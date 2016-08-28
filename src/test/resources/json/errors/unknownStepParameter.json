@@ -1,0 +1,38 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "timeout",
+        "arguments":         [
+                    {
+            "key": "time",
+            "value":             {
+              "isConstant": true,
+              "value": 5
+            }
+          },
+                    {
+            "key": "banana",
+            "value":             {
+              "isConstant": true,
+              "value": "SECONDS"
+            }
+          }
+        ],
+        "children": [        {
+          "name": "echo",
+          "arguments":           {
+            "isConstant": true,
+            "value": "hello"
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent":   {
+    "isConstant": true,
+    "value": "none"
+  }
+}}

@@ -1,0 +1,50 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "writeFile",
+          "arguments":           [
+            {
+              "key": "text",
+              "value":               {
+                "isConstant": true,
+                "value": "hello world"
+              }
+            },
+            {
+              "key": "file",
+              "value":               {
+                "isConstant": true,
+                "value": "msg.out"
+              }
+            }
+          ]
+        },
+        {
+          "name": "step",
+          "arguments":           {
+            "isConstant": false,
+            "value": "[$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: true]"
+          }
+        },
+        {
+          "name": "sh",
+          "arguments":           {
+            "isConstant": true,
+            "value": "echo ONSLAVE=$ONSLAVE"
+          }
+        }
+      ]
+    }]
+  }],
+  "agent": [  {
+    "key": "label",
+    "value":     {
+      "isConstant": true,
+      "value": "some-label"
+    }
+  }]
+}}
