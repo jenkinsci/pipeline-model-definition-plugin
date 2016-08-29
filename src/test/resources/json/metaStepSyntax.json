@@ -10,14 +10,12 @@
                         {
               "key": "text",
               "value":               {
-                "isConstant": true,
                 "value": "hello world"
               }
             },
                         {
               "key": "file",
               "value":               {
-                "isConstant": true,
                 "value": "msg.out"
               }
             }
@@ -29,14 +27,12 @@
                         {
               "key": "allowEmptyArchive",
               "value":               {
-                "isConstant": true,
                 "value": true
               }
             },
                         {
               "key": "artifacts",
               "value":               {
-                "isConstant": true,
                 "value": "msg.out"
               }
             }
@@ -45,7 +41,6 @@
                 {
           "name": "sh",
           "arguments":           {
-            "isConstant": true,
             "value": "echo ONSLAVE=$ONSLAVE"
           }
         }
@@ -55,7 +50,6 @@
   "agent": [  {
     "key": "label",
     "value":     {
-      "isConstant": true,
       "value": "some-label"
     }
   }]

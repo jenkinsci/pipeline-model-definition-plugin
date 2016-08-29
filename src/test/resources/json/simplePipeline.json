@@ -6,14 +6,12 @@
       "steps": [      {
         "name": "echo",
         "arguments":         {
-          "isConstant": true,
           "value": "hello"
         }
       }]
     }]
   }],
   "agent":   {
-    "isConstant": true,
     "value": "none"
   }
 }}

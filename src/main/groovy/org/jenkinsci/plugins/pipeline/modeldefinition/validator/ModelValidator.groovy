@@ -51,8 +51,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.GenericWhitelist
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
@@ -255,17 +258,24 @@ class ModelValidator {
     }
 
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
-        if (v.isConstant()) {
-            try {
+        try {
+            // TODO: Clean this up a lot. We're secure now, but....yeah.
+            if (v.value instanceof String && ((String)v.value).contains('$class')) {
+                final GroovyShell shell = new GroovyShell(GroovySandbox.createSecureCompilerConfiguration());
+                Map<String,?> args = (Map<String,?>)GroovySandbox.run(shell.parse((String)v.value), new GenericWhitelist());
+
+                UninstantiatedDescribable ud = new UninstantiatedDescribable(null, (String)args.get('$class'), args)
+                ud.instantiate()
+            } else {
                 ScriptBytecodeAdapter.castToType(v.value, erasedType);
-            } catch (Exception e) {
-                if (k != null) {
-                    errorCollector.error(v, "Expecting ${erasedType} for parameter '${k.key}' but got '${v.value}' instead")
-                } else {
-                    errorCollector.error(v, "Expecting ${erasedType} but got '${v.value}' instead")
-                }
-                return false
             }
+        } catch (Exception e) {
+            if (k != null) {
+                errorCollector.error(v, "Expecting ${erasedType} for parameter '${k.key}' but got '${v.value}' instead")
+            } else {
+                errorCollector.error(v, "Expecting ${erasedType} but got '${v.value}' instead")
+            }
+            return false
         }
 
         return true

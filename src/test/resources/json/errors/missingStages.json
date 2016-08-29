@@ -1,6 +1,5 @@
 {"pipeline": {
   "agent":   {
-    "isConstant": true,
     "value": "none"
   }
 }}

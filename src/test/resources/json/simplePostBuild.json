@@ -6,7 +6,6 @@
       "steps": [      {
         "name": "echo",
         "arguments":         {
-          "isConstant": true,
           "value": "hello"
         }
       }]
@@ -20,7 +19,6 @@
         "steps": [        {
           "name": "echo",
           "arguments":           {
-            "isConstant": true,
             "value": "I HAVE DEFINITELY FINISHED"
           }
         }]
@@ -33,7 +31,6 @@
         "steps": [        {
           "name": "echo",
           "arguments":           {
-            "isConstant": true,
             "value": "I HAVE FAILED"
           }
         }]
@@ -46,7 +43,6 @@
         "steps": [      {
           "name": "echo",
           "arguments":         {
-            "isConstant": true,
             "value": "I HAVE FINISHED"
           }
         }]
@@ -54,7 +50,6 @@
     }
   ]},
   "agent":   {
-    "isConstant": true,
     "value": "none"
   }
 }}
