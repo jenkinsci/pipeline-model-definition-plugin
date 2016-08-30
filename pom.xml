@@ -31,12 +31,12 @@
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
-  <artifactId>pipeline-config</artifactId>
+  <artifactId>pipeline-model-definition</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <name>Pipeline: Config</name>
+  <name>Pipeline: Model Definition</name>
   <description>An opinionated, declarative Pipeline</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Config+Plugin</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
 
   <licenses>
     <license>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <p>
+        The <code>pipeline</code> step allows you to define your Pipelines in a more structured way.
+        See <a href="https://github.com/jenkinsci/pipeline-model-definition-plugin/wiki/Getting-Started">the wiki</a> for more information.
+    </p>
+</j:jelly>
