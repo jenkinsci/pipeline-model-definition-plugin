@@ -1,7 +1,7 @@
-# Jenkinsfile v2 (a.k.a. Kyoto) Syntax spec
+# Pipeline Model Definition Syntax spec
 
 ## pipeline
-* *Description*: Top level step, containing a closure with the Kyoto configuration inside it.
+* *Description*: Top level step, containing a closure with the model configuration inside it.
 * *Parameters*: none
 * *Takes a Closure*: Yes.
 * *Closure Contents*: See below.
