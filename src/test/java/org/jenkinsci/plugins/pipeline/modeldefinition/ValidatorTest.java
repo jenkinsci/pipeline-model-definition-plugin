@@ -40,7 +40,14 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void rejectStageInSteps() throws Exception {
         prepRepoWithJenkinsfile("errors", "rejectStageInSteps");
 
-        failWithError("Invalid step 'stage' used - not allowed in this context @ line");
+        failWithError("Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in step blocks in Pipeline Config");
+    }
+
+    @Test
+    public void rejectParallelMixedInSteps() throws Exception {
+        prepRepoWithJenkinsfile("errors", "rejectParallelMixedInSteps");
+
+        failWithError("Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block");
     }
 
     @Ignore("I still want to block parallel, but I'm not sure it's worth it, ignoring for now.")
