@@ -41,7 +41,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("FOO is BAR", b);
     }
 
