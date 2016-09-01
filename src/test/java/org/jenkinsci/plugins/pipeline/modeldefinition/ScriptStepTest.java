@@ -39,7 +39,7 @@ public class ScriptStepTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("In a script step", b);
     }
 
@@ -57,7 +57,7 @@ public class ScriptStepTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("image: ubuntu", b);
     }
 }

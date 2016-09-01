@@ -44,7 +44,7 @@ public class AgentTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
     }
 
@@ -56,7 +56,7 @@ public class AgentTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartNonRepoBuild("noCheckoutScmInWrongContext");
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
     }
 
@@ -73,7 +73,7 @@ public class AgentTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("The answer is 42", b);
     }
 
@@ -105,7 +105,7 @@ public class AgentTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
     }
 }

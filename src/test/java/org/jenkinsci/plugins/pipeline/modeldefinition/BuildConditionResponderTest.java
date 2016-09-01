@@ -41,8 +41,10 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
         j.assertLogContains("I HAVE FINISHED", b);
         j.assertLogContains("MOST DEFINITELY FINISHED", b);
         j.assertLogNotContains("I FAILED", b);
@@ -54,8 +56,10 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("I HAVE FINISHED", b);
         j.assertLogContains("MOST DEFINITELY FINISHED", b);
         j.assertLogNotContains("I FAILED", b);
@@ -67,8 +71,10 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("I AM FAILING", b);
         j.assertLogContains("I HAVE FAILED", b);
         j.assertLogNotContains("I HAVE SUCCEEDED", b);
@@ -78,21 +84,21 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     public void notificationOnChanged() throws Exception {
         WorkflowRun b = getAndStartNonRepoBuild("notificationOnChangeFailed");
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("I FAILED", b);
 
         WorkflowJob job = b.getParent();
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("notificationOnChangeChanged")));
         WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
         j.assertBuildStatusSuccess(j.waitForCompletion(b2));
-        j.assertLogContains("Entering stage foo", b2);
+        j.assertLogContains("[Pipeline] { (foo)", b2);
         j.assertLogContains("hello", b2);
         j.assertLogContains("I CHANGED", b2);
 
         // Now make sure we don't get any alert this time.
         WorkflowRun b3 = job.scheduleBuild2(0).waitForStart();
         j.assertBuildStatusSuccess(j.waitForCompletion(b3));
-        j.assertLogContains("Entering stage foo", b3);
+        j.assertLogContains("[Pipeline] { (foo)", b3);
         j.assertLogContains("hello", b3);
         j.assertLogNotContains("I CHANGED", b3);
         j.assertLogNotContains("I FAILED", b3);
@@ -105,7 +111,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
 
         j.assertBuildStatus(Result.UNSTABLE, j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("I AM UNSTABLE", b);
         j.assertLogNotContains("I FAILED", b);
@@ -120,7 +126,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         b.getExecutor().interrupt();
         j.assertBuildStatus(Result.ABORTED, j.waitForCompletion(b));
 
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("I ABORTED", b);
         j.assertLogNotContains("I FAILED", b);

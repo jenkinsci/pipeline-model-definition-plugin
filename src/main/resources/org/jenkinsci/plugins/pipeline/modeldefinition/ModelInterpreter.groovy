@@ -72,12 +72,12 @@ public class ModelInterpreter implements Serializable {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
 
-                                        script.stage thisStage.name
-
-                                        Closure closureToCall = thisStage.closureWrapper.closure
-                                        closureToCall.delegate = script
-                                        closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
-                                        closureToCall.call()
+                                        script.stage(thisStage.name) {
+                                            Closure closureToCall = thisStage.closureWrapper.closure
+                                            closureToCall.delegate = script
+                                            closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
+                                            closureToCall.call()
+                                        }
                                     }
                                 }.call()
                             }
@@ -85,12 +85,15 @@ public class ModelInterpreter implements Serializable {
                             script.catchError {
                                 catchRequiredContextForNode(root.agent) {
                                     List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
-
-                                    for (int i = 0; i < postBuildClosures.size(); i++) {
-                                        Closure c = postBuildClosures.get(i)
-                                        c.delegate = script
-                                        c.resolveStrategy = Closure.DELEGATE_FIRST
-                                        c.call()
+                                    if (postBuildClosures.size() > 0) {
+                                        script.stage("Post Build Actions") {
+                                            for (int i = 0; i < postBuildClosures.size(); i++) {
+                                                Closure c = postBuildClosures.get(i)
+                                                c.delegate = script
+                                                c.resolveStrategy = Closure.DELEGATE_FIRST
+                                                c.call()
+                                            }
+                                        }
                                     }
                                 }.call()
                             }
@@ -102,11 +105,15 @@ public class ModelInterpreter implements Serializable {
                 List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
 
                 catchRequiredContextForNode(root.agent, true) {
-                    for (int i = 0; i < notificationClosures.size(); i++) {
-                        Closure c = notificationClosures.get(i)
-                        c.delegate = script
-                        c.resolveStrategy = Closure.DELEGATE_FIRST
-                        c.call()
+                    if (notificationClosures.size() > 0) {
+                        script.stage("Notifications") {
+                            for (int i = 0; i < notificationClosures.size(); i++) {
+                                Closure c = notificationClosures.get(i)
+                                c.delegate = script
+                                c.resolveStrategy = Closure.DELEGATE_FIRST
+                                c.call()
+                            }
+                        }
                     }
                 }.call()
             }

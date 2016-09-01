@@ -49,7 +49,7 @@ public class ToolsTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("Apache Maven 3.0.1", b);
     }
 
@@ -72,7 +72,7 @@ public class ToolsTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage build", b);
+        j.assertLogContains("[Pipeline] { (build)", b);
         j.assertLogContains("[INFO] BUILD SUCCESS", b);
         j.assertLogContains("M2_HOME: " + m3.getHome(), b);
         j.assertLogContains("JAVA_HOME: " + thisJdk.getHome(), b);

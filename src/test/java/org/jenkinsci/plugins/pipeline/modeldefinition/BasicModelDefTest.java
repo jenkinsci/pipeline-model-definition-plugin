@@ -44,7 +44,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
     }
 
@@ -54,9 +56,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
-        j.assertLogContains("Entering stage bar", b);
+        j.assertLogContains("[Pipeline] { (bar)", b);
         j.assertLogContains("goodbye", b);
     }
 
@@ -66,7 +68,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] timeout", b);
         j.assertLogContains("hello", b);
     }
@@ -81,7 +83,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
 
         VirtualFile archivedFile = b.getArtifactManager().root().child("msg.out");
@@ -99,7 +101,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
 
         VirtualFile archivedFile = b.getArtifactManager().root().child("msg.out");
@@ -113,7 +115,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[first] { (Branch: first)", b);
         j.assertLogContains("[second] { (Branch: second)", b);
     }
@@ -131,7 +133,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("image: ubuntu", b);
     }
 
