@@ -70,6 +70,7 @@ to-be-released block-scoped `stage` syntax in base Pipeline.
 * *Takes a Closure*: Yes
 * *Closure Contents*: One or more Pipeline steps, including block-scoped steps and the special `script` block described below.
     * *NOTE*: Only the "declarative subset" of Groovy is allowed by default. See below for details on that subset.
+    * *NOTE*: The `parallel` step is a special case - it can only be used if it's the sole step in the `stage`.
 * *Examples*:
 
 ```
@@ -91,6 +92,15 @@ stages {
             checkout scm
             sh "mvn clean install"
         }
+    }
+}
+
+stages {
+    stage('parallel-stage') {
+        parallel([
+            firstBlock: 'echo "First block of the parallel"',
+            secondBlock: 'echo "Second block of the parallel"'
+        ])
     }
 }
 ```
