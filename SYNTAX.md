@@ -97,10 +97,14 @@ stages {
 
 stages {
     stage('parallel-stage') {
-        parallel([
-            firstBlock: 'echo "First block of the parallel"',
-            secondBlock: 'echo "Second block of the parallel"'
-        ])
+        parallel(
+            firstBlock: {
+                echo "First block of the parallel"
+            },
+            secondBlock: {
+                echo "Second block of the parallel"
+            }
+        )
     }
 }
 ```
