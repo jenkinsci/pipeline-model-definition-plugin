@@ -118,35 +118,39 @@ class ModelParser {
         def sectionsSeen = new HashSet();
         eachStatement(pipelineBlock.body.code) { stmt ->
             def mc = matchMethodCall(stmt);
-            def name = parseMethodName(mc);
-            // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
-            if (!sectionsSeen.add(name)) {
-                // Also an error that we couldn't actually detect at model evaluation time.
-                errorCollector.error(r,"Multiple occurences of the $name section")
-            }
+            if (mc == null) {
+                errorCollector.error(r, "Not a valid section definition: '${getSourceText(stmt)}'")
+            } else {
+                def name = parseMethodName(mc);
+                // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
+                if (!sectionsSeen.add(name)) {
+                    // Also an error that we couldn't actually detect at model evaluation time.
+                    errorCollector.error(r, "Multiple occurrences of the $name section")
+                }
 
-            switch (name) {
-            case 'stages':
-                r.stages = parseStages(stmt);
-                break;
-            case 'environment':
-                r.environment = parseEnvironment(stmt);
-                break;
-            case 'notifications':
-                r.notifications = parseNotifications(stmt);
-                break;
-            case 'postBuild':
-                r.postBuild = parsePostBuild(stmt);
-                break;
-            case 'agent':
-                r.agent = parseAgent(stmt);
-                break;
-            case 'tools':
-                r.tools = parseTools(stmt)
-                break
-            default:
-                // We need to check for unknowns here.
-                errorCollector.error(r, "Undefined section '$name'")
+                switch (name) {
+                    case 'stages':
+                        r.stages = parseStages(stmt);
+                        break;
+                    case 'environment':
+                        r.environment = parseEnvironment(stmt);
+                        break;
+                    case 'notifications':
+                        r.notifications = parseNotifications(stmt);
+                        break;
+                    case 'postBuild':
+                        r.postBuild = parsePostBuild(stmt);
+                        break;
+                    case 'agent':
+                        r.agent = parseAgent(stmt);
+                        break;
+                    case 'tools':
+                        r.tools = parseTools(stmt)
+                        break
+                    default:
+                        // We need to check for unknowns here.
+                        errorCollector.error(r, "Undefined section '$name'")
+                }
             }
         }
 
