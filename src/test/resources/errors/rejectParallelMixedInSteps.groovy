@@ -27,8 +27,12 @@ pipeline {
     stages {
         stage("foo") {
             echo "hello"
-            parallel([a: "echo '1'",
-                      b: "echo '2'"])
+            parallel(a: {
+                        echo '1'
+                     },
+                     b: {
+                         echo '2'
+                     })
         }
     }
 }
