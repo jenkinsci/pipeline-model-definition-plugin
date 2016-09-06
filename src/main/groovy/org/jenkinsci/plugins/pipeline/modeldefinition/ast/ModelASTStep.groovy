@@ -17,7 +17,11 @@ public class ModelASTStep extends ModelASTElement {
     /**
      * A list of step names which are banned from being executed within a step block.
      */
-    public final List<String> blockedSteps = ["stage", "properties"]
+    public final Map<String, String> blockedSteps = [
+        "stage":      "The stage step cannot be used in step blocks in Pipeline Config",
+        "properties": "The properties step cannot be used in step blocks in Pipeline Config",
+        "parallel":   "The parallel step can only be used as the only top-level step in a stage's step block"
+    ]
 
     String name;
     ModelASTArgumentList args;

@@ -184,72 +184,73 @@ class ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (step.blockedSteps.contains(step.name)) {
-            errorCollector.error(step, "Invalid step '${step.name}' used - not allowed in this context")
+        if (step.blockedSteps.keySet().contains(step.name)) {
+            errorCollector.error(step, "Invalid step '${step.name}' used - not allowed in this context - ${step.blockedSteps.get(step.name)}")
             valid = false
-        }
+        } else {
+            // We can't do step validation without a Jenkins instance, so move on.
+            if (Jenkins.getInstance() != null) {
+                Descriptor desc = lookupStepDescriptor(step.name)
+                DescribableModel<? extends Describable> model
 
-        // We can't do step validation without a Jenkins instance, so move on.
-        if (Jenkins.getInstance() != null) {
-            Descriptor desc = lookupStepDescriptor(step.name)
-            DescribableModel<? extends Describable> model
-
-            if (desc != null) {
-                model = modelForStep(step.name)
-            } else {
-                desc = lookupFunction(step.name)
                 if (desc != null) {
-                    model = modelForDescribable(step.name)
-                }
-            }
-
-            if (model != null) {
-                if (step.args instanceof ModelASTNamedArgumentList) {
-                    ModelASTNamedArgumentList argList = (ModelASTNamedArgumentList) step.args
-
-                    argList.arguments.each { k, v ->
-                        def p = model.getParameter(k.key);
-                        if (p==null) {
-                            String possible = EditDistance.findNearest(k.key, model.getParameters().collect { it.name })
-                            errorCollector.error(k, "Invalid parameter '${k.key}', did you mean '${possible}'?")
-                            valid = false
-                            return;
-                        }
-
-                        if (!validateParameterType(v, p.erasedType, k)) {
-                            valid = false
-                        }
-                    }
-                    model.parameters.each { p ->
-                        if (p.isRequired() && !argList.containsKeyName(p.name)) {
-                            errorCollector.error(step, "Missing required parameter: '${p.name}'")
-                            valid = false
-                        }
-                    }
+                    model = modelForStep(step.name)
                 } else {
-                    assert step.args instanceof ModelASTSingleArgument;
-                    ModelASTSingleArgument arg = (ModelASTSingleArgument)step.args;
-
-                    def p = model.soleRequiredParameter;
-                    if (p==null && !stepTakesClosure(desc)) {
-                        errorCollector.error(step, "Step does not take a single required parameter - use named parameters instead")
-                        valid = false
-                    } else {
-                        Class erasedType = p?.erasedType
-                        if (stepTakesClosure(desc)) {
-                            erasedType = String.class
-                        }
-                        def v = arg.value;
-
-                        if (!validateParameterType(v, erasedType)) {
-                            valid = false
-                        }
+                    desc = lookupFunction(step.name)
+                    if (desc != null) {
+                        model = modelForDescribable(step.name)
                     }
+                }
 
+                if (model != null) {
+                    if (step.args instanceof ModelASTNamedArgumentList) {
+                        ModelASTNamedArgumentList argList = (ModelASTNamedArgumentList) step.args
+
+                        argList.arguments.each { k, v ->
+                            def p = model.getParameter(k.key);
+                            if (p == null) {
+                                String possible = EditDistance.findNearest(k.key, model.getParameters().collect {
+                                    it.name
+                                })
+                                errorCollector.error(k, "Invalid parameter '${k.key}', did you mean '${possible}'?")
+                                valid = false
+                                return;
+                            }
+
+                            if (!validateParameterType(v, p.erasedType, k)) {
+                                valid = false
+                            }
+                        }
+                        model.parameters.each { p ->
+                            if (p.isRequired() && !argList.containsKeyName(p.name)) {
+                                errorCollector.error(step, "Missing required parameter: '${p.name}'")
+                                valid = false
+                            }
+                        }
+                    } else {
+                        assert step.args instanceof ModelASTSingleArgument;
+                        ModelASTSingleArgument arg = (ModelASTSingleArgument) step.args;
+
+                        def p = model.soleRequiredParameter;
+                        if (p == null && !stepTakesClosure(desc)) {
+                            errorCollector.error(step, "Step does not take a single required parameter - use named parameters instead")
+                            valid = false
+                        } else {
+                            Class erasedType = p?.erasedType
+                            if (stepTakesClosure(desc)) {
+                                erasedType = String.class
+                            }
+                            def v = arg.value;
+
+                            if (!validateParameterType(v, erasedType)) {
+                                valid = false
+                            }
+                        }
+
+                    }
                 }
             }
         }
-
 
         return valid
     }

@@ -1,0 +1,40 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "echo",
+          "arguments":           {
+            "isConstant": true,
+            "value": "hello"
+          }
+        },
+        {
+          "name": "parallel",
+          "arguments":           [
+            {
+              "key": "a",
+              "value":               {
+                "isConstant": true,
+                "value": "echo '1'"
+              }
+            },
+            {
+              "key": "b",
+              "value":               {
+                "isConstant": true,
+                "value": "echo '2'"
+              }
+            }
+          ]
+        }
+      ]
+    }]
+  }],
+  "agent":   {
+    "isConstant": true,
+    "value": "none"
+  }
+}}
