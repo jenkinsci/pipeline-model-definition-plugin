@@ -119,7 +119,7 @@ class ModelParser {
         eachStatement(pipelineBlock.body.code) { stmt ->
             def mc = matchMethodCall(stmt);
             if (mc == null) {
-                errorCollector.error(r, "Not a valid section definition: '${getSourceText(stmt)}'")
+                errorCollector.error(r, "Not a valid section definition: '${getSourceText(stmt)}'. Some extra configuration is required.")
             } else {
                 def name = parseMethodName(mc);
                 // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.

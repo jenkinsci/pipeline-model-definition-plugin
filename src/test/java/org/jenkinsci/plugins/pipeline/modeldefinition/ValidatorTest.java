@@ -141,7 +141,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void emptyAgent() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyAgent");
 
-        failWithError("Not a valid section definition: 'agent'");
+        failWithError("Not a valid section definition: 'agent'. Some extra configuration is required.");
     }
 
     @Test
