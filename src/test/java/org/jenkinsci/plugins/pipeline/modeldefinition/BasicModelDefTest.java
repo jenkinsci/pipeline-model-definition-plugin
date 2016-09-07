@@ -51,6 +51,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void loadLibrary() throws Exception {
+        prepRepoWithJenkinsfile("loadLibrary");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("Entering stage foo", b);
+        j.assertLogContains("hello", b);
+    }
+
+    @Test
     public void twoStagePipeline() throws Exception {
         prepRepoWithJenkinsfile("twoStagePipeline");
 
