@@ -44,7 +44,7 @@ public class ScriptStepTest extends AbstractModelDefTest {
     }
 
     @Test
-        public void dockerGlobalVariableInScript() throws Exception {
+    public void dockerGlobalVariableInScript() throws Exception {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
@@ -59,5 +59,20 @@ public class ScriptStepTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("image: ubuntu", b);
+    }
+
+    @Test
+    public void globalLibrarySuccessInScript() throws Exception {
+
+        // Test the successful, albeit limited, case.
+        prepRepoWithJenkinsfile("globalLibrarySuccessInScript");
+
+        initGlobalLibrary();
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("[nothing here]", b);
+        j.assertLogContains("map call(1,2)", b);
     }
 }
