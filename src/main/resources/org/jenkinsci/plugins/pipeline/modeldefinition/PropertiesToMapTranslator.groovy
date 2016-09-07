@@ -43,8 +43,8 @@ public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializ
         return mapCopy
     }
 
-    NestedModel toNestedModel(Class c) {
-        NestedModel m = Utils.newInstanceWrapper(c)
+    NestedModel toNestedModel(Class<NestedModel> c) {
+        NestedModel m = c.newInstance()
         m.modelFromMap(actualMap)
         return m
     }

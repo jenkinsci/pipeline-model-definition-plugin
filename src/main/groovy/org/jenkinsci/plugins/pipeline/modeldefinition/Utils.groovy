@@ -136,11 +136,6 @@ public class Utils {
     }
 
     @Whitelisted
-    public static NestedModel newInstanceWrapper(Class<NestedModel> c) {
-        return c.newInstance()
-    }
-
-    @Whitelisted
     public static <T extends StepBlockWithOtherArgs> T newStepBlockWithOtherArgs(Class<T> c, Object[] args) {
         return c.newInstance(args)
     }

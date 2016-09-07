@@ -50,7 +50,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
     }
 
     NestedModel toNestedModel() {
-        NestedModel m = Utils.newInstanceWrapper(actualClass)
+        NestedModel m = actualClass.newInstance()
         m.modelFromMap(actualMap)
         return m
     }
