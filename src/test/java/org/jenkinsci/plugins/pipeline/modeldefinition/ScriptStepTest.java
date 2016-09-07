@@ -49,7 +49,7 @@ public class ScriptStepTest extends AbstractModelDefTest {
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
 
-        prepRepoWithJenkinsfile("dockerGlobalVariable");
+        prepRepoWithJenkinsfile("dockerGlobalVariableInScript");
 
         DumbSlave s = j.createOnlineSlave();
         s.setLabelString("some-label");
