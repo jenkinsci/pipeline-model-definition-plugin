@@ -24,19 +24,14 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Job;
-import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import jenkins.plugins.git.GitSCMSource;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.LibraryResolver;
@@ -45,7 +40,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import org.junit.Assume;
 import org.jvnet.hudson.test.TestExtension;
 
 /**
@@ -67,22 +61,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void loadLibrary() throws Exception {
-        Method random = RandomStringUtils.class.getMethod("random", int.class, boolean.class, boolean.class);
-        Assume.assumeFalse("this method is not yet whitelisted", Whitelist.all().permitsStaticMethod(random, new Object[] {9, true, true}));
         otherRepo.init();
-        otherRepo.write("vars/withTower.groovy",
-            "import org.apache.commons.lang.RandomStringUtils\n" +
-            "\n" +
-            "def call (host, credentials, Closure body){\n" +
-            "    dir (\"tmp/${RandomStringUtils.random(9, true, true)}\") {\n" +
-            "        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: \"$credentials\",\n" +
-            "                          usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {\n" +
-            "            writeFile file: './.tower_cli.cfg',\n" +
-            "                    text: \"host: $host\\nusername: $env.USERNAME \\npassword: $env.PASSWORD\"\n" +
-            "            body()\n" +
-            "        }\n" +
-            "        deleteDir()\n" +
-            "    }\n" +
+        otherRepo.write("vars/withStuff.groovy",
+            // TODO passes if `b` parameter is removed from both definition and call site
+            "def call (a, b, Closure body){\n" +
+            "    body()\n" +
             "}");
         otherRepo.git("add", "vars");
         otherRepo.git("commit", "--message=init");
@@ -91,8 +74,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         prepRepoWithJenkinsfile("loadLibrary");
 
         WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains(StaticWhitelist.rejectStaticMethod(random).toString(), b);
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("running inside the block", b);
     }
     @TestExtension("loadLibrary")
     public static class DynamicResolver extends LibraryResolver {

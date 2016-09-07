@@ -28,8 +28,8 @@ pipeline{
     agent label:""
     stages{
         stage("Deploy"){
-            withTower(host:"foo.com", credentials:"tower-cli"){
-                sh 'tower-cli user list'
+            withStuff(a: 'a', b: 'b') {
+                echo 'running inside the block'
             }
         }
     }
