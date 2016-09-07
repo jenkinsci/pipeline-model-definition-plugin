@@ -28,25 +28,17 @@ pipeline {
     stages {
         stage("foo") {
             script {
-                // TODO: foo.bar() global variable object calls do not work as the step, though they do work as arguments.
-                //acmeVar.hello('Pipeline')
-                //acmeVar.foo('seed')
+                acmeVar.hello('Pipeline')
+                acmeVar.foo('seed')
 
-                // TODO: Due to the above methods not running/working, this method will fail as a result of acmeVar.x not being set.
-                //echo '['+acmeVar.bar()+']'
-
-                // acmeVar.baz() will work since it doesn't rely on anything else - demonstrating that it will work as a step
-                // argument, if not as a step itself.
+                echo '['+acmeVar.bar()+']'
                 echo '[' + acmeVar.baz() + ']'
 
-                // TODO: Unnamed parameters won't work.
-                //acmeFunc(1,2)
+                acmeFunc(1,2)
 
-                // A call method taking a map, however, will work.
-                acmeFuncMap(a: 1, b: 2)
+                acmeFuncMap(a: 3, b: 4)
 
-                // TODO: Passing a body that isn't composed of steps does not work. Should it work?
-                //acmeBody { title = 'yolo' }
+                acmeBody { title = 'yolo' }
             }
         }
     }

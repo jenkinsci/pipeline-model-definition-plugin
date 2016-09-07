@@ -72,7 +72,11 @@ public class ScriptStepTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
+        j.assertLogContains("Hello Pipeline", b);
+        j.assertLogContains("[seed-set-get]", b);
         j.assertLogContains("[nothing here]", b);
-        j.assertLogContains("map call(1,2)", b);
+        j.assertLogContains("call(1,2)", b);
+        j.assertLogContains("map call(3,4)", b);
+        j.assertLogContains("title was yolo", b);
     }
 }
