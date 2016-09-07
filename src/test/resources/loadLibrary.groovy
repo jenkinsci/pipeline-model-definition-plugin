@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-@Library("github.com/patrickdummy/pipeline") _
+@Library("stuff@master") _
 
 pipeline{
     agent label:""
