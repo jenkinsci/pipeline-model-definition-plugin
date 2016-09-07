@@ -283,6 +283,12 @@ public abstract class AbstractModelDefTest {
         FileUtils.writeStringToFile(new File(vars, "acmeFunc.groovy"), StringUtils.join(Arrays.asList(
                 "def call(a,b) { echo \"call($a,$b)\" }")
                 , "\n"));
+        FileUtils.writeStringToFile(new File(vars, "acmeFuncClosure1.groovy"), StringUtils.join(Arrays.asList(
+                "def call(a, Closure body) { echo \"closure1($a)\"; body() }")
+                , "\n"));
+        FileUtils.writeStringToFile(new File(vars, "acmeFuncClosure2.groovy"), StringUtils.join(Arrays.asList(
+                "def call(a, b, Closure body) { echo \"closure2($a, $b)\"; body() }")
+                , "\n"));
         FileUtils.writeStringToFile(new File(vars, "acmeFuncMap.groovy"), StringUtils.join(Arrays.asList(
                 "def call(m) { echo \"map call(${m.a},${m.b})\" }")
                 , "\n"));

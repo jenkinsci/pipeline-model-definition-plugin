@@ -41,6 +41,14 @@ pipeline {
             // TODO: Unnamed parameters won't work.
             //acmeFunc(1,2)
 
+            acmeFuncClosure1(a: 1) {
+                echo 'running inside closure1'
+            }
+
+            acmeFuncClosure2(a: 1, b: 2) {
+                echo 'running inside closure2'
+            }
+
             // A call method taking a map, however, will work.
             acmeFuncMap(a:1,b:2)
 
