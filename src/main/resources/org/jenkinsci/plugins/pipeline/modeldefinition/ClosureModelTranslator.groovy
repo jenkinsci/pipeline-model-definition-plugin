@@ -50,7 +50,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
     }
 
     NestedModel toNestedModel() {
-        NestedModel m = Utils.newInstanceWrapper(actualClass)
+        NestedModel m = actualClass.newInstance()
         m.modelFromMap(actualMap)
         return m
     }
@@ -113,7 +113,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                             blockParams.add(thisArg)
                         }
                     }
-                    resultValue = Utils.newStepBlockWithOtherArgs(actualType, Utils.toObjectArray(blockParams))
+                    resultValue = actualType.newInstance(Utils.toObjectArray(blockParams))
                 }
                 // If the argument is a Closure, we've got a few possibilities.
                 else if (argValue != null && Utils.instanceOfWrapper(Closure.class, argValue)) {
