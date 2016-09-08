@@ -137,12 +137,18 @@ public class ValidatorTest extends AbstractModelDefTest {
         failWithError("Duplicate named parameter 'time' found");
     }
 
-
     @Test
     public void emptyEnvironment() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyEnvironment");
 
         failWithError("No variables specified for environment");
+    }
+
+    @Test
+    public void emptyAgent() throws Exception {
+        prepRepoWithJenkinsfile("errors", "emptyAgent");
+
+        failWithError("Not a valid section definition: 'agent'. Some extra configuration is required.");
     }
 
     @Test
