@@ -23,15 +23,24 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.Job;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import jenkins.plugins.git.GitSCMSource;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.LibraryResolver;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.jvnet.hudson.test.TestExtension;
 
 /**
  * @author Andrew Bayer
@@ -48,6 +57,37 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
         j.assertLogNotContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
+    }
+
+    @Test
+    public void loadLibrary() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/withStuff.groovy",
+            // TODO passes if `b` parameter is removed from both definition and call site
+            "def call (a, b, Closure body){\n" +
+            "    body()\n" +
+            "}");
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        DynamicResolver.url = otherRepo.toString();
+
+        prepRepoWithJenkinsfile("loadLibrary");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("running inside the block", b);
+    }
+    @TestExtension("loadLibrary")
+    public static class DynamicResolver extends LibraryResolver {
+        static String url;
+        @Override
+        public boolean isTrusted() {
+            return false;
+        }
+        @Override
+        public Collection<LibraryConfiguration> forJob(Job<?,?> job, Map<String,String> libraryVersions) {
+            return Collections.singleton(new LibraryConfiguration("stuff", new SCMSourceRetriever(new GitSCMSource(null, url, "", "*", "", true))));
+        }
     }
 
     @Test
