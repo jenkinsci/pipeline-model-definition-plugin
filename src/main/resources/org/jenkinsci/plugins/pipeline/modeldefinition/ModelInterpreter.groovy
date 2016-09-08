@@ -59,8 +59,9 @@ public class ModelInterpreter implements Serializable {
         if (root != null) {
             // Entire build, including notifications, runs in the withEnv.
             script.withEnv(root.getEnvVars()) {
-                // Stage execution and post-build actions run in separate catchErrors, so we still run post-build actions
+                // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                 // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
+                // We save the caught error, if any, for throwing at the end of the build.
                 nodeOrDockerOrNone(root.agent) {
                     toolsBlock(root.agent, root.tools) {
                         try {
@@ -90,7 +91,6 @@ public class ModelInterpreter implements Serializable {
                         }
 
                         try {
-                            // Now run the post-build actions wrapped in catchError.
                             catchRequiredContextForNode(root.agent) {
                                 List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
                                 if (postBuildClosures.size() > 0) {
