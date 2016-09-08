@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.util.VirtualFile;
@@ -48,6 +49,51 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
         j.assertLogNotContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
+    }
+
+    @Test
+    public void failingPipeline() throws Exception {
+        prepRepoWithJenkinsfile("failingPipeline");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("goodbye", b);
+        j.assertLogContains("farewell", b);
+        assertTrue(b.getExecution().getCauseOfFailure() != null);
+    }
+
+    @Test
+    public void failingPostBuild() throws Exception {
+        prepRepoWithJenkinsfile("failingPostBuild");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("goodbye", b);
+        j.assertLogContains("farewell", b);
+        assertTrue(b.getExecution().getCauseOfFailure() != null);
+    }
+
+    @Test
+    public void failingNotifications() throws Exception {
+        prepRepoWithJenkinsfile("failingNotifications");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("goodbye", b);
+        j.assertLogContains("farewell", b);
+        assertTrue(b.getExecution().getCauseOfFailure() != null);
     }
 
     @Test

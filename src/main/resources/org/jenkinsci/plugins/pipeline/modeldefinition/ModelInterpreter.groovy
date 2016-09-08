@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
+import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
@@ -53,69 +54,92 @@ public class ModelInterpreter implements Serializable {
         closure.call()
 
         Root root = m.toNestedModel()
+        Throwable firstError
 
         if (root != null) {
             // Entire build, including notifications, runs in the withEnv.
             script.withEnv(root.getEnvVars()) {
-                // Stage execution and post-build actions run in separate catchErrors, so we still run post-build actions
+                // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                 // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
-                script.catchError {
-                    nodeOrDockerOrNone(root.agent) {
-                        toolsBlock(root.agent, root.tools) {
-                            script.catchError {
-                                catchRequiredContextForNode(root.agent) {
-                                    // If we have an agent and script.scm isn't null, run checkout scm
-                                    if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                        script.checkout script.scm
+                // We save the caught error, if any, for throwing at the end of the build.
+                nodeOrDockerOrNone(root.agent) {
+                    toolsBlock(root.agent, root.tools) {
+                        try {
+                            catchRequiredContextForNode(root.agent) {
+                                // If we have an agent and script.scm isn't null, run checkout scm
+                                if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                                    script.checkout script.scm
+                                }
+
+                                for (int i = 0; i < root.stages.getStages().size(); i++) {
+                                    Stage thisStage = root.stages.getStages().get(i)
+
+                                    script.stage(thisStage.name) {
+                                        Closure closureToCall = thisStage.closureWrapper.closure
+                                        closureToCall.delegate = script
+                                        closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
+                                        closureToCall.call()
                                     }
-
-                                    for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                        Stage thisStage = root.stages.getStages().get(i)
-
-                                        script.stage(thisStage.name) {
-                                            Closure closureToCall = thisStage.closureWrapper.closure
-                                            closureToCall.delegate = script
-                                            closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
-                                            closureToCall.call()
-                                        }
-                                    }
-                                }.call()
-                            }
-                            // Now run the post-build actions wrapped in catchError.
-                            script.catchError {
-                                catchRequiredContextForNode(root.agent) {
-                                    List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
-                                    if (postBuildClosures.size() > 0) {
-                                        script.stage("Post Build Actions") {
-                                            for (int i = 0; i < postBuildClosures.size(); i++) {
-                                                Closure c = postBuildClosures.get(i)
-                                                c.delegate = script
-                                                c.resolveStrategy = Closure.DELEGATE_FIRST
-                                                c.call()
-                                            }
-                                        }
-                                    }
-                                }.call()
-                            }
-                        }.call()
-                    }.call()
-                }
-
-                // And finally, run the notifications.
-                List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
-
-                catchRequiredContextForNode(root.agent, true) {
-                    if (notificationClosures.size() > 0) {
-                        script.stage("Notifications") {
-                            for (int i = 0; i < notificationClosures.size(); i++) {
-                                Closure c = notificationClosures.get(i)
-                                c.delegate = script
-                                c.resolveStrategy = Closure.DELEGATE_FIRST
-                                c.call()
+                                }
+                            }.call()
+                        } catch (Exception e) {
+                            script.echo "Error in stages execution: ${e.getMessage()}"
+                            script.getProperty("currentBuild").result = Result.FAILURE
+                            if (firstError == null) {
+                                firstError = e
                             }
                         }
-                    }
+
+                        try {
+                            catchRequiredContextForNode(root.agent) {
+                                List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
+                                if (postBuildClosures.size() > 0) {
+                                    script.stage("Post Build Actions") {
+                                        for (int i = 0; i < postBuildClosures.size(); i++) {
+                                            Closure c = postBuildClosures.get(i)
+                                            c.delegate = script
+                                            c.resolveStrategy = Closure.DELEGATE_FIRST
+                                            c.call()
+                                        }
+                                    }
+                                }
+                            }.call()
+                        } catch (Exception e) {
+                            script.echo "Error in postBuild execution: ${e.getMessage()}"
+                            script.getProperty("currentBuild").result = Result.FAILURE
+                            if (firstError == null) {
+                                firstError = e
+                            }
+                        }
+                    }.call()
                 }.call()
+
+                try {
+                    // And finally, run the notifications.
+                    List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
+
+                    catchRequiredContextForNode(root.agent, true) {
+                        if (notificationClosures.size() > 0) {
+                            script.stage("Notifications") {
+                                for (int i = 0; i < notificationClosures.size(); i++) {
+                                    Closure c = notificationClosures.get(i)
+                                    c.delegate = script
+                                    c.resolveStrategy = Closure.DELEGATE_FIRST
+                                    c.call()
+                                }
+                            }
+                        }
+                    }.call()
+                } catch (Exception e) {
+                    script.echo "Error in notifications execution: ${e.getMessage()}"
+                    script.getProperty("currentBuild").result = Result.FAILURE
+                    if (firstError == null) {
+                        firstError = e
+                    }
+                }
+            }
+            if (firstError != null) {
+                throw firstError
             }
         }
     }
