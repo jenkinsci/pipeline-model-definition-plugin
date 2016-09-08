@@ -81,6 +81,7 @@ public abstract class AbstractModelDefTest {
     @Before
     public void setUp() throws Exception {
         ToolInstallations.configureMaven3();
+        initGlobalLibrary();
     }
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
@@ -99,7 +100,8 @@ public abstract class AbstractModelDefTest {
             "simpleNotification",
             "simplePostBuild",
             "simpleTools",
-            "legacyMetaStepSyntax"
+            "legacyMetaStepSyntax",
+            "globalLibrarySuccess"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

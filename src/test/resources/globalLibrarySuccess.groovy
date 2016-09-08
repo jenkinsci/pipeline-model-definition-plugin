@@ -36,16 +36,16 @@ pipeline {
 
             // acmeVar.baz() will work since it doesn't rely on anything else - demonstrating that it will work as a step
             // argument, if not as a step itself.
-            echo '['+acmeVar.baz()+']'
+            echo('['+acmeVar.baz()+']')
 
             // TODO: Unnamed parameters won't work.
             //acmeFunc(1,2)
 
-            acmeFuncClosure1(a: 1) {
+            acmeFuncClosure1(1) {
                 echo 'running inside closure1'
             }
 
-            acmeFuncClosure2(a: 1, b: 2) {
+            acmeFuncClosure2(1, 2) {
                 echo 'running inside closure2'
             }
 

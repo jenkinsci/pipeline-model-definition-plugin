@@ -40,6 +40,13 @@
         "$ref": "#/definitions/argumentValue"
       }
     },
+    "positionalArgumentList": {
+      "description": "List of values used as positional parameters",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/rawArgument"
+      }
+    },
     "singleArgument": {
       "description": "A single value used as a sole unnamed parameter",
       "$ref": "#/definitions/rawArgument"
@@ -52,6 +59,9 @@
         },
         {
           "$ref": "#/definitions/singleArgument"
+        },
+        {
+          "$ref": "#/definitions/positionalArgumentList"
         }
       ]
     },

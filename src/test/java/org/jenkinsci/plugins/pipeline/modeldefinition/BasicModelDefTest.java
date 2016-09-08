@@ -150,13 +150,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         j.assertLogContains("[nothing here]", b);
         j.assertLogContains("map call(1,2)", b);
-        /* TODO called the wrong way: closure1([a:1])
+        /* TODO called the wrong way: closure1([a:1]) */
         j.assertLogContains("closure1(1)", b);
-        */
+
         j.assertLogContains("running inside closure1", b);
-        /* TODO silently ignored
+        /* TODO silently ignored */
         j.assertLogContains("closure2(1, 2)", b);
         j.assertLogContains("running inside closure2", b);
-        */
+
     }
 }

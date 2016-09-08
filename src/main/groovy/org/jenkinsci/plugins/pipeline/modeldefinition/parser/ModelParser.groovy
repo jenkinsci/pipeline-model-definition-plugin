@@ -38,6 +38,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
@@ -431,9 +432,10 @@ class ModelParser {
                 return singleArg
             }
         default:
-            // positional args not allowed
-            ModelASTNamedArgumentList l = new ModelASTNamedArgumentList(args[1]);
-            errorCollector.error(l,"Expecting named arguments");
+            ModelASTPositionalArgumentList l = new ModelASTPositionalArgumentList(args[0]);
+            args.each { e ->
+                l.arguments.add(parseArgument(e))
+            }
             return l
         }
     }
@@ -612,6 +614,10 @@ class ModelParser {
             }
         }
         return null;
+    }
+
+    protected String getSourceText(BinaryExpression e) {
+        return getSourceText(e.leftExpression) + e.operation.getText() + getSourceText(e.rightExpression)
     }
 
     /**

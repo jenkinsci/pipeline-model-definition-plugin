@@ -232,19 +232,6 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void globalLibraryUnnamedParameters() throws Exception {
-        // Test the case of calling a function with multiple unnamed parameters. This will fail.
-        prepRepoWithJenkinsfile("errors", "globalLibraryUnnamedParameters");
-
-        initGlobalLibrary();
-
-        WorkflowRun b = getAndStartBuild();
-
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);
-        j.assertLogContains("Expecting named arguments @ line", b);
-    }
-
     public void packageShouldNotSkipParsing() throws Exception {
         prepRepoWithJenkinsfile("errors", "packageShouldNotSkipParsing");
 
