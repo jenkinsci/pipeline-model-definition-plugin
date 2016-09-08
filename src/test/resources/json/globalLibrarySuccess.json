@@ -1,0 +1,77 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "echo",
+          "arguments":           {
+            "isConstant": false,
+            "value": "${'['+acmeVar.baz()+']'}"
+          }
+        },
+        {
+          "name": "acmeFuncClosure1",
+          "arguments":           {
+            "isConstant": true,
+            "value": 1
+          },
+          "children": [          {
+            "name": "echo",
+            "arguments":             {
+              "isConstant": true,
+              "value": "running inside closure1"
+            }
+          }]
+        },
+        {
+          "name": "acmeFuncClosure2",
+          "arguments":           [
+            {
+              "isConstant": true,
+              "value": 1
+            },
+            {
+              "isConstant": true,
+              "value": 2
+            }
+          ],
+          "children": [          {
+            "name": "echo",
+            "arguments":             {
+              "isConstant": true,
+              "value": "running inside closure2"
+            }
+          }]
+        },
+        {
+          "name": "acmeFuncMap",
+          "arguments":           [
+            {
+              "key": "a",
+              "value":               {
+                "isConstant": true,
+                "value": 1
+              }
+            },
+            {
+              "key": "b",
+              "value":               {
+                "isConstant": true,
+                "value": 2
+              }
+            }
+          ]
+        }
+      ]
+    }]
+  }],
+  "agent": [  {
+    "key": "label",
+    "value":     {
+      "isConstant": true,
+      "value": "master"
+    }
+  }]
+}}

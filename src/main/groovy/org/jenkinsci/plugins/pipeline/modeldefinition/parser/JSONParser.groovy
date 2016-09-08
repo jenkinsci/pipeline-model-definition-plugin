@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
@@ -186,16 +187,32 @@ class JSONParser {
     public @CheckForNull ModelASTArgumentList parseArgumentList(Object o) {
         ModelASTArgumentList argList
         if (o instanceof JSONArray) {
-            argList = new ModelASTNamedArgumentList(o)
 
-            o.each { rawEntry ->
-                JSONObject entry = (JSONObject) rawEntry
-                // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
-                ModelASTKey key = parseKey(entry)
+            if (o.isEmpty()) {
+                argList = new ModelASTNamedArgumentList(o)
+            } else {
+                JSONObject firstElem = o.getJSONObject(0)
+                // If this is true, then we've got named parameters.
+                if (firstElem != null && firstElem.size() == 2 && firstElem.has("key") && firstElem.has("value")) {
+                    argList = new ModelASTNamedArgumentList(o)
+                    o.each { rawEntry ->
+                        JSONObject entry = (JSONObject) rawEntry
+                        // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
+                        ModelASTKey key = parseKey(entry)
 
-                ModelASTValue value = parseValue(entry.getJSONObject("value"))
+                        ModelASTValue value = parseValue(entry.getJSONObject("value"))
 
-                ((ModelASTNamedArgumentList)argList).arguments.put(key, value)
+                        ((ModelASTNamedArgumentList) argList).arguments.put(key, value)
+                    }
+                }
+                // Otherwise, we've got positional parameters.
+                else {
+                    argList = new ModelASTPositionalArgumentList(o)
+                    o.each { rawValue ->
+                        ModelASTValue value = parseValue((JSONObject) rawValue)
+                        ((ModelASTPositionalArgumentList)argList).arguments.add(value)
+                    }
+                }
             }
         } else if (o instanceof JSONObject) {
             argList = new ModelASTSingleArgument(o)

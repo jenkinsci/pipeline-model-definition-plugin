@@ -100,7 +100,11 @@ public abstract class ModelASTValue extends ModelASTElement {
 
             @Override
             public String toGroovy() {
-                return gstring
+                if (gstring.startsWith('${') && gstring.endsWith('}')) {
+                    return gstring.substring(2, gstring.length() - 1)
+                } else {
+                    return gstring
+                }
             }
         }
     }

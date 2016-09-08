@@ -208,9 +208,6 @@ postBuild {
 * No semicolons as statement separators. Each statement has to be on its own line
 * Block must only consists of method call statements, assignment statements, or property reference statement
     * A property reference statement is treated as no-arg method invocation. So for example, `input` is treated as `input()`
-* Method calls statements have no parenthesis
-    * However, method calls appearing inside an expression tree must have parenthesis. See the `secret()` function as an example
-* Method calls with parameters must always use named parameters, even if there's just one parameter.
 * Expression has to be one of the following:
     * Literals (except class literals)
     * Numbers: `1`, `3`

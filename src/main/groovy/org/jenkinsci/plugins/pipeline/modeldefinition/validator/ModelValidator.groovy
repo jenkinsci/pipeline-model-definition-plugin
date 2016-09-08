@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
@@ -53,6 +54,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
+import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
@@ -225,6 +227,22 @@ class ModelValidator {
                             if (p.isRequired() && !argList.containsKeyName(p.name)) {
                                 errorCollector.error(step, "Missing required parameter: '${p.name}'")
                                 valid = false
+                            }
+                        }
+                    } else if (step.args instanceof ModelASTPositionalArgumentList) {
+                        ModelASTPositionalArgumentList argList = (ModelASTPositionalArgumentList) step.args
+
+                        List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
+
+                        if (requiredParams.size() != argList.arguments.size()) {
+                            errorCollector.error(step, "Step '${step.name}' should have ${requiredParams.size()} arguments but has ${argList.arguments.size()} arguments instead.")
+                            valid = false
+                        } else {
+                            requiredParams.eachWithIndex { DescribableParameter entry, int i ->
+                                def argVal = argList.arguments.get(i)
+                                if (!validateParameterType(argVal, entry.erasedType)) {
+                                    valid = false
+                                }
                             }
                         }
                     } else {
