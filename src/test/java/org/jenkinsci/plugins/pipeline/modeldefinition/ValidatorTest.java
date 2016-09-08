@@ -258,6 +258,13 @@ public class ValidatorTest extends AbstractModelDefTest {
         failWithError("Missing required section 'agent'");
     }
 
+    @Test
+    public void invalidLegacyMetaStepSyntax() throws Exception {
+        prepRepoWithJenkinsfile("errors", "invalidLegacyMetaStepSyntax");
+
+        failWithError("Expecting interface jenkins.tasks.SimpleBuildStep but got '[$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: \"foo\"]' instead");
+    }
+
     private void failWithError(final String... errors) throws Exception {
         failWithErrorAndPossiblySlave(false, errors);
     }

@@ -120,7 +120,7 @@ public abstract class AbstractModelDefTest {
 
         result.add(new Object[]{"emptyParallel", "Nothing to execute within stage 'foo'"});
 
-        result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 244 of {\"pipeline\": {\n" +
+        result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 214 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +
                 "    \"name\": \"foo\",\n" +
                 "    \"branches\": [    {\n" +
@@ -128,14 +128,12 @@ public abstract class AbstractModelDefTest {
                 "      \"steps\": [      {\n" +
                 "        \"name\": \"echo\",\n" +
                 "        \"arguments\":         {\n" +
-                "          \"isConstant\": true,\n" +
                 "          \"value\": \"hello\"\n" +
                 "\n" +
                 "      }]\n" +
                 "    }]\n" +
                 "  }],\n" +
                 "  \"agent\":   {\n" +
-                "    \"isConstant\": true,\n" +
                 "    \"value\": \"none\"\n" +
                 "  }\n" +
                 "}}"});

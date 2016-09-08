@@ -223,11 +223,15 @@ class JSONParser {
     }
 
     public @CheckForNull ModelASTValue parseValue(JSONObject o) {
-        if (o.getBoolean("isConstant")) {
-            return ModelASTValue.fromConstant(o.get("value"), o)
-        } else {
-            return ModelASTValue.fromGString(o.getString("value"), o)
+        // TODO: Probably need better type-checking? Not sure yet.
+        if (o.getString("value") != null) {
+            String valString = o.getString("value")
+            if (valString.contains('$class')) {
+                return ModelASTValue.fromGString(o.getString("value"), o)
+            }
         }
+
+        return ModelASTValue.fromConstant(o.get("value"), o)
     }
 
     public @CheckForNull ModelASTScriptBlock parseScriptBlock(JSONObject j) {

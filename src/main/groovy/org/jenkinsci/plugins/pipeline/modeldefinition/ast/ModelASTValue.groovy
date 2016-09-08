@@ -44,12 +44,6 @@ public abstract class ModelASTValue extends ModelASTElement {
     Object value
 
     /**
-     * If the value can be determined without side-effect at AST parsing time,
-     * this method returns true, and {@Link #getValue()} returns its value.
-     */
-    public abstract boolean isConstant();
-
-    /**
      * Returns a value or an expression that represents this value.
      *
      * This model is used at the compile time, so it's not always possible
@@ -68,18 +62,11 @@ public abstract class ModelASTValue extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        return new JSONObject()
-            .accumulate("isConstant", isConstant())
-            .accumulate("value", getValue())
+        return new JSONObject().accumulate("value", getValue())
     }
 
     public static final ModelASTValue fromConstant(final Object o, Object sourceLocation) {
         return new ModelASTValue(sourceLocation, o) {
-            @Override
-            boolean isConstant() {
-                return true;
-            }
-
             @Override
             public String toGroovy() {
                 if (o instanceof String) {
@@ -93,11 +80,6 @@ public abstract class ModelASTValue extends ModelASTElement {
 
     public static final ModelASTValue fromGString(String gstring, Object sourceLocation) {
         return new ModelASTValue(sourceLocation, gstring) {
-            @Override
-            boolean isConstant() {
-                return false;
-            }
-
             @Override
             public String toGroovy() {
                 return gstring

@@ -6,7 +6,6 @@
       "steps": [      {
         "name": "sh",
         "arguments":         {
-          "isConstant": true,
           "value": "echo ONSLAVE=$ONSLAVE"
         }
       }]
@@ -15,7 +14,6 @@
   "agent": [  {
     "key": "label",
     "value":     {
-      "isConstant": true,
       "value": "some-label"
     }
   }]
