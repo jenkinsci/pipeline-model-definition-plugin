@@ -460,9 +460,10 @@ class ModelParser {
         if (e instanceof VariableExpression) {
             if (e.name.equals("none")) {
                 return ModelASTValue.fromConstant("none", e) // Special casing for agent none.
+            } else if (e.name.equals("any")) {
+                return ModelASTValue.fromConstant("any", e) // Special casing for agent any.
             }
         }
-
         // for other composite expressions, treat it as in-place GString
         return ModelASTValue.fromGString("\${"+getSourceText(e)+"}", e)
     }
@@ -479,7 +480,7 @@ class ModelParser {
         if (exp instanceof ConstantExpression) {
             return castOrNull(String,exp.value);
         }
-        // TODO: This may be too broad a way to catch 'agent none'.
+        // TODO: This may be too broad a way to catch 'agent none' and 'agent any'.
         else if (exp instanceof VariableExpression) {
             return castOrNull(String,exp.name);
         }

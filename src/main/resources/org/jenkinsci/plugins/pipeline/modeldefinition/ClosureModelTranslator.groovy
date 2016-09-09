@@ -45,6 +45,11 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
      */
     boolean none = false
 
+    /**
+     * Placeholder to make sure 'agent any' works.
+     */
+    boolean any = true
+
     ClosureModelTranslator(Class clazz) {
         actualClass = clazz
     }

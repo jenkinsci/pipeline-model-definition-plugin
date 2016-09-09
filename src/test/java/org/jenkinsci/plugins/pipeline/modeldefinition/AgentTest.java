@@ -28,6 +28,7 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Andrew Bayer
@@ -46,6 +47,17 @@ public class AgentTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
+    }
+
+    @Issue("JENKINS-37932")
+    @Test
+    public void agentAny() throws Exception {
+        prepRepoWithJenkinsfile("agentAny");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("THIS WORKS", b);
     }
 
     @Test

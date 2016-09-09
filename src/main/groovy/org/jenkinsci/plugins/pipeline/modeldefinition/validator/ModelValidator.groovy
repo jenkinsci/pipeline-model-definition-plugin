@@ -363,14 +363,14 @@ class ModelValidator {
         if (agent.args instanceof ModelASTSingleArgument) {
             ModelASTSingleArgument singleArg = (ModelASTSingleArgument) agent.args
 
-            if (singleArg.value.getValue() != 'none') {
-                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.getValue()}' - must be map of config options or bare none.")
+            if (singleArg.value.getValue() != 'none' && singleArg.value.getValue() != 'any') {
+                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.getValue()}' - must be map of config options or bare none or any.")
                 valid = false
             } else if (agent.args instanceof ModelASTNamedArgumentList) {
                 ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList)agent.args
                 namedArgs.arguments.each { k, v ->
                     if (!(Agent.agentConfigKeys().contains(k.key))) {
-                        errorCollector.error(k, "Invalid config option '${k.key}'. Valid config optiosn are ${Agent.agentConfigKeys()}.")
+                        errorCollector.error(k, "Invalid config option '${k.key}'. Valid config options are ${Agent.agentConfigKeys()}.")
                         valid = false
                     }
                 }

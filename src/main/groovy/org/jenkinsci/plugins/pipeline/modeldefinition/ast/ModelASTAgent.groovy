@@ -59,8 +59,9 @@ public final class ModelASTAgent extends ModelASTElement {
     public String toGroovy() {
         String argStr
         // TODO: Stop special-casing agent none.
-        if (args instanceof ModelASTSingleArgument && args.value.value.equals("none")) {
-            argStr = "none"
+        if (args instanceof ModelASTSingleArgument &&
+            (args.value.value.equals("none") || args.value.value.equals("any"))) {
+            argStr = args.value.value
         } else {
             argStr = args.toGroovy()
         }
