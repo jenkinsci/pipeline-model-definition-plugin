@@ -86,6 +86,7 @@ public abstract class AbstractModelDefTest {
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simplePipeline",
+            "agentAny",
             "agentDocker",
             "agentLabel",
             "agentNoneWithNode",

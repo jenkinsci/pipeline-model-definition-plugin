@@ -46,6 +46,9 @@ public class Agent implements Serializable {
     String label
 
     @Whitelisted
+    Boolean any
+
+    @Whitelisted
     public Agent(Map<String,String> args) {
         if (args.containsKey("docker")) {
             docker = args.get("docker")
@@ -57,12 +60,12 @@ public class Agent implements Serializable {
 
     @Whitelisted
     public Agent(boolean b) {
-
+        this.any = b
     }
 
     @Whitelisted
     public boolean hasAgent() {
-        return docker != null || label != null
+        return any || docker != null || label != null
     }
 
     // TODO: Rewrite as an extension point and get this by extension discovery, but we knew that already.
