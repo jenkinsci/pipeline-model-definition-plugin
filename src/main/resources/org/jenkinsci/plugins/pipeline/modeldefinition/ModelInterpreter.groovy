@@ -88,6 +88,8 @@ public class ModelInterpreter implements Serializable {
                                                 firstError = e
                                             }
                                         }
+                                    } else {
+                                        Utils.setSkippedStage(thisStage.name)
                                     }
                                 }
                             }

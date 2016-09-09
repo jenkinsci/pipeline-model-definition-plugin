@@ -26,10 +26,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction
+import org.jenkinsci.plugins.workflow.actions.StageAction
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.graph.FlowNode
 
 import java.lang.reflect.ParameterizedType;
 
@@ -53,7 +56,7 @@ public class Utils {
      * @return True if the field exists and is of the given type.
      */
     @Whitelisted
-    public static boolean isFieldA(Class fieldType, Class actualClass, String fieldName) {
+    static boolean isFieldA(Class fieldType, Class actualClass, String fieldName) {
         def actualFieldName = actualFieldName(actualClass, fieldName)
         def realFieldType = actualClass.metaClass.getMetaProperty(actualFieldName)?.type
 
@@ -72,7 +75,7 @@ public class Utils {
      * @return The real field name, pluralized if necessary, or null if not found.
      */
     @Whitelisted
-    public static String actualFieldName(Class actualClass, String fieldName) {
+    static String actualFieldName(Class actualClass, String fieldName) {
         if (actualClass.metaClass.getMetaProperty(fieldName) != null) {
             return fieldName
         } else if (actualClass.metaClass.getMetaProperty("${fieldName}s") != null) {
@@ -90,7 +93,7 @@ public class Utils {
      * @return The class of the field in the inspected class, or the class contained in the list or map.
      */
     @Whitelisted
-    public static Class actualFieldType(Class actualClass, String fieldName) {
+    static Class actualFieldType(Class actualClass, String fieldName) {
         def actualFieldName = actualFieldName(actualClass, fieldName)
         if (actualFieldName == null) {
             return null
@@ -119,7 +122,7 @@ public class Utils {
      * @return True if the object is an instance of the class, false otherwise
      */
     @Whitelisted
-    public static boolean instanceOfWrapper(Class c, Object o) {
+    static boolean instanceOfWrapper(Class c, Object o) {
         return c.isInstance(o)
     }
 
@@ -131,17 +134,17 @@ public class Utils {
      * @return True if o can be assigned to c, false otherwise
      */
     @Whitelisted
-    public static boolean assignableFromWrapper(Class c, Class o) {
+    static boolean assignableFromWrapper(Class c, Class o) {
         return c.isAssignableFrom(o)
     }
 
     @Whitelisted
-    public static Object[] toObjectArray(List<Object> origList) {
+    static Object[] toObjectArray(List<Object> origList) {
         return origList.toArray()
     }
 
     @Whitelisted
-    public static boolean hasScmContext(CpsScript script) {
+    static boolean hasScmContext(CpsScript script) {
         try {
             // Just rely on SCMVar's own context-checking (via CpsScript) rather than brewing our own.
             script.getProperty("scm")
@@ -150,5 +153,17 @@ public class Utils {
             // If we get an IllegalStateException, "checkout scm" isn't valid, so return false.
             return false
         }
+    }
+
+    @Whitelisted
+    static void setSkippedStage(String stageName) {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        FlowNode currentNode = execution.currentHeads.find { n ->
+            n?.displayName?.equals(stageName)
+        }
+
+        currentNode.actions.add(new NotExecutedNodeAction())
     }
 }

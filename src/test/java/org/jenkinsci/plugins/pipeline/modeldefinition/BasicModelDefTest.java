@@ -28,6 +28,10 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -119,6 +123,22 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("[Pipeline] { (bar)", b);
+        FlowExecution execution = b.getExecution();
+        FlowGraphWalker walker = new FlowGraphWalker(execution);
+        boolean foundSkippedBar = false;
+        boolean foundExecutedFoo = false;
+
+        for (FlowNode node : walker) {
+            if (node.getDisplayName().equals("bar") && node.getAction(NotExecutedNodeAction.class) != null) {
+                foundSkippedBar = true;
+            }
+            if (node.getDisplayName().equals("foo") && node.getAction(NotExecutedNodeAction.class) == null) {
+                foundExecutedFoo = true;
+            }
+        }
+
+        assertTrue("Executed stage foo either doesn't exist or is marked as skipped", foundExecutedFoo);
+        assertTrue("Post-failure stage bar either doesn't exist or isn't marked as skipped", foundSkippedBar);
     }
 
     @Test
