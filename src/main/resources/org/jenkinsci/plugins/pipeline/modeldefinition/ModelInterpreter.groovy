@@ -88,6 +88,8 @@ public class ModelInterpreter implements Serializable {
                                                 firstError = e
                                             }
                                         }
+                                    } else {
+                                        script.echo "Skipping stage due to earlier failure(s)"
                                     }
                                 }
                             }
