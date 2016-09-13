@@ -30,6 +30,7 @@ import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -106,6 +107,18 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("hello", b);
         j.assertLogContains("[Pipeline] { (bar)", b);
         j.assertLogContains("goodbye", b);
+    }
+
+    @Issue("JENKINS-38097")
+    @Test
+    public void allStagesExist() throws Exception {
+        prepRepoWithJenkinsfile("allStagesExist");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (bar)", b);
     }
 
     @Test
