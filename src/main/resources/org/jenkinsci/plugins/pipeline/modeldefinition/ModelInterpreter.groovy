@@ -64,32 +64,34 @@ public class ModelInterpreter implements Serializable {
                 // We save the caught error, if any, for throwing at the end of the build.
                 nodeOrDockerOrNone(root.agent) {
                     toolsBlock(root.agent, root.tools) {
-                        try {
-                            catchRequiredContextForNode(root.agent) {
-                                // If we have an agent and script.scm isn't null, run checkout scm
-                                if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                    script.stage(SyntheticStageNames.checkout()) {
-                                        Utils.markSyntheticStage(SyntheticStageNames.checkout(), SyntheticContext.PRE)
-                                        script.checkout script.scm
+                        // If we have an agent and script.scm isn't null, run checkout scm
+                        if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                            script.stage(SyntheticStageNames.checkout()) {
+                                Utils.markSyntheticStage(SyntheticStageNames.checkout(), SyntheticContext.PRE)
+                                script.checkout script.scm
+                            }
+                        }
+
+                        for (int i = 0; i < root.stages.getStages().size(); i++) {
+                            Stage thisStage = root.stages.getStages().get(i)
+
+                            script.stage(thisStage.name) {
+                                if (firstError == null) {
+                                    try {
+                                        catchRequiredContextForNode(root.agent) {
+                                            Closure closureToCall = thisStage.closureWrapper.closure
+                                            closureToCall.delegate = script
+                                            closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
+                                            closureToCall.call()
+                                        }.call()
+                                    } catch (Exception e) {
+                                        script.echo "Error in stages execution: ${e.getMessage()}"
+                                        script.getProperty("currentBuild").result = Result.FAILURE
+                                        if (firstError == null) {
+                                            firstError = e
+                                        }
                                     }
                                 }
-
-                                for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                    Stage thisStage = root.stages.getStages().get(i)
-
-                                    script.stage(thisStage.name) {
-                                        Closure closureToCall = thisStage.closureWrapper.closure
-                                        closureToCall.delegate = script
-                                        closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
-                                        closureToCall.call()
-                                    }
-                                }
-                            }.call()
-                        } catch (Exception e) {
-                            script.echo "Error in stages execution: ${e.getMessage()}"
-                            script.getProperty("currentBuild").result = Result.FAILURE
-                            if (firstError == null) {
-                                firstError = e
                             }
                         }
 
