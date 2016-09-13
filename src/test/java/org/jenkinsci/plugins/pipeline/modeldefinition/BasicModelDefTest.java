@@ -43,6 +43,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -186,36 +187,48 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
         assertNotNull(action);
         ModelASTStages stages = action.getStages();
+        assertNull(stages.getSourceLocation());
         assertNotNull(stages);
 
         assertEquals(1, stages.getStages().size());
 
         ModelASTStage stage = stages.getStages().get(0);
-
+        assertNull(stage.getSourceLocation());
         assertNotNull(stage);
 
         assertEquals(2, stage.getBranches().size());
 
         ModelASTBranch firstBranch = branchForName("first", stage.getBranches());
+        assertNull(firstBranch.getSourceLocation());
         assertNotNull(firstBranch);
         assertEquals(1, firstBranch.getSteps().size());
         ModelASTStep firstStep = firstBranch.getSteps().get(0);
+        assertNull(firstStep.getSourceLocation());
         assertEquals("echo", firstStep.getName());
         assertEquals("First branch", ((ModelASTSingleArgument) firstStep.getArgs()).getValue().getValue());
+        assertNull(firstStep.getArgs().getSourceLocation());
+        assertNull(((ModelASTSingleArgument) firstStep.getArgs()).getValue().getSourceLocation());
 
         ModelASTBranch secondBranch = branchForName("second", stage.getBranches());
         assertNotNull(secondBranch);
+        assertNull(secondBranch.getSourceLocation());
         assertEquals(2, secondBranch.getSteps().size());
         ModelASTStep scriptStep = secondBranch.getSteps().get(0);
+        assertNull(scriptStep.getSourceLocation());
         assertTrue(scriptStep instanceof ModelASTScriptBlock);
+        assertNull(scriptStep.getArgs().getSourceLocation());
+        assertNull(((ModelASTSingleArgument) scriptStep.getArgs()).getValue().getSourceLocation());
+
         ModelASTStep timeoutStep = secondBranch.getSteps().get(1);
+        assertNull(timeoutStep.getSourceLocation());
         assertTrue(timeoutStep instanceof ModelASTTreeStep);
         assertEquals("timeout", timeoutStep.getName());
 
         ModelASTTreeStep treeStep = (ModelASTTreeStep)timeoutStep;
         assertEquals(1, treeStep.getChildren().size());
         assertEquals("echo", treeStep.getChildren().get(0).getName());
-
+        assertNull(treeStep.getChildren().get(0).getSourceLocation());
+        
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[first] { (Branch: first)", b);
         j.assertLogContains("[second] { (Branch: second)", b);
