@@ -23,15 +23,25 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.google.common.base.Predicate;
 import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticStageMarkerAction;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
 
+import java.util.Collection;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -117,6 +127,51 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] timeout", b);
         j.assertLogContains("hello", b);
+    }
+
+    @Test
+    public void syntheticStages() throws Exception {
+        prepRepoWithJenkinsfile("syntheticStages");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("[Pipeline] { (Tool Install)", b);
+        j.assertLogContains("[Pipeline] { (Checkout SCM)", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("I AM A POST-BUILD", b);
+        j.assertLogNotContains("I HAVE FAILED", b);
+        j.assertLogContains("I HAVE SUCCEEDED", b);
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Tool Install", SyntheticContext.PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Checkout SCM", SyntheticContext.PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Post Build Actions", SyntheticContext.POST)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Notifications", SyntheticContext.POST)));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Agent - Docker Pull", SyntheticContext.PRE)));
+    }
+
+    private Predicate<FlowNode> syntheticStagePredicate(final String stageName,
+                                                        final SyntheticContext context) {
+        return new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(FlowNode input) {
+                if (input.getDisplayName().equals(stageName) &&
+                        input.getAction(SyntheticStageMarkerAction.class) != null &&
+                        input.getAction(SyntheticStageMarkerAction.class).getContext().equals(context)) {
+                    return true;
+                }
+                return false;
+            }
+        };
     }
 
     @Test

@@ -27,6 +27,7 @@ import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
@@ -55,7 +56,6 @@ public class ModelInterpreter implements Serializable {
 
         Root root = m.toNestedModel()
         Throwable firstError
-
         if (root != null) {
             // Entire build, including notifications, runs in the withEnv.
             script.withEnv(root.getEnvVars()) {
@@ -68,7 +68,10 @@ public class ModelInterpreter implements Serializable {
                             catchRequiredContextForNode(root.agent) {
                                 // If we have an agent and script.scm isn't null, run checkout scm
                                 if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                    script.checkout script.scm
+                                    script.stage("Checkout SCM") {
+                                        Utils.markSyntheticStage("Checkout SCM", SyntheticContext.PRE)
+                                        script.checkout script.scm
+                                    }
                                 }
 
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
@@ -95,6 +98,8 @@ public class ModelInterpreter implements Serializable {
                                 List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
                                 if (postBuildClosures.size() > 0) {
                                     script.stage("Post Build Actions") {
+                                        Utils.markSyntheticStage("Post Build Actions", SyntheticContext.POST)
+
                                         for (int i = 0; i < postBuildClosures.size(); i++) {
                                             Closure c = postBuildClosures.get(i)
                                             c.delegate = script
@@ -121,6 +126,7 @@ public class ModelInterpreter implements Serializable {
                     catchRequiredContextForNode(root.agent, true) {
                         if (notificationClosures.size() > 0) {
                             script.stage("Notifications") {
+                                Utils.markSyntheticStage("Notifications", SyntheticContext.POST)
                                 for (int i = 0; i < notificationClosures.size(); i++) {
                                     Closure c = notificationClosures.get(i)
                                     c.delegate = script
@@ -170,14 +176,18 @@ public class ModelInterpreter implements Serializable {
         if (agent.hasAgent() && tools != null) {
             def toolEnv = []
             def toolsList = tools.getToolEntries()
-            for (int i = 0; i < toolsList.size(); i++) {
-                def entry = toolsList.get(i)
-                String k = entry.get(0)
-                String v= entry.get(1)
+            script.stage("Tool Install") {
+                Utils.markSyntheticStage("Tool Install", SyntheticContext.PRE)
 
-                String toolPath = script.tool(name:v, type:Tools.typeForKey(k))
+                for (int i = 0; i < toolsList.size(); i++) {
+                    def entry = toolsList.get(i)
+                    String k = entry.get(0)
+                    String v = entry.get(1)
 
-                toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+                    String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
+
+                    toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+                }
             }
 
             return {
@@ -212,6 +222,10 @@ public class ModelInterpreter implements Serializable {
     def dockerOrWithout(Agent agent, Closure body) {
         if (agent.docker != null) {
             return {
+                script.stage("Agent - Docker Pull") {
+                    Utils.markSyntheticStage("Agent - Docker Pull", SyntheticContext.PRE)
+                    script.getProperty("docker").image(agent.docker).pull()
+                }
                 script.getProperty("docker").image(agent.docker).inside {
                     body.call()
                 }
