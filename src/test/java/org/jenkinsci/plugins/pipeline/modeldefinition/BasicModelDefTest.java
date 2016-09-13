@@ -28,10 +28,21 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -164,6 +175,60 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[first] { (Branch: first)", b);
         j.assertLogContains("[second] { (Branch: second)", b);
+    }
+
+    @Test
+    public void executionModelAction() throws Exception {
+        prepRepoWithJenkinsfile("executionModelAction");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
+        assertNotNull(action);
+        ModelASTStages stages = action.getStages();
+        assertNotNull(stages);
+
+        assertEquals(1, stages.getStages().size());
+
+        ModelASTStage stage = stages.getStages().get(0);
+
+        assertNotNull(stage);
+
+        assertEquals(2, stage.getBranches().size());
+
+        ModelASTBranch firstBranch = branchForName("first", stage.getBranches());
+        assertNotNull(firstBranch);
+        assertEquals(1, firstBranch.getSteps().size());
+        ModelASTStep firstStep = firstBranch.getSteps().get(0);
+        assertEquals("echo", firstStep.getName());
+        assertEquals("First branch", ((ModelASTSingleArgument) firstStep.getArgs()).getValue().getValue());
+
+        ModelASTBranch secondBranch = branchForName("second", stage.getBranches());
+        assertNotNull(secondBranch);
+        assertEquals(2, secondBranch.getSteps().size());
+        ModelASTStep scriptStep = secondBranch.getSteps().get(0);
+        assertTrue(scriptStep instanceof ModelASTScriptBlock);
+        ModelASTStep timeoutStep = secondBranch.getSteps().get(1);
+        assertTrue(timeoutStep instanceof ModelASTTreeStep);
+        assertEquals("timeout", timeoutStep.getName());
+
+        ModelASTTreeStep treeStep = (ModelASTTreeStep)timeoutStep;
+        assertEquals(1, treeStep.getChildren().size());
+        assertEquals("echo", treeStep.getChildren().get(0).getName());
+
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("[first] { (Branch: first)", b);
+        j.assertLogContains("[second] { (Branch: second)", b);
+    }
+
+    private ModelASTBranch branchForName(String name, List<ModelASTBranch> branches) {
+        for (ModelASTBranch branch : branches) {
+            if (branch.getName().equals(name)) {
+                return branch;
+            }
+        }
+
+        return null;
     }
 
     @Test
