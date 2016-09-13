@@ -47,6 +47,9 @@ public class ModelInterpreter implements Serializable {
     }
 
     def call(CpsClosure closure) {
+        // Attach the stages model to the run for introspection etc.
+        Utils.attachExecutionModel(script)
+        
         ClosureModelTranslator m = new ClosureModelTranslator(Root.class)
 
         closure.delegate = m
