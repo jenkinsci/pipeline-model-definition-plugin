@@ -152,11 +152,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         DepthFirstScanner scanner = new DepthFirstScanner();
 
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Tool Install", SyntheticContext.PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Checkout SCM", SyntheticContext.PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Post Build Actions", SyntheticContext.POST)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Notifications", SyntheticContext.POST)));
-        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate("Agent - Docker Pull", SyntheticContext.PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.toolInstall(), SyntheticContext.PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.checkout(), SyntheticContext.PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.postBuild(), SyntheticContext.POST)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.notifications(), SyntheticContext.POST)));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.dockerPull(), SyntheticContext.PRE)));
     }
 
     private Predicate<FlowNode> syntheticStagePredicate(final String stageName,

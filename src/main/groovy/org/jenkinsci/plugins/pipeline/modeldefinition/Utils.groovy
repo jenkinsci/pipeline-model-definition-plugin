@@ -161,6 +161,12 @@ public class Utils {
         }
     }
 
+    /**
+     * Marks the containing stage with this name as a synthetic stage, with the appropriate {@link SyntheticContext}.
+     *
+     * @param stageName
+     * @param context
+     */
     @Whitelisted
     static void markSyntheticStage(String stageName, SyntheticContext context) {
         CpsThread thread = CpsThread.current()
@@ -172,5 +178,4 @@ public class Utils {
 
         currentNode.actions.add(new SyntheticStageMarkerAction(context))
     }
-
 }
