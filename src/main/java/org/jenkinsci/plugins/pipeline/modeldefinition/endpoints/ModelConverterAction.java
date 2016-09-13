@@ -71,7 +71,7 @@ public class ModelConverterAction implements RootAction {
 
     @SuppressWarnings("unused")
     @RequirePOST
-    public HttpResponse doToGroovy(StaplerRequest req) {
+    public HttpResponse doToJenkinsfile(StaplerRequest req) {
         Jenkins.getInstance().checkPermission(READ);
 
         JSONObject result = new JSONObject();
@@ -96,7 +96,7 @@ public class ModelConverterAction implements RootAction {
                 result.accumulate("errors", errors);
             } else {
                 result.accumulate("result", "success");
-                result.accumulate("groovy", pipelineDef.toPrettyGroovy());
+                result.accumulate("jenkinsfile", pipelineDef.toPrettyGroovy());
             }
         } catch (Exception je) {
             result.accumulate("result", "failure");
@@ -115,7 +115,7 @@ public class ModelConverterAction implements RootAction {
 
         JSONObject result = new JSONObject();
 
-        String groovyAsString = req.getParameter("groovy");
+        String groovyAsString = req.getParameter("jenkinsfile");
 
         try {
             ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
