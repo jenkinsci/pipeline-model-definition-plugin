@@ -108,6 +108,16 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         return prettyLines.join("\n")
     }
 
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        stages.removeSourceLocation()
+        notifications.removeSourceLocation()
+        postBuild.removeSourceLocation()
+        environment.removeSourceLocation()
+        tools.removeSourceLocation()
+    }
+
     private String indent(int count) {
         return "  " * count
     }

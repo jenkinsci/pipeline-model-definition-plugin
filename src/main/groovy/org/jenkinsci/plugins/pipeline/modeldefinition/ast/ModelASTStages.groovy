@@ -71,4 +71,12 @@ public final class ModelASTStages extends ModelASTElement {
         }.join("\n")
         return "stages {\n${stagesString}\n}\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        stages.each { s ->
+            s.removeSourceLocation()
+        }
+    }
 }

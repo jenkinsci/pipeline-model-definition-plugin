@@ -71,4 +71,13 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
             v.toGroovy()
         }.join(", ")
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+
+        arguments.each { v ->
+            v.removeSourceLocation()
+        }
+    }
 }

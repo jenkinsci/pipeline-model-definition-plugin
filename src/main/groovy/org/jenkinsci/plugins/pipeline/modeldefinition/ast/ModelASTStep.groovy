@@ -48,4 +48,10 @@ public class ModelASTStep extends ModelASTElement {
     public String toGroovy() {
         return "${name}(${args.toGroovy()})"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        args.removeSourceLocation()
+    }
 }

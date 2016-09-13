@@ -67,4 +67,10 @@ public final class ModelASTAgent extends ModelASTElement {
         }
         return "agent ${argStr}\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        args.removeSourceLocation()
+    }
 }

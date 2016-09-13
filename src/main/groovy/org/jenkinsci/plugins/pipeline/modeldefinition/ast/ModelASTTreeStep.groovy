@@ -50,4 +50,12 @@ public class ModelASTTreeStep extends ModelASTStep {
         return retString
     }
 
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        children.each { c ->
+            c.removeSourceLocation()
+        }
+    }
+
 }

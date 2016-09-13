@@ -66,4 +66,14 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
             "${k.toGroovy()}: ${v.toGroovy()}"
         }.join(", ")
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+
+        arguments.each { k, v ->
+            k.removeSourceLocation()
+            v.removeSourceLocation()
+        }
+    }
 }
