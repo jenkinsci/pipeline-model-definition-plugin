@@ -7,7 +7,7 @@ pipeline {
         jdk "Oracle JDK 8u40"
     }
 
-    // Run on any executor.
+    // Run on executors with the "docker" label, because it's either that or Windows here.
     agent label:"docker"
 
     // The order that sections are specified doesn't matter - this will still be run
