@@ -8,7 +8,7 @@ pipeline {
     }
 
     // Run on executors with the "docker" label, because it's either that or Windows here.
-    agent label:"docker"
+    agent label:"docker && !spinach"
 
     // The order that sections are specified doesn't matter - this will still be run
     // after the stages, even though it's specified before the stages.
