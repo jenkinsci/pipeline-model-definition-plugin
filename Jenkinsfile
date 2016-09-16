@@ -10,6 +10,12 @@ pipeline {
     // Run on executors with the "docker" label, because it's either that or Windows here.
     agent label:"docker"
 
+    // Make sure we have GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL set due to machine weirdness.
+    environment {
+        GIT_COMMITTER_NAME = "jenkins"
+        GIT_COMMITTER_EMAIL = "jenkins@jenkins.io"
+    }
+    
     // The order that sections are specified doesn't matter - this will still be run
     // after the stages, even though it's specified before the stages.
     postBuild {
