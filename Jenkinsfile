@@ -4,7 +4,7 @@ pipeline {
     // Make sure that the tools we need are installed and on the path.
     tools {
         maven "mvn"
-        jdk "Oracle JDK 8u40"
+        jdk "jdk8"
     }
 
     // Run on executors with the "docker" label, because it's either that or Windows here.
