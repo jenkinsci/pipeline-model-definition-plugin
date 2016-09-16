@@ -91,7 +91,7 @@
           </systemProperties>
           <argLine>-Xmx4g -XX:MaxPermSize=256m</argLine>
           <reuseForks>true</reuseForks>
-          <forkCount>${concurrency}</forkCount>
+          <forkCount>2</forkCount>
           <!-- TODO: I hate the retrying tests but given the nondeterministic whackiness of JENKINS-37101... -->
           <rerunFailingTestsCount>3</rerunFailingTestsCount>
         </configuration>
