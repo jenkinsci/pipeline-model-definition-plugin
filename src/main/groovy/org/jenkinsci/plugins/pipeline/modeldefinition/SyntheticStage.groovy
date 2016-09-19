@@ -22,15 +22,34 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
-public enum SyntheticContext {
-    /**
-     * A synthetic stage run before any user-specified stages
-     */
-    PRE,
-    /**
-     * A synthetic stage run after all user-specified stages
-     */
-    POST
+package org.jenkinsci.plugins.pipeline.modeldefinition
+
+
+class SyntheticStage {
+    public static final String SYNTHETIC_STAGE_TAG = "SYNTHETIC_STAGE"
+
+    public static final String SYNTHETIC_PRE = "PRE"
+
+    public static final String SYNTHETIC_POST = "POST"
+
+    static String checkout() {
+        return "Checkout SCM"
+    }
+
+    static String dockerPull() {
+        return "Agent - Docker Pull"
+    }
+
+    static String toolInstall() {
+        return "Tool Install"
+    }
+
+    static String notifications() {
+        return "Notifications"
+    }
+
+    static String postBuild() {
+        return "Post Build Actions"
+    }
 }

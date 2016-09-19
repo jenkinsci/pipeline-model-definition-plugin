@@ -41,7 +41,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import java.lang.reflect.ParameterizedType
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames.SYNTHETIC_STAGE_TAG
+import static SyntheticStage.SYNTHETIC_STAGE_TAG
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -163,13 +163,13 @@ public class Utils {
     }
 
     /**
-     * Marks the containing stage with this name as a synthetic stage, with the appropriate {@link SyntheticContext}.
+     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
      *
      * @param stageName
      * @param context
      */
     @Whitelisted
-    static void markSyntheticStage(String stageName, SyntheticContext context) {
+    static void markSyntheticStage(String stageName, String context) {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
@@ -180,7 +180,7 @@ public class Utils {
         if (currentNode.getAction(TagsAction.class) == null) {
             currentNode.actions.add(new TagsAction())
         }
-        currentNode.getAction(TagsAction.class).addTag(SYNTHETIC_STAGE_TAG, context.toString())
+        currentNode.getAction(TagsAction.class).addTag(SYNTHETIC_STAGE_TAG, context)
     }
 
     @Whitelisted

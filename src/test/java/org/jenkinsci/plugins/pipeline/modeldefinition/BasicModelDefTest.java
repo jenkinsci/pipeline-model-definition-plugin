@@ -29,7 +29,6 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -49,7 +48,9 @@ import org.jvnet.hudson.test.Issue;
 import java.util.Collection;
 import java.util.List;
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames.SYNTHETIC_STAGE_TAG;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStage.SYNTHETIC_POST;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStage.SYNTHETIC_PRE;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStage.SYNTHETIC_STAGE_TAG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -175,22 +176,22 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         DepthFirstScanner scanner = new DepthFirstScanner();
 
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.toolInstall(), SyntheticContext.PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.checkout(), SyntheticContext.PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.postBuild(), SyntheticContext.POST)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.notifications(), SyntheticContext.POST)));
-        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.dockerPull(), SyntheticContext.PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.toolInstall(), SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.checkout(), SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.postBuild(), SYNTHETIC_POST)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.notifications(), SYNTHETIC_POST)));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.dockerPull(), SYNTHETIC_PRE)));
     }
 
     private Predicate<FlowNode> syntheticStagePredicate(final String stageName,
-                                                        final SyntheticContext context) {
+                                                        final String context) {
         return new Predicate<FlowNode>() {
             @Override
             public boolean apply(FlowNode input) {
                 return input.getDisplayName().equals(stageName) &&
                         input.getAction(TagsAction.class) != null &&
                         input.getAction(TagsAction.class).getTagValue(SYNTHETIC_STAGE_TAG) != null &&
-                        input.getAction(TagsAction.class).getTagValue(SYNTHETIC_STAGE_TAG).equals(context.toString());
+                        input.getAction(TagsAction.class).getTagValue(SYNTHETIC_STAGE_TAG).equals(context);
             }
         };
     }

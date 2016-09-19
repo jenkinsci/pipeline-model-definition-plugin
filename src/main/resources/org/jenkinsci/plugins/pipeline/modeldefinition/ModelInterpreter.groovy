@@ -27,7 +27,6 @@ import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
@@ -69,8 +68,8 @@ public class ModelInterpreter implements Serializable {
                     toolsBlock(root.agent, root.tools) {
                         // If we have an agent and script.scm isn't null, run checkout scm
                         if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                            script.stage(SyntheticStageNames.checkout()) {
-                                Utils.markSyntheticStage(SyntheticStageNames.checkout(), SyntheticContext.PRE)
+                            script.stage(SyntheticStage.checkout()) {
+                                Utils.markSyntheticStage(SyntheticStage.checkout(), SyntheticStage.SYNTHETIC_PRE)
                                 script.checkout script.scm
                             }
                         }
@@ -102,8 +101,8 @@ public class ModelInterpreter implements Serializable {
                             catchRequiredContextForNode(root.agent) {
                                 List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
                                 if (postBuildClosures.size() > 0) {
-                                    script.stage(SyntheticStageNames.postBuild()) {
-                                        Utils.markSyntheticStage(SyntheticStageNames.postBuild(), SyntheticContext.POST)
+                                    script.stage(SyntheticStage.postBuild()) {
+                                        Utils.markSyntheticStage(SyntheticStage.postBuild(), SyntheticStage.SYNTHETIC_POST)
 
                                         for (int i = 0; i < postBuildClosures.size(); i++) {
                                             Closure c = postBuildClosures.get(i)
@@ -130,8 +129,8 @@ public class ModelInterpreter implements Serializable {
 
                     catchRequiredContextForNode(root.agent, true) {
                         if (notificationClosures.size() > 0) {
-                            script.stage(SyntheticStageNames.notifications()) {
-                                Utils.markSyntheticStage(SyntheticStageNames.notifications(), SyntheticContext.POST)
+                            script.stage(SyntheticStage.notifications()) {
+                                Utils.markSyntheticStage(SyntheticStage.notifications(), SyntheticStage.SYNTHETIC_POST)
                                 for (int i = 0; i < notificationClosures.size(); i++) {
                                     Closure c = notificationClosures.get(i)
                                     c.delegate = script
@@ -181,8 +180,8 @@ public class ModelInterpreter implements Serializable {
         if (agent.hasAgent() && tools != null) {
             def toolEnv = []
             def toolsList = tools.getToolEntries()
-            script.stage(SyntheticStageNames.toolInstall()) {
-                Utils.markSyntheticStage(SyntheticStageNames.toolInstall(), SyntheticContext.PRE)
+            script.stage(SyntheticStage.toolInstall()) {
+                Utils.markSyntheticStage(SyntheticStage.toolInstall(), SyntheticStage.SYNTHETIC_PRE)
 
                 for (int i = 0; i < toolsList.size(); i++) {
                     def entry = toolsList.get(i)
@@ -227,8 +226,8 @@ public class ModelInterpreter implements Serializable {
     def dockerOrWithout(Agent agent, Closure body) {
         if (agent.docker != null) {
             return {
-                script.stage(SyntheticStageNames.dockerPull()) {
-                    Utils.markSyntheticStage(SyntheticStageNames.dockerPull(), SyntheticContext.PRE)
+                script.stage(SyntheticStage.dockerPull()) {
+                    Utils.markSyntheticStage(SyntheticStage.dockerPull(), SyntheticStage.SYNTHETIC_PRE)
                     script.getProperty("docker").image(agent.docker).pull()
                 }
                 script.getProperty("docker").image(agent.docker).inside {
