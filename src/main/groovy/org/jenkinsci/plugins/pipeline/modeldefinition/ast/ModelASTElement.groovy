@@ -74,4 +74,11 @@ public abstract class ModelASTElement {
         // No-op
     }
 
+    /**
+     * Removes the source location value from this element.
+     */
+    public void removeSourceLocation() {
+        sourceLocation = null
+    }
+
 }

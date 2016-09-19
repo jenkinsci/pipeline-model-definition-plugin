@@ -49,4 +49,10 @@ public final class ModelASTBranch extends ModelASTElement {
     public String toGroovy() {
         return steps.collect { it.toGroovy() }.join("\n") + "\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        steps.each { it.removeSourceLocation() }
+    }
 }

@@ -67,4 +67,10 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     public String toGroovy() {
         return "${condition} {\n${branch.toGroovy()}\n}\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        branch.removeSourceLocation()
+    }
 }

@@ -35,4 +35,10 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
         return value.toGroovy()
     }
 
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        value.removeSourceLocation()
+    }
+
 }

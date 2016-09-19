@@ -27,12 +27,17 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import java.lang.reflect.ParameterizedType
 
@@ -177,4 +182,17 @@ public class Utils {
         }
         currentNode.getAction(TagsAction.class).addTag(SYNTHETIC_STAGE_TAG, context.toString())
     }
+
+    @Whitelisted
+    static void attachExecutionModel(CpsScript script) {
+        WorkflowRun r = script.$build()
+        ModelASTPipelineDef model = Converter.parseFromCpsScript(script)
+
+        ModelASTStages stages = model.stages
+
+        stages.removeSourceLocation()
+
+        r.addAction(new ExecutionModelAction(stages))
+    }
+
 }
