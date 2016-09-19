@@ -74,4 +74,12 @@ public final class ModelASTPostBuild extends ModelASTElement {
     public String toGroovy() {
         return "postBuild {\n${conditions.collect { it.toGroovy() }.join("\n")}\n}\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        conditions.each { c ->
+            c.removeSourceLocation()
+        }
+    }
 }

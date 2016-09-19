@@ -76,4 +76,14 @@ public final class ModelASTEnvironment extends ModelASTElement {
         }.join("\n")
         return "environment {\n${keysAndValues}\n}\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+
+        variables.each { k, v ->
+            k.removeSourceLocation()
+            v.removeSourceLocation()
+        }
+    }
 }

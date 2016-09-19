@@ -75,4 +75,13 @@ public final class ModelASTTools extends ModelASTElement {
         }.join("\n")
         return "tools {\n${keysAndValues}\n}\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        tools.each { k, v ->
+            k.removeSourceLocation()
+            v.removeSourceLocation()
+        }
+    }
 }

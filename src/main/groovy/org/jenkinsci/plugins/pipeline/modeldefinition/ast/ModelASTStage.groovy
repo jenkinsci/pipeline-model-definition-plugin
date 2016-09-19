@@ -65,4 +65,12 @@ public final class ModelASTStage extends ModelASTElement {
 
         return retString.toString()
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        branches.each { b ->
+            b.removeSourceLocation()
+        }
+    }
 }

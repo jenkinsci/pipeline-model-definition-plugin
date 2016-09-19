@@ -72,4 +72,13 @@ public final class ModelASTNotifications extends ModelASTElement {
     public String toGroovy() {
         return "notifications {\n${conditions.collect { it.toGroovy() }.join("\n")}\n}\n"
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+
+        conditions.each { c ->
+            c.removeSourceLocation()
+        }
+    }
 }

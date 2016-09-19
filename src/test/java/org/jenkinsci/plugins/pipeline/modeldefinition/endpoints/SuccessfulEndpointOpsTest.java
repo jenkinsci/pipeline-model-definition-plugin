@@ -105,9 +105,9 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void testSuccessfulToGroovy() throws Exception {
+    public void testSuccessfulToJenkinsfile() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toGroovy"), HttpMethod.POST);
+        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
         String simpleJson = fileContentsFromResources("json/" + configName + ".json");
 
         assertNotNull(simpleJson);
@@ -123,7 +123,7 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
         JSONObject resultData = result.getJSONObject("data");
         assertNotNull(resultData);
 
-        String rawGroovy = resultData.getString("groovy");
+        String rawGroovy = resultData.getString("jenkinsfile");
         assertNotNull(rawGroovy);
 
         ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(rawGroovy);
@@ -138,7 +138,7 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
 
         assertNotNull(initialGroovy);
 
-        NameValuePair pair = new NameValuePair("groovy", initialGroovy);
+        NameValuePair pair = new NameValuePair("jenkinsfile", initialGroovy);
         req.setRequestParameters(Collections.singletonList(pair));
 
         String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
