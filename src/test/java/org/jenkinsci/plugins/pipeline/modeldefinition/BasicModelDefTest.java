@@ -23,11 +23,16 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.google.common.base.Predicate;
 import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
@@ -40,8 +45,12 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import java.util.Collection;
 import java.util.List;
 
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStage.SYNTHETIC_POST;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStage.SYNTHETIC_PRE;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStage.SYNTHETIC_STAGE_TAG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -142,6 +151,49 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] timeout", b);
         j.assertLogContains("hello", b);
+    }
+
+    @Test
+    public void syntheticStages() throws Exception {
+        prepRepoWithJenkinsfile("syntheticStages");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("[Pipeline] { (Tool Install)", b);
+        j.assertLogContains("[Pipeline] { (Checkout SCM)", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("I AM A POST-BUILD", b);
+        j.assertLogNotContains("I HAVE FAILED", b);
+        j.assertLogContains("I HAVE SUCCEEDED", b);
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.toolInstall(), SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.checkout(), SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.postBuild(), SYNTHETIC_POST)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.notifications(), SYNTHETIC_POST)));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.dockerPull(), SYNTHETIC_PRE)));
+    }
+
+    private Predicate<FlowNode> syntheticStagePredicate(final String stageName,
+                                                        final String context) {
+        return new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(FlowNode input) {
+                return input.getDisplayName().equals(stageName) &&
+                        input.getAction(TagsAction.class) != null &&
+                        input.getAction(TagsAction.class).getTagValue(SYNTHETIC_STAGE_TAG) != null &&
+                        input.getAction(TagsAction.class).getTagValue(SYNTHETIC_STAGE_TAG).equals(context);
+            }
+        };
     }
 
     @Test

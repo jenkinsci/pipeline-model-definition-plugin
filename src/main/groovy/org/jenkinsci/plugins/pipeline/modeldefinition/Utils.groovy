@@ -27,26 +27,20 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.workflow.actions.TagsAction
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.ParameterizedType
+
+import static SyntheticStage.SYNTHETIC_STAGE_TAG
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -167,6 +161,27 @@ public class Utils {
         }
     }
 
+    /**
+     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
+     *
+     * @param stageName
+     * @param context
+     */
+    @Whitelisted
+    static void markSyntheticStage(String stageName, String context) {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        FlowNode currentNode = execution.currentHeads.find { n ->
+            n?.displayName?.equals(stageName)
+        }
+
+        if (currentNode.getAction(TagsAction.class) == null) {
+            currentNode.actions.add(new TagsAction())
+        }
+        currentNode.getAction(TagsAction.class).addTag(SYNTHETIC_STAGE_TAG, context)
+    }
+
     @Whitelisted
     static void attachExecutionModel(CpsScript script) {
         WorkflowRun r = script.$build()
@@ -178,6 +193,5 @@ public class Utils {
 
         r.addAction(new ExecutionModelAction(stages))
     }
-
 
 }

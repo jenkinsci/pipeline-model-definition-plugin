@@ -58,7 +58,6 @@ public class ModelInterpreter implements Serializable {
 
         Root root = m.toNestedModel()
         Throwable firstError
-
         if (root != null) {
             // Entire build, including notifications, runs in the withEnv.
             script.withEnv(root.getEnvVars()) {
@@ -67,39 +66,44 @@ public class ModelInterpreter implements Serializable {
                 // We save the caught error, if any, for throwing at the end of the build.
                 nodeOrDockerOrNone(root.agent) {
                     toolsBlock(root.agent, root.tools) {
-                            // If we have an agent and script.scm isn't null, run checkout scm
-                            if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                        // If we have an agent and script.scm isn't null, run checkout scm
+                        if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                            script.stage(SyntheticStage.checkout()) {
+                                Utils.markSyntheticStage(SyntheticStage.checkout(), SyntheticStage.SYNTHETIC_PRE)
                                 script.checkout script.scm
                             }
+                        }
 
-                            for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                Stage thisStage = root.stages.getStages().get(i)
+                        for (int i = 0; i < root.stages.getStages().size(); i++) {
+                            Stage thisStage = root.stages.getStages().get(i)
 
-                                script.stage(thisStage.name) {
-                                    if (firstError == null) {
-                                        try {
-                                            catchRequiredContextForNode(root.agent) {
-                                                Closure closureToCall = thisStage.closureWrapper.closure
-                                                closureToCall.delegate = script
-                                                closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
-                                                closureToCall.call()
-                                            }.call()
-                                        } catch (Exception e) {
-                                            script.echo "Error in stages execution: ${e.getMessage()}"
-                                            script.getProperty("currentBuild").result = Result.FAILURE
-                                            if (firstError == null) {
-                                                firstError = e
-                                            }
+                            script.stage(thisStage.name) {
+                                if (firstError == null) {
+                                    try {
+                                        catchRequiredContextForNode(root.agent) {
+                                            Closure closureToCall = thisStage.closureWrapper.closure
+                                            closureToCall.delegate = script
+                                            closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
+                                            closureToCall.call()
+                                        }.call()
+                                    } catch (Exception e) {
+                                        script.echo "Error in stages execution: ${e.getMessage()}"
+                                        script.getProperty("currentBuild").result = Result.FAILURE
+                                        if (firstError == null) {
+                                            firstError = e
                                         }
                                     }
                                 }
                             }
+                        }
 
                         try {
                             catchRequiredContextForNode(root.agent) {
                                 List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
                                 if (postBuildClosures.size() > 0) {
-                                    script.stage("Post Build Actions") {
+                                    script.stage(SyntheticStage.postBuild()) {
+                                        Utils.markSyntheticStage(SyntheticStage.postBuild(), SyntheticStage.SYNTHETIC_POST)
+
                                         for (int i = 0; i < postBuildClosures.size(); i++) {
                                             Closure c = postBuildClosures.get(i)
                                             c.delegate = script
@@ -125,7 +129,8 @@ public class ModelInterpreter implements Serializable {
 
                     catchRequiredContextForNode(root.agent, true) {
                         if (notificationClosures.size() > 0) {
-                            script.stage("Notifications") {
+                            script.stage(SyntheticStage.notifications()) {
+                                Utils.markSyntheticStage(SyntheticStage.notifications(), SyntheticStage.SYNTHETIC_POST)
                                 for (int i = 0; i < notificationClosures.size(); i++) {
                                     Closure c = notificationClosures.get(i)
                                     c.delegate = script
@@ -175,14 +180,18 @@ public class ModelInterpreter implements Serializable {
         if (agent.hasAgent() && tools != null) {
             def toolEnv = []
             def toolsList = tools.getToolEntries()
-            for (int i = 0; i < toolsList.size(); i++) {
-                def entry = toolsList.get(i)
-                String k = entry.get(0)
-                String v= entry.get(1)
+            script.stage(SyntheticStage.toolInstall()) {
+                Utils.markSyntheticStage(SyntheticStage.toolInstall(), SyntheticStage.SYNTHETIC_PRE)
 
-                String toolPath = script.tool(name:v, type:Tools.typeForKey(k))
+                for (int i = 0; i < toolsList.size(); i++) {
+                    def entry = toolsList.get(i)
+                    String k = entry.get(0)
+                    String v = entry.get(1)
 
-                toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+                    String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
+
+                    toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+                }
             }
 
             return {
@@ -217,6 +226,10 @@ public class ModelInterpreter implements Serializable {
     def dockerOrWithout(Agent agent, Closure body) {
         if (agent.docker != null) {
             return {
+                script.stage(SyntheticStage.dockerPull()) {
+                    Utils.markSyntheticStage(SyntheticStage.dockerPull(), SyntheticStage.SYNTHETIC_PRE)
+                    script.getProperty("docker").image(agent.docker).pull()
+                }
                 script.getProperty("docker").image(agent.docker).inside {
                     body.call()
                 }
