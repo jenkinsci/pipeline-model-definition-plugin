@@ -30,7 +30,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.util.VirtualFile;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext;
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticStageMarkerAction;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
@@ -40,6 +40,7 @@ import org.jvnet.hudson.test.Issue;
 
 import java.util.Collection;
 
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames.SYNTHETIC_STAGE_TAG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -177,12 +178,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         return new Predicate<FlowNode>() {
             @Override
             public boolean apply(FlowNode input) {
-                if (input.getDisplayName().equals(stageName) &&
-                        input.getAction(SyntheticStageMarkerAction.class) != null &&
-                        input.getAction(SyntheticStageMarkerAction.class).getContext().equals(context)) {
-                    return true;
-                }
-                return false;
+                return input.getDisplayName().equals(stageName) &&
+                        input.getAction(TagsAction.class) != null &&
+                        input.getAction(TagsAction.class).getTagValue(SYNTHETIC_STAGE_TAG) != null &&
+                        input.getAction(TagsAction.class).getTagValue(SYNTHETIC_STAGE_TAG).equals(context.toString());
             }
         };
     }

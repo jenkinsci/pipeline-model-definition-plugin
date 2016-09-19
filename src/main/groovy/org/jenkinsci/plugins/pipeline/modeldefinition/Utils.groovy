@@ -27,20 +27,16 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticStageMarkerAction
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-import org.jenkinsci.plugins.workflow.actions.StageAction
+import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
-import org.jenkinsci.plugins.workflow.cps.nodes.StepNode
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
 import java.lang.reflect.ParameterizedType
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticStageMarkerAction.Context;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames.SYNTHETIC_STAGE_TAG
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -176,6 +172,9 @@ public class Utils {
             n?.displayName?.equals(stageName)
         }
 
-        currentNode.actions.add(new SyntheticStageMarkerAction(context))
+        if (currentNode.getAction(TagsAction.class) == null) {
+            currentNode.actions.add(new TagsAction())
+        }
+        currentNode.getAction(TagsAction.class).addTag(SYNTHETIC_STAGE_TAG, context.toString())
     }
 }

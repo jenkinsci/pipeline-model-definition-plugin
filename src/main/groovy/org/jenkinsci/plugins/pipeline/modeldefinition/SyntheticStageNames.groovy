@@ -27,6 +27,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 
 class SyntheticStageNames {
+    public static final String SYNTHETIC_STAGE_TAG = "SYNTHETIC_STAGE"
+
     static String checkout() {
         return "Checkout SCM"
     }
