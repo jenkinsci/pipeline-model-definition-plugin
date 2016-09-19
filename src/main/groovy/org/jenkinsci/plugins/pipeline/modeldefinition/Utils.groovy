@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.SyntheticContext
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
