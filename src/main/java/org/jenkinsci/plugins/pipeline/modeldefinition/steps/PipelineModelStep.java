@@ -26,8 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
 import groovy.lang.Closure;
 import hudson.Extension;
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStep;
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepDescriptor;

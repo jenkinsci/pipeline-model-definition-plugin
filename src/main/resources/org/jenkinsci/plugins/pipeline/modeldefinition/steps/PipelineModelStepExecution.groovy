@@ -30,13 +30,17 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.ClosureModelTranslator
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepExecution
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 
 /**
@@ -49,7 +53,7 @@ public class PipelineModelStepExecution extends GroovyStepExecution implements M
         CpsClosure closure = ((PipelineModelStep)getStep()).closure
 
         // Attach the stages model to the run for introspection etc.
-        Utils.attachExecutionModel(currentBuild)
+        attachExecutionModel()
         ClosureModelTranslator translator = new ClosureModelTranslator(Root.class)
 
         closure.delegate = translator
@@ -252,4 +256,16 @@ public class PipelineModelStepExecution extends GroovyStepExecution implements M
             return false
         }
     }
+
+    private void attachExecutionModel() {
+        WorkflowRun r = currentBuild.rawBuild
+        ModelASTPipelineDef model = Converter.parseFromRun(r)
+
+        ModelASTStages stages = model.stages
+
+        stages.removeSourceLocation()
+
+        r.addAction(new ExecutionModelAction(stages))
+    }
+
 }
