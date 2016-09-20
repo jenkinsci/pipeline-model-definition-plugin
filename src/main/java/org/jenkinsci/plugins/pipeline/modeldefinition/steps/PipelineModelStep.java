@@ -35,11 +35,11 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class ModelInterpreterStep extends GroovyStep {
+public class PipelineModelStep extends GroovyStep {
     private final Closure closure;
 
     @DataBoundConstructor
-    public ModelInterpreterStep(Closure closure) {
+    public PipelineModelStep(Closure closure) {
         this.closure = closure;
     }
 

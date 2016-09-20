@@ -49,7 +49,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.ModelInterpreterStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.PipelineModelStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
@@ -98,7 +98,7 @@ class JSONParser {
 
         def sectionsSeen = new HashSet()
 
-        String stepName = StepDescriptor.all().find { it instanceof ModelInterpreterStep.DescriptorImpl }?.functionName
+        String stepName = StepDescriptor.all().find { it instanceof PipelineModelStep.DescriptorImpl }?.functionName
 
         JSONObject pipelineJson = jsonObject.getJSONObject(stepName)
         pipelineJson.keySet().each { sectionName ->

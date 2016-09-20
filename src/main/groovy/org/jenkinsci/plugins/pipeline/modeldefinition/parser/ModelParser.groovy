@@ -53,7 +53,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.ModelInterpreterStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.PipelineModelStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
@@ -101,7 +101,7 @@ class ModelParser {
      * that into {@link ModelASTPipelineDef}
      */
     public @CheckForNull ModelASTPipelineDef parse(ModuleNode src) {
-        String stepName = StepDescriptor.all().find { it instanceof ModelInterpreterStep.DescriptorImpl }?.functionName
+        String stepName = StepDescriptor.all().find { it instanceof PipelineModelStep.DescriptorImpl }?.functionName
         // first, quickly ascertain if this module should be parsed at all
         // TODO: 'use script' escape hatch
         def pst = src.statementBlock.statements.find {

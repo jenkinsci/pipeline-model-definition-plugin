@@ -31,21 +31,12 @@ import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.ClosureModelTranslator
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
-
-import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepExecution
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 
 /**
@@ -53,9 +44,9 @@ import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
  *
  * @author Andrew Bayer
  */
-public class ModelInterpreterStepExecution extends GroovyStepExecution implements MethodMissingWrapper {
+public class PipelineModelStepExecution extends GroovyStepExecution implements MethodMissingWrapper {
     def call() {
-        CpsClosure closure = ((ModelInterpreterStep)getStep()).closure
+        CpsClosure closure = ((PipelineModelStep)getStep()).closure
 
         // Attach the stages model to the run for introspection etc.
         Utils.attachExecutionModel(currentBuild)
