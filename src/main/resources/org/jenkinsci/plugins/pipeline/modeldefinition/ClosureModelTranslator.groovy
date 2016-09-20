@@ -21,15 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import com.cloudbees.groovy.cps.NonCPS
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+
+import java.lang.reflect.ParameterizedType
 
 /**
  * CPS-transformed code for translating from the closure argument to the pipeline step into the runtime model.
@@ -37,7 +36,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
  * @author Andrew Bayer
  */
 public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
-    Map<String,Object> actualMap = [:]
+    Map<String, Object> actualMap = [:]
     Class<NestedModel> actualClass
 
     /**
@@ -77,11 +76,11 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
         }
 
         // If we're already in a MappedClosure, we may need to recurse if the value itself is a closure.
-        if (Utils.assignableFromWrapper(MappedClosure.class, actualClass) && argValue != null) {
+        if (MappedClosure.class.isAssignableFrom(actualClass) && argValue != null) {
             // If the containing class is a MappedClosure and the argument is a Closure, it's most likely a build responder,
             // In which case we don't recurse, or it's just normal nested MappedClosure fun, in which case we *do* recurse.
-            if (Utils.instanceOfWrapper(Closure.class, argValue)) {
-                if (Utils.assignableFromWrapper(AbstractBuildConditionResponder.class, actualClass)) {
+            if (Closure.class.isInstance(argValue)) {
+                if (AbstractBuildConditionResponder.class.isAssignableFrom(actualClass)) {
                     actualMap[methodName] = createStepsBlock(argValue)
                 } else {
                     def ctm = new ClosureModelTranslator(MappedClosure.class)
@@ -96,39 +95,39 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
             }
         } else {
             def resultValue
-            def actualFieldName = Utils.actualFieldName(actualClass, methodName)
+            def actualFieldName = actualFieldName(actualClass, methodName)
 
             // We care about the field name actually being a thing.
             if (actualFieldName != null) {
-                def actualType = Utils.actualFieldType(actualClass, methodName)
+                def actualType = actualFieldType(actualClass, methodName)
 
                 // Handle StepBlockWithOtherArgs *first*, since we won't recurse at all on them.
                 // If the field is an implementation of StepBlockWithOtherArgs, we need to just call its constructor with the args.
                 // Note that only Stage is a StepBlockWithOtherArgs currently, but that may be reused later.
-                if (Utils.assignableFromWrapper(StepBlockWithOtherArgs.class, actualType)) {
+                if (StepBlockWithOtherArgs.class.isAssignableFrom(actualType)) {
                     Object[] origArgs = args
                     List<Object> blockParams = []
                     for (int i = 0; i < origArgs.size(); i++) {
                         def thisArg = origArgs[i]
                         // If the argument is a Closure, create a StepsBlock of it.
-                        if (Utils.instanceOfWrapper(Closure.class, thisArg)) {
+                        if (Closure.class.isInstance(thisArg)) {
                             blockParams.add(createStepsBlock(thisArg))
                         } else {
                             // Otherwise, just add the parameter.
                             blockParams.add(thisArg)
                         }
                     }
-                    resultValue = actualType.newInstance(Utils.toObjectArray(blockParams))
+                    resultValue = actualType.newInstance(blockParams.toArray())
                 }
                 // If the argument is a Closure, we've got a few possibilities.
-                else if (argValue != null && Utils.instanceOfWrapper(Closure.class, argValue)) {
+                else if (argValue != null && Closure.class.isInstance(argValue)) {
 
                     // If it's a StepsBlock, create the object.
-                    if (Utils.assignableFromWrapper(StepsBlock.class, actualType)) {
+                    if (StepsBlock.class.isAssignableFrom(actualType)) {
                         resultValue = createStepsBlock(argValue)
                     }
                     // if it's a PropertiesToMap, we use PropertiesToMapTranslator to translate it into the right form.
-                    else if (Utils.assignableFromWrapper(PropertiesToMap.class, actualType)) {
+                    else if (PropertiesToMap.class.isAssignableFrom(actualType)) {
                         def ptm = new PropertiesToMapTranslator()
                         resolveClosure(argValue, ptm)
                         resultValue = ptm.toNestedModel(actualType)
@@ -139,7 +138,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
 
                         resolveClosure(argValue, ctm)
                         // If it's a ModelForm, the result value is the ModelForm equivalent of the Map.
-                        if (Utils.assignableFromWrapper(NestedModel.class, actualType)) {
+                        if (NestedModel.class.isAssignableFrom(actualType)) {
                             resultValue = ctm.toNestedModel()
                         } else {
                             // TODO: Put some kind of error handling in here. Shouldn't actually be possible to get here, but...
@@ -155,7 +154,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                 // Now that we've got a result value, do something with it!
                 // Behavior is a bit different if the field is a list - if so, we need to make sure the field is init'd,
                 // And add the value to the list. Otherwise, just set the field/value pair.
-                if (Utils.isFieldA(List.class, actualClass, methodName)) {
+                if (isFieldA(List.class, actualClass, methodName)) {
                     if (!actualMap.containsKey(actualFieldName)) {
                         actualMap[actualFieldName] = []
                     }
@@ -187,7 +186,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
 
     /**
      * Resolve an object that can be cast to {@link Closure} using a translator delegate, such as
-     * {@link ClosureModelTranslator} or {@link PropertiesToMapTranslator}
+     * {@link ClosureModelTranslator}.
      *
      * @param closureObj The object representing the closure block we're resolving
      * @param translator The translator delegate.
@@ -198,5 +197,50 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
         argClosure.resolveStrategy = Closure.DELEGATE_ONLY
         argClosure.call()
     }
-}
 
+    @NonCPS
+    private String actualFieldName(Class actualClass, String fieldName) {
+        if (actualClass.metaClass.getMetaProperty(fieldName) != null) {
+            return fieldName
+        } else if (actualClass.metaClass.getMetaProperty("${fieldName}s") != null) {
+            return "${fieldName}s"
+        } else {
+            return null
+        }
+    }
+
+    @NonCPS
+    private Class actualFieldType(Class actualClass, String fieldName) {
+        def actualFieldName = actualFieldName(actualClass, fieldName)
+        if (actualFieldName == null) {
+            return null
+        } else {
+            def field = actualClass.getDeclaredFields().find { !it.isSynthetic() && it.name == actualFieldName }
+            // If the field's a ParameterizedType, we need to check it to see if it's containing a Plumber class.
+            if (field.getGenericType() instanceof ParameterizedType) {
+                if (Map.class.isAssignableFrom(field.getType())) {
+                    return (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]
+                } else {
+                    // First class listed in the actual type arguments - we ignore anything past this because eh.
+                    return (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]
+                }
+            } else {
+                return field.getType()
+            }
+        }
+
+    }
+
+    @NonCPS
+    private boolean isFieldA(Class fieldType, Class actualClass, String fieldName) {
+        def actualFieldName = actualFieldName(actualClass, fieldName)
+        def realFieldType = actualClass.metaClass.getMetaProperty(actualFieldName)?.type
+
+        if (realFieldType == null) {
+            return false
+        } else {
+            return realFieldType == fieldType || fieldType.isAssignableFrom(realFieldType)
+        }
+    }
+
+}

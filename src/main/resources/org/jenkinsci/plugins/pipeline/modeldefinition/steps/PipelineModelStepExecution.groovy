@@ -21,17 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition
+
+
+package org.jenkinsci.plugins.pipeline.modeldefinition.steps
 
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.ClosureModelTranslator
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
+import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepExecution
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 
 /**
@@ -39,54 +48,50 @@ import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
  *
  * @author Andrew Bayer
  */
-public class ModelInterpreter implements Serializable {
-    private CpsScript script
+public class PipelineModelStepExecution extends GroovyStepExecution implements MethodMissingWrapper {
+    def call() {
+        CpsClosure closure = ((PipelineModelStep)getStep()).closure
 
-    public ModelInterpreter(CpsScript script) {
-        this.script = script
-    }
-
-    def call(CpsClosure closure) {
         // Attach the stages model to the run for introspection etc.
-        Utils.attachExecutionModel(script)
+        attachExecutionModel()
+        ClosureModelTranslator translator = new ClosureModelTranslator(Root.class)
 
-        ClosureModelTranslator m = new ClosureModelTranslator(Root.class)
-
-        closure.delegate = m
+        closure.delegate = translator
         closure.resolveStrategy = Closure.DELEGATE_ONLY
         closure.call()
 
-        Root root = m.toNestedModel()
+        Root root = translator.toNestedModel()
+
         Throwable firstError
 
         if (root != null) {
             // Entire build, including notifications, runs in the withEnv.
-            script.withEnv(root.getEnvVars()) {
+            withEnv(root.getEnvVars()) {
                 // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                 // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
                 // We save the caught error, if any, for throwing at the end of the build.
                 nodeOrDockerOrNone(root.agent) {
                     toolsBlock(root.agent, root.tools) {
-                            // If we have an agent and script.scm isn't null, run checkout scm
-                            if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                script.checkout script.scm
+                            // If we have an agent and scm isn't null, run checkout scm
+                            if (root.agent.hasAgent() && hasScmContext()) {
+                                checkout scm
                             }
 
                             for (int i = 0; i < root.stages.getStages().size(); i++) {
                                 Stage thisStage = root.stages.getStages().get(i)
 
-                                script.stage(thisStage.name) {
+                                stage(thisStage.name) {
                                     if (firstError == null) {
                                         try {
                                             catchRequiredContextForNode(root.agent) {
                                                 Closure closureToCall = thisStage.closureWrapper.closure
-                                                closureToCall.delegate = script
+                                                closureToCall.delegate = this
                                                 closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
                                                 closureToCall.call()
                                             }.call()
                                         } catch (Exception e) {
-                                            script.echo "Error in stages execution: ${e.getMessage()}"
-                                            script.getProperty("currentBuild").result = Result.FAILURE
+                                            echo "Error in stages execution: ${e.getMessage()}"
+                                            currentBuild.result = Result.FAILURE
                                             if (firstError == null) {
                                                 firstError = e
                                             }
@@ -97,12 +102,12 @@ public class ModelInterpreter implements Serializable {
 
                         try {
                             catchRequiredContextForNode(root.agent) {
-                                List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
+                                List<Closure> postBuildClosures = root.satisfiedPostBuilds(currentBuild)
                                 if (postBuildClosures.size() > 0) {
-                                    script.stage("Post Build Actions") {
+                                    stage("Post Build Actions") {
                                         for (int i = 0; i < postBuildClosures.size(); i++) {
                                             Closure c = postBuildClosures.get(i)
-                                            c.delegate = script
+                                            c.delegate = this
                                             c.resolveStrategy = Closure.DELEGATE_FIRST
                                             c.call()
                                         }
@@ -110,8 +115,8 @@ public class ModelInterpreter implements Serializable {
                                 }
                             }.call()
                         } catch (Exception e) {
-                            script.echo "Error in postBuild execution: ${e.getMessage()}"
-                            script.getProperty("currentBuild").result = Result.FAILURE
+                            echo "Error in postBuild execution: ${e.getMessage()}"
+                            currentBuild.result = Result.FAILURE
                             if (firstError == null) {
                                 firstError = e
                             }
@@ -121,14 +126,14 @@ public class ModelInterpreter implements Serializable {
 
                 try {
                     // And finally, run the notifications.
-                    List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
+                    List<Closure> notificationClosures = root.satisfiedNotifications(currentBuild)
 
                     catchRequiredContextForNode(root.agent, true) {
                         if (notificationClosures.size() > 0) {
-                            script.stage("Notifications") {
+                            stage("Notifications") {
                                 for (int i = 0; i < notificationClosures.size(); i++) {
                                     Closure c = notificationClosures.get(i)
-                                    c.delegate = script
+                                    c.delegate = this
                                     c.resolveStrategy = Closure.DELEGATE_FIRST
                                     c.call()
                                 }
@@ -136,8 +141,8 @@ public class ModelInterpreter implements Serializable {
                         }
                     }.call()
                 } catch (Exception e) {
-                    script.echo "Error in notifications execution: ${e.getMessage()}"
-                    script.getProperty("currentBuild").result = Result.FAILURE
+                    echo "Error in notifications execution: ${e.getMessage()}"
+                    currentBuild.result = Result.FAILURE
                     if (firstError == null) {
                         firstError = e
                     }
@@ -156,9 +161,9 @@ public class ModelInterpreter implements Serializable {
             } catch (MissingContextVariableException e) {
                 if (FilePath.class.equals(e.type) || Launcher.class.equals(e.type)) {
                     if (inNotifications) {
-                        script.error("Attempted to execute a notification step that requires a node context. Notifications do not run inside a 'node { ... }' block.")
+                        error("Attempted to execute a notification step that requires a node context. Notifications do not run inside a 'node { ... }' block.")
                     } else if (!agent.hasAgent()) {
-                        script.error("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
+                        error("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
                             "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.")
                     } else {
                         throw e
@@ -180,13 +185,13 @@ public class ModelInterpreter implements Serializable {
                 String k = entry.get(0)
                 String v= entry.get(1)
 
-                String toolPath = script.tool(name:v, type:Tools.typeForKey(k))
+                String toolPath = tool(name:v, type:Tools.typeForKey(k))
 
-                toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+                toolEnv.addAll(envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
             }
 
             return {
-                script.withEnv(toolEnv) {
+                withEnv(toolEnv) {
                     body.call()
                 }
             }
@@ -217,7 +222,7 @@ public class ModelInterpreter implements Serializable {
     def dockerOrWithout(Agent agent, Closure body) {
         if (agent.docker != null) {
             return {
-                script.getProperty("docker").image(agent.docker).inside {
+                docker.image(agent.docker).inside {
                     body.call()
                 }
             }
@@ -231,16 +236,36 @@ public class ModelInterpreter implements Serializable {
     def nodeWithLabelOrWithout(Agent agent, Closure body) {
         if (agent?.label != null) {
             return {
-                script.node(agent.label) {
+                node(agent.label) {
                     body.call()
                 }
             }
         } else {
             return {
-                script.node {
+                node {
                     body.call()
                 }
             }
         }
     }
+
+    boolean hasScmContext() {
+        try {
+            return scm != null
+        } catch (Exception e) {
+            return false
+        }
+    }
+
+    private void attachExecutionModel() {
+        WorkflowRun r = currentBuild.rawBuild
+        ModelASTPipelineDef model = Converter.parseFromRun(r)
+
+        ModelASTStages stages = model.stages
+
+        stages.removeSourceLocation()
+
+        r.addAction(new ExecutionModelAction(stages))
+    }
+
 }

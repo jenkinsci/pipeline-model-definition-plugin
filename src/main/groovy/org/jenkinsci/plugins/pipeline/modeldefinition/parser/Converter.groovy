@@ -31,14 +31,13 @@ import com.github.fge.jsonschema.main.JsonSchema
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.github.fge.jsonschema.report.ProcessingReport
 import net.sf.json.JSONObject
-import org.apache.commons.lang.reflect.FieldUtils
 import org.codehaus.groovy.control.CompilationFailedException
 import org.codehaus.groovy.control.CompilationUnit
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.SourceUnit
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import java.security.CodeSource
 import java.security.cert.Certificate
@@ -150,16 +149,15 @@ public class Converter {
     }
 
     /**
-     * Converts the raw script from a {@link CpsScript} into {@link ModelASTPipelineDef}
+     * Converts the raw script from a {@link WorkflowRun} into {@link ModelASTPipelineDef}
      *
-     * @param cpsScript The {@link CpsScript} to pull from.
+     * @param run The {@link WorkflowRun} to pull from.
      * @return A parsed and validated {@link ModelASTPipelineDef}
      */
-    public static ModelASTPipelineDef parseFromCpsScript(CpsScript cpsScript) {
-        CpsFlowExecution execution = (CpsFlowExecution) FieldUtils.readField(cpsScript, "execution", true)
+    public static ModelASTPipelineDef parseFromRun(WorkflowRun run) {
+        CpsFlowExecution execution = (CpsFlowExecution) run.execution
 
         String rawScript = execution.script
-
         return scriptToPipelineDef(rawScript)
     }
 

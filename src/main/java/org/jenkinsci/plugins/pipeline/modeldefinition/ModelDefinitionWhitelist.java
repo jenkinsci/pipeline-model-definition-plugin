@@ -22,33 +22,27 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition
+import hudson.Extension;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapperWhitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.ProxyWhitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.workflow.cps.steps.ingroovy.GroovyStepExecution
+import java.io.IOException;
 
-/**
- * Translates a closure containing one or more "foo = 'bar'" statements into a map.
- * @author Andrew Bayer
- */
-public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializable {
-    Map<String, Object> actualMap = [:]
+@Extension
+public class ModelDefinitionWhitelist extends ProxyWhitelist {
+    public ModelDefinitionWhitelist() throws IOException {
+        super(new MethodMissingWrapperWhitelist(), new StaticWhitelist(
+                "method java.util.Map containsKey java.lang.Object",
+                "method java.util.Collection isEmpty",
+                "method java.util.Map putAll java.util.Map",
+                "method java.util.Collection addAll java.util.Collection",
 
-    void setProperty(String s, args) {
-        actualMap.put(s, args)
-    }
-
-    public Map<String, Object> getMap() {
-        def mapCopy = [:]
-        mapCopy.putAll(actualMap)
-        return mapCopy
-    }
-
-    NestedModel toNestedModel(Class<NestedModel> c) {
-        NestedModel m = c.newInstance()
-        m.modelFromMap(actualMap)
-        return m
+                // Used for debugging - can probably be removed eventually
+                "staticField java.lang.System err",
+                "method java.io.PrintStream println java.lang.String"
+        ));
     }
 }

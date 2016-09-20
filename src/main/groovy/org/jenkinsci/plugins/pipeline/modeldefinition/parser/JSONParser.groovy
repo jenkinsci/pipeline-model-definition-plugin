@@ -30,7 +30,6 @@ import com.github.fge.jsonschema.report.ProcessingReport
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
-import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
@@ -50,9 +49,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.PipelineModelStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.CheckForNull
 
@@ -97,7 +98,9 @@ class JSONParser {
 
         def sectionsSeen = new HashSet()
 
-        JSONObject pipelineJson = jsonObject.getJSONObject(ModelStepLoader.STEP_NAME)
+        String stepName = StepDescriptor.all().find { it instanceof PipelineModelStep.DescriptorImpl }?.functionName
+
+        JSONObject pipelineJson = jsonObject.getJSONObject(stepName)
         pipelineJson.keySet().each { sectionName ->
             if (!sectionsSeen.add(sectionName)) {
                 errorCollector.error(pipelineDef, "Multiple occurences of the ${sectionName} section")
