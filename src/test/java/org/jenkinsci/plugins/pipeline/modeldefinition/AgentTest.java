@@ -87,6 +87,7 @@ public class AgentTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("The answer is 42", b);
+        j.assertLogContains("-v /tmp:/tmp", b);
     }
 
     @Test
