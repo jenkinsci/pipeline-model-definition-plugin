@@ -70,7 +70,7 @@ public class PipelineModelStepExecution extends GroovyStepExecution implements M
                 nodeOrDockerOrNone(root.agent) {
                     toolsBlock(root.agent, root.tools) {
                             // If we have an agent and scm isn't null, run checkout scm
-                            if (root.agent.hasAgent() && scm != null) {
+                            if (root.agent.hasAgent() && hasScmContext()) {
                                 checkout scm
                             }
 
@@ -243,6 +243,14 @@ public class PipelineModelStepExecution extends GroovyStepExecution implements M
                     body.call()
                 }
             }
+        }
+    }
+
+    boolean hasScmContext() {
+        try {
+            return scm != null
+        } catch (Exception e) {
+            return false
         }
     }
 }
