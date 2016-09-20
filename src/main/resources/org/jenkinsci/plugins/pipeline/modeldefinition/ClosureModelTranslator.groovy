@@ -21,15 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 
 /**
  * CPS-transformed code for translating from the closure argument to the pipeline step into the runtime model.
@@ -37,7 +33,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
  * @author Andrew Bayer
  */
 public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
-    Map<String,Object> actualMap = [:]
+    Map<String, Object> actualMap = [:]
     Class<NestedModel> actualClass
 
     /**
@@ -187,7 +183,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
 
     /**
      * Resolve an object that can be cast to {@link Closure} using a translator delegate, such as
-     * {@link ClosureModelTranslator} or {@link PropertiesToMapTranslator}
+     * {@link ClosureModelTranslator}.
      *
      * @param closureObj The object representing the closure block we're resolving
      * @param translator The translator delegate.
@@ -198,5 +194,5 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
         argClosure.resolveStrategy = Closure.DELEGATE_ONLY
         argClosure.call()
     }
-}
 
+}

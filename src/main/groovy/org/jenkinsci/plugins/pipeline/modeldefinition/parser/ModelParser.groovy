@@ -34,7 +34,6 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
-import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
@@ -54,9 +53,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.ModelInterpreterStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -100,10 +101,11 @@ class ModelParser {
      * that into {@link ModelASTPipelineDef}
      */
     public @CheckForNull ModelASTPipelineDef parse(ModuleNode src) {
+        String stepName = StepDescriptor.all().find { it instanceof ModelInterpreterStep.DescriptorImpl }?.functionName
         // first, quickly ascertain if this module should be parsed at all
         // TODO: 'use script' escape hatch
         def pst = src.statementBlock.statements.find {
-            matchMethodCall(it)?.methodAsString == ModelStepLoader.STEP_NAME
+            matchMethodCall(it)?.methodAsString == stepName
         }
         if (pst==null)      return null; // no 'pipeline', so this doesn't apply
 
@@ -112,7 +114,7 @@ class ModelParser {
         def pipelineBlock = matchBlockStatement(pst);
         if (pipelineBlock==null) {
             // We never get to the validator with this error
-            errorCollector.error(r,"Expected a block with the '${ModelStepLoader.STEP_NAME}' step")
+            errorCollector.error(r,"Expected a block with the '${stepName}' step")
             return null;
         }
 

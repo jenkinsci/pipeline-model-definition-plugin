@@ -27,24 +27,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 import java.lang.reflect.ParameterizedType;
 
@@ -168,9 +158,9 @@ public class Utils {
     }
 
     @Whitelisted
-    static void attachExecutionModel(CpsScript script) {
-        WorkflowRun r = script.$build()
-        ModelASTPipelineDef model = Converter.parseFromCpsScript(script)
+    static void attachExecutionModel(RunWrapper wrapper) {
+        WorkflowRun r = wrapper.rawBuild
+        ModelASTPipelineDef model = Converter.parseFromRun(r)
 
         ModelASTStages stages = model.stages
 
