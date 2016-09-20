@@ -51,13 +51,12 @@ public class PipelineModelStepExecution extends GroovyStepExecution implements M
         // Attach the stages model to the run for introspection etc.
         Utils.attachExecutionModel(currentBuild)
         ClosureModelTranslator translator = new ClosureModelTranslator(Root.class)
-        echo "Instantiated translator"
+
         closure.delegate = translator
         closure.resolveStrategy = Closure.DELEGATE_ONLY
         closure.call()
-        echo "Ran translator"
+
         Root root = translator.toNestedModel()
-        echo "Hey look, root: ${root}"
 
         Throwable firstError
 
