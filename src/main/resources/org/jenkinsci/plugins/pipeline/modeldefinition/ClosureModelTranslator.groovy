@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  * CPS-transformed code for translating from the closure argument to the pipeline step into the runtime model.
@@ -40,16 +41,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
     Map<String,Object> actualMap = [:]
     Class<NestedModel> actualClass
 
-    /**
-     * Placeholder to make sure 'agent none' works.
-     */
-    boolean none = false
-
-    /**
-     * Placeholder to make sure 'agent any' works.
-     */
-    boolean any = true
-
     ClosureModelTranslator(Class clazz) {
         actualClass = clazz
     }
@@ -59,6 +50,23 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
         m.modelFromMap(actualMap)
         return m
     }
+
+    /**
+     * Placeholder to make sure 'agent none' works.
+     */
+    @Whitelisted
+    public Object getNone() {
+        return none;
+    }
+
+    /**
+     * Placeholder to make sure 'agent any' works.
+     */
+    @Whitelisted
+    public Object getAny() {
+        return true;
+    }
+
 
     /**
      * Convenience method to allow for "foo 'bar'" style population of the underlying map.
