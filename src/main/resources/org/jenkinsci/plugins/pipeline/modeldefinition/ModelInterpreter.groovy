@@ -214,7 +214,7 @@ public class ModelInterpreter implements Serializable {
     def dockerOrWithout(Agent agent, Closure body) {
         if (agent.docker != null) {
             return {
-                script.getProperty("docker").image(agent.docker).inside(agent.args, {
+                script.getProperty("docker").image(agent.docker).inside(agent.dockerArgs, {
                     body.call()
                 })
             }
