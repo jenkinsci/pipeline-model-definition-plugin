@@ -42,6 +42,10 @@ import java.lang.reflect.ParameterizedType;
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Utils {
 
+    public static void unsafe() {
+        System.out.println("Look ma!");
+    }
+
     /**
      * Workaround for not having to whitelist isAssignableFrom, metaClass etc to determine whether a field on
      * a class is of a specific type.

@@ -36,7 +36,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
  *
  * @author Andrew Bayer
  */
-public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
+    public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
     Map<String,Object> actualMap = [:]
     Class<NestedModel> actualClass
 

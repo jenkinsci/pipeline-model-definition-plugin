@@ -38,31 +38,9 @@ import java.io.IOException;
  *
  * @author Andrew Bayer
  */
-@Extension
-public class ModelStepLoader extends GlobalVariable {
+public class ModelStepLoader {
     public static final String STEP_NAME = "pipeline";
 
-    @Override
-    @Nonnull
-    public String getName() {
-        return STEP_NAME;
-    }
-
-    @Override
-    @Nonnull
-    public Object getValue(@Nonnull CpsScript script) throws Exception {
-        // Make sure we've already loaded ClosureModelTranslator or load it now.
-        script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ClosureModelTranslator");
-        script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.PropertiesToMapTranslator");
-
-        return script.getClass()
-                .getClassLoader()
-                .loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter")
-                .getConstructor(CpsScript.class)
-                .newInstance(script);
-    }
-
-    // TODO: Remember to prune out debugging stuff from the whitelist in place of a better debugging setup.
     @Extension
     public static class ModelDefinitionWhitelist extends ProxyWhitelist {
         public ModelDefinitionWhitelist() throws IOException {
