@@ -58,9 +58,7 @@ public final class ModelASTStage extends ModelASTElement {
         StringBuilder retString = new StringBuilder()
         retString.append("stage(\"${name}\") {\n")
         if (config != null) {
-            retString.append("config {\n")
             retString.append(config.toGroovy())
-            retString.append("}\n")
             retString.append("steps {\n")
         }
         if (branches.size() > 1) {

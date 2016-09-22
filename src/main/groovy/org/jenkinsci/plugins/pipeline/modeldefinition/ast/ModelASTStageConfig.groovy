@@ -52,9 +52,9 @@ public final class ModelASTStageConfig extends ModelASTElement {
     public JSONObject toJSON() {
         JSONObject a = new JSONObject()
         if (agent != null) {
-            a.put("agent", agent.toJSON())
+            a.accumulate("agent", agent.toJSON())
         }
-        return new JSONObject().accumulate("config", a)
+        return a
     }
 
     @Override

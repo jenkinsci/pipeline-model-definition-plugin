@@ -11,13 +11,13 @@
         }
       }]
     }],
-    "config": {"config": {"agent": [    {
+    "config": {"agent": [    {
       "key": "label",
       "value":       {
         "isConstant": true,
         "value": "some-label"
       }
-    }]}}
+    }]}
   }],
   "agent":   {
     "isConstant": true,

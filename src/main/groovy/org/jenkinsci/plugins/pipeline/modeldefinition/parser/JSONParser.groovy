@@ -173,7 +173,7 @@ class JSONParser {
             }
             switch (configName) {
                 case 'agent':
-                    config.agent = parseAgent(j.getJSONObject("agent"))
+                    config.agent = parseAgent(j.get("agent"))
                     break
                 default:
                     errorCollector.error(config, "Undefined stage config section '${configName}'")
