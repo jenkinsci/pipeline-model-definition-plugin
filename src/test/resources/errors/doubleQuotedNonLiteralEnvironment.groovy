@@ -21,41 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import hudson.slaves.DumbSlave;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Test;
-
-/**
- * @author Andrew Bayer
- */
-public class EnvironmentTest extends AbstractModelDefTest {
-
-    @Test
-    public void simpleEnvironment() throws Exception {
-        prepRepoWithJenkinsfile("simpleEnvironment");
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("FOO is BAR", b);
+pipeline {
+    environment {
+        FOO = "BAR"
+        BUILD_NUM_ENV = "${currentBuild.getNumber()}"
     }
 
-    @Test
-    public void nonLiteralEnvironment() throws Exception {
-        prepRepoWithJenkinsfile("nonLiteralEnvironment");
+    agent label:"some-label"
 
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("FOO is BAR", b);
-        j.assertLogContains("BUILD_NUM_ENV is 1", b);
+    stages {
+        stage("foo") {
+            sh 'echo "FOO is $FOO"'
+            sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
+        }
     }
 }
+
+

@@ -102,6 +102,7 @@ public abstract class AbstractModelDefTest {
             "simplePostBuild",
             "simpleTools",
             "legacyMetaStepSyntax",
+            "nonLiteralEnvironment",
             "globalLibrarySuccess"
     );
 

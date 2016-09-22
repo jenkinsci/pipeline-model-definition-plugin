@@ -103,12 +103,12 @@ public class Root implements NestedModel, Serializable {
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
      *
-     * @return a list of "key=value" strings.
+     * @return a list of [key,value] lists.
      */
     @Whitelisted
-    List<String> getEnvVars() {
+    List<List<Object>> getEnvVars() {
         return environment.collect { k, v ->
-            "${k}=${v}"
+            [k, v]
         }
     }
 
