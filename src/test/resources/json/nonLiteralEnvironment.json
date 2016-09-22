@@ -1,0 +1,47 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "sh",
+          "arguments":           {
+            "isConstant": true,
+            "value": "echo \"FOO is $FOO\""
+          }
+        },
+        {
+          "name": "sh",
+          "arguments":           {
+            "isConstant": true,
+            "value": "echo \"BUILD_NUM_ENV is $BUILD_NUM_ENV\""
+          }
+        }
+      ]
+    }]
+  }],
+  "environment":   [
+    {
+      "key": "FOO",
+      "value":       {
+        "isConstant": true,
+        "value": "BAR"
+      }
+    },
+    {
+      "key": "BUILD_NUM_ENV",
+      "value":       {
+        "isConstant": true,
+        "value": "${currentBuild.getNumber()}"
+      }
+    }
+  ],
+  "agent": [  {
+    "key": "label",
+    "value":     {
+      "isConstant": true,
+      "value": "some-label"
+    }
+  }]
+}}

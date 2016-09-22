@@ -61,7 +61,7 @@ public class ModelInterpreter implements Serializable {
 
         if (root != null) {
             // Entire build, including notifications, runs in the withEnv.
-            script.withEnv(root.getEnvVars()) {
+            script.withEnv(getEnvVars(root)) {
                 // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                 // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
                 // We save the caught error, if any, for throwing at the end of the build.
@@ -242,5 +242,17 @@ public class ModelInterpreter implements Serializable {
                 }
             }
         }
+    }
+
+    def getEnvVars(Root r) {
+        List<String> envList = []
+        List<List<String>> rawEnv = r.getEnvVars()
+        for (int i = 0; i < rawEnv.size(); i++) {
+            def k = rawEnv.get(i).get(0)
+            def v = rawEnv.get(i).get(1)
+
+            envList.add("${k}=${script.evaluate("\"${v}\"")}")
+        }
+        return envList
     }
 }

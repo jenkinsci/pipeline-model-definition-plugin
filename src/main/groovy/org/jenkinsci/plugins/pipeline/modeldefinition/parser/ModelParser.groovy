@@ -196,6 +196,10 @@ class ModelParser {
                                 errorCollector.error(key, "Duplicate environment variable name: '${key.key}'")
                                 return
                             } else {
+                                if (exp.rightExpression instanceof GStringExpression) {
+                                    errorCollector.error(key, "Non-literal environment variable ${getSourceText(exp.rightExpression)} must be in single-quotes")
+                                    return
+                                }
                                 r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression)
                                 return
                             }

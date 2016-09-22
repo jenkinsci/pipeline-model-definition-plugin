@@ -251,6 +251,13 @@ public class ValidatorTest extends AbstractModelDefTest {
         failWithError("Missing required section 'agent'");
     }
 
+    @Test
+    public void doubleQuotedNonLiteralEnvironment() throws Exception {
+        prepRepoWithJenkinsfile("errors", "doubleQuotedNonLiteralEnvironment");
+
+        failWithError("Non-literal environment variable \"${currentBuild.getNumber()}\" must be in single-quotes");
+    }
+
     private void failWithError(final String... errors) throws Exception {
         failWithErrorAndPossiblySlave(false, errors);
     }
