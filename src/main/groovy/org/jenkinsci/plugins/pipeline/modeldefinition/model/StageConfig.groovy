@@ -21,6 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
@@ -28,35 +30,42 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
+
 /**
- * An individual stage to be executed within the build.
+ * Overriding configuration for a single {@link Stage}
  *
  * @author Andrew Bayer
  */
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stage implements StepBlockWithOtherArgs, Serializable {
+public class StageConfig implements NestedModel, Serializable {
+    @Whitelisted
+    Agent agent
 
     @Whitelisted
-    String name
-
-    @Whitelisted
-    StepsBlock closureWrapper
-
-    @Whitelisted
-    StageConfig config
-
-    @Whitelisted
-    public Stage(String n, StepsBlock w) {
-        this.name = n
-        this.closureWrapper = w
+    StageConfig agent(Agent a) {
+        this.agent = a
+        return this
     }
 
     @Whitelisted
-    public Stage(String n, StepsBlock w, StageConfig c) {
-        this(n, w)
-        this.config = c
+    StageConfig agent(Map<String,String> args) {
+        this.agent = new Agent(args)
+        return this
+    }
+
+    @Whitelisted
+    Agent getAgent() {
+        return agent
+    }
+
+    @Override
+    @Whitelisted
+    public void modelFromMap(Map<String,Object> m) {
+        m.each { k, v ->
+            this."${k}"(v)
+        }
     }
 
 }
