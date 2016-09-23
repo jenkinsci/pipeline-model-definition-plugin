@@ -33,7 +33,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializable {
     Map<String,Object> actualMap = [:]
 
-    void setProperty(String s, args) {
+    void propertyMissing(String s, args) {
         actualMap.put(s, args)
     }
 
