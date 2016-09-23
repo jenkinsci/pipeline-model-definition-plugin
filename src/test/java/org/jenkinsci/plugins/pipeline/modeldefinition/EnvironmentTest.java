@@ -45,4 +45,19 @@ public class EnvironmentTest extends AbstractModelDefTest {
         j.assertLogContains("FOO is BAR", b);
     }
 
+    @Test
+    public void nonLiteralEnvironment() throws Exception {
+        prepRepoWithJenkinsfile("nonLiteralEnvironment");
+
+        DumbSlave s = j.createOnlineSlave();
+        s.setLabelString("some-label");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("FOO is BAR", b);
+        j.assertLogContains("BUILD_NUM_ENV is 1", b);
+        j.assertLogContains("ANOTHER_ENV is 1", b);
+    }
+
 }

@@ -53,7 +53,7 @@ public class ModelInterpreter implements Serializable {
         ClosureModelTranslator m = new ClosureModelTranslator(Root.class)
 
         closure.delegate = m
-        closure.resolveStrategy = Closure.DELEGATE_ONLY
+        closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure.call()
 
         Root root = m.toNestedModel()
