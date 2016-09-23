@@ -5,6 +5,11 @@ pipeline {
         maven "Maven 3.3.9"
         jdk "Oracle JDK 8u40"
     }
+    
+    environment {
+        GIT_COMMITTER_NAME = "jenkins"
+        GIT_COMMITTER_EMAIL = "jenkins@example.com"
+    }
 
     image label:"any-executor"
 
