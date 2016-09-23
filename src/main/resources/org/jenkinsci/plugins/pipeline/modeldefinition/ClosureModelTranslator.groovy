@@ -195,7 +195,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
     private void resolveClosure(Object closureObj, Object translator) {
         Closure argClosure = closureObj
         argClosure.delegate = translator
-        argClosure.resolveStrategy = Closure.DELEGATE_ONLY
+        argClosure.resolveStrategy = Closure.DELEGATE_FIRST
         argClosure.call()
     }
 }
