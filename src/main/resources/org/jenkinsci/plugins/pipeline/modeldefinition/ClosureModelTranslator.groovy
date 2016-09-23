@@ -24,12 +24,17 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.ClosureContentsChecker
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConfig
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+
+import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 
 /**
  * CPS-transformed code for translating from the closure argument to the pipeline step into the runtime model.
@@ -76,8 +81,11 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
             argValue = args[0]
         }
 
+        if (Utils.assignableFromWrapper(ClosureContentsChecker.class, actualClass)) {
+            actualMap[methodName] = argValue
+        }
         // If we're already in a MappedClosure, we may need to recurse if the value itself is a closure.
-        if (Utils.assignableFromWrapper(MappedClosure.class, actualClass) && argValue != null) {
+        else if (Utils.assignableFromWrapper(MappedClosure.class, actualClass) && argValue != null) {
             // If the containing class is a MappedClosure and the argument is a Closure, it's most likely a build responder,
             // In which case we don't recurse, or it's just normal nested MappedClosure fun, in which case we *do* recurse.
             if (Utils.instanceOfWrapper(Closure.class, argValue)) {
@@ -97,11 +105,10 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
         } else {
             def resultValue
             def actualFieldName = Utils.actualFieldName(actualClass, methodName)
+            def actualType = Utils.actualFieldType(actualClass, methodName)
 
             // We care about the field name actually being a thing.
             if (actualFieldName != null) {
-                def actualType = Utils.actualFieldType(actualClass, methodName)
-
                 // Handle StepBlockWithOtherArgs *first*, since we won't recurse at all on them.
                 // If the field is an implementation of StepBlockWithOtherArgs, we need to just call its constructor with the args.
                 // Note that only Stage is a StepBlockWithOtherArgs currently, but that may be reused later.
@@ -112,7 +119,23 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                         def thisArg = origArgs[i]
                         // If the argument is a Closure, create a StepsBlock of it.
                         if (Utils.instanceOfWrapper(Closure.class, thisArg)) {
-                            blockParams.add(createStepsBlock(thisArg))
+                            def ctm = new ClosureModelTranslator(ClosureContentsChecker.class)
+
+                            try {
+                                resolveClosure(thisArg, ctm)
+                                Map<String, Object> closureMap = ctm.getMap()
+                                if (closureMap.size() == 2 && closureMap.containsKey("config") && closureMap.containsKey("steps")) {
+                                    blockParams.add(createStepsBlock(closureMap.get("steps")))
+                                    def configTranslator = new ClosureModelTranslator(StageConfig.class)
+                                    resolveClosure(closureMap.get("config"), configTranslator)
+                                    blockParams.add(configTranslator.toNestedModel())
+                                } else {
+                                    blockParams.add(createStepsBlock(thisArg))
+                                }
+                            } catch (_) {
+                                // If there's an exception by the time we've gotten this far, that's because it's a step block, so move on.
+                                blockParams.add(createStepsBlock(thisArg))
+                            }
                         } else {
                             // Otherwise, just add the parameter.
                             blockParams.add(thisArg)
@@ -195,7 +218,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
     private void resolveClosure(Object closureObj, Object translator) {
         Closure argClosure = closureObj
         argClosure.delegate = translator
-        argClosure.resolveStrategy = Closure.DELEGATE_ONLY
+        argClosure.resolveStrategy = Closure.DELEGATE_FIRST
         argClosure.call()
     }
 }

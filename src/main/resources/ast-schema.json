@@ -216,6 +216,16 @@
       ],
       "additionalProperties": false
     },
+    "stageConfig": {
+      "description": "Per-stage configuration overrides",
+      "type": "object",
+      "properties": {
+        "agent": {
+          "$ref": "#/definitions/agent"
+        }
+      },
+      "additionalProperties": false
+    },
     "stage": {
       "description": "A single Pipeline stage, with a name and one or more branches",
       "type": "object",
@@ -228,6 +238,9 @@
           "items": {
             "$ref": "#/definitions/branch"
           }
+        },
+        "config": {
+          "$ref": "#/definitions/stageConfig"
         }
       },
       "required": [

@@ -41,6 +41,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentL
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStageConfig
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
@@ -268,20 +269,74 @@ class ModelParser {
      * branches of the stage, or else
      */
     protected ModelASTStage parseStageBody(ModelASTStage stage, BlockStatement block) {
-        if (block.statements.size()==1) {
-            def parallel = matchParallel(block.statements[0]);
-            if (parallel!=null) {
-                parallel.args.each { k,v ->
-                    stage.branches.add(parseBranch(k, asBlock(v.code)));
+        if (block.statements.size() == 2 && methodNamesFromBlock(block).containsAll(ModelASTStage.possibleKeys)) {
+            // This means we've got a stage with config/steps specified explicitly.
+            def m = matchBlockStatement(block);
+            block.statements.each { stmt ->
+                def mc = matchMethodCall(stmt);
+                def name = parseMethodName(mc);
+
+                switch (name) {
+                    case 'config':
+                        stage.config = parseStageConfig(stmt)
+                        break
+                    case 'steps':
+                        def stepsBlock = matchBlockStatement(stmt);
+                        parseStageBody(stage, asBlock(stepsBlock.body.code))
+                        break
+                    default:
+                        errorCollector.error(stage, "Unknown stage section '${name}'")
                 }
-                return stage;
+            }
+        }
+        // Getting here means it's not a stage with config/steps, so assume it's a block of steps.
+        else {
+            if (block.statements.size() == 1) {
+                def parallel = matchParallel(block.statements[0]);
+                if (parallel != null) {
+                    parallel.args.each { k, v ->
+                        stage.branches.add(parseBranch(k, asBlock(v.code)));
+                    }
+                    return stage;
+                }
+            }
+
+            // otherwise it's a single line of execution
+            stage.branches.add(parseBranch("default", block));
+        }
+
+        return stage;
+    }
+
+    protected ModelASTStageConfig parseStageConfig(Statement st) {
+        ModelASTStageConfig config = new ModelASTStageConfig(st)
+        def configBlock = matchBlockStatement(st);
+        def sectionsSeen = new HashSet();
+
+        eachStatement(configBlock.body.code) { stmt ->
+            def mc = matchMethodCall(stmt);
+            if (mc == null) {
+                errorCollector.error(config, "Not a valid stage config section definition: '${getSourceText(stmt)}'. Some extra configuration is required.")
+            } else {
+                def name = parseMethodName(mc);
+                // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
+                if (!sectionsSeen.add(name)) {
+                    // Also an error that we couldn't actually detect at model evaluation time.
+                    errorCollector.error(config, "Multiple occurrences of the stage config section '${name}'")
+                }
+
+                switch (name) {
+                    case 'agent':
+                        config.agent = parseAgent(stmt);
+                        break;
+                    default:
+                        // We need to check for unknowns here.
+                        errorCollector.error(config, "Undefined stage config section '${name}'")
+                }
             }
         }
 
-        // otherwise it's a single line of execution
-        stage.branches.add(parseBranch("default",block));
-
-        return stage;
+        return config
     }
 
     /**
@@ -601,6 +656,17 @@ class ModelParser {
             def bs = new BlockStatement();
             bs.addStatement(st);
             return bs;
+        }
+    }
+
+    protected List<String> methodNamesFromBlock(BlockStatement block) {
+        return block.statements.collect { s ->
+            def mc = matchMethodCall(s);
+            if (mc != null) {
+                return matchMethodName(mc);
+            } else {
+                return null
+            }
         }
     }
 

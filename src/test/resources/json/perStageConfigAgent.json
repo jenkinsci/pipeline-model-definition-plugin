@@ -1,0 +1,26 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "sh",
+        "arguments":         {
+          "isConstant": true,
+          "value": "echo ONSLAVE=$ONSLAVE"
+        }
+      }]
+    }],
+    "config": {"agent": [    {
+      "key": "label",
+      "value":       {
+        "isConstant": true,
+        "value": "some-label"
+      }
+    }]}
+  }],
+  "agent":   {
+    "isConstant": true,
+    "value": "none"
+  }
+}}

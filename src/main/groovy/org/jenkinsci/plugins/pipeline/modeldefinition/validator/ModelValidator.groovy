@@ -42,6 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStageConfig
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
@@ -319,6 +320,23 @@ class ModelValidator {
 
         if (pipelineDef.agent == null) {
             errorCollector.error(pipelineDef, "Missing required section 'agent'")
+        }
+        return valid
+    }
+
+    public boolean validateElement(@Nonnull ModelASTStageConfig config) {
+        boolean valid = true
+
+        // TODO: Need to make this check all the sections to make sure they're *all* null. Right now there's just one section so...
+        if (config.agent == null) {
+            errorCollector.error(config, "No configuration specified in stage config section")
+            valid = false
+        }
+        // TODO: Need a better way for validating context - we only want to reject 'agent none' in a stage config...
+        else if (config.agent.args instanceof ModelASTSingleArgument
+            && ((ModelASTSingleArgument)config.agent.args).value.value.equals("none")) {
+            errorCollector.error(config.agent.args, "'agent none' not allowed in per-stage configuration")
+            valid = false
         }
         return valid
     }

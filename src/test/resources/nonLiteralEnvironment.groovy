@@ -21,42 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
-/**
- * An individual stage to be executed within the build.
- *
- * @author Andrew Bayer
- */
-@ToString
-@EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stage implements StepBlockWithOtherArgs, Serializable {
-
-    @Whitelisted
-    String name
-
-    @Whitelisted
-    StepsBlock closureWrapper
-
-    @Whitelisted
-    StageConfig config
-
-    @Whitelisted
-    public Stage(String n, StepsBlock w) {
-        this.name = n
-        this.closureWrapper = w
+pipeline {
+    environment {
+        FOO = "BAR"
+        BUILD_NUM_ENV = currentBuild.getNumber()
+        ANOTHER_ENV = "${currentBuild.getNumber()}"
     }
 
-    @Whitelisted
-    public Stage(String n, StepsBlock w, StageConfig c) {
-        this(n, w)
-        this.config = c
-    }
+    agent label:"some-label"
 
+    stages {
+        stage("foo") {
+            sh 'echo "FOO is $FOO"'
+            sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
+            sh 'echo "ANOTHER_ENV is $ANOTHER_ENV"'
+        }
+    }
 }
+
+

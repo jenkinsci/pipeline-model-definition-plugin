@@ -120,4 +120,18 @@ public class AgentTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
     }
+
+    @Test
+    public void perStageConfigAgent() throws Exception {
+        prepRepoWithJenkinsfile("perStageConfigAgent");
+
+        DumbSlave s = j.createOnlineSlave();
+        s.setLabelString("some-label");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("ONSLAVE=true", b);
+    }
 }

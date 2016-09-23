@@ -102,7 +102,8 @@ public abstract class AbstractModelDefTest {
             "simplePostBuild",
             "simpleTools",
             "legacyMetaStepSyntax",
-            "globalLibrarySuccess"
+            "globalLibrarySuccess",
+            "perStageConfigAgent"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

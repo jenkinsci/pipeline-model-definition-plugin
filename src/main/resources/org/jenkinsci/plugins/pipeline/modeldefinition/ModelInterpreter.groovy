@@ -53,7 +53,7 @@ public class ModelInterpreter implements Serializable {
         ClosureModelTranslator m = new ClosureModelTranslator(Root.class)
 
         closure.delegate = m
-        closure.resolveStrategy = Closure.DELEGATE_ONLY
+        closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure.call()
 
         Root root = m.toNestedModel()
@@ -67,16 +67,17 @@ public class ModelInterpreter implements Serializable {
                 // We save the caught error, if any, for throwing at the end of the build.
                 nodeOrDockerOrNone(root.agent) {
                     toolsBlock(root.agent, root.tools) {
-                            // If we have an agent and script.scm isn't null, run checkout scm
-                            if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                        // If we have an agent and script.scm isn't null, run checkout scm
+                        if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
                                 script.checkout script.scm
-                            }
+                        }
 
-                            for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                Stage thisStage = root.stages.getStages().get(i)
+                        for (int i = 0; i < root.stages.getStages().size(); i++) {
+                            Stage thisStage = root.stages.getStages().get(i)
 
-                                script.stage(thisStage.name) {
-                                    if (firstError == null) {
+                            script.stage(thisStage.name) {
+                                if (firstError == null) {
+                                    nodeOrDockerOrNone(thisStage.config?.agent) {
                                         try {
                                             catchRequiredContextForNode(root.agent) {
                                                 Closure closureToCall = thisStage.closureWrapper.closure
@@ -91,9 +92,10 @@ public class ModelInterpreter implements Serializable {
                                                 firstError = e
                                             }
                                         }
-                                    }
+                                    }.call()
                                 }
                             }
+                        }
 
                         try {
                             catchRequiredContextForNode(root.agent) {
@@ -201,7 +203,7 @@ public class ModelInterpreter implements Serializable {
     TODO: The agent handling stuff here is just waiting for step-in-Groovy support..
      */
     def nodeOrDockerOrNone(Agent agent, Closure body) {
-        if (agent.hasAgent()) {
+        if (agent != null && agent.hasAgent()) {
             return {
                 nodeWithLabelOrWithout(agent) {
                     dockerOrWithout(agent, body).call()

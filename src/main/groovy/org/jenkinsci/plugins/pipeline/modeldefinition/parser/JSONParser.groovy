@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentL
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStageConfig
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
@@ -149,12 +150,37 @@ class JSONParser {
 
         stage.name = j.getString("name")
 
+        if (j.has("config")) {
+            stage.config = parseStageConfig(j.getJSONObject("config"))
+        }
+
         j.getJSONArray("branches").each { b ->
             JSONObject o = (JSONObject)b
             stage.branches.add(parseBranch(o))
         }
         return stage
 
+    }
+
+    public @CheckForNull ModelASTStageConfig parseStageConfig(JSONObject j) {
+        ModelASTStageConfig config = new ModelASTStageConfig(j)
+
+        def sectionsSeen = new HashSet()
+
+        j.keySet().each { configName ->
+            if (!sectionsSeen.add(configName)) {
+                errorCollector.error(config, "Multiple occurrences of the stage config section '${configName}'")
+            }
+            switch (configName) {
+                case 'agent':
+                    config.agent = parseAgent(j.get("agent"))
+                    break
+                default:
+                    errorCollector.error(config, "Undefined stage config section '${configName}'")
+            }
+        }
+
+        return config
     }
 
     public @CheckForNull ModelASTBranch parseBranch(JSONObject j) {
