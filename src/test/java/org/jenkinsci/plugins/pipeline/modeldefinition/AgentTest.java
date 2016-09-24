@@ -126,7 +126,6 @@ public class AgentTest extends AbstractModelDefTest {
         onAllowedOS(PossibleOS.LINUX);
         prepRepoWithJenkinsfile(jenkinsfile);
 
-        assumeDocker();
         DumbSlave s = j.createOnlineSlave();
         s.setLabelString("docker");
 
