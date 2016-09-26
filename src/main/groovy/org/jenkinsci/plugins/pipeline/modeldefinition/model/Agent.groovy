@@ -46,6 +46,9 @@ public class Agent implements Serializable {
     String label
 
     @Whitelisted
+    String dockerArgs
+
+    @Whitelisted
     Boolean any
 
     @Whitelisted
@@ -55,6 +58,9 @@ public class Agent implements Serializable {
         }
         if (args.containsKey("label")) {
             label = args.get("label")
+        }
+        if (args.containsKey("dockerArgs")) {
+            this.dockerArgs = args.get("dockerArgs")
         }
     }
 
@@ -70,6 +76,6 @@ public class Agent implements Serializable {
 
     // TODO: Rewrite as an extension point and get this by extension discovery, but we knew that already.
     public static List<String> agentConfigKeys() {
-        return ["docker", "label"]
+        return ["docker", "label", "dockerArgs"]
     }
 }
