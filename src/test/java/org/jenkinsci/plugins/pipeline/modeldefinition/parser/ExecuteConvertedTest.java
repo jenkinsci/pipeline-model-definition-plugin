@@ -53,7 +53,7 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
         List<Object[]> result = new ArrayList<>();
         for (String c : AbstractModelDefTest.SHOULD_PASS_CONFIGS) {
             // Temporary hack to skip Docker and postBuildAndNotifications (since that last one has a failing build deliberately)
-            if (!c.equals("agentDocker") && !c.equals("postBuildAndNotifications")) {
+            if (!c.equals("agentDocker") && !c.equals("postBuildAndNotifications") && !c.contains("globalLibrary")) {
                 result.add(new Object[]{c});
             }
         }
