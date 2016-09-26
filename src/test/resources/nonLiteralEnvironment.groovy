@@ -28,6 +28,7 @@ pipeline {
         BUILD_NUM_ENV = currentBuild.getNumber()
         ANOTHER_ENV = "${currentBuild.getNumber()}"
         INHERITED_ENV = "\${BUILD_NUM_ENV} is inherited"
+        ACME_FUNC = returnAThing("banana")
     }
 
     agent label:"some-label"
@@ -38,6 +39,7 @@ pipeline {
             sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
             sh 'echo "ANOTHER_ENV is $ANOTHER_ENV"'
             sh 'echo "INHERITED_ENV is $INHERITED_ENV"'
+            sh 'echo "ACME_FUNC is $ACME_FUNC"'
         }
     }
 }

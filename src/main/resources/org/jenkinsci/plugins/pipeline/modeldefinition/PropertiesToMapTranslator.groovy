@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
  * Translates a closure containing one or more "foo = 'bar'" statements into a map.
@@ -32,6 +33,16 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
  */
 public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializable {
     Map<String,Object> actualMap = [:]
+    CpsScript script
+
+    PropertiesToMapTranslator(CpsScript script) {
+        this.script = script
+    }
+
+    def methodMissing(String s, args) {
+        return script."${s}"(args)
+    }
+
 
     void propertyMissing(String s, args) {
         actualMap.put(s, args)

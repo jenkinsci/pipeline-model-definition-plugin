@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
  * CPS-transformed code for translating from the closure argument to the pipeline step into the runtime model.
@@ -39,6 +40,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
     Map<String,Object> actualMap = [:]
     Class<NestedModel> actualClass
+    CpsScript script
 
     /**
      * Placeholder to make sure 'agent none' works.
@@ -50,8 +52,9 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
      */
     boolean any = true
 
-    ClosureModelTranslator(Class clazz) {
+    ClosureModelTranslator(Class clazz, CpsScript s) {
         actualClass = clazz
+        this.script = s
     }
 
     NestedModel toNestedModel() {
@@ -84,7 +87,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                 if (Utils.assignableFromWrapper(AbstractBuildConditionResponder.class, actualClass)) {
                     actualMap[methodName] = createStepsBlock(argValue)
                 } else {
-                    def ctm = new ClosureModelTranslator(MappedClosure.class)
+                    def ctm = new ClosureModelTranslator(MappedClosure.class, script)
 
                     resolveClosure(argValue, ctm)
 
@@ -129,13 +132,13 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                     }
                     // if it's a PropertiesToMap, we use PropertiesToMapTranslator to translate it into the right form.
                     else if (Utils.assignableFromWrapper(PropertiesToMap.class, actualType)) {
-                        def ptm = new PropertiesToMapTranslator()
+                        def ptm = new PropertiesToMapTranslator(script)
                         resolveClosure(argValue, ptm)
                         resultValue = ptm.toNestedModel(actualType)
                     }
                     // And lastly, recurse - this must be another container block.
                     else {
-                        def ctm = new ClosureModelTranslator(actualType)
+                        def ctm = new ClosureModelTranslator(actualType, script)
 
                         resolveClosure(argValue, ctm)
                         // If it's a ModelForm, the result value is the ModelForm equivalent of the Map.
