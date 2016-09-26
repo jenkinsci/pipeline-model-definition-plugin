@@ -23,7 +23,7 @@
  */
 
 pipeline {
-    agent docker:"httpd:2.4.12", dockerArgs:"-v /tmp:/tmp -p 80:80"
+    agent docker:"httpd:2.4.12", dockerArgs:""
     stages {
         stage("foo") {
             sh 'cat /usr/local/apache2/conf/extra/httpd-userdir.conf'

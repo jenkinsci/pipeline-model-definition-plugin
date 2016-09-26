@@ -74,19 +74,18 @@ public class AgentTest extends AbstractModelDefTest {
 
     @Test
     public void agentDocker() throws Exception {
-        assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
-        prepRepoWithJenkinsfile("agentDocker");
+        final WorkflowRun b = agentDocker("agentDocker");
+        j.assertLogContains("-v /tmp:/tmp -p 80:80", b);
+    }
 
-        assumeDocker();
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("docker");
+    @Test
+    public void agentDockerWithNullDockerArgs() throws Exception {
+        agentDocker("agentDockerWithNullDockerArgs");
+    }
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("The answer is 42", b);
+    @Test
+    public void agentDockerWithEmptyDockerArgs() throws Exception {
+        agentDocker("agentDockerWithEmptyDockerArgs");
     }
 
     @Test
@@ -119,5 +118,21 @@ public class AgentTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
+    }
+
+    private WorkflowRun agentDocker(final String jenkinsfile) throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+        prepRepoWithJenkinsfile(jenkinsfile);
+
+        DumbSlave s = j.createOnlineSlave();
+        s.setLabelString("docker");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("The answer is 42", b);
+        return b;
     }
 }
