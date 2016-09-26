@@ -67,8 +67,8 @@ import static org.junit.Assume.assumeTrue;
 public abstract class AbstractModelDefTest {
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
     @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
 
