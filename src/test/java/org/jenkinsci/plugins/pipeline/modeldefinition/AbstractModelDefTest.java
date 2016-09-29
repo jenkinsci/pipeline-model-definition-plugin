@@ -283,6 +283,9 @@ public abstract class AbstractModelDefTest {
                 "def bar() { return x+'-get' }",
                 "def baz() { return 'nothing here' }")
                 , "\n"));
+        FileUtils.writeStringToFile(new File(vars, "returnAThing.groovy"), StringUtils.join(Arrays.asList(
+                "def call(a) { return \"${a} tada\" }"), "\n"
+        ));
         FileUtils.writeStringToFile(new File(vars, "acmeFunc.groovy"), StringUtils.join(Arrays.asList(
                 "def call(a,b) { echo \"call($a,$b)\" }")
                 , "\n"));

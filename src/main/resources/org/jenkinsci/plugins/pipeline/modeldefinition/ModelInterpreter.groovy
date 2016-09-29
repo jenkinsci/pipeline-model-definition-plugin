@@ -50,10 +50,10 @@ public class ModelInterpreter implements Serializable {
         // Attach the stages model to the run for introspection etc.
         Utils.attachExecutionModel(script)
 
-        ClosureModelTranslator m = new ClosureModelTranslator(Root.class)
+        ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
 
         closure.delegate = m
-        closure.resolveStrategy = Closure.DELEGATE_ONLY
+        closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure.call()
 
         Root root = m.toNestedModel()

@@ -21,43 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-/**
- * Translates a closure containing one or more "foo = 'bar'" statements into a map.
- * @author Andrew Bayer
- */
-public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializable {
-    Map<String,Object> actualMap = [:]
-    CpsScript script
-
-    PropertiesToMapTranslator(CpsScript script) {
-        this.script = script
+pipeline {
+    environment {
+        FOO = "BAR"
+        BUILD_NUM_ENV = currentBuild.getNumber()
+        ANOTHER_ENV = "${currentBuild.getNumber()}"
+        INHERITED_ENV = "\${BUILD_NUM_ENV} is inherited"
+        ACME_FUNC = returnAThing("banana")
     }
 
-    def methodMissing(String s, args) {
-        return script."${s}"(args)
+    agent label:"some-label"
+
+    stages {
+        stage("foo") {
+            sh 'echo "FOO is $FOO"'
+            sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
+            sh 'echo "ANOTHER_ENV is $ANOTHER_ENV"'
+            sh 'echo "INHERITED_ENV is $INHERITED_ENV"'
+            sh 'echo "ACME_FUNC is $ACME_FUNC"'
+        }
     }
-
-
-    void propertyMissing(String s, args) {
-        actualMap.put(s, args)
-    }
-
-    public Map<String, Object> getMap() {
-        def mapCopy = [:]
-        mapCopy.putAll(actualMap)
-        return mapCopy
-    }
-
-    NestedModel toNestedModel(Class<NestedModel> c) {
-        NestedModel m = c.newInstance()
-        m.modelFromMap(actualMap)
-        return m
-    }
-
 }
+
+
