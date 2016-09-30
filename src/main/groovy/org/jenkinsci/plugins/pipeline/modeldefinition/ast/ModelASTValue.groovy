@@ -47,7 +47,7 @@ public abstract class ModelASTValue extends ModelASTElement {
      * If the value can be determined without side-effect at AST parsing time,
      * this method returns true, and {@Link #getValue()} returns its value.
      */
-    public abstract boolean isConstant();
+    public abstract boolean isLiteral();
 
     /**
      * Returns a value or an expression that represents this value.
@@ -69,14 +69,14 @@ public abstract class ModelASTValue extends ModelASTElement {
     @Override
     public JSONObject toJSON() {
         return new JSONObject()
-            .accumulate("isConstant", isConstant())
+            .accumulate("isLiteral", isLiteral())
             .accumulate("value", getValue())
     }
 
     public static final ModelASTValue fromConstant(final Object o, Object sourceLocation) {
         return new ModelASTValue(sourceLocation, o) {
             @Override
-            boolean isConstant() {
+            boolean isLiteral() {
                 return true;
             }
 
@@ -94,7 +94,7 @@ public abstract class ModelASTValue extends ModelASTElement {
     public static final ModelASTValue fromGString(String gstring, Object sourceLocation) {
         return new ModelASTValue(sourceLocation, gstring) {
             @Override
-            boolean isConstant() {
+            boolean isLiteral() {
                 return false;
             }
 

@@ -130,14 +130,14 @@ public abstract class AbstractModelDefTest {
                 "      \"steps\": [      {\n" +
                 "        \"name\": \"echo\",\n" +
                 "        \"arguments\":         {\n" +
-                "          \"isConstant\": true,\n" +
+                "          \"isLiteral\": true,\n" +
                 "          \"value\": \"hello\"\n" +
                 "\n" +
                 "      }]\n" +
                 "    }]\n" +
                 "  }],\n" +
                 "  \"agent\":   {\n" +
-                "    \"isConstant\": true,\n" +
+                "    \"isLiteral\": true,\n" +
                 "    \"value\": \"none\"\n" +
                 "  }\n" +
                 "}}"});

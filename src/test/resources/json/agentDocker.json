@@ -7,14 +7,14 @@
                 {
           "name": "sh",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "cat /usr/local/apache2/conf/extra/httpd-userdir.conf"
           }
         },
                 {
           "name": "sh",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "echo \"The answer is 42\""
           }
         }
@@ -24,7 +24,7 @@
   "agent": [  {
     "key": "docker",
     "value":     {
-      "isConstant": true,
+      "isLiteral": true,
       "value": "httpd:2.4.12"
     }
   }]
