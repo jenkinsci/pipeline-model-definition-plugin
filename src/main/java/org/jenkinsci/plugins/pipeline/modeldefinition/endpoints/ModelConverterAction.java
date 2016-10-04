@@ -28,11 +28,15 @@ import hudson.model.RootAction;
 import hudson.util.HttpResponses;
 import hudson.util.TimeUnit2;
 import jenkins.model.Jenkins;
+import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
+import net.sf.json.util.JSONUtils;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
 import org.kohsuke.stapler.HttpResponse;
@@ -42,6 +46,8 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static hudson.security.Permission.READ;
 
@@ -134,6 +140,64 @@ public class ModelConverterAction implements RootAction {
             result.accumulate("result", "failure");
             JSONArray errors = new JSONArray();
             errors.add(e.getMessage());
+            result.accumulate("errors", errors);
+        }
+
+        return HttpResponses.okJSON(result);
+    }
+
+    @SuppressWarnings("unused")
+    @RequirePOST
+    public HttpResponse doStepToJenkinsfile(StaplerRequest req) {
+        Jenkins.getInstance().checkPermission(READ);
+
+        JSONObject result = new JSONObject();
+        try {
+            String jsonAsString = req.getParameter("json");
+            JSON json = JSONSerializer.toJSON(jsonAsString);
+
+            JSONArray jsonSteps;
+            if (json.isArray()) {
+                jsonSteps = (JSONArray)json;
+            } else {
+                jsonSteps = new JSONArray();
+                jsonSteps.add(json);
+            }
+            JSONParser parser = new JSONParser(null);
+            List<ModelASTStep> astSteps = new ArrayList<>(jsonSteps.size());
+            for (Object jsonStep : jsonSteps) {
+                if (!(jsonStep instanceof JSONObject)) {
+                    continue;
+                }
+                ModelASTStep astStep = parser.parseStep((JSONObject)jsonStep);
+                astStep.validate(parser.getValidator());
+                astSteps.add(astStep);
+            }
+
+            if (parser.getErrorCollector().getErrorCount() > 0) {
+                result.accumulate("result", "failure");
+
+                JSONArray errors = new JSONArray();
+                for (String jsonError : parser.getErrorCollector().errorsAsStrings()) {
+                    errors.add(jsonError);
+                }
+
+                result.accumulate("errors", errors);
+            } else {
+                result.accumulate("result", "success");
+                StringBuilder jenkinsFile = new StringBuilder();
+                for (ModelASTStep step : astSteps) {
+                    if (jenkinsFile.length() > 0) {
+                        jenkinsFile.append('\n');
+                    }
+                    jenkinsFile.append(step.toGroovy());
+                }
+                result.accumulate("jenkinsfile", jenkinsFile.toString());
+            }
+        } catch (Exception je) {
+            result.accumulate("result", "failure");
+            JSONArray errors = new JSONArray();
+            errors.add(je.getMessage());
             result.accumulate("errors", errors);
         }
 

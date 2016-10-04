@@ -1,0 +1,16 @@
+[
+  {
+    "name": "echo",
+    "arguments":         {
+      "isConstant": true,
+      "value": "Hello"
+    }
+  },
+  {
+    "name": "echo",
+    "arguments":         {
+      "isConstant": true,
+      "value": "World"
+    }
+  }
+]
