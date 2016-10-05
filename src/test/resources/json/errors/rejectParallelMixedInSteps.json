@@ -7,7 +7,7 @@
         {
           "name": "echo",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "hello"
           }
         },
@@ -17,14 +17,14 @@
             {
               "key": "a",
               "value":               {
-                "isConstant": true,
+                "isLiteral": true,
                 "value": "echo '1'"
               }
             },
             {
               "key": "b",
               "value":               {
-                "isConstant": true,
+                "isLiteral": true,
                 "value": "echo '2'"
               }
             }
@@ -34,7 +34,7 @@
     }]
   }],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "none"
   }
 }}

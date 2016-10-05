@@ -6,7 +6,7 @@
       "steps": [      {
         "name": "sh",
         "arguments":         {
-          "isConstant": true,
+          "isLiteral": true,
           "value": "echo \"FOO is $FOO\""
         }
       }]
@@ -16,7 +16,7 @@
   "agent": [  {
     "key": "label",
     "value":     {
-      "isConstant": true,
+      "isLiteral": true,
       "value": "some-label"
     }
   }]

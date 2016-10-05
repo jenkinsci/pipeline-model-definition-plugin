@@ -9,14 +9,14 @@
                     {
             "key": "time",
             "value":             {
-              "isConstant": true,
+              "isLiteral": true,
               "value": 5
             }
           },
                     {
             "key": "unit",
             "value":             {
-              "isConstant": true,
+              "isLiteral": true,
               "value": "SECONDS"
             }
           }
@@ -24,7 +24,7 @@
         "children": [        {
           "name": "echo",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "hello"
           }
         }]
@@ -32,7 +32,7 @@
     }]
   }],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "none"
   }
 }}

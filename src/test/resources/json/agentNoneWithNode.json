@@ -6,13 +6,13 @@
       "steps": [      {
         "name": "node",
         "arguments":         {
-          "isConstant": true,
+          "isLiteral": true,
           "value": "some-label"
         },
         "children": [        {
           "name": "sh",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "echo ONSLAVE=$ONSLAVE"
           }
         }]
@@ -20,7 +20,7 @@
     }]
   }],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "none"
   }
 }}

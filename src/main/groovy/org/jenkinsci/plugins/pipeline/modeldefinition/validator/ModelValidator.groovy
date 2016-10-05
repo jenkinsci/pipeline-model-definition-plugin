@@ -274,7 +274,7 @@ class ModelValidator {
     }
 
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
-        if (v.isConstant()) {
+        if (v.isLiteral()) {
             try {
                 ScriptBytecodeAdapter.castToType(v.value, erasedType);
             } catch (Exception e) {
