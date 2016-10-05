@@ -206,8 +206,10 @@ public class ModelConverterAction implements RootAction {
                     continue;
                 }
                 ModelASTStep astStep = parser.parseStep((JSONObject)jsonStep);
-                astStep.validate(parser.getValidator());
-                astSteps.add(astStep);
+                if (astStep != null) {
+                    astStep.validate(parser.getValidator());
+                    astSteps.add(astStep);
+                }
             }
 
             if (parser.getErrorCollector().getErrorCount() > 0) {
@@ -218,6 +220,11 @@ public class ModelConverterAction implements RootAction {
                     errors.add(jsonError);
                 }
 
+                result.accumulate("errors", errors);
+            } else if (astSteps.isEmpty()) {
+                result.accumulate("result", "failure");
+                JSONArray errors = new JSONArray();
+                errors.add("No result.");
                 result.accumulate("errors", errors);
             } else {
                 result.accumulate("result", "success");
