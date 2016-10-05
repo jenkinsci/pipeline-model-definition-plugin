@@ -57,6 +57,12 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
         this.triggers = t
     }
 
+    protected Object readResolve() throws IOException {
+        // Need to make sure triggers is initialized on deserialization, even if it's going to be empty.
+        this.triggers = []
+        return this;
+    }
+
     /**
      * Get a map of allowed trigger type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
      * trigger, use that as the key. Otherwise, use the class name.

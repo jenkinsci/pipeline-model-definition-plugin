@@ -59,6 +59,13 @@ public class JobProperties implements Serializable, MethodsToList<JobProperty> {
     private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
         Utils.generateTypeCache(JobPropertyDescriptor.class)
 
+
+    protected Object readResolve() throws IOException {
+        // Need to make sure properties is initialized on deserialization, even if it's going to be empty.
+        this.properties = []
+        return this;
+    }
+
     /**
      * Get a map of allowed property type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
      * job property, use that as the key. Otherwise, use the class name.
