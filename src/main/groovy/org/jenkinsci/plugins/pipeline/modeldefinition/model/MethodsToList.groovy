@@ -28,7 +28,21 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import hudson.model.Describable
 
 /**
- * Used to mark {@link MappedClosure}s that are specified as "foo = 'bar'", rather than "foo 'bar'"
+ * Used to mark model classes that are composed of lists of {@link Describable} classes for proper parsing and translating.
+ *
+ * <p>
+ * For example:
+ * <pre>
+ * jobProperties {
+ *     buildDiscarder(logRotator(numToKeepStr:'1')
+ *     disableConcurrentBuilds()
+ * }
+ *
+ * triggers {
+ *     cron('@daily')
+ * }
+ * </pre>
+ *
  * @author Andrew Bayer
  */
 public interface MethodsToList<T extends Describable> {

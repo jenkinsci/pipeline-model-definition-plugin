@@ -29,10 +29,15 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 
+/**
+ * A single parameter definition, eventually corresponding to a {@link ParameterDefinition}
+ *
+ * @author Andrew Bayer
+ */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class ModelASTBuildParameter extends ModelASTMethodCallFromArguments {
+public class ModelASTBuildParameter extends ModelASTMethodCall {
     ModelASTBuildParameter(Object sourceLocation) {
         super(sourceLocation)
     }

@@ -29,10 +29,15 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 
+/**
+ * A single trigger, corresponding eventually to a {@link Trigger}
+ *
+ * @author Andrew Bayer
+ */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class ModelASTTrigger extends ModelASTMethodCallFromArguments {
+public class ModelASTTrigger extends ModelASTMethodCall {
     ModelASTTrigger(Object sourceLocation) {
         super(sourceLocation)
     }

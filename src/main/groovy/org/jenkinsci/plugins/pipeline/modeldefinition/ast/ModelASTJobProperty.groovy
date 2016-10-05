@@ -29,10 +29,15 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 
+/**
+ * A single job property, corresponding eventually to {@link JobProperty}
+ *
+ * @author Andrew Bayer
+ */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class ModelASTJobProperty extends ModelASTMethodCallFromArguments {
+public class ModelASTJobProperty extends ModelASTMethodCall {
     ModelASTJobProperty(Object sourceLocation) {
         super(sourceLocation)
     }

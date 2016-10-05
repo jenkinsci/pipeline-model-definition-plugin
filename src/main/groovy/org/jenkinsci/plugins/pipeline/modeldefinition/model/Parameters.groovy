@@ -35,6 +35,11 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.Nonnull
 
+/**
+ * A container for lists of parameter definitions.
+ *
+ * @author Andrew Bayer
+ */
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")

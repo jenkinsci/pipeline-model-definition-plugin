@@ -33,7 +33,8 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
- * Translates a closure containing one or more "foo = 'bar'" statements into a map.
+ * Translates a closure containing a sequence of method calls into a {@link MethodsToList} implementation.
+ *
  * @author Andrew Bayer
  */
 public class MethodsToListTranslator implements MethodMissingWrapper, Serializable {
@@ -55,7 +56,7 @@ public class MethodsToListTranslator implements MethodMissingWrapper, Serializab
         }
 
         def retVal = script."${s}"(argVal)
-        if (isOfType((UninstantiatedDescribable)retVal, Utils.getMethodstoListType(clazz))) {
+        if (isOfType((UninstantiatedDescribable)retVal, Utils.getMethodsToListType(clazz))) {
             actualList << retVal
         }
 

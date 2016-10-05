@@ -125,33 +125,26 @@ public class Utils {
 
     }
 
+    /**
+     * Finds the parameterized type argument for a {@link MethodsToList} class and returns it.
+     *
+     * @param c A class.
+     * @return The parameterized type argument for the class, if it's a {@link MethodsToList} class. Null otherwise.
+     */
     @Whitelisted
-    public static Class<Describable> getMethodstoListType(Class c) {
+    public static Class<Describable> getMethodsToListType(Class c) {
         Class retClass
         c.genericInterfaces.each { Type t ->
             if (t instanceof ParameterizedType) {
-                if (t.rawType.equals(MethodsToList.class)) {
-                    retClass = t.actualTypeArguments.first()
+                if (t.rawType.equals(MethodsToList.class) && t.getActualTypeArguments().first() instanceof Class) {
+                    retClass = (Class)t.actualTypeArguments.first()
                 }
             }
         }
 
         return retClass
     }
-/*
-    @Whitelisted
-    public static Class<Describable> getMethodsToListDescribable(Class c) {
-        Class<Describable> returnClass
 
-        if (c instanceof MethodsToList) {
-            c.genericInterfaces.each { Type t ->
-                if (t instanceof ParameterizedType) {
-                    if (t.rawType)
-                }
-            }
-        }
-    }
-    */
     /**
      * Simple wrapper for isInstance to avoid whitelisting issues.
      *
@@ -205,34 +198,13 @@ public class Utils {
         r.addAction(new ExecutionModelAction(stages))
     }
 
-
-    @Whitelisted
-    static Map<String,Object> mapForDescribable(UninstantiatedDescribable ud) {
-        Map<String,Object> args = [:]
-
-        ud.arguments.each { k, v ->
-            if (k == UninstantiatedDescribable.ANONYMOUS_KEY &&
-                (v instanceof List || v instanceof Object[]) &&
-                v[0] instanceof Map) {
-                args.putAll((Map) v[0])
-            } else if (v instanceof UninstantiatedDescribable) {
-                args.putAll(mapForDescribable((UninstantiatedDescribable)v))
-            } else {
-                args[k] = v
-            }
-        }
-        if (ud.klass != null) {
-            args['$class'] = ud.klass
-        } else {
-            Descriptor d = SymbolLookup.get().findDescriptor(Object.class, ud.symbol)
-            if (d != null) {
-                args['$class'] = d.clazz.simpleName
-            }
-        }
-
-        return args
-    }
-
+    /**
+     * Creates and sets the loading for a cache of {@link Describable}s descending from the given descriptor type.
+     *
+     * @param type The {@link Descriptor} class whose extensions we want to find.
+     * @param excludedSymbols Optional list of symbol names to exclude from the cache.
+     * @return A {@link LoadingCache} for looking up types from symbols.
+     */
     static generateTypeCache(Class<? extends Descriptor> type, List<String> excludedSymbols = []) {
         return CacheBuilder.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -244,6 +216,13 @@ public class Utils {
         })
     }
 
+    /**
+     * Actually populates the type cache.
+     *
+     * @param type The {@link Descriptor} class whose extensions we want to find.
+     * @param excludedSymbols Optional list of symbol names to exclude from the cache.
+     * @return A map of symbols or class names to class names.
+     */
     private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type, List<String> excludedSymbols = []) {
         Map<String,String> knownTypes = [:]
 

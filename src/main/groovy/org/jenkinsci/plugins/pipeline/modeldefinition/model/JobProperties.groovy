@@ -38,6 +38,11 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 import javax.annotation.Nonnull
 
+/**
+ * Container for job properties.
+ *
+ * @author Andrew Bayer
+ */
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
@@ -51,24 +56,6 @@ public class JobProperties implements Serializable, MethodsToList<JobProperty> {
 
     private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
         Utils.generateTypeCache(JobPropertyDescriptor.class)
-
-    @Whitelisted
-    List<JobProperty> asList(CpsScript script) {
-        List<JobProperty> l = []
-
-        getMap().each { k, v ->
-
-            if (v instanceof UninstantiatedDescribable) {
-                def f = Utils.mapForDescribable(v)
-                l << script."${k}"(f)
-            } else {
-                def f = script."${k}"(v).toMap()
-                l << script."${k}"(f)
-            }
-        }
-
-        return l
-    }
 
     /**
      * Get a map of allowed property type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given

@@ -41,7 +41,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodArg
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCallFromArguments
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
@@ -193,7 +193,7 @@ class JSONParser {
 
         j.getJSONArray("properties").each { p ->
             ModelASTJobProperty prop = new ModelASTJobProperty(p)
-            ModelASTMethodCallFromArguments m = parseMethodCallFromArguments(p)
+            ModelASTMethodCall m = parseMethodCallFromArguments(p)
             prop.args = m.args
             prop.name = m.name
             properties.properties.add(prop)
@@ -207,7 +207,7 @@ class JSONParser {
 
         j.getJSONArray("triggers").each { p ->
             ModelASTTrigger t = new ModelASTTrigger(p)
-            ModelASTMethodCallFromArguments m = parseMethodCallFromArguments(p)
+            ModelASTMethodCall m = parseMethodCallFromArguments(p)
             t.args = m.args
             t.name = m.name
             triggers.triggers.add(t)
@@ -221,7 +221,7 @@ class JSONParser {
 
         j.getJSONArray("parameters").each { p ->
             ModelASTBuildParameter b = new ModelASTBuildParameter(p)
-            ModelASTMethodCallFromArguments m = parseMethodCallFromArguments(p)
+            ModelASTMethodCall m = parseMethodCallFromArguments(p)
             b.args = m.args
             b.name = m.name
             params.parameters.add(b)
@@ -251,8 +251,8 @@ class JSONParser {
         return pair
     }
 
-    public @CheckForNull ModelASTMethodCallFromArguments parseMethodCallFromArguments(Object o) {
-        ModelASTMethodCallFromArguments meth = new ModelASTMethodCallFromArguments(o)
+    public @CheckForNull ModelASTMethodCall parseMethodCallFromArguments(Object o) {
+        ModelASTMethodCall meth = new ModelASTMethodCall(o)
         if (o instanceof JSONObject) {
             meth.name = o.getString("name")
             if (o.has("arguments") && o.get("arguments") instanceof JSONArray) {

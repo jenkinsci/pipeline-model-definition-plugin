@@ -36,13 +36,12 @@ import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCallFromArguments
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
@@ -285,7 +284,7 @@ class ModelValidator {
         return valid
     }
 
-    public boolean validateElement(@Nonnull ModelASTMethodCallFromArguments meth) {
+    public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
         if (Jenkins.getInstance() != null) {
             Descriptor desc = lookupFunction(meth.name)
@@ -308,8 +307,8 @@ class ModelValidator {
                             return;
                         }
 
-                        if (kvm.value instanceof ModelASTMethodCallFromArguments) {
-                            valid = validateElement((ModelASTMethodCallFromArguments) kvm.value)
+                        if (kvm.value instanceof ModelASTMethodCall) {
+                            valid = validateElement((ModelASTMethodCall) kvm.value)
                         } else {
                             if (!validateParameterType((ModelASTValue) kvm.value, p.erasedType, kvm.key)) {
                                 errorCollector.error(kvm.key, "Invalid type for parameter '${kvm.key.key}'")
@@ -326,8 +325,8 @@ class ModelValidator {
                     } else {
                         requiredParams.eachWithIndex { DescribableParameter entry, int i ->
                             def argVal = meth.args.get(i)
-                            if (argVal instanceof ModelASTMethodCallFromArguments) {
-                                valid = validateElement((ModelASTMethodCallFromArguments) argVal)
+                            if (argVal instanceof ModelASTMethodCall) {
+                                valid = validateElement((ModelASTMethodCall) argVal)
                             } else {
                                 if (!validateParameterType((ModelASTValue) argVal, entry.erasedType)) {
                                     errorCollector.error((ModelASTValue)argVal, "Invalid type for parameter '${entry.name}'")
@@ -364,7 +363,7 @@ class ModelValidator {
             errorCollector.error(trig, "Can't mix named and unnamed trigger arguments")
             valid = false
         } else {
-            valid = validateElement((ModelASTMethodCallFromArguments)trig)
+            valid = validateElement((ModelASTMethodCall)trig)
         }
         return valid
     }
@@ -392,7 +391,7 @@ class ModelValidator {
             errorCollector.error(param, "Can't mix named and unnamed parameter definition arguments")
             valid = false
         } else {
-            valid = validateElement((ModelASTMethodCallFromArguments)param)
+            valid = validateElement((ModelASTMethodCall)param)
         }
         return valid
     }
@@ -419,7 +418,7 @@ class ModelValidator {
             errorCollector.error(prop, "Can't mix named and unnamed job property arguments")
             valid = false
         } else {
-            valid = validateElement((ModelASTMethodCallFromArguments)prop)
+            valid = validateElement((ModelASTMethodCall)prop)
         }
         return valid
     }

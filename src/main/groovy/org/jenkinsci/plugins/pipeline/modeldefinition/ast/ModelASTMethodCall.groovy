@@ -30,13 +30,21 @@ import net.sf.json.JSONArray
 import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
+/**
+ * A representation of a method call, including its name and a list of {@link ModelASTMethodArg}s.
+ *
+ * This is used for things like job properties, triggers and parameter definitions, allowing parsing and validation of
+ * the arguments in case they themselves are method calls.
+ *
+ * @author Andrew Bayer
+ */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class ModelASTMethodCallFromArguments extends ModelASTElement implements ModelASTMethodArg {
+public class ModelASTMethodCall extends ModelASTElement implements ModelASTMethodArg {
     String name;
     List<ModelASTMethodArg> args = []
 
-    ModelASTMethodCallFromArguments(Object sourceLocation) {
+    ModelASTMethodCall(Object sourceLocation) {
         super(sourceLocation)
     }
 

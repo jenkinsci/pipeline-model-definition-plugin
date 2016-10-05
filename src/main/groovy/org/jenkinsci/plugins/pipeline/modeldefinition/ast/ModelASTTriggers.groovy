@@ -31,6 +31,11 @@ import net.sf.json.JSONArray
 import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
+/**
+ * A container for one or more {@link ModelASTTrigger}s.
+ *
+ * @author Andrew Bayer
+ */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")

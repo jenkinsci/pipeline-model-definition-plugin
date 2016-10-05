@@ -34,9 +34,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import javax.annotation.Nonnull
 
 /**
- * Represents the named parameters for a step in a map of {@link ModelASTKey}s and {@link ModelASTValue}s.
+ * An individual pair of a {@link ModelASTKey} and a {@link ModelASTMethodArg}
  *
- * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
 @ToString(includeSuper = true, includeSuperProperties = true)

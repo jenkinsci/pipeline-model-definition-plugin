@@ -42,7 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCallFromArguments
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
@@ -347,7 +347,7 @@ class ModelParser {
             errorCollector.error(thisProp,"Job property definitions cannot have blocks")
             return thisProp
         } else {
-            ModelASTMethodCallFromArguments mArgs = parseMethodCallFromArguments(mc)
+            ModelASTMethodCall mArgs = parseMethodCallFromArguments(mc)
             thisProp.args = mArgs.args
             thisProp.name = mArgs.name
         }
@@ -389,7 +389,7 @@ class ModelParser {
             errorCollector.error(trig,"Trigger definitions cannot have blocks")
             return trig
         } else {
-            ModelASTMethodCallFromArguments mArgs = parseMethodCallFromArguments(mc)
+            ModelASTMethodCall mArgs = parseMethodCallFromArguments(mc)
             trig.args = mArgs.args
             trig.name = mArgs.name
         }
@@ -431,7 +431,7 @@ class ModelParser {
             errorCollector.error(param,"Build parameter definitions cannot have blocks")
             return param
         } else {
-            ModelASTMethodCallFromArguments mArgs = parseMethodCallFromArguments(mc)
+            ModelASTMethodCall mArgs = parseMethodCallFromArguments(mc)
             param.args = mArgs.args
             param.name = mArgs.name
         }
@@ -439,8 +439,8 @@ class ModelParser {
         return param
     }
 
-    public ModelASTMethodCallFromArguments parseMethodCallFromArguments(MethodCallExpression expr) {
-        ModelASTMethodCallFromArguments m = new ModelASTMethodCallFromArguments(expr)
+    public ModelASTMethodCall parseMethodCallFromArguments(MethodCallExpression expr) {
+        ModelASTMethodCall m = new ModelASTMethodCall(expr)
         def methodName = parseMethodName(expr);
         m.name = methodName
 
