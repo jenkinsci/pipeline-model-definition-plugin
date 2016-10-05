@@ -1,7 +1,7 @@
 {
   "name": "echo",
   "arguments":         {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "hello"
   }
 }

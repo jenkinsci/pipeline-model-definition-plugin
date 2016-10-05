@@ -1,7 +1,7 @@
 {
   "name": "script",
   "arguments": {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "echo \"In a script step\""
   }
 }
