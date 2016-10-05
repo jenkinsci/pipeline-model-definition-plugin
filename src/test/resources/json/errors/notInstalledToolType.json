@@ -6,7 +6,7 @@
       "steps": [      {
         "name": "sh",
         "arguments":         {
-          "isConstant": true,
+          "isLiteral": true,
           "value": "mvn -version"
         }
       }]
@@ -15,14 +15,14 @@
   "agent": [  {
     "key": "label",
     "value":     {
-      "isConstant": true,
+      "isLiteral": true,
       "value": "some-label"
     }
   }],
   "tools": [  {
     "key": "gradle",
     "value":     {
-      "isConstant": true,
+      "isLiteral": true,
       "value": "apache-maven-3.0.1"
     }
   }]

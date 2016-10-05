@@ -49,6 +49,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void nonLiteralEnvironment() throws Exception {
         prepRepoWithJenkinsfile("nonLiteralEnvironment");
 
+        initGlobalLibrary();
         DumbSlave s = j.createOnlineSlave();
         s.setLabelString("some-label");
 

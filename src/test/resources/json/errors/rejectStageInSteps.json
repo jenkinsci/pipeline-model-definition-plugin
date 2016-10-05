@@ -6,21 +6,21 @@
       "steps": [      {
         "name": "stage",
         "arguments":         {
-          "isConstant": true,
+          "isLiteral": true,
           "value": "hello"
         }
       },
         {
           "name": "echo",
           "arguments": {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "hello"
           }
         }]
     }]
   }],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "none"
   }
 }}

@@ -5,7 +5,7 @@
       "description": "The raw value of an argument, including whether it's a constant",
       "type": "object",
       "properties": {
-        "isConstant": { "type": "boolean" },
+        "isLiteral": { "type": "boolean" },
         "value": {
           "type": [
             "number",
@@ -15,7 +15,7 @@
         }
       },
 
-      "required": ["isConstant", "value"],
+      "required": ["isLiteral", "value"],
 
       "additionalProperties": false
 
