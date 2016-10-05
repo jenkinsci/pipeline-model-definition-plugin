@@ -35,7 +35,7 @@ import net.sf.json.JSONObject
  */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class ModelASTValue extends ModelASTElement {
+public abstract class ModelASTValue extends ModelASTElement implements ModelASTMethodArg {
     /* package */ ModelASTValue(Object sourceLocation, Object v) {
         super(sourceLocation)
         this.value = v

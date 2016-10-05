@@ -28,55 +28,46 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import net.sf.json.JSONArray
+import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
-/**
- * Represents the positional parameters for a step in a list of {@link ModelASTValue}s.
- *
- * @author Kohsuke Kawaguchi
- * @author Andrew Bayer
- */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
-    List<ModelASTValue> arguments = []
+public final class ModelASTBuildParameters extends ModelASTElement {
+    List<ModelASTBuildParameter> parameters = []
 
-    public ModelASTPositionalArgumentList(Object sourceLocation) {
+    public ModelASTBuildParameters(Object sourceLocation) {
         super(sourceLocation)
     }
 
     @Override
-    public JSONArray toJSON() {
+    public JSONObject toJSON() {
         JSONArray a = new JSONArray()
-
-        arguments.each { v ->
-            a.add(v.toJSON())
+        parameters.each { s ->
+            a.add(s.toJSON())
         }
-        return a
+
+        return new JSONObject()
+            .accumulate("parameters",a)
     }
 
     @Override
     public void validate(ModelValidator validator) {
-        // Nothing to validate directly
-        arguments.each { v ->
-            v?.validate(validator)
+        validator.validateElement(this)
+        parameters.each { s ->
+            s?.validate(validator)
         }
     }
 
     @Override
     public String toGroovy() {
-        return arguments.collect { v ->
-            v.toGroovy()
-        }.join(", ")
+        return "parameters {\n${parameters.collect { it.toGroovy() }.join("\n") }\n"
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation()
-
-        arguments.each { v ->
-            v.removeSourceLocation()
-        }
+        parameters.each { it.removeSourceLocation() }
     }
 }

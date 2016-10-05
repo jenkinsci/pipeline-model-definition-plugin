@@ -23,6 +23,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     ModelASTEnvironment environment
     ModelASTAgent agent
     ModelASTTools tools
+    ModelASTJobProperties jobProperties
+    ModelASTBuildParameters parameters
+    ModelASTTriggers triggers
 
     public ModelASTPipelineDef(Object sourceLocation) {
         super(sourceLocation)
@@ -37,6 +40,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         a.put('environment',environment?.toJSON())
         a.put('agent',agent?.toJSON())
         a.put('tools',tools?.toJSON())
+        a.put('jobProperties',jobProperties?.toJSON())
+        a.put('parameters',parameters?.toJSON())
+        a.put('triggers',triggers?.toJSON())
         return new JSONObject()
                 .accumulate("pipeline", a)
     }
@@ -51,6 +57,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         environment?.validate(validator)
         agent?.validate(validator)
         tools?.validate(validator)
+        jobProperties?.validate(validator)
+        parameters?.validate(validator)
+        triggers?.validate(validator)
     }
 
     @Override
@@ -77,6 +86,18 @@ public final class ModelASTPipelineDef extends ModelASTElement {
 
         if (notifications != null) {
             lines << notifications.toGroovy()
+        }
+
+        if (jobProperties != null && !jobProperties.properties.isEmpty()) {
+            lines << jobProperties.toGroovy()
+        }
+
+        if (parameters != null && !parameters.parameters.isEmpty()) {
+            lines << parameters.toGroovy()
+        }
+
+        if (triggers != null && !triggers.triggers.isEmpty()) {
+            lines << triggers.toGroovy()
         }
 
         lines << "}"
@@ -116,6 +137,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         postBuild.removeSourceLocation()
         environment.removeSourceLocation()
         tools.removeSourceLocation()
+        jobProperties.removeSourceLocation()
+        parameters.removeSourceLocation()
+        triggers.removeSourceLocation()
     }
 
     private String indent(int count) {

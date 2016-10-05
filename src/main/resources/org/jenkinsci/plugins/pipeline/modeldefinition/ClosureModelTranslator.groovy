@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
@@ -135,6 +136,11 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                         def ptm = new PropertiesToMapTranslator(script)
                         resolveClosure(argValue, ptm)
                         resultValue = ptm.toNestedModel(actualType)
+                    }
+                    else if (Utils.assignableFromWrapper(MethodsToList.class, actualType)) {
+                        def mtl = new MethodsToListTranslator(script, actualType)
+                        resolveClosure(argValue, mtl)
+                        resultValue = mtl.toListModel(actualType)
                     }
                     // And lastly, recurse - this must be another container block.
                     else {

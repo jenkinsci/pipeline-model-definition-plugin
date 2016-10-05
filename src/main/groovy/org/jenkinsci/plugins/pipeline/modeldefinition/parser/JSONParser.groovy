@@ -33,14 +33,23 @@ import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodArg
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCallFromArguments
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
@@ -122,6 +131,15 @@ class JSONParser {
                 case 'tools':
                     pipelineDef.tools = parseTools(pipelineJson.getJSONArray("tools"))
                     break
+                case 'jobProperties':
+                    pipelineDef.jobProperties = parseJobProperties(pipelineJson.getJSONObject("jobProperties"))
+                    break
+                case 'triggers':
+                    pipelineDef.triggers = parseTriggers(pipelineJson.getJSONObject("triggers"))
+                    break
+                case 'parameters':
+                    pipelineDef.parameters = parseBuildParameters(pipelineJson.getJSONObject("parameters"))
+                    break
                 default:
                     errorCollector.error(pipelineDef, "Undefined section '${sectionName}'")
             }
@@ -168,6 +186,108 @@ class JSONParser {
         }
 
         return branch
+    }
+
+    public @CheckForNull ModelASTJobProperties parseJobProperties(JSONObject j) {
+        ModelASTJobProperties properties = new ModelASTJobProperties(j)
+
+        j.getJSONArray("properties").each { p ->
+            ModelASTJobProperty prop = new ModelASTJobProperty(p)
+            ModelASTMethodCallFromArguments m = parseMethodCallFromArguments(p)
+            prop.args = m.args
+            prop.name = m.name
+            properties.properties.add(prop)
+        }
+
+        return properties
+    }
+
+    public @CheckForNull ModelASTTriggers parseTriggers(JSONObject j) {
+        ModelASTTriggers triggers = new ModelASTTriggers(j)
+
+        j.getJSONArray("triggers").each { p ->
+            ModelASTTrigger t = new ModelASTTrigger(p)
+            ModelASTMethodCallFromArguments m = parseMethodCallFromArguments(p)
+            t.args = m.args
+            t.name = m.name
+            triggers.triggers.add(t)
+        }
+
+        return triggers
+    }
+
+    public @CheckForNull ModelASTBuildParameters parseBuildParameters(JSONObject j) {
+        ModelASTBuildParameters params = new ModelASTBuildParameters(j)
+
+        j.getJSONArray("parameters").each { p ->
+            ModelASTBuildParameter b = new ModelASTBuildParameter(p)
+            ModelASTMethodCallFromArguments m = parseMethodCallFromArguments(p)
+            b.args = m.args
+            b.name = m.name
+            params.parameters.add(b)
+        }
+
+        return params
+    }
+
+    public @CheckForNull parseKeyValueOrMethodCallPair(JSONObject j) {
+        ModelASTKeyValueOrMethodCallPair pair = new ModelASTKeyValueOrMethodCallPair(j)
+
+        // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
+        pair.key = parseKey(j)
+
+        JSONObject v = j.getJSONObject("value")
+
+        if (v.has("name") && v.has("arguments")) {
+            // This is a method call
+            pair.value = parseMethodCallFromArguments(v)
+        } else if (v.has("isLiteral") && v.has("value")) {
+            // This is a single argument
+            pair.value = parseValue(v)
+        } else {
+            errorCollector.error(pair, "Invalid value type")
+        }
+
+        return pair
+    }
+
+    public @CheckForNull ModelASTMethodCallFromArguments parseMethodCallFromArguments(Object o) {
+        ModelASTMethodCallFromArguments meth = new ModelASTMethodCallFromArguments(o)
+        if (o instanceof JSONObject) {
+            meth.name = o.getString("name")
+            if (o.has("arguments") && o.get("arguments") instanceof JSONArray) {
+                JSONArray args = o.getJSONArray("arguments")
+                args.each { rawEntry ->
+                    if (rawEntry instanceof JSONObject) {
+                        JSONObject entry = (JSONObject) rawEntry
+                        ModelASTMethodArg arg
+                        if (entry.has("key") && entry.has("value")) {
+                            // This is a key/value pair
+                            arg = parseKeyValueOrMethodCallPair(entry)
+                        } else if (entry.has("name") && entry.has("arguments")) {
+                            // This is a method call
+                            arg = parseMethodCallFromArguments(entry)
+                        } else if (entry.has("isLiteral") && entry.has("value")) {
+                            // This is a single argument
+                            arg = parseValue(entry)
+                        } else {
+                            errorCollector.error(meth, "Invalid argument syntax")
+                        }
+                        if (arg != null) {
+                            meth.args << arg
+                        }
+                    } else {
+                        errorCollector.error(meth, "Individual method arguments must be a JSON object")
+                    }
+                }
+            } else {
+                errorCollector.error(meth, "Method arguments missing or not an array")
+            }
+        } else {
+            errorCollector.error(meth, "Method call definition must be a JSON object")
+        }
+
+        return meth
     }
 
     public @CheckForNull ModelASTStep parseStep(JSONObject j) {

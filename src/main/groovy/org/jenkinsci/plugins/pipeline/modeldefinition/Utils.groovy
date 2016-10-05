@@ -22,31 +22,30 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition;
+package org.jenkinsci.plugins.pipeline.modeldefinition
 
-
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import hudson.ExtensionList
+import hudson.model.Describable
+import hudson.model.Descriptor
+import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
+import java.util.concurrent.TimeUnit;
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -126,6 +125,33 @@ public class Utils {
 
     }
 
+    @Whitelisted
+    public static Class<Describable> getMethodstoListType(Class c) {
+        Class retClass
+        c.genericInterfaces.each { Type t ->
+            if (t instanceof ParameterizedType) {
+                if (t.rawType.equals(MethodsToList.class)) {
+                    retClass = t.actualTypeArguments.first()
+                }
+            }
+        }
+
+        return retClass
+    }
+/*
+    @Whitelisted
+    public static Class<Describable> getMethodsToListDescribable(Class c) {
+        Class<Describable> returnClass
+
+        if (c instanceof MethodsToList) {
+            c.genericInterfaces.each { Type t ->
+                if (t instanceof ParameterizedType) {
+                    if (t.rawType)
+                }
+            }
+        }
+    }
+    */
     /**
      * Simple wrapper for isInstance to avoid whitelisting issues.
      *
@@ -179,5 +205,59 @@ public class Utils {
         r.addAction(new ExecutionModelAction(stages))
     }
 
+
+    @Whitelisted
+    static Map<String,Object> mapForDescribable(UninstantiatedDescribable ud) {
+        Map<String,Object> args = [:]
+
+        ud.arguments.each { k, v ->
+            if (k == UninstantiatedDescribable.ANONYMOUS_KEY &&
+                (v instanceof List || v instanceof Object[]) &&
+                v[0] instanceof Map) {
+                args.putAll((Map) v[0])
+            } else if (v instanceof UninstantiatedDescribable) {
+                args.putAll(mapForDescribable((UninstantiatedDescribable)v))
+            } else {
+                args[k] = v
+            }
+        }
+        if (ud.klass != null) {
+            args['$class'] = ud.klass
+        } else {
+            Descriptor d = SymbolLookup.get().findDescriptor(Object.class, ud.symbol)
+            if (d != null) {
+                args['$class'] = d.clazz.simpleName
+            }
+        }
+
+        return args
+    }
+
+    static generateTypeCache(Class<? extends Descriptor> type, List<String> excludedSymbols = []) {
+        return CacheBuilder.newBuilder()
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build(new CacheLoader<Object, Map<String, String>>() {
+            @Override
+            Map<String, String> load(Object key) throws Exception {
+                return populateTypeCache(type, excludedSymbols)
+            }
+        })
+    }
+
+    private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type, List<String> excludedSymbols = []) {
+        Map<String,String> knownTypes = [:]
+
+        ExtensionList.lookup(type).each { t ->
+            Set<String> symbolValue = SymbolLookup.getSymbolValue(t)
+            if (!symbolValue.isEmpty() && !symbolValue.any { excludedSymbols.contains(it) }) {
+                knownTypes.put(symbolValue.iterator().next(), t.clazz.getName())
+            }
+
+            // Add the class name mapping even if we also found the symbol, for backwards compatibility reasons.
+            knownTypes.put(t.clazz.getName(), t.clazz.getName())
+        }
+
+        return knownTypes
+    }
 
 }

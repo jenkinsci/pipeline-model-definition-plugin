@@ -28,10 +28,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import net.sf.json.JSONArray
+import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
+import javax.annotation.Nonnull
+
 /**
- * Represents the positional parameters for a step in a list of {@link ModelASTValue}s.
+ * Represents the named parameters for a step in a map of {@link ModelASTKey}s and {@link ModelASTValue}s.
  *
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
@@ -39,44 +42,36 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
-    List<ModelASTValue> arguments = []
+public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement implements ModelASTMethodArg {
+    ModelASTKey key
+    ModelASTMethodArg value
 
-    public ModelASTPositionalArgumentList(Object sourceLocation) {
+    public ModelASTKeyValueOrMethodCallPair(Object sourceLocation) {
         super(sourceLocation)
     }
 
     @Override
-    public JSONArray toJSON() {
-        JSONArray a = new JSONArray()
-
-        arguments.each { v ->
-            a.add(v.toJSON())
-        }
-        return a
+    public JSONObject toJSON() {
+        return new JSONObject()
+            .accumulate("key", key.toJSON())
+            .accumulate("value", value.toJSON())
     }
 
     @Override
     public void validate(ModelValidator validator) {
-        // Nothing to validate directly
-        arguments.each { v ->
-            v?.validate(validator)
-        }
+        key?.validate(validator)
+        value?.validate(validator)
     }
 
     @Override
     public String toGroovy() {
-        return arguments.collect { v ->
-            v.toGroovy()
-        }.join(", ")
+        return "${key.toGroovy()}: ${value.toGroovy()}"
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation()
-
-        arguments.each { v ->
-            v.removeSourceLocation()
-        }
+        key?.removeSourceLocation()
+        value?.removeSourceLocation()
     }
 }

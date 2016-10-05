@@ -25,58 +25,52 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import net.sf.json.JSONArray
+import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
-/**
- * Represents the positional parameters for a step in a list of {@link ModelASTValue}s.
- *
- * @author Kohsuke Kawaguchi
- * @author Andrew Bayer
- */
 @ToString(includeSuper = true, includeSuperProperties = true)
-@EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
-    List<ModelASTValue> arguments = []
+public class ModelASTMethodCallFromArguments extends ModelASTElement implements ModelASTMethodArg {
+    String name;
+    List<ModelASTMethodArg> args = []
 
-    public ModelASTPositionalArgumentList(Object sourceLocation) {
+    ModelASTMethodCallFromArguments(Object sourceLocation) {
         super(sourceLocation)
     }
 
     @Override
-    public JSONArray toJSON() {
+    public JSONObject toJSON() {
         JSONArray a = new JSONArray()
-
-        arguments.each { v ->
-            a.add(v.toJSON())
+        args.each { arg ->
+            a.add(arg.toJSON())
         }
-        return a
+        return new JSONObject()
+            .accumulate("name", name)
+            .accumulate("arguments", a)
     }
 
     @Override
     public void validate(ModelValidator validator) {
-        // Nothing to validate directly
-        arguments.each { v ->
-            v?.validate(validator)
+        validator.validateElement(this)
+
+        args.each { a ->
+            a?.validate(validator)
         }
     }
 
     @Override
     public String toGroovy() {
-        return arguments.collect { v ->
-            v.toGroovy()
-        }.join(", ")
+        List<String> argsGroovy = args.collect { a -> a.toGroovy() }
+        return "${name}(${argsGroovy.join(", ")})"
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation()
-
-        arguments.each { v ->
-            v.removeSourceLocation()
+        args.each { a ->
+            a.removeSourceLocation()
         }
     }
 }
