@@ -347,7 +347,7 @@ class ModelParser {
             errorCollector.error(thisProp,"Job property definitions cannot have blocks")
             return thisProp
         } else {
-            ModelASTMethodCall mArgs = parseMethodCallFromArguments(mc)
+            ModelASTMethodCall mArgs = parseMethodCall(mc)
             thisProp.args = mArgs.args
             thisProp.name = mArgs.name
         }
@@ -389,7 +389,7 @@ class ModelParser {
             errorCollector.error(trig,"Trigger definitions cannot have blocks")
             return trig
         } else {
-            ModelASTMethodCall mArgs = parseMethodCallFromArguments(mc)
+            ModelASTMethodCall mArgs = parseMethodCall(mc)
             trig.args = mArgs.args
             trig.name = mArgs.name
         }
@@ -431,7 +431,7 @@ class ModelParser {
             errorCollector.error(param,"Build parameter definitions cannot have blocks")
             return param
         } else {
-            ModelASTMethodCall mArgs = parseMethodCallFromArguments(mc)
+            ModelASTMethodCall mArgs = parseMethodCall(mc)
             param.args = mArgs.args
             param.name = mArgs.name
         }
@@ -439,7 +439,7 @@ class ModelParser {
         return param
     }
 
-    public ModelASTMethodCall parseMethodCallFromArguments(MethodCallExpression expr) {
+    public ModelASTMethodCall parseMethodCall(MethodCallExpression expr) {
         ModelASTMethodCall m = new ModelASTMethodCall(expr)
         def methodName = parseMethodName(expr);
         m.name = methodName
@@ -455,15 +455,19 @@ class ModelParser {
                     // Don't need to check key duplication here because Groovy compilation will do it for us.
                     ModelASTKeyValueOrMethodCallPair keyPair = new ModelASTKeyValueOrMethodCallPair(e)
                     keyPair.key = parseKey(e.keyExpression)
-                    if (e.valueExpression instanceof MethodCallExpression) {
-                        keyPair.value = parseMethodCallFromArguments((MethodCallExpression) e.valueExpression)
+                    if (e.valueExpression instanceof ClosureExpression) {
+                        errorCollector.error(keyPair, "Method call arguments cannot use closures")
+                    } else if (e.valueExpression instanceof MethodCallExpression) {
+                        keyPair.value = parseMethodCall((MethodCallExpression) e.valueExpression)
                     } else {
                         keyPair.value = parseArgument(e.valueExpression)
                     }
                     m.args << keyPair
                 }
+            } else if (a instanceof ClosureExpression) {
+                errorCollector.error(m, "Method call arguments cannot use closures")
             } else if (a instanceof MethodCallExpression) {
-                m.args << parseMethodCallFromArguments(a)
+                m.args << parseMethodCall(a)
             } else {
                 m.args << parseArgument(a)
             }

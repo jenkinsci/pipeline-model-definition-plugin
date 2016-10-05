@@ -118,12 +118,24 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"emptyPostBuild", "At /pipeline/postBuild/conditions: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyNotifications", "At /pipeline/notifications/conditions: Array has 0 entries, requires minimum of 1"});
 
-        result.add(new Object[]{"rejectStageInSteps", "Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in step blocks in Pipeline Config"});
+        result.add(new Object[]{"rejectStageInSteps", "Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines"});
         result.add(new Object[]{"rejectParallelMixedInSteps", "Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block"});
 
         result.add(new Object[]{"stageWithoutName", "At /pipeline/stages/0: Missing one or more required properties: 'name'"});
 
         result.add(new Object[]{"emptyParallel", "Nothing to execute within stage 'foo'"});
+
+        result.add(new Object[]{"emptyJobProperties", "Cannot have empty jobProperties section"});
+        result.add(new Object[]{"emptyParameters", "Cannot have empty parameters section"});
+        result.add(new Object[]{"emptyTriggers", "Cannot have empty triggers section"});
+        result.add(new Object[]{"mixedMethodArgs", "Can't mix named and unnamed parameter definition arguments"});
+
+        result.add(new Object[]{"rejectPropertiesStepInMethodCall",
+                "Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines"});
+
+        result.add(new Object[]{"tooFewMethodCallArgs", "'cron' should have 1 arguments but has 0 arguments instead"});
+        result.add(new Object[]{"wrongParameterNameMethodCall", "Invalid parameter 'namd', did you mean 'name'?"});
+        result.add(new Object[]{"invalidParameterTypeMethodCall", "Expecting class java.lang.String for parameter 'name' but got '1234' instead"});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +

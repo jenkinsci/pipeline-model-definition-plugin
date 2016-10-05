@@ -56,6 +56,14 @@ import java.util.concurrent.TimeUnit;
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Utils {
 
+    public static Map<String,String> blockedStepsBase() {
+        return [
+            "stage":      'The stage step cannot be used in Declarative Pipelines',
+            "properties": 'The properties step cannot be used in Declarative Pipelines',
+            "parallel":   "The parallel step can only be used as the only top-level step in a stage's step block"
+        ]
+    }
+
     /**
      * Workaround for not having to whitelist isAssignableFrom, metaClass etc to determine whether a field on
      * a class is of a specific type.

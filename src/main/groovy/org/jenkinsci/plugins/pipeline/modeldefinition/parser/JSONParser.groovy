@@ -193,7 +193,7 @@ class JSONParser {
 
         j.getJSONArray("properties").each { p ->
             ModelASTJobProperty prop = new ModelASTJobProperty(p)
-            ModelASTMethodCall m = parseMethodCallFromArguments(p)
+            ModelASTMethodCall m = parseMethodCall(p)
             prop.args = m.args
             prop.name = m.name
             properties.properties.add(prop)
@@ -207,7 +207,7 @@ class JSONParser {
 
         j.getJSONArray("triggers").each { p ->
             ModelASTTrigger t = new ModelASTTrigger(p)
-            ModelASTMethodCall m = parseMethodCallFromArguments(p)
+            ModelASTMethodCall m = parseMethodCall(p)
             t.args = m.args
             t.name = m.name
             triggers.triggers.add(t)
@@ -221,7 +221,7 @@ class JSONParser {
 
         j.getJSONArray("parameters").each { p ->
             ModelASTBuildParameter b = new ModelASTBuildParameter(p)
-            ModelASTMethodCall m = parseMethodCallFromArguments(p)
+            ModelASTMethodCall m = parseMethodCall(p)
             b.args = m.args
             b.name = m.name
             params.parameters.add(b)
@@ -240,7 +240,7 @@ class JSONParser {
 
         if (v.has("name") && v.has("arguments")) {
             // This is a method call
-            pair.value = parseMethodCallFromArguments(v)
+            pair.value = parseMethodCall(v)
         } else if (v.has("isLiteral") && v.has("value")) {
             // This is a single argument
             pair.value = parseValue(v)
@@ -251,7 +251,7 @@ class JSONParser {
         return pair
     }
 
-    public @CheckForNull ModelASTMethodCall parseMethodCallFromArguments(Object o) {
+    public @CheckForNull ModelASTMethodCall parseMethodCall(Object o) {
         ModelASTMethodCall meth = new ModelASTMethodCall(o)
         if (o instanceof JSONObject) {
             meth.name = o.getString("name")
@@ -266,7 +266,7 @@ class JSONParser {
                             arg = parseKeyValueOrMethodCallPair(entry)
                         } else if (entry.has("name") && entry.has("arguments")) {
                             // This is a method call
-                            arg = parseMethodCallFromArguments(entry)
+                            arg = parseMethodCall(entry)
                         } else if (entry.has("isLiteral") && entry.has("value")) {
                             // This is a single argument
                             arg = parseValue(entry)

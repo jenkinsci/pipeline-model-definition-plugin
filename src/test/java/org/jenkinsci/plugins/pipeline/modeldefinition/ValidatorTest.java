@@ -40,7 +40,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void rejectStageInSteps() throws Exception {
         prepRepoWithJenkinsfile("errors", "rejectStageInSteps");
 
-        failWithError("Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in step blocks in Pipeline Config");
+        failWithError("Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines");
     }
 
     @Test
@@ -65,6 +65,90 @@ public class ValidatorTest extends AbstractModelDefTest {
         prepRepoWithJenkinsfile("errors", "emptyStages");
 
         failWithError("No stages specified");
+    }
+
+    @Test
+    public void emptyJobProperties() throws Exception {
+        prepRepoWithJenkinsfile("errors", "emptyJobProperties");
+
+        failWithError("Cannot have empty jobProperties section");
+    }
+
+    @Test
+    public void emptyParameters() throws Exception {
+        prepRepoWithJenkinsfile("errors", "emptyParameters");
+
+        failWithError("Cannot have empty parameters section");
+    }
+
+    @Test
+    public void emptyTriggers() throws Exception {
+        prepRepoWithJenkinsfile("errors", "emptyTriggers");
+
+        failWithError("Cannot have empty triggers section");
+    }
+
+    @Test
+    public void blockInJobProperties() throws Exception {
+        prepRepoWithJenkinsfile("errors", "blockInJobProperties");
+
+        failWithError("Job property definitions cannot have blocks");
+    }
+
+    @Test
+    public void blockInParameters() throws Exception {
+        prepRepoWithJenkinsfile("errors", "blockInParameters");
+
+        failWithError("Build parameter definitions cannot have blocks");
+    }
+
+    @Test
+    public void blockInTriggers() throws Exception {
+        prepRepoWithJenkinsfile("errors", "blockInTriggers");
+
+        failWithError("Trigger definitions cannot have blocks");
+    }
+
+    @Test
+    public void mixedMethodArgs() throws Exception {
+        prepRepoWithJenkinsfile("errors", "mixedMethodArgs");
+
+        failWithError("Can't mix named and unnamed parameter definition arguments");
+    }
+
+    @Test
+    public void closureAsMethodCallArg() throws Exception {
+        prepRepoWithJenkinsfile("errors", "closureAsMethodCallArg");
+
+        failWithError("Method call arguments cannot use closures");
+    }
+
+    @Test
+    public void tooFewMethodCallArgs() throws Exception {
+        prepRepoWithJenkinsfile("errors", "tooFewMethodCallArgs");
+
+        failWithError("'cron' should have 1 arguments but has 0 arguments instead");
+    }
+
+    @Test
+    public void wrongParameterNameMethodCall() throws Exception {
+        prepRepoWithJenkinsfile("errors", "wrongParameterNameMethodCall");
+
+        failWithError("Invalid parameter 'namd', did you mean 'name'?");
+    }
+
+    @Test
+    public void invalidParameterTypeMethodCall() throws Exception {
+        prepRepoWithJenkinsfile("errors", "invalidParameterTypeMethodCall");
+
+        failWithError("Expecting class java.lang.String for parameter 'name' but got '1234' instead");
+    }
+
+    @Test
+    public void rejectPropertiesStepInMethodCall() throws Exception {
+        prepRepoWithJenkinsfile("errors", "rejectPropertiesStepInMethodCall");
+
+        failWithError("Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines");
     }
 
     @Test

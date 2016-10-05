@@ -197,8 +197,9 @@ class ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (step.blockedSteps.keySet().contains(step.name)) {
-            errorCollector.error(step, "Invalid step '${step.name}' used - not allowed in this context - ${step.blockedSteps.get(step.name)}")
+        if (ModelASTStep.blockedSteps.keySet().contains(step.name)) {
+            errorCollector.error(step,
+                "Invalid step '${step.name}' used - not allowed in this context - ${ModelASTStep.blockedSteps.get(step.name)}")
             valid = false
         } else {
             // We can't do step validation without a Jenkins instance, so move on.
@@ -286,6 +287,11 @@ class ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
+        if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
+            errorCollector.error(meth,
+                "Invalid step '${meth.name}' used - not allowed in this context - ${ModelASTMethodCall.blockedSteps.get(meth.name)}")
+            valid = false
+        }
         if (Jenkins.getInstance() != null) {
             Descriptor desc = lookupFunction(meth.name)
             DescribableModel<? extends Describable> model
@@ -297,6 +303,7 @@ class ModelValidator {
                 if (meth.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }) {
                     meth.args.each { a ->
                         ModelASTKeyValueOrMethodCallPair kvm = (ModelASTKeyValueOrMethodCallPair) a
+
                         def p = model.getParameter(kvm.key.key);
                         if (p == null) {
                             String possible = EditDistance.findNearest(kvm.key.key, model.getParameters().collect {
@@ -426,6 +433,11 @@ class ModelValidator {
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
         if (v.isLiteral()) {
             try {
+                // Converting from boolean or int to string at runtime doesn't work, but does pass castToType. So.
+                if (erasedType.equals(String.class)
+                    && (v.value instanceof Integer || v.value instanceof Boolean)) {
+                    throw new RuntimeException("Ignore")
+                }
                 ScriptBytecodeAdapter.castToType(v.value, erasedType);
             } catch (Exception e) {
                 if (k != null) {
