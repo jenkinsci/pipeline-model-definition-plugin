@@ -162,12 +162,7 @@ public class ModelConverterAction implements RootAction {
                 array.add(step.toJSON());
             }
             result.accumulate("result", "success");
-            if (array.size() == 1) {
-                result.accumulate("json", array.get(0)); //TODO decide if consistently returning an array is better
-            } else {
-                result.accumulate("json", array);
-            }
-
+            result.accumulate("json", array);
         } catch (MultipleCompilationErrorsException e) {
             result.accumulate("result", "failure");
             JSONArray errors = new JSONArray();

@@ -36,6 +36,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.IOException;
 import java.util.Collections;
 
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.isA;
 import static org.hamcrest.core.StringContains.containsString;
@@ -70,8 +71,8 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
         assertThat(result, hasKey("data"));
         JSONObject data = result.getJSONObject("data");
         assertThat(data, hasEntry("result", "success"));
-        assertThat(data, hasKey("json"));
-        JSONObject json = data.getJSONObject("json");
+        assertThat(data, hasEntry("json", allOf(isA(JSONArray.class), hasSize(1))));
+        JSONObject json = data.getJSONArray("json").getJSONObject(0);
         assertThat(json, allOf(
                 hasEntry("name", "echo"),
                 hasEntry("arguments", hasEntry("value", "Hello World"))
@@ -132,8 +133,8 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
         assertThat(result, hasKey("data"));
         JSONObject data = result.getJSONObject("data");
         assertThat(data, hasEntry("result", "success"));
-        assertThat(data, hasEntry("json", isA(JSONObject.class)));
-        JSONObject json = data.getJSONObject("json");
+        assertThat(data, hasEntry("json", allOf(isA(JSONArray.class), hasSize(1))));
+        JSONObject json = data.getJSONArray("json").getJSONObject(0);
         assertThat(json,
                    allOf(
                            hasEntry("name", "script"),
