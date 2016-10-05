@@ -32,13 +32,13 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
-import net.sf.json.util.JSONUtils;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -91,24 +91,12 @@ public class ModelConverterAction implements RootAction {
 
             ModelASTPipelineDef pipelineDef = parser.parse();
 
-            if (parser.getErrorCollector().getErrorCount() > 0) {
-                result.accumulate("result", "failure");
-
-                JSONArray errors = new JSONArray();
-                for (String jsonError : parser.getErrorCollector().errorsAsStrings()) {
-                    errors.add(jsonError);
-                }
-
-                result.accumulate("errors", errors);
-            } else {
+            if (!collectErrors(result, parser.getErrorCollector())) {
                 result.accumulate("result", "success");
                 result.accumulate("jenkinsfile", pipelineDef.toPrettyGroovy());
             }
         } catch (Exception je) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            errors.add(je.getMessage());
-            result.accumulate("errors", errors);
+            reportFailure(result, je);
         }
 
         return HttpResponses.okJSON(result);
@@ -127,20 +115,8 @@ public class ModelConverterAction implements RootAction {
             ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
             result.accumulate("result", "success");
             result.accumulate("json", pipelineDef.toJSON());
-        } catch (MultipleCompilationErrorsException e) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            for (Object o : e.getErrorCollector().getErrors()) {
-                if (o instanceof SyntaxErrorMessage) {
-                    errors.add(((SyntaxErrorMessage) o).getCause().getMessage());
-                }
-            }
-            result.accumulate("errors", errors);
         } catch (Exception e) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            errors.add(e.getMessage());
-            result.accumulate("errors", errors);
+            reportFailure(result, e);
         }
 
         return HttpResponses.okJSON(result);
@@ -163,20 +139,8 @@ public class ModelConverterAction implements RootAction {
             }
             result.accumulate("result", "success");
             result.accumulate("json", array);
-        } catch (MultipleCompilationErrorsException e) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            for (Object o : e.getErrorCollector().getErrors()) {
-                if (o instanceof SyntaxErrorMessage) {
-                    errors.add(((SyntaxErrorMessage) o).getCause().getMessage());
-                }
-            }
-            result.accumulate("errors", errors);
         } catch (Exception e) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            errors.add(e.getMessage());
-            result.accumulate("errors", errors);
+            reportFailure(result, e);
         }
 
         return HttpResponses.okJSON(result);
@@ -212,21 +176,11 @@ public class ModelConverterAction implements RootAction {
                 }
             }
 
-            if (parser.getErrorCollector().getErrorCount() > 0) {
-                result.accumulate("result", "failure");
+            boolean collectedSomeErrors = collectErrors(result, parser.getErrorCollector());
 
-                JSONArray errors = new JSONArray();
-                for (String jsonError : parser.getErrorCollector().errorsAsStrings()) {
-                    errors.add(jsonError);
-                }
-
-                result.accumulate("errors", errors);
-            } else if (astSteps.isEmpty()) {
-                result.accumulate("result", "failure");
-                JSONArray errors = new JSONArray();
-                errors.add("No result.");
-                result.accumulate("errors", errors);
-            } else {
+            if (!collectedSomeErrors && astSteps.isEmpty()) {
+                reportFailure(result, "No result.");
+            } else if (!collectedSomeErrors){
                 result.accumulate("result", "success");
                 StringBuilder jenkinsFile = new StringBuilder();
                 for (ModelASTStep step : astSteps) {
@@ -238,10 +192,7 @@ public class ModelConverterAction implements RootAction {
                 result.accumulate("jenkinsfile", jenkinsFile.toString());
             }
         } catch (Exception je) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            errors.add(je.getMessage());
-            result.accumulate("errors", errors);
+            reportFailure(result, je);
         }
 
         return HttpResponses.okJSON(result);
@@ -259,20 +210,8 @@ public class ModelConverterAction implements RootAction {
         try {
             ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
             result.accumulate("result", "success");
-        } catch (MultipleCompilationErrorsException e) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            for (Object o : e.getErrorCollector().getErrors()) {
-                if (o instanceof SyntaxErrorMessage) {
-                    errors.add(((SyntaxErrorMessage) o).getCause().getMessage());
-                }
-            }
-            result.accumulate("errors", errors);
         } catch (Exception e) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            errors.add(e.getMessage());
-            result.accumulate("errors", errors);
+            reportFailure(result, e);
         }
 
         return HttpResponses.okJSON(result);
@@ -294,23 +233,11 @@ public class ModelConverterAction implements RootAction {
 
             parser.parse();
 
-            if (parser.getErrorCollector().getErrorCount() > 0) {
-                result.accumulate("result", "failure");
-
-                JSONArray errors = new JSONArray();
-                for (String jsonError : parser.getErrorCollector().errorsAsStrings()) {
-                    errors.add(jsonError);
-                }
-
-                result.accumulate("errors", errors);
-            } else {
+            if (!collectErrors(result, parser.getErrorCollector())) {
                 result.accumulate("result", "success");
             }
         } catch (Exception je) {
-            result.accumulate("result", "failure");
-            JSONArray errors = new JSONArray();
-            errors.add(je.getMessage());
-            result.accumulate("errors", errors);
+            reportFailure(result, je);
         }
 
         return HttpResponses.okJSON(result);
@@ -320,5 +247,67 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     public void doSchema(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         rsp.serveFile(req, getClass().getResource("/ast-schema.json"), TimeUnit2.DAYS.toMillis(1));
+    }
+
+    /**
+     * Checks the error collector for errors, and if there are any set the result as failure
+     * @param result the result to mutate if so
+     * @param errorCollector the collector of errors
+     * @return {@code true} if any errors where collected.
+     */
+    private boolean collectErrors(JSONObject result, ErrorCollector errorCollector) {
+        if (errorCollector.getErrorCount() > 0) {
+            JSONArray errors = new JSONArray();
+            for (String jsonError : errorCollector.errorsAsStrings()) {
+                errors.add(jsonError);
+            }
+            reportFailure(result, errors);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Report result to be a failure message due to the given exception.
+     *
+     * @param result the result to mutate
+     * @param e      the exception to report
+     */
+    private void reportFailure(JSONObject result, Exception e) {
+        JSONArray errors = new JSONArray();
+        if (e instanceof MultipleCompilationErrorsException) {
+            MultipleCompilationErrorsException ce = (MultipleCompilationErrorsException)e;
+            for (Object o : ce.getErrorCollector().getErrors()) {
+                if (o instanceof SyntaxErrorMessage) {
+                    errors.add(((SyntaxErrorMessage)o).getCause().getMessage());
+                }
+            }
+        } else {
+            errors.add(e.getMessage());
+        }
+        reportFailure(result, errors);
+    }
+
+    /**
+     * Report result to be a failure message due to the given error message.
+     *
+     * @param result the result to mutate
+     * @param message the error
+     */
+    private void reportFailure(JSONObject result, String message) {
+        JSONArray errors = new JSONArray();
+        errors.add(message);
+        reportFailure(result, errors);
+    }
+
+    /**
+     * Report result to be a failure message due to the given error messages.
+     *
+     * @param result the result to mutate
+     * @param errors the errors
+     */
+    private void reportFailure(JSONObject result, JSONArray errors) {
+        result.accumulate("result", "failure");
+        result.accumulate("errors", errors);
     }
 }
