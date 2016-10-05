@@ -95,6 +95,12 @@ class ModelParser {
         return parse(sourceUnit.AST);
     }
 
+    public @CheckForNull List<ModelASTStep> parsePlainSteps(ModuleNode src) {
+        src.statementBlock.statements.collect() {
+            return parseStep(it);
+        }
+    }
+
     /**
      * Given a Groovy AST that represents a parsed source code, parses
      * that into {@link ModelASTPipelineDef}

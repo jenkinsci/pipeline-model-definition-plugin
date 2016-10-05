@@ -148,7 +148,48 @@ public class ModelConverterAction implements RootAction {
 
     @SuppressWarnings("unused")
     @RequirePOST
-    public HttpResponse doStepToJenkinsfile(StaplerRequest req) {
+    public HttpResponse doStepsToJson(StaplerRequest req) {
+        Jenkins.getInstance().checkPermission(READ);
+
+        JSONObject result = new JSONObject();
+
+        String groovyAsString = req.getParameter("jenkinsfile");
+
+        try {
+            List<ModelASTStep> steps = Converter.scriptToPlainSteps(groovyAsString);
+            JSONArray array = new JSONArray();
+            for (ModelASTStep step : steps) {
+                array.add(step.toJSON());
+            }
+            result.accumulate("result", "success");
+            if (array.size() == 1) {
+                result.accumulate("json", array.get(0)); //TODO decide if consistently returning an array is better
+            } else {
+                result.accumulate("json", array);
+            }
+
+        } catch (MultipleCompilationErrorsException e) {
+            result.accumulate("result", "failure");
+            JSONArray errors = new JSONArray();
+            for (Object o : e.getErrorCollector().getErrors()) {
+                if (o instanceof SyntaxErrorMessage) {
+                    errors.add(((SyntaxErrorMessage) o).getCause().getMessage());
+                }
+            }
+            result.accumulate("errors", errors);
+        } catch (Exception e) {
+            result.accumulate("result", "failure");
+            JSONArray errors = new JSONArray();
+            errors.add(e.getMessage());
+            result.accumulate("errors", errors);
+        }
+
+        return HttpResponses.okJSON(result);
+    }
+
+    @SuppressWarnings("unused")
+    @RequirePOST
+    public HttpResponse doStepsToJenkinsfile(StaplerRequest req) {
         Jenkins.getInstance().checkPermission(READ);
 
         JSONObject result = new JSONObject();
