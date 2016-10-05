@@ -47,7 +47,9 @@ import javax.annotation.Nonnull
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class JobProperties implements Serializable, MethodsToList<JobProperty> {
-    List<JobProperty> properties = []
+    // Transient since JobProperty isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
+    // anyway.
+    transient List<JobProperty> properties = []
 
     public JobProperties(List<JobProperty> props) {
         this.properties = props

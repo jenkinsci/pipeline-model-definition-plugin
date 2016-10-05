@@ -49,7 +49,9 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
     private static final LoadingCache<Object,Map<String,String>> triggerTypeCache =
         Utils.generateTypeCache(TriggerDescriptor.class)
 
-    List<Trigger> triggers = []
+    // Transient since Trigger isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
+    // anyway.
+    transient List<Trigger> triggers = []
 
     public Triggers(List<Trigger> t) {
         this.triggers = t
