@@ -67,7 +67,7 @@ public final class ModelASTTriggers extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        return "triggers {\n${triggers.collect { it.toGroovy() }.join("\n") }\n"
+        return "triggers {\n${triggers.collect { it.toGroovy() }.join("\n") }\n}\n"
     }
 
     @Override

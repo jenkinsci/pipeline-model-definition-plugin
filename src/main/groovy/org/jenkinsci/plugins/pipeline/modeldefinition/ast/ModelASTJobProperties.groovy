@@ -67,7 +67,7 @@ public final class ModelASTJobProperties extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        return "jobProperties {\n${properties.collect { it.toGroovy() }.join("\n") }\n"
+        return "jobProperties {\n${properties.collect { it.toGroovy() }.join("\n") }\n}\n"
     }
 
     @Override

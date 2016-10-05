@@ -67,7 +67,7 @@ public final class ModelASTBuildParameters extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        return "parameters {\n${parameters.collect { it.toGroovy() }.join("\n") }\n"
+        return "parameters {\n${parameters.collect { it.toGroovy() }.join("\n") }\n}\n"
     }
 
     @Override
