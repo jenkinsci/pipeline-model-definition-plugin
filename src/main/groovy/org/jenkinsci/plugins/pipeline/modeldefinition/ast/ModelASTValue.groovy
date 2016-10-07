@@ -83,7 +83,11 @@ public abstract class ModelASTValue extends ModelASTElement {
             @Override
             public String toGroovy() {
                 if (o instanceof String) {
-                    return "'${o}'"
+                    if (o.indexOf('\n') == -1) {
+                        return "'${o.replace("'", "\\'")}'"
+                    } else {
+                        return "\'\'\'${o.replace('\'\'\'',"\\\'\\\\'\\\\'")}\'\'\'"
+                    }
                 } else {
                     return o
                 }
