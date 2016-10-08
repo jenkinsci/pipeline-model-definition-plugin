@@ -219,7 +219,7 @@
   </dependencies>
   
   <properties>
-    <jenkins.version>2.7.1</jenkins.version>
+    <jenkins.version>1.642.1</jenkins.version>
     <java.level>7</java.level>
     <groovy.version>2.4.7</groovy.version>
   </properties>
