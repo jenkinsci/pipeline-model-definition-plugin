@@ -32,7 +32,7 @@
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-definition</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.3</version>
   <packaging>hpi</packaging>
   <name>Pipeline: Model Definition</name>
   <description>An opinionated, declarative Pipeline</description>
@@ -57,7 +57,7 @@
     <connection>scm:git:git://git@github.com/jenkinsci/pipeline-config-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-config-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/pipeline-config-plugin</url>
-    <tag>HEAD</tag>
+    <tag>pipeline-model-definition-0.3</tag>
   </scm>
   
   <build>
