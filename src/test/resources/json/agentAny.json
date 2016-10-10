@@ -6,14 +6,14 @@
       "steps": [      {
         "name": "sh",
         "arguments":         {
-          "isConstant": true,
+          "isLiteral": true,
           "value": "echo \"THIS WORKS\""
         }
       }]
     }]
   }],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "any"
   }
 }}

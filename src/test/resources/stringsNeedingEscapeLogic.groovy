@@ -21,43 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            echo '''Hello!
+'How are you?', said script A
 
-/**
- * Translates a closure containing one or more "foo = 'bar'" statements into a map.
- * @author Andrew Bayer
- */
-public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializable {
-    Map<String,Object> actualMap = [:]
-    CpsScript script
+"I am fine \'\'\'really\'\'\'" said script B
 
-    PropertiesToMapTranslator(CpsScript script) {
-        this.script = script
+'''
+            echo 'echo "\'quoted\'"'
+        }
     }
-
-    def methodMissing(String s, args) {
-        return script."${s}"(args)
-    }
-
-
-    void propertyMissing(String s, args) {
-        actualMap.put(s, args)
-    }
-
-    public Map<String, Object> getMap() {
-        def mapCopy = [:]
-        mapCopy.putAll(actualMap)
-        return mapCopy
-    }
-
-    NestedModel toNestedModel(Class<NestedModel> c) {
-        NestedModel m = c.newInstance()
-        m.modelFromMap(actualMap)
-        return m
-    }
-
 }
+
+
+

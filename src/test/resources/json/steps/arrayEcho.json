@@ -1,0 +1,16 @@
+[
+  {
+    "name": "echo",
+    "arguments":         {
+      "isLiteral": true,
+      "value": "Hello"
+    }
+  },
+  {
+    "name": "echo",
+    "arguments":         {
+      "isLiteral": true,
+      "value": "World"
+    }
+  }
+]

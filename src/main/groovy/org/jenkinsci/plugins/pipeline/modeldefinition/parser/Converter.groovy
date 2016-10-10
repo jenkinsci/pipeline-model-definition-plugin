@@ -37,6 +37,7 @@ import org.codehaus.groovy.control.CompilationUnit
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.SourceUnit
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -141,6 +142,31 @@ public class Converter {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
                 model[0] = new ModelParser(source).parse();
+            }
+        }, CANONICALIZATION);
+
+        cu.compile(CANONICALIZATION);
+
+        return model[0];
+    }
+
+    public static List<ModelASTStep> scriptToPlainSteps(String script) {
+        CompilationUnit cu = new CompilationUnit(
+                CompilerConfiguration.DEFAULT,
+                new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
+                new GroovyClassLoader())
+        cu.addSource(PIPELINE_SCRIPT_NAME, script)
+
+        return compilationUnitToPlainSteps(cu)
+    }
+
+    private static List<ModelASTStep> compilationUnitToPlainSteps(CompilationUnit cu) {
+        final List<ModelASTStep>[] model = new List<ModelASTStep>[1];
+
+        cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
+            @Override
+            public void call(SourceUnit source) throws CompilationFailedException {
+                model[0] = new ModelParser(source).parsePlainSteps(source.AST);
             }
         }, CANONICALIZATION);
 

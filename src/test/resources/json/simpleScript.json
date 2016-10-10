@@ -6,14 +6,14 @@
       "steps": [      {
         "name": "script",
         "arguments":         {
-          "isConstant": true,
+          "isLiteral": true,
           "value": "echo \"In a script step\""
         }
       }]
     }]
   }],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "none"
   }
 }}

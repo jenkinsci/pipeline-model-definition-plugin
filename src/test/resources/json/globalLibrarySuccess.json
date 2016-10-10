@@ -7,20 +7,20 @@
         {
           "name": "echo",
           "arguments":           {
-            "isConstant": false,
+            "isLiteral": false,
             "value": "${'['+acmeVar.baz()+']'}"
           }
         },
         {
           "name": "acmeFuncClosure1",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": 1
           },
           "children": [          {
             "name": "echo",
             "arguments":             {
-              "isConstant": true,
+              "isLiteral": true,
               "value": "running inside closure1"
             }
           }]
@@ -29,18 +29,18 @@
           "name": "acmeFuncClosure2",
           "arguments":           [
             {
-              "isConstant": true,
+              "isLiteral": true,
               "value": 1
             },
             {
-              "isConstant": true,
+              "isLiteral": true,
               "value": 2
             }
           ],
           "children": [          {
             "name": "echo",
             "arguments":             {
-              "isConstant": true,
+              "isLiteral": true,
               "value": "running inside closure2"
             }
           }]
@@ -51,14 +51,14 @@
             {
               "key": "a",
               "value":               {
-                "isConstant": true,
+                "isLiteral": true,
                 "value": 1
               }
             },
             {
               "key": "b",
               "value":               {
-                "isConstant": true,
+                "isLiteral": true,
                 "value": 2
               }
             }
@@ -70,7 +70,7 @@
   "agent": [  {
     "key": "label",
     "value":     {
-      "isConstant": true,
+      "isLiteral": true,
       "value": "master"
     }
   }]

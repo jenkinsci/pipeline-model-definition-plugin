@@ -67,8 +67,8 @@ import static org.junit.Assume.assumeTrue;
 public abstract class AbstractModelDefTest {
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
     @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
 
@@ -81,7 +81,6 @@ public abstract class AbstractModelDefTest {
     @Before
     public void setUp() throws Exception {
         ToolInstallations.configureMaven3();
-        initGlobalLibrary();
     }
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
@@ -103,7 +102,8 @@ public abstract class AbstractModelDefTest {
             "simpleTools",
             "legacyMetaStepSyntax",
             "globalLibrarySuccess",
-            "perStageConfigAgent"
+            "perStageConfigAgent",
+            "stringsNeedingEscapeLogic"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -124,7 +124,7 @@ public abstract class AbstractModelDefTest {
 
         result.add(new Object[]{"emptyParallel", "Nothing to execute within stage 'foo'"});
 
-        result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 244 of {\"pipeline\": {\n" +
+        result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +
                 "    \"name\": \"foo\",\n" +
                 "    \"branches\": [    {\n" +
@@ -132,14 +132,14 @@ public abstract class AbstractModelDefTest {
                 "      \"steps\": [      {\n" +
                 "        \"name\": \"echo\",\n" +
                 "        \"arguments\":         {\n" +
-                "          \"isConstant\": true,\n" +
+                "          \"isLiteral\": true,\n" +
                 "          \"value\": \"hello\"\n" +
                 "\n" +
                 "      }]\n" +
                 "    }]\n" +
                 "  }],\n" +
                 "  \"agent\":   {\n" +
-                "    \"isConstant\": true,\n" +
+                "    \"isLiteral\": true,\n" +
                 "    \"value\": \"none\"\n" +
                 "  }\n" +
                 "}}"});
@@ -284,6 +284,9 @@ public abstract class AbstractModelDefTest {
                 "def bar() { return x+'-get' }",
                 "def baz() { return 'nothing here' }")
                 , "\n"));
+        FileUtils.writeStringToFile(new File(vars, "returnAThing.groovy"), StringUtils.join(Arrays.asList(
+                "def call(a) { return \"${a} tada\" }"), "\n"
+        ));
         FileUtils.writeStringToFile(new File(vars, "acmeFunc.groovy"), StringUtils.join(Arrays.asList(
                 "def call(a,b) { echo \"call($a,$b)\" }")
                 , "\n"));

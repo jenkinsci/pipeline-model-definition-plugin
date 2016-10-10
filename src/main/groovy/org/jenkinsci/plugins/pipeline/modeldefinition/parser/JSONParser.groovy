@@ -266,7 +266,7 @@ class JSONParser {
     }
 
     public @CheckForNull ModelASTValue parseValue(JSONObject o) {
-        if (o.getBoolean("isConstant")) {
+        if (o.getBoolean("isLiteral")) {
             return ModelASTValue.fromConstant(o.get("value"), o)
         } else {
             return ModelASTValue.fromGString(o.getString("value"), o)

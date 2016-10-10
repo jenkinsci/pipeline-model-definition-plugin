@@ -7,7 +7,7 @@
         "steps": [        {
           "name": "echo",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "hello"
           }
         }]
@@ -20,7 +20,7 @@
         "steps": [        {
           "name": "echo",
           "arguments":           {
-            "isConstant": true,
+            "isLiteral": true,
             "value": "goodbye"
           }
         }]
@@ -28,7 +28,7 @@
     }
   ],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "none"
   }
 }}

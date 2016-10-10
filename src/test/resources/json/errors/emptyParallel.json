@@ -4,7 +4,7 @@
     "branches": []
   }],
   "agent":   {
-    "isConstant": true,
+    "isLiteral": true,
     "value": "none"
   }
 }}
