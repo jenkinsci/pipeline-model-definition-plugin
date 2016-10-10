@@ -44,7 +44,7 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
     private static final Object CACHE_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> toolTypeCache =
-        Utils.generateTypeCache(ToolDescriptor.class)
+        Utils.generateTypeCache(ToolDescriptor.class, true)
 
     /**
      * Workaround for iterating over a map in CPS code. Gets the tools as a list of type/name tuples.

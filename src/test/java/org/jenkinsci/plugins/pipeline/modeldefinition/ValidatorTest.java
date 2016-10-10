@@ -152,6 +152,13 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void rejectMapsForTriggerDefinition() throws Exception {
+        prepRepoWithJenkinsfile("errors", "rejectMapsForTriggerDefinition");
+
+        failWithError("Triggers cannot be defined as maps");
+    }
+
+    @Test
     public void emptyParallel() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyParallel");
 

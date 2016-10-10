@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.google.common.collect.ImmutableList;
 import hudson.Launcher;
+import hudson.model.ParameterDefinition;
 import hudson.util.StreamTaskListener;
 import hudson.util.VersionNumber;
 import jenkins.plugins.git.GitSampleRepoRule;
@@ -326,4 +327,12 @@ public abstract class AbstractModelDefTest {
     }
 
 
+    protected <T extends ParameterDefinition> T getParameterOfType(List<ParameterDefinition> params, Class<T> c) {
+        for (ParameterDefinition p : params) {
+            if (c.isInstance(p)) {
+                return (T)p;
+            }
+        }
+        return null;
+    }
 }

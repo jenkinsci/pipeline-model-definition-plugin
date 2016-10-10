@@ -358,10 +358,13 @@ class ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTTrigger trig) {
-        boolean valid
+        boolean valid = true
 
+        if (trig.name == null) {
+            // This means that we failed at compilation time so can move on.
+        }
         // We can't do trigger validation without a Jenkins instance, so move on.
-        if (Triggers.typeForKey(trig.name) == null) {
+        else if (Triggers.typeForKey(trig.name) == null) {
             errorCollector.error(trig,
                 "Invalid trigger type '${trig.name}'. Valid trigger types: ${Triggers.getAllowedTriggerTypes().keySet()}")
             valid = false
@@ -385,10 +388,13 @@ class ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildParameter param) {
-        boolean valid
+        boolean valid = true
 
+        if (param.name == null) {
+            // Validation failed at compilation time - avoid redundant errors here.
+        }
         // We can't do parameter validation without a Jenkins instance, so move on.
-        if (Parameters.typeForKey(param.name) == null) {
+        else if (Parameters.typeForKey(param.name) == null) {
             errorCollector.error(param,
                 "Invalid parameter definition type '${param.name}'. Valid parameter definition types: "
                     + Parameters.allowedParameterTypes.keySet())
@@ -413,10 +419,13 @@ class ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTJobProperty prop) {
-        boolean valid
+        boolean valid = true
 
+        if (prop.name == null) {
+            // Validation failed at compilation time so move on.
+        }
         // We can't do property validation without a Jenkins instance, so move on.
-        if (JobProperties.typeForKey(prop.name) == null) {
+        else if (JobProperties.typeForKey(prop.name) == null) {
             errorCollector.error(prop,
                 "Invalid job property type '${prop.name}'. Valid job property types: ${JobProperties.getAllowedPropertyTypes().keySet()}")
             valid = false

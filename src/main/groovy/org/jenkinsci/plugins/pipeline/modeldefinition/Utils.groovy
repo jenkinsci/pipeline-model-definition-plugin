@@ -210,16 +210,18 @@ public class Utils {
      * Creates and sets the loading for a cache of {@link Describable}s descending from the given descriptor type.
      *
      * @param type The {@link Descriptor} class whose extensions we want to find.
+     * @param includeClassNames Optionally include class names as keys. Defaults to false.
      * @param excludedSymbols Optional list of symbol names to exclude from the cache.
      * @return A {@link LoadingCache} for looking up types from symbols.
      */
-    static generateTypeCache(Class<? extends Descriptor> type, List<String> excludedSymbols = []) {
+    static generateTypeCache(Class<? extends Descriptor> type, boolean includeClassNames = false,
+                             List<String> excludedSymbols = []) {
         return CacheBuilder.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(new CacheLoader<Object, Map<String, String>>() {
             @Override
             Map<String, String> load(Object key) throws Exception {
-                return populateTypeCache(type, excludedSymbols)
+                return populateTypeCache(type, includeClassNames, excludedSymbols)
             }
         })
     }
@@ -228,10 +230,13 @@ public class Utils {
      * Actually populates the type cache.
      *
      * @param type The {@link Descriptor} class whose extensions we want to find.
+     * @param includeClassNames Optionally include class names as keys. Defaults to false.
      * @param excludedSymbols Optional list of symbol names to exclude from the cache.
      * @return A map of symbols or class names to class names.
      */
-    private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type, List<String> excludedSymbols = []) {
+    private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type,
+                                                        boolean includeClassNames = false,
+                                                        List<String> excludedSymbols = []) {
         Map<String,String> knownTypes = [:]
 
         ExtensionList.lookup(type).each { t ->
@@ -240,8 +245,10 @@ public class Utils {
                 knownTypes.put(symbolValue.iterator().next(), t.clazz.getName())
             }
 
-            // Add the class name mapping even if we also found the symbol, for backwards compatibility reasons.
-            knownTypes.put(t.clazz.getName(), t.clazz.getName())
+            if (includeClassNames) {
+                // Add the class name mapping even if we also found the symbol, for backwards compatibility reasons.
+                knownTypes.put(t.clazz.getName(), t.clazz.getName())
+            }
         }
 
         return knownTypes

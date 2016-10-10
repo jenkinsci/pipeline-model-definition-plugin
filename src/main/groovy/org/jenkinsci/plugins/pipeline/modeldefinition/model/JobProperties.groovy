@@ -57,7 +57,7 @@ public class JobProperties implements Serializable, MethodsToList<JobProperty> {
     private static final Object CACHE_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
-        Utils.generateTypeCache(JobPropertyDescriptor.class)
+        Utils.generateTypeCache(JobPropertyDescriptor.class, false, ["pipelineTriggers", "parameters"])
 
 
     protected Object readResolve() throws IOException {

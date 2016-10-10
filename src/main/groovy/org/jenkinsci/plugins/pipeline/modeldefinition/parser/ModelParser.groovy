@@ -343,9 +343,14 @@ class ModelParser {
         ModelASTJobProperty thisProp = new ModelASTJobProperty(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(thisProp,"Expected a job property");
-            return thisProp
+            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
+                errorCollector.error(thisProp,"Job properties cannot be defined as maps")
+                return thisProp
+            } else {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(thisProp, "Expected a job property");
+                return thisProp
+            }
         };
 
         def bs = matchBlockStatement(st);
@@ -385,9 +390,14 @@ class ModelParser {
         ModelASTTrigger trig = new ModelASTTrigger(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(trig,"Expected a trigger");
-            return trig
+            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
+                errorCollector.error(trig,"Triggers cannot be defined as maps")
+                return trig
+            } else {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(trig, "Expected a trigger");
+                return trig
+            }
         };
 
         def bs = matchBlockStatement(st);
@@ -427,9 +437,14 @@ class ModelParser {
         ModelASTBuildParameter param = new ModelASTBuildParameter(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(param,"Expected a build parameter definition");
-            return param
+            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
+                errorCollector.error(param,"Build parameters cannot be defined as maps")
+                return param
+            } else {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(param, "Expected a build parameter definition");
+                return param
+            }
         };
 
         def bs = matchBlockStatement(st);

@@ -24,15 +24,23 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.BooleanParameterDefinition;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.model.StringParameterDefinition;
 import hudson.tasks.LogRotator;
+import hudson.triggers.TimerTrigger;
+import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty;
+import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class JobPropertiesTest extends AbstractModelDefTest {
     @Test
@@ -58,4 +66,59 @@ public class JobPropertiesTest extends AbstractModelDefTest {
 
     }
 
+    @Test
+    public void multipleProperties() throws Exception {
+        prepRepoWithJenkinsfile("multipleProperties");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("hello", b);
+
+        WorkflowJob p = b.getParent();
+
+        // Job properties
+        BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
+        assertNotNull(bdp);
+        BuildDiscarder strategy = bdp.getStrategy();
+        assertNotNull(strategy);
+        assertEquals(LogRotator.class, strategy.getClass());
+        LogRotator lr = (LogRotator) strategy;
+        assertEquals(1, lr.getNumToKeep());
+
+        DisableConcurrentBuildsJobProperty dcbjp = p.getProperty(DisableConcurrentBuildsJobProperty.class);
+        assertNotNull(dcbjp);
+
+        // Parameters
+        ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(pdp);
+
+        assertEquals(2, pdp.getParameterDefinitions().size());
+        BooleanParameterDefinition bpd = getParameterOfType(pdp.getParameterDefinitions(), BooleanParameterDefinition.class);
+        assertNotNull(bpd);
+        assertEquals("flag", bpd.getName());
+        assertTrue(bpd.isDefaultValue());
+
+        StringParameterDefinition spd = getParameterOfType(pdp.getParameterDefinitions(), StringParameterDefinition.class);
+        assertNotNull(spd);
+        assertEquals("SOME_STRING", spd.getName());
+
+        // Trigger(s)
+        PipelineTriggersJobProperty trigProp = p.getProperty(PipelineTriggersJobProperty.class);
+        assertNotNull(trigProp);
+
+        assertEquals(1, trigProp.getTriggers().size());
+        TimerTrigger.DescriptorImpl timerDesc = j.jenkins.getDescriptorByType(TimerTrigger.DescriptorImpl.class);
+
+        Trigger trigger = trigProp.getTriggerForDescriptor(timerDesc);
+        assertNotNull(trigger);
+
+        assertTrue(trigger instanceof TimerTrigger);
+        TimerTrigger timer = (TimerTrigger) trigger;
+        assertEquals("@daily", timer.getSpec());
+
+
+    }
 }

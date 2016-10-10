@@ -50,12 +50,23 @@ public class MethodsToListTranslator implements MethodMissingWrapper, Serializab
     def methodMissing(String s, args) {
         def argVal
         if (args instanceof List || args instanceof Object[]) {
-            argVal = args[0]
+            if (args.size() > 0) {
+                argVal = args[0]
+            } else {
+                argVal = null
+            }
         } else {
             argVal = args
         }
 
-        def retVal = script."${s}"(argVal)
+        def retVal
+
+        if (argVal != null) {
+            retVal = script."${s}"(argVal)
+        } else {
+            retVal = script."${s}"()
+        }
+
         if (isOfType((UninstantiatedDescribable)retVal, Utils.getMethodsToListType(clazz))) {
             actualList << retVal
         }
