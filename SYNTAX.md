@@ -9,10 +9,10 @@
 ## Within `pipeline`
 These are sections that are specified directly within the `pipeline` argument closure.
 
-### image
-* *Description*: Specifies where the build will run - may be renamed. 
+### agent
+* *Description*: Specifies where the build will run. 
 * *Required*: Yes
-* *Parameters*: Either a `Map` of one or more arguments or `none`.
+* *Parameters*: Either a `Map` of one or more arguments or one of two constants - `none` or `any`.
     * *Map Keys*:
         * Note that this will be an `ExtensionPoint`, so plugins will be able to add to the available image providers.
         * `docker`
@@ -31,10 +31,11 @@ These are sections that are specified directly within the `pipeline` argument cl
         automatic `checkout scm` call will occur.
 * *Takes a Closure*: No
 * *Examples*:
-    * `image label:'has-docker', docker:'ubuntu:lts'`
-    * `image docker:'ubuntu:lts'`
-    * `image label:'hi-speed'`
-    * `image none`
+    * `agent label:'has-docker', docker:'ubuntu:lts'`
+    * `agent docker:'ubuntu:lts'`
+    * `agent label:'hi-speed'`
+    * `agent none`
+    * `agent any`
 
 ### environment
 * *Description*: A sequence of `key = value` pairs, which will be passed to the `withEnv` step the build will be 
@@ -203,6 +204,55 @@ postBuild {
 }
 ```
 
+### Triggers
+* *Description*:
+* *Required*: No
+* *Parameters*: None
+* *Takes a Closure*: Yes
+* *Closure Contents*: A sequence of one or more trigger configurations, using `@Symbol` names for constructors.
+    * Note that `[$class: 'Foo', arg1: 'something', ...]` syntax can not be used, only `cron('@daily')` and the like.
+    * Also note that the `SCMTrigger` won't work with the `scm` `@Symbol` - with Jenkins 2.22 or later, the `pollScm` symbol does work.
+* *Examples*:
+
+```
+triggers {
+    cron('@daily')
+}
+```
+
+### Build Parameters
+* *Description*:
+* *Required*: No
+* *Parameters*: None
+* *Takes a Closure*: Yes
+* *Closure Contents*: A sequence of one or more parameter definition configurations, using `@Symbol` names for constructors.
+    * Note that `[$class: 'Foo', arg1: 'something', ...]` syntax can not be used, only `booleanParam(...)` and the like.
+* *Examples*:
+
+```
+parameters {
+    booleanParam(defaultValue: true, description: '', name: 'flag')
+    string(defaultValue: '', description: '', name: 'SOME_STRING')
+}
+```
+
+### Job Properties
+* *Description*:
+* *Required*: No
+* *Parameters*: None
+* *Takes a Closure*: Yes
+* *Closure Contents*: A sequence of one or more job property configurations, using `@Symbol` names for constructors.
+    * Note that `[$class: 'Foo', arg1: 'something', ...]` syntax can not be used, only `booleanParam(...)` and the like.
+    * Note that the `parameters` and `pipelineTriggers` `@Symbol`s cannot be used here directly.
+* *Examples*:
+
+```
+jobProperties {
+    buildDiscarder(logRotator(numToKeepStr:'1'))
+    disableConcurrentBuilds()
+}
+```
+
 ## Declarative Subset of Groovy
 * Top-level has to be a block
 * No semicolons as statement separators. Each statement has to be on its own line
@@ -220,6 +270,7 @@ postBuild {
     * Literal list: `[exp,exp,...]`
     * Literal map where keys are all constants: `[a:exp, b:exp, ... ]`
     * Method calls where the left hand side is a variable reference or a sequence of property references: `x.y.z(...)`
+    * Method calls (including `@Symbol` constructors like used above in job properties, triggers and build parameters) where there is no left hand side.
     * Closure without parameters: `{ ... }`
 
 ## Script mode

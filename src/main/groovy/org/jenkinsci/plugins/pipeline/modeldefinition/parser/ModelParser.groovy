@@ -469,8 +469,6 @@ class ModelParser {
 
         args.each { a ->
             def namedArgs = castOrNull(MapExpression, a);
-            // Special casing for legacy meta-step syntax, i.e., "[$class: 'Foo', arg1: 'something', ...]" - need to
-            // treat that as a single argument but still handle the more standard "foo(arg1: 'something', ...)" case.
             if (namedArgs != null) {
                 namedArgs.mapEntryExpressions.each { e ->
                     // Don't need to check key duplication here because Groovy compilation will do it for us.
