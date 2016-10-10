@@ -105,7 +105,8 @@ public abstract class AbstractModelDefTest {
             "globalLibrarySuccess",
             "simpleJobProperties",
             "simpleTriggers",
-            "simpleParameters"
+            "simpleParameters",
+            "stringsNeedingEscapeLogic"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

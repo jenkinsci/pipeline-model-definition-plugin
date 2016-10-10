@@ -1,0 +1,34 @@
+{
+  "pipeline": {
+    "stages": [
+      {
+        "name": "foo",
+        "branches": [
+          {
+            "name": "default",
+            "steps": [
+              {
+                "name": "echo",
+                "arguments": {
+                  "isLiteral": true,
+                  "value": "Hello!\n'How are you?', said script A\n\n\"I am fine '''really'''\" said script B\n\n"
+                }
+              },
+              {
+                "name": "echo",
+                "arguments": {
+                  "isLiteral": true,
+                  "value": "echo \"\n'quoted'\""
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "agent": {
+      "isLiteral": true,
+      "value": "none"
+    }
+  }
+}
