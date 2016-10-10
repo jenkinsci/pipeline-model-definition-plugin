@@ -94,14 +94,24 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         List<String> rawLines = toGroovy().split("\n")
 
         int indentCount = 0
+        boolean tripleSingleQuotedString = false;
 
         rawLines.each { r ->
-            if (r.startsWith("}") || r.startsWith(")") || r.startsWith("]")) {
-                indentCount -= 1
+            if (tripleSingleQuotedString) {
+                prettyLines << r
+            } else {
+                if (r.startsWith("}") || r.startsWith(")") || r.startsWith("]")) {
+                    indentCount -= 1
+                }
+                prettyLines << "${indent(indentCount)}${r}"
+                if (r.endsWith("{") || r.endsWith("(") || r.endsWith("[")) {
+                    indentCount += 1
+                }
             }
-            prettyLines << "${indent(indentCount)}${r}"
-            if (r.endsWith("{") || r.endsWith("(") || r.endsWith("[")) {
-                indentCount += 1
+            int index = r.indexOf("\'\'\'");
+            while (index != -1) {
+                tripleSingleQuotedString = !tripleSingleQuotedString;
+                index = r.indexOf("\'\'\'", index + 3);
             }
         }
 
