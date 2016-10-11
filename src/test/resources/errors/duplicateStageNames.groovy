@@ -33,7 +33,9 @@ pipeline {
         stage("bar") {
         }
         stage("foo") {
-            echo "I shouldn't be here"
+            steps {
+                echo "I shouldn't be here"
+            }
         }
     }
 }

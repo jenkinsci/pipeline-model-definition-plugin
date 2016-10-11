@@ -24,7 +24,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.slaves.DumbSlave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -32,12 +34,19 @@ import org.junit.Test;
  */
 public class EnvironmentTest extends AbstractModelDefTest {
 
+    private static DumbSlave s;
+
+    @BeforeClass
+    public static void setUpAgent() throws Exception {
+        s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+    }
+
     @Test
     public void simpleEnvironment() throws Exception {
         prepRepoWithJenkinsfile("simpleEnvironment");
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
@@ -50,8 +59,6 @@ public class EnvironmentTest extends AbstractModelDefTest {
         prepRepoWithJenkinsfile("nonLiteralEnvironment");
 
         initGlobalLibrary();
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));

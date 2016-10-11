@@ -29,6 +29,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -43,6 +44,16 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(Parameterized.class)
 public class ExecuteConvertedTest extends AbstractModelDefTest {
     private String configName;
+
+    private static DumbSlave s;
+
+    @BeforeClass
+    public static void setUpAgent() throws Exception {
+        s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+    }
 
     public ExecuteConvertedTest(String configName) {
         this.configName = configName;
@@ -95,10 +106,6 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
     }
 
     private void executeBuild() throws Exception {
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
     }

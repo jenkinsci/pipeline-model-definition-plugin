@@ -29,6 +29,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -36,6 +37,17 @@ import org.junit.Test;
  * @author Andrew Bayer
  */
 public class ValidatorTest extends AbstractModelDefTest {
+
+    private static DumbSlave s;
+
+    @BeforeClass
+    public static void setUpAgent() throws Exception {
+        s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+    }
+
     @Test
     public void rejectStageInSteps() throws Exception {
         prepRepoWithJenkinsfile("errors", "rejectStageInSteps");
@@ -204,14 +216,14 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void invalidMetaStepSyntax() throws Exception {
         prepRepoWithJenkinsfile("errors", "invalidMetaStepSyntax");
 
-        failWithErrorOnSlave("Invalid parameter 'someRandomField', did you mean 'caseSensitive'?");
+        failWithError("Invalid parameter 'someRandomField', did you mean 'caseSensitive'?");
     }
 
     @Test
     public void duplicateStageNames() throws Exception {
         prepRepoWithJenkinsfile("errors", "duplicateStageNames");
 
-        failWithError("Duplicate stage name: 'foo'", "No steps specified for branch @ line");
+        failWithError("Duplicate stage name: 'foo'", "Nothing to execute within stage 'bar'");
     }
 
     @Test
@@ -343,19 +355,6 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     private void failWithError(final String... errors) throws Exception {
-        failWithErrorAndPossiblySlave(false, errors);
-    }
-
-    private void failWithErrorOnSlave(final String... errors) throws Exception {
-        failWithErrorAndPossiblySlave(true, errors);
-    }
-
-    private void failWithErrorAndPossiblySlave(final boolean useSlave, final String... errors) throws Exception {
-        if (useSlave) {
-            DumbSlave s = j.createOnlineSlave();
-            s.setLabelString("some-label");
-            s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-        }
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);

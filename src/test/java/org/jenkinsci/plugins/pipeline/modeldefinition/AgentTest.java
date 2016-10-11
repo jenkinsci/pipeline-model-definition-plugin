@@ -27,6 +27,8 @@ import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -35,13 +37,19 @@ import org.jvnet.hudson.test.Issue;
  */
 public class AgentTest extends AbstractModelDefTest {
 
+    private static DumbSlave s;
+
+    @BeforeClass
+    public static void setUpAgent() throws Exception {
+        s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+    }
+
     @Test
     public void agentLabel() throws Exception {
         prepRepoWithJenkinsfile("agentLabel");
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
@@ -62,10 +70,6 @@ public class AgentTest extends AbstractModelDefTest {
 
     @Test
     public void noCheckoutScmInWrongContext() throws Exception {
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
         WorkflowRun b = getAndStartNonRepoBuild("noCheckoutScmInWrongContext");
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
@@ -92,10 +96,6 @@ public class AgentTest extends AbstractModelDefTest {
     public void agentNone() throws Exception {
         prepRepoWithJenkinsfile("agentNone");
 
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
 
@@ -110,10 +110,6 @@ public class AgentTest extends AbstractModelDefTest {
     public void agentNoneWithNode() throws Exception {
         prepRepoWithJenkinsfile("agentNoneWithNode");
 
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
@@ -123,10 +119,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void perStageConfigAgent() throws Exception {
         prepRepoWithJenkinsfile("perStageConfigAgent");
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
@@ -139,9 +131,6 @@ public class AgentTest extends AbstractModelDefTest {
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
         prepRepoWithJenkinsfile(jenkinsfile);
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("docker");
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
