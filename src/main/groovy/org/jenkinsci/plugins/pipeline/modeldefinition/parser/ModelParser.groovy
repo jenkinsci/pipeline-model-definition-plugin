@@ -288,7 +288,7 @@ class ModelParser {
             eachStatement(((ClosureExpression)bodyExp).code) { s ->
                 def mc = matchMethodCall(s);
                 if (mc == null) {
-                    errorCollector.error(stage, "Not a valid section definition: '${getSourceText(s)}'. Some extra configuration is required.")
+                    errorCollector.error(stage, "Not a valid stage section definition: '${getSourceText(s)}'. Some extra configuration is required.")
                 } else {
                     def name = parseMethodName(mc);
 

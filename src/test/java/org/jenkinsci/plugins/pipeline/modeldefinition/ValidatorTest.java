@@ -213,6 +213,27 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void perStageConfigEmptySteps() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigEmptySteps");
+
+        failWithError("No steps specified for branch");
+    }
+
+    @Test
+    public void perStageConfigMissingSteps() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigMissingSteps");
+
+        failWithError("Nothing to execute within stage");
+    }
+
+    @Test
+    public void perStageConfigUnknownSection() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigUnknownSection");
+
+        failWithError("Unknown stage section 'banana'");
+    }
+
+    @Test
     public void invalidMetaStepSyntax() throws Exception {
         prepRepoWithJenkinsfile("errors", "invalidMetaStepSyntax");
 
@@ -252,6 +273,13 @@ public class ValidatorTest extends AbstractModelDefTest {
         prepRepoWithJenkinsfile("errors", "emptyAgent");
 
         failWithError("Not a valid section definition: 'agent'. Some extra configuration is required.");
+    }
+
+    @Test
+    public void perStageConfigEmptyAgent() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigEmptyAgent");
+
+        failWithError("Not a valid stage section definition: 'agent'. Some extra configuration is required.");
     }
 
     @Test

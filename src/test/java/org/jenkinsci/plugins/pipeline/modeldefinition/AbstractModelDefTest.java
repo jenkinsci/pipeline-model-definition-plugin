@@ -139,6 +139,10 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"wrongParameterNameMethodCall", "Invalid parameter 'namd', did you mean 'name'?"});
         result.add(new Object[]{"invalidParameterTypeMethodCall", "Expecting class java.lang.String for parameter 'name' but got '1234' instead"});
 
+        result.add(new Object[]{"perStageConfigEmptySteps", "At /pipeline/stages/0/branches/0/steps: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"perStageConfigMissingSteps", "At /pipeline/stages/0/branches/0: Missing one or more required properties: 'steps'"});
+        result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
+
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +
                 "    \"name\": \"foo\",\n" +

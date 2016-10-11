@@ -1,0 +1,19 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default"
+    }],
+    "agent": [    {
+      "key": "label",
+      "value":       {
+        "isLiteral": true,
+        "value": "some-label"
+      }
+    }]
+  }],
+  "agent":   {
+    "isLiteral": true,
+    "value": "none"
+  }
+}}
