@@ -54,6 +54,7 @@ public class ModelStepLoader extends GlobalVariable {
         // Make sure we've already loaded ClosureModelTranslator or load it now.
         script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ClosureModelTranslator");
         script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.PropertiesToMapTranslator");
+        script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.MethodsToListTranslator");
 
         return script.getClass()
                 .getClassLoader()

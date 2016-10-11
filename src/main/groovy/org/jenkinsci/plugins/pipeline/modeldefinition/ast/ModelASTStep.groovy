@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.ToString
 import net.sf.json.JSONObject
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
 /**
@@ -17,11 +18,9 @@ public class ModelASTStep extends ModelASTElement {
     /**
      * A list of step names which are banned from being executed within a step block.
      */
-    public final Map<String, String> blockedSteps = [
-        "stage":      "The stage step cannot be used in step blocks in Pipeline Config",
-        "properties": "The properties step cannot be used in step blocks in Pipeline Config",
-        "parallel":   "The parallel step can only be used as the only top-level step in a stage's step block"
-    ]
+    public static Map<String, String> getBlockedSteps() {
+        return Utils.blockedStepsBase()
+    }
 
     String name;
     ModelASTArgumentList args;

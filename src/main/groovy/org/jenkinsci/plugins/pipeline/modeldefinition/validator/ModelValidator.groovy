@@ -34,8 +34,14 @@ import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
@@ -44,6 +50,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
@@ -51,7 +59,10 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
@@ -186,8 +197,9 @@ class ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (step.blockedSteps.keySet().contains(step.name)) {
-            errorCollector.error(step, "Invalid step '${step.name}' used - not allowed in this context - ${step.blockedSteps.get(step.name)}")
+        if (ModelASTStep.blockedSteps.keySet().contains(step.name)) {
+            errorCollector.error(step,
+                "Invalid step '${step.name}' used - not allowed in this context - ${ModelASTStep.blockedSteps.get(step.name)}")
             valid = false
         } else {
             // We can't do step validation without a Jenkins instance, so move on.
@@ -273,9 +285,168 @@ class ModelValidator {
         return valid
     }
 
+    public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
+        boolean valid = true
+        if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
+            errorCollector.error(meth,
+                "Invalid step '${meth.name}' used - not allowed in this context - ${ModelASTMethodCall.blockedSteps.get(meth.name)}")
+            valid = false
+        }
+        if (Jenkins.getInstance() != null) {
+            Descriptor desc = lookupFunction(meth.name)
+            DescribableModel<? extends Describable> model
+            if (desc != null) {
+                model = modelForDescribable(meth.name)
+            }
+
+            if (model != null) {
+                if (meth.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }) {
+                    meth.args.each { a ->
+                        ModelASTKeyValueOrMethodCallPair kvm = (ModelASTKeyValueOrMethodCallPair) a
+
+                        def p = model.getParameter(kvm.key.key);
+                        if (p == null) {
+                            String possible = EditDistance.findNearest(kvm.key.key, model.getParameters().collect {
+                                it.name
+                            })
+                            errorCollector.error(kvm.key, "Invalid parameter '${kvm.key.key}', did you mean '${possible}'?")
+                            valid = false
+                            return;
+                        }
+
+                        if (kvm.value instanceof ModelASTMethodCall) {
+                            valid = validateElement((ModelASTMethodCall) kvm.value)
+                        } else {
+                            if (!validateParameterType((ModelASTValue) kvm.value, p.erasedType, kvm.key)) {
+                                errorCollector.error(kvm.key, "Invalid type for parameter '${kvm.key.key}'")
+                                valid = false
+                            }
+                        }
+                    }
+                } else {
+                    List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
+
+                    if (requiredParams.size() != meth.args.size()) {
+                        errorCollector.error(meth, "'${meth.name}' should have ${requiredParams.size()} arguments but has ${meth.args.size()} arguments instead.")
+                        valid = false
+                    } else {
+                        requiredParams.eachWithIndex { DescribableParameter entry, int i ->
+                            def argVal = meth.args.get(i)
+                            if (argVal instanceof ModelASTMethodCall) {
+                                valid = validateElement((ModelASTMethodCall) argVal)
+                            } else {
+                                if (!validateParameterType((ModelASTValue) argVal, entry.erasedType)) {
+                                    errorCollector.error((ModelASTValue)argVal, "Invalid type for parameter '${entry.name}'")
+                                    valid = false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return valid
+    }
+
+    public boolean validateElement(@Nonnull ModelASTJobProperties props) {
+        if (props.properties.isEmpty()) {
+            errorCollector.error(props, "Cannot have empty jobProperties section")
+            return false
+        }
+
+        return true
+    }
+
+    public boolean validateElement(@Nonnull ModelASTTrigger trig) {
+        boolean valid = true
+
+        if (trig.name == null) {
+            // This means that we failed at compilation time so can move on.
+        }
+        // We can't do trigger validation without a Jenkins instance, so move on.
+        else if (Triggers.typeForKey(trig.name) == null) {
+            errorCollector.error(trig,
+                "Invalid trigger type '${trig.name}'. Valid trigger types: ${Triggers.getAllowedTriggerTypes().keySet()}")
+            valid = false
+        } else if (trig.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
+            && !trig.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
+            errorCollector.error(trig, "Can't mix named and unnamed trigger arguments")
+            valid = false
+        } else {
+            valid = validateElement((ModelASTMethodCall)trig)
+        }
+        return valid
+    }
+
+    public boolean validateElement(@Nonnull ModelASTTriggers triggers) {
+        if (triggers.triggers.isEmpty()) {
+            errorCollector.error(triggers, "Cannot have empty triggers section")
+            return false
+        }
+
+        return true
+    }
+
+    public boolean validateElement(@Nonnull ModelASTBuildParameter param) {
+        boolean valid = true
+
+        if (param.name == null) {
+            // Validation failed at compilation time - avoid redundant errors here.
+        }
+        // We can't do parameter validation without a Jenkins instance, so move on.
+        else if (Parameters.typeForKey(param.name) == null) {
+            errorCollector.error(param,
+                "Invalid parameter definition type '${param.name}'. Valid parameter definition types: "
+                    + Parameters.allowedParameterTypes.keySet())
+            valid = false
+        } else if (param.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
+            && !param.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
+            errorCollector.error(param, "Can't mix named and unnamed parameter definition arguments")
+            valid = false
+        } else {
+            valid = validateElement((ModelASTMethodCall)param)
+        }
+        return valid
+    }
+
+    public boolean validateElement(@Nonnull ModelASTBuildParameters params) {
+        if (params.parameters.isEmpty()) {
+            errorCollector.error(params, "Cannot have empty parameters section")
+            return false
+        }
+
+        return true
+    }
+
+    public boolean validateElement(@Nonnull ModelASTJobProperty prop) {
+        boolean valid = true
+
+        if (prop.name == null) {
+            // Validation failed at compilation time so move on.
+        }
+        // We can't do property validation without a Jenkins instance, so move on.
+        else if (JobProperties.typeForKey(prop.name) == null) {
+            errorCollector.error(prop,
+                "Invalid job property type '${prop.name}'. Valid job property types: ${JobProperties.getAllowedPropertyTypes().keySet()}")
+            valid = false
+        } else if (prop.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
+            && !prop.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
+            errorCollector.error(prop, "Can't mix named and unnamed job property arguments")
+            valid = false
+        } else {
+            valid = validateElement((ModelASTMethodCall)prop)
+        }
+        return valid
+    }
+
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
         if (v.isLiteral()) {
             try {
+                // Converting from boolean or int to string at runtime doesn't work, but does pass castToType. So.
+                if (erasedType.equals(String.class)
+                    && (v.value instanceof Integer || v.value instanceof Boolean)) {
+                    throw new RuntimeException("Ignore")
+                }
                 ScriptBytecodeAdapter.castToType(v.value, erasedType);
             } catch (Exception e) {
                 if (k != null) {
@@ -286,7 +457,6 @@ class ModelValidator {
                 return false
             }
         }
-
         return true
     }
 

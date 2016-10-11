@@ -21,62 +21,67 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import hudson.tools.ToolDescriptor
-import org.jenkinsci.Symbol
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+import hudson.triggers.Trigger
+import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.Nonnull
 
 /**
- * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and
- * environment for the build.
+ * A container for lists of triggers.
  *
  * @author Andrew Bayer
  */
+@ToString
+@EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Tools extends MappedClosure<String,Tools> implements Serializable {
-
+public class Triggers implements Serializable, MethodsToList<Trigger> {
     private static final Object CACHE_KEY = new Object()
+    private static final LoadingCache<Object,Map<String,String>> triggerTypeCache =
+        Utils.generateTypeCache(TriggerDescriptor.class)
 
-    private static final LoadingCache<Object,Map<String,String>> toolTypeCache =
-        Utils.generateTypeCache(ToolDescriptor.class, true)
+    // Transient since Trigger isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
+    // anyway.
+    transient List<Trigger> triggers = []
 
-    /**
-     * Workaround for iterating over a map in CPS code. Gets the tools as a list of type/name tuples.
-     *
-     * @return A list of type/name tuples
-     */
-    @Whitelisted
-    public List<List<Object>> getToolEntries() {
-        return getMap().collect { k, v ->
-            return [k, v]
-        }
+    public Triggers(List<Trigger> t) {
+        this.triggers = t
+    }
+
+    protected Object readResolve() throws IOException {
+        // Need to make sure triggers is initialized on deserialization, even if it's going to be empty.
+        this.triggers = []
+        return this;
     }
 
     /**
-     * Get a map of allowed tool type keys to their actual type ID. If a {@link Symbol} is on the descriptor for a given
-     * tool, use that as the key. Otherwise, use the class name.
+     * Get a map of allowed trigger type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
+     * trigger, use that as the key. Otherwise, use the class name.
      *
-     * @return A map of valid tool type keys to their actual type IDs.
+     * @return A map of valid parameter type keys to their actual type IDs.
      */
     @Whitelisted
-    public static Map<String,String> getAllowedToolTypes() {
-        return toolTypeCache.get(CACHE_KEY)
+    public static Map<String,String> getAllowedTriggerTypes() {
+        return triggerTypeCache.get(CACHE_KEY)
     }
 
     /**
-     * Given a tool type key, get the actual type ID.
+     * Given a parameter type key, get the actual type ID.
      *
      * @param key The key to look up.
-     * @return The type ID for that key, if it's in the tool types cache.
+     * @return The type ID for that key, if it's in the parameter types cache.
      */
     @Whitelisted
     public static String typeForKey(@Nonnull String key) {
-        return getAllowedToolTypes().get(key)
+        return getAllowedTriggerTypes().get(key)
     }
 }

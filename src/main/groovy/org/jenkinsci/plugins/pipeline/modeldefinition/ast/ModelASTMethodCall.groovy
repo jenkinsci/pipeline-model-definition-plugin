@@ -25,58 +25,70 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import net.sf.json.JSONArray
+import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
- * Represents the positional parameters for a step in a list of {@link ModelASTValue}s.
+ * A representation of a method call, including its name and a list of {@link ModelASTMethodArg}s.
  *
- * @author Kohsuke Kawaguchi
+ * This is used for things like job properties, triggers and parameter definitions, allowing parsing and validation of
+ * the arguments in case they themselves are method calls.
+ *
  * @author Andrew Bayer
  */
 @ToString(includeSuper = true, includeSuperProperties = true)
-@EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
-    List<ModelASTValue> arguments = []
+public class ModelASTMethodCall extends ModelASTElement implements ModelASTMethodArg {
+    String name;
+    List<ModelASTMethodArg> args = []
 
-    public ModelASTPositionalArgumentList(Object sourceLocation) {
+    @Whitelisted
+    public static Map<String,String> getBlockedSteps() {
+        Map<String,String> blockedSteps = [
+            "node": "The node step cannot be called as an argument to a method in Declarative Pipelines"
+        ]
+        blockedSteps.putAll(ModelASTStep.blockedSteps)
+        return blockedSteps
+    }
+
+    ModelASTMethodCall(Object sourceLocation) {
         super(sourceLocation)
     }
 
     @Override
-    public JSONArray toJSON() {
+    public JSONObject toJSON() {
         JSONArray a = new JSONArray()
-
-        arguments.each { v ->
-            a.add(v.toJSON())
+        args.each { arg ->
+            a.add(arg.toJSON())
         }
-        return a
+        return new JSONObject()
+            .accumulate("name", name)
+            .accumulate("arguments", a)
     }
 
     @Override
     public void validate(ModelValidator validator) {
-        // Nothing to validate directly
-        arguments.each { v ->
-            v?.validate(validator)
+        validator.validateElement(this)
+
+        args.each { a ->
+            a?.validate(validator)
         }
     }
 
     @Override
     public String toGroovy() {
-        return arguments.collect { v ->
-            v.toGroovy()
-        }.join(", ")
+        List<String> argsGroovy = args.collect { a -> a.toGroovy() }
+        return "${name}(${argsGroovy.join(", ")})"
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation()
-
-        arguments.each { v ->
-            v.removeSourceLocation()
+        args.each { a ->
+            a.removeSourceLocation()
         }
     }
 }

@@ -1,0 +1,32 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments":         {
+          "isLiteral": true,
+          "value": "hello"
+        }
+      }]
+    }]
+  }],
+  "agent":   {
+    "isLiteral": true,
+    "value": "none"
+  },
+  "jobProperties": {"properties": [  {
+    "name": "buildDiscarder",
+    "arguments": [    {
+      "name": "logRotator",
+      "arguments": [      {
+        "key": "numToKeepStr",
+        "value":         {
+          "isLiteral": true,
+          "value": "1"
+        }
+      }]
+    }]
+  }]}
+}}

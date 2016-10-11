@@ -65,6 +65,99 @@
         }
       ]
     },
+    "keyAndValueOrMethodCall": {
+      "description": "A key/value pair that can either have a value or method call",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/valueOrMethodCall"
+        }
+      },
+      "additionalProperties": false
+    },
+    "methodCall": {
+      "description": "A method call with arguments, outside steps",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/methodArg"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "valueOrMethodCall": {
+      "description": "Either a value or a method call",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/singleArgument"
+        },
+        {
+          "$ref": "#/definitions/methodCall"
+        }
+      ]
+    },
+    "methodArg": {
+      "description": "A possible argument for a method",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/valueOrMethodCall"
+        },
+        {
+          "$ref": "#/definitions/keyAndValueOrMethodCall"
+        }
+      ]
+    },
+    "jobProperties": {
+      "description": "One or more job properties",
+      "type": "object",
+      "properties": {
+        "properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/methodCall"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "triggers": {
+      "description": "One or more triggers",
+      "type": "object",
+      "properties": {
+        "triggers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/methodCall"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "parameters": {
+      "description": "One or more parameter definitions",
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/methodCall"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "step": {
       "description": "A single step with parameters",
       "type": "object",
@@ -264,6 +357,15 @@
         },
         "tools": {
           "$ref": "#/definitions/tools"
+        },
+        "jobProperties": {
+          "$ref": "#/definitions/jobProperties"
+        },
+        "triggers": {
+          "$ref": "#/definitions/triggers"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parameters"
         }
       },
       "required": [

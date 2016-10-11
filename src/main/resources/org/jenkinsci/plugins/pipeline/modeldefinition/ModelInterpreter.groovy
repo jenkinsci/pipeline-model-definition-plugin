@@ -60,6 +60,21 @@ public class ModelInterpreter implements Serializable {
         Throwable firstError
 
         if (root != null) {
+            def jobProps = []
+
+            if (root.jobProperties != null) {
+                jobProps.addAll(root.jobProperties.properties)
+            }
+            if (root.triggers != null) {
+                jobProps.add(script.pipelineTriggers(root.triggers.triggers))
+            }
+            if (root.parameters != null) {
+                jobProps.add(script.parameters(root.parameters.parameters))
+            }
+            if (!jobProps.isEmpty()) {
+                script.properties(jobProps)
+            }
+
             // Entire build, including notifications, runs in the withEnv.
             script.withEnv(root.getEnvVars()) {
                 // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
