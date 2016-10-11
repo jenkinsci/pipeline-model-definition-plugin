@@ -1,0 +1,44 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments":         {
+          "isLiteral": true,
+          "value": "hello"
+        }
+      }]
+    }]
+  }],
+  "agent":   {
+    "isLiteral": true,
+    "value": "none"
+  },
+  "parameters": {"parameters": [  {
+    "name": "booleanParam",
+    "arguments":     [
+      {
+        "key": "defaultValue",
+        "value":         {
+          "isLiteral": true,
+          "value": true
+        }
+      },
+      {
+        "name": "echo",
+        "arguments": [
+          {
+            "isLiteral": true,
+            "value": "foo"
+          }
+        ]
+      },
+      {
+        "isLiteral": true,
+        "value": "flag"
+      }
+    ]
+  }]}
+}}

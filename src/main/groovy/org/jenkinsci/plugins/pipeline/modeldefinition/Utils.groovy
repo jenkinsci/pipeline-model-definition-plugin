@@ -22,31 +22,30 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition;
+package org.jenkinsci.plugins.pipeline.modeldefinition
 
-
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import hudson.ExtensionList
+import hudson.model.Describable
+import hudson.model.Descriptor
+import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
-import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
+import java.util.concurrent.TimeUnit;
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -56,6 +55,14 @@ import java.lang.reflect.ParameterizedType;
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Utils {
+
+    public static Map<String,String> blockedStepsBase() {
+        return [
+            "stage":      'The stage step cannot be used in Declarative Pipelines',
+            "properties": 'The properties step cannot be used in Declarative Pipelines',
+            "parallel":   "The parallel step can only be used as the only top-level step in a stage's step block"
+        ]
+    }
 
     /**
      * Workaround for not having to whitelist isAssignableFrom, metaClass etc to determine whether a field on
@@ -127,6 +134,26 @@ public class Utils {
     }
 
     /**
+     * Finds the parameterized type argument for a {@link MethodsToList} class and returns it.
+     *
+     * @param c A class.
+     * @return The parameterized type argument for the class, if it's a {@link MethodsToList} class. Null otherwise.
+     */
+    @Whitelisted
+    public static Class<Describable> getMethodsToListType(Class c) {
+        Class retClass
+        c.genericInterfaces.each { Type t ->
+            if (t instanceof ParameterizedType) {
+                if (t.rawType.equals(MethodsToList.class) && t.getActualTypeArguments().first() instanceof Class) {
+                    retClass = (Class)t.actualTypeArguments.first()
+                }
+            }
+        }
+
+        return retClass
+    }
+
+    /**
      * Simple wrapper for isInstance to avoid whitelisting issues.
      *
      * @param c The class to check against
@@ -179,5 +206,52 @@ public class Utils {
         r.addAction(new ExecutionModelAction(stages))
     }
 
+    /**
+     * Creates and sets the loading for a cache of {@link Describable}s descending from the given descriptor type.
+     *
+     * @param type The {@link Descriptor} class whose extensions we want to find.
+     * @param includeClassNames Optionally include class names as keys. Defaults to false.
+     * @param excludedSymbols Optional list of symbol names to exclude from the cache.
+     * @return A {@link LoadingCache} for looking up types from symbols.
+     */
+    static generateTypeCache(Class<? extends Descriptor> type, boolean includeClassNames = false,
+                             List<String> excludedSymbols = []) {
+        return CacheBuilder.newBuilder()
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build(new CacheLoader<Object, Map<String, String>>() {
+            @Override
+            Map<String, String> load(Object key) throws Exception {
+                return populateTypeCache(type, includeClassNames, excludedSymbols)
+            }
+        })
+    }
+
+    /**
+     * Actually populates the type cache.
+     *
+     * @param type The {@link Descriptor} class whose extensions we want to find.
+     * @param includeClassNames Optionally include class names as keys. Defaults to false.
+     * @param excludedSymbols Optional list of symbol names to exclude from the cache.
+     * @return A map of symbols or class names to class names.
+     */
+    private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type,
+                                                        boolean includeClassNames = false,
+                                                        List<String> excludedSymbols = []) {
+        Map<String,String> knownTypes = [:]
+
+        ExtensionList.lookup(type).each { t ->
+            Set<String> symbolValue = SymbolLookup.getSymbolValue(t)
+            if (!symbolValue.isEmpty() && !symbolValue.any { excludedSymbols.contains(it) }) {
+                knownTypes.put(symbolValue.iterator().next(), t.clazz.getName())
+            }
+
+            if (includeClassNames) {
+                // Add the class name mapping even if we also found the symbol, for backwards compatibility reasons.
+                knownTypes.put(t.clazz.getName(), t.clazz.getName())
+            }
+        }
+
+        return knownTypes
+    }
 
 }

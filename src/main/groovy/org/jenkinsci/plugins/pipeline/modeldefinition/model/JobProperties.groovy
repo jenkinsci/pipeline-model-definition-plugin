@@ -21,62 +21,70 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import hudson.tools.ToolDescriptor
-import org.jenkinsci.Symbol
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+import hudson.model.JobProperty
+import hudson.model.JobPropertyDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 import javax.annotation.Nonnull
 
 /**
- * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and
- * environment for the build.
+ * Container for job properties.
  *
  * @author Andrew Bayer
  */
+@ToString
+@EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Tools extends MappedClosure<String,Tools> implements Serializable {
+public class JobProperties implements Serializable, MethodsToList<JobProperty> {
+    // Transient since JobProperty isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
+    // anyway.
+    transient List<JobProperty> properties = []
 
+    public JobProperties(List<JobProperty> props) {
+        this.properties = props
+    }
     private static final Object CACHE_KEY = new Object()
 
-    private static final LoadingCache<Object,Map<String,String>> toolTypeCache =
-        Utils.generateTypeCache(ToolDescriptor.class, true)
+    private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
+        Utils.generateTypeCache(JobPropertyDescriptor.class, false, ["pipelineTriggers", "parameters"])
 
-    /**
-     * Workaround for iterating over a map in CPS code. Gets the tools as a list of type/name tuples.
-     *
-     * @return A list of type/name tuples
-     */
-    @Whitelisted
-    public List<List<Object>> getToolEntries() {
-        return getMap().collect { k, v ->
-            return [k, v]
-        }
+
+    protected Object readResolve() throws IOException {
+        // Need to make sure properties is initialized on deserialization, even if it's going to be empty.
+        this.properties = []
+        return this;
     }
 
     /**
-     * Get a map of allowed tool type keys to their actual type ID. If a {@link Symbol} is on the descriptor for a given
-     * tool, use that as the key. Otherwise, use the class name.
+     * Get a map of allowed property type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
+     * job property, use that as the key. Otherwise, use the class name.
      *
-     * @return A map of valid tool type keys to their actual type IDs.
+     * @return A map of valid property type keys to their actual type IDs.
      */
     @Whitelisted
-    public static Map<String,String> getAllowedToolTypes() {
-        return toolTypeCache.get(CACHE_KEY)
+    public static Map<String,String> getAllowedPropertyTypes() {
+        return propertyTypeCache.get(CACHE_KEY)
     }
 
     /**
-     * Given a tool type key, get the actual type ID.
+     * Given a property type key, get the actual type ID.
      *
      * @param key The key to look up.
-     * @return The type ID for that key, if it's in the tool types cache.
+     * @return The type ID for that key, if it's in the property types cache.
      */
     @Whitelisted
     public static String typeForKey(@Nonnull String key) {
-        return getAllowedToolTypes().get(key)
+        return getAllowedPropertyTypes().get(key)
     }
 }

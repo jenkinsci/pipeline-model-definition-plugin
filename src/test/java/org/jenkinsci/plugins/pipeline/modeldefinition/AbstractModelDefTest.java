@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.google.common.collect.ImmutableList;
 import hudson.Launcher;
+import hudson.model.ParameterDefinition;
 import hudson.util.StreamTaskListener;
 import hudson.util.VersionNumber;
 import jenkins.plugins.git.GitSampleRepoRule;
@@ -103,6 +104,9 @@ public abstract class AbstractModelDefTest {
             "legacyMetaStepSyntax",
             "globalLibrarySuccess",
             "perStageConfigAgent",
+            "simpleJobProperties",
+            "simpleTriggers",
+            "simpleParameters",
             "stringsNeedingEscapeLogic"
     );
 
@@ -117,12 +121,23 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"emptyPostBuild", "At /pipeline/postBuild/conditions: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyNotifications", "At /pipeline/notifications/conditions: Array has 0 entries, requires minimum of 1"});
 
-        result.add(new Object[]{"rejectStageInSteps", "Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in step blocks in Pipeline Config"});
+        result.add(new Object[]{"rejectStageInSteps", "Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines"});
         result.add(new Object[]{"rejectParallelMixedInSteps", "Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block"});
 
         result.add(new Object[]{"stageWithoutName", "At /pipeline/stages/0: Missing one or more required properties: 'name'"});
 
         result.add(new Object[]{"emptyParallel", "Nothing to execute within stage 'foo'"});
+
+        result.add(new Object[]{"emptyJobProperties", "At /pipeline/jobProperties/properties: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"emptyParameters", "At /pipeline/parameters/parameters: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"emptyTriggers", "At /pipeline/triggers/triggers: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"mixedMethodArgs", "Can't mix named and unnamed parameter definition arguments"});
+
+        result.add(new Object[]{"rejectPropertiesStepInMethodCall",
+                "Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines"});
+
+        result.add(new Object[]{"wrongParameterNameMethodCall", "Invalid parameter 'namd', did you mean 'name'?"});
+        result.add(new Object[]{"invalidParameterTypeMethodCall", "Expecting class java.lang.String for parameter 'name' but got '1234' instead"});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +
@@ -314,4 +329,12 @@ public abstract class AbstractModelDefTest {
     }
 
 
+    protected <T extends ParameterDefinition> T getParameterOfType(List<ParameterDefinition> params, Class<T> c) {
+        for (ParameterDefinition p : params) {
+            if (c.isInstance(p)) {
+                return (T)p;
+            }
+        }
+        return null;
+    }
 }

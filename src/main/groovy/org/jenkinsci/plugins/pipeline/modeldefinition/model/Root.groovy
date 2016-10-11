@@ -58,6 +58,15 @@ public class Root implements NestedModel, Serializable {
     Tools tools
 
     @Whitelisted
+    JobProperties jobProperties
+
+    @Whitelisted
+    Triggers triggers
+
+    @Whitelisted
+    Parameters parameters
+
+    @Whitelisted
     Root stages(Stages s) {
         this.stages = s
         return this
@@ -96,6 +105,24 @@ public class Root implements NestedModel, Serializable {
     @Whitelisted
     Root tools(Tools t) {
         this.tools = t
+        return this
+    }
+
+    @Whitelisted
+    Root jobProperties(JobProperties p) {
+        this.jobProperties = p
+        return this
+    }
+
+    @Whitelisted
+    Root triggers(Triggers t) {
+        this.triggers = t
+        return this
+    }
+
+    @Whitelisted
+    Root parameters(Parameters p) {
+        this.parameters = p
         return this
     }
 

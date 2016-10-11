@@ -36,13 +36,21 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStageConfig
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
@@ -154,6 +162,15 @@ class ModelParser {
                         break;
                     case 'tools':
                         r.tools = parseTools(stmt)
+                        break
+                    case 'jobProperties':
+                        r.jobProperties = parseJobProperties(stmt)
+                        break
+                    case 'parameters':
+                        r.parameters = parseBuildParameters(stmt)
+                        break
+                    case 'triggers':
+                        r.triggers = parseTriggers(stmt)
                         break
                     default:
                         // We need to check for unknowns here.
@@ -358,6 +375,182 @@ class ModelParser {
     }
 
     /**
+     * Parses a block of code into {@link ModelASTJobProperties}
+     */
+    public ModelASTJobProperties parseJobProperties(Statement stmt) {
+        def jp = new ModelASTJobProperties(stmt);
+        def m = matchBlockStatement(stmt);
+        if (m == null) {
+            // Should be able to get this validation later.
+            return jp
+        } else {
+            eachStatement(m.body.code) { s ->
+                jp.properties.add(parseProperty(s));
+            }
+        }
+        return jp;
+    }
+
+    /**
+     * Parses a statement into a {@link ModelASTJobProperty}
+     */
+    public ModelASTJobProperty parseProperty(Statement st) {
+        ModelASTJobProperty thisProp = new ModelASTJobProperty(st)
+        def mc = matchMethodCall(st);
+        if (mc == null) {
+            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
+                errorCollector.error(thisProp,"Job properties cannot be defined as maps")
+                return thisProp
+            } else {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(thisProp, "Expected a job property");
+                return thisProp
+            }
+        };
+
+        def bs = matchBlockStatement(st);
+        if (bs != null) {
+            errorCollector.error(thisProp,"Job property definitions cannot have blocks")
+            return thisProp
+        } else {
+            ModelASTMethodCall mArgs = parseMethodCall(mc)
+            thisProp.args = mArgs.args
+            thisProp.name = mArgs.name
+        }
+
+        return thisProp
+    }
+
+    /**
+     * Parses a block of code into {@link ModelASTTriggers}
+     */
+    public ModelASTTriggers parseTriggers(Statement stmt) {
+        def triggers = new ModelASTTriggers(stmt);
+        def m = matchBlockStatement(stmt);
+        if (m == null) {
+            // Should be able to get this validation later.
+            return triggers
+        } else {
+            eachStatement(m.body.code) { s ->
+                triggers.triggers.add(parseTrigger(s));
+            }
+        }
+        return triggers;
+    }
+
+    /**
+     * Parses a statement into a {@link ModelASTTrigger}
+     */
+    public ModelASTTrigger parseTrigger(Statement st) {
+        ModelASTTrigger trig = new ModelASTTrigger(st)
+        def mc = matchMethodCall(st);
+        if (mc == null) {
+            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
+                errorCollector.error(trig,"Triggers cannot be defined as maps")
+                return trig
+            } else {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(trig, "Expected a trigger");
+                return trig
+            }
+        };
+
+        def bs = matchBlockStatement(st);
+        if (bs != null) {
+            errorCollector.error(trig,"Trigger definitions cannot have blocks")
+            return trig
+        } else {
+            ModelASTMethodCall mArgs = parseMethodCall(mc)
+            trig.args = mArgs.args
+            trig.name = mArgs.name
+        }
+
+        return trig
+    }
+
+    /**
+     * Parses a block of code into {@link ModelASTBuildParameters}
+     */
+    public ModelASTBuildParameters parseBuildParameters(Statement stmt) {
+        def bp = new ModelASTBuildParameters(stmt);
+        def m = matchBlockStatement(stmt);
+        if (m == null) {
+            // Should be able to get this validation later.
+            return bp
+        } else {
+            eachStatement(m.body.code) { s ->
+                bp.parameters.add(parseBuildParameter(s));
+            }
+        }
+        return bp;
+    }
+
+    /**
+     * Parses a statement into a {@link ModelASTBuildParameter}
+     */
+    public ModelASTBuildParameter parseBuildParameter(Statement st) {
+        ModelASTBuildParameter param = new ModelASTBuildParameter(st)
+        def mc = matchMethodCall(st);
+        if (mc == null) {
+            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
+                errorCollector.error(param,"Build parameters cannot be defined as maps")
+                return param
+            } else {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(param, "Expected a build parameter definition");
+                return param
+            }
+        };
+
+        def bs = matchBlockStatement(st);
+        if (bs != null) {
+            errorCollector.error(param,"Build parameter definitions cannot have blocks")
+            return param
+        } else {
+            ModelASTMethodCall mArgs = parseMethodCall(mc)
+            param.args = mArgs.args
+            param.name = mArgs.name
+        }
+
+        return param
+    }
+
+    public ModelASTMethodCall parseMethodCall(MethodCallExpression expr) {
+        ModelASTMethodCall m = new ModelASTMethodCall(expr)
+        def methodName = parseMethodName(expr);
+        m.name = methodName
+
+        List<Expression> args = ((TupleExpression) expr.arguments).expressions
+
+        args.each { a ->
+            def namedArgs = castOrNull(MapExpression, a);
+            if (namedArgs != null) {
+                namedArgs.mapEntryExpressions.each { e ->
+                    // Don't need to check key duplication here because Groovy compilation will do it for us.
+                    ModelASTKeyValueOrMethodCallPair keyPair = new ModelASTKeyValueOrMethodCallPair(e)
+                    keyPair.key = parseKey(e.keyExpression)
+                    if (e.valueExpression instanceof ClosureExpression) {
+                        errorCollector.error(keyPair, "Method call arguments cannot use closures")
+                    } else if (e.valueExpression instanceof MethodCallExpression) {
+                        keyPair.value = parseMethodCall((MethodCallExpression) e.valueExpression)
+                    } else {
+                        keyPair.value = parseArgument(e.valueExpression)
+                    }
+                    m.args << keyPair
+                }
+            } else if (a instanceof ClosureExpression) {
+                errorCollector.error(m, "Method call arguments cannot use closures")
+            } else if (a instanceof MethodCallExpression) {
+                m.args << parseMethodCall(a)
+            } else {
+                m.args << parseArgument(a)
+            }
+        }
+
+        return m
+    }
+
+    /**
      * Parses a statement into a {@link ModelASTStep}
      */
     public ModelASTStep parseStep(Statement st) {
@@ -390,7 +583,6 @@ class ModelParser {
 
         return thisStep
     }
-
     /**
      * Parses a statement into a {@link ModelASTScriptBlock}
      */
@@ -525,6 +717,7 @@ class ModelParser {
                 return ModelASTValue.fromConstant("any", e) // Special casing for agent any.
             }
         }
+
         // for other composite expressions, treat it as in-place GString
         return ModelASTValue.fromGString("\${"+getSourceText(e)+"}", e)
     }
