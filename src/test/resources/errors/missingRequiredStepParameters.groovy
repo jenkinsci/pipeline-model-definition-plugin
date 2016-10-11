@@ -26,8 +26,10 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            timeout {
-                echo "hello"
+            steps {
+                timeout {
+                    echo "hello"
+                }
             }
         }
     }

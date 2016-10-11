@@ -27,33 +27,35 @@ pipeline {
     agent label:"master"
     stages {
         stage("foo") {
-            // TODO: foo.bar() global variable object calls do not work as the step, though they do work as arguments.
-            //acmeVar.hello('Pipeline')
-            //acmeVar.foo('seed')
+            steps {
+                // TODO: foo.bar() global variable object calls do not work as the step, though they do work as arguments.
+                //acmeVar.hello('Pipeline')
+                //acmeVar.foo('seed')
 
-            // TODO: Due to the above methods not running/working, this method will fail as a result of acmeVar.x not being set.
-            //echo '['+acmeVar.bar()+']'
+                // TODO: Due to the above methods not running/working, this method will fail as a result of acmeVar.x not being set.
+                //echo '['+acmeVar.bar()+']'
 
-            // acmeVar.baz() will work since it doesn't rely on anything else - demonstrating that it will work as a step
-            // argument, if not as a step itself.
-            echo('['+acmeVar.baz()+']')
+                // acmeVar.baz() will work since it doesn't rely on anything else - demonstrating that it will work as a step
+                // argument, if not as a step itself.
+                echo('[' + acmeVar.baz() + ']')
 
-            // TODO: Unnamed parameters won't work.
-            //acmeFunc(1,2)
+                // TODO: Unnamed parameters won't work.
+                //acmeFunc(1,2)
 
-            acmeFuncClosure1(1) {
-                echo 'running inside closure1'
+                acmeFuncClosure1(1) {
+                    echo 'running inside closure1'
+                }
+
+                acmeFuncClosure2(1, 2) {
+                    echo 'running inside closure2'
+                }
+
+                // A call method taking a map, however, will work.
+                acmeFuncMap(a: 1, b: 2)
+
+                // TODO: Passing a body that isn't composed of steps does not work. Should it work?
+                //acmeBody { title = 'yolo' }
             }
-
-            acmeFuncClosure2(1, 2) {
-                echo 'running inside closure2'
-            }
-
-            // A call method taking a map, however, will work.
-            acmeFuncMap(a:1,b:2)
-
-            // TODO: Passing a body that isn't composed of steps does not work. Should it work?
-            //acmeBody { title = 'yolo' }
         }
     }
 }

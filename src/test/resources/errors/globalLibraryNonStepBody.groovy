@@ -27,8 +27,10 @@ pipeline {
     agent label:"master"
     stages {
         stage("foo") {
-            // Passing a body that isn't composed of steps does not work.
-            acmeBody { title = 'yolo' }
+            steps {
+                // Passing a body that isn't composed of steps does not work.
+                acmeBody { title = 'yolo' }
+            }
         }
     }
 }

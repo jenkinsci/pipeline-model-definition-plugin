@@ -26,7 +26,9 @@ pipeline {
     agent any
     stages {
         stage("foo") {
-            sh('echo "THIS WORKS"')
+            steps {
+                sh('echo "THIS WORKS"')
+            }
         }
     }
 }

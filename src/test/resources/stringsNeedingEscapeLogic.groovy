@@ -26,13 +26,15 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo '''Hello!
+            steps {
+                echo '''Hello!
 'How are you?', said script A
 
 "I am fine \'\'\'really\'\'\'" said script B
 
 '''
-            echo 'echo "\'quoted\'"'
+                echo 'echo "\'quoted\'"'
+            }
         }
     }
 }

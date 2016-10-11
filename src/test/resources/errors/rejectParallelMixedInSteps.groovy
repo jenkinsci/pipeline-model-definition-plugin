@@ -26,13 +26,15 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo "hello"
-            parallel(a: {
-                        echo '1'
-                     },
-                     b: {
-                         echo '2'
-                     })
+            steps {
+                echo "hello"
+                parallel(a: {
+                    echo '1'
+                },
+                    b: {
+                        echo '2'
+                    })
+            }
         }
     }
 }

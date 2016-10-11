@@ -29,7 +29,9 @@ pipeline {
     }
     stages {
         stage("foo") {
-            sh 'mvn --version'
+            steps {
+                sh 'mvn --version'
+            }
         }
     }
 }

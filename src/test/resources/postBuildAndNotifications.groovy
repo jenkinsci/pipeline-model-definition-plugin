@@ -26,7 +26,9 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo "hello"
+            steps {
+                echo "hello"
+            }
         }
     }
     postBuild {

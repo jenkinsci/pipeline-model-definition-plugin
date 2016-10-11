@@ -26,9 +26,7 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            config {
-                agent label:'some-label'
-            }
+            agent label:'some-label'
             steps {
                 sh('echo ONSLAVE=$ONSLAVE')
             }

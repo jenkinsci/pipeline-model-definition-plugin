@@ -31,12 +31,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConfig
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 
 /**
  * CPS-transformed code for translating from the closure argument to the pipeline step into the runtime model.
@@ -113,39 +109,17 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
 
             // We care about the field name actually being a thing.
             if (actualFieldName != null) {
-                // Handle StepBlockWithOtherArgs *first*, since we won't recurse at all on them.
-                // If the field is an implementation of StepBlockWithOtherArgs, we need to just call its constructor with the args.
-                // Note that only Stage is a StepBlockWithOtherArgs currently, but that may be reused later.
-                if (Utils.assignableFromWrapper(StepBlockWithOtherArgs.class, actualType)) {
+                // Due to Stage taking an argument, not just a closure, we need to handle it differently.
+                if (Utils.assignableFromWrapper(Stage.class, actualType)) {
                     Object[] origArgs = args
-                    List<Object> blockParams = []
-                    for (int i = 0; i < origArgs.size(); i++) {
-                        def thisArg = origArgs[i]
-                        // If the argument is a Closure, create a StepsBlock of it.
-                        if (Utils.instanceOfWrapper(Closure.class, thisArg)) {
-                            def ctm = new ClosureModelTranslator(ClosureContentsChecker.class)
+                    String n = origArgs[0]
+                    def ctm = new ClosureModelTranslator(actualType, script)
 
-                            try {
-                                resolveClosure(thisArg, ctm)
-                                Map<String, Object> closureMap = ctm.getMap()
-                                if (closureMap.size() == 2 && closureMap.containsKey("config") && closureMap.containsKey("steps")) {
-                                    blockParams.add(createStepsBlock(closureMap.get("steps")))
-                                    def configTranslator = new ClosureModelTranslator(StageConfig.class)
-                                    resolveClosure(closureMap.get("config"), configTranslator)
-                                    blockParams.add(configTranslator.toNestedModel())
-                                } else {
-                                    blockParams.add(createStepsBlock(thisArg))
-                                }
-                            } catch (_) {
-                                // If there's an exception by the time we've gotten this far, that's because it's a step block, so move on.
-                                blockParams.add(createStepsBlock(thisArg))
-                            }
-                        } else {
-                            // Otherwise, just add the parameter.
-                            blockParams.add(thisArg)
-                        }
+                    if (Utils.instanceOfWrapper(Closure.class, origArgs[1])) {
+                        resolveClosure(origArgs[1], ctm)
                     }
-                    resultValue = actualType.newInstance(Utils.toObjectArray(blockParams))
+                    ctm.actualMap.name = n
+                    resultValue = ctm.toNestedModel()
                 }
                 // If the argument is a Closure, we've got a few possibilities.
                 else if (argValue != null && Utils.instanceOfWrapper(Closure.class, argValue)) {

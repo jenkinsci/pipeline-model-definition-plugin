@@ -27,8 +27,10 @@ pipeline {
     agent label:"some-label"
     stages {
         stage("foo") {
-            // This only works because it's an argument, not the step.
-            echo "image: ${docker.image('ubuntu').imageName()}"
+            steps {
+                // This only works because it's an argument, not the step.
+                echo "image: ${docker.image('ubuntu').imageName()}"
+            }
         }
     }
 }

@@ -26,10 +26,14 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo "hello"
+            steps {
+                echo "hello"
+            }
         }
         stage("bar") {
-            echo "goodbye"
+            steps {
+                echo "goodbye"
+            }
         }
     }
 }

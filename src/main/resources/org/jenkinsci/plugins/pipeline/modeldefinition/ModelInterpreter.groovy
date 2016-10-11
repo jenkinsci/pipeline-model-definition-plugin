@@ -92,10 +92,10 @@ public class ModelInterpreter implements Serializable {
 
                             script.stage(thisStage.name) {
                                 if (firstError == null) {
-                                    nodeOrDockerOrNone(thisStage.config?.agent) {
+                                    nodeOrDockerOrNone(thisStage.agent) {
                                         try {
                                             catchRequiredContextForNode(root.agent) {
-                                                Closure closureToCall = thisStage.closureWrapper.closure
+                                                Closure closureToCall = thisStage.steps.closure
                                                 closureToCall.delegate = script
                                                 closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
                                                 closureToCall.call()

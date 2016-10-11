@@ -29,7 +29,9 @@ pipeline {
     }
     stages {
         stage("foo") {
-            echo "hello"
+            steps {
+                echo "hello"
+            }
         }
     }
 }

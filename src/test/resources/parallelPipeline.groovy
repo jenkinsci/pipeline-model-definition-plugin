@@ -26,12 +26,14 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            parallel(first: {
-                echo "First branch"
-            },
-            second: {
-                echo "Second branch"
-            })
+            steps {
+                parallel(first: {
+                    echo "First branch"
+                },
+                    second: {
+                        echo "Second branch"
+                    })
+            }
         }
     }
 }

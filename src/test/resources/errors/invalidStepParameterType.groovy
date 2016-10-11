@@ -27,7 +27,9 @@ pipeline {
     stages {
         stage("foo") {
             timeout(time: "someTime") {
-                echo "hello"
+                steps {
+                    echo "hello"
+                }
             }
         }
     }
