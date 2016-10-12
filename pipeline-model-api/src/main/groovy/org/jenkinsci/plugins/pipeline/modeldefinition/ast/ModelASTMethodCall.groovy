@@ -29,7 +29,6 @@ import groovy.transform.ToString
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  * A representation of a method call, including its name and a list of {@link ModelASTMethodArg}s.
@@ -45,7 +44,6 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     String name;
     List<ModelASTMethodArg> args = []
 
-    @Whitelisted
     public static Map<String,String> getBlockedSteps() {
         Map<String,String> blockedSteps = [
             "node": "The node step cannot be called as an argument to a method in Declarative Pipelines"

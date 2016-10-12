@@ -25,6 +25,60 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
+
 
 public interface ModelValidator {
+    public boolean validateElement(ModelASTAgent agent)
+
+    public boolean validateElement(ModelASTBranch branch)
+
+    public boolean validateElement(ModelASTPostBuild postBuild)
+
+    public boolean validateElement(ModelASTNotifications notifications)
+
+    public boolean validateElement(ModelASTBuildCondition buildCondition)
+
+    public boolean validateElement(ModelASTEnvironment environment)
+
+    public boolean validateElement(ModelASTTools tools)
+
+    public boolean validateElement(ModelASTStep step)
+
+    public boolean validateElement(ModelASTMethodCall methodCall)
+
+    public boolean validateElement(ModelASTJobProperties jobProperties)
+
+    public boolean validateElement(ModelASTTriggers triggers)
+
+    public boolean validateElement(ModelASTBuildParameters buildParameters)
+
+    public boolean validateElement(ModelASTJobProperty jobProperty)
+
+    public boolean validateElement(ModelASTTrigger trigger)
+
+    public boolean validateElement(ModelASTBuildParameter buildParameter)
+
+    public boolean validateElement(ModelASTPipelineDef pipelineDef)
+
+    public boolean validateElement(ModelASTStage stage)
+
+    public boolean validateElement(ModelASTStages stages)
 }
