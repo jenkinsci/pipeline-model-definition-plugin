@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 /**
- * A single job property, corresponding eventually to {@link JobProperty}
+ * A single job property, corresponding eventually to {@code JobProperty}
  *
  * @author Andrew Bayer
  */

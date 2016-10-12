@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Closure;
-import groovy.lang.GString;
 import groovy.transform.EqualsAndHashCode;
 import groovy.transform.ToString;
 import java.util.LinkedHashMap;
@@ -23,6 +22,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
+    private Map<ModelASTKey, ModelASTValue> arguments = new LinkedHashMap<ModelASTKey, ModelASTValue>();
+
     public ModelASTNamedArgumentList(Object sourceLocation) {
         super(sourceLocation);
     }
@@ -30,16 +31,12 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     @Override
     public JSONArray toJSON() {
         final JSONArray a = new JSONArray();
-
-        DefaultGroovyMethods.each(arguments, new Closure<Boolean>(this, this) {
-            public Boolean doCall(Object k, Object v) {
-                JSONObject o = new JSONObject();
-                o.accumulate("key", ((ModelASTKey) k).toJSON());
-                o.accumulate("value", ((ModelASTValue) v).toJSON());
-                return a.add(o);
-            }
-
-        });
+        for (Map.Entry<ModelASTKey, ModelASTValue> entry: arguments.entrySet()) {
+            JSONObject o = new JSONObject();
+            o.accumulate("key", entry.getKey().toJSON());
+            o.accumulate("value", entry.getValue().toJSON());
+            a.add(o);
+        }
         return a;
     }
 
@@ -49,52 +46,46 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
      * @param keyName The name of a key to check for.
      * @return True if a {@link ModelASTKey} with that name is present in the map.
      */
-    public boolean containsKeyName(@Nonnull final String keyName) {
-        return DefaultGroovyMethods.any(arguments, new Closure<Boolean>(this, this) {
-            public Boolean doCall(Object k, Object v) {
-                return keyName.equals(((ModelASTKey) k).getKey());
-            }
-
-        });
+    public boolean containsKeyName(@Nonnull String keyName) {
+        for (ModelASTKey key: arguments.keySet()) {
+            if (keyName.equals(key.getKey())) return true;
+        }
+        return false;
     }
 
     @Override
     public void validate(final ModelValidator validator) {
-        // Nothing to validate directly
-        DefaultGroovyMethods.each(arguments, new Closure<Object>(this, this) {
-            public void doCall(Object k, Object v) {
-                ((ModelASTKey) k).validate(validator);
-                ((ModelASTValue) v).validate(validator);
-            }
-
-        });
-
+        for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {
+            entry.getKey().validate(validator);
+            entry.getValue().validate(validator);
+        }
     }
 
     @Override
     public String toGroovy() {
-        return DefaultGroovyMethods.join(DefaultGroovyMethods.collect(arguments, new Closure<GString>(this, this) {
-            public GString doCall(final Object k, final Object v) {
-                return ((ModelASTKey) k).toGroovy() + ": " + ((ModelASTValue) v).toGroovy();
+        StringBuilder result = new StringBuilder();
+        boolean first = true;
+        for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {
+            if (first) {
+                first = false;
+            } else {
+                result.append(", ");
             }
-
-        }), ", ");
+            result.append(entry.getKey().toGroovy()).append(": ").append(entry.getValue().toGroovy());
+        }
+        return result.toString();
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-
-        DefaultGroovyMethods.each(arguments, new Closure<Object>(this, this) {
-            public void doCall(Object k, Object v) {
-                ((ModelASTKey) k).removeSourceLocation();
-                ((ModelASTValue) v).removeSourceLocation();
-            }
-
-        });
+        for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {
+            entry.getKey().removeSourceLocation();
+            entry.getValue().removeSourceLocation();
+        }
     }
 
-    public LinkedHashMap<ModelASTKey, ModelASTValue> getArguments() {
+    public Map<ModelASTKey, ModelASTValue> getArguments() {
         return arguments;
     }
 
@@ -102,5 +93,35 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
         this.arguments = arguments;
     }
 
-    private Map<ModelASTKey, ModelASTValue> arguments = new LinkedHashMap<ModelASTKey, ModelASTValue>();
+    @Override
+    public String toString() {
+        return "ModelASTNamedArgumentList{" +
+                "arguments=" + arguments +
+                "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        ModelASTNamedArgumentList that = (ModelASTNamedArgumentList) o;
+
+        return getArguments() != null ? getArguments().equals(that.getArguments()) : that.getArguments() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (getArguments() != null ? getArguments().hashCode() : 0);
+        return result;
+    }
 }

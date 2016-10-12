@@ -5,7 +5,7 @@ import groovy.transform.EqualsAndHashCode;
 import groovy.transform.ToString;
 
 /**
- * A single parameter definition, eventually corresponding to a {@link ParameterDefinition}
+ * A single parameter definition, eventually corresponding to a {@code ParameterDefinition}
  *
  * @author Andrew Bayer
  */

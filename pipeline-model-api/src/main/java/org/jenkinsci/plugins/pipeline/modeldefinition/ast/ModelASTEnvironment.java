@@ -7,7 +7,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
- * Represents a block of "foo = 'bar'" assignments to environment variables, corresponding to {@link Environment}.
+ * Represents a block of "foo = 'bar'" assignments to environment variables, corresponding to {@code Environment}.
  *
  * @author Andrew Bayer
  */
