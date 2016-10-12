@@ -24,17 +24,11 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.jenkins-ci.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>2.13</version>
-  </parent>
-
   <groupId>org.jenkinsci.plugins</groupId>
-  <artifactId>pipeline-model-definition</artifactId>
+  <artifactId>pipeline-model-pom</artifactId>
   <version>0.5-SNAPSHOT</version>
-  <packaging>hpi</packaging>
-  <name>Pipeline: Model Definition</name>
+  <packaging>pom</packaging>
+  <name>Pipeline: Model Parent POM</name>
   <description>An opinionated, declarative Pipeline</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
 
@@ -60,192 +54,9 @@
     <tag>HEAD</tag>
   </scm>
   
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.gmaven</groupId>
-        <artifactId>gmaven-plugin</artifactId>
-        <version>1.4</version>
-        <configuration>
-          <providerSelection>1.8</providerSelection>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generateStubs</goal>
-              <goal>compile</goal>
-              <goal>generateTestStubs</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemProperties>
-            <property>
-              <name>hudson.udp</name>
-              <value>33849</value>
-            </property>
-          </systemProperties>
-          <argLine>-Xmx4g -XX:MaxPermSize=256m</argLine>
-          <reuseForks>true</reuseForks>
-          <forkCount>0.5C</forkCount>
-          <!-- TODO: I hate the retrying tests but given the nondeterministic whackiness of JENKINS-37101... -->
-          <rerunFailingTestsCount>3</rerunFailingTestsCount>
-        </configuration>
-      </plugin>
 
-    </plugins>
-  </build>
-  
-  <dependencies>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-cps</artifactId>
-      <version>2.18</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-job</artifactId>
-      <version>2.6</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-multibranch</artifactId>
-      <version>2.8</version>
-    </dependency>
-    <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>script-security</artifactId>
-        <version>1.22</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-scm-step</artifactId>
-      <version>2.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-basic-steps</artifactId>
-      <version>2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-durable-task-step</artifactId>
-      <version>2.4</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>pipeline-stage-step</artifactId>
-      <version>2.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>docker-workflow</artifactId>
-      <version>1.8</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>structs</artifactId>
-      <version>1.5</version>
-    </dependency>
-
-    <!-- JSON schema stuff -->
-    <dependency>
-      <groupId>com.github.fge</groupId>
-      <artifactId>json-schema-validator</artifactId>
-      <version>2.0.4</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-json-org</artifactId>
-      <version>2.2.3</version>
-    </dependency>
-
-    <!-- TEST deps --> 
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>git</artifactId>
-      <version>2.6.0</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.main</groupId>
-      <artifactId>jenkins-test-harness-tools</artifactId>
-      <version>2.0</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-cps-global-lib</artifactId>
-      <version>2.3</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>git</artifactId>
-      <version>2.6.0</version>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-scm-step</artifactId>
-      <version>2.2</version>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-support</artifactId>
-        <version>2.2</version>
-        <classifier>tests</classifier>
-        <scope>test</scope>
-    </dependency>
-    
-  </dependencies>
-  
-  <properties>
-    <jenkins.version>2.7.1</jenkins.version>
-    <java.level>7</java.level>
-    <groovy.version>2.4.7</groovy.version>
-  </properties>
-  
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
-  
+  <modules>
+    <module>pipeline-model-api</module>
+    <module>pipeline-model-definition</module>
+  </modules>
 </project>
