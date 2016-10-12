@@ -98,6 +98,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
     public String toString() {
         return "ModelASTValue{" +
                 "value=" + value +
+                ", isLiteral=" + isLiteral() +
                 '}';
     }
 
