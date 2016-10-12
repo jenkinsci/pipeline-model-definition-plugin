@@ -21,11 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast
+package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import net.sf.json.JSONObject
+import net.sf.json.JSONObject;
 
 /**
  * Represents the value in a key/value pair, as used in {@link ModelASTEnvironment}, {@link ModelASTNamedArgumentList} and elsewhere.
@@ -33,19 +31,17 @@ import net.sf.json.JSONObject
  * @author Andrew Bayer
  * @author Kohsuke Kawaguchi
  */
-@ToString(includeSuper = true, includeSuperProperties = true)
-@EqualsAndHashCode(callSuper = true)
 public abstract class ModelASTValue extends ModelASTElement implements ModelASTMethodArg {
     /* package */ ModelASTValue(Object sourceLocation, Object v) {
-        super(sourceLocation)
-        this.value = v
+        super(sourceLocation);
+        this.value = v;
     }
 
-    Object value
+    private Object value;
 
     /**
      * If the value can be determined without side-effect at AST parsing time,
-     * this method returns true, and {@Link #getValue()} returns its value.
+     * this method returns true, and {@link #getValue()} returns its value.
      */
     public abstract boolean isLiteral();
 
@@ -63,53 +59,87 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
      * "${foobar(x)}"
      */
     public Object getValue() {
-        return value
+        return value;
     }
 
     @Override
     public JSONObject toJSON() {
         return new JSONObject()
             .accumulate("isLiteral", isLiteral())
-            .accumulate("value", getValue())
+            .accumulate("value", getValue());
     }
 
-    public static final ModelASTValue fromConstant(final Object o, Object sourceLocation) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        ModelASTValue that = (ModelASTValue) o;
+
+        return getValue() != null ? getValue().equals(that.getValue()) : that.getValue() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (getValue() != null ? getValue().hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ModelASTValue{" +
+                "value=" + value +
+                '}';
+    }
+
+    public static ModelASTValue fromConstant(final Object o, Object sourceLocation) {
         return new ModelASTValue(sourceLocation, o) {
             @Override
-            boolean isLiteral() {
+            public boolean isLiteral() {
                 return true;
             }
 
             @Override
             public String toGroovy() {
-                if (o instanceof String) {
-                    if (o.indexOf('\n') == -1) {
-                        return "'${o.replace("'", "\\'")}'"
+                if (getValue() instanceof String) {
+                    String str = (String) getValue();
+                    if (str.indexOf('\n') == -1) {
+                        return "'" + str.replace("'", "\\'") + "'";
                     } else {
-                        return "\'\'\'${o.replace('\'\'\'',"\\\'\\\\'\\\\'")}\'\'\'"
+                        return "'''" + str.replace("'''", "\\'\\'\\'") + "'''";
                     }
                 } else {
-                    return o
+                    return getValue().toString();
                 }
             }
-        }
+        };
     }
 
-    public static final ModelASTValue fromGString(String gstring, Object sourceLocation) {
+    public static ModelASTValue fromGString(final String gstring, Object sourceLocation) {
         return new ModelASTValue(sourceLocation, gstring) {
             @Override
-            boolean isLiteral() {
+            public boolean isLiteral() {
                 return false;
             }
 
             @Override
             public String toGroovy() {
-                if (gstring.startsWith('${') && gstring.endsWith('}')) {
-                    return gstring.substring(2, gstring.length() - 1)
+                String gstring = (String)getValue();
+                if (gstring.startsWith("${") && gstring.endsWith("}")) {
+                    return gstring.substring(2, gstring.length() - 1);
                 } else {
-                    return gstring
+                    return gstring;
                 }
             }
-        }
+        };
     }
 }

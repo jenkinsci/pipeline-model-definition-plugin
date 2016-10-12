@@ -21,33 +21,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast
+package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import net.sf.json.JSONArray
-import net.sf.json.JSONObject
-import org.codehaus.groovy.ast.ASTNode
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
+import javax.annotation.Nonnull;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.codehaus.groovy.ast.ASTNode;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull
-
-/**
- * @author Andrew Bayer
- */
-@ToString(excludes = "sourceLocation")
-@EqualsAndHashCode(excludes = "sourceLocation")
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public abstract class ModelASTElement {
     /**
      * The sourceLocation is a reference to whatever section of the original source we're parsed from corresponds to this
      * element. When parsed from Pipeline Script, it's an {@link ASTNode}, and when parsed from JSON, it's a {@link JSONObject}.
      */
-    Object sourceLocation;
+    private Object sourceLocation;
 
     ModelASTElement(Object sourceLocation) {
-        this.sourceLocation = sourceLocation
+        this.sourceLocation = sourceLocation;
+    }
+
+    public Object getSourceLocation() {
+        return sourceLocation;
+    }
+
+    public void setSourceLocation(Object sourceLocation) {
+        this.sourceLocation = sourceLocation;
     }
 
     /**
@@ -56,14 +54,14 @@ public abstract class ModelASTElement {
      * @return Generally a {@link JSONObject} or {@link JSONArray} but for some leaf nodes, may be a {@link String} or
      *     other simple class.
      */
-    public abstract Object toJSON()
+    public abstract Object toJSON();
 
     /**
      * Translates this element and any children it may have into Pipeline Config-formatted Groovy, without any indentations.
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
-    public abstract String toGroovy()
+    public abstract String toGroovy();
 
     /**
      * Called to do whatever validation is necessary for this element. Overridden in most cases.
@@ -78,8 +76,38 @@ public abstract class ModelASTElement {
      * Removes the source location value from this element.
      */
     public void removeSourceLocation() {
-        sourceLocation = null
+        sourceLocation = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "ModelASTElement{}";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ModelASTElement.class.hashCode();
+    }
 }
 
