@@ -23,7 +23,9 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     @Override
     public void validate(ModelValidator validator) {
         // Nothing to immediately validate here
-        value.validate(validator);
+        if (value != null) {
+            value.validate(validator);
+        }
     }
 
     @Override
@@ -34,7 +36,9 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        value.removeSourceLocation();
+        if (value != null) {
+            value.removeSourceLocation();
+        }
     }
 
     public ModelASTValue getValue() {

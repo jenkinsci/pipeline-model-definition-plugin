@@ -40,25 +40,33 @@ public class ModelASTStep extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        return new JSONObject().accumulate("name", name).accumulate("arguments", args.toJSON());
+        JSONObject o = new JSONObject();
+        o.accumulate("name", name);
+        if (args != null) {
+            o.accumulate("arguments", args.toJSON());
+        }
+        return o;
     }
 
     @Override
     public void validate(ModelValidator validator) {
         validator.validateElement(this);
-
-        args.validate(validator);
+        if (args != null) {
+            args.validate(validator);
+        }
     }
 
     @Override
     public String toGroovy() {
-        return name + "(" + args.toGroovy() + ")";
+        return name + "(" + (args != null ? args.toGroovy() : "") + ")";
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        args.removeSourceLocation();
+        if (args != null) {
+            args.removeSourceLocation();
+        }
     }
 
     public String getName() {

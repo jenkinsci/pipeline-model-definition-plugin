@@ -114,9 +114,9 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
                 if (getValue() instanceof String) {
                     String str = (String) getValue();
                     if (str.indexOf('\n') == -1) {
-                        return "'" + str.replace("'", "\\'") + "'";
+                        return "'" + (str.replace("'", "\\'")) + "'";
                     } else {
-                        return "'''" + str.replace("'''", "\\'\\'\\'") + "'''";
+                        return "'''" + (str.replace("'''", "\\'\\'\\'")) + "'''";
                     }
                 } else {
                     return getValue().toString();

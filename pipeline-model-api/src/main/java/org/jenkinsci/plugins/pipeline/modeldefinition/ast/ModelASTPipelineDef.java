@@ -28,32 +28,26 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     @Override
     public JSONObject toJSON() {
         JSONObject a = new JSONObject();
-        if (stages != null) {
-            a.put("stages", stages.toJSON());
-        }
-        if (notifications != null) {
-            a.put("notifications", notifications.toJSON());
-        }
-        if (postBuild != null) {
-            a.put("postBuild", postBuild.toJSON());
-        }
-        if (environment != null) {
-            a.put("environment", environment.toJSON());
-        }
-        if (agent != null) {
-            a.put("agent", agent.toJSON());
-        }
-        if (tools != null) {
-            a.put("tools", tools.toJSON());
-        }
-        if (jobProperties != null) {
+        a.put("stages", stages != null ? stages.toJSON() : null);
+        a.put("notifications", notifications != null ? notifications.toJSON() : null);
+        a.put("postBuild", postBuild != null ? postBuild.toJSON() : null);
+        a.put("environment", environment != null ? environment.toJSON() : null);
+        a.put("agent", agent != null ? agent.toJSON() : null);
+        a.put("tools", tools != null ? tools.toJSON() : null);
+        if (jobProperties != null && !jobProperties.getProperties().isEmpty()) {
             a.put("jobProperties", jobProperties.toJSON());
+        } else {
+            a.put("jobProperties", null);
         }
-        if (parameters != null) {
+        if (parameters != null && !parameters.getParameters().isEmpty()) {
             a.put("parameters", parameters.toJSON());
+        } else {
+            a.put("parameters", null);
         }
-        if (triggers != null) {
+        if (triggers != null && !triggers.getTriggers().isEmpty()) {
             a.put("triggers", triggers.toJSON());
+        } else {
+            a.put("triggers", null);
         }
         return new JSONObject().accumulate("pipeline", a);
     }

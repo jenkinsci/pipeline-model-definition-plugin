@@ -13,7 +13,17 @@ public class ModelASTScriptBlock extends ModelASTStep {
 
     @Override
     public String toGroovy() {
-        return "script {\n" + getArgs().toGroovy() + "\n}\n";
+        StringBuilder result = new StringBuilder("script {\n");
+        if (getArgs() != null
+                && getArgs() instanceof ModelASTSingleArgument
+                && ((ModelASTSingleArgument) getArgs()).getValue()!=null
+                && ((ModelASTSingleArgument) getArgs()).getValue().isLiteral()) {
+            result.append(((ModelASTSingleArgument) getArgs()).getValue().getValue());
+        } else if (getArgs() != null) {
+            result.append(getArgs().toGroovy());
+        }
+        result.append("\n}\n");
+        return result.toString();
     }
 
     @Override

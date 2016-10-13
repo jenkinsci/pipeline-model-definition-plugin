@@ -302,6 +302,10 @@ class ModelValidatorImpl implements ModelValidator {
             if (model != null) {
                 if (meth.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }) {
                     meth.args.each { a ->
+                        if (!(a instanceof ModelASTKeyValueOrMethodCallPair)) {
+                            errorCollector.error(meth, "Can't mix named and unnamed parameter definition arguments")
+                            return
+                        }
                         ModelASTKeyValueOrMethodCallPair kvm = (ModelASTKeyValueOrMethodCallPair) a
 
                         def p = model.getParameter(kvm.key.key);
