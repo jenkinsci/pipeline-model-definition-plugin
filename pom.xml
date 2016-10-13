@@ -59,4 +59,32 @@
     <module>pipeline-model-api</module>
     <module>pipeline-model-definition</module>
   </modules>
+
+  <!-- project is just for aggregating, never as a parent, we force skip to ensure we never deploy or install it -->
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>2.5.2</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.8.2</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <!-- keep the tag names aligned with previous releases -->
+          <tagNameFormat>pipeline-model-definition-@{project.version}</tagNameFormat>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
