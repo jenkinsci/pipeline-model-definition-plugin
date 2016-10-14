@@ -118,6 +118,13 @@ public class PostStageTest extends AbstractModelDefTest {
 
     }
 
+    @Test
+    public void failingNotifications() throws Exception {
+        expect(Result.FAILURE, "failingNotifications")
+                .logContains("hello", "Post stage", "farewell", "Error in stage post:", "I AM HERE STILL")
+                .logNotContains("world").go();
+    }
+
 
     //Helper methods and builders, could possibly be moved to something more central for reuse
 
