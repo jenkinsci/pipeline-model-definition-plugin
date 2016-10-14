@@ -67,7 +67,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Test
     public void withAllLocalUnstable() throws Exception {
-        env().put("MAKE_RESULT", Result.UNSTABLE.toString()).set();
+        env(s).put("MAKE_RESULT", Result.UNSTABLE.toString()).set();
         expect(Result.UNSTABLE, "localAll").logContains(ALL_LOCAL_ALWAYS)
                 .logContains("Setting build result UNSTABLE", "I AM UNSTABLE", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "MOST DEFINITELY FINISHED").go();
@@ -76,7 +76,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Test
     public void withAllLocalFailure() throws Exception {
-        env().put("MAKE_RESULT", Result.FAILURE.toString()).set();
+        env(s).put("MAKE_RESULT", Result.FAILURE.toString()).set();
         expect(Result.FAILURE, "localAll").logContains(ALL_LOCAL_ALWAYS)
                 .logContains("Setting build result FAILURE", "I FAILED", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I AM UNSTABLE", "MOST DEFINITELY FINISHED").go();
@@ -85,7 +85,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Test
     public void withAllLocalAborted() throws Exception {
-        env().put("MAKE_RESULT", Result.ABORTED.toString()).set();
+        env(s).put("MAKE_RESULT", Result.ABORTED.toString()).set();
         expect(Result.ABORTED, "localAll").logContains(ALL_LOCAL_ALWAYS)
                 .logContains("Setting build result ABORTED", "I WAS ABORTED", "I HAVE CHANGED")
                 .logNotContains("I FAILED", "I AM UNSTABLE", "MOST DEFINITELY FINISHED").go();
@@ -94,7 +94,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Test
     public void withAllLocalSuccess() throws Exception {
-        env().set();
+        env(s).set();
         expect(Result.SUCCESS, "localAll").logContains(ALL_LOCAL_ALWAYS)
                 .logContains("All is well", "MOST DEFINITELY FINISHED", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "I AM UNSTABLE").go();
@@ -103,7 +103,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Test
     public void withAllLocalChanged() throws Exception {
-        env().set();
+        env(s).set();
         ExpectationsBuilder expect = expect(Result.SUCCESS, "localAll").logContains(ALL_LOCAL_ALWAYS);
         expect.logContains("All is well", "MOST DEFINITELY FINISHED", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "I AM UNSTABLE").go();
@@ -111,7 +111,7 @@ public class PostStageTest extends AbstractModelDefTest {
                 .logContains("All is well", "MOST DEFINITELY FINISHED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "I AM UNSTABLE", "I HAVE CHANGED").go();
 
-        env().put("MAKE_RESULT", Result.UNSTABLE.toString()).set();
+        env(s).put("MAKE_RESULT", Result.UNSTABLE.toString()).set();
         expect.resetForNewRun(Result.UNSTABLE).logContains(ALL_LOCAL_ALWAYS)
                 .logContains("Setting build result UNSTABLE", "I AM UNSTABLE", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "MOST DEFINITELY FINISHED").go();
@@ -125,112 +125,13 @@ public class PostStageTest extends AbstractModelDefTest {
                 .logNotContains("world").go();
     }
 
-
-    //Helper methods and builders, could possibly be moved to something more central for reuse
-
-    private EnvBuilder env() {
-        return new EnvBuilder(s);
+    @Override
+    protected ExpectationsBuilder expect(String resource) {
+        return super.expect("postStage", resource);
     }
 
-    private ExpectationsBuilder expect(String resource) {
-        return new ExpectationsBuilder(resource);
-    }
-
-    private ExpectationsBuilder expect(Result result, String resource) {
-        return new ExpectationsBuilder(result, resource);
-    }
-
-    private class ExpectationsBuilder {
-        private Result result = Result.SUCCESS;
-        private String resource;
-        private List<String> logContains;
-        private List<String> logNotContains;
-        private WorkflowRun run;
-
-        ExpectationsBuilder(String resource) {
-            this(Result.SUCCESS, resource);
-        }
-
-        ExpectationsBuilder(Result result, String resource) {
-            this.result = result;
-            this.resource = resource;
-        }
-
-        ExpectationsBuilder logContains(String... logEntries) {
-            if (this.logContains != null) {
-                logContains.addAll(Arrays.asList(logEntries));
-            } else {
-                this.logContains = new ArrayList<>(Arrays.asList(logEntries));
-            }
-            return this;
-        }
-
-        ExpectationsBuilder logNotContains(String... logEntries) {
-            if (this.logNotContains != null) {
-                this.logNotContains.addAll(Arrays.asList(logEntries));
-            } else {
-                this.logNotContains = new ArrayList<>(Arrays.asList(logEntries));
-            }
-            return this;
-        }
-
-        void go() throws Exception {
-            if (resource != null) {
-                prepRepoWithJenkinsfile("postStage", resource);
-            }
-
-            if (run == null) {
-                run = getAndStartBuild();
-            } else {
-                run = run.getParent().scheduleBuild2(0).waitForStart();
-            }
-            j.assertBuildStatus(result, j.waitForCompletion(run));
-
-            if (logContains != null) {
-                for (String entry : logContains) {
-                    j.assertLogContains(entry, run);
-                }
-            }
-            if (logNotContains != null) {
-                for (String logNotContain : logNotContains) {
-                    j.assertLogNotContains(logNotContain, run);
-                }
-            }
-        }
-
-        ExpectationsBuilder resetForNewRun(Result result) {
-            this.result = result;
-            resource = null;
-            logContains = null;
-            logNotContains = null;
-            return this;
-        }
-    }
-
-    private class EnvBuilder {
-        private final Slave agent;
-        private Map<String, String> env;
-
-        public EnvBuilder(Slave agent) {
-            this.agent = agent;
-            this.env = new HashMap<>();
-            env.put("ONSLAVE", "true");
-        }
-
-        EnvBuilder put(String key, String value) {
-            env.put(key, value);
-            return this;
-        }
-
-        void set() throws IOException {
-            List<EnvironmentVariablesNodeProperty.Entry> entries = new ArrayList<>(env.size());
-            for (Map.Entry<String, String> entry : env.entrySet()) {
-                entries.add(new EnvironmentVariablesNodeProperty.Entry(entry.getKey(), entry.getValue()));
-            }
-            EnvironmentVariablesNodeProperty newProperty = new EnvironmentVariablesNodeProperty(entries);
-            DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties = agent.getNodeProperties();
-            nodeProperties.replace(newProperty);
-        }
-
+    @Override
+    protected ExpectationsBuilder expect(Result result, String resource) {
+        return super.expect(result, "postStage", resource);
     }
 }
