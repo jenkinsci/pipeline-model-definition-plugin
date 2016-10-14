@@ -95,10 +95,7 @@ public class ModelInterpreter implements Serializable {
                                     nodeOrDockerOrNone(thisStage.agent) {
                                         try {
                                             catchRequiredContextForNode(root.agent) {
-                                                Closure closureToCall = thisStage.steps.closure
-                                                closureToCall.delegate = script
-                                                closureToCall.resolveStrategy = Closure.DELEGATE_FIRST
-                                                closureToCall.call()
+                                                setUpDelegate(thisStage.steps.closure).call()
                                             }.call()
                                         } catch (Exception e) {
                                             script.echo "Error in stages execution: ${e.getMessage()}"
@@ -115,10 +112,7 @@ public class ModelInterpreter implements Serializable {
                                                     script.echo("Post stage") //TODO should this be a nested stage instead?
                                                     try {
                                                         for (int ni = 0; ni < postClosures.size(); ni++) {
-                                                            Closure c = postClosures.get(ni)
-                                                            c.delegate = script
-                                                            c.resolveStrategy = Closure.DELEGATE_FIRST
-                                                            c.call()
+                                                            setUpDelegate(postClosures.get(ni)).call()
                                                         }
                                                     } catch (Exception e) {
                                                         script.echo "Error in stage post: ${e.getMessage()}"
@@ -141,10 +135,7 @@ public class ModelInterpreter implements Serializable {
                                 if (postBuildClosures.size() > 0) {
                                     script.stage("Post Build Actions") {
                                         for (int i = 0; i < postBuildClosures.size(); i++) {
-                                            Closure c = postBuildClosures.get(i)
-                                            c.delegate = script
-                                            c.resolveStrategy = Closure.DELEGATE_FIRST
-                                            c.call()
+                                            setUpDelegate(postBuildClosures.get(i)).call()
                                         }
                                     }
                                 }
@@ -167,10 +158,7 @@ public class ModelInterpreter implements Serializable {
                         if (notificationClosures.size() > 0) {
                             script.stage("Notifications") {
                                 for (int i = 0; i < notificationClosures.size(); i++) {
-                                    Closure c = notificationClosures.get(i)
-                                    c.delegate = script
-                                    c.resolveStrategy = Closure.DELEGATE_FIRST
-                                    c.call()
+                                    setUpDelegate(notificationClosures.get(i)).call()
                                 }
                             }
                         }
@@ -187,6 +175,12 @@ public class ModelInterpreter implements Serializable {
                 throw firstError
             }
         }
+    }
+
+    Closure setUpDelegate(Closure c) {
+        c.delegate = script
+        c.resolveStrategy = Closure.DELEGATE_FIRST
+        return c
     }
 
     def catchRequiredContextForNode(Agent agent, boolean inNotifications = false, Closure body) throws Exception {
