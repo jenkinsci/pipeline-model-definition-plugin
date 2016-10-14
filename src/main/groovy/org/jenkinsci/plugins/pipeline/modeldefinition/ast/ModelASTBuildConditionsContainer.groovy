@@ -28,35 +28,57 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Notifications
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.PostBuild
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
 /**
- * Represents a list of {@link BuildCondition} and {@link StepsBlock} pairs to be called, depending on whether the build
- * condition is satisfied, at the end of the build, but before the {@link Notifications}. Corresponds to {@link PostBuild}.
+ * Represents a list of {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition} and {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock} pairs to be called, depending on whether the build
+ * condition is satisfied, at the end of the build or a stage.
+ * Corresponds to {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Notifications} or {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.PostBuild}
  *
- * @author Andrew Bayer
+ * @see ModelASTNotifications
+ * @see ModelASTPostBuild
+ *
+ * @author Robert Sandell &lt;rsandell@cloudbees.com&gt;.
  */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public final class ModelASTPostBuild extends ModelASTBuildConditionsContainer {
+public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
+    List<ModelASTBuildCondition> conditions = []
 
-    public ModelASTPostBuild(Object sourceLocation) {
+    protected ModelASTBuildConditionsContainer(Object sourceLocation) {
         super(sourceLocation)
     }
 
+    /*package*/ abstract String getName();
+
     @Override
-    /*package*/ String getName() {
-        return "postBuild";
+    public JSONObject toJSON() {
+        JSONArray a = new JSONArray()
+        conditions.each { c ->
+            a.add(c.toJSON())
+        }
+
+        return new JSONObject()
+                .accumulate("conditions", a)
+    }
+
+    protected void _validate(ModelValidator validator) {
+        conditions.each { c ->
+            c?.validate(validator)
+        }
     }
 
     @Override
-    public void validate(ModelValidator validator) {
-        validator.validateElement(this)
-        _validate(validator)
+    public String toGroovy() {
+        return "${getName()} {\n${conditions.collect { it.toGroovy() }.join("\n")}\n}\n"
+    }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation()
+        conditions.each { c ->
+            c.removeSourceLocation()
+        }
     }
 }

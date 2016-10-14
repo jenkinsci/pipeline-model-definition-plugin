@@ -21,41 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast
+package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import net.sf.json.JSONArray
-import net.sf.json.JSONObject
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Notifications
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
 /**
- * Represents a list of {@link BuildCondition} and {@link StepsBlock} pairs to be called, depending on whether the build
- * condition is satisfied, at the end of the build. Corresponds to {@link Notifications}
  *
- * @author Andrew Bayer
+ * @author Robert Sandell &lt;rsandell@cloudbees.com&gt;.
  */
-@ToString(includeSuper = true, includeSuperProperties = true)
-@EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public final class ModelASTNotifications extends ModelASTBuildConditionsContainer {
-
-    public ModelASTNotifications(Object sourceLocation) {
-        super(sourceLocation)
-    }
-
-    @Override
-    /*package*/ String getName() {
-        return "notifications";
-    }
-
-    @Override
-    public void validate(ModelValidator validator) {
-        validator.validateElement(this)
-        _validate(validator)
-    }
+public class PostStage  extends AbstractBuildConditionResponder<PostStage> {
 }

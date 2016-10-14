@@ -48,6 +48,9 @@ public class Stage implements NestedModel, Serializable {
     Agent agent
 
     @Whitelisted
+    PostStage post
+
+    @Whitelisted
     Stage name(String n) {
         this.name = n
         return this
@@ -71,12 +74,29 @@ public class Stage implements NestedModel, Serializable {
         return this
     }
 
+    @Whitelisted
+    Stage post(PostStage post) {
+        this.post = post
+        return this
+    }
+
     @Override
     @Whitelisted
     public void modelFromMap(Map<String,Object> m) {
         m.each { k, v ->
             this."${k}"(v)
         }
+    }
+
+    /**
+     * Returns a list of notification closures whose conditions have been satisfied and should be run.
+     *
+     * @param runWrapperObj The {@link org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper} for the build.
+     * @return a list of closures whose conditions have been satisfied.
+     */
+    @Whitelisted
+    List<Closure> satisfiedPostStageConditions(Root root, Object runWrapperObj) {
+        return root.satisfiedConditionsForField(post, runWrapperObj)
     }
 
 }
