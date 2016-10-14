@@ -26,17 +26,19 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            parallel(first: {
-                echo "First branch"
-            },
-            second: {
-                script {
-                    echo "In a script"
-                }
-                timeout(time: 5, unit: "MINUTES") {
-                    echo "Second branch"
-                }
-            })
+            steps {
+                parallel(first: {
+                    echo "First branch"
+                },
+                    second: {
+                        script {
+                            echo "In a script"
+                        }
+                        timeout(time: 5, unit: "MINUTES") {
+                            echo "Second branch"
+                        }
+                    })
+            }
         }
     }
 }

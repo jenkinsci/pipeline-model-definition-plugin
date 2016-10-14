@@ -22,19 +22,16 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent none
-    triggers {
-        [$class: "TimerTrigger", spec: "@daily"]
-    }
-    stages {
-        stage("foo") {
-            steps {
-                echo "hello"
-            }
-        }
-    }
+
+package org.jenkinsci.plugins.pipeline.modeldefinition.model
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+
+/**
+ * Special wrapper for checking the contents of a {@link Closure}.
+ *
+ * @author Andrew Bayer
+ */
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+public class ClosureContentsChecker extends MappedClosure<Object,ClosureContentsChecker> {
 }
-
-
-

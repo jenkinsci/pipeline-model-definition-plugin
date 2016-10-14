@@ -37,6 +37,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -51,6 +52,16 @@ import static org.junit.Assert.assertTrue;
  * @author Andrew Bayer
  */
 public class BasicModelDefTest extends AbstractModelDefTest {
+
+    private static DumbSlave s;
+
+    @BeforeClass
+    public static void setUpAgent() throws Exception {
+        s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+    }
 
     @Test
     public void simplePipeline() throws Exception {
@@ -148,10 +159,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void metaStepSyntax() throws Exception {
         prepRepoWithJenkinsfile("metaStepSyntax");
 
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
@@ -165,10 +172,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Test
     public void legacyMetaStepSyntax() throws Exception {
         prepRepoWithJenkinsfile("legacyMetaStepSyntax");
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
@@ -263,10 +266,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
         prepRepoWithJenkinsfile("dockerGlobalVariable");
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));

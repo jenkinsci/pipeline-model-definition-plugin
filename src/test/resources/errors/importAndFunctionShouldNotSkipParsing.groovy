@@ -27,7 +27,9 @@ import com.cloudbees.groovy.cps.NonCPS
 pipeline {
     stages {
         stage("foo") {
-            echo returnSomething()
+            steps {
+                echo returnSomething()
+            }
         }
     }
 }

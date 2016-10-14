@@ -24,12 +24,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.ClosureContentsChecker
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepBlockWithOtherArgs
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -80,8 +81,11 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
             argValue = args[0]
         }
 
+        if (Utils.assignableFromWrapper(ClosureContentsChecker.class, actualClass)) {
+            actualMap[methodName] = argValue
+        }
         // If we're already in a MappedClosure, we may need to recurse if the value itself is a closure.
-        if (Utils.assignableFromWrapper(MappedClosure.class, actualClass) && argValue != null) {
+        else if (Utils.assignableFromWrapper(MappedClosure.class, actualClass) && argValue != null) {
             // If the containing class is a MappedClosure and the argument is a Closure, it's most likely a build responder,
             // In which case we don't recurse, or it's just normal nested MappedClosure fun, in which case we *do* recurse.
             if (Utils.instanceOfWrapper(Closure.class, argValue)) {
@@ -101,28 +105,21 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
         } else {
             def resultValue
             def actualFieldName = Utils.actualFieldName(actualClass, methodName)
+            def actualType = Utils.actualFieldType(actualClass, methodName)
 
             // We care about the field name actually being a thing.
             if (actualFieldName != null) {
-                def actualType = Utils.actualFieldType(actualClass, methodName)
-
-                // Handle StepBlockWithOtherArgs *first*, since we won't recurse at all on them.
-                // If the field is an implementation of StepBlockWithOtherArgs, we need to just call its constructor with the args.
-                // Note that only Stage is a StepBlockWithOtherArgs currently, but that may be reused later.
-                if (Utils.assignableFromWrapper(StepBlockWithOtherArgs.class, actualType)) {
+                // Due to Stage taking an argument, not just a closure, we need to handle it differently.
+                if (Utils.assignableFromWrapper(Stage.class, actualType)) {
                     Object[] origArgs = args
-                    List<Object> blockParams = []
-                    for (int i = 0; i < origArgs.size(); i++) {
-                        def thisArg = origArgs[i]
-                        // If the argument is a Closure, create a StepsBlock of it.
-                        if (Utils.instanceOfWrapper(Closure.class, thisArg)) {
-                            blockParams.add(createStepsBlock(thisArg))
-                        } else {
-                            // Otherwise, just add the parameter.
-                            blockParams.add(thisArg)
-                        }
+                    String n = origArgs[0]
+                    def ctm = new ClosureModelTranslator(actualType, script)
+
+                    if (Utils.instanceOfWrapper(Closure.class, origArgs[1])) {
+                        resolveClosure(origArgs[1], ctm)
                     }
-                    resultValue = actualType.newInstance(Utils.toObjectArray(blockParams))
+                    ctm.actualMap.name = n
+                    resultValue = ctm.toNestedModel()
                 }
                 // If the argument is a Closure, we've got a few possibilities.
                 else if (argValue != null && Utils.instanceOfWrapper(Closure.class, argValue)) {

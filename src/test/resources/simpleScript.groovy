@@ -26,8 +26,10 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            script {
-                echo "In a script step"
+            steps {
+                script {
+                    echo "In a script step"
+                }
             }
         }
     }

@@ -26,9 +26,11 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo "hello"
-            script {
-                currentBuild.result = "UNSTABLE"
+            steps {
+                echo "hello"
+                script {
+                    currentBuild.result = "UNSTABLE"
+                }
             }
         }
     }

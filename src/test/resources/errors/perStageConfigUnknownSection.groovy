@@ -24,13 +24,14 @@
 
 pipeline {
     agent none
-    triggers {
-        [$class: "TimerTrigger", spec: "@daily"]
-    }
     stages {
         stage("foo") {
+            banana {
+                echo "monkey"
+            }
+            agent label:'some-label'
             steps {
-                echo "hello"
+                echo "hi"
             }
         }
     }

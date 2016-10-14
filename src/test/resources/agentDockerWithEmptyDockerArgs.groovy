@@ -26,8 +26,10 @@ pipeline {
     agent docker:"httpd:2.4.12", dockerArgs:""
     stages {
         stage("foo") {
-            sh 'cat /usr/local/apache2/conf/extra/httpd-userdir.conf'
-            sh 'echo "The answer is 42"'
+            steps {
+                sh 'cat /usr/local/apache2/conf/extra/httpd-userdir.conf'
+                sh 'echo "The answer is 42"'
+            }
         }
     }
 }

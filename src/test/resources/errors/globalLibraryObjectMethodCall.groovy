@@ -27,8 +27,10 @@ pipeline {
     agent label:"master"
     stages {
         stage("foo") {
-            // foo.bar() global variable object calls do not work as the step, though they do work as arguments.
-            acmeVar.hello('Pipeline')
+            steps {
+                // foo.bar() global variable object calls do not work as the step, though they do work as arguments.
+                acmeVar.hello('Pipeline')
+            }
         }
     }
 }

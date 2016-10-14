@@ -26,8 +26,10 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo "hello"
-            semaphore 'wait'
+            steps {
+                echo "hello"
+                semaphore 'wait'
+            }
         }
     }
     notifications {

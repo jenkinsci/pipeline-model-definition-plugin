@@ -26,9 +26,11 @@ pipeline {
     agent label:"some-label"
     stages {
         stage("foo") {
-            writeFile text: 'hello world', file: 'msg.out'
-            step([$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: true])
-            sh('echo ONSLAVE=$ONSLAVE')
+            steps {
+                writeFile text: 'hello world', file: 'msg.out'
+                step([$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: true])
+                sh('echo ONSLAVE=$ONSLAVE')
+            }
         }
     }
 }

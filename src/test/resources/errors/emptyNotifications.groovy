@@ -26,7 +26,9 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo "hello goodbye"
+            steps {
+                echo "hello goodbye"
+            }
         }
     }
     notifications {

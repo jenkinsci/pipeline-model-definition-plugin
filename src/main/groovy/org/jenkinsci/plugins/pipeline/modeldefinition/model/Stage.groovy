@@ -36,19 +36,47 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stage implements StepBlockWithOtherArgs, Serializable {
+public class Stage implements NestedModel, Serializable {
 
     @Whitelisted
     String name
 
     @Whitelisted
-    StepsBlock closureWrapper
-
+    StepsBlock steps
 
     @Whitelisted
-    public Stage(String n, StepsBlock w) {
+    Agent agent
+
+    @Whitelisted
+    Stage name(String n) {
         this.name = n
-        this.closureWrapper = w
+        return this
+    }
+
+    @Whitelisted
+    Stage agent(Agent a) {
+        this.agent = a
+        return this
+    }
+
+    @Whitelisted
+    Stage agent(Map<String,String> args) {
+        this.agent = new Agent(args)
+        return this
+    }
+
+    @Whitelisted
+    Stage steps(StepsBlock s) {
+        this.steps = s
+        return this
+    }
+
+    @Override
+    @Whitelisted
+    public void modelFromMap(Map<String,Object> m) {
+        m.each { k, v ->
+            this."${k}"(v)
+        }
     }
 
 }

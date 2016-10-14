@@ -27,18 +27,20 @@ pipeline {
     agent label:"master"
     stages {
         stage("foo") {
-            script {
-                acmeVar.hello('Pipeline')
-                acmeVar.foo('seed')
+            steps {
+                script {
+                    acmeVar.hello('Pipeline')
+                    acmeVar.foo('seed')
 
-                echo '['+acmeVar.bar()+']'
-                echo '[' + acmeVar.baz() + ']'
+                    echo '[' + acmeVar.bar() + ']'
+                    echo '[' + acmeVar.baz() + ']'
 
-                acmeFunc(1,2)
+                    acmeFunc(1, 2)
 
-                acmeFuncMap(a: 3, b: 4)
+                    acmeFuncMap(a: 3, b: 4)
 
-                acmeBody { title = 'yolo' }
+                    acmeBody { title = 'yolo' }
+                }
             }
         }
     }

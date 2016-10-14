@@ -28,6 +28,7 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.Maven;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -39,13 +40,19 @@ import static org.jvnet.hudson.test.ToolInstallations.configureDefaultMaven;
  */
 public class ToolsTest extends AbstractModelDefTest {
 
+    private static DumbSlave s;
+
+    @BeforeClass
+    public static void setUpAgent() throws Exception {
+        s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+    }
+
     @Test
     public void simpleTools() throws Exception {
         prepRepoWithJenkinsfile("simpleTools");
-
-        DumbSlave s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));

@@ -280,31 +280,58 @@ class ModelParser {
         }
 
         stage.name = parseStringLiteral(nameExp)
-        return parseStageBody(stage, asBlock(m.body.code));
+        def sectionsSeen = new HashSet()
+        def bodyExp = m.getArgument(1)
+        if (bodyExp == null || !(bodyExp instanceof ClosureExpression)) {
+            errorCollector.error(stage, "Stage doesn't have a block")
+        } else {
+            eachStatement(((ClosureExpression)bodyExp).code) { s ->
+                def mc = matchMethodCall(s);
+                if (mc == null) {
+                    errorCollector.error(stage, "Not a valid stage section definition: '${getSourceText(s)}'. Some extra configuration is required.")
+                } else {
+                    def name = parseMethodName(mc);
+
+                    // Here, method name is a "section" name in the "stage" closure, which must be unique.
+                    if (!sectionsSeen.add(name)) {
+                        // Also an error that we couldn't actually detect at model evaluation time.
+                        errorCollector.error(stage, "Multiple occurrences of the $name section")
+                    }
+                    switch (name) {
+                        case 'agent':
+                            stage.agent = parseAgent(s)
+                            break
+                        case 'steps':
+                            def stepsBlock = matchBlockStatement(s);
+                            stage.branches.addAll(parseStepsBlock(asBlock(stepsBlock.body.code)))
+                            break
+                        default:
+                            errorCollector.error(stage, "Unknown stage section '${name}'")
+                    }
+                }
+            }
+        }
+        return stage
     }
 
-    /**
-     * Given the body of a stage block, attempts to fill in {@link ModelASTStage#branches}.
-     *
-     * <p>
-     * If the body's sole statement is {@code parallel(...)} then it's treated as
-     * branches of the stage, or else
-     */
-    protected ModelASTStage parseStageBody(ModelASTStage stage, BlockStatement block) {
+    protected List<ModelASTBranch> parseStepsBlock(BlockStatement block) {
+        List<ModelASTBranch> branches = []
+
+        // Handle parallel as a special case
         if (block.statements.size()==1) {
             def parallel = matchParallel(block.statements[0]);
-            if (parallel!=null) {
-                parallel.args.each { k,v ->
-                    stage.branches.add(parseBranch(k, asBlock(v.code)));
+            if (parallel != null) {
+                parallel.args.each { k, v ->
+                    branches.add(parseBranch(k, asBlock(v.code)));
                 }
-                return stage;
+                return branches
             }
         }
 
         // otherwise it's a single line of execution
-        stage.branches.add(parseBranch("default",block));
+        branches.add(parseBranch("default", block));
 
-        return stage;
+        return branches
     }
 
     /**
@@ -800,6 +827,17 @@ class ModelParser {
             def bs = new BlockStatement();
             bs.addStatement(st);
             return bs;
+        }
+    }
+
+    protected List<String> methodNamesFromBlock(BlockStatement block) {
+        return block.statements.collect { s ->
+            def mc = matchMethodCall(s);
+            if (mc != null) {
+                return matchMethodName(mc);
+            } else {
+                return null
+            }
         }
     }
 

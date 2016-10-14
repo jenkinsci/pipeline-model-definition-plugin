@@ -10,8 +10,9 @@
 These are sections that are specified directly within the `pipeline` argument closure.
 
 ### agent
-* *Description*: Specifies where the build will run. 
-* *Required*: Yes
+* *Description*: Specifies where the build or stage will run. 
+* *Required*: Yes for the top-level `pipeline` closure, optional for individual `stage` closures.
+* *Allowed In*: Top-level `pipeline` closure and individual `stage` closures.
 * *Parameters*: Either a `Map` of one or more arguments or one of two constants - `none` or `any`.
     * *Map Keys*:
         * Note that this will be an `ExtensionPoint`, so plugins will be able to add to the available image providers.
@@ -41,6 +42,7 @@ These are sections that are specified directly within the `pipeline` argument cl
 * *Description*: A sequence of `key = value` pairs, which will be passed to the `withEnv` step the build will be 
 executed within.
 * *Required*: No
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: One or more lines with `foo = 'bar'` variable name/value pairs.
@@ -59,6 +61,7 @@ environment {
 ### stages
 * *Description*: A sequence of one or more Pipeline `stage`s, each of which consist of a sequence of steps.
 * *Required*: Yes
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: one or more `stage` blocks, as described below.
@@ -69,7 +72,10 @@ to-be-released block-scoped `stage` syntax in base Pipeline.
 * *Required*: At least one is required.
 * *Parameters*: A single `String`, the name for the `stage`.
 * *Takes a Closure*: Yes
-* *Closure Contents*: One or more Pipeline steps, including block-scoped steps and the special `script` block described below.
+* *Closure Contents*: A `steps` block containing one or more Pipeline steps, including block-scoped steps and the 
+special `script` block described below, and optionally, certain configuration sections that allow being set on a 
+per-stage basis.
+    * *NOTE*: Currently only the `agent` section can be configured per-stage.
     * *NOTE*: Only the "declarative subset" of Groovy is allowed by default. See below for details on that subset.
     * *NOTE*: The `parallel` step is a special case - it can only be used if it's the sole step in the `stage`.
 * *Examples*:
@@ -77,19 +83,24 @@ to-be-released block-scoped `stage` syntax in base Pipeline.
 ```
 stages {
     stage('foo') {
-        echo 'bar'
+        steps {
+            echo 'bar'
+        }
     }
 }
 
 stages {
     stage('first') {
-        timeout(time:5, unit:'MINUTES') {
-            sh "mvn clean install -DskipTests"
+        steps {
+            timeout(time:5, unit:'MINUTES') {
+                sh "mvn clean install -DskipTests"
+            }
         }
     }
         
     stage('second') {
-        node('some-node') {
+        agent label:'some-node'
+        steps {
             checkout scm
             sh "mvn clean install"
         }
@@ -98,14 +109,16 @@ stages {
 
 stages {
     stage('parallel-stage') {
-        parallel(
-            firstBlock: {
-                echo "First block of the parallel"
-            },
-            secondBlock: {
-                echo "Second block of the parallel"
-            }
-        )
+        steps {
+            parallel(
+                firstBlock: {
+                    echo "First block of the parallel"
+                },
+                secondBlock: {
+                    echo "Second block of the parallel"
+                }
+            )
+        }
     }
 }
 ```
@@ -136,6 +149,7 @@ stages {
 * *Description*: A top-level section defining tools to auto-install and put on the PATH. This is ignored if `image none`
 is specified.
 * *Required*: No
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: Names and versions of tools configured in Jenkins to install. 
@@ -155,6 +169,7 @@ tools {
 ### notifications
 * *Description*: Defines notifications to be sent after build completion, assuming build status conditions are met.
 * *Required*: No
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: A sequence of one or more build conditions containing Pipeline steps to run. See below for 
@@ -164,6 +179,7 @@ definition of build conditions and their contents.
 * *Description*: Defines post build actions to be run after build completion, assuming build status conditions are met.
 Note that `postBuild` steps are run *before* `notifications`.
 * *Required*: No
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: A sequence of one or more build conditions containing Pipeline steps to run. See below for 
@@ -205,8 +221,9 @@ postBuild {
 ```
 
 ### Triggers
-* *Description*:
+* *Description*: Triggers for this job, as used in other Jenkins jobs.
 * *Required*: No
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: A sequence of one or more trigger configurations, using `@Symbol` names for constructors.
@@ -221,8 +238,9 @@ triggers {
 ```
 
 ### Build Parameters
-* *Description*:
+* *Description*: Build parameters that will be prompted for at build time.
 * *Required*: No
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: A sequence of one or more parameter definition configurations, using `@Symbol` names for constructors.
@@ -237,8 +255,9 @@ parameters {
 ```
 
 ### Job Properties
-* *Description*:
+* *Description*: Other job properties, such as build discarding, limiting concurrent builds, and more.
 * *Required*: No
+* *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: A sequence of one or more job property configurations, using `@Symbol` names for constructors.
@@ -272,8 +291,3 @@ jobProperties {
     * Method calls where the left hand side is a variable reference or a sequence of property references: `x.y.z(...)`
     * Method calls (including `@Symbol` constructors like used above in job properties, triggers and build parameters) where there is no left hand side.
     * Closure without parameters: `{ ... }`
-
-## Script mode
-* *Description*: A flag which, when set, allows usage of standard non-declarative-subset Pipeline code throughout the Jenkinsfile.
-* *Usage*: Set by putting `use script` at the beginning of the Jenkinsfile
-* *Examples*: (hard to figure out a good example here since we've moved to the `pipeline` step?)

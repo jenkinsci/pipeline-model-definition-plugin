@@ -26,7 +26,9 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            error "hello"
+            steps {
+                error "hello"
+            }
         }
     }
     notifications {

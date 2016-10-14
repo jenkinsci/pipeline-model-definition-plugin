@@ -30,7 +30,9 @@ pipeline {
 
     stages {
         stage("foo") {
-            sh 'echo "FOO is $FOO"'
+            steps {
+                sh 'echo "FOO is $FOO"'
+            }
         }
     }
 }

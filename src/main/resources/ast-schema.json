@@ -316,6 +316,9 @@
         "name": {
           "type": "string"
         },
+        "agent": {
+          "$ref": "#/definitions/agent"
+        },
         "branches": {
           "type": "array",
           "items": {

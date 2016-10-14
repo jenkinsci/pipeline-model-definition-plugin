@@ -26,8 +26,10 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            node('some-label') {
-                sh('echo ONSLAVE=$ONSLAVE')
+            steps {
+                node('some-label') {
+                    sh('echo ONSLAVE=$ONSLAVE')
+                }
             }
         }
     }

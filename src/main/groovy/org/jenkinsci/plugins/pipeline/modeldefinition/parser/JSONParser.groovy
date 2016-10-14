@@ -167,6 +167,10 @@ class JSONParser {
 
         stage.name = j.getString("name")
 
+        if (j.has("agent")) {
+            stage.agent = parseAgent(j.get("agent"))
+        }
+
         j.getJSONArray("branches").each { b ->
             JSONObject o = (JSONObject)b
             stage.branches.add(parseBranch(o))
@@ -174,6 +178,8 @@ class JSONParser {
         return stage
 
     }
+
+
 
     public @CheckForNull ModelASTBranch parseBranch(JSONObject j) {
         ModelASTBranch branch = new ModelASTBranch(j)

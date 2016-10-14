@@ -26,12 +26,16 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            echo "hello"
+            steps {
+                echo "hello"
+            }
         }
         stage("bar") {
         }
         stage("foo") {
-            echo "I shouldn't be here"
+            steps {
+                echo "I shouldn't be here"
+            }
         }
     }
 }

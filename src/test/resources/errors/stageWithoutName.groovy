@@ -1,7 +1,9 @@
 pipeline {
     stages {
         stage {
-            sh './test.sh'
+            steps {
+                sh './test.sh'
+            }
         }
     }
 }

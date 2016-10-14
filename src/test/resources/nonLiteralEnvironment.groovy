@@ -35,11 +35,13 @@ pipeline {
 
     stages {
         stage("foo") {
-            sh 'echo "FOO is $FOO"'
-            sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
-            sh 'echo "ANOTHER_ENV is $ANOTHER_ENV"'
-            sh 'echo "INHERITED_ENV is $INHERITED_ENV"'
-            sh 'echo "ACME_FUNC is $ACME_FUNC"'
+            steps {
+                sh 'echo "FOO is $FOO"'
+                sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
+                sh 'echo "ANOTHER_ENV is $ANOTHER_ENV"'
+                sh 'echo "INHERITED_ENV is $INHERITED_ENV"'
+                sh 'echo "ACME_FUNC is $ACME_FUNC"'
+            }
         }
     }
 }

@@ -29,6 +29,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -36,18 +37,29 @@ import org.junit.Test;
  * @author Andrew Bayer
  */
 public class ValidatorTest extends AbstractModelDefTest {
+
+    private static DumbSlave s;
+
+    @BeforeClass
+    public static void setUpAgent() throws Exception {
+        s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
+    }
+
     @Test
     public void rejectStageInSteps() throws Exception {
         prepRepoWithJenkinsfile("errors", "rejectStageInSteps");
 
-        failWithError("Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines");
+        assertFailWithError("Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines");
     }
 
     @Test
     public void rejectParallelMixedInSteps() throws Exception {
         prepRepoWithJenkinsfile("errors", "rejectParallelMixedInSteps");
 
-        failWithError("Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block");
+        assertFailWithError("Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block");
     }
 
     @Ignore("I still want to block parallel, but I'm not sure it's worth it, ignoring for now.")
@@ -64,182 +76,210 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void emptyStages() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyStages");
 
-        failWithError("No stages specified");
+        assertFailWithError("No stages specified");
     }
 
     @Test
     public void emptyJobProperties() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyJobProperties");
 
-        failWithError("Cannot have empty jobProperties section");
+        assertFailWithError("Cannot have empty jobProperties section");
     }
 
     @Test
     public void emptyParameters() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyParameters");
 
-        failWithError("Cannot have empty parameters section");
+        assertFailWithError("Cannot have empty parameters section");
     }
 
     @Test
     public void emptyTriggers() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyTriggers");
 
-        failWithError("Cannot have empty triggers section");
+        assertFailWithError("Cannot have empty triggers section");
     }
 
     @Test
     public void blockInJobProperties() throws Exception {
         prepRepoWithJenkinsfile("errors", "blockInJobProperties");
 
-        failWithError("Job property definitions cannot have blocks");
+        assertFailWithError("Job property definitions cannot have blocks");
     }
 
     @Test
     public void blockInParameters() throws Exception {
         prepRepoWithJenkinsfile("errors", "blockInParameters");
 
-        failWithError("Build parameter definitions cannot have blocks");
+        assertFailWithError("Build parameter definitions cannot have blocks");
     }
 
     @Test
     public void blockInTriggers() throws Exception {
         prepRepoWithJenkinsfile("errors", "blockInTriggers");
 
-        failWithError("Trigger definitions cannot have blocks");
+        assertFailWithError("Trigger definitions cannot have blocks");
     }
 
     @Test
     public void mixedMethodArgs() throws Exception {
         prepRepoWithJenkinsfile("errors", "mixedMethodArgs");
 
-        failWithError("Can't mix named and unnamed parameter definition arguments");
+        assertFailWithError("Can't mix named and unnamed parameter definition arguments");
     }
 
     @Test
     public void closureAsMethodCallArg() throws Exception {
         prepRepoWithJenkinsfile("errors", "closureAsMethodCallArg");
 
-        failWithError("Method call arguments cannot use closures");
+        assertFailWithError("Method call arguments cannot use closures");
     }
 
     @Test
     public void tooFewMethodCallArgs() throws Exception {
         prepRepoWithJenkinsfile("errors", "tooFewMethodCallArgs");
 
-        failWithError("'cron' should have 1 arguments but has 0 arguments instead");
+        assertFailWithError("'cron' should have 1 arguments but has 0 arguments instead");
     }
 
     @Test
     public void wrongParameterNameMethodCall() throws Exception {
         prepRepoWithJenkinsfile("errors", "wrongParameterNameMethodCall");
 
-        failWithError("Invalid parameter 'namd', did you mean 'name'?");
+        assertFailWithError("Invalid parameter 'namd', did you mean 'name'?");
     }
 
     @Test
     public void invalidParameterTypeMethodCall() throws Exception {
         prepRepoWithJenkinsfile("errors", "invalidParameterTypeMethodCall");
 
-        failWithError("Expecting class java.lang.String for parameter 'name' but got '1234' instead");
+        assertFailWithError("Expecting class java.lang.String for parameter 'name' but got '1234' instead");
     }
 
     @Test
     public void rejectPropertiesStepInMethodCall() throws Exception {
         prepRepoWithJenkinsfile("errors", "rejectPropertiesStepInMethodCall");
 
-        failWithError("Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines");
+        assertFailWithError("Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines");
     }
 
     @Test
     public void rejectMapsForTriggerDefinition() throws Exception {
         prepRepoWithJenkinsfile("errors", "rejectMapsForTriggerDefinition");
 
-        failWithError("Triggers cannot be defined as maps");
+        assertFailWithError("Triggers cannot be defined as maps");
     }
 
     @Test
     public void emptyParallel() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyParallel");
 
-        failWithError("Nothing to execute within stage 'foo'");
+        assertFailWithError("Nothing to execute within stage 'foo'");
     }
 
     @Test
     public void missingAgent() throws Exception {
         prepRepoWithJenkinsfile("errors", "missingAgent");
 
-        failWithError("Missing required section 'agent'");
+        assertFailWithError("Missing required section 'agent'");
     }
 
     @Test
     public void missingStages() throws Exception {
         prepRepoWithJenkinsfile("errors", "missingStages");
 
-        failWithError("Missing required section 'stages'");
+        assertFailWithError("Missing required section 'stages'");
     }
 
     @Test
     public void missingRequiredStepParameters() throws Exception {
         prepRepoWithJenkinsfile("errors", "missingRequiredStepParameters");
 
-        failWithError("Missing required parameter: 'time'");
+        assertFailWithError("Missing required parameter: 'time'");
     }
 
     @Test
     public void invalidStepParameterType() throws Exception {
         prepRepoWithJenkinsfile("errors", "invalidStepParameterType");
 
-        failWithError("Expecting int for parameter 'time' but got 'someTime' instead");
+        assertFailWithError("Expecting int for parameter 'time' but got 'someTime' instead");
     }
 
     @Test
     public void unknownStepParameter() throws Exception {
         prepRepoWithJenkinsfile("errors", "unknownStepParameter");
 
-        failWithError("Invalid parameter 'banana', did you mean 'unit'?");
+        assertFailWithError("Invalid parameter 'banana', did you mean 'unit'?");
+    }
+
+    @Test
+    public void perStageConfigEmptySteps() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigEmptySteps");
+
+        assertFailWithError("No steps specified for branch");
+    }
+
+    @Test
+    public void perStageConfigMissingSteps() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigMissingSteps");
+
+        assertFailWithError("Nothing to execute within stage");
+    }
+
+    @Test
+    public void perStageConfigUnknownSection() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigUnknownSection");
+
+        assertFailWithError("Unknown stage section 'banana'");
     }
 
     @Test
     public void invalidMetaStepSyntax() throws Exception {
         prepRepoWithJenkinsfile("errors", "invalidMetaStepSyntax");
 
-        failWithErrorOnSlave("Invalid parameter 'someRandomField', did you mean 'caseSensitive'?");
+        assertFailWithError("Invalid parameter 'someRandomField', did you mean 'caseSensitive'?");
     }
 
     @Test
     public void duplicateStageNames() throws Exception {
         prepRepoWithJenkinsfile("errors", "duplicateStageNames");
 
-        failWithError("Duplicate stage name: 'foo'", "No steps specified for branch @ line");
+        assertFailWithError("Duplicate stage name: 'foo'", "Nothing to execute within stage 'bar'");
     }
 
     @Test
     public void duplicateEnvironment() throws Exception {
         prepRepoWithJenkinsfile("errors", "duplicateEnvironment");
 
-        failWithError("Duplicate environment variable name: 'FOO'");
+        assertFailWithError("Duplicate environment variable name: 'FOO'");
     }
 
     @Test
     public void duplicateStepParameter() throws Exception {
         prepRepoWithJenkinsfile("errors", "duplicateStepParameter");
 
-        failWithError("Duplicate named parameter 'time' found");
+        assertFailWithError("Duplicate named parameter 'time' found");
     }
 
     @Test
     public void emptyEnvironment() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyEnvironment");
 
-        failWithError("No variables specified for environment");
+        assertFailWithError("No variables specified for environment");
     }
 
     @Test
     public void emptyAgent() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyAgent");
 
-        failWithError("Not a valid section definition: 'agent'. Some extra configuration is required.");
+        assertFailWithError("Not a valid section definition: 'agent'. Some extra configuration is required.");
+    }
+
+    @Test
+    public void perStageConfigEmptyAgent() throws Exception {
+        prepRepoWithJenkinsfile("errors", "perStageConfigEmptyAgent");
+
+        assertFailWithError("Not a valid stage section definition: 'agent'. Some extra configuration is required.");
     }
 
     @Test
@@ -257,28 +297,28 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void emptyNotification() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyNotifications");
 
-        failWithError("notifications can not be empty");
+        assertFailWithError("notifications can not be empty");
     }
 
     @Test
     public void emptyPostBuild() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyPostBuild");
 
-        failWithError("postBuild can not be empty");
+        assertFailWithError("postBuild can not be empty");
     }
 
     @Test
     public void duplicateNotificationConditions() throws Exception {
         prepRepoWithJenkinsfile("errors", "duplicateNotificationConditions");
 
-        failWithError("Duplicate build condition name: 'always'");
+        assertFailWithError("Duplicate build condition name: 'always'");
     }
 
     @Test
     public void duplicatePostBuildConditions() throws Exception {
         prepRepoWithJenkinsfile("errors", "duplicatePostBuildConditions");
 
-        failWithError("Duplicate build condition name: 'always'");
+        assertFailWithError("Duplicate build condition name: 'always'");
     }
 
     @Test
@@ -296,7 +336,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void notInstalledToolVersion() throws Exception {
         prepRepoWithJenkinsfile("errors", "notInstalledToolVersion");
 
-        failWithError("Tool type 'maven' does not have an install of 'apache-maven-3.0.2' configured - did you mean 'apache-maven-3.0.1'?");
+        assertFailWithError("Tool type 'maven' does not have an install of 'apache-maven-3.0.2' configured - did you mean 'apache-maven-3.0.1'?");
     }
 
     @Test
@@ -332,30 +372,17 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void packageShouldNotSkipParsing() throws Exception {
         prepRepoWithJenkinsfile("errors", "packageShouldNotSkipParsing");
 
-        failWithError("Missing required section 'agent'");
+        assertFailWithError("Missing required section 'agent'");
     }
 
     @Test
     public void importAndFunctionShouldNotSkipParsing() throws Exception {
         prepRepoWithJenkinsfile("errors", "importAndFunctionShouldNotSkipParsing");
 
-        failWithError("Missing required section 'agent'");
+        assertFailWithError("Missing required section 'agent'");
     }
 
-    private void failWithError(final String... errors) throws Exception {
-        failWithErrorAndPossiblySlave(false, errors);
-    }
-
-    private void failWithErrorOnSlave(final String... errors) throws Exception {
-        failWithErrorAndPossiblySlave(true, errors);
-    }
-
-    private void failWithErrorAndPossiblySlave(final boolean useSlave, final String... errors) throws Exception {
-        if (useSlave) {
-            DumbSlave s = j.createOnlineSlave();
-            s.setLabelString("some-label");
-            s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-        }
+    private void assertFailWithError(final String... errors) throws Exception {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);

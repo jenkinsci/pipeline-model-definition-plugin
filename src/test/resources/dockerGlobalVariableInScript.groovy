@@ -27,9 +27,11 @@ pipeline {
     agent label:"some-label"
     stages {
         stage("foo") {
-            script {
-                foo = docker.image('ubuntu')
-                echo "image: ${foo.imageName()}"
+            steps {
+                script {
+                    foo = docker.image('ubuntu')
+                    echo "image: ${foo.imageName()}"
+                }
             }
         }
     }
