@@ -30,9 +30,11 @@ import com.github.fge.jsonschema.report.ProcessingReport
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
@@ -64,6 +66,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollect
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 
 import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
 
 /**
  * Parses input JSON into a {@link ModelASTPipelineDef}.
@@ -174,6 +177,13 @@ class JSONParser {
         j.getJSONArray("branches").each { b ->
             JSONObject o = (JSONObject)b
             stage.branches.add(parseBranch(o))
+        }
+
+        if (j.has("post")) {
+            def object = j.getJSONObject("post")
+            if (!object.isNullObject()) {
+                stage.post = parsePostStage(object)
+            }
         }
         return stage
 
@@ -405,21 +415,26 @@ class JSONParser {
     public @CheckForNull ModelASTNotifications parseNotifications(JSONObject j) {
         ModelASTNotifications notifications = new ModelASTNotifications(j)
 
-        j.getJSONArray("conditions").each { o ->
-            JSONObject conditionBlock = (JSONObject) o
-            notifications.conditions.add(parseBuildCondition(conditionBlock))
-        }
-        return notifications
+        return parseBuildConditionResponder(j, notifications)
     }
 
     public @CheckForNull ModelASTPostBuild parsePostBuild(JSONObject j) {
         ModelASTPostBuild postBuild = new ModelASTPostBuild(j)
+        return parseBuildConditionResponder(j, postBuild)
+    }
 
+    public @CheckForNull ModelASTPostStage parsePostStage(JSONObject j) {
+        ModelASTPostStage post = new ModelASTPostStage(j)
+        return parseBuildConditionResponder(j, post)
+    }
+
+    @Nonnull
+    public <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(JSONObject j, R responder) {
         j.getJSONArray("conditions").each { o ->
             JSONObject conditionBlock = (JSONObject) o
-            postBuild.conditions.add(parseBuildCondition(conditionBlock))
+            responder.conditions.add(parseBuildCondition(conditionBlock))
         }
-        return postBuild
+        return responder
     }
 
     public @CheckForNull ModelASTEnvironment parseEnvironment(JSONArray j) {

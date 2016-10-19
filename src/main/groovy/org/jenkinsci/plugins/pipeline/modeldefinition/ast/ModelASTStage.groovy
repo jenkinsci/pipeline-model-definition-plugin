@@ -22,6 +22,7 @@ public final class ModelASTStage extends ModelASTElement {
     String name
     ModelASTAgent agent
     List<ModelASTBranch> branches = []
+    ModelASTPostStage post;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation)
@@ -39,6 +40,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (agent != null) {
             o.accumulate("agent", agent.toJSON())
         }
+        if (post != null) {
+            o.accumulate("post", post.toJSON())
+        }
         return o
     }
 
@@ -49,6 +53,7 @@ public final class ModelASTStage extends ModelASTElement {
             b?.validate(validator)
         }
         agent?.validate(validator)
+        post?.validate(validator)
     }
 
     @Override
@@ -72,6 +77,10 @@ public final class ModelASTStage extends ModelASTElement {
 
         retString.append("}\n")
 
+        if (post != null) {
+            retString.append(post.toGroovy())
+        }
+
         retString.append("}\n")
 
         return retString.toString()
@@ -84,5 +93,6 @@ public final class ModelASTStage extends ModelASTElement {
             b.removeSourceLocation()
         }
         agent?.removeSourceLocation()
+        post?.removeSourceLocation()
     }
 }

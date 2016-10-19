@@ -34,8 +34,10 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
@@ -305,6 +307,9 @@ class ModelParser {
                             def stepsBlock = matchBlockStatement(s);
                             stage.branches.addAll(parseStepsBlock(asBlock(stepsBlock.body.code)))
                             break
+                        case 'post':
+                            stage.post = parsePostStage(s)
+                            break;
                         default:
                             errorCollector.error(stage, "Unknown stage section '${name}'")
                     }
@@ -592,31 +597,35 @@ class ModelParser {
     }
 
     public @Nonnull ModelASTNotifications parseNotifications(Statement stmt) {
-        def m = matchBlockStatement(stmt);
-
         def r = new ModelASTNotifications(stmt);
-        if (m==null) {
-            errorCollector.error(r, "Expected a block");
-        } else {
-            eachStatement(m.body.code) {
-                r.conditions.add(parseBuildCondition(it));
-            }
-        }
-        return r;
+
+        return parseBuildConditionResponder(stmt, r);
     }
 
     public @Nonnull ModelASTPostBuild parsePostBuild(Statement stmt) {
+        def r = new ModelASTPostBuild(stmt);
+
+        return parseBuildConditionResponder(stmt, r);
+    }
+
+    public @Nonnull ModelASTPostStage parsePostStage(Statement stmt) {
+        def r = new ModelASTPostStage(stmt);
+
+        return parseBuildConditionResponder(stmt, r);
+    }
+
+    @Nonnull
+    public <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(Statement stmt, R responder) {
         def m = matchBlockStatement(stmt);
 
-        def r = new ModelASTPostBuild(stmt);
         if (m==null) {
-            errorCollector.error(r,"Expected a block");
+            errorCollector.error(responder,"Expected a block");
         } else {
             eachStatement(m.body.code) {
-                r.conditions.add(parseBuildCondition(it));
+                responder.conditions.add(parseBuildCondition(it));
             }
         }
-        return r;
+        return responder;
     }
 
     public @Nonnull ModelASTBuildCondition parseBuildCondition(Statement st) {
