@@ -23,8 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.collect.ImmutableList;
 import hudson.Launcher;
+import hudson.model.ItemGroup;
 import hudson.model.ParameterDefinition;
 import hudson.model.Result;
 import hudson.model.Slave;
@@ -278,15 +281,31 @@ public abstract class AbstractModelDefTest {
     }
 
     protected WorkflowRun getAndStartBuild() throws Exception {
-        WorkflowJob p = j.createProject(WorkflowJob.class);
+        return getAndStartBuild(null);
+    }
+
+    protected WorkflowRun getAndStartBuild(Folder folder) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder);
         p.setDefinition(new CpsScmFlowDefinition(new GitStep(sampleRepo.toString()).createSCM(), "Jenkinsfile"));
         return p.scheduleBuild2(0).waitForStart();
     }
 
     protected WorkflowRun getAndStartNonRepoBuild(String pipelineScriptFile) throws Exception {
-        WorkflowJob p = j.createProject(WorkflowJob.class);
+        return getAndStartNonRepoBuild(null, pipelineScriptFile);
+    }
+
+    protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder);
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(pipelineScriptFile)));
         return p.scheduleBuild2(0).waitForStart();
+    }
+
+    private WorkflowJob createWorkflowJob(Folder folder) throws IOException {
+        if (folder == null) {
+            return j.createProject(WorkflowJob.class);
+        } else {
+            return folder.createProject(WorkflowJob.class, "test" + (folder.getItems().size() + 1));
+        }
     }
 
     protected void assumeDocker() throws Exception {
@@ -370,13 +389,15 @@ public abstract class AbstractModelDefTest {
         return new ExpectationsBuilder(result, resourceParent, resource);
     }
 
-    protected class ExpectationsBuilder {
+    public class ExpectationsBuilder {
         private Result result = Result.SUCCESS;
         private final String resourceParent;
         private String resource;
         private List<String> logContains;
         private List<String> logNotContains;
         private WorkflowRun run;
+        private boolean runFromRepo = true;
+        private Folder folder; //We use the real stuff here, no mocking fluff
 
         private ExpectationsBuilder(String resourceParent, String resource) {
             this(Result.SUCCESS, resourceParent, resource);
@@ -388,7 +409,17 @@ public abstract class AbstractModelDefTest {
             this.resource = resource;
         }
 
-        protected ExpectationsBuilder logContains(String... logEntries) {
+        public ExpectationsBuilder runFromRepo(boolean mode) {
+            runFromRepo = mode;
+            return this;
+        }
+
+        public ExpectationsBuilder inFolder(Folder folder) {
+            this.folder = folder;
+            return this;
+        }
+
+        public ExpectationsBuilder logContains(String... logEntries) {
             if (this.logContains != null) {
                 logContains.addAll(Arrays.asList(logEntries));
             } else {
@@ -397,7 +428,7 @@ public abstract class AbstractModelDefTest {
             return this;
         }
 
-        protected ExpectationsBuilder logNotContains(String... logEntries) {
+        public ExpectationsBuilder logNotContains(String... logEntries) {
             if (this.logNotContains != null) {
                 this.logNotContains.addAll(Arrays.asList(logEntries));
             } else {
@@ -406,17 +437,22 @@ public abstract class AbstractModelDefTest {
             return this;
         }
 
-        protected void go() throws Exception {
-            if (resource != null) {
-                if (resourceParent != null) {
-                    prepRepoWithJenkinsfile(resourceParent, resource);
-                } else {
-                    prepRepoWithJenkinsfile(resource);
-                }
+        public void go() throws Exception {
+            String resourceFullName = resource;
+            if (resourceParent != null) {
+                resourceFullName = resourceParent + "/" + resource;
+            }
+
+            if (runFromRepo) {
+                prepRepoWithJenkinsfile(resourceFullName);
             }
 
             if (run == null) {
-                run = getAndStartBuild();
+                if (runFromRepo) {
+                    run = getAndStartBuild(folder);
+                } else {
+                    run = getAndStartNonRepoBuild(folder, resourceFullName);
+                }
             } else {
                 run = run.getParent().scheduleBuild2(0).waitForStart();
             }
@@ -434,7 +470,7 @@ public abstract class AbstractModelDefTest {
             }
         }
 
-        protected ExpectationsBuilder resetForNewRun(Result result) {
+        public ExpectationsBuilder resetForNewRun(Result result) {
             this.result = result;
             resource = null;
             logContains = null;
@@ -443,7 +479,7 @@ public abstract class AbstractModelDefTest {
         }
     }
 
-    protected class EnvBuilder {
+    public class EnvBuilder {
         private final Slave agent;
         private Map<String, String> env;
 
@@ -453,12 +489,12 @@ public abstract class AbstractModelDefTest {
             env.put("ONSLAVE", "true");
         }
 
-        protected EnvBuilder put(String key, String value) {
+        public EnvBuilder put(String key, String value) {
             env.put(key, value);
             return this;
         }
 
-        protected void set() throws IOException {
+        public void set() throws IOException {
             List<EnvironmentVariablesNodeProperty.Entry> entries = new ArrayList<>(env.size());
             for (Map.Entry<String, String> entry : env.entrySet()) {
                 entries.add(new EnvironmentVariablesNodeProperty.Entry(entry.getKey(), entry.getValue()));

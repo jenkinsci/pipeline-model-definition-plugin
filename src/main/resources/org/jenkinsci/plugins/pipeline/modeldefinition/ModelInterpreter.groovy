@@ -270,6 +270,16 @@ public class ModelInterpreter implements Serializable {
                 }
             }
         } else {
+            if (agent?.hasDocker()) {
+                String dl = script.dockerLabel()?.trim()
+                if (dl) {
+                    return {
+                        script.node(dl) {
+                            body.call()
+                        }
+                    }
+                }
+            }
             return {
                 script.node {
                     body.call()
