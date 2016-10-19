@@ -65,6 +65,7 @@ public class DockerLabelStep extends AbstractStepImpl implements Serializable {
 
 
     public static class StepExecutionImpl extends AbstractSynchronousNonBlockingStepExecution<String> {
+        private static final long serialVersionUID = 1L;
 
         @StepContextParameter
         transient TaskListener listener;
