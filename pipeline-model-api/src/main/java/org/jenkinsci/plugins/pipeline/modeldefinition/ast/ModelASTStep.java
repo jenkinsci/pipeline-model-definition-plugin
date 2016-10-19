@@ -28,7 +28,9 @@ public class ModelASTStep extends ModelASTElement {
     }
 
     /**
-     * A list of step names which are banned from being executed within a step block.
+     * A map of step names which are banned from being executed within a step block.
+     *
+     * @return the map of steps that are banned from being executed within a step block, keyed by step name.
      */
     public static Map<String, String> getBlockedSteps() {
         return blockedStepsBase();

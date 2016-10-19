@@ -176,7 +176,7 @@ public class Root implements NestedModel, Serializable {
      * @param runWrapperObj The {@link RunWrapper} for the build.
      * @return A list of closures from the responder which have had their conditions satisfied.
      */
-    private List<Closure> satisfiedConditionsForField(AbstractBuildConditionResponder r, Object runWrapperObj) {
+    /*package*/ List<Closure> satisfiedConditionsForField(AbstractBuildConditionResponder r, Object runWrapperObj) {
         if (r != null) {
             return r.satisfiedConditions(runWrapperObj)
         } else {

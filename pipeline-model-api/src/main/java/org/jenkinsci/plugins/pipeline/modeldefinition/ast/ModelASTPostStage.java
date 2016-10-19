@@ -4,23 +4,23 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
  * Represents a list of {@code BuildCondition} and {@code StepsBlock} pairs to be called, depending on whether the build
- * condition is satisfied, at the end of the build, but before the {@code Notifications}. Corresponds to {@code PostBuild}.
+ * condition is satisfied, at the end of the stage.
  *
- * @author Andrew Bayer
+ * @author Robert Sandell &lt;rsandell@cloudbees.com&gt;.
  */
-public final class ModelASTPostBuild extends ModelASTBuildConditionsContainer {
-    public ModelASTPostBuild(Object sourceLocation) {
+public final class ModelASTPostStage extends ModelASTBuildConditionsContainer {
+    public ModelASTPostStage(java.lang.Object sourceLocation) {
         super(sourceLocation);
     }
 
     @Override
     public java.lang.String getName() {
-        return "postBuild";
+        return "post";
     }
 
     @Override
     public String toString() {
-        return "ModelASTPostBuild{" +
+        return "ModelASTPostStage{" +
                 "conditions=" + getConditions() +
                 "}";
     }

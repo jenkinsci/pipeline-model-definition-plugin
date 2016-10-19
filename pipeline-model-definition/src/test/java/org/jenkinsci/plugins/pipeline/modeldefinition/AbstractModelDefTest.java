@@ -26,6 +26,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import com.google.common.collect.ImmutableList;
 import hudson.Launcher;
 import hudson.model.ParameterDefinition;
+import hudson.model.Result;
+import hudson.model.Slave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.NodePropertyDescriptor;
+import hudson.util.DescribableList;
 import hudson.util.StreamTaskListener;
 import hudson.util.VersionNumber;
 import jenkins.plugins.git.GitSampleRepoRule;
@@ -56,7 +62,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
@@ -340,5 +348,125 @@ public abstract class AbstractModelDefTest {
             }
         }
         return null;
+    }
+
+    protected EnvBuilder env(Slave s) {
+        return new EnvBuilder(s);
+    }
+
+    protected ExpectationsBuilder expect(String resource) {
+        return expect((String)null, resource);
+    }
+
+    protected ExpectationsBuilder expect(Result result, String resource) {
+        return expect(result, null, resource);
+    }
+
+    protected ExpectationsBuilder expect(String resourceParent, String resource) {
+        return new ExpectationsBuilder(resourceParent, resource);
+    }
+
+    protected ExpectationsBuilder expect(Result result, String resourceParent, String resource) {
+        return new ExpectationsBuilder(result, resourceParent, resource);
+    }
+
+    protected class ExpectationsBuilder {
+        private Result result = Result.SUCCESS;
+        private final String resourceParent;
+        private String resource;
+        private List<String> logContains;
+        private List<String> logNotContains;
+        private WorkflowRun run;
+
+        private ExpectationsBuilder(String resourceParent, String resource) {
+            this(Result.SUCCESS, resourceParent, resource);
+        }
+
+        private ExpectationsBuilder(Result result, String resourceParent, String resource) {
+            this.result = result;
+            this.resourceParent = resourceParent;
+            this.resource = resource;
+        }
+
+        protected ExpectationsBuilder logContains(String... logEntries) {
+            if (this.logContains != null) {
+                logContains.addAll(Arrays.asList(logEntries));
+            } else {
+                this.logContains = new ArrayList<>(Arrays.asList(logEntries));
+            }
+            return this;
+        }
+
+        protected ExpectationsBuilder logNotContains(String... logEntries) {
+            if (this.logNotContains != null) {
+                this.logNotContains.addAll(Arrays.asList(logEntries));
+            } else {
+                this.logNotContains = new ArrayList<>(Arrays.asList(logEntries));
+            }
+            return this;
+        }
+
+        protected void go() throws Exception {
+            if (resource != null) {
+                if (resourceParent != null) {
+                    prepRepoWithJenkinsfile(resourceParent, resource);
+                } else {
+                    prepRepoWithJenkinsfile(resource);
+                }
+            }
+
+            if (run == null) {
+                run = getAndStartBuild();
+            } else {
+                run = run.getParent().scheduleBuild2(0).waitForStart();
+            }
+            j.assertBuildStatus(result, j.waitForCompletion(run));
+
+            if (logContains != null) {
+                for (String entry : logContains) {
+                    j.assertLogContains(entry, run);
+                }
+            }
+            if (logNotContains != null) {
+                for (String logNotContain : logNotContains) {
+                    j.assertLogNotContains(logNotContain, run);
+                }
+            }
+        }
+
+        protected ExpectationsBuilder resetForNewRun(Result result) {
+            this.result = result;
+            resource = null;
+            logContains = null;
+            logNotContains = null;
+            return this;
+        }
+    }
+
+    protected class EnvBuilder {
+        private final Slave agent;
+        private Map<String, String> env;
+
+        protected EnvBuilder(Slave agent) {
+            this.agent = agent;
+            this.env = new HashMap<>();
+            env.put("ONSLAVE", "true");
+        }
+
+        protected EnvBuilder put(String key, String value) {
+            env.put(key, value);
+            return this;
+        }
+
+        protected void set() throws IOException {
+            List<EnvironmentVariablesNodeProperty.Entry> entries = new ArrayList<>(env.size());
+            for (Map.Entry<String, String> entry : env.entrySet()) {
+                entries.add(new EnvironmentVariablesNodeProperty.Entry(entry.getKey(), entry.getValue()));
+            }
+            EnvironmentVariablesNodeProperty newProperty = new EnvironmentVariablesNodeProperty(entries);
+            DescribableList<NodeProperty<?>, NodePropertyDescriptor> nodeProperties = agent.getNodeProperties();
+            nodeProperties.replace(newProperty);
+        }
+
     }
 }

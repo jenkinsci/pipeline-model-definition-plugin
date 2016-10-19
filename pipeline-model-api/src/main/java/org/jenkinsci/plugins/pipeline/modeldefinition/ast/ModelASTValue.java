@@ -42,6 +42,8 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
     /**
      * If the value can be determined without side-effect at AST parsing time,
      * this method returns true, and {@link #getValue()} returns its value.
+     *
+     * @return {@code true} if the value can be determined without side-effects at AST parsing time.
      */
     public abstract boolean isLiteral();
 
@@ -57,6 +59,8 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
      *
      * For example, if the value is {@code foobar(x)}, we want the editor to show
      * "${foobar(x)}"
+     *
+     * @return returens the value or an expression that represents this value.
      */
     public Object getValue() {
         return value;

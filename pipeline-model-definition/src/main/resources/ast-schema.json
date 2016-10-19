@@ -319,6 +319,9 @@
         "agent": {
           "$ref": "#/definitions/agent"
         },
+        "post": {
+          "$ref": "#/definitions/notifications"
+        },
         "branches": {
           "type": "array",
           "items": {

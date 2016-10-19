@@ -28,6 +28,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment;
@@ -37,6 +38,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
@@ -50,7 +52,11 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTBranch branch);
 
+    boolean validateElement(ModelASTBuildConditionsContainer container);
+
     boolean validateElement(ModelASTPostBuild postBuild);
+
+    boolean validateElement(ModelASTPostStage post);
 
     boolean validateElement(ModelASTNotifications notifications);
 

@@ -17,6 +17,7 @@ public final class ModelASTStage extends ModelASTElement {
     private String name;
     private ModelASTAgent agent;
     private List<ModelASTBranch> branches = new ArrayList<ModelASTBranch>();
+    private ModelASTPostStage post;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -35,6 +36,10 @@ public final class ModelASTStage extends ModelASTElement {
             o.accumulate("agent", agent.toJSON());
         }
 
+        if (post != null) {
+            o.accumulate("post", post.toJSON());
+        }
+
         return o;
     }
 
@@ -46,6 +51,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (agent != null) {
             agent.validate(validator);
+        }
+        if (post != null) {
+            post.validate(validator);
         }
     }
 
@@ -78,6 +86,10 @@ public final class ModelASTStage extends ModelASTElement {
 
         result.append("}\n");
 
+        if (post != null) {
+            result.append(post.toGroovy());
+        }
+
         result.append("}\n");
 
         return result.toString();
@@ -91,6 +103,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (agent != null) {
             agent.removeSourceLocation();
+        }
+        if (post != null) {
+            post.removeSourceLocation();
         }
     }
 
@@ -118,12 +133,21 @@ public final class ModelASTStage extends ModelASTElement {
         this.branches = branches;
     }
 
+    public ModelASTPostStage getPost() {
+        return post;
+    }
+
+    public void setPost(ModelASTPostStage post) {
+        this.post = post;
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
                 "name='" + name + '\'' +
                 ", agent=" + agent +
                 ", branches=" + branches +
+                ", post=" + post +
                 "}";
     }
 
@@ -145,6 +169,9 @@ public final class ModelASTStage extends ModelASTElement {
             return false;
         }
         if (getAgent() != null ? !getAgent().equals(that.getAgent()) : that.getAgent() != null) {
+            return false;
+        }
+        if (getPost() != null ? !getPost().equals(that.getPost()) : that.getPost() != null) {
             return false;
         }
         return getBranches() != null ? getBranches().equals(that.getBranches()) : that.getBranches() == null;

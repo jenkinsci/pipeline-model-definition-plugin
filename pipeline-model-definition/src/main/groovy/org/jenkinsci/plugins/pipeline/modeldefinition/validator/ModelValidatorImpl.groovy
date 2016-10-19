@@ -34,6 +34,7 @@ import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
@@ -46,6 +47,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentL
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
@@ -55,7 +58,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
@@ -98,39 +100,34 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTPostBuild postBuild) {
-        boolean valid = true
-
-        if (postBuild.conditions.isEmpty()) {
-            errorCollector.error(postBuild, "postBuild can not be empty")
-            valid = false
-        }
-
-        def conditionNames = postBuild.conditions.collect { c ->
-            c.condition
-        }
-
-        conditionNames.findAll { conditionNames.count(it) > 1 }.unique().each { sn ->
-            errorCollector.error(postBuild, "Duplicate build condition name: '${sn}'")
-            valid = false
-        }
-
-        return valid
+        // postBuild specific validation
+        true
     }
 
-    public boolean validateElement(@Nonnull ModelASTNotifications notifications) {
+    public boolean validateElement(@Nonnull ModelASTPostStage post) {
+        // post stage specific validation
+        true
+    }
+
+    public boolean validateElement(ModelASTNotifications notifications) {
+        // notifications specific validation
+        true
+    }
+
+    public boolean validateElement(@Nonnull ModelASTBuildConditionsContainer post) {
         boolean valid = true
 
-        if (notifications.conditions.isEmpty()) {
-            errorCollector.error(notifications, "notifications can not be empty")
+        if (post.conditions.isEmpty()) {
+            errorCollector.error(post, "${post.getName()} can not be empty")
             valid = false
         }
 
-        def conditionNames = notifications.conditions.collect { c ->
+        def conditionNames = post.conditions.collect { c ->
             c.condition
         }
 
         conditionNames.findAll { conditionNames.count(it) > 1 }.unique().each { sn ->
-            errorCollector.error(notifications, "Duplicate build condition name: '${sn}'")
+            errorCollector.error(post, "Duplicate build condition name: '${sn}'")
             valid = false
         }
 
