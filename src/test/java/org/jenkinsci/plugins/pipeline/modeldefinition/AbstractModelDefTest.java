@@ -443,12 +443,9 @@ public abstract class AbstractModelDefTest {
                 resourceFullName = resourceParent + "/" + resource;
             }
 
-            if (runFromRepo) {
-                prepRepoWithJenkinsfile(resourceFullName);
-            }
-
             if (run == null) {
                 if (runFromRepo) {
+                    prepRepoWithJenkinsfile(resourceFullName);
                     run = getAndStartBuild(folder);
                 } else {
                     run = getAndStartNonRepoBuild(folder, resourceFullName);
