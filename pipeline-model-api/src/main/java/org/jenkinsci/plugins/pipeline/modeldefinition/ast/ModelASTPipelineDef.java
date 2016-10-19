@@ -89,11 +89,11 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     public String toGroovy() {
         StringBuilder result = new StringBuilder();
         result.append("pipeline {\n");
-        if (stages != null) {
-            result.append(stages.toGroovy()).append('\n');
-        }
         if (agent != null) {
             result.append(agent.toGroovy()).append('\n');
+        }
+        if (stages != null) {
+            result.append(stages.toGroovy()).append('\n');
         }
         if (tools != null) {
             result.append(tools.toGroovy()).append('\n');
