@@ -23,10 +23,7 @@
  *
  */
 
-def f = namespace(lib.FormTagLib)
 
-f.section(title:_("Pipeline Model Definition")) {
-    f.entry(field: "dockerLabel", title:_("Docker Label")) {
-        f.textbox()
-    }
-}
+
+
+echo "Docker Label is: ${dockerLabel()}"

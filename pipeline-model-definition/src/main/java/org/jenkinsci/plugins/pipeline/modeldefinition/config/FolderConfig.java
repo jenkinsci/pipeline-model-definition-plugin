@@ -29,7 +29,6 @@ import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import hudson.Extension;
-import hudson.model.Describable;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;

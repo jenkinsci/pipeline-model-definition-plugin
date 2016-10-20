@@ -23,10 +23,25 @@
  *
  */
 
-def f = namespace(lib.FormTagLib)
 
-f.section(title:_("Pipeline Model Definition")) {
-    f.entry(field: "dockerLabel", title: _("Docker Label")) {
-        f.textbox()
+
+
+pipeline {
+    agent docker:"httpd:2.4.12", dockerArgs:"-v /tmp:/tmp -p 80:80"
+    stages {
+        stage("foo") {
+            steps {
+                script {
+                    if (env.DOCKER_INDICATOR != "CORRECT") {
+                        error "Not the assumed Docker agent"
+                    } else {
+                        echo "Running on assumed Docker agent"
+                    }
+                }
+            }
+        }
     }
 }
+
+
+

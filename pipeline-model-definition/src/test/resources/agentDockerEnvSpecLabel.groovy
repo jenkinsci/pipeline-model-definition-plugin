@@ -23,6 +23,9 @@
  *
  */
 
+
+
+
 pipeline {
     agent label: "thisspec", docker:"httpd:2.4.12", dockerArgs:"-v /tmp:/tmp -p 80:80"
     stages {
