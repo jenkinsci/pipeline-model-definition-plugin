@@ -22,8 +22,8 @@ pipeline {
         // No matter what the build status is, run these steps. There are other conditions
         // available as well, such as "success", "failed", "unstable", and "changed".
         always {
-            archive "target/**/*"
-            junit 'target/surefire-reports/*.xml'
+            archive "*/target/**/*"
+            junit '*/target/surefire-reports/*.xml'
         }
     }
 
