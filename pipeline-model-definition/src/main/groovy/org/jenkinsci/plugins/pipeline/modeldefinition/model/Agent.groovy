@@ -74,6 +74,11 @@ public class Agent implements Serializable {
         return any || docker != null || label != null
     }
 
+    @Whitelisted
+    public boolean hasDocker() {
+        return docker != null
+    }
+
     // TODO: Rewrite as an extension point and get this by extension discovery, but we knew that already.
     public static List<String> agentConfigKeys() {
         return ["docker", "label", "dockerArgs"]
