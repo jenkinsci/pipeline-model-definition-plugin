@@ -69,7 +69,7 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
         this.dockerLabel = dockerLabel;
     }
 
-    @Extension @Symbol("pmd")
+    @Extension @Symbol("pipeline-model")
     public static class DescriptorImpl extends AbstractFolderPropertyDescriptor {
 
         @Nonnull

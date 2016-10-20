@@ -41,7 +41,7 @@ import org.kohsuke.stapler.StaplerRequest;
  *
  * For example the system level {@link DockerLabelProvider}.
  */
-@Extension @Symbol("pmd")
+@Extension @Symbol("pipeline-model")
 public class GlobalConfig extends GlobalConfiguration {
     private String dockerLabel;
 
