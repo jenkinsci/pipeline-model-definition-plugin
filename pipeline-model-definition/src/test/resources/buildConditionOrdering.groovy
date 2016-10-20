@@ -21,30 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-
-/**
- * A {@link BuildCondition} for matching failed builds.
- *
- * @author Andrew Bayer
- */
-@Extension @Symbol("failure")
-public class Failure extends BuildCondition {
-    @Override
-    public double getOrdinal() {
-        return 700
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
-
-    @Override
-    public boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() != null && r.getResult().equals(Result.FAILURE)
+    notifications {
+        always {
+            echo "I AM ALWAYS"
+        }
+        changed {
+            echo "I CHANGED"
+        }
+        success {
+            echo "I SUCCEEDED"
+        }
     }
-
-    public static final long serialVersionUID = 1L
 }
+
+
+

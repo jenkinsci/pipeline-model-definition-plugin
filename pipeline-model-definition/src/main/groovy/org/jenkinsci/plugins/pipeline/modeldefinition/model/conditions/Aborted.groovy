@@ -37,6 +37,11 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 @Extension @Symbol("aborted")
 public class Aborted extends BuildCondition {
     @Override
+    public double getOrdinal() {
+        return 800
+    }
+
+    @Override
     public boolean meetsCondition(WorkflowRun r) {
         return r.getResult() != null && r.getResult().equals(Result.ABORTED)
     }

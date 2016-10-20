@@ -30,7 +30,11 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,11 +47,38 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
     @Whitelisted
     public abstract boolean meetsCondition(WorkflowRun r);
 
+    public abstract double getOrdinal();
+
     /**
      * All the registered {@link BuildCondition}s.
      */
     public static ExtensionList<BuildCondition> all() {
         return ExtensionList.lookup(BuildCondition.class);
+    }
+
+    public static List<String> getOrderedConditionNames() {
+        final Map<String,BuildCondition> conditionMethods = getConditionMethods();
+
+        List<String> toSort = new ArrayList<>(conditionMethods.keySet());
+
+        Collections.sort(toSort, new Comparator<String>() {
+            @Override
+            public int compare(String c1, String c2) {
+                BuildCondition firstCondition = conditionMethods.get(c1);
+                BuildCondition secondCondition = conditionMethods.get(c2);
+
+                if (secondCondition == null) {
+                    return -1;
+                }
+                if (firstCondition == null) {
+                    return 1;
+                }
+
+                return Double.compare(secondCondition.getOrdinal(), firstCondition.getOrdinal());
+            }
+        });
+
+        return toSort;
     }
 
     public static Map<String, BuildCondition> getConditionMethods() {

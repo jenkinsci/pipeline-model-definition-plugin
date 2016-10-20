@@ -36,6 +36,11 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 @Extension @Symbol("always")
 public class Always extends BuildCondition {
     @Override
+    public double getOrdinal() {
+        return 1000
+    }
+
+    @Override
     public boolean meetsCondition(WorkflowRun r) {
         return true
     }

@@ -37,6 +37,11 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 @Extension @Symbol("changed")
 public class Changed extends BuildCondition {
     @Override
+    public double getOrdinal() {
+        return 900
+    }
+
+    @Override
     public boolean meetsCondition(WorkflowRun r) {
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
