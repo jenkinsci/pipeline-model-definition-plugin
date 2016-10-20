@@ -34,13 +34,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension @Symbol("unstable")
+@Extension(ordinal=500d) @Symbol("unstable")
 public class Unstable extends BuildCondition {
-    @Override
-    public double getOrdinal() {
-        return 500
-    }
-
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         return r.getResult() != null && r.getResult().equals(Result.UNSTABLE)

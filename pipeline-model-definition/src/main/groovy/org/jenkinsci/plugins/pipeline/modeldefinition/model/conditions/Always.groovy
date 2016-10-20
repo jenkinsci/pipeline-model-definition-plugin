@@ -33,13 +33,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension @Symbol("always")
+@Extension(ordinal=1000d) @Symbol("always")
 public class Always extends BuildCondition {
-    @Override
-    public double getOrdinal() {
-        return 1000
-    }
-
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         return true

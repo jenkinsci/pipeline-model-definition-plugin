@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 
+import hudson.ExtensionComponent;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
@@ -47,8 +48,6 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
     @Whitelisted
     public abstract boolean meetsCondition(WorkflowRun r);
 
-    public abstract double getOrdinal();
-
     /**
      * All the registered {@link BuildCondition}s.
      */
@@ -57,34 +56,28 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
     }
 
     public static List<String> getOrderedConditionNames() {
-        final Map<String,BuildCondition> conditionMethods = getConditionMethods();
+        List<String> orderedConditions = new ArrayList<>();
 
-        List<String> toSort = new ArrayList<>(conditionMethods.keySet());
+        List<ExtensionComponent<BuildCondition>> extensionComponents = new ArrayList<>(all().getComponents());
+        Collections.sort(extensionComponents);
 
-        Collections.sort(toSort, new Comparator<String>() {
-            @Override
-            public int compare(String c1, String c2) {
-                BuildCondition firstCondition = conditionMethods.get(c1);
-                BuildCondition secondCondition = conditionMethods.get(c2);
+        for (ExtensionComponent<BuildCondition> extensionComponent: extensionComponents) {
+            BuildCondition b = extensionComponent.getInstance();
+            Set<String> symbolValues = SymbolLookup.getSymbolValue(b);
 
-                if (secondCondition == null) {
-                    return -1;
-                }
-                if (firstCondition == null) {
-                    return 1;
-                }
-
-                return Double.compare(secondCondition.getOrdinal(), firstCondition.getOrdinal());
+            if (!symbolValues.isEmpty()) {
+                orderedConditions.add(symbolValues.iterator().next());
             }
-        });
+        }
 
-        return toSort;
+        return orderedConditions;
     }
 
     public static Map<String, BuildCondition> getConditionMethods() {
         Map<String,BuildCondition> conditions = new HashMap<>();
 
-        for (BuildCondition b : all()) {
+        for (BuildCondition b: all()) {
+
             Set<String> symbolValues = SymbolLookup.getSymbolValue(b);
 
             if (!symbolValues.isEmpty()) {

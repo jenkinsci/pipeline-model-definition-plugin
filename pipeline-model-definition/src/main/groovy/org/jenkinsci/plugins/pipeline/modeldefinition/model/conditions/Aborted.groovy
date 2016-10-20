@@ -34,13 +34,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension @Symbol("aborted")
+@Extension(ordinal=800d) @Symbol("aborted")
 public class Aborted extends BuildCondition {
-    @Override
-    public double getOrdinal() {
-        return 800
-    }
-
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         return r.getResult() != null && r.getResult().equals(Result.ABORTED)

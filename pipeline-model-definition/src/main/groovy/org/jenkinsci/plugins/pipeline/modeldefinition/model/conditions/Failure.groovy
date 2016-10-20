@@ -34,13 +34,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension @Symbol("failure")
+@Extension(ordinal=700d) @Symbol("failure")
 public class Failure extends BuildCondition {
-    @Override
-    public double getOrdinal() {
-        return 700
-    }
-
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         return r.getResult() != null && r.getResult().equals(Result.FAILURE)

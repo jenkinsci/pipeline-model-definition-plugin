@@ -34,13 +34,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension @Symbol("success")
+@Extension(ordinal=600d) @Symbol("success")
 public class Success extends BuildCondition {
-    @Override
-    public double getOrdinal() {
-        return 600
-    }
-
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         return r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS)
