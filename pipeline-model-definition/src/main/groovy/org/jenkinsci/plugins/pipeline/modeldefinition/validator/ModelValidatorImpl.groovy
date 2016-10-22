@@ -33,6 +33,7 @@ import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
@@ -533,15 +534,35 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (agent.args instanceof ModelASTSingleArgument) {
             ModelASTSingleArgument singleArg = (ModelASTSingleArgument) agent.args
-
-            if (singleArg.value.getValue() != 'none' && singleArg.value.getValue() != 'any') {
-                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.getValue()}' - must be map of config options or bare none or any.")
+            Map<String,DescribableModel> singleArgModels = DeclarativeAgentDescriptor.singleArgModels()
+            if (!singleArgModels.containsKey(singleArg.value.getValue())) {
+                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.getValue()}' - must be map of config options or bare ${singleArgModels.keySet().join(', ')}.")
                 valid = false
-            } else if (agent.args instanceof ModelASTNamedArgumentList) {
-                ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList)agent.args
+            }
+        } else if (agent.args instanceof ModelASTNamedArgumentList) {
+            ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList)agent.args
+            List<String> argKeys = namedArgs.arguments.collect { k, v ->
+                k.key
+            }
+
+            Map<String,DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
+            String typeName = possibleModels.find { k, v -> k in argKeys }.key
+
+            if (typeName == null) {
+                errorCollector.error(agent, "No agent type specified. Must contain one of ${DeclarativeAgentDescriptor.orderedNames}")
+                valid = false
+            } else {
+                DescribableModel model = possibleModels.get(typeName)
+                model.parameters.findAll { it.required }.each { p ->
+                    if (!argKeys.contains(p.name)) {
+                        errorCollector.error(agent, "Missing required parameter for agent type '${typeName}': ${p.name}")
+                        valid = false
+                    }
+                }
                 namedArgs.arguments.each { k, v ->
-                    if (!(Agent.agentConfigKeys().contains(k.key))) {
-                        errorCollector.error(k, "Invalid config option '${k.key}'. Valid config options are ${Agent.agentConfigKeys()}.")
+                    List<String> validParamNames = model.parameters.collect { it.name }
+                    if (!validParamNames.contains(k.key)) {
+                        errorCollector.error(k, "Invalid config option '${k.key}' for agent type '${typeName}. Valid config options are ${validParamNames}")
                         valid = false
                     }
                 }

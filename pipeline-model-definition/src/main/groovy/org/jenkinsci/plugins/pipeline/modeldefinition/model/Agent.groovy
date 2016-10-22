@@ -26,6 +26,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 
@@ -40,47 +43,34 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Agent implements Serializable {
     @Whitelisted
-    String docker
-
-    @Whitelisted
-    String label
-
-    @Whitelisted
-    String dockerArgs
-
-    @Whitelisted
-    Boolean any
+    Map<String,String> arguments = [:]
 
     @Whitelisted
     public Agent(Map<String,String> args) {
-        if (args.containsKey("docker")) {
-            docker = args.get("docker")
-        }
-        if (args.containsKey("label")) {
-            label = args.get("label")
-        }
-        if (args.containsKey("dockerArgs")) {
-            this.dockerArgs = args.get("dockerArgs")
-        }
+        this.arguments.putAll(args)
+    }
+
+    /**
+     * Special constructor for the no-additional-arguments agent types, i.e., none and any
+     */
+    @Whitelisted
+    public Agent(String s) {
+        this.arguments.put(s, "true")
     }
 
     @Whitelisted
-    public Agent(boolean b) {
-        this.any = b
+    public DeclarativeAgent getDeclarativeAgent() {
+        String foundType = DeclarativeAgentDescriptor.orderedNames.find { arguments.containsKey(it) }
+        if (foundType != null) {
+            return DeclarativeAgentDescriptor.instanceForName(foundType, arguments)
+        } else {
+            return null
+        }
     }
 
     @Whitelisted
     public boolean hasAgent() {
-        return any || docker != null || label != null
-    }
-
-    @Whitelisted
-    public boolean hasDocker() {
-        return docker != null
-    }
-
-    // TODO: Rewrite as an extension point and get this by extension discovery, but we knew that already.
-    public static List<String> agentConfigKeys() {
-        return ["docker", "label", "dockerArgs"]
+        DeclarativeAgent a = getDeclarativeAgent()
+        return a != null && !None.class.isInstance(a)
     }
 }

@@ -27,6 +27,8 @@ import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
@@ -80,7 +82,7 @@ public class ModelInterpreter implements Serializable {
                 // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                 // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
                 // We save the caught error, if any, for throwing at the end of the build.
-                nodeOrDockerOrNone(root.agent) {
+                inDeclarativeAgent(root.agent) {
                     toolsBlock(root.agent, root.tools) {
                         // If we have an agent and script.scm isn't null, run checkout scm
                         if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
@@ -92,7 +94,7 @@ public class ModelInterpreter implements Serializable {
 
                             script.stage(thisStage.name) {
                                 if (firstError == null) {
-                                    nodeOrDockerOrNone(thisStage.agent) {
+                                    inDeclarativeAgent(thisStage.agent) {
                                         try {
                                             catchRequiredContextForNode(root.agent) {
                                                 setUpDelegate(thisStage.steps.closure).call()
@@ -231,59 +233,14 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-    /*
-    TODO: The agent handling stuff here is just waiting for step-in-Groovy support..
-     */
-    def nodeOrDockerOrNone(Agent agent, Closure body) {
-        if (agent != null && agent.hasAgent()) {
-            return {
-                nodeWithLabelOrWithout(agent) {
-                    dockerOrWithout(agent, body).call()
-                }.call()
-            }
-        } else {
+    def inDeclarativeAgent(Agent agent, Closure body) {
+        if (agent == null) {
             return {
                 body.call()
             }
-        }
-    }
-
-    def dockerOrWithout(Agent agent, Closure body) {
-        if (agent.docker != null) {
-            return {
-                script.getProperty("docker").image(agent.docker).inside(agent.dockerArgs, {
-                    body.call()
-                })
-            }
         } else {
-            return {
+            return agent.getDeclarativeAgent().getScript(script).run {
                 body.call()
-            }
-        }
-    }
-
-    def nodeWithLabelOrWithout(Agent agent, Closure body) {
-        if (agent?.label != null) {
-            return {
-                script.node(agent.label) {
-                    body.call()
-                }
-            }
-        } else {
-            if (agent?.hasDocker()) {
-                String dl = script.dockerLabel()?.trim()
-                if (dl) {
-                    return {
-                        script.node(dl) {
-                            body.call()
-                        }
-                    }
-                }
-            }
-            return {
-                script.node {
-                    body.call()
-                }
             }
         }
     }
