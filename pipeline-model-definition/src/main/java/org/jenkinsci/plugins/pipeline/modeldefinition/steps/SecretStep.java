@@ -94,7 +94,7 @@ public class SecretStep extends AbstractStepImpl implements Serializable {
 
         @Override
         public Step newInstance(@CheckForNull StaplerRequest req, @Nonnull JSONObject formData) throws FormException {
-            if (req.findAncestor(Snippetizer.class) != null) {
+            if (req != null && req.findAncestor(Snippetizer.class) != null) {
                 String text = formData.optString("text");
                 if (text != null) {
                     try {
