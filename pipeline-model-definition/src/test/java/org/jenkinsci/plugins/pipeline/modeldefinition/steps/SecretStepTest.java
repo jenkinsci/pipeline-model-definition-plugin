@@ -25,6 +25,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
+import hudson.slaves.DumbSlave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.hamcrest.core.StringContains;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -81,6 +83,10 @@ public class SecretStepTest extends AbstractModelDefTest {
 
     @Test
     public void worksInEnvironment() throws Exception {
+        DumbSlave s = j.createOnlineSlave();
+        s.setLabelString("some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+
         String plainText = "Bobby`s lil secret";
         String script = "pipeline {\n" +
                 "    environment {\n" +
