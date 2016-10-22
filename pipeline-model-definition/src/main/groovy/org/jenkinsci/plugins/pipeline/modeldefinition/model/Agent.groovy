@@ -58,6 +58,11 @@ public class Agent implements Serializable {
         this.arguments.put(s, "true")
     }
 
+    /**
+     * Get the appropriate instantiated {@link DeclarativeAgent} corresponding to our arguments.
+     *
+     * @return The instantiated declarative agent or null if not found.
+     */
     @Whitelisted
     public DeclarativeAgent getDeclarativeAgent() {
         String foundType = DeclarativeAgentDescriptor.orderedNames.find { arguments.containsKey(it) }

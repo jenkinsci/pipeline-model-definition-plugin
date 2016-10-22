@@ -24,21 +24,19 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
-import groovy.lang.GroovyCodeSource;
-import groovy.lang.GroovyShell;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
-import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.net.URL;
 
-import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace;
-
+/**
+ * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
+ *
+ * @author Andrew Bayer
+ */
 public abstract class DeclarativeAgent extends AbstractDescribableImpl<DeclarativeAgent> implements Serializable, ExtensionPoint {
 
     /**

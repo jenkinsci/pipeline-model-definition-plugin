@@ -40,24 +40,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Descriptor for {@link DeclarativeAgent}.
+ *
+ * @author Andrew Bayer
+ */
 public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeAgent> {
 
+    /**
+     * The name for this agent type. Should match the {@code Symbol} on the class.
+     *
+     * @return The name.
+     */
     public abstract @Nonnull String getName();
 
+    /**
+     * The full package and class name for the {@link DeclarativeAgentScript} class corresponding to this.
+     *
+     * @return The class name.
+     */
     public abstract @Nonnull String getDeclarativeAgentScriptClass();
-    
+
+    /**
+     * Creates an instance of the corresponding {@link DeclarativeAgent} from the given arguments.
+     *
+     * @param arguments A map of strings/objects to be passed to the constructor.
+     * @return An instantiated {@link DeclarativeAgent}
+     * @throws Exception
+     */
     public DeclarativeAgent newInstance(Map<String,Object> arguments) throws Exception {
         return new DescribableModel<>(clazz).instantiate(arguments);
-    }
-
-    public UninstantiatedDescribable uninstantiate(DeclarativeAgent declarativeAgent) throws UnsupportedOperationException {
-        return DescribableModel.uninstantiate2_(declarativeAgent);
     }
 
     public static ExtensionList<DeclarativeAgentDescriptor> all() {
         return ExtensionList.lookup(DeclarativeAgentDescriptor.class);
     }
 
+    /**
+     * Get a map of name-to-{@link DescribableModel} of all known/registered descriptors.
+     *
+     * @return A map of name-to-{@link DescribableModel}s
+     */
     public static Map<String,DescribableModel> getDescribableModels() {
         Map<String,DescribableModel> models = new HashMap<>();
 
@@ -73,6 +96,10 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         return models;
     }
 
+    /**
+     * Get the map of the subset of descriptors with single-arguments - i.e., "none" and "any".
+     * @return A map of descriptors with just one argument.
+     */
     public static Map<String,DescribableModel> singleArgModels() {
         Map<String,DescribableModel> models = new HashMap<>();
 
@@ -85,6 +112,10 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         return models;
     }
 
+    /**
+     * An ordered (by Extension ordinal, in descending order) list of all descriptors.
+     * @return A list of descriptors.
+     */
     public static List<DeclarativeAgentDescriptor> getOrderedDescriptors() {
         List<DeclarativeAgentDescriptor> orderedDescriptors = new ArrayList<>();
 
@@ -98,33 +129,30 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         return orderedDescriptors;
     }
 
-    public static List<String> getOrderedNames() {
-        List<String> orderedNames = new ArrayList<>();
-
-        for (DeclarativeAgentDescriptor d : getOrderedDescriptors()) {
-            Set<String> symbolValues = SymbolLookup.getSymbolValue(d);
-
-            if (!symbolValues.isEmpty()) {
-                orderedNames.add(symbolValues.iterator().next());
-            }
-        }
-
-        return orderedNames;
-    }
-
+    /**
+     * Get the descriptor for a given name or null if not found.
+     *
+     * @param name The name for the descriptor to look up
+     * @return The corresponding descriptor or null if not found.
+     */
     @Whitelisted
     public static @Nullable DeclarativeAgentDescriptor byName(@Nonnull String name) {
-        System.err.println("byName: " + name);
         for (DeclarativeAgentDescriptor d : all()) {
-            System.err.println("d.n: " + d.getName());
             if (d.getName().equals(name)) {
-                System.err.println("returning " + d);
                 return d;
             }
         }
         return null;
     }
 
+    /**
+     * For a given name and map of arguments, find the corresponding descriptor and return an instance using those arguments.
+     *
+     * @param name The name of the descriptor
+     * @param arguments A map of arguments
+     * @return The instantiated {@link DeclarativeAgent} instance, or null if the name isn't found.
+     * @throws Exception
+     */
     @Whitelisted
     public static @Nullable DeclarativeAgent instanceForName(@Nonnull String name,
                                                              Map<String,Object> arguments) throws Exception {
