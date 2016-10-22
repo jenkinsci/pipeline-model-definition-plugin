@@ -130,6 +130,24 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
     }
 
     /**
+     * An ordered list of all descriptor names.
+     *
+     * @return A list of names
+     */
+    public static List<String> getOrderedNames() {
+        List<String> orderedNames = new ArrayList<>();
+
+        for (DeclarativeAgentDescriptor d : getOrderedDescriptors()) {
+            Set<String> symbolValues = SymbolLookup.getSymbolValue(d);
+            if (symbolValues != null && !symbolValues.isEmpty()) {
+                orderedNames.add(symbolValues.iterator().next());
+            }
+        }
+
+        return orderedNames;
+    }
+
+    /**
      * Get the descriptor for a given name or null if not found.
      *
      * @param name The name for the descriptor to look up
