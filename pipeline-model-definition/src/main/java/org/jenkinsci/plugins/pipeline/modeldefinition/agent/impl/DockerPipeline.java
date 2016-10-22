@@ -41,8 +41,8 @@ public class DockerPipeline extends DeclarativeAgent {
     private String dockerArgs = "";
 
     @DataBoundConstructor
-    public DockerPipeline(@Nonnull String d) {
-        this.docker = d;
+    public DockerPipeline(@Nonnull String docker) {
+        this.docker = docker;
     }
 
     @Whitelisted

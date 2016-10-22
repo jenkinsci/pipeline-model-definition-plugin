@@ -38,9 +38,9 @@ public class Label extends DeclarativeAgent {
     private String label;
 
     @DataBoundConstructor
-    public Label(String l) {
+    public Label(String label) {
         // Label *can* be null. That's fine.
-        this.label = l;
+        this.label = label;
     }
 
     @Whitelisted
