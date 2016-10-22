@@ -40,7 +40,14 @@ public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializ
     }
 
     def methodMissing(String s, args) {
-        return script."${s}"(args)
+        def argValue
+        if (args.length > 1) {
+            argValue = args
+        } else if (args.length == 1) {
+            argValue = args[0]
+        }
+
+        return script."${s}"(argValue)
     }
 
 
