@@ -23,7 +23,7 @@
  */
 
 pipeline {
-    agent dockerfileImage:"something", dockerArgs:"-v /tmp:/tmp -p 80:80"
+    agent dockerfileImage:"something", dockerArgs:"-v /tmp:/tmp -p 8000:8000"
     stages {
         stage("foo") {
             steps {
