@@ -34,7 +34,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension @Symbol("changed")
+@Extension(ordinal=900d) @Symbol("changed")
 public class Changed extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {

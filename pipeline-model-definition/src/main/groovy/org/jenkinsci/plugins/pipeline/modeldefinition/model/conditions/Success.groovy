@@ -34,7 +34,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension @Symbol("success")
+@Extension(ordinal=600d) @Symbol("success")
 public class Success extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {

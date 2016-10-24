@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 
+import hudson.ExtensionComponent;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
@@ -30,7 +31,11 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,10 +55,29 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         return ExtensionList.lookup(BuildCondition.class);
     }
 
+    public static List<String> getOrderedConditionNames() {
+        List<String> orderedConditions = new ArrayList<>();
+
+        List<ExtensionComponent<BuildCondition>> extensionComponents = new ArrayList<>(all().getComponents());
+        Collections.sort(extensionComponents);
+
+        for (ExtensionComponent<BuildCondition> extensionComponent: extensionComponents) {
+            BuildCondition b = extensionComponent.getInstance();
+            Set<String> symbolValues = SymbolLookup.getSymbolValue(b);
+
+            if (!symbolValues.isEmpty()) {
+                orderedConditions.add(symbolValues.iterator().next());
+            }
+        }
+
+        return orderedConditions;
+    }
+
     public static Map<String, BuildCondition> getConditionMethods() {
         Map<String,BuildCondition> conditions = new HashMap<>();
 
-        for (BuildCondition b : all()) {
+        for (BuildCondition b: all()) {
+
             Set<String> symbolValues = SymbolLookup.getSymbolValue(b);
 
             if (!symbolValues.isEmpty()) {
