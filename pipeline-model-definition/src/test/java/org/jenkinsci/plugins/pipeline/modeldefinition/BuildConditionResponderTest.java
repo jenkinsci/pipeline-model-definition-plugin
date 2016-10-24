@@ -30,6 +30,13 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+
+import java.util.Arrays;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 
 /**
  * @author Andrew Bayer
@@ -116,6 +123,21 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertLogContains("hello", b);
         j.assertLogContains("I AM UNSTABLE", b);
         j.assertLogNotContains("I FAILED", b);
+    }
+
+    @Issue("JENKINS-38993")
+    @Test
+    public void buildConditionOrdering() throws Exception {
+        prepRepoWithJenkinsfile("buildConditionOrdering");
+
+        WorkflowRun b = getAndStartBuild();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("hello", b);
+
+        String buildLog = JenkinsRule.getLog(b);
+        assertThat(buildLog, stringContainsInOrder(Arrays.asList("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")));
     }
 
     @Ignore("This no longer works with the JENKINS-38049 fix - needs to be re-evaluated")

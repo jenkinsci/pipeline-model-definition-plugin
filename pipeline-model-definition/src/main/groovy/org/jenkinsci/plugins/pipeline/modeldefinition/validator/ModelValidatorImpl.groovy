@@ -141,7 +141,7 @@ class ModelValidatorImpl implements ModelValidator {
         // Only do the symbol lookup if we have a Jenkins instance
         if (Jenkins.getInstance() != null) {
             if (SymbolLookup.get().find(BuildCondition.class, buildCondition.condition) == null) {
-                errorCollector.error(buildCondition, "Invalid condition '${buildCondition.condition}' - valid conditions are ${BuildCondition.getConditionMethods().keySet()}")
+                errorCollector.error(buildCondition, "Invalid condition '${buildCondition.condition}' - valid conditions are ${BuildCondition.getOrderedConditionNames()}")
                 valid = false
             }
         }

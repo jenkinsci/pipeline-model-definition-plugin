@@ -85,7 +85,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertNotNull(resultData);
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
 
-        String expectedError = "Invalid condition 'banana' - valid conditions are " + BuildCondition.getConditionMethods().keySet();
+        String expectedError = "Invalid condition 'banana' - valid conditions are " + BuildCondition.getOrderedConditionNames();
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedError(expectedError, resultData.getJSONArray("errors")));
     }
