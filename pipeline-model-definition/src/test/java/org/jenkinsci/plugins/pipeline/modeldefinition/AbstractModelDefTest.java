@@ -118,7 +118,8 @@ public abstract class AbstractModelDefTest {
             "simpleJobProperties",
             "simpleTriggers",
             "simpleParameters",
-            "stringsNeedingEscapeLogic"
+            "stringsNeedingEscapeLogic",
+            "agentTypeOrdering"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -153,6 +154,11 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"perStageConfigEmptySteps", "At /pipeline/stages/0/branches/0/steps: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"perStageConfigMissingSteps", "At /pipeline/stages/0/branches/0: Missing one or more required properties: 'steps'"});
         result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
+
+        result.add(new Object[]{"unknownAgentType", "No agent type specified. Must contain one of [otherField, docker, label, any, none]"});
+        result.add(new Object[]{"unknownBareAgentType", "Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]."});
+        result.add(new Object[]{"agentMissingRequiredParam", "Missing required parameter for agent type 'otherField': label"});
+        result.add(new Object[]{"agentUnknownParamForType", "Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]"});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +

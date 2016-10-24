@@ -536,7 +536,7 @@ class ModelValidatorImpl implements ModelValidator {
             ModelASTSingleArgument singleArg = (ModelASTSingleArgument) agent.args
             Map<String,DescribableModel> singleArgModels = DeclarativeAgentDescriptor.singleArgModels()
             if (!singleArgModels.containsKey(singleArg.value.getValue())) {
-                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.getValue()}' - must be map of config options or bare ${singleArgModels.keySet().join(', ')}.")
+                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.toGroovy()}' - must be map of config options or bare ${singleArgModels.keySet().sort()}.")
                 valid = false
             }
         } else if (agent.args instanceof ModelASTNamedArgumentList) {
@@ -546,7 +546,8 @@ class ModelValidatorImpl implements ModelValidator {
             }
 
             Map<String,DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
-            String typeName = possibleModels.find { k, v -> k in argKeys }.key
+
+            String typeName = DeclarativeAgentDescriptor.orderedNames.find { it in argKeys }
 
             if (typeName == null) {
                 errorCollector.error(agent, "No agent type specified. Must contain one of ${DeclarativeAgentDescriptor.orderedNames}")
@@ -562,7 +563,7 @@ class ModelValidatorImpl implements ModelValidator {
                 namedArgs.arguments.each { k, v ->
                     List<String> validParamNames = model.parameters.collect { it.name }
                     if (!validParamNames.contains(k.key)) {
-                        errorCollector.error(k, "Invalid config option '${k.key}' for agent type '${typeName}. Valid config options are ${validParamNames}")
+                        errorCollector.error(k, "Invalid config option '${k.key}' for agent type '${typeName}'. Valid config options are ${validParamNames}")
                         valid = false
                     }
                 }

@@ -27,7 +27,6 @@ import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -122,6 +121,17 @@ public class AgentTest extends AbstractModelDefTest {
 
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("ONSLAVE=true", b);
+    }
+
+    @Test
+    public void agentTypeOrdering() throws Exception {
+        prepRepoWithJenkinsfile("agentTypeOrdering");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("Running in labelAndOtherField with otherField = banana", b);
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("ONSLAVE=true", b);
     }
