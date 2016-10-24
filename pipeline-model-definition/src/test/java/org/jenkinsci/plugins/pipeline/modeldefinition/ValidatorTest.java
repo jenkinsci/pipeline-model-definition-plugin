@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Andrew Bayer
@@ -46,6 +47,14 @@ public class ValidatorTest extends AbstractModelDefTest {
         s.setLabelString("some-label docker");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
 
+    }
+
+    @Issue("JENKINS-39011")
+    @Test
+    public void pipelineStepWithinOtherBlockFailure() throws Exception {
+        prepRepoWithJenkinsfile("errors", "pipelineStepWithinOtherBlocksFailure");
+
+        assertFailWithError("pipeline block must be at the top-level, not within another block");
     }
 
     @Test

@@ -112,6 +112,19 @@ class ModelParser {
         }
     }
 
+    public void checkForNestedPipelineStep(Statement statement) {
+        def b = matchBlockStatement(statement)
+        if (b != null) {
+            if (b.methodName == ModelStepLoader.STEP_NAME) {
+                ModelASTPipelineDef p = new ModelASTPipelineDef(statement)
+                errorCollector.error(p, "pipeline block must be at the top-level, not within another block.")
+            }
+            eachStatement(b.body.code) { s ->
+                checkForNestedPipelineStep(s)
+            }
+        }
+    }
+
     /**
      * Given a Groovy AST that represents a parsed source code, parses
      * that into {@link ModelASTPipelineDef}
@@ -122,7 +135,12 @@ class ModelParser {
         def pst = src.statementBlock.statements.find {
             matchMethodCall(it)?.methodAsString == ModelStepLoader.STEP_NAME
         }
-        if (pst==null)      return null; // no 'pipeline', so this doesn't apply
+
+        if (pst==null) {
+            // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
+            src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
+            return null; // no 'pipeline', so this doesn't apply
+        }
 
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst);
 
