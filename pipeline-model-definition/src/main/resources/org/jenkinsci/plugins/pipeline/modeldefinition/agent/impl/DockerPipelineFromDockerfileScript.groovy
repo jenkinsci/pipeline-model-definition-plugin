@@ -47,7 +47,7 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
             script.checkout script.scm
             try {
                 def hash = Utils.stringToSHA1(script.readFile("Dockerfile"))
-                def imgName = "${declarativeAgent.name}-${hash}"
+                def imgName = "${declarativeAgent.dockerfileImage}-${hash}"
                 def img = script.getProperty("docker").build(imgName)
                 img.inside(declarativeAgent.dockerArgs, {
                     body.call()

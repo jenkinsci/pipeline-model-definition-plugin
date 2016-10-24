@@ -139,11 +139,29 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentAnyInStage() throws Exception {
         prepRepoWithJenkinsfile("agentAnyInStage");
-
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("THIS WORKS", b);
+    }
+
+    @Test
+    public void fromDockerfile() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        prepRepoWithJenkinsfile("fromDockerfile");
+        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("The answer is 42", b);
+        j.assertLogContains("-v /tmp:/tmp -p 80:80", b);
+        j.assertLogContains("HI THERE", b);
     }
 
     private WorkflowRun agentDocker(final String jenkinsfile) throws Exception {

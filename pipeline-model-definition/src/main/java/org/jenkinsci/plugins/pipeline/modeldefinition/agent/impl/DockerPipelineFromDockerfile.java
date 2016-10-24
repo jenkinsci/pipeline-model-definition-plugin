@@ -37,13 +37,12 @@ import javax.annotation.Nullable;
 
 public class DockerPipelineFromDockerfile extends DeclarativeAgent {
     private String label;
-    private String dockerfile;
-    private String name;
+    private String dockerfileImage;
     private String dockerArgs = "";
 
     @DataBoundConstructor
-    public DockerPipelineFromDockerfile(@Nonnull String name) {
-        this.name = name;
+    public DockerPipelineFromDockerfile(@Nonnull String dockerfileImage) {
+        this.dockerfileImage = dockerfileImage;
     }
 
     @Whitelisted
@@ -67,25 +66,15 @@ public class DockerPipelineFromDockerfile extends DeclarativeAgent {
     }
 
     @Whitelisted
-    public @Nonnull String getName() {
-        return name;
+    public @Nonnull String getDockerfileImage() {
+        return dockerfileImage;
     }
 
-    @Whitelisted
-    public @Nullable String getDockerfile() {
-        return dockerfile;
-    }
-
-    @DataBoundSetter
-    public void setDockerfile(String dockerfile) {
-        this.dockerfile = dockerfile;
-    }
-
-    @Extension(ordinal = 999) @Symbol("dockerfile")
+    @Extension(ordinal = 999) @Symbol("dockerfileImage")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
         @Override
         public @Nonnull String getName() {
-            return "dockerfile";
+            return "dockerfileImage";
         }
 
         public @Nonnull String getDeclarativeAgentScriptClass() {
