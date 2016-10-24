@@ -21,25 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-
-/**
- * A {@link BuildCondition} for matching all builds regardless of status.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=1000d) @Symbol("always")
-public class Always extends BuildCondition {
-    @Override
-    public boolean meetsCondition(WorkflowRun r) {
-        return true
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
-
-    public static final long serialVersionUID = 1L
-
+    notifications {
+        always {
+            echo "I AM ALWAYS"
+        }
+        changed {
+            echo "I CHANGED"
+        }
+        success {
+            echo "I SUCCEEDED"
+        }
+    }
 }
+
+
+
