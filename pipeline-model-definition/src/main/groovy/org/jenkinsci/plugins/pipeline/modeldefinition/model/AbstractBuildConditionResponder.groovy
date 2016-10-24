@@ -62,9 +62,11 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
 
         List<Closure> closures = []
 
-        getMap().each { conditionName, conditionClosure ->
-            if (BuildCondition.getConditionMethods().get(conditionName).meetsCondition(run)) {
-                closures.add(((StepsBlock)conditionClosure).getClosure())
+        Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
+
+        BuildCondition.orderedConditionNames.each { conditionName ->
+            if (getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(run)) {
+                closures.add(((StepsBlock)getMap().get(conditionName)).getClosure())
             }
         }
 

@@ -300,7 +300,7 @@ public class ValidatorTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);
         // Note that we need to generate the error string here within the story or it comes out empty due to lack of a Jenkins instance.
-        j.assertLogContains("Invalid condition 'banana' - valid conditions are " + BuildCondition.getConditionMethods().keySet(), b);
+        j.assertLogContains("Invalid condition 'banana' - valid conditions are " + BuildCondition.getOrderedConditionNames(), b);
     }
 
     @Test
