@@ -155,7 +155,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"perStageConfigMissingSteps", "At /pipeline/stages/0/branches/0: Missing one or more required properties: 'steps'"});
         result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
 
-        result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [retry, script timeout, withEnv]"});
+        result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [retry, script, timeout, withEnv]"});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +
