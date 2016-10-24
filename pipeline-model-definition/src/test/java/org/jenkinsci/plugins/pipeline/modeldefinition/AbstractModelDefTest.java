@@ -302,7 +302,7 @@ public abstract class AbstractModelDefTest {
 
     protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile) throws Exception {
         WorkflowJob p = createWorkflowJob(folder);
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(pipelineScriptFile)));
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(pipelineScriptFile), true));
         return p.scheduleBuild2(0).waitForStart();
     }
 
