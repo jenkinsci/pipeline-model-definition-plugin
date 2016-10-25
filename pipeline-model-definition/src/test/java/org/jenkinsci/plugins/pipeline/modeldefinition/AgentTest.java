@@ -136,6 +136,16 @@ public class AgentTest extends AbstractModelDefTest {
         j.assertLogContains("ONSLAVE=true", b);
     }
 
+    @Test
+    public void agentAnyInStage() throws Exception {
+        prepRepoWithJenkinsfile("agentAnyInStage");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("THIS WORKS", b);
+    }
+
     private WorkflowRun agentDocker(final String jenkinsfile) throws Exception {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment
