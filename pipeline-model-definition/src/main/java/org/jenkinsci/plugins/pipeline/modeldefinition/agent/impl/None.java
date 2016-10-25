@@ -41,14 +41,5 @@ public class None extends DeclarativeAgent {
 
     @Extension(ordinal = -1000) @Symbol("none")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
-        @Override
-        public @Nonnull String getName() {
-            return "none";
-        }
-
-        public @Nonnull String getDeclarativeAgentScriptClass() {
-            return "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.NoneScript";
-        }
-
     }
 }

@@ -534,9 +534,9 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (agent.args instanceof ModelASTSingleArgument) {
             ModelASTSingleArgument singleArg = (ModelASTSingleArgument) agent.args
-            Map<String,DescribableModel> singleArgModels = DeclarativeAgentDescriptor.singleArgModels()
-            if (!singleArgModels.containsKey(singleArg.value.getValue())) {
-                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.toGroovy()}' - must be map of config options or bare ${singleArgModels.keySet().sort()}.")
+            Map<String,DescribableModel> zeroArgModels = DeclarativeAgentDescriptor.zeroArgModels()
+            if (!zeroArgModels.containsKey(singleArg.value.getValue())) {
+                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.toGroovy()}' - must be map of config options or bare ${zeroArgModels.keySet().sort()}.")
                 valid = false
             }
         } else if (agent.args instanceof ModelASTNamedArgumentList) {

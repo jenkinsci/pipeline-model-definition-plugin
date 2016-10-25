@@ -81,23 +81,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <systemProperties>
-            <property>
-              <name>hudson.udp</name>
-              <value>33849</value>
-            </property>
-          </systemProperties>
-          <argLine>-Xmx4g -XX:MaxPermSize=256m</argLine>
-          <reuseForks>true</reuseForks>
-          <forkCount>0.5C</forkCount>
-          <!-- TODO: I hate the retrying tests but given the nondeterministic whackiness of JENKINS-37101... -->
-          <rerunFailingTestsCount>3</rerunFailingTestsCount>
-        </configuration>
-      </plugin>
-
     </plugins>
   </build>
   

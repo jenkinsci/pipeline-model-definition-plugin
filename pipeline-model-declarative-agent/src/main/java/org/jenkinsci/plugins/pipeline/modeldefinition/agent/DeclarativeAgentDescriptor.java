@@ -29,13 +29,13 @@ import hudson.model.Descriptor;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,14 +52,19 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      *
      * @return The name.
      */
-    public abstract @Nonnull String getName();
+    public @Nonnull String getName() {
+        Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
+        return symbolValues.iterator().next();
+    }
 
     /**
      * The full package and class name for the {@link DeclarativeAgentScript} class corresponding to this.
      *
      * @return The class name.
      */
-    public abstract @Nonnull String getDeclarativeAgentScriptClass();
+    public @Nonnull String getDeclarativeAgentScriptClass() {
+        return clazz.getName() + "Script";
+    }
 
     /**
      * Creates an instance of the corresponding {@link DeclarativeAgent} from the given arguments.
@@ -70,6 +75,16 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      */
     public DeclarativeAgent newInstance(Map<String,Object> arguments) throws Exception {
         return new DescribableModel<>(clazz).instantiate(arguments);
+    }
+
+    /**
+     * Creates an instance of the corresponding {@link DeclarativeAgent} with no arguments.
+     *
+     * @return An instantiated {@link DeclarativeAgent}
+     * @throws Exception
+     */
+    public DeclarativeAgent newInstance() throws Exception {
+        return clazz.newInstance();
     }
 
     public static ExtensionList<DeclarativeAgentDescriptor> all() {
@@ -85,22 +100,19 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         Map<String,DescribableModel> models = new HashMap<>();
 
         for (DeclarativeAgentDescriptor d : getOrderedDescriptors()) {
-            Set<String> symbolValues = SymbolLookup.getSymbolValue(d);
-
-            if (!symbolValues.isEmpty()) {
-                models.put(symbolValues.iterator().next(), new DescribableModel<>(d.clazz));
+            for (String s : SymbolLookup.getSymbolValue(d)) {
+                models.put(s, new DescribableModel<>(d.clazz));
             }
-
         }
 
         return models;
     }
 
     /**
-     * Get the map of the subset of descriptors with single-arguments - i.e., "none" and "any".
-     * @return A map of descriptors with just one argument.
+     * Get the map of the subset of descriptors with no additional arguments - i.e., "none" and "any".
+     * @return A map of descriptors with no arguments.
      */
-    public static Map<String,DescribableModel> singleArgModels() {
+    public static Map<String,DescribableModel> zeroArgModels() {
         Map<String,DescribableModel> models = new HashMap<>();
 
         for (Map.Entry<String,DescribableModel> entry : getDescribableModels().entrySet()) {
@@ -138,10 +150,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         List<String> orderedNames = new ArrayList<>();
 
         for (DeclarativeAgentDescriptor d : getOrderedDescriptors()) {
-            Set<String> symbolValues = SymbolLookup.getSymbolValue(d);
-            if (symbolValues != null && !symbolValues.isEmpty()) {
-                orderedNames.add(symbolValues.iterator().next());
-            }
+            orderedNames.addAll(SymbolLookup.getSymbolValue(d));
         }
 
         return orderedNames;
@@ -155,12 +164,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      */
     @Whitelisted
     public static @Nullable DeclarativeAgentDescriptor byName(@Nonnull String name) {
-        for (DeclarativeAgentDescriptor d : all()) {
-            if (d.getName().equals(name)) {
-                return d;
-            }
-        }
-        return null;
+        return (DeclarativeAgentDescriptor) SymbolLookup.get().findDescriptor(DeclarativeAgent.class, name);
     }
 
     /**
@@ -177,8 +181,8 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         DeclarativeAgentDescriptor descriptor = byName(name);
 
         if (descriptor != null) {
-            if (singleArgModels().keySet().contains(name)) {
-                return descriptor.newInstance(new HashMap<String, Object>());
+            if (zeroArgModels().keySet().contains(name)) {
+                return descriptor.newInstance();
             } else {
                 return descriptor.newInstance(arguments);
             }

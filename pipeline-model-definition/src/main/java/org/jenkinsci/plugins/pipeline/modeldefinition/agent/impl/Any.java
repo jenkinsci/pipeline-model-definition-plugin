@@ -40,11 +40,6 @@ public class Any extends Label {
 
     @Extension(ordinal = -900) @Symbol("any")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
-        @Override
-        public @Nonnull String getName() {
-            return "any";
-        }
-
         public @Nonnull String getDeclarativeAgentScriptClass() {
             return "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.LabelScript";
         }

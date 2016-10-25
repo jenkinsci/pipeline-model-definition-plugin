@@ -72,14 +72,5 @@ public class DockerPipeline extends DeclarativeAgent {
 
     @Extension(ordinal = 1000) @Symbol("docker")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
-        @Override
-        public @Nonnull String getName() {
-            return "docker";
-        }
-
-        public @Nonnull String getDeclarativeAgentScriptClass() {
-            return "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.DockerPipelineScript";
-        }
-
     }
 }
