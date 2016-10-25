@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  * An individual stage to be executed within the build.
@@ -38,35 +37,28 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Stage implements NestedModel, Serializable {
 
-    @Whitelisted
     String name
 
-    @Whitelisted
     StepsBlock steps
 
-    @Whitelisted
     Agent agent
 
-    @Whitelisted
     PostStage post
 
     Tools tools
 
     Environment environment
 
-    @Whitelisted
     Stage name(String n) {
         this.name = n
         return this
     }
 
-    @Whitelisted
     Stage agent(Agent a) {
         this.agent = a
         return this
     }
 
-    @Whitelisted
     Stage agent(Map<String,String> args) {
         this.agent = new Agent(args)
         return this
@@ -77,13 +69,11 @@ public class Stage implements NestedModel, Serializable {
         return this
     }
     
-    @Whitelisted
     Stage steps(StepsBlock s) {
         this.steps = s
         return this
     }
 
-    @Whitelisted
     Stage post(PostStage post) {
         this.post = post
         return this
@@ -113,7 +103,6 @@ public class Stage implements NestedModel, Serializable {
 
 
     @Override
-    @Whitelisted
     public void modelFromMap(Map<String,Object> m) {
         m.each { k, v ->
             this."${k}"(v)
@@ -126,7 +115,6 @@ public class Stage implements NestedModel, Serializable {
      * @param runWrapperObj The {@link org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper} for the build.
      * @return a list of closures whose conditions have been satisfied.
      */
-    @Whitelisted
     List<Closure> satisfiedPostStageConditions(Root root, Object runWrapperObj) {
         return root.satisfiedConditionsForField(post, runWrapperObj)
     }
