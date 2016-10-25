@@ -329,6 +329,12 @@ class ModelParser {
                         case 'post':
                             stage.post = parsePostStage(s)
                             break;
+                        case 'tools':
+                            stage.tools = parseTools(s)
+                            break
+                        case 'environment':
+                            stage.environment = parseEnvironment(s)
+                            break
                         default:
                             errorCollector.error(stage, "Unknown stage section '${name}'")
                     }

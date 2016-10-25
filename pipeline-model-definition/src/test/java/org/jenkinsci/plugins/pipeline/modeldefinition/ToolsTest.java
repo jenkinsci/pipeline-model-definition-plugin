@@ -61,6 +61,16 @@ public class ToolsTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void toolsInStage() throws Exception {
+        prepRepoWithJenkinsfile("toolsInStage");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("Apache Maven 3.0.1", b);
+    }
+
+    @Test
     public void buildPluginParentPOM() throws Exception {
         prepRepoWithJenkinsfile("buildPluginParentPOM");
 
