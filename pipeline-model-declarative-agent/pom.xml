@@ -25,41 +25,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.jenkins-ci.plugins</groupId>
-    <artifactId>plugin</artifactId>
-    <version>2.13</version>
-    <relativePath/>
+    <groupId>org.jenkinsci.plugins</groupId>
+    <artifactId>pipeline-model-parent</artifactId>
+    <version>0.5-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-declarative-agent</artifactId>
-  <version>0.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Pipeline: Declarative Agent API</name>
   <description>API for declarative agents in Declarative Pipeline</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
 
-  <licenses>
-    <license>
-        <name>MIT</name>
-        <url>http://opensource.org/licenses/MIT</url>
-        <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <developers>
-    <developer>
-      <id>abayer</id>
-      <name>Andrew Bayer</name>
-    </developer>
-  </developers>
-
-  <scm>
-    <connection>scm:git:git://git@github.com/jenkinsci/pipeline-config-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-config-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/pipeline-config-plugin</url>
-    <tag>HEAD</tag>
-  </scm>
 
   <dependencies>
     <dependency>
@@ -68,53 +46,5 @@
       <version>2.18</version>
     </dependency>
   </dependencies>
-  
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.gmaven</groupId>
-        <artifactId>gmaven-plugin</artifactId>
-        <version>1.4</version>
-        <configuration>
-          <providerSelection>1.8</providerSelection>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generateStubs</goal>
-              <goal>compile</goal>
-              <goal>generateTestStubs</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
-  <properties>
-    <jenkins.version>2.7.1</jenkins.version>
-    <java.level>7</java.level>
-    <groovy.version>2.4.7</groovy.version>
-  </properties>
-  
-  <repositories>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
-  
+    
 </project>
