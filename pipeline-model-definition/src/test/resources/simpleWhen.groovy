@@ -27,10 +27,6 @@ pipeline {
     agent label: "here"
     stages {
         stage("One") {
-            when {
-                echo "Should I run?"
-                return true
-            }
             steps {
                 echo "Hello"
             }

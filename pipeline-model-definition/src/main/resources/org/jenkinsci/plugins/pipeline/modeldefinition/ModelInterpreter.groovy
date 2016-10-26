@@ -291,16 +291,13 @@ public class ModelInterpreter implements Serializable {
     }
 
     def runStageOrNot(Stage stage, Throwable firstError, Closure body) {
-        script.echo "Run stage or not!"
         if (stage.when != null && firstError == null) {
-            script.echo "One when!"
             return {
-                if (stage.when.call()) {
+                if (setUpDelegate(stage.when.closure).call()) {
                     body.call()
                 }
             }
         } else {
-            script.echo "No when!"
             return {
                 body.call()
             }

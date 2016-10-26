@@ -31,7 +31,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 
 /**
  * Tests {@link Stage#when}
