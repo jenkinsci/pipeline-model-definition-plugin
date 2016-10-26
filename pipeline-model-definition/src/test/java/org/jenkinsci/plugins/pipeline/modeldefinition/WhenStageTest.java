@@ -25,11 +25,24 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.Result;
 import hudson.model.Slave;
+import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+
+import java.io.IOException;
+import java.util.Collections;
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.util.IsJsonObjectContaining.hasEntry;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 
 /**
@@ -48,9 +61,54 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void simpleWhen() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
-        ExpectationsBuilder expect = expect("simpleWhen");
+        ExpectationsBuilder expect = expect("when", "simpleWhen").runFromRepo(false);
         expect.logContains("One", "Hello", "Should I run?").logNotContains("Two", "World").go();
         env(s).put("SECOND_STAGE", "RUN").set();
         expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Should I run?", "Two", "World").go();
+    }
+
+    @Test
+    public void whenException() throws Exception {
+        env(s).put("SECOND_STAGE", "NOPE").set();
+        expect(Result.FAILURE, "when", "whenException").runFromRepo(false)
+                .logContains("One", "Hello", "Should I run?", "NullPointerException")
+                .logNotContains("Two", "World").go();
+    }
+
+    @Test
+    public void whenEmpty() throws Exception {
+        env(s).put("SECOND_STAGE", "NOPE").set();
+        expect(Result.FAILURE, "when", "whenEmpty").runFromRepo(false)
+                .logContains("Empty when closure").logNotContains("Two", "World").go();
+    }
+
+    @Test
+    public void toJson() throws IOException {
+        final String rawJenkinsfile = fileContentsFromResources("when/simpleWhen.groovy", true);
+        JenkinsRule.WebClient wc = j.createWebClient();
+        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"), HttpMethod.POST);
+
+        assertNotNull(rawJenkinsfile);
+
+        NameValuePair pair = new NameValuePair("jenkinsfile", rawJenkinsfile);
+        req.setRequestParameters(Collections.singletonList(pair));
+
+        String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+        assertNotNull(rawResult);
+
+        JSONObject result = JSONObject.fromObject(rawResult);
+        assertNotNull(result);
+        assertThat(result, hasEntry("status", "ok"));
+        assertThat(result, hasEntry("data", hasEntry("result", "success")));
+
+        req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
+        pair = new NameValuePair("json", result.getJSONObject("data").getJSONObject("json").toString());
+        req.setRequestParameters(Collections.singletonList(pair));
+
+        rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+        assertNotNull(rawResult);
+        result = JSONObject.fromObject(rawResult);
+        assertThat(result, hasEntry("status", "ok"));
+        assertThat(result, hasEntry("data", hasEntry("result", "success")));
     }
 }

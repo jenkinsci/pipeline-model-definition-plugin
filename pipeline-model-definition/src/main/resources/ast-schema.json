@@ -275,6 +275,19 @@
         }
       ]
     },
+    "when": {
+      "description": "Closure to evaluate if the stage should run or not",
+      "type": "object",
+      "properties": {
+        "arguments": {
+          "$ref": "#/definitions/rawArgument"
+        }
+
+      },
+
+      "additionalProperties": false
+
+    },
     "notifications": {
       "description": "An array of build conditions with blocks of steps to run if those conditions are satisfied at the end of the build",
       "type": "object",
@@ -318,6 +331,9 @@
         },
         "agent": {
           "$ref": "#/definitions/agent"
+        },
+        "when": {
+          "$ref": "#/definitions/when"
         },
         "post": {
           "$ref": "#/definitions/notifications"

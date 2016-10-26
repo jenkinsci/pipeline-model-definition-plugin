@@ -37,7 +37,11 @@ pipeline {
                 return env.SECOND_STAGE == "RUN"
             }
             steps {
-                echo "World"
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
+
             }
         }
     }

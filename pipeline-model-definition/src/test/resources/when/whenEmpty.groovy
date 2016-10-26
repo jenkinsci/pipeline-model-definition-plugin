@@ -23,39 +23,21 @@
  *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
-
-import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-/**
- * Represents a block for when/if a {@link ModelASTStage} will be executed or not.
- */
-public class ModelASTWhen extends ModelASTScriptBlock { //Model wise we don't really extend it but there are plenty of reuse
-    public ModelASTWhen(Object sourceLocation) {
-        super(sourceLocation, "when");
-    }
-
-    @Override
-    public String toString() {
-        return "ModelASTWhen{" +
-                "name='" + getName() + '\'' +
-                ", args=" + getArgs() +
-                "}";
-    }
-
-    @Override
-    public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        if (getArgs() != null) {
-            o.accumulate("arguments", getArgs().toJSON());
+pipeline {
+    agent label: "here"
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
         }
-        return o;
-    }
+        stage("Two") {
+            when {
 
-    @Override
-    public void validate(ModelValidator validator) {
-        super.validate(validator);
-        validator.validateElement(this);
+            }
+            steps {
+                echo "World"
+            }
+        }
     }
 }

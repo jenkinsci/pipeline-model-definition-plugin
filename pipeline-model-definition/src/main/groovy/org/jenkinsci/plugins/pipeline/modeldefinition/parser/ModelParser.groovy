@@ -907,16 +907,34 @@ class ModelParser {
      */
     protected String getSourceText(ASTNode n) {
         def result = new StringBuilder();
-        for (int x = n.getLineNumber(); x <= n.getLastLineNumber(); x++) {
+        int beginLine = n.getLineNumber()
+        int endLine = n.getLastLineNumber()
+        int beginLineColumn = n.getColumnNumber()
+        int endLineLastColumn = n.getLastColumnNumber()
+
+        //The node seems to be lying about the last line, so go through each statement to try to make sure
+        if (n instanceof BlockStatement) {
+            for (Statement s : n.statements) {
+                if (s.lineNumber < beginLine) {
+                    beginLine = s.lineNumber
+                    beginLineColumn = s.columnNumber
+                }
+                if (s.lastLineNumber > endLine) {
+                    endLine = s.lastLineNumber
+                    endLineLastColumn = s.lastColumnNumber
+                }
+            }
+        }
+        for (int x = beginLine; x <= endLine; x++) {
             String line = sourceUnit.source.getLine(x, null);
             if (line == null)
                 throw new AssertionError("Unable to get source line"+x);
 
-            if (x == n.getLastLineNumber()) {
-                line = line.substring(0, n.getLastColumnNumber() - 1);
+            if (x == endLine) {
+                line = line.substring(0, endLineLastColumn - 1);
             }
-            if (x == n.getLineNumber()) {
-                line = line.substring(n.getColumnNumber() - 1);
+            if (x == beginLine) {
+                line = line.substring(beginLineColumn - 1);
             }
             result.append(line).append('\n');
         }
