@@ -59,6 +59,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties
@@ -190,6 +191,11 @@ class ModelValidatorImpl implements ModelValidator {
 
         return valid
     }
+
+    public boolean validateElement(ModelASTWhen when) {
+        //TODO can we evaluate if the closure will return something that can be tries for true?
+    }
+
 
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true

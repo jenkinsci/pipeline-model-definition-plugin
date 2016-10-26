@@ -90,43 +90,45 @@ public class ModelInterpreter implements Serializable {
                         for (int i = 0; i < root.stages.getStages().size(); i++) {
                             Stage thisStage = root.stages.getStages().get(i)
 
-                            script.stage(thisStage.name) {
-                                if (firstError == null) {
-                                    nodeOrDockerOrNone(thisStage.agent) {
-                                        try {
-                                            catchRequiredContextForNode(root.agent) {
-                                                setUpDelegate(thisStage.steps.closure).call()
-                                            }.call()
-                                        } catch (Exception e) {
-                                            script.echo "Error in stages execution: ${e.getMessage()}"
-                                            script.getProperty("currentBuild").result = Result.FAILURE
-                                            if (firstError == null) {
-                                                firstError = e
-                                            }
-                                        } finally {
-                                            // And finally, run the post stage steps.
-                                            List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
+                            runStageOrNot(thisStage, firstError) {
+                                script.stage(thisStage.name) {
+                                    if (firstError == null) {
+                                        nodeOrDockerOrNone(thisStage.agent) {
+                                            try {
+                                                catchRequiredContextForNode(root.agent) {
+                                                    setUpDelegate(thisStage.steps.closure).call()
+                                                }.call()
+                                            } catch (Exception e) {
+                                                script.echo "Error in stages execution: ${e.getMessage()}"
+                                                script.getProperty("currentBuild").result = Result.FAILURE
+                                                if (firstError == null) {
+                                                    firstError = e
+                                                }
+                                            } finally {
+                                                // And finally, run the post stage steps.
+                                                List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
 
-                                            catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
-                                                if (postClosures.size() > 0) {
-                                                    script.echo("Post stage") //TODO should this be a nested stage instead?
-                                                    try {
-                                                        for (int ni = 0; ni < postClosures.size(); ni++) {
-                                                            setUpDelegate(postClosures.get(ni)).call()
-                                                        }
-                                                    } catch (Exception e) {
-                                                        script.echo "Error in stage post: ${e.getMessage()}"
-                                                        script.getProperty("currentBuild").result = Result.FAILURE
-                                                        if (firstError == null) {
-                                                            firstError = e
+                                                catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
+                                                    if (postClosures.size() > 0) {
+                                                        script.echo("Post stage") //TODO should this be a nested stage instead?
+                                                        try {
+                                                            for (int ni = 0; ni < postClosures.size(); ni++) {
+                                                                setUpDelegate(postClosures.get(ni)).call()
+                                                            }
+                                                        } catch (Exception e) {
+                                                            script.echo "Error in stage post: ${e.getMessage()}"
+                                                            script.getProperty("currentBuild").result = Result.FAILURE
+                                                            if (firstError == null) {
+                                                                firstError = e
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            }.call()
-                                        }
-                                    }.call()
+                                                }.call()
+                                            }
+                                        }.call()
+                                    }
                                 }
-                            }
+                            }.call()
                         }
 
                         try {
@@ -284,6 +286,23 @@ public class ModelInterpreter implements Serializable {
                 script.node {
                     body.call()
                 }
+            }
+        }
+    }
+
+    def runStageOrNot(Stage stage, Throwable firstError, Closure body) {
+        script.echo "Run stage or not!"
+        if (stage.when != null && firstError == null) {
+            script.echo "One when!"
+            return {
+                if (stage.when.call()) {
+                    body.call()
+                }
+            }
+        } else {
+            script.echo "No when!"
+            return {
+                body.call()
             }
         }
     }

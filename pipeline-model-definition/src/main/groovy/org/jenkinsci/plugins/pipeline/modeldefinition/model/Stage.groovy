@@ -51,6 +51,9 @@ public class Stage implements NestedModel, Serializable {
     PostStage post
 
     @Whitelisted
+    Closure<Boolean> when
+
+    @Whitelisted
     Stage name(String n) {
         this.name = n
         return this
@@ -77,6 +80,12 @@ public class Stage implements NestedModel, Serializable {
     @Whitelisted
     Stage post(PostStage post) {
         this.post = post
+        return this
+    }
+
+    @Whitelisted
+    Stage when(Closure<Boolean> when) {
+        this.when = when
         return this
     }
 

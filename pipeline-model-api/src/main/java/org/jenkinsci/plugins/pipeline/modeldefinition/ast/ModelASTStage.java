@@ -18,6 +18,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTAgent agent;
     private List<ModelASTBranch> branches = new ArrayList<ModelASTBranch>();
     private ModelASTPostStage post;
+    private ModelASTWhen when;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -34,6 +35,9 @@ public final class ModelASTStage extends ModelASTElement {
         o.accumulate("branches", a);
         if (agent != null) {
             o.accumulate("agent", agent.toJSON());
+        }
+        if (when != null) {
+            o.accumulate("when", when.toJSON());
         }
 
         if (post != null) {
@@ -52,6 +56,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (agent != null) {
             agent.validate(validator);
         }
+        if (when != null) {
+            when.validate(validator);
+        }
         if (post != null) {
             post.validate(validator);
         }
@@ -64,6 +71,10 @@ public final class ModelASTStage extends ModelASTElement {
         result.append("stage(\'").append(name.replace("'", "\\'")).append("\') {\n");
         if (agent != null) {
             result.append(agent.toGroovy());
+        }
+
+        if (when != null) {
+            result.append(when.toGroovy());
         }
 
         result.append("steps {\n");
@@ -107,6 +118,10 @@ public final class ModelASTStage extends ModelASTElement {
         if (post != null) {
             post.removeSourceLocation();
         }
+
+        if (when != null) {
+            when.removeSourceLocation();
+        }
     }
 
     public String getName() {
@@ -141,6 +156,14 @@ public final class ModelASTStage extends ModelASTElement {
         this.post = post;
     }
 
+    public ModelASTWhen getWhen() {
+        return when;
+    }
+
+    public void setWhen(ModelASTWhen when) {
+        this.when = when;
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
@@ -148,6 +171,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", agent=" + agent +
                 ", branches=" + branches +
                 ", post=" + post +
+                ", when=" + when +
                 "}";
     }
 
@@ -174,6 +198,10 @@ public final class ModelASTStage extends ModelASTElement {
         if (getPost() != null ? !getPost().equals(that.getPost()) : that.getPost() != null) {
             return false;
         }
+        if (getWhen() != null ? !getWhen().equals(that.getWhen()) : that.getWhen() != null) {
+            return false;
+        }
+
         return getBranches() != null ? getBranches().equals(that.getBranches()) : that.getBranches() == null;
 
     }
@@ -184,6 +212,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getAgent() != null ? getAgent().hashCode() : 0);
         result = 31 * result + (getBranches() != null ? getBranches().hashCode() : 0);
+        result = 31 * result + (getWhen() != null ? getWhen().hashCode() : 0);
         return result;
     }
 }

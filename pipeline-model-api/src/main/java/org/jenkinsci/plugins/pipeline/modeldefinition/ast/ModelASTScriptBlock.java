@@ -7,13 +7,17 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
  */
 public class ModelASTScriptBlock extends ModelASTStep {
     public ModelASTScriptBlock(Object sourceLocation) {
+        this(sourceLocation, "script");
+    }
+
+    protected ModelASTScriptBlock(Object sourceLocation, String name) {
         super(sourceLocation);
-        this.setName("script");
+        this.setName(name);
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("script {\n");
+        StringBuilder result = new StringBuilder(getName()).append(" {\n");
         if (getArgs() != null
                 && getArgs() instanceof ModelASTSingleArgument
                 && ((ModelASTSingleArgument) getArgs()).getValue()!=null

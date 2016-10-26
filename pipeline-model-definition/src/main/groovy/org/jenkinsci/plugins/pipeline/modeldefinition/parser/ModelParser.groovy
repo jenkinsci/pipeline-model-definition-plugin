@@ -64,6 +64,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -322,6 +323,9 @@ class ModelParser {
                         case 'agent':
                             stage.agent = parseAgent(s)
                             break
+                        case 'when':
+                            stage.when = parseWhen(s)
+                            break
                         case 'steps':
                             def stepsBlock = matchBlockStatement(s);
                             stage.branches.addAll(parseStepsBlock(asBlock(stepsBlock.body.code)))
@@ -579,11 +583,19 @@ class ModelParser {
 
         return thisStep
     }
+
+    public ModelASTWhen parseWhen(Statement st) {
+        return parseScriptBlockInternal(st, new ModelASTWhen(st), "When")
+    }
+
     /**
      * Parses a statement into a {@link ModelASTScriptBlock}
      */
     public ModelASTScriptBlock parseScriptBlock(Statement st) {
-        ModelASTScriptBlock scriptBlock = new ModelASTScriptBlock(st)
+        return parseScriptBlockInternal(st, new ModelASTScriptBlock(st), "Script")
+    }
+
+    private <T extends ModelASTScriptBlock> T parseScriptBlockInternal(Statement st, T scriptBlock, String pronoun) {
         // TODO: Probably error out for cases with parameters?
         def bs = matchBlockStatement(st);
         if (bs != null) {
@@ -591,7 +603,7 @@ class ModelParser {
             groovyBlock.value = ModelASTValue.fromConstant(getSourceText(bs.body.code), bs.body.code)
             scriptBlock.args = groovyBlock
         } else {
-            errorCollector.error(scriptBlock, "Script step without a script block")
+            errorCollector.error(scriptBlock, "${pronoun} step without a block")
         }
 
         return scriptBlock
