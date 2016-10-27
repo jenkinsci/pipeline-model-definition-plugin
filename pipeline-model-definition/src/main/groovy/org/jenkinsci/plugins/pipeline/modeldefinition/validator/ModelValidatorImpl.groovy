@@ -194,7 +194,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(ModelASTWhen when) {
         //TODO can we evaluate if the closure will return something that can be tries for true?
-        if (when.toGroovy() =~ /when\s[{\s}]*/) {
+        if (when.toGroovy() =~ /\Awhen\s[{\s}]*\z/) {
             errorCollector.error(when, "Empty when closure, remove the property or add some content.")
             return false
         }
