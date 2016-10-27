@@ -211,7 +211,6 @@ public class ModelInterpreter implements Serializable {
     }
 
     def withEnvBlock(List<String> envVars, Closure body) {
-        System.err.println("IN WITHENV BLOCK WITH ${envVars}")
         if (envVars != null && !envVars.isEmpty()) {
             return {
                 script.withEnv(envVars) {
