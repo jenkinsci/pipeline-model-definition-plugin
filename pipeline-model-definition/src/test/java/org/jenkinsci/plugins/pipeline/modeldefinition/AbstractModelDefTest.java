@@ -119,7 +119,10 @@ public abstract class AbstractModelDefTest {
             "simpleTriggers",
             "simpleParameters",
             "stringsNeedingEscapeLogic",
-            "agentTypeOrdering"
+            "agentTypeOrdering",
+            "toolsInStage",
+            "environmentInStage",
+            "stringsNeedingEscapeLogic"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

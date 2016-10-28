@@ -322,6 +322,12 @@
         "post": {
           "$ref": "#/definitions/notifications"
         },
+        "tools": {
+          "$ref": "#/definitions/tools"
+        },
+        "environment": {
+          "$ref": "#/definitions/environment"
+        },
         "branches": {
           "type": "array",
           "items": {

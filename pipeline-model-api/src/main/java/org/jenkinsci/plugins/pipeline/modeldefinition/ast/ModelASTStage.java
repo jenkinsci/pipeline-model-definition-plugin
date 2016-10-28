@@ -18,6 +18,8 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTAgent agent;
     private List<ModelASTBranch> branches = new ArrayList<ModelASTBranch>();
     private ModelASTPostStage post;
+    private ModelASTTools tools;
+    private ModelASTEnvironment environment;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -40,6 +42,14 @@ public final class ModelASTStage extends ModelASTElement {
             o.accumulate("post", post.toJSON());
         }
 
+        if (tools != null) {
+            o.accumulate("tools", tools.toJSON());
+        }
+
+        if (environment != null) {
+            o.accumulate("environment", environment.toJSON());
+        }
+
         return o;
     }
 
@@ -55,6 +65,12 @@ public final class ModelASTStage extends ModelASTElement {
         if (post != null) {
             post.validate(validator);
         }
+        if (tools != null) {
+            tools.validate(validator);
+        }
+        if (environment != null) {
+            environment.validate(validator);
+        }
     }
 
     @Override
@@ -65,7 +81,12 @@ public final class ModelASTStage extends ModelASTElement {
         if (agent != null) {
             result.append(agent.toGroovy());
         }
-
+        if (tools != null) {
+            result.append(tools.toGroovy());
+        }
+        if (environment != null) {
+            result.append(environment.toGroovy());
+        }
         result.append("steps {\n");
         if (branches.size() > 1) {
             result.append("parallel(");
@@ -107,6 +128,12 @@ public final class ModelASTStage extends ModelASTElement {
         if (post != null) {
             post.removeSourceLocation();
         }
+        if (tools != null) {
+            tools.removeSourceLocation();
+        }
+        if (environment != null) {
+            environment.removeSourceLocation();
+        }
     }
 
     public String getName() {
@@ -141,6 +168,22 @@ public final class ModelASTStage extends ModelASTElement {
         this.post = post;
     }
 
+    public ModelASTTools getTools() {
+        return tools;
+    }
+
+    public void setTools(ModelASTTools tools) {
+        this.tools = tools;
+    }
+
+    public ModelASTEnvironment getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(ModelASTEnvironment environment) {
+        this.environment = environment;
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
@@ -148,6 +191,8 @@ public final class ModelASTStage extends ModelASTElement {
                 ", agent=" + agent +
                 ", branches=" + branches +
                 ", post=" + post +
+                ", tools=" + tools +
+                ", environment=" + environment +
                 "}";
     }
 
@@ -174,6 +219,12 @@ public final class ModelASTStage extends ModelASTElement {
         if (getPost() != null ? !getPost().equals(that.getPost()) : that.getPost() != null) {
             return false;
         }
+        if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
+            return false;
+        }
+        if (getEnvironment() != null ? !getEnvironment().equals(that.getEnvironment()) : that.getEnvironment() != null) {
+            return false;
+        }
         return getBranches() != null ? getBranches().equals(that.getBranches()) : that.getBranches() == null;
 
     }
@@ -184,6 +235,9 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getAgent() != null ? getAgent().hashCode() : 0);
         result = 31 * result + (getBranches() != null ? getBranches().hashCode() : 0);
+        result = 31 * result + (getPost() != null ? getPost().hashCode() : 0);
+        result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
+        result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         return result;
     }
 }

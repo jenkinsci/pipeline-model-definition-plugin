@@ -50,6 +50,10 @@ public class Stage implements NestedModel, Serializable {
     @Whitelisted
     PostStage post
 
+    Tools tools
+
+    Environment environment
+
     @Whitelisted
     Stage name(String n) {
         this.name = n
@@ -84,6 +88,29 @@ public class Stage implements NestedModel, Serializable {
         this.post = post
         return this
     }
+
+    Stage tools(Tools tools) {
+        this.tools = tools
+        return this
+    }
+
+    Stage environment(Environment environment) {
+        this.environment = environment
+        return this
+    }
+
+    /**
+     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
+     * suitable for use with the withEnv step.
+     *
+     * @return a list of "key=value" strings.
+     */
+    List<String> getEnvVars() {
+        return environment.collect { k, v ->
+            "${k}=${v}"
+        }
+    }
+
 
     @Override
     @Whitelisted

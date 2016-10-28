@@ -180,17 +180,24 @@ class JSONParser {
             stage.branches.add(parseBranch(o))
         }
 
+        if (j.has("environment")) {
+            stage.environment = parseEnvironment(j.getJSONArray("environment"))
+        }
+
+        if (j.has("tools")) {
+            stage.tools = parseTools(j.getJSONArray("tools"))
+        }
+
         if (j.has("post")) {
             def object = j.getJSONObject("post")
             if (!object.isNullObject()) {
                 stage.post = parsePostStage(object)
             }
         }
+
         return stage
 
     }
-
-
 
     public @CheckForNull ModelASTBranch parseBranch(JSONObject j) {
         ModelASTBranch branch = new ModelASTBranch(j)
