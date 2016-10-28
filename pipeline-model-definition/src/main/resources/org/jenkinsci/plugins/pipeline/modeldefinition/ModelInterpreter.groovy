@@ -28,6 +28,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
@@ -76,16 +77,16 @@ public class ModelInterpreter implements Serializable {
                 script.properties(jobProps)
             }
 
-            // Entire build, including notifications and wrappers, runs in the withEnv.
-            script.withEnv(root.getEnvVars()) {
+            // Entire build, including notifications, runs in the withEnv.
+            withEnvBlock(root.getEnvVars()) {
                 inWrappers(root.wrappers) {
-                    // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
-                    // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
-                    // We save the caught error, if any, for throwing at the end of the build.
-                    nodeOrDockerOrNone(root.agent) {
-                        toolsBlock(root.agent, root.tools) {
-                            // If we have an agent and script.scm isn't null, run checkout scm
-                            if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
+                // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
+                // We save the caught error, if any, for throwing at the end of the build.
+                nodeOrDockerOrNone(root.agent) {
+                    toolsBlock(root.agent, root.tools) {
+                        // If we have an agent and script.scm isn't null, run checkout scm
+                        if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
                                 script.checkout script.scm
                             }
 
@@ -93,42 +94,46 @@ public class ModelInterpreter implements Serializable {
                                 Stage thisStage = root.stages.getStages().get(i)
 
                                 script.stage(thisStage.name) {
-                                    if (firstError == null) {
-                                        nodeOrDockerOrNone(thisStage.agent) {
-                                            try {
-                                                catchRequiredContextForNode(root.agent) {
-                                                    setUpDelegate(thisStage.steps.closure).call()
-                                                }.call()
-                                            } catch (Exception e) {
-                                                script.echo "Error in stages execution: ${e.getMessage()}"
-                                                script.getProperty("currentBuild").result = Result.FAILURE
-                                                if (firstError == null) {
-                                                    firstError = e
-                                                }
-                                            } finally {
-                                                // And finally, run the post stage steps.
-                                                List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-
-                                                catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
-                                                    if (postClosures.size() > 0) {
-                                                        script.echo("Post stage")
-                                                        //TODO should this be a nested stage instead?
-                                                        try {
-                                                            for (int ni = 0; ni < postClosures.size(); ni++) {
-                                                                setUpDelegate(postClosures.get(ni)).call()
-                                                            }
-                                                        } catch (Exception e) {
-                                                            script.echo "Error in stage post: ${e.getMessage()}"
-                                                            script.getProperty("currentBuild").result = Result.FAILURE
-                                                            if (firstError == null) {
-                                                                firstError = e
-                                                            }
+                                    withEnvBlock(thisStage.getEnvVars()) {
+                                        if (firstError == null) {
+                                            nodeOrDockerOrNone(thisStage.agent) {
+                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                    try {
+                                                        catchRequiredContextForNode(root.agent) {
+                                                            setUpDelegate(thisStage.steps.closure).call()
+                                                        }.call()
+                                                    } catch (Exception e) {
+                                                        script.echo "Error in stages execution: ${e.getMessage()}"
+                                                        script.getProperty("currentBuild").result = Result.FAILURE
+                                                        if (firstError == null) {
+                                                            firstError = e
                                                         }
+                                                    } finally {
+                                                        // And finally, run the post stage steps.
+                                                        List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
+
+                                                        catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
+                                                            if (postClosures.size() > 0) {
+                                                                script.echo("Post stage")
+                                                                //TODO should this be a nested stage instead?
+                                                                try {
+                                                                    for (int ni = 0; ni < postClosures.size(); ni++) {
+                                                                        setUpDelegate(postClosures.get(ni)).call()
+                                                                    }
+                                                                } catch (Exception e) {
+                                                                    script.echo "Error in stage post: ${e.getMessage()}"
+                                                                    script.getProperty("currentBuild").result = Result.FAILURE
+                                                                    if (firstError == null) {
+                                                                        firstError = e
+                                                                    }
+                                                                }
+                                                            }
+                                                        }.call()
                                                     }
                                                 }.call()
-                                            }
-                                        }.call()
-                                    }
+                                            }.call()
+                                        }
+                                    }.call()
                                 }
                             }
 
@@ -175,9 +180,10 @@ public class ModelInterpreter implements Serializable {
                     }
                 }.call()
 
-                if (firstError != null) {
-                    throw firstError
-                }
+            }.call()
+
+            if (firstError != null) {
+                throw firstError
             }
         }
     }
@@ -205,6 +211,20 @@ public class ModelInterpreter implements Serializable {
                 } else {
                     throw e
                 }
+            }
+        }
+    }
+
+    def withEnvBlock(List<String> envVars, Closure body) {
+        if (envVars != null && !envVars.isEmpty()) {
+            return {
+                script.withEnv(envVars) {
+                    body.call()
+                }
+            }
+        } else {
+            return {
+                body.call()
             }
         }
     }

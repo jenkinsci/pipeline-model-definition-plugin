@@ -119,7 +119,9 @@ public abstract class AbstractModelDefTest {
             "simpleParameters",
             "stringsNeedingEscapeLogic",
             "simpleWrapper",
-            "multipleWrappers"
+            "multipleWrappers",
+            "toolsInStage",
+            "environmentInStage"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
