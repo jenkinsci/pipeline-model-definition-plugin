@@ -42,7 +42,7 @@ These are sections that are specified directly within the `pipeline` argument cl
 * *Description*: A sequence of `key = value` pairs, which will be passed to the `withEnv` step the build will be 
 executed within.
 * *Required*: No
-* *Allowed In*: Top-level `pipeline` closure only.
+* *Allowed In*: Top-level `pipeline` or `stage` closures only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: One or more lines with `foo = 'bar'` variable name/value pairs.
@@ -146,10 +146,10 @@ stages {
 ```
 
 ### tools
-* *Description*: A top-level section defining tools to auto-install and put on the PATH. This is ignored if `image none`
+* *Description*: A section defining tools to auto-install and put on the PATH. This is ignored if `image none`
 is specified.
 * *Required*: No
-* *Allowed In*: Top-level `pipeline` closure only.
+* *Allowed In*: Top-level `pipeline`  or `stage` closures only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: Names and versions of tools configured in Jenkins to install. 
