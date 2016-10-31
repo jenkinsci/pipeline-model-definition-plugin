@@ -65,7 +65,7 @@ public class Agent implements Serializable {
      */
     @Whitelisted
     public DeclarativeAgent getDeclarativeAgent() {
-        DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.orderedDescriptors.find { d ->
+        DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
             arguments.containsKey(d.getName())
         }
 

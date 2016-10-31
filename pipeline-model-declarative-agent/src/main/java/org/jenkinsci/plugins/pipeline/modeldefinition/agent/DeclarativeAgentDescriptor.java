@@ -127,24 +127,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
 
         return models;
     }
-
-    /**
-     * An ordered (by Extension ordinal, in descending order) list of all descriptors.
-     * @return A list of descriptors.
-     */
-    public static List<DeclarativeAgentDescriptor> getOrderedDescriptors() {
-        List<DeclarativeAgentDescriptor> orderedDescriptors = new ArrayList<>();
-
-        List<ExtensionComponent<DeclarativeAgentDescriptor>> extensionComponents = new ArrayList<>(all().getComponents());
-        Collections.sort(extensionComponents);
-
-        for (ExtensionComponent<DeclarativeAgentDescriptor> extensionComponent: extensionComponents) {
-            orderedDescriptors.add(extensionComponent.getInstance());
-        }
-
-        return orderedDescriptors;
-    }
-
+    
     /**
      * Get the descriptor for a given name or null if not found.
      *
