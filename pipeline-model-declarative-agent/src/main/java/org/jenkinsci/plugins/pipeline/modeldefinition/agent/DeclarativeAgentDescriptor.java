@@ -23,20 +23,15 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
-import hudson.ExtensionComponent;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -127,7 +122,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
 
         return models;
     }
-    
+
     /**
      * Get the descriptor for a given name or null if not found.
      *
@@ -135,7 +130,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * @return The corresponding descriptor or null if not found.
      */
     @Whitelisted
-    public static @Nullable DeclarativeAgentDescriptor byName(@Nonnull String name) {
+    public static @CheckForNull DeclarativeAgentDescriptor byName(@Nonnull String name) {
         return (DeclarativeAgentDescriptor) SymbolLookup.get().findDescriptor(DeclarativeAgent.class, name);
     }
 
@@ -148,8 +143,8 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * @throws Exception
      */
     @Whitelisted
-    public static @Nullable DeclarativeAgent instanceForName(@Nonnull String name,
-                                                             Map<String,Object> arguments) throws Exception {
+    public static @CheckForNull DeclarativeAgent instanceForName(@Nonnull String name,
+                                                                 Map<String,Object> arguments) throws Exception {
         DeclarativeAgentDescriptor descriptor = byName(name);
 
         if (descriptor != null) {
