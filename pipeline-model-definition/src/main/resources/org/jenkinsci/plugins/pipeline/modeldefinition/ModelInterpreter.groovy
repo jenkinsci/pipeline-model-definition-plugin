@@ -27,6 +27,8 @@ import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
@@ -83,7 +85,7 @@ public class ModelInterpreter implements Serializable {
                 // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                 // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
                 // We save the caught error, if any, for throwing at the end of the build.
-                nodeOrDockerOrNone(root.agent) {
+                inDeclarativeAgent(root.agent) {
                     toolsBlock(root.agent, root.tools) {
                         // If we have an agent and script.scm isn't null, run checkout scm
                         if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
@@ -93,25 +95,24 @@ public class ModelInterpreter implements Serializable {
                             for (int i = 0; i < root.stages.getStages().size(); i++) {
                                 Stage thisStage = root.stages.getStages().get(i)
 
-                                script.stage(thisStage.name) {
-                                    withEnvBlock(thisStage.getEnvVars()) {
-                                        if (firstError == null) {
-                                            nodeOrDockerOrNone(thisStage.agent) {
-                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                    try {
-                                                        catchRequiredContextForNode(root.agent) {
-                                                            setUpDelegate(thisStage.steps.closure).call()
-                                                        }.call()
-                                                    } catch (Exception e) {
-                                                        script.echo "Error in stages execution: ${e.getMessage()}"
-                                                        script.getProperty("currentBuild").result = Result.FAILURE
-                                                        if (firstError == null) {
-                                                            firstError = e
-                                                        }
-                                                    } finally {
-                                                        // And finally, run the post stage steps.
-                                                        List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-
+                            script.stage(thisStage.name) {
+                                withEnvBlock(thisStage.getEnvVars()) {
+                                    if (firstError == null) {
+                                        inDeclarativeAgent(thisStage.agent) {
+                                            toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                try {
+                                                    catchRequiredContextForNode(root.agent) {
+                                                        setUpDelegate(thisStage.steps.closure).call()
+                                                    }.call()
+                                                } catch (Exception e) {
+                                                    script.echo "Error in stages execution: ${e.getMessage()}"
+                                                    script.getProperty("currentBuild").result = Result.FAILURE
+                                                    if (firstError == null) {
+                                                        firstError = e
+                                                    }
+                                                } finally {
+                                                    // And finally, run the post stage steps.
+                                                    List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
                                                         catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
                                                             if (postClosures.size() > 0) {
                                                                 script.echo("Post stage")
@@ -256,59 +257,14 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-    /*
-    TODO: The agent handling stuff here is just waiting for step-in-Groovy support..
-     */
-    def nodeOrDockerOrNone(Agent agent, Closure body) {
-        if (agent != null && agent.hasAgent()) {
-            return {
-                nodeWithLabelOrWithout(agent) {
-                    dockerOrWithout(agent, body).call()
-                }.call()
-            }
-        } else {
+    def inDeclarativeAgent(Agent agent, Closure body) {
+        if (agent == null) {
             return {
                 body.call()
             }
-        }
-    }
-
-    def dockerOrWithout(Agent agent, Closure body) {
-        if (agent.docker != null) {
-            return {
-                script.getProperty("docker").image(agent.docker).inside(agent.dockerArgs, {
-                    body.call()
-                })
-            }
         } else {
-            return {
+            return agent.getDeclarativeAgent().getScript(script).run {
                 body.call()
-            }
-        }
-    }
-
-    def nodeWithLabelOrWithout(Agent agent, Closure body) {
-        if (agent?.label != null) {
-            return {
-                script.node(agent.label) {
-                    body.call()
-                }
-            }
-        } else {
-            if (agent?.hasDocker()) {
-                String dl = script.dockerLabel()?.trim()
-                if (dl) {
-                    return {
-                        script.node(dl) {
-                            body.call()
-                        }
-                    }
-                }
-            }
-            return {
-                script.node {
-                    body.call()
-                }
             }
         }
     }

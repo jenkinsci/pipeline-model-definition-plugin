@@ -1,0 +1,38 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "sh",
+        "arguments":         {
+          "isLiteral": true,
+          "value": "echo ONSLAVE=$ONSLAVE"
+        }
+      }]
+    }]
+  }],
+  "agent":   [
+    {
+      "key": "label",
+      "value":       {
+        "isLiteral": true,
+        "value": "some-label"
+      }
+    },
+    {
+      "key": "otherField",
+      "value":       {
+        "isLiteral": true,
+        "value": "banana"
+      }
+    },
+    {
+      "key": "fruit",
+      "value":       {
+        "isLiteral": true,
+        "value": "apple"
+      }
+    }
+  ]
+}}
