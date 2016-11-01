@@ -59,7 +59,7 @@ environment {
 ```
 
 ### stages
-* *Description*: A sequence of one or more Pipeline `stage`s, each of which consist of a sequence of steps.
+* *Description*: A sequence of one or more Pipeline `stage`s, each of which consists of a sequence of steps.
 * *Required*: Yes
 * *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
@@ -173,10 +173,10 @@ tools {
 * *Parameters*: None
 * *Takes a Closure*: Yes
 * *Closure Contents*: A sequence of one or more build conditions containing Pipeline steps to run. See below for 
-definition of build conditions and their contents.
+definitions of build conditions and their contents.
 
 ### postBuild
-* *Description*: Defines post build actions to be run after build completion, assuming build status conditions are met.
+* *Description*: Defines post-build actions to be run after build completion, assuming build status conditions are met.
 Note that `postBuild` steps are run *before* `notifications`.
 * *Required*: No
 * *Allowed In*: Top-level `pipeline` closure only.
