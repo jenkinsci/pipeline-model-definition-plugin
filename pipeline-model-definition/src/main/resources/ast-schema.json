@@ -158,6 +158,20 @@
       },
       "additionalProperties": false
     },
+    "wrappers": {
+      "description": "One or more wrappers",
+      "type": "object",
+      "properties": {
+        "wrappers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/methodCall"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "step": {
       "description": "A single step with parameters",
       "type": "object",
@@ -378,6 +392,9 @@
         },
         "parameters": {
           "$ref": "#/definitions/parameters"
+        },
+        "wrappers": {
+          "$ref": "#/definitions/wrappers"
         }
       },
       "required": [
