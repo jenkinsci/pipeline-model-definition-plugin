@@ -45,6 +45,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers;
 
 
 public interface ModelValidator {
@@ -87,4 +89,8 @@ public interface ModelValidator {
     boolean validateElement(ModelASTStage stage);
 
     boolean validateElement(ModelASTStages stages);
+
+    boolean validateElement(ModelASTWrapper wrapper);
+
+    boolean validateElement(ModelASTWrappers wrappers);
 }
