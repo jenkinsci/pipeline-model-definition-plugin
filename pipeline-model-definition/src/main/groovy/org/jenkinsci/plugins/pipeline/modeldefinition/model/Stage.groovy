@@ -72,6 +72,11 @@ public class Stage implements NestedModel, Serializable {
         return this
     }
 
+    Stage agent(String s) {
+        this.agent = new Agent(s)
+        return this
+    }
+    
     @Whitelisted
     Stage steps(StepsBlock s) {
         this.steps = s

@@ -91,8 +91,8 @@ public class Root implements NestedModel, Serializable {
     }
 
     @Whitelisted
-    Root agent(Boolean none) {
-        this.agent = new Agent(none)
+    Root agent(String s) {
+        this.agent = new Agent(s)
         return this
     }
 
