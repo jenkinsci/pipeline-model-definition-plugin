@@ -28,11 +28,13 @@ import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,7 +53,8 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
     public @Nonnull String getName() {
         Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
         if (symbolValues.isEmpty()) {
-            throw new IllegalStateException("Cannot get agent type name for class " + clazz.getName());
+            throw new IllegalArgumentException("Declarative Agent descriptor class " + this.getClass().getName()
+                    + " does not have a @Symbol and does not override getName().");
         }
         return symbolValues.iterator().next();
     }
@@ -60,7 +63,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * The full package and class name for the {@link DeclarativeAgentScript} class corresponding to this. Defaults to
      * the {@link DeclarativeAgent} class name with "Script" appended to the end.
      *
-     * @return The class name.
+     * @return The class name, defaulting to the {@link DeclarativeAgent} {@link #clazz} class name with "Script" appended.
      */
     public @Nonnull String getDeclarativeAgentScriptClass() {
         return clazz.getName() + "Script";
@@ -130,21 +133,6 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
     }
 
     /**
-     * An ordered list of all descriptor names.
-     *
-     * @return A list of names
-     */
-    public static List<String> getOrderedNames() {
-        List<String> orderedNames = new ArrayList<>();
-
-        for (DeclarativeAgentDescriptor d : all()) {
-            orderedNames.addAll(SymbolLookup.getSymbolValue(d));
-        }
-
-        return orderedNames;
-    }
-
-    /**
      * Get the descriptor for a given name or null if not found.
      *
      * @param name The name for the descriptor to look up
@@ -167,14 +155,27 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         DeclarativeAgentDescriptor descriptor = byName(name);
 
         if (descriptor != null) {
-            if (zeroArgModels().keySet().contains(name)) {
-                return descriptor.newInstance();
-            } else {
-                return descriptor.newInstance(arguments);
-            }
+            return instanceForDescriptor(descriptor, arguments);
         }
 
         return null;
+    }
+
+    /**
+     * For a given descriptor and map of arguments, return an instance using those arguments.
+     *
+     * @param descriptor The descriptor instance
+     * @param arguments A map of arguments
+     * @return The instantiated {@link DeclarativeAgent} instance.
+     * @throws Exception
+     */
+    public static @Nonnull DeclarativeAgent instanceForDescriptor(@Nonnull DeclarativeAgentDescriptor descriptor,
+                                                                   Map<String,Object> arguments) throws Exception {
+        if (zeroArgModels().keySet().contains(descriptor.getName())) {
+            return descriptor.newInstance();
+        } else {
+            return descriptor.newInstance(arguments);
+        }
     }
 
 }

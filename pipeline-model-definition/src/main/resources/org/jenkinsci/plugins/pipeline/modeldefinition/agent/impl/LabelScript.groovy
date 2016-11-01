@@ -37,17 +37,9 @@ public class LabelScript extends DeclarativeAgentScript {
 
     @Override
     public Closure run(Closure body) {
-        if (declarativeAgent?.label != null) {
-            return {
-                script.node(declarativeAgent.label) {
-                    body.call()
-                }
-            }
-        } else {
-            return {
-                script.node {
-                    body.call()
-                }
+        return {
+            script.node(declarativeAgent?.label) {
+                body.call()
             }
         }
     }
