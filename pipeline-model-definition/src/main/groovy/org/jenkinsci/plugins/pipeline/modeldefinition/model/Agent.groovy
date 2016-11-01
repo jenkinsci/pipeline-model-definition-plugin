@@ -65,9 +65,12 @@ public class Agent implements Serializable {
      */
     @Whitelisted
     public DeclarativeAgent getDeclarativeAgent() {
-        String foundType = DeclarativeAgentDescriptor.orderedNames.find { arguments.containsKey(it) }
-        if (foundType != null) {
-            return DeclarativeAgentDescriptor.instanceForName(foundType, arguments)
+        DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
+            arguments.containsKey(d.getName())
+        }
+
+        if (foundDescriptor != null) {
+            return DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, arguments)
         } else {
             return null
         }

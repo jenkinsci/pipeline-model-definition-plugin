@@ -547,10 +547,11 @@ class ModelValidatorImpl implements ModelValidator {
 
             Map<String,DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
 
-            String typeName = DeclarativeAgentDescriptor.orderedNames.find { it in argKeys }
+            List<String> orderedNames = DeclarativeAgentDescriptor.all().collect { it.name }
+            String typeName = orderedNames.find { it in argKeys }
 
             if (typeName == null) {
-                errorCollector.error(agent, "No agent type specified. Must contain one of ${DeclarativeAgentDescriptor.orderedNames}")
+                errorCollector.error(agent, "No agent type specified. Must contain one of ${orderedNames}")
                 valid = false
             } else {
                 DescribableModel model = possibleModels.get(typeName)

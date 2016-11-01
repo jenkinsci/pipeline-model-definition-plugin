@@ -55,9 +55,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://git@github.com/jenkinsci/pipeline-config-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-config-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/pipeline-config-plugin</url>
+    <connection>scm:git:git://git@github.com/jenkinsci/pipeline-model-definition-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
     <tag>HEAD</tag>
   </scm>
   
@@ -68,7 +68,6 @@
     <module>pipeline-model-definition</module>
   </modules>
 
-  <!-- project is just for aggregating, never as a parent, we force skip to ensure we never deploy or install it -->
   <build>
     <plugins>
       <plugin>
