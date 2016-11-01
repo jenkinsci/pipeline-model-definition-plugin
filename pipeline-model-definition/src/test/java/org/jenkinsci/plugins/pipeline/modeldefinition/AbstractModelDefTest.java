@@ -23,11 +23,9 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.collect.ImmutableList;
 import hudson.Launcher;
-import hudson.model.ItemGroup;
 import hudson.model.ParameterDefinition;
 import hudson.model.Result;
 import hudson.model.Slave;
@@ -45,6 +43,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
@@ -119,10 +118,11 @@ public abstract class AbstractModelDefTest {
             "simpleTriggers",
             "simpleParameters",
             "stringsNeedingEscapeLogic",
+            "simpleWrapper",
+            "multipleWrappers",
             "agentTypeOrdering",
             "toolsInStage",
-            "environmentInStage",
-            "stringsNeedingEscapeLogic"
+            "environmentInStage"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -158,6 +158,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"perStageConfigMissingSteps", "At /pipeline/stages/0/branches/0: Missing one or more required properties: 'steps'"});
         result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
 
+        result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [retry, script, timeout, withEnv]"});
         result.add(new Object[]{"unknownAgentType", "No agent type specified. Must contain one of [otherField, docker, label, any, none]"});
         result.add(new Object[]{"unknownBareAgentType", "Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]."});
         result.add(new Object[]{"agentMissingRequiredParam", "Missing required parameter for agent type 'otherField': label"});
