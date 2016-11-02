@@ -150,7 +150,7 @@ public class ModelInterpreter implements Serializable {
                                     }
                                 }.call()
                             } catch (Exception e) {
-                                script.echo "Error in postBuild execution: ${e.getMessage()}"
+                                script.echo "Error in post execution: ${e.getMessage()}"
                                 script.getProperty("currentBuild").result = Result.FAILURE
                                 if (firstError == null) {
                                     firstError = e

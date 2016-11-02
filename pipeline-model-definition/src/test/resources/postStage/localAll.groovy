@@ -61,7 +61,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         always {
             echo "And AAAAIIIAAAIAI"
         }

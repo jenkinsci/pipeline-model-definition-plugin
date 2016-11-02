@@ -46,7 +46,7 @@ public class Root implements NestedModel, Serializable {
     Stages stages
 
     @Whitelisted
-    PostBuild postBuild
+    PostBuild post
 
     @Whitelisted
     Environment environment
@@ -73,8 +73,8 @@ public class Root implements NestedModel, Serializable {
     }
 
     @Whitelisted
-    Root postBuild(PostBuild p) {
-        this.postBuild = p
+    Root post(PostBuild p) {
+        this.post = p
         return this
     }
 
@@ -147,7 +147,7 @@ public class Root implements NestedModel, Serializable {
      */
     @Whitelisted
     List<Closure> satisfiedPostBuilds(Object runWrapperObj) {
-        return satisfiedConditionsForField(postBuild, runWrapperObj)
+        return satisfiedConditionsForField(post, runWrapperObj)
     }
 
     @Override

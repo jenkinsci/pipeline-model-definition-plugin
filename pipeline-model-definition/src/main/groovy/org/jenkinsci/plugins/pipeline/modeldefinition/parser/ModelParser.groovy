@@ -172,7 +172,7 @@ class ModelParser {
                     case 'environment':
                         r.environment = parseEnvironment(stmt);
                         break;
-                    case 'postBuild':
+                    case 'post':
                         r.postBuild = parsePostBuild(stmt);
                         break;
                     case 'agent':
@@ -195,6 +195,9 @@ class ModelParser {
                         break
                     case 'notifications':
                         errorCollector.error(r, "The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
+                        break
+                    case 'postBuild':
+                        errorCollector.error(r, "The 'postBuild' section has been renamed as of version 0.6. Use 'post' for all post-build actions.")
                         break
                     default:
                         // We need to check for unknowns here.

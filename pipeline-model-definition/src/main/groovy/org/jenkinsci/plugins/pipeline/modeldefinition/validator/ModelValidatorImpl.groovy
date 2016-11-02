@@ -102,7 +102,7 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTPostBuild postBuild) {
-        // postBuild specific validation
+        // post specific validation
         true
     }
 

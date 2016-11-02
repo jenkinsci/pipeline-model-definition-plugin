@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.endpoints;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
-import hudson.util.TimeUnit2;
 import jenkins.model.Jenkins;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
@@ -41,11 +40,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -242,11 +238,6 @@ public class ModelConverterAction implements RootAction {
 
         return HttpResponses.okJSON(result);
 
-    }
-
-    @SuppressWarnings("unused")
-    public void doSchema(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        rsp.serveFile(req, getClass().getResource("/ast-schema.json"), TimeUnit2.DAYS.toMillis(1));
     }
 
     /**

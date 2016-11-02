@@ -31,7 +31,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         banana {
             echo "I HAVE FINISHED"
         }

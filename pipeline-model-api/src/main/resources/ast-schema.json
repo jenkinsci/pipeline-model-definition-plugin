@@ -289,7 +289,7 @@
         }
       ]
     },
-    "postBuild": {
+    "post": {
       "description": "An array of build conditions with blocks of steps to run if those conditions are satisfied at the end of the build while still on the image/node the build ran on",
       "type": "object",
       "properties": {
@@ -317,7 +317,7 @@
           "$ref": "#/definitions/agent"
         },
         "post": {
-          "$ref": "#/definitions/postBuild"
+          "$ref": "#/definitions/post"
         },
         "tools": {
           "$ref": "#/definitions/tools"
@@ -352,8 +352,8 @@
         "stages": {
           "$ref": "#/definitions/stages"
         },
-        "postBuild": {
-          "$ref": "#/definitions/postBuild"
+        "post": {
+          "$ref": "#/definitions/post"
         },
         "environment": {
           "$ref": "#/definitions/environment"

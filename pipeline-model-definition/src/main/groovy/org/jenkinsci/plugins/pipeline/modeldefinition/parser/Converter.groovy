@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule
 import com.github.fge.jsonschema.exceptions.ProcessingException
 import com.github.fge.jsonschema.main.JsonSchema
-import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.github.fge.jsonschema.report.ProcessingReport
 import net.sf.json.JSONObject
 import org.apache.commons.lang.reflect.FieldUtils
@@ -36,6 +35,7 @@ import org.codehaus.groovy.control.CompilationFailedException
 import org.codehaus.groovy.control.CompilationUnit
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.SourceUnit
+import org.jenkinsci.plugins.pipeline.modeldefinition.ASTSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -66,7 +66,7 @@ public class Converter {
     public static ProcessingReport validateJSONAgainstSchema(JSONObject origJson) throws ProcessingException {
         JsonNode jsonNode = jacksonJSONFromJSONObject(origJson);
 
-        JsonSchema schema = getJSONSchema();
+        JsonSchema schema = ASTSchema.getJSONSchema();
 
         return schema.validate(jsonNode)
     }
@@ -82,18 +82,6 @@ public class Converter {
         mapper.registerModule(new JsonOrgModule());
 
         return mapper.valueToTree(input);
-    }
-
-
-    /**
-     * Get the Pipeline Config AST JSON schema.
-     *
-     * @return the schema in {@link JsonSchema} form.
-     * @throws ProcessingException
-     */
-    public static JsonSchema getJSONSchema() throws ProcessingException {
-        final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        return factory.getJsonSchema("resource:/ast-schema.json");
     }
 
     /**

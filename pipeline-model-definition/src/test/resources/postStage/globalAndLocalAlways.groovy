@@ -37,7 +37,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         always {
             echo "Global Always"
         }

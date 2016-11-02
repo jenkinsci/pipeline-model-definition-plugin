@@ -31,7 +31,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         always {
             echo "I AM ALWAYS"
         }

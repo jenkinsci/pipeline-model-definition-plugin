@@ -34,7 +34,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         unstable {
             echo "I AM UNSTABLE"
         }

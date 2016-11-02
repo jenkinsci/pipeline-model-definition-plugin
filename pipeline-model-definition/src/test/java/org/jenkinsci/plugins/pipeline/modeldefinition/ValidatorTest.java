@@ -297,7 +297,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void emptyPostBuild() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyPostBuild");
 
-        assertFailWithError("postBuild can not be empty");
+        assertFailWithError("post can not be empty");
     }
 
     @Test

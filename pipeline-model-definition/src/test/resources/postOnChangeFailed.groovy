@@ -31,7 +31,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         changed {
             echo "I CHANGED"
         }

@@ -127,8 +127,8 @@ class JSONParser {
                 case 'agent':
                     pipelineDef.agent = parseAgent(pipelineJson.get("agent"))
                     break
-                case 'postBuild':
-                    pipelineDef.postBuild = parsePostBuild(pipelineJson.getJSONObject("postBuild"))
+                case 'post':
+                    pipelineDef.postBuild = parsePostBuild(pipelineJson.getJSONObject("post"))
                     break
                 case 'tools':
                     pipelineDef.tools = parseTools(pipelineJson.getJSONArray("tools"))

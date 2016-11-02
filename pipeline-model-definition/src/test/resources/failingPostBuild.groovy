@@ -31,7 +31,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         always {
             error "goodbye"
         }

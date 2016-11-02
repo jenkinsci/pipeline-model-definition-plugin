@@ -131,7 +131,7 @@ public abstract class AbstractModelDefTest {
 
         result.add(new Object[]{"emptyStages", "At /pipeline/stages: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyEnvironment", "At /pipeline/environment: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"emptyPostBuild", "At /pipeline/postBuild/conditions: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"emptyPostBuild", "At /pipeline/post/conditions: Array has 0 entries, requires minimum of 1"});
 
         result.add(new Object[]{"rejectStageInSteps", "Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines"});
         result.add(new Object[]{"rejectParallelMixedInSteps", "Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block"});

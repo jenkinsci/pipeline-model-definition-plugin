@@ -29,7 +29,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     public JSONObject toJSON() {
         JSONObject a = new JSONObject();
         a.put("stages", stages != null ? stages.toJSON() : null);
-        a.put("postBuild", postBuild != null ? postBuild.toJSON() : null);
+        a.put("post", postBuild != null ? postBuild.toJSON() : null);
         a.put("environment", environment != null ? environment.toJSON() : null);
         a.put("agent", agent != null ? agent.toJSON() : null);
         a.put("tools", tools != null ? tools.toJSON() : null);
@@ -276,7 +276,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     public String toString() {
         return "ModelASTPipelineDef{" +
                 "stages=" + stages +
-                ", postBuild=" + postBuild +
+                ", post=" + postBuild +
                 ", environment=" + environment +
                 ", agent=" + agent +
                 ", tools=" + tools +
