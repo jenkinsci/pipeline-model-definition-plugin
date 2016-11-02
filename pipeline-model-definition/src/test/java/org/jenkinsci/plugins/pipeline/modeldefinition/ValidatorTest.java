@@ -382,7 +382,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void unknownAgentType() throws Exception {
         prepRepoWithJenkinsfile("errors", "unknownAgentType");
 
-        assertFailWithError("No agent type specified. Must contain one of [otherField, docker, dockerfileImage, label, any, none]");
+        assertFailWithError("No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]");
     }
 
     @Test

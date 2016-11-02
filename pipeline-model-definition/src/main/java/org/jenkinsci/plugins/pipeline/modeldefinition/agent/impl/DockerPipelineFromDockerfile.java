@@ -28,25 +28,23 @@ import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class DockerPipelineFromDockerfile extends DeclarativeAgent {
     private String label;
-    private String dockerfileImage;
+    private Object dockerfile;
     private String dockerArgs = "";
 
     @DataBoundConstructor
-    public DockerPipelineFromDockerfile(@Nonnull String dockerfileImage) {
-        this.dockerfileImage = dockerfileImage;
+    public DockerPipelineFromDockerfile(@Nonnull Object dockerfile) {
+        this.dockerfile = dockerfile;
     }
 
-    @Whitelisted
-    public @Nullable String getLabel() {
+    public @CheckForNull String getLabel() {
         return label;
     }
 
@@ -55,8 +53,7 @@ public class DockerPipelineFromDockerfile extends DeclarativeAgent {
         this.label = label;
     }
 
-    @Whitelisted
-    public @Nullable String getDockerArgs() {
+    public @CheckForNull String getDockerArgs() {
         return dockerArgs;
     }
 
@@ -65,21 +62,19 @@ public class DockerPipelineFromDockerfile extends DeclarativeAgent {
         this.dockerArgs = dockerArgs;
     }
 
-    @Whitelisted
-    public @Nonnull String getDockerfileImage() {
-        return dockerfileImage;
+    public @Nonnull Object getDockerfile() {
+        return dockerfile;
     }
 
-    @Extension(ordinal = 999) @Symbol("dockerfileImage")
+    public String getDockerfileAsString() {
+        if (dockerfile instanceof String) {
+            return (String)dockerfile;
+        } else {
+            return "Dockerfile";
+        }
+    }
+
+    @Extension(ordinal = 999) @Symbol("dockerfile")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
-        @Override
-        public @Nonnull String getName() {
-            return "dockerfileImage";
-        }
-
-        public @Nonnull String getDeclarativeAgentScriptClass() {
-            return "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.DockerPipelineFromDockerfileScript";
-        }
-
     }
 }
