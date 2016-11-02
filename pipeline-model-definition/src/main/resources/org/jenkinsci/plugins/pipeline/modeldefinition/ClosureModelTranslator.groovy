@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.WrappersToMap
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
@@ -47,12 +48,12 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
     /**
      * Placeholder to make sure 'agent none' works.
      */
-    boolean none = false
+    String none = "none"
 
     /**
      * Placeholder to make sure 'agent any' works.
      */
-    boolean any = true
+    String any = "any"
 
     ClosureModelTranslator(Class clazz, CpsScript s) {
         actualClass = clazz
@@ -138,6 +139,11 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                         def mtl = new MethodsToListTranslator(script, actualType)
                         resolveClosure(argValue, mtl)
                         resultValue = mtl.toListModel(actualType)
+                    }
+                    else if (Utils.assignableFromWrapper(WrappersToMap.class, actualType)) {
+                        def mtl = new WrappersToMapTranslator(script)
+                        resolveClosure(argValue, mtl)
+                        resultValue = mtl.toNestedModel(actualType)
                     }
                     // And lastly, recurse - this must be another container block.
                     else {

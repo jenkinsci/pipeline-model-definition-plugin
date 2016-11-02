@@ -28,6 +28,7 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -378,6 +379,34 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void unknownAgentType() throws Exception {
+        prepRepoWithJenkinsfile("errors", "unknownAgentType");
+
+        assertFailWithError("No agent type specified. Must contain one of [otherField, docker, label, any, none]");
+    }
+
+    @Test
+    public void unknownBareAgentType() throws Exception {
+        prepRepoWithJenkinsfile("errors", "unknownBareAgentType");
+
+        assertFailWithError("Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]");
+    }
+
+    @Test
+    public void agentMissingRequiredParam() throws Exception {
+        prepRepoWithJenkinsfile("errors", "agentMissingRequiredParam");
+
+        assertFailWithError("Missing required parameter for agent type 'otherField': label");
+    }
+
+    @Test
+    public void agentUnknownParamForType() throws Exception {
+        prepRepoWithJenkinsfile("errors", "agentUnknownParamForType");
+
+        assertFailWithError("Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]");
+    }
+
+    @Test
     public void packageShouldNotSkipParsing() throws Exception {
         prepRepoWithJenkinsfile("errors", "packageShouldNotSkipParsing");
 
@@ -389,6 +418,13 @@ public class ValidatorTest extends AbstractModelDefTest {
         prepRepoWithJenkinsfile("errors", "importAndFunctionShouldNotSkipParsing");
 
         assertFailWithError("Missing required section 'agent'");
+    }
+
+    @Test
+    public void invalidWrapperType() throws Exception {
+        prepRepoWithJenkinsfile("errors", "invalidWrapperType");
+
+        assertFailWithError("Invalid wrapper type 'echo'. Valid wrapper types: " + Wrappers.getEligibleSteps());
     }
 
     private void assertFailWithError(final String... errors) throws Exception {

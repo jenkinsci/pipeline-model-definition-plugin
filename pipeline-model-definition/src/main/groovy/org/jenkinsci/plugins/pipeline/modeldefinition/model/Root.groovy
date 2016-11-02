@@ -67,6 +67,9 @@ public class Root implements NestedModel, Serializable {
     Parameters parameters
 
     @Whitelisted
+    Wrappers wrappers
+
+    @Whitelisted
     Root stages(Stages s) {
         this.stages = s
         return this
@@ -91,8 +94,8 @@ public class Root implements NestedModel, Serializable {
     }
 
     @Whitelisted
-    Root agent(Boolean none) {
-        this.agent = new Agent(none)
+    Root agent(String s) {
+        this.agent = new Agent(s)
         return this
     }
 
@@ -123,6 +126,12 @@ public class Root implements NestedModel, Serializable {
     @Whitelisted
     Root parameters(Parameters p) {
         this.parameters = p
+        return this
+    }
+
+    @Whitelisted
+    Root wrappers(Wrappers w) {
+        this.wrappers = w
         return this
     }
 

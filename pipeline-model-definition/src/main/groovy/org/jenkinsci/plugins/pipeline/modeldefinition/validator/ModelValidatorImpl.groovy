@@ -33,6 +33,7 @@ import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
@@ -60,12 +61,15 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
@@ -472,6 +476,36 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
+    public boolean validateElement(@Nonnull ModelASTWrapper wrapper) {
+        boolean valid = true
+
+        if (wrapper.name == null) {
+            // This means that we failed at compilation time so can move on.
+        }
+        // We can't do trigger validation without a Jenkins instance, so move on.
+        else if (!(wrapper.name in Wrappers.getEligibleSteps())) {
+            errorCollector.error(wrapper,
+                "Invalid wrapper type '${wrapper.name}'. Valid wrapper types: ${Wrappers.getEligibleSteps()}")
+            valid = false
+        } else if (wrapper.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
+            && !wrapper.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
+            errorCollector.error(wrapper, "Can't mix named and unnamed wrapper arguments")
+            valid = false
+        } else {
+            valid = validateElement((ModelASTMethodCall)wrapper)
+        }
+        return valid
+    }
+
+    public boolean validateElement(@Nonnull ModelASTWrappers wrappers) {
+        if (wrappers.wrappers.isEmpty()) {
+            errorCollector.error(wrappers, "Cannot have empty wrappers section")
+            return false
+        }
+
+        return true
+    }
+
     private boolean stepTakesClosure(Descriptor d) {
         if (d instanceof StepDescriptor) {
             return ((StepDescriptor)d).takesImplicitBlockArgument()
@@ -544,15 +578,37 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (agent.args instanceof ModelASTSingleArgument) {
             ModelASTSingleArgument singleArg = (ModelASTSingleArgument) agent.args
-
-            if (singleArg.value.getValue() != 'none' && singleArg.value.getValue() != 'any') {
-                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.getValue()}' - must be map of config options or bare none or any.")
+            Map<String,DescribableModel> zeroArgModels = DeclarativeAgentDescriptor.zeroArgModels()
+            if (!zeroArgModels.containsKey(singleArg.value.getValue())) {
+                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.toGroovy()}' - must be map of config options or bare ${zeroArgModels.keySet().sort()}.")
                 valid = false
-            } else if (agent.args instanceof ModelASTNamedArgumentList) {
-                ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList)agent.args
+            }
+        } else if (agent.args instanceof ModelASTNamedArgumentList) {
+            ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList)agent.args
+            List<String> argKeys = namedArgs.arguments.collect { k, v ->
+                k.key
+            }
+
+            Map<String,DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
+
+            List<String> orderedNames = DeclarativeAgentDescriptor.all().collect { it.name }
+            String typeName = orderedNames.find { it in argKeys }
+
+            if (typeName == null) {
+                errorCollector.error(agent, "No agent type specified. Must contain one of ${orderedNames}")
+                valid = false
+            } else {
+                DescribableModel model = possibleModels.get(typeName)
+                model.parameters.findAll { it.required }.each { p ->
+                    if (!argKeys.contains(p.name)) {
+                        errorCollector.error(agent, "Missing required parameter for agent type '${typeName}': ${p.name}")
+                        valid = false
+                    }
+                }
                 namedArgs.arguments.each { k, v ->
-                    if (!(Agent.agentConfigKeys().contains(k.key))) {
-                        errorCollector.error(k, "Invalid config option '${k.key}'. Valid config options are ${Agent.agentConfigKeys()}.")
+                    List<String> validParamNames = model.parameters.collect { it.name }
+                    if (!validParamNames.contains(k.key)) {
+                        errorCollector.error(k, "Invalid config option '${k.key}' for agent type '${typeName}'. Valid config options are ${validParamNames}")
                         valid = false
                     }
                 }

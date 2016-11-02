@@ -1,0 +1,29 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "sh",
+        "arguments":         {
+          "isLiteral": true,
+          "value": "mvn --version"
+        }
+      }]
+    }],
+    "tools": [    {
+      "key": "maven",
+      "value":       {
+        "isLiteral": true,
+        "value": "apache-maven-3.0.1"
+      }
+    }]
+  }],
+  "agent": [  {
+    "key": "label",
+    "value":     {
+      "isLiteral": true,
+      "value": "some-label"
+    }
+  }]
+}}

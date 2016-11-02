@@ -20,7 +20,7 @@ public class ModelASTStep extends ModelASTElement {
     private ModelASTArgumentList args;
 
     public static Map<String, String> blockedStepsBase() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>(3);
+        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
         map.put("stage", "The stage step cannot be used in Declarative Pipelines");
         map.put("properties", "The properties step cannot be used in Declarative Pipelines");
         map.put("parallel", "The parallel step can only be used as the only top-level step in a stage's step block");

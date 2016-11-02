@@ -1,0 +1,47 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments":         {
+          "isLiteral": true,
+          "value": "hello"
+        }
+      }]
+    }]
+  }],
+  "agent":   {
+    "isLiteral": true,
+    "value": "none"
+  },
+  "wrappers": {"wrappers":   [
+    {
+      "name": "timeout",
+      "arguments":       [
+        {
+          "key": "time",
+          "value":           {
+            "isLiteral": true,
+            "value": 5
+          }
+        },
+        {
+          "key": "unit",
+          "value":           {
+            "isLiteral": true,
+            "value": "MINUTES"
+          }
+        }
+      ]
+    },
+    {
+      "name": "retry",
+      "arguments": [      {
+        "isLiteral": true,
+        "value": 3
+      }]
+    }
+  ]}
+}}

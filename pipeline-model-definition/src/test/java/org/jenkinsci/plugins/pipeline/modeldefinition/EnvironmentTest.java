@@ -55,6 +55,16 @@ public class EnvironmentTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void environmentInStage() throws Exception {
+        prepRepoWithJenkinsfile("environmentInStage");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("FOO is BAR", b);
+    }
+
+    @Test
     public void nonLiteralEnvironment() throws Exception {
         prepRepoWithJenkinsfile("nonLiteralEnvironment");
 

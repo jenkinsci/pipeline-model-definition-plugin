@@ -53,6 +53,10 @@ public class Stage implements NestedModel, Serializable {
     @Whitelisted
     StepsBlock when
 
+    Tools tools
+
+    Environment environment
+
     @Whitelisted
     Stage name(String n) {
         this.name = n
@@ -68,6 +72,11 @@ public class Stage implements NestedModel, Serializable {
     @Whitelisted
     Stage agent(Map<String,String> args) {
         this.agent = new Agent(args)
+        return this
+    }
+
+    Stage agent(String s) {
+        this.agent = new Agent(s)
         return this
     }
 
@@ -88,6 +97,29 @@ public class Stage implements NestedModel, Serializable {
         this.when = when
         return this
     }
+
+    Stage tools(Tools tools) {
+        this.tools = tools
+        return this
+    }
+
+    Stage environment(Environment environment) {
+        this.environment = environment
+        return this
+    }
+
+    /**
+     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
+     * suitable for use with the withEnv step.
+     *
+     * @return a list of "key=value" strings.
+     */
+    List<String> getEnvVars() {
+        return environment.collect { k, v ->
+            "${k}=${v}"
+        }
+    }
+
 
     @Override
     @Whitelisted
