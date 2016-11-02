@@ -341,7 +341,7 @@ class ModelParser {
                             stage.environment = parseEnvironment(s)
                             break
                         default:
-                            errorCollector.error(stage, "Unknown stage section '${name}'")
+                            errorCollector.error(stage, "Unknown stage section '${name}'. Starting with version 0.5, steps in a stage must be in a 'steps' block.")
                     }
                 }
             }
