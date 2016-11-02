@@ -45,7 +45,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
@@ -63,7 +62,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
@@ -110,11 +108,6 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTPostStage post) {
         // post stage specific validation
-        true
-    }
-
-    public boolean validateElement(ModelASTNotifications notifications) {
-        // notifications specific validation
         true
     }
 

@@ -27,19 +27,13 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                echo "hello"
+                error "hello"
             }
         }
     }
-    notifications {
-        always {
-            def parallelArg = ["first": { echo "first" },
-                               "second": {echo "second" }]
-            parallel parallelArg
-            echo "I HAVE FINISHED"
-        }
-        success {
-            echo "MOST DEFINITELY FINISHED"
+    postBuild {
+        changed {
+            echo "I CHANGED"
         }
         failure {
             echo "I FAILED"

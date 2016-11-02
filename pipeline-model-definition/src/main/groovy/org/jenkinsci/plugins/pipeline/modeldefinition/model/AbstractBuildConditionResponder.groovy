@@ -31,7 +31,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 
 /**
- * Parent for {@link Notifications} and {@link PostBuild} - containers for condition name/step block pairs.
+ * Parent for {@link PostStage} and {@link PostBuild} - containers for condition name/step block pairs.
  *
  * @author Andrew Bayer
  */

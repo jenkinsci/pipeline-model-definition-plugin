@@ -27,13 +27,19 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                error "hello"
+                echo "hello"
+                script {
+                    currentBuild.result = "UNSTABLE"
+                }
             }
         }
     }
-    notifications {
-        changed {
-            echo "I CHANGED"
+    postBuild {
+        unstable {
+            echo "I AM UNSTABLE"
+        }
+        success {
+            echo "MOST DEFINITELY FINISHED"
         }
         failure {
             echo "I FAILED"

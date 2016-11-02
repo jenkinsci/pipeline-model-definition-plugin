@@ -37,7 +37,7 @@ pipeline {
             }
         }
     }
-    notifications {
+    postBuild {
         always {
             echo "Global Always"
         }

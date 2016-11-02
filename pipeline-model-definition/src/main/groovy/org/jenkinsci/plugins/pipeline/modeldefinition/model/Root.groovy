@@ -46,9 +46,6 @@ public class Root implements NestedModel, Serializable {
     Stages stages
 
     @Whitelisted
-    Notifications notifications
-
-    @Whitelisted
     PostBuild postBuild
 
     @Whitelisted
@@ -72,12 +69,6 @@ public class Root implements NestedModel, Serializable {
     @Whitelisted
     Root stages(Stages s) {
         this.stages = s
-        return this
-    }
-
-    @Whitelisted
-    Root notifications(Notifications n) {
-        this.notifications = n
         return this
     }
 
@@ -149,17 +140,6 @@ public class Root implements NestedModel, Serializable {
     }
 
     /**
-     * Returns a list of notification closures whose conditions have been satisfied and should be run.
-     *
-     * @param runWrapperObj The {@link RunWrapper} for the build.
-     * @return a list of closures whose conditions have been satisfied.
-     */
-    @Whitelisted
-    List<Closure> satisfiedNotifications(Object runWrapperObj) {
-        return satisfiedConditionsForField(notifications, runWrapperObj)
-    }
-
-    /**
      * Returns a list of post-build closures whose conditions have been satisfied and should be run.
      *
      * @param runWrapperObj The {@link RunWrapper} for the build.
@@ -181,7 +161,7 @@ public class Root implements NestedModel, Serializable {
     /**
      * Gets the list of satisfied build condition closures for the given responder.
      *
-     * @param r an {@link AbstractBuildConditionResponder}, such as {@link Notifications} or {@link PostBuild}.
+     * @param r an {@link AbstractBuildConditionResponder}, such as {@link PostStage} or {@link PostBuild}.
      * @param runWrapperObj The {@link RunWrapper} for the build.
      * @return A list of closures from the responder which have had their conditions satisfied.
      */

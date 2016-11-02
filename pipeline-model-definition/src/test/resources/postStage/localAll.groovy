@@ -61,7 +61,7 @@ pipeline {
             }
         }
     }
-    notifications {
+    postBuild {
         always {
             echo "And AAAAIIIAAAIAI"
         }

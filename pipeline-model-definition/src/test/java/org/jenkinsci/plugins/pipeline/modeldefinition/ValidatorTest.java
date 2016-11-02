@@ -72,16 +72,6 @@ public class ValidatorTest extends AbstractModelDefTest {
         assertFailWithError("Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block");
     }
 
-    @Ignore("I still want to block parallel, but I'm not sure it's worth it, ignoring for now.")
-    @Test
-    public void rejectParallelInNotifications() throws Exception {
-        prepRepoWithJenkinsfile("errors", "rejectParallelInNotifications");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("Illegal Pipeline steps used in inline Pipeline - parallel", b);
-    }
-
     @Test
     public void emptyStages() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyStages");
@@ -304,24 +294,10 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void emptyNotification() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyNotifications");
-
-        assertFailWithError("notifications can not be empty");
-    }
-
-    @Test
     public void emptyPostBuild() throws Exception {
         prepRepoWithJenkinsfile("errors", "emptyPostBuild");
 
         assertFailWithError("postBuild can not be empty");
-    }
-
-    @Test
-    public void duplicateNotificationConditions() throws Exception {
-        prepRepoWithJenkinsfile("errors", "duplicateNotificationConditions");
-
-        assertFailWithError("Duplicate build condition name: 'always'");
     }
 
     @Test
@@ -425,6 +401,13 @@ public class ValidatorTest extends AbstractModelDefTest {
         prepRepoWithJenkinsfile("errors", "invalidWrapperType");
 
         assertFailWithError("Invalid wrapper type 'echo'. Valid wrapper types: " + Wrappers.getEligibleSteps());
+    }
+
+    @Test
+    public void notificationsSectionRemoved() throws Exception {
+        prepRepoWithJenkinsfile("errors", "notificationsSectionRemoved");
+
+        assertFailWithError("The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.");
     }
 
     private void assertFailWithError(final String... errors) throws Exception {

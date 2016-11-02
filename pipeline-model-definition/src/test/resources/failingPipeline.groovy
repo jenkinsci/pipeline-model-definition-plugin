@@ -36,11 +36,6 @@ pipeline {
             echo "goodbye"
         }
     }
-    notifications {
-        always {
-            echo "farewell"
-        }
-    }
 }
 
 

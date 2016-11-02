@@ -55,7 +55,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
@@ -130,9 +129,6 @@ class JSONParser {
                     break
                 case 'postBuild':
                     pipelineDef.postBuild = parsePostBuild(pipelineJson.getJSONObject("postBuild"))
-                    break
-                case 'notifications':
-                    pipelineDef.notifications = parseNotifications(pipelineJson.getJSONObject("notifications"))
                     break
                 case 'tools':
                     pipelineDef.tools = parseTools(pipelineJson.getJSONArray("tools"))
@@ -437,12 +433,6 @@ class JSONParser {
         condition.branch = parseBranch(j.getJSONObject("branch"))
 
         return condition
-    }
-
-    public @CheckForNull ModelASTNotifications parseNotifications(JSONObject j) {
-        ModelASTNotifications notifications = new ModelASTNotifications(j)
-
-        return parseBuildConditionResponder(j, notifications)
     }
 
     public @CheckForNull ModelASTPostBuild parsePostBuild(JSONObject j) {
