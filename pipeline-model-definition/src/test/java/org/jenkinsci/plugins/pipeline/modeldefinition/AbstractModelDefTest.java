@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import hudson.Launcher;
 import hudson.model.ParameterDefinition;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
@@ -41,9 +42,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
+import org.hamcrest.Matcher;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
@@ -62,14 +65,18 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.text.IsEqualIgnoringWhiteSpace.equalToIgnoringWhiteSpace;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -408,6 +415,7 @@ public abstract class AbstractModelDefTest {
         private WorkflowRun run;
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
+        private List<Matcher<Run>> buildMatchers;
 
         private ExpectationsBuilder(String resourceParent, String resource) {
             this(Result.SUCCESS, resourceParent, resource);
@@ -417,6 +425,7 @@ public abstract class AbstractModelDefTest {
             this.result = result;
             this.resourceParent = resourceParent;
             this.resource = resource;
+            buildMatchers = new ArrayList<>();
         }
 
         public ExpectationsBuilder runFromRepo(boolean mode) {
@@ -447,6 +456,27 @@ public abstract class AbstractModelDefTest {
             return this;
         }
 
+        public ExpectationsBuilder buildMatches(Matcher<Run>... matchers) {
+            buildMatchers.addAll(Arrays.asList(matchers));
+            return this;
+        }
+
+        public ExpectationsBuilder archives(Matcher<String> fileName, Matcher<String> content, Charset encoding) {
+            return buildMatches(HasArchived.hasArchivedString(fileName, content, encoding));
+        }
+
+        public ExpectationsBuilder archives(Matcher<String> fileName, Matcher<String> content) {
+            return buildMatches(HasArchived.hasArchivedString(fileName, content));
+        }
+
+        public ExpectationsBuilder archives(String fileName, String content) {
+            return buildMatches(HasArchived.hasArchivedString(equalTo(fileName), equalToIgnoringWhiteSpace(content)));
+        }
+
+        public ExpectationsBuilder archives(String fileName, Matcher<String> content) {
+            return buildMatches(HasArchived.hasArchivedString(equalTo(fileName), content));
+        }
+
         public void go() throws Exception {
             String resourceFullName = resource;
             if (resourceParent != null) {
@@ -475,6 +505,9 @@ public abstract class AbstractModelDefTest {
                     j.assertLogNotContains(logNotContain, run);
                 }
             }
+            for (Matcher<Run> matcher : buildMatchers) {
+                assertThat(run, matcher);
+            }
         }
 
         public ExpectationsBuilder resetForNewRun(Result result) {
@@ -482,6 +515,7 @@ public abstract class AbstractModelDefTest {
             resource = null;
             logContains = null;
             logNotContains = null;
+            buildMatchers = new ArrayList<>();
             return this;
         }
     }

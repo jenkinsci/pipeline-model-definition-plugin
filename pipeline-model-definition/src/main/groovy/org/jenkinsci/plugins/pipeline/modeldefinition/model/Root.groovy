@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
@@ -143,9 +143,20 @@ public class Root implements NestedModel, Serializable {
      */
     @Whitelisted
     List<String> getEnvVars() {
-        return environment.collect { k, v ->
+        return environment.findAll{k, v -> !(v instanceof CredentialWrapper)}.collect { k, v ->
             "${k}=${v}"
         }
+    }
+
+    @Whitelisted
+    Map<String, CredentialWrapper> getEnvCredentials() {
+        Map<String, CredentialWrapper> m = [:]
+        environment.each {k, v ->
+            if (v instanceof  CredentialWrapper) {
+                m["${k}"] = v;
+            }
+        }
+        return m
     }
 
     /**
