@@ -62,7 +62,7 @@ public class ASTSchema implements RootAction {
 
     @SuppressWarnings("unused")
     public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        rsp.serveFile(req, getClass().getResource("/ast-schema.json"), TimeUnit2.DAYS.toMillis(1));
+        rsp.serveFile(req, getClass().getResource("/ast-schema.json"));
     }
 
     /**
