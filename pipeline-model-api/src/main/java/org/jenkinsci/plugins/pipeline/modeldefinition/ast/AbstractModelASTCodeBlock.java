@@ -25,29 +25,38 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 /**
- * Represents a block for when/if a {@link ModelASTStage} will be executed or not.
+ * Represents the special step which are executed without validation against the declarative subset.
+ * @see ModelASTScriptBlock
+ * @see ModelASTWhen
  */
-public class ModelASTWhen extends AbstractModelASTCodeBlock {
-    public ModelASTWhen(Object sourceLocation) {
-        super(sourceLocation, "when");
+public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
+
+    protected AbstractModelASTCodeBlock(Object sourceLocation, String name) {
+        super(sourceLocation);
+        this.setName(name);
     }
 
     @Override
-    public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        if (getArgs() != null) {
-            o.accumulate("arguments", getArgs().toJSON());
+    public String toGroovy() {
+        StringBuilder result = new StringBuilder(getName()).append(" {\n");
+        if (getArgs() != null
+                && getArgs() instanceof ModelASTSingleArgument
+                && ((ModelASTSingleArgument) getArgs()).getValue()!=null
+                && ((ModelASTSingleArgument) getArgs()).getValue().isLiteral()) {
+            result.append(((ModelASTSingleArgument) getArgs()).getValue().getValue());
+        } else if (getArgs() != null) {
+            result.append(getArgs().toGroovy());
         }
-        return o;
+        result.append("\n}\n");
+        return result.toString();
     }
 
     @Override
-    public void validate(ModelValidator validator) {
-        super.validate(validator);
-        validator.validateElement(this);
+    public String toString() {
+        return getClass().getSimpleName() + "{" +
+                "name='" + getName() + '\'' +
+                ", args=" + getArgs() +
+                "}";
     }
 }

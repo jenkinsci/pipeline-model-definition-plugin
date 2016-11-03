@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.AbstractModelASTCodeBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
@@ -641,17 +642,17 @@ class ModelParser {
     }
 
     public ModelASTWhen parseWhen(Statement st) {
-        return parseScriptBlockInternal(st, new ModelASTWhen(st), "When")
+        return parseCodeBlockInternal(st, new ModelASTWhen(st), "When")
     }
 
     /**
      * Parses a statement into a {@link ModelASTScriptBlock}
      */
     public ModelASTScriptBlock parseScriptBlock(Statement st) {
-        return parseScriptBlockInternal(st, new ModelASTScriptBlock(st), "Script")
+        return parseCodeBlockInternal(st, new ModelASTScriptBlock(st), "Script")
     }
 
-    private <T extends ModelASTScriptBlock> T parseScriptBlockInternal(Statement st, T scriptBlock, String pronoun) {
+    private <T extends AbstractModelASTCodeBlock> T parseCodeBlockInternal(Statement st, T scriptBlock, String pronoun) {
         // TODO: Probably error out for cases with parameters?
         def bs = matchBlockStatement(st);
         if (bs != null) {
