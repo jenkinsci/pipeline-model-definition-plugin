@@ -47,7 +47,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
         return labelScript.run {
             if (!Utils.withinAStage()) {
                 script.stage(StageTagsMetadata.agentSetup()) {
-                    Utils.markSyntheticStage(StageTagsMetadata.toolInstall(), StageTagsMetadata.SYNTHETIC_PRE)
+                    Utils.markSyntheticStage(StageTagsMetadata.agentSetup(), StageTagsMetadata.SYNTHETIC_PRE)
                     script.getProperty("docker").image(declarativeAgent.docker).pull()
                 }
             }
