@@ -160,7 +160,7 @@ public abstract class AbstractModelDefTest {
 
         result.add(new Object[]{"unknownAgentType", "No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]"});
         result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [retry, script, timeout, withEnv]"});
-        result.add(new Object[]{"unknownAgentType", "No agent type specified. Must contain one of [otherField, docker, label, any, none]"});
+
         result.add(new Object[]{"unknownBareAgentType", "Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]."});
         result.add(new Object[]{"agentMissingRequiredParam", "Missing required parameter for agent type 'otherField': label"});
         result.add(new Object[]{"agentUnknownParamForType", "Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]"});
