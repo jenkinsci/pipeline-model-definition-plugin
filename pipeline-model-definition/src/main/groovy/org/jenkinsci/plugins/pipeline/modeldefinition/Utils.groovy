@@ -207,7 +207,7 @@ public class Utils {
 
     /**
      * Returns true if we're currently nested under a stage.
-     * 
+     *
      * @return true if we're in a stage and false otherwise
      */
     static boolean withinAStage() {
@@ -233,13 +233,7 @@ public class Utils {
         }
     }
 
-    /**
-     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
-     *
-     * @param stageName
-     * @param context
-     */
-    static void markSyntheticStage(String stageName, String context) {
+    private static void markStageWithTag(String stageName, String tagName, String tagValue) {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
@@ -247,16 +241,33 @@ public class Utils {
 
         FlowNode currentNode = scanner.findFirstMatch(execution, isStageWithOptionalName(stageName))
 
-
         TagsAction tagsAction = currentNode.getAction(TagsAction.class)
         if (tagsAction == null) {
             tagsAction = new TagsAction()
-            tagsAction.addTag(SyntheticStage.SYNTHETIC_STAGE_TAG, context)
+            tagsAction.addTag(tagName, tagValue)
             currentNode.addAction(tagsAction)
         } else {
-            tagsAction.addTag(SyntheticStage.SYNTHETIC_STAGE_TAG, context)
+            tagsAction.addTag(tagName, tagValue)
             currentNode.save()
         }
+    }
+
+    /**
+     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
+     *
+     * @param stageName
+     * @param context
+     */
+    static void markSyntheticStage(String stageName, String context) {
+        markStageWithTag(stageName, StageTagsMetadata.SYNTHETIC_STAGE_TAG, context)
+    }
+
+    static void markStageSkippedForFailure(String stageName) {
+        markStageWithTag(stageName, StageTagsMetadata.STAGE_STATUS_TAG, StageTagsMetadata.STAGE_STATUS_SKIPPED_FOR_FAILURE)
+    }
+
+    static void markStageSkippedForConditional(String stageName) {
+        markStageWithTag(stageName, StageTagsMetadata.STAGE_STATUS_TAG, StageTagsMetadata.STAGE_STATUS_SKIPPED_FOR_CONDITIONAL)
     }
 
     /**

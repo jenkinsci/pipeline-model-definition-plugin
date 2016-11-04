@@ -27,10 +27,7 @@ import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
@@ -89,8 +86,8 @@ public class ModelInterpreter implements Serializable {
                         toolsBlock(root.agent, root.tools) {
                             // If we have an agent and script.scm isn't null, run checkout scm
                             if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                script.stage(SyntheticStage.checkout()) {
-                                    Utils.markSyntheticStage(SyntheticStage.checkout(), SyntheticStage.SYNTHETIC_PRE)
+                                script.stage(StageTagsMetadata.checkout()) {
+                                    Utils.markSyntheticStage(StageTagsMetadata.checkout(), StageTagsMetadata.SYNTHETIC_PRE)
                                     script.checkout script.scm
                                 }
                             }
@@ -136,6 +133,8 @@ public class ModelInterpreter implements Serializable {
                                                     }
                                                 }.call()
                                             }.call()
+                                        } else {
+                                            Utils.markStageSkippedForFailure(thisStage.name)
                                         }
                                     }.call()
                                 }
@@ -145,8 +144,8 @@ public class ModelInterpreter implements Serializable {
                                 catchRequiredContextForNode(root.agent) {
                                     List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
                                     if (postBuildClosures.size() > 0) {
-                                        script.stage(SyntheticStage.postBuild()) {
-                                            Utils.markSyntheticStage(SyntheticStage.postBuild(), SyntheticStage.SYNTHETIC_POST)
+                                        script.stage(StageTagsMetadata.postBuild()) {
+                                            Utils.markSyntheticStage(StageTagsMetadata.postBuild(), StageTagsMetadata.SYNTHETIC_POST)
                                             for (int i = 0; i < postBuildClosures.size(); i++) {
                                                 setUpDelegate(postBuildClosures.get(i)).call()
                                             }
@@ -240,8 +239,8 @@ public class ModelInterpreter implements Serializable {
             def toolEnv = []
             def toolsList = tools.getToolEntries()
             if (!Utils.withinAStage()) {
-                script.stage(SyntheticStage.toolInstall()) {
-                    Utils.markSyntheticStage(SyntheticStage.toolInstall(), SyntheticStage.SYNTHETIC_PRE)
+                script.stage(StageTagsMetadata.toolInstall()) {
+                    Utils.markSyntheticStage(StageTagsMetadata.toolInstall(), StageTagsMetadata.SYNTHETIC_PRE)
                     toolEnv = actualToolsInstall(toolsList)
                 }
             } else {

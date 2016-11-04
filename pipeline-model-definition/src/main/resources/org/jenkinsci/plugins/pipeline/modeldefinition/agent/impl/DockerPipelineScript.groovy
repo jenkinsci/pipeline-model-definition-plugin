@@ -25,7 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
@@ -46,8 +46,8 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
         LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
         return labelScript.run {
             if (!Utils.withinAStage()) {
-                script.stage(SyntheticStage.agentSetup()) {
-                    Utils.markSyntheticStage(SyntheticStage.toolInstall(), SyntheticStage.SYNTHETIC_PRE)
+                script.stage(StageTagsMetadata.agentSetup()) {
+                    Utils.markSyntheticStage(StageTagsMetadata.toolInstall(), StageTagsMetadata.SYNTHETIC_PRE)
                     script.getProperty("docker").image(declarativeAgent.docker).pull()
                 }
             }

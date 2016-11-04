@@ -26,7 +26,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
 
-public class SyntheticStage {
+public class StageTagsMetadata {
+    public static final String STAGE_STATUS_TAG = "DECLARATIVE_STAGE_STATUS"
+
+    public static final String STAGE_STATUS_SKIPPED_FOR_FAILURE = "SKIPPED_FOR_FAILURE"
+
+    public static final String STAGE_STATUS_SKIPPED_FOR_CONDITIONAL = "SKIPPED_FOR_CONDITIONAL"
+
     public static final String SYNTHETIC_STAGE_TAG = "SYNTHETIC_STAGE"
 
     public static final String SYNTHETIC_PRE = "PRE"
