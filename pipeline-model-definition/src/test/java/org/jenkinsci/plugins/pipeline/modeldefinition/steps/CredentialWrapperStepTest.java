@@ -25,11 +25,14 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.util.Secret;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -57,5 +60,50 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .logContains("FOO_USR is *")
                 .archives("combined/foo.txt", allOf(containsString(username), containsString(password)))
                 .archives("foo_usr.txt", username).archives("foo_psw.txt", password).go();
+    }
+
+    @Test
+    public void mixedEnv() throws Exception {
+        final String cred1Id = "cred1";
+        final String cred2Id = "cred2";
+
+        final String cred1Secret = "Some secret text for 1";
+        final String cred2U = "bobby";
+        final String cred2P = "supersecretpassword+mydogsname";
+
+        StringCredentialsImpl sc = new StringCredentialsImpl(CredentialsScope.GLOBAL, cred1Id, "test", Secret.fromString(cred1Secret));
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), sc);
+        UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, cred2Id, "sample", cred2U, cred2P);
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), c);
+
+        expect("credentials", "mixedEnv").runFromRepo(false)
+                .logContains("SOME_VAR is SOME VALUE",
+                             "INBETWEEN is Something in between",
+                             "OTHER_VAR is OTHER VALUE")
+                .archives("cred1.txt", cred1Secret)
+                .archives("cred2.txt", cred2U + ":" + cred2P).go();
+    }
+
+    @Test
+    public void mixedEnvInFolder() throws Exception {
+        Folder folder = j.jenkins.createProject(Folder.class, "testFolder");
+        final String cred1Id = "cred1";
+        final String cred2Id = "cred2";
+
+        final String cred1Secret = "Some secret text for 1";
+        final String cred2U = "bobby";
+        final String cred2P = "supersecretpassword+mydogsname";
+
+        StringCredentialsImpl sc = new StringCredentialsImpl(CredentialsScope.GLOBAL, cred1Id, "test", Secret.fromString(cred1Secret));
+        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), sc);
+        UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, cred2Id, "sample", cred2U, cred2P);
+        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), c);
+
+        expect("credentials", "mixedEnv").runFromRepo(false).inFolder(folder)
+                .logContains("SOME_VAR is SOME VALUE",
+                             "INBETWEEN is Something in between",
+                             "OTHER_VAR is OTHER VALUE")
+                .archives("cred1.txt", cred1Secret)
+                .archives("cred2.txt", cred2U + ":" + cred2P).go();
     }
 }
