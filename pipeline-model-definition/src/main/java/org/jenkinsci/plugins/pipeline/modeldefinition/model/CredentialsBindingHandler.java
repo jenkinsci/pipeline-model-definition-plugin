@@ -112,7 +112,7 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
         if (cred instanceof StandardCredentials) {
             CredentialsBindingHandler handler = forCredential((StandardCredentials)cred);
             if (handler == null) {
-                throw new CredentialNotFoundException(String.format("No suitable binding handler could be found for type %s." +
+                throw new CredentialNotFoundException(String.format("No suitable binding handler could be found for type %s. " +
                                                                             "Supported types are %s.",
                                                                     cred.getClass().getName(),
                                                                     StringUtils.join(supportedTypeNames(), ',')));

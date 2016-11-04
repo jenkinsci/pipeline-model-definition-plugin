@@ -26,84 +26,98 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
+import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.Result;
 import hudson.util.Secret;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
 
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.Assert.*;
 
 /**
  * Tests {@link CredentialWrapperStep}.
  */
 public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
+    private static final String usernamePasswordUsername = "bobby";
+    private static final String usernamePasswordPassword = "s3cr37";
+    private static final String mixedEnvCred1Id = "cred1";
+    private static final String mixedEnvCred2Id = "cred2";
+    private static final String mixedEnvCred1Secret = "Some secret text for 1";
+    private static final String mixedEnvCred2U = "bobby";
+    private static final String mixedEnvCred2P = "supersecretpassword+mydogsname";
+    private static Folder folder;
+    private static final String mixedEnvInFolderCred1Secret = "Some secret text for 1 folder";
+    private static final String mixedEnvInFoldercred2U = "bobby-in-folder";
+    private static final String mixedEnvInFolderCred2P = "folder-supersecretpassword+mydogsname";
+
+    @BeforeClass
+    public static void setup() throws IOException {
+        String usernamePasswordCredentialsId = "FOOcredentials";
+        UsernamePasswordCredentialsImpl usernamePassword = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, usernamePasswordCredentialsId, "sample", usernamePasswordUsername, usernamePasswordPassword);
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), usernamePassword);
+
+        StringCredentialsImpl mixedEnvCred1 = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred1Id, "test", Secret.fromString(mixedEnvCred1Secret));
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), mixedEnvCred1);
+        UsernamePasswordCredentialsImpl mixedEnvCred2 = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvCred2U, mixedEnvCred2P);
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), mixedEnvCred2);
+
+        folder = j.jenkins.createProject(Folder.class, "testFolder");
+        StringCredentialsImpl sc = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred1Id, "test", Secret.fromString(mixedEnvInFolderCred1Secret));
+        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), sc);
+        UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvInFoldercred2U, mixedEnvInFolderCred2P);
+        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), c);
+
+        SSHUserPrivateKey k = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "sshCred1", "bobby", new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource("abc123"), null, "sample");
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), k);
+    }
+
 
     @Test
     public void usernamePassword() throws Exception {
-        final String credentialsId = "FOOcredentials";
-        final String username = "bobby";
-        final String password = "s3cr37";
-        UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, credentialsId, "sample", username, password);
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), c);
-
         expect("credentials", "usernamePassword").runFromRepo(false)
-                .logNotContains(password, "FOO_USR is " + username)
+                .logNotContains(usernamePasswordPassword, "FOO_USR is " + usernamePasswordUsername)
                 .logContains("FOO_USR is *")
-                .archives("combined/foo.txt", allOf(containsString(username), containsString(password)))
-                .archives("foo_usr.txt", username).archives("foo_psw.txt", password).go();
+                .archives("combined/foo.txt", allOf(containsString(usernamePasswordUsername), containsString(usernamePasswordPassword)))
+                .archives("foo_usr.txt", usernamePasswordUsername).archives("foo_psw.txt", usernamePasswordPassword).go();
     }
 
     @Test
     public void mixedEnv() throws Exception {
-        final String cred1Id = "cred1";
-        final String cred2Id = "cred2";
-
-        final String cred1Secret = "Some secret text for 1";
-        final String cred2U = "bobby";
-        final String cred2P = "supersecretpassword+mydogsname";
-
-        StringCredentialsImpl sc = new StringCredentialsImpl(CredentialsScope.GLOBAL, cred1Id, "test", Secret.fromString(cred1Secret));
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), sc);
-        UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, cred2Id, "sample", cred2U, cred2P);
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), c);
-
         expect("credentials", "mixedEnv").runFromRepo(false)
                 .logContains("SOME_VAR is SOME VALUE",
                              "INBETWEEN is Something in between",
                              "OTHER_VAR is OTHER VALUE")
-                .archives("cred1.txt", cred1Secret)
-                .archives("cred2.txt", cred2U + ":" + cred2P).go();
+                .archives("cred1.txt", mixedEnvCred1Secret)
+                .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
     }
 
     @Test
     public void mixedEnvInFolder() throws Exception {
-        Folder folder = j.jenkins.createProject(Folder.class, "testFolder");
-        final String cred1Id = "cred1";
-        final String cred2Id = "cred2";
-
-        final String cred1Secret = "Some secret text for 1";
-        final String cred2U = "bobby";
-        final String cred2P = "supersecretpassword+mydogsname";
-
-        StringCredentialsImpl sc = new StringCredentialsImpl(CredentialsScope.GLOBAL, cred1Id, "test", Secret.fromString(cred1Secret));
-        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), sc);
-        UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, cred2Id, "sample", cred2U, cred2P);
-        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), c);
 
         expect("credentials", "mixedEnv").runFromRepo(false).inFolder(folder)
                 .logContains("SOME_VAR is SOME VALUE",
                              "INBETWEEN is Something in between",
                              "OTHER_VAR is OTHER VALUE")
-                .archives("cred1.txt", cred1Secret)
-                .archives("cred2.txt", cred2U + ":" + cred2P).go();
+                .archives("cred1.txt", mixedEnvInFolderCred1Secret)
+                .archives("cred2.txt", mixedEnvInFoldercred2U + ":" + mixedEnvInFolderCred2P).go();
+    }
+
+    @Test
+    public void noBindingAvailable() throws Exception {
+        expect(Result.FAILURE, "credentials", "noBinding").runFromRepo(false)
+                .logNotContains("Hello")
+                .logContains("No suitable binding handler could be found for type com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey")
+                .go();
     }
 }
