@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.google.common.base.Predicate;
 import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
@@ -36,11 +37,16 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -295,4 +301,69 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("running inside closure2", b);
 
     }
+
+    @Test
+    public void syntheticStages() throws Exception {
+        prepRepoWithJenkinsfile("syntheticStages");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("[Pipeline] { (Tool Install)", b);
+        j.assertLogContains("[Pipeline] { (Checkout SCM)", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("I AM A POST-BUILD", b);
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.toolInstall(), SyntheticStage.SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.checkout(), SyntheticStage.SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.postBuild(), SyntheticStage.SYNTHETIC_POST)));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.agentSetup(), SyntheticStage.SYNTHETIC_PRE)));
+    }
+
+    @Test
+    public void noToolSyntheticStage() throws Exception {
+        prepRepoWithJenkinsfile("noToolSyntheticStage");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("[Pipeline] { (Checkout SCM)", b);
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("hello", b);
+        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("I AM A POST-BUILD", b);
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.toolInstall(), SyntheticStage.SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.checkout(), SyntheticStage.SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.postBuild(), SyntheticStage.SYNTHETIC_POST)));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStage.agentSetup(), SyntheticStage.SYNTHETIC_PRE)));
+    }
+
+    private Predicate<FlowNode> syntheticStagePredicate(final String stageName,
+                                                        final String context) {
+        return new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(FlowNode input) {
+                return input.getDisplayName().equals(stageName) &&
+                        input.getAction(TagsAction.class) != null &&
+                        input.getAction(TagsAction.class).getTagValue(SyntheticStage.SYNTHETIC_STAGE_TAG) != null &&
+                        input.getAction(TagsAction.class).getTagValue(SyntheticStage.SYNTHETIC_STAGE_TAG).equals(context);
+            }
+        };
+    }
+
 }

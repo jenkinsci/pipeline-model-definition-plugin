@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache;
@@ -40,7 +41,13 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.workflow.actions.StageAction
+import org.jenkinsci.plugins.workflow.actions.TagsAction
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import java.lang.reflect.ParameterizedType
@@ -196,6 +203,42 @@ public class Utils {
         stages.removeSourceLocation()
 
         r.addAction(new ExecutionModelAction(stages))
+    }
+
+    static boolean withinAStage() {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        FlowNode stageNode = scanner.findFirstMatch(execution, new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(FlowNode input) {
+                return input.getAction(StageAction.class) != null
+            }
+        })
+
+        return stageNode == null
+    }
+
+    /**
+     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
+     *
+     * @param stageName
+     * @param context
+     */
+    static void markSyntheticStage(String stageName, String context) {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        FlowNode currentNode = execution.currentHeads.find { n ->
+            n?.displayName?.equals(stageName)
+        }
+
+        if (currentNode.getAction(TagsAction.class) == null) {
+            currentNode.actions.add(new TagsAction())
+        }
+        currentNode.getAction(TagsAction.class).addTag(SyntheticStage.SYNTHETIC_STAGE_TAG, context)
     }
 
     /**

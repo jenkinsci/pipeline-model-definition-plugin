@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>0.6-SNAPSHOT</version>
+    <version>0.6-synthetic-stage-SNAPSHOT</version> <!-- Revert back to 0.6-SNAPSHOT after merge -->
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
@@ -65,6 +65,11 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
       <version>2.18</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-api</artifactId>
+      <version>2.6-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
