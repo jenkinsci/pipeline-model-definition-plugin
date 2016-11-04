@@ -32,7 +32,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
-import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
@@ -40,15 +39,15 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
-import org.jenkinsci.plugins.workflow.actions.StageAction
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -214,11 +213,13 @@ public class Utils {
         FlowNode stageNode = scanner.findFirstMatch(execution, new Predicate<FlowNode>() {
             @Override
             public boolean apply(FlowNode input) {
-                return input.getAction(StageAction.class) != null
+                return input != null &&
+                    input instanceof StepStartNode &&
+                    ((StepStartNode)input).descriptor instanceof StageStep.DescriptorImpl
             }
         })
 
-        return stageNode == null
+        return stageNode != null
     }
 
     /**
