@@ -48,15 +48,15 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
             if (!Utils.withinAStage()) {
                 script.stage(StageTagsMetadata.agentSetup()) {
                     Utils.markSyntheticStage(StageTagsMetadata.agentSetup(), StageTagsMetadata.SYNTHETIC_PRE)
-                    buildImage().call()
+                    buildImage(body).call()
                 }
             } else {
-                buildImage().call()
+                buildImage(body).call()
             }
         }
     }
 
-    private Closure buildImage() {
+    private Closure buildImage(Closure body) {
         return {
             script.checkout script.scm
             try {
