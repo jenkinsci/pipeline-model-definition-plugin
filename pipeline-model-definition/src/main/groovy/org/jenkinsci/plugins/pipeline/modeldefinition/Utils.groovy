@@ -45,10 +45,11 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner
+import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
+import javax.annotation.Nullable
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit;
@@ -204,22 +205,32 @@ public class Utils {
         r.addAction(new ExecutionModelAction(stages))
     }
 
+    /**
+     * Returns true if we're currently nested under a stage.
+     * 
+     * @return true if we're in a stage and false otherwise
+     */
     static boolean withinAStage() {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
-        DepthFirstScanner scanner = new DepthFirstScanner();
+        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
 
-        FlowNode stageNode = scanner.findFirstMatch(execution, new Predicate<FlowNode>() {
-            @Override
-            public boolean apply(FlowNode input) {
-                return input != null &&
-                    input instanceof StepStartNode &&
-                    ((StepStartNode)input).descriptor instanceof StageStep.DescriptorImpl
-            }
-        })
+        FlowNode stageNode = scanner.findFirstMatch(execution, isStageWithOptionalName())
 
         return stageNode != null
+    }
+
+    private static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input != null &&
+                    input instanceof StepStartNode &&
+                    ((StepStartNode)input).descriptor instanceof StageStep.DescriptorImpl &&
+                    (stageName == null || input.displayName?.equals(stageName))
+            }
+        }
     }
 
     /**
@@ -232,14 +243,20 @@ public class Utils {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
-        FlowNode currentNode = execution.currentHeads.find { n ->
-            n?.displayName?.equals(stageName)
-        }
+        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
 
-        if (currentNode.getAction(TagsAction.class) == null) {
-            currentNode.actions.add(new TagsAction())
+        FlowNode currentNode = scanner.findFirstMatch(execution, isStageWithOptionalName(stageName))
+
+
+        TagsAction tagsAction = currentNode.getAction(TagsAction.class)
+        if (tagsAction == null) {
+            tagsAction = new TagsAction()
+            tagsAction.addTag(SyntheticStage.SYNTHETIC_STAGE_TAG, context)
+            currentNode.addAction(tagsAction)
+        } else {
+            tagsAction.addTag(SyntheticStage.SYNTHETIC_STAGE_TAG, context)
+            currentNode.save()
         }
-        currentNode.getAction(TagsAction.class).addTag(SyntheticStage.SYNTHETIC_STAGE_TAG, context)
     }
 
     /**
