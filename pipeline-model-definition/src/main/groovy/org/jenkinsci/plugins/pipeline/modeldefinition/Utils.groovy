@@ -32,6 +32,7 @@ import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
 import hudson.triggers.TriggerDescriptor
+import org.apache.commons.codec.digest.DigestUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
@@ -196,6 +197,11 @@ public class Utils {
         stages.removeSourceLocation()
 
         r.addAction(new ExecutionModelAction(stages))
+    }
+
+    @Whitelisted
+    public static String stringToSHA1(String s) {
+        return DigestUtils.sha1Hex(s)
     }
 
     /**
