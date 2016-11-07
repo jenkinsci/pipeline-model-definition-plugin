@@ -32,9 +32,6 @@ import groovy.transform.ToString
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
-import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 import javax.annotation.Nonnull
 
@@ -72,7 +69,6 @@ public class JobProperties implements Serializable, MethodsToList<JobProperty> {
      *
      * @return A map of valid property type keys to their actual type IDs.
      */
-    @Whitelisted
     public static Map<String,String> getAllowedPropertyTypes() {
         return propertyTypeCache.get(CACHE_KEY)
     }
@@ -83,7 +79,6 @@ public class JobProperties implements Serializable, MethodsToList<JobProperty> {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the property types cache.
      */
-    @Whitelisted
     public static String typeForKey(@Nonnull String key) {
         return getAllowedPropertyTypes().get(key)
     }

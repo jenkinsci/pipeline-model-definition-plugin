@@ -31,20 +31,20 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDesc
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-public class DockerPipeline extends DeclarativeAgent {
+public class DockerPipelineFromDockerfile extends DeclarativeAgent {
     private String label;
-    private String docker;
+    private Object dockerfile;
     private String dockerArgs = "";
 
     @DataBoundConstructor
-    public DockerPipeline(@Nonnull String docker) {
-        this.docker = docker;
+    public DockerPipelineFromDockerfile(@Nonnull Object dockerfile) {
+        this.dockerfile = dockerfile;
     }
 
-    public @Nullable String getLabel() {
+    public @CheckForNull String getLabel() {
         return label;
     }
 
@@ -53,7 +53,7 @@ public class DockerPipeline extends DeclarativeAgent {
         this.label = label;
     }
 
-    public @Nullable String getDockerArgs() {
+    public @CheckForNull String getDockerArgs() {
         return dockerArgs;
     }
 
@@ -62,11 +62,19 @@ public class DockerPipeline extends DeclarativeAgent {
         this.dockerArgs = dockerArgs;
     }
 
-    public @Nonnull String getDocker() {
-        return docker;
+    public @Nonnull Object getDockerfile() {
+        return dockerfile;
     }
 
-    @Extension(ordinal = 1000) @Symbol("docker")
+    public String getDockerfileAsString() {
+        if (dockerfile instanceof String) {
+            return (String)dockerfile;
+        } else {
+            return "Dockerfile";
+        }
+    }
+
+    @Extension(ordinal = 999) @Symbol("dockerfile")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
     }
 }

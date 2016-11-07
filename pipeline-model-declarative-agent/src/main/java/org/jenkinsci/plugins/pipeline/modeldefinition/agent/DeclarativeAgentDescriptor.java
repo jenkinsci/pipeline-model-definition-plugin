@@ -25,12 +25,15 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +46,7 @@ import java.util.Set;
 public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeAgent> {
 
     /**
-     * The name for this agent type. Should match the {@code Symbol} on the class.
+     * The name for this agent type. Defaults to the first string in the {@code Symbol} on the class.
      *
      * @return The name.
      */
@@ -57,7 +60,8 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
     }
 
     /**
-     * The full package and class name for the {@link DeclarativeAgentScript} class corresponding to this.
+     * The full package and class name for the {@link DeclarativeAgentScript} class corresponding to this. Defaults to
+     * the {@link DeclarativeAgent} class name with "Script" appended to the end.
      *
      * @return The class name, defaulting to the {@link DeclarativeAgent} {@link #clazz} class name with "Script" appended.
      */
@@ -86,6 +90,11 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
         return clazz.newInstance();
     }
 
+    /**
+     * Get all {@link DeclarativeAgentDescriptor}s.
+     *
+     * @return a list of all {@link DeclarativeAgentDescriptor}s registered.`
+     */
     public static ExtensionList<DeclarativeAgentDescriptor> all() {
         return ExtensionList.lookup(DeclarativeAgentDescriptor.class);
     }
@@ -129,8 +138,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * @param name The name for the descriptor to look up
      * @return The corresponding descriptor or null if not found.
      */
-    @Whitelisted
-    public static @CheckForNull DeclarativeAgentDescriptor byName(@Nonnull String name) {
+    public static @Nullable DeclarativeAgentDescriptor byName(@Nonnull String name) {
         return (DeclarativeAgentDescriptor) SymbolLookup.get().findDescriptor(DeclarativeAgent.class, name);
     }
 
@@ -142,9 +150,8 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * @return The instantiated {@link DeclarativeAgent} instance, or null if the name isn't found.
      * @throws Exception
      */
-    @Whitelisted
-    public static @CheckForNull DeclarativeAgent instanceForName(@Nonnull String name,
-                                                                 Map<String,Object> arguments) throws Exception {
+    public static @Nullable DeclarativeAgent instanceForName(@Nonnull String name,
+                                                             Map<String,Object> arguments) throws Exception {
         DeclarativeAgentDescriptor descriptor = byName(name);
 
         if (descriptor != null) {
@@ -162,7 +169,6 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * @return The instantiated {@link DeclarativeAgent} instance.
      * @throws Exception
      */
-    @Whitelisted
     public static @Nonnull DeclarativeAgent instanceForDescriptor(@Nonnull DeclarativeAgentDescriptor descriptor,
                                                                    Map<String,Object> arguments) throws Exception {
         if (zeroArgModels().keySet().contains(descriptor.getName())) {

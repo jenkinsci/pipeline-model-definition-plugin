@@ -79,7 +79,7 @@ public class ModelInterpreter implements Serializable {
             // Entire build, including notifications, runs in the withEnv.
             withEnvBlock(root.getEnvVars()) {
                 inWrappers(root.wrappers) {
-                    // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
+                    // Stage executgit statusion and post-build actions run in try/catch blocks, so we still run post-build actions
                     // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
                     // We save the caught error, if any, for throwing at the end of the build.
                     inDeclarativeAgent(root.agent) {

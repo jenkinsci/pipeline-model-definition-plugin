@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 
 /**
@@ -45,11 +44,9 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
 
     @Delegate Map<String,O> resultMap = [:]
 
-    @Whitelisted
     public MappedClosure() {
     }
 
-    @Whitelisted
     public MappedClosure(Map<String,O> inMap) {
         this.modelFromMap(inMap)
     }
@@ -76,12 +73,10 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
     }
 
     @Override
-    @Whitelisted
     public void modelFromMap(Map<String,Object> inMap) {
         this.resultMap.putAll(inMap)
     }
 
-    @Whitelisted
     public Map<String, Object> getMap() {
         def mapCopy = [:]
         mapCopy.putAll(resultMap)
