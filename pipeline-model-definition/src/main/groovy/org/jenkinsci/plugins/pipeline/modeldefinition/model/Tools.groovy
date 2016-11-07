@@ -28,7 +28,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.tools.ToolDescriptor
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.Nonnull
 
@@ -51,7 +50,6 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
      *
      * @return A list of type/name tuples
      */
-    @Whitelisted
     public List<List<Object>> getToolEntries() {
         return getMap().collect { k, v ->
             return [k, v]
@@ -64,7 +62,6 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
      *
      * @return A map of valid tool type keys to their actual type IDs.
      */
-    @Whitelisted
     public static Map<String,String> getAllowedToolTypes() {
         return toolTypeCache.get(CACHE_KEY)
     }
@@ -75,7 +72,6 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the tool types cache.
      */
-    @Whitelisted
     public static String typeForKey(@Nonnull String key) {
         return getAllowedToolTypes().get(key)
     }

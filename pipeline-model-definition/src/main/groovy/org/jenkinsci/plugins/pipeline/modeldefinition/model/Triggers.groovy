@@ -32,7 +32,6 @@ import groovy.transform.ToString
 import hudson.triggers.Trigger
 import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.Nonnull
 
@@ -69,7 +68,6 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
      *
      * @return A map of valid parameter type keys to their actual type IDs.
      */
-    @Whitelisted
     public static Map<String,String> getAllowedTriggerTypes() {
         return triggerTypeCache.get(CACHE_KEY)
     }
@@ -80,7 +78,6 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the parameter types cache.
      */
-    @Whitelisted
     public static String typeForKey(@Nonnull String key) {
         return getAllowedTriggerTypes().get(key)
     }

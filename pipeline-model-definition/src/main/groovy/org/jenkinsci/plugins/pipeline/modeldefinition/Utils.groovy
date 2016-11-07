@@ -38,7 +38,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -74,7 +73,6 @@ public class Utils {
      *   we'll get the actual name from actualFieldName(...)
      * @return True if the field exists and is of the given type.
      */
-    @Whitelisted
     public static boolean isFieldA(Class fieldType, Class actualClass, String fieldName) {
         def actualFieldName = actualFieldName(actualClass, fieldName)
         def realFieldType = actualClass.metaClass.getMetaProperty(actualFieldName)?.type
@@ -93,7 +91,6 @@ public class Utils {
      * @param fieldName The original field name, which could need to be pluralized.
      * @return The real field name, pluralized if necessary, or null if not found.
      */
-    @Whitelisted
     public static String actualFieldName(Class actualClass, String fieldName) {
         if (actualClass.metaClass.getMetaProperty(fieldName) != null) {
             return fieldName
@@ -111,7 +108,6 @@ public class Utils {
      * @param fieldName The field name we're looking for, which could get pluralized.
      * @return The class of the field in the inspected class, or the class contained in the list or map.
      */
-    @Whitelisted
     public static Class actualFieldType(Class actualClass, String fieldName) {
         def actualFieldName = actualFieldName(actualClass, fieldName)
         if (actualFieldName == null) {
@@ -139,7 +135,6 @@ public class Utils {
      * @param c A class.
      * @return The parameterized type argument for the class, if it's a {@link MethodsToList} class. Null otherwise.
      */
-    @Whitelisted
     public static Class<Describable> getMethodsToListType(Class c) {
         Class retClass
         c.genericInterfaces.each { Type t ->
@@ -160,7 +155,6 @@ public class Utils {
      * @param o The object to check
      * @return True if the object is an instance of the class, false otherwise
      */
-    @Whitelisted
     public static boolean instanceOfWrapper(Class c, Object o) {
         return c.isInstance(o)
     }
@@ -172,17 +166,10 @@ public class Utils {
      * @param o The class to check
      * @return True if o can be assigned to c, false otherwise
      */
-    @Whitelisted
     public static boolean assignableFromWrapper(Class c, Class o) {
         return c.isAssignableFrom(o)
     }
 
-    @Whitelisted
-    public static Object[] toObjectArray(List<Object> origList) {
-        return origList.toArray()
-    }
-
-    @Whitelisted
     public static boolean hasScmContext(CpsScript script) {
         try {
             // Just rely on SCMVar's own context-checking (via CpsScript) rather than brewing our own.
@@ -194,7 +181,6 @@ public class Utils {
         }
     }
 
-    @Whitelisted
     static void attachExecutionModel(CpsScript script) {
         WorkflowRun r = script.$build()
         ModelASTPipelineDef model = Converter.parseFromCpsScript(script)
@@ -206,7 +192,6 @@ public class Utils {
         r.addAction(new ExecutionModelAction(stages))
     }
 
-    @Whitelisted
     public static String stringToSHA1(String s) {
         return DigestUtils.sha1Hex(s)
     }
