@@ -26,12 +26,17 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
+import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
+import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.domains.DomainCredentials;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.ModelObject;
 import hudson.model.Result;
 import hudson.util.Secret;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
@@ -40,12 +45,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
 
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.StringContains.containsString;
 
 /**
- * Tests {@link CredentialWrapperStep}.
+ * Tests the "fake" {@code credentials} step in {@code environment}.
  */
 public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
@@ -62,26 +69,29 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     private static final String mixedEnvInFolderCred2P = "folder-supersecretpassword+mydogsname";
 
     @BeforeClass
-    public static void setup() throws IOException {
+    public static void setup() throws Exception {
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+
         String usernamePasswordCredentialsId = "FOOcredentials";
         UsernamePasswordCredentialsImpl usernamePassword = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, usernamePasswordCredentialsId, "sample", usernamePasswordUsername, usernamePasswordPassword);
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), usernamePassword);
+        store.addCredentials(Domain.global(), usernamePassword);
 
         StringCredentialsImpl mixedEnvCred1 = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred1Id, "test", Secret.fromString(mixedEnvCred1Secret));
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), mixedEnvCred1);
+        store.addCredentials(Domain.global(), mixedEnvCred1);
         UsernamePasswordCredentialsImpl mixedEnvCred2 = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvCred2U, mixedEnvCred2P);
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), mixedEnvCred2);
+        store.addCredentials(Domain.global(), mixedEnvCred2);
 
         folder = j.jenkins.createProject(Folder.class, "testFolder");
+        j.configRoundtrip(folder);
+        CredentialsStore folderStore = folder.getProperties().get(FolderCredentialsProvider.FolderCredentialsProperty.class).getStore();
         StringCredentialsImpl sc = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred1Id, "test", Secret.fromString(mixedEnvInFolderCred1Secret));
-        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), sc);
+        folderStore.addCredentials(Domain.global(), sc);
         UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvInFoldercred2U, mixedEnvInFolderCred2P);
-        CredentialsProvider.lookupStores(folder).iterator().next().addCredentials(Domain.global(), c);
+        folderStore.addCredentials(Domain.global(), c);
 
         SSHUserPrivateKey k = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "sshCred1", "bobby", new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource("abc123"), null, "sample");
-        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), k);
+        store.addCredentials(Domain.global(), k);
     }
-
 
     @Test
     public void usernamePassword() throws Exception {
@@ -94,7 +104,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void mixedEnv() throws Exception {
-        expect("credentials", "mixedEnv").runFromRepo(false)
+        expect("credentials", "mixedEnv")
                 .logContains("SOME_VAR is SOME VALUE",
                              "INBETWEEN is Something in between",
                              "OTHER_VAR is OTHER VALUE")

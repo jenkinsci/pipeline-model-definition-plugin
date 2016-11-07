@@ -23,9 +23,12 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /**
  * Translates a closure containing one or more "foo = 'bar'" statements into a map.
@@ -34,8 +37,10 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializable {
     Map<String,Object> actualMap = [:]
     CpsScript script
+    private final boolean resolveCredentials
 
-    PropertiesToMapTranslator(CpsScript script) {
+    PropertiesToMapTranslator(CpsScript script, boolean resolveCredentials = false) {
+        this.resolveCredentials = resolveCredentials
         this.script = script
     }
 
@@ -45,6 +50,19 @@ public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializ
             argValue = args
         } else if (args.length == 1) {
             argValue = args[0]
+        }
+
+        if (resolveCredentials && s == "credentials") {
+            if (args.length == 1) {
+                String id = "${args[0]}"
+
+                RunWrapper currentBuild = script.getProperty("currentBuild")
+
+                CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
+                return new CredentialWrapper(id, handler.getWithCredentialsParameters(id));
+            } else {
+                throw new IllegalArgumentException("credentials is expecting one parameter for the credentials id")
+            }
         }
 
         return script."${s}"(argValue)
@@ -66,5 +84,4 @@ public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializ
         m.modelFromMap(actualMap)
         return m
     }
-
 }
