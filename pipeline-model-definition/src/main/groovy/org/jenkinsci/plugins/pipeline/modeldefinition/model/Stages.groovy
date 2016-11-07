@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 
 /**
@@ -38,22 +37,18 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Stages implements NestedModel, Serializable {
-    @Whitelisted
     List<Stage> stages = []
 
-    @Whitelisted
     Stages stages(List<Stage> s) {
         this.stages = s
         return this
     }
 
-    @Whitelisted
     List<Stage> getStages() {
         return stages
     }
 
     @Override
-    @Whitelisted
     public void modelFromMap(Map<String,Object> m) {
         m.each { k, v ->
             this."${k}"(v)

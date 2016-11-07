@@ -25,7 +25,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
@@ -41,7 +40,6 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
 
 
     @Override
-    @Whitelisted
     public void modelFromMap(Map<String,Object> inMap) {
 
         inMap.each { conditionName, conditionClosure ->
@@ -54,8 +52,6 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         }
     }
 
-
-    @Whitelisted
     public List<Closure> satisfiedConditions(Object runWrapperObj) {
         RunWrapper runWrapper = (RunWrapper)runWrapperObj
         WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild()

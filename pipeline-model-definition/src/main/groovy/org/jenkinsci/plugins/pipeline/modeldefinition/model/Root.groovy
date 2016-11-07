@@ -27,7 +27,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /**
@@ -39,88 +38,69 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Root implements NestedModel, Serializable {
-    @Whitelisted
     Agent agent
 
-    @Whitelisted
     Stages stages
 
-    @Whitelisted
     PostBuild post
 
-    @Whitelisted
     Environment environment
 
-    @Whitelisted
     Tools tools
 
-    @Whitelisted
     JobProperties jobProperties
 
-    @Whitelisted
     Triggers triggers
 
-    @Whitelisted
     Parameters parameters
 
-    @Whitelisted
     Wrappers wrappers
 
-    @Whitelisted
     Root stages(Stages s) {
         this.stages = s
         return this
     }
 
-    @Whitelisted
     Root post(PostBuild p) {
         this.post = p
         return this
     }
 
-    @Whitelisted
     Root agent(Map<String,String> args) {
         this.agent = new Agent(args)
         return this
     }
 
-    @Whitelisted
     Root agent(String s) {
         this.agent = new Agent(s)
         return this
     }
 
-    @Whitelisted
     Root environment(Environment m) {
         this.environment = m
         return this
     }
 
-    @Whitelisted
     Root tools(Tools t) {
         this.tools = t
         return this
     }
 
-    @Whitelisted
     Root jobProperties(JobProperties p) {
         this.jobProperties = p
         return this
     }
 
-    @Whitelisted
     Root triggers(Triggers t) {
         this.triggers = t
         return this
     }
 
-    @Whitelisted
     Root parameters(Parameters p) {
         this.parameters = p
         return this
     }
 
-    @Whitelisted
     Root wrappers(Wrappers w) {
         this.wrappers = w
         return this
@@ -132,7 +112,6 @@ public class Root implements NestedModel, Serializable {
      *
      * @return a list of "key=value" strings.
      */
-    @Whitelisted
     List<String> getEnvVars() {
         return environment.collect { k, v ->
             "${k}=${v}"
@@ -145,13 +124,11 @@ public class Root implements NestedModel, Serializable {
      * @param runWrapperObj The {@link RunWrapper} for the build.
      * @return a list of closures whose conditions have been satisfied.
      */
-    @Whitelisted
     List<Closure> satisfiedPostBuilds(Object runWrapperObj) {
         return satisfiedConditionsForField(post, runWrapperObj)
     }
 
     @Override
-    @Whitelisted
     public void modelFromMap(Map<String,Object> m) {
         m.each { k, v ->
             this."${k}"(v)

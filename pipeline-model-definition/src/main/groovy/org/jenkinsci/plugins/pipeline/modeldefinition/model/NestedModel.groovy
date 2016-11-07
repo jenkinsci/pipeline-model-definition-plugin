@@ -23,8 +23,6 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
 /**
  * Marker for model classes which themselves may contain other model classes.
  *
@@ -36,6 +34,5 @@ interface NestedModel {
      *
      * @param m The input map.
      */
-    @Whitelisted
     public void modelFromMap(Map<String,Object> m)
 }
