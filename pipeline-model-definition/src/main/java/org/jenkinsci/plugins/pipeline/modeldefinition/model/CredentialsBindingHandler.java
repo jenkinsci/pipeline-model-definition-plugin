@@ -37,6 +37,10 @@ import org.apache.commons.jexl.context.HashMapContext;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException;
+import org.jenkinsci.plugins.credentialsbinding.impl.FileBinding;
+import org.jenkinsci.plugins.credentialsbinding.impl.StringBinding;
+import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordBinding;
+import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
@@ -156,11 +160,11 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
         @Override
         public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
             Map<String, Object> map = new HashMap<>();
-            map.put("$class", "UsernamePasswordBinding");
+            map.put("$class", UsernamePasswordBinding.class.getName());
             map.put("variable", new EnvVarResolver());
             map.put("credentialsId", credentialsId);
             Map<String, Object> map2 = new HashMap<>();
-            map2.put("$class", "UsernamePasswordMultiBinding");
+            map2.put("$class", UsernamePasswordMultiBinding.class.getName());
             map2.put("usernameVariable", new EnvVarResolver("%s_USR"));
             map2.put("passwordVariable", new EnvVarResolver("%s_PSW"));
             map2.put("credentialsId", credentialsId);
@@ -182,7 +186,7 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
         @Override
         public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
             Map<String, Object> map = new HashMap<>();
-            map.put("$class", "FileBinding");
+            map.put("$class", FileBinding.class.getName());
             map.put("variable", new EnvVarResolver());
             map.put("credentialsId", credentialsId);
             return Collections.singletonList(map);
@@ -202,7 +206,7 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
         @Override
         public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
             Map<String, Object> map = new HashMap<>();
-            map.put("$class", "StringBinding");
+            map.put("$class", StringBinding.class.getName());
             map.put("variable", new EnvVarResolver());
             map.put("credentialsId", credentialsId);
             return Collections.singletonList(map);
