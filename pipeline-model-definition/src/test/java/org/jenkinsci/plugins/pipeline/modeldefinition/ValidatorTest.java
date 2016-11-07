@@ -46,393 +46,359 @@ public class ValidatorTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
     }
 
     @Issue("JENKINS-39011")
     @Test
     public void pipelineStepWithinOtherBlockFailure() throws Exception {
-        prepRepoWithJenkinsfile("errors", "pipelineStepWithinOtherBlocksFailure");
-
-        assertFailWithError("pipeline block must be at the top-level, not within another block");
+        expect(Result.FAILURE, "errors", "pipelineStepWithinOtherBlocksFailure")
+                .logContains("pipeline block must be at the top-level, not within another block")
+                .go();
     }
 
     @Test
     public void rejectStageInSteps() throws Exception {
-        prepRepoWithJenkinsfile("errors", "rejectStageInSteps");
-
-        assertFailWithError("Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines");
+        expect(Result.FAILURE, "errors", "rejectStageInSteps")
+                .logContains("Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines")
+                .go();
     }
 
     @Test
     public void rejectParallelMixedInSteps() throws Exception {
-        prepRepoWithJenkinsfile("errors", "rejectParallelMixedInSteps");
-
-        assertFailWithError("Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block");
-    }
-
-    @Ignore("I still want to block parallel, but I'm not sure it's worth it, ignoring for now.")
-    @Test
-    public void rejectParallelInNotifications() throws Exception {
-        prepRepoWithJenkinsfile("errors", "rejectParallelInNotifications");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("Illegal Pipeline steps used in inline Pipeline - parallel", b);
+        expect(Result.FAILURE, "errors", "rejectParallelMixedInSteps")
+                .logContains("Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block")
+                .go();
     }
 
     @Test
     public void emptyStages() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyStages");
-
-        assertFailWithError("No stages specified");
+        expect(Result.FAILURE, "errors", "emptyStages")
+                .logContains("No stages specified")
+                .go();
     }
 
     @Test
     public void emptyJobProperties() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyJobProperties");
-
-        assertFailWithError("Cannot have empty jobProperties section");
+        expect(Result.FAILURE, "errors", "emptyJobProperties")
+                .logContains("Cannot have empty jobProperties section")
+                .go();
     }
 
     @Test
     public void emptyParameters() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyParameters");
-
-        assertFailWithError("Cannot have empty parameters section");
+        expect(Result.FAILURE, "errors", "emptyParameters")
+                .logContains("Cannot have empty parameters section")
+                .go();
     }
 
     @Test
     public void emptyTriggers() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyTriggers");
-
-        assertFailWithError("Cannot have empty triggers section");
+        expect(Result.FAILURE, "errors", "emptyTriggers")
+                .logContains("Cannot have empty triggers section")
+                .go();
     }
 
     @Test
     public void blockInJobProperties() throws Exception {
-        prepRepoWithJenkinsfile("errors", "blockInJobProperties");
-
-        assertFailWithError("Job property definitions cannot have blocks");
+        expect(Result.FAILURE, "errors", "blockInJobProperties")
+                .logContains("Job property definitions cannot have blocks")
+                .go();
     }
 
     @Test
     public void blockInParameters() throws Exception {
-        prepRepoWithJenkinsfile("errors", "blockInParameters");
-
-        assertFailWithError("Build parameter definitions cannot have blocks");
+        expect(Result.FAILURE, "errors", "blockInParameters")
+                .logContains("Build parameter definitions cannot have blocks")
+                .go();
     }
 
     @Test
     public void blockInTriggers() throws Exception {
-        prepRepoWithJenkinsfile("errors", "blockInTriggers");
-
-        assertFailWithError("Trigger definitions cannot have blocks");
+        expect(Result.FAILURE, "errors", "blockInTriggers")
+                .logContains("Trigger definitions cannot have blocks")
+                .go();
     }
 
     @Test
     public void mixedMethodArgs() throws Exception {
-        prepRepoWithJenkinsfile("errors", "mixedMethodArgs");
-
-        assertFailWithError("Can't mix named and unnamed parameter definition arguments");
+        expect(Result.FAILURE, "errors", "mixedMethodArgs")
+                .logContains("Can't mix named and unnamed parameter definition arguments")
+                .go();
     }
 
     @Test
     public void closureAsMethodCallArg() throws Exception {
-        prepRepoWithJenkinsfile("errors", "closureAsMethodCallArg");
-
-        assertFailWithError("Method call arguments cannot use closures");
+        expect(Result.FAILURE, "errors", "closureAsMethodCallArg")
+                .logContains("Method call arguments cannot use closures")
+                .go();
     }
 
     @Test
     public void tooFewMethodCallArgs() throws Exception {
-        prepRepoWithJenkinsfile("errors", "tooFewMethodCallArgs");
-
-        assertFailWithError("'cron' should have 1 arguments but has 0 arguments instead");
+        expect(Result.FAILURE, "errors", "tooFewMethodCallArgs")
+                .logContains("'cron' should have 1 arguments but has 0 arguments instead")
+                .go();
     }
 
     @Test
     public void wrongParameterNameMethodCall() throws Exception {
-        prepRepoWithJenkinsfile("errors", "wrongParameterNameMethodCall");
-
-        assertFailWithError("Invalid parameter 'namd', did you mean 'name'?");
+        expect(Result.FAILURE, "errors", "wrongParameterNameMethodCall")
+                .logContains("Invalid parameter 'namd', did you mean 'name'?")
+                .go();
     }
 
     @Test
     public void invalidParameterTypeMethodCall() throws Exception {
-        prepRepoWithJenkinsfile("errors", "invalidParameterTypeMethodCall");
-
-        assertFailWithError("Expecting class java.lang.String for parameter 'name' but got '1234' instead");
+        expect(Result.FAILURE, "errors", "invalidParameterTypeMethodCall")
+                .logContains("Expecting class java.lang.String for parameter 'name' but got '1234' instead")
+                .go();
     }
 
     @Test
     public void rejectPropertiesStepInMethodCall() throws Exception {
-        prepRepoWithJenkinsfile("errors", "rejectPropertiesStepInMethodCall");
-
-        assertFailWithError("Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines");
+        expect(Result.FAILURE, "errors", "rejectPropertiesStepInMethodCall")
+                .logContains("Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines")
+                .go();
     }
 
     @Test
     public void rejectMapsForTriggerDefinition() throws Exception {
-        prepRepoWithJenkinsfile("errors", "rejectMapsForTriggerDefinition");
-
-        assertFailWithError("Triggers cannot be defined as maps");
+        expect(Result.FAILURE, "errors", "rejectMapsForTriggerDefinition")
+                .logContains("Triggers cannot be defined as maps")
+                .go();
     }
 
     @Test
     public void emptyParallel() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyParallel");
-
-        assertFailWithError("Nothing to execute within stage 'foo'");
+        expect(Result.FAILURE, "errors", "emptyParallel")
+                .logContains("Nothing to execute within stage 'foo'")
+                .go();
     }
 
     @Test
     public void missingAgent() throws Exception {
-        prepRepoWithJenkinsfile("errors", "missingAgent");
-
-        assertFailWithError("Missing required section 'agent'");
+        expect(Result.FAILURE, "errors", "missingAgent")
+                .logContains("Missing required section 'agent'")
+                .go();
     }
 
     @Test
     public void missingStages() throws Exception {
-        prepRepoWithJenkinsfile("errors", "missingStages");
-
-        assertFailWithError("Missing required section 'stages'");
+        expect(Result.FAILURE, "errors", "missingStages")
+                .logContains("Missing required section 'stages'")
+                .go();
     }
 
     @Test
     public void missingRequiredStepParameters() throws Exception {
-        prepRepoWithJenkinsfile("errors", "missingRequiredStepParameters");
-
-        assertFailWithError("Missing required parameter: 'time'");
+        expect(Result.FAILURE, "errors", "missingRequiredStepParameters")
+                .logContains("Missing required parameter: 'time'")
+                .go();
     }
 
     @Test
     public void invalidStepParameterType() throws Exception {
-        prepRepoWithJenkinsfile("errors", "invalidStepParameterType");
-
-        assertFailWithError("Expecting int for parameter 'time' but got 'someTime' instead");
+        expect(Result.FAILURE, "errors", "invalidStepParameterType")
+                .logContains("Expecting int for parameter 'time' but got 'someTime' instead")
+                .go();
     }
 
     @Test
     public void unknownStepParameter() throws Exception {
-        prepRepoWithJenkinsfile("errors", "unknownStepParameter");
-
-        assertFailWithError("Invalid parameter 'banana', did you mean 'unit'?");
+        expect(Result.FAILURE, "errors", "unknownStepParameter")
+                .logContains("Invalid parameter 'banana', did you mean 'unit'?")
+                .go();
     }
 
     @Test
     public void perStageConfigEmptySteps() throws Exception {
-        prepRepoWithJenkinsfile("errors", "perStageConfigEmptySteps");
-
-        assertFailWithError("No steps specified for branch");
+        expect(Result.FAILURE, "errors", "perStageConfigEmptySteps")
+                .logContains("No steps specified for branch")
+                .go();
     }
 
     @Test
     public void perStageConfigMissingSteps() throws Exception {
-        prepRepoWithJenkinsfile("errors", "perStageConfigMissingSteps");
-
-        assertFailWithError("Nothing to execute within stage");
+        expect(Result.FAILURE, "errors", "perStageConfigMissingSteps")
+                .logContains("Nothing to execute within stage")
+                .go();
     }
 
     @Test
     public void perStageConfigUnknownSection() throws Exception {
-        prepRepoWithJenkinsfile("errors", "perStageConfigUnknownSection");
-
-        assertFailWithError("Unknown stage section 'banana'");
+        expect(Result.FAILURE, "errors", "perStageConfigUnknownSection")
+                .logContains("Unknown stage section 'banana'")
+                .go();
     }
 
     @Test
     public void invalidMetaStepSyntax() throws Exception {
-        prepRepoWithJenkinsfile("errors", "invalidMetaStepSyntax");
-
-        assertFailWithError("Invalid parameter 'someRandomField', did you mean 'caseSensitive'?");
+        expect(Result.FAILURE, "errors", "invalidMetaStepSyntax")
+                .logContains("Invalid parameter 'someRandomField', did you mean 'caseSensitive'?")
+                .go();
     }
 
     @Test
     public void duplicateStageNames() throws Exception {
-        prepRepoWithJenkinsfile("errors", "duplicateStageNames");
-
-        assertFailWithError("Duplicate stage name: 'foo'", "Nothing to execute within stage 'bar'");
+        expect(Result.FAILURE, "errors", "duplicateStageNames")
+                .logContains("Duplicate stage name: 'foo'", "Nothing to execute within stage 'bar'")
+                .go();
     }
 
     @Test
     public void duplicateEnvironment() throws Exception {
-        prepRepoWithJenkinsfile("errors", "duplicateEnvironment");
-
-        assertFailWithError("Duplicate environment variable name: 'FOO'");
+        expect(Result.FAILURE, "errors", "duplicateEnvironment")
+                .logContains("Duplicate environment variable name: 'FOO'")
+                .go();
     }
 
     @Test
     public void duplicateStepParameter() throws Exception {
-        prepRepoWithJenkinsfile("errors", "duplicateStepParameter");
-
-        assertFailWithError("Duplicate named parameter 'time' found");
+        expect(Result.FAILURE, "errors", "duplicateStepParameter")
+                .logContains("Duplicate named parameter 'time' found")
+                .go();
     }
 
     @Test
     public void emptyEnvironment() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyEnvironment");
-
-        assertFailWithError("No variables specified for environment");
+        expect(Result.FAILURE, "errors", "emptyEnvironment")
+                .logContains("No variables specified for environment")
+                .go();
     }
 
     @Test
     public void emptyAgent() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyAgent");
-
-        assertFailWithError("Not a valid section definition: 'agent'. Some extra configuration is required.");
+        expect(Result.FAILURE, "errors", "emptyAgent")
+                .logContains("Not a valid section definition: 'agent'. Some extra configuration is required.")
+                .go();
     }
 
     @Test
     public void perStageConfigEmptyAgent() throws Exception {
-        prepRepoWithJenkinsfile("errors", "perStageConfigEmptyAgent");
-
-        assertFailWithError("Not a valid stage section definition: 'agent'. Some extra configuration is required.");
+        expect(Result.FAILURE, "errors", "perStageConfigEmptyAgent")
+                .logContains("Not a valid stage section definition: 'agent'. Some extra configuration is required.")
+                .go();
     }
 
     @Test
     public void invalidBuildCondition() throws Exception {
-        prepRepoWithJenkinsfile("errors", "invalidBuildCondition");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);
-        // Note that we need to generate the error string here within the story or it comes out empty due to lack of a Jenkins instance.
-        j.assertLogContains("Invalid condition 'banana' - valid conditions are " + BuildCondition.getOrderedConditionNames(), b);
+        expect(Result.FAILURE, "errors", "invalidBuildCondition")
+                .logContains("MultipleCompilationErrorsException: startup failed:",
+                        "Invalid condition 'banana' - valid conditions are " + BuildCondition.getOrderedConditionNames())
+                .go();
     }
 
     @Test
     public void emptyNotification() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyNotifications");
-
-        assertFailWithError("notifications can not be empty");
+        expect(Result.FAILURE, "errors", "emptyNotifications")
+                .logContains("notifications can not be empty")
+                .go();
     }
 
     @Test
     public void emptyPostBuild() throws Exception {
-        prepRepoWithJenkinsfile("errors", "emptyPostBuild");
-
-        assertFailWithError("postBuild can not be empty");
+        expect(Result.FAILURE, "errors", "emptyPostBuild")
+                .logContains("postBuild can not be empty")
+                .go();
     }
 
     @Test
     public void duplicateNotificationConditions() throws Exception {
-        prepRepoWithJenkinsfile("errors", "duplicateNotificationConditions");
-
-        assertFailWithError("Duplicate build condition name: 'always'");
+        expect(Result.FAILURE, "errors", "duplicateNotificationConditions")
+                .logContains("Duplicate build condition name: 'always'")
+                .go();
     }
 
     @Test
     public void duplicatePostBuildConditions() throws Exception {
-        prepRepoWithJenkinsfile("errors", "duplicatePostBuildConditions");
-
-        assertFailWithError("Duplicate build condition name: 'always'");
+        expect(Result.FAILURE, "errors", "duplicatePostBuildConditions")
+                .logContains("Duplicate build condition name: 'always'")
+                .go();
     }
 
     @Test
     public void unlistedToolType() throws Exception {
-        prepRepoWithJenkinsfile("errors", "unlistedToolType");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);
-        // Note that we need to generate the error string here within the story or it comes out empty due to lack of a Jenkins instance.
-        j.assertLogContains("Invalid tool type 'banana'. Valid tool types: " + Tools.getAllowedToolTypes().keySet(), b);
+        expect(Result.FAILURE, "errors", "unlistedToolType")
+                .logContains("MultipleCompilationErrorsException: startup failed:",
+                        "Invalid tool type 'banana'. Valid tool types: " + Tools.getAllowedToolTypes().keySet())
+                .go();
     }
 
     @Test
     public void notInstalledToolVersion() throws Exception {
-        prepRepoWithJenkinsfile("errors", "notInstalledToolVersion");
-
-        assertFailWithError("Tool type 'maven' does not have an install of 'apache-maven-3.0.2' configured - did you mean 'apache-maven-3.0.1'?");
+        expect(Result.FAILURE, "errors", "notInstalledToolVersion")
+                .logContains("Tool type 'maven' does not have an install of 'apache-maven-3.0.2' configured - did you mean 'apache-maven-3.0.1'?")
+                .go();
     }
 
     @Test
     public void globalLibraryNonStepBody() throws Exception {
-        // Test the case of a function with a body that doesn't consist of steps - this will fail.
-        prepRepoWithJenkinsfile("errors", "globalLibraryNonStepBody");
-
         initGlobalLibrary();
 
-        WorkflowRun b = getAndStartBuild();
-
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);
-        j.assertLogContains("Expected a step @ line", b);
+        // Test the case of a function with a body that doesn't consist of steps - this will fail.
+        expect(Result.FAILURE, "errors", "globalLibraryNonStepBody")
+                .logContains("MultipleCompilationErrorsException: startup failed:",
+                        "Expected a step @ line")
+                .go();
     }
 
     @Test
     public void globalLibraryObjectMethodCall() throws Exception {
-        // Test the case of calling a method on an object, i.e., foo.bar(1). This will fail.
-        prepRepoWithJenkinsfile("errors", "globalLibraryObjectMethodCall");
-
         initGlobalLibrary();
 
-        WorkflowRun b = getAndStartBuild();
-
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);
-        j.assertLogContains("Expected a symbol @ line", b);
-
+        // Test the case of calling a method on an object, i.e., foo.bar(1). This will fail.
+        expect(Result.FAILURE, "errors", "globalLibraryObjectMethodCall")
+                .logContains("MultipleCompilationErrorsException: startup failed:",
+                        "Expected a symbol @ line")
+                .go();
     }
 
     @Test
     public void unknownAgentType() throws Exception {
-        prepRepoWithJenkinsfile("errors", "unknownAgentType");
-
-        assertFailWithError("No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]");
+        expect(Result.FAILURE, "errors", "unknownAgentType")
+                .logContains("No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]")
+                .go();
     }
 
     @Test
     public void unknownBareAgentType() throws Exception {
-        prepRepoWithJenkinsfile("errors", "unknownBareAgentType");
-
-        assertFailWithError("Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]");
+        expect(Result.FAILURE, "errors", "unknownBareAgentType")
+                .logContains("Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]")
+                .go();
     }
 
     @Test
     public void agentMissingRequiredParam() throws Exception {
-        prepRepoWithJenkinsfile("errors", "agentMissingRequiredParam");
-
-        assertFailWithError("Missing required parameter for agent type 'otherField': label");
+        expect(Result.FAILURE, "errors", "agentMissingRequiredParam")
+                .logContains("Missing required parameter for agent type 'otherField': label")
+                .go();
     }
 
     @Test
     public void agentUnknownParamForType() throws Exception {
-        prepRepoWithJenkinsfile("errors", "agentUnknownParamForType");
-
-        assertFailWithError("Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]");
+        expect(Result.FAILURE, "errors", "agentUnknownParamForType")
+                .logContains("Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]")
+                .go();
     }
 
     @Test
     public void packageShouldNotSkipParsing() throws Exception {
-        prepRepoWithJenkinsfile("errors", "packageShouldNotSkipParsing");
-
-        assertFailWithError("Missing required section 'agent'");
+        expect(Result.FAILURE, "errors", "packageShouldNotSkipParsing")
+                .logContains("Missing required section 'agent'")
+                .go();
     }
 
     @Test
     public void importAndFunctionShouldNotSkipParsing() throws Exception {
-        prepRepoWithJenkinsfile("errors", "importAndFunctionShouldNotSkipParsing");
-
-        assertFailWithError("Missing required section 'agent'");
+        expect(Result.FAILURE, "errors", "importAndFunctionShouldNotSkipParsing")
+                .logContains("Missing required section 'agent'")
+                .go();
     }
 
     @Test
     public void invalidWrapperType() throws Exception {
-        prepRepoWithJenkinsfile("errors", "invalidWrapperType");
-
-        assertFailWithError("Invalid wrapper type 'echo'. Valid wrapper types: " + Wrappers.getEligibleSteps());
-    }
-
-    private void assertFailWithError(final String... errors) throws Exception {
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("MultipleCompilationErrorsException: startup failed:", b);
-        for (String error : errors) {
-            j.assertLogContains(error, b);
-        }
+        expect(Result.FAILURE, "errors", "invalidWrapperType")
+                .logContains("Invalid wrapper type 'echo'. Valid wrapper types: " + Wrappers.getEligibleSteps())
+                .go();
     }
 }

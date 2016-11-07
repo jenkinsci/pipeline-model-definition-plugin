@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.Slave;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -34,50 +35,40 @@ import org.junit.Test;
  */
 public class EnvironmentTest extends AbstractModelDefTest {
 
-    private static DumbSlave s;
+    private static Slave s;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
     }
 
     @Test
     public void simpleEnvironment() throws Exception {
-        prepRepoWithJenkinsfile("simpleEnvironment");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("FOO is BAR", b);
+        expect("simpleEnvironment")
+                .logContains("[Pipeline] { (foo)", "FOO is BAR")
+                .go();
     }
 
     @Test
     public void environmentInStage() throws Exception {
-        prepRepoWithJenkinsfile("environmentInStage");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("FOO is BAR", b);
+        expect("environmentInStage")
+                .logContains("[Pipeline] { (foo)", "FOO is BAR")
+                .go();
     }
 
     @Test
     public void nonLiteralEnvironment() throws Exception {
-        prepRepoWithJenkinsfile("nonLiteralEnvironment");
-
         initGlobalLibrary();
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("FOO is BAR", b);
-        j.assertLogContains("BUILD_NUM_ENV is 1", b);
-        j.assertLogContains("ANOTHER_ENV is 1", b);
-        j.assertLogContains("INHERITED_ENV is 1 is inherited", b);
-        j.assertLogContains("ACME_FUNC is [banana] tada", b);
+        expect("nonLiteralEnvironment")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "BUILD_NUM_ENV is 1",
+                        "ANOTHER_ENV is 1",
+                        "INHERITED_ENV is 1 is inherited",
+                        "ACME_FUNC is [banana] tada")
+                .go();
     }
 
 }

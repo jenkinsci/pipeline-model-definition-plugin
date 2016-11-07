@@ -45,47 +45,39 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void simpleNotification() throws Exception {
-        prepRepoWithJenkinsfile("simpleNotification");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("I HAVE FINISHED", b);
-        j.assertLogContains("MOST DEFINITELY FINISHED", b);
-        j.assertLogNotContains("I FAILED", b);
+        expect("simpleNotification")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (Notifications)",
+                        "I HAVE FINISHED",
+                        "MOST DEFINITELY FINISHED")
+                .logNotContains("[Pipeline] { (Post Build Actions)", "I FAILED")
+                .go();
     }
 
     @Test
     public void simplePostBuild() throws Exception {
-        prepRepoWithJenkinsfile("simplePostBuild");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
-        j.assertLogContains("I HAVE FINISHED", b);
-        j.assertLogContains("MOST DEFINITELY FINISHED", b);
-        j.assertLogNotContains("I FAILED", b);
+        expect("simplePostBuild")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (Post Build Actions)",
+                        "I HAVE FINISHED",
+                        "MOST DEFINITELY FINISHED")
+                .logNotContains("[Pipeline] { (Notifications)", "I FAILED")
+                .go();
     }
 
     @Test
     public void postBuildAndNotifications() throws Exception {
-        prepRepoWithJenkinsfile("postBuildAndNotifications");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
-        j.assertLogContains("I AM FAILING", b);
-        j.assertLogContains("I HAVE FAILED", b);
-        j.assertLogNotContains("I HAVE SUCCEEDED", b);
+        expect(Result.FAILURE, "postBuildAndNotifications")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (Notifications)",
+                        "[Pipeline] { (Post Build Actions)",
+                        "I AM FAILING",
+                        "I HAVE FAILED")
+                .logNotContains("I HAVE SUCCEEDED")
+                .go();
     }
 
     @Test
@@ -114,30 +106,19 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void unstableNotification() throws Exception {
-        prepRepoWithJenkinsfile("unstableNotification");
-
-        WorkflowRun b = getAndStartBuild();
-
-        j.assertBuildStatus(Result.UNSTABLE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("I AM UNSTABLE", b);
-        j.assertLogNotContains("I FAILED", b);
+        expect(Result.UNSTABLE, "unstableNotification")
+                .logContains("[Pipeline] { (foo)", "hello", "I AM UNSTABLE")
+                .logNotContains("I FAILED")
+                .go();
     }
 
     @Issue("JENKINS-38993")
     @Test
     public void buildConditionOrdering() throws Exception {
-        prepRepoWithJenkinsfile("buildConditionOrdering");
-
-        WorkflowRun b = getAndStartBuild();
-
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-
-        String buildLog = JenkinsRule.getLog(b);
-        assertThat(buildLog, stringContainsInOrder(Arrays.asList("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")));
+        expect("buildConditionOrdering")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .inLogInOrder("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")
+                .go();
     }
 
     @Ignore("This no longer works with the JENKINS-38049 fix - needs to be re-evaluated")
@@ -158,14 +139,9 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void shInNotification() throws Exception {
-        prepRepoWithJenkinsfile("shInNotification");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-
-        j.assertLogContains(" Attempted to execute a notification step that requires a node context. Notifications do not run inside a 'node { ... }' block.", b);
-
-        // This message is printed straight to the build log so we can't prevent it from showing up.
-        j.assertLogContains("Perhaps you forgot to surround the code with a step that provides this, such as: node", b);
+        expect(Result.FAILURE, "shInNotification")
+                .logContains("Attempted to execute a notification step that requires a node context. Notifications do not run inside a 'node { ... }' block.",
+                        "Perhaps you forgot to surround the code with a step that provides this, such as: node")
+                .go();
     }
 }

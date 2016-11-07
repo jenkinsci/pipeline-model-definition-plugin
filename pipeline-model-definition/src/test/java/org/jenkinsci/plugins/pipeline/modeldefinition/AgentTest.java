@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
+import hudson.model.Slave;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -31,54 +32,50 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @author Andrew Bayer
  */
 public class AgentTest extends AbstractModelDefTest {
 
-    private static DumbSlave s;
+    private static Slave s;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
     }
 
     @Test
     public void agentLabel() throws Exception {
-        prepRepoWithJenkinsfile("agentLabel");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("ONSLAVE=true", b);
+        expect("agentLabel")
+                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .go();
     }
 
     @Issue("JENKINS-37932")
     @Test
     public void agentAny() throws Exception {
-        prepRepoWithJenkinsfile("agentAny");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("THIS WORKS", b);
+        expect("agentAny")
+                .logContains("[Pipeline] { (foo)", "THIS WORKS")
+                .go();
     }
 
     @Test
     public void noCheckoutScmInWrongContext() throws Exception {
-        WorkflowRun b = getAndStartNonRepoBuild("noCheckoutScmInWrongContext");
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("ONSLAVE=true", b);
+        expect("noCheckoutScmInWrongContext")
+                .runFromRepo(false)
+                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .go();
     }
 
     @Test
     public void agentDocker() throws Exception {
-        final WorkflowRun b = agentDocker("agentDocker");
-        j.assertLogContains("-v /tmp:/tmp -p 80:80", b);
+        agentDocker("agentDocker", "-v /tmp:/tmp -p 80:80");
     }
 
     @Test
@@ -93,56 +90,39 @@ public class AgentTest extends AbstractModelDefTest {
 
     @Test
     public void agentNone() throws Exception {
-        prepRepoWithJenkinsfile("agentNone");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-
-        j.assertLogContains("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
-                "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.", b);
-
-        // This message is printed straight to the build log so we can't prevent it from showing up.
-        j.assertLogContains("Perhaps you forgot to surround the code with a step that provides this, such as: node", b);
+        expect(Result.FAILURE, "agentNone")
+                .logContains("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
+                        "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.",
+                        "Perhaps you forgot to surround the code with a step that provides this, such as: node")
+                .go();
     }
 
     @Test
     public void agentNoneWithNode() throws Exception {
-        prepRepoWithJenkinsfile("agentNoneWithNode");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("ONSLAVE=true", b);
+        expect("agentNoneWithNode")
+                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .go();
     }
 
     @Test
     public void perStageConfigAgent() throws Exception {
-        prepRepoWithJenkinsfile("perStageConfigAgent");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("ONSLAVE=true", b);
+        expect("perStageConfigAgent")
+                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .go();
     }
 
     @Test
     public void agentTypeOrdering() throws Exception {
-        prepRepoWithJenkinsfile("agentTypeOrdering");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("Running in labelAndOtherField with otherField = banana", b);
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("ONSLAVE=true", b);
+        expect("agentTypeOrdering")
+                .logContains("[Pipeline] { (foo)", "ONSLAVE=true", "Running in labelAndOtherField with otherField = banana")
+                .go();
     }
 
     @Test
     public void agentAnyInStage() throws Exception {
-        prepRepoWithJenkinsfile("agentAnyInStage");
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("THIS WORKS", b);
+        expect("agentAnyInStage")
+                .logContains("[Pipeline] { (foo)", "THIS WORKS")
+                .go();
     }
 
     @Test
@@ -151,17 +131,16 @@ public class AgentTest extends AbstractModelDefTest {
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
 
-        prepRepoWithJenkinsfile("fromDockerfile");
         sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("add", "Dockerfile");
         sampleRepo.git("commit", "--message=Dockerfile");
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("The answer is 42", b);
-        j.assertLogContains("-v /tmp:/tmp -p 8000:8000", b);
-        j.assertLogContains("HI THERE", b);
+        expect("fromDockerfile")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
+                        "-v /tmp:/tmp -p 8000:8000",
+                        "HI THERE")
+                .go();
     }
 
     @Test
@@ -170,29 +149,30 @@ public class AgentTest extends AbstractModelDefTest {
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
 
-        prepRepoWithJenkinsfile("fromAlternateDockerfile");
         sampleRepo.write("Dockerfile.alternate", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("add", "Dockerfile.alternate");
         sampleRepo.git("commit", "--message=Dockerfile");
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("The answer is 42", b);
-        j.assertLogContains("-v /tmp:/tmp -p 8000:8000", b);
-        j.assertLogContains("HI THERE", b);
+        expect("fromAlternateDockerfile")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
+                        "-v /tmp:/tmp -p 8000:8000",
+                        "HI THERE")
+                .go();
     }
 
-    private WorkflowRun agentDocker(final String jenkinsfile) throws Exception {
+    private void agentDocker(final String jenkinsfile, String... additionalLogContains) throws Exception {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
-        prepRepoWithJenkinsfile(jenkinsfile);
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("The answer is 42", b);
-        return b;
+        List<String> logContains = new ArrayList<>();
+        logContains.add("[Pipeline] { (foo)");
+        logContains.add("The answer is 42");
+        logContains.addAll(Arrays.asList(additionalLogContains));
+
+        expect(jenkinsfile)
+                .logContains(logContains.toArray(new String[logContains.size()]))
+                .go();
     }
 }

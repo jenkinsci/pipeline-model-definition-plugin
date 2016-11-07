@@ -34,28 +34,24 @@ import org.junit.Test;
 public class WrappersTest extends AbstractModelDefTest {
     @Test
     public void simpleWrapper() throws Exception {
-        prepRepoWithJenkinsfile("simpleWrapper");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] timeout", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
-        j.assertLogContains("hello", b);
+        expect("simpleWrapper")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)",
+                        "[Pipeline] { (Notifications)")
+                .go();
     }
 
     @Test
     public void multipleWrappers() throws Exception {
-        prepRepoWithJenkinsfile("multipleWrappers");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] timeout", b);
-        j.assertLogContains("[Pipeline] retry", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
-        j.assertLogContains("hello", b);
+        expect("multipleWrappers")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "[Pipeline] retry",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)",
+                        "[Pipeline] { (Notifications)")
+                .go();
     }
 }

@@ -38,14 +38,10 @@ import static org.junit.Assert.assertTrue;
 public class TriggersTest extends AbstractModelDefTest {
     @Test
     public void simpleTriggers() throws Exception {
-        prepRepoWithJenkinsfile("simpleTriggers");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
-        j.assertLogContains("hello", b);
+        WorkflowRun b = expect("simpleTriggers")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)", "[Pipeline] { (Notifications)")
+                .go();
 
         WorkflowJob p = b.getParent();
 

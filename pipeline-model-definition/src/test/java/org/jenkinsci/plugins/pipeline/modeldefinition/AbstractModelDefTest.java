@@ -37,6 +37,7 @@ import hudson.util.StreamTaskListener;
 import hudson.util.VersionNumber;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.GitStep;
+import jenkins.util.VirtualFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -64,12 +65,17 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -409,6 +415,10 @@ public abstract class AbstractModelDefTest {
         private WorkflowRun run;
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
+        private boolean hasFailureCause;
+        private String archivedFile;
+        private String archivedFileContents;
+        private List<String> inLogInOrder;
 
         private ExpectationsBuilder(String resourceParent, String resource) {
             this(Result.SUCCESS, resourceParent, resource);
@@ -418,6 +428,11 @@ public abstract class AbstractModelDefTest {
             this.result = result;
             this.resourceParent = resourceParent;
             this.resource = resource;
+        }
+
+        public ExpectationsBuilder inLogInOrder(String... msgsInOrder) {
+            this.inLogInOrder = Arrays.asList(msgsInOrder);
+            return this;
         }
 
         public ExpectationsBuilder runFromRepo(boolean mode) {
@@ -448,7 +463,23 @@ public abstract class AbstractModelDefTest {
             return this;
         }
 
-        public void go() throws Exception {
+        public ExpectationsBuilder hasFailureCase() {
+            this.hasFailureCause = true;
+            return this;
+        }
+
+        public ExpectationsBuilder archivedFile(String file) {
+            return archivedFileWithContents(file, null);
+        }
+
+        public ExpectationsBuilder archivedFileWithContents(String file, String contents) {
+            this.archivedFile = file;
+            this.archivedFileContents = contents;
+
+            return this;
+        }
+
+        public WorkflowRun go() throws Exception {
             String resourceFullName = resource;
             if (resourceParent != null) {
                 resourceFullName = resourceParent + "/" + resource;
@@ -476,6 +507,22 @@ public abstract class AbstractModelDefTest {
                     j.assertLogNotContains(logNotContain, run);
                 }
             }
+            if (hasFailureCause) {
+                assertNotNull(run.getExecution().getCauseOfFailure());
+            }
+            if (archivedFile != null) {
+                VirtualFile f = run.getArtifactManager().root().child(archivedFile);
+                assertTrue(f.exists());
+                if (archivedFileContents != null) {
+                    assertEquals(archivedFileContents, IOUtils.toString(f.open()));
+                }
+            }
+            if (inLogInOrder != null && !inLogInOrder.isEmpty()) {
+                String buildLog = JenkinsRule.getLog(run);
+                assertThat(buildLog, stringContainsInOrder(inLogInOrder));
+            }
+
+            return run;
         }
 
         public ExpectationsBuilder resetForNewRun(Result result) {

@@ -40,14 +40,10 @@ import static org.junit.Assert.assertTrue;
 public class ParametersTest extends AbstractModelDefTest {
     @Test
     public void simpleParameters() throws Exception {
-        prepRepoWithJenkinsfile("simpleParameters");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
-        j.assertLogContains("hello", b);
+        WorkflowRun b = expect("simpleParameters")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)", "[Pipeline] { (Notifications)")
+                .go();
 
         WorkflowJob p = b.getParent();
 
