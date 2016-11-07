@@ -28,7 +28,6 @@ import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -45,7 +44,6 @@ public class DockerPipeline extends DeclarativeAgent {
         this.docker = docker;
     }
 
-    @Whitelisted
     public @Nullable String getLabel() {
         return label;
     }
@@ -55,7 +53,6 @@ public class DockerPipeline extends DeclarativeAgent {
         this.label = label;
     }
 
-    @Whitelisted
     public @Nullable String getDockerArgs() {
         return dockerArgs;
     }
@@ -65,7 +62,6 @@ public class DockerPipeline extends DeclarativeAgent {
         this.dockerArgs = dockerArgs;
     }
 
-    @Whitelisted
     public @Nonnull String getDocker() {
         return docker;
     }

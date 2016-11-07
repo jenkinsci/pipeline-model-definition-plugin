@@ -27,7 +27,6 @@ import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
@@ -42,12 +41,10 @@ public class LabelAndOtherFieldAgent extends DeclarativeAgent {
         this.otherField = otherField;
     }
 
-    @Whitelisted
     public String getLabel() {
         return label;
     }
 
-    @Whitelisted
     public String getOtherField() {
         return otherField;
     }

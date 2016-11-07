@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 
 /**
@@ -38,19 +37,16 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class StepsBlock implements Serializable {
-    @Whitelisted
     Closure closure
 
     /**
      * Empty constructor to get around some weirdness...
      */
-    @Whitelisted
     public StepsBlock() {
 
     }
 
     // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
-    @Whitelisted
     public void setClosure(Object c) {
         this.closure = (Closure) c
     }
