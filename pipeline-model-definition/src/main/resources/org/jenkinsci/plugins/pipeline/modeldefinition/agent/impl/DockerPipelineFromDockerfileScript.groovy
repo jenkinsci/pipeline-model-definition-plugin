@@ -48,24 +48,25 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
             if (!Utils.withinAStage()) {
                 script.stage(StageTagsMetadata.agentSetup()) {
                     Utils.markSyntheticStage(StageTagsMetadata.agentSetup(), StageTagsMetadata.SYNTHETIC_PRE)
-                    buildImage(body).call()
+                    buildImage().call()
                 }
             } else {
-                buildImage(body).call()
+                buildImage().call()
             }
+            img.inside(declarativeAgent.dockerArgs, {
+                body.call()
+            })
+
         }
     }
 
-    private Closure buildImage(Closure body) {
+    private Closure buildImage() {
         return {
             script.checkout script.scm
             try {
                 def hash = Utils.stringToSHA1(script.readFile(declarativeAgent.getDockerfileAsString()))
                 def imgName = "${hash}"
                 def img = script.getProperty("docker").build(imgName, "-f ${declarativeAgent.getDockerfileAsString()} .")
-                img.inside(declarativeAgent.dockerArgs, {
-                    body.call()
-                })
             } catch (FileNotFoundException f) {
                 script.error("No Dockerfile found at root of repository - failing.")
             }
