@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.AbstractModelASTCodeBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
@@ -63,6 +64,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
@@ -328,6 +330,9 @@ class ModelParser {
                     switch (name) {
                         case 'agent':
                             stage.agent = parseAgent(s)
+                            break
+                        case 'when':
+                            stage.when = parseWhen(s)
                             break
                         case 'steps':
                             def stepsBlock = matchBlockStatement(s);
@@ -637,11 +642,19 @@ class ModelParser {
 
         return thisStep
     }
+
+    public ModelASTWhen parseWhen(Statement st) {
+        return parseCodeBlockInternal(st, new ModelASTWhen(st), "When")
+    }
+
     /**
      * Parses a statement into a {@link ModelASTScriptBlock}
      */
     public ModelASTScriptBlock parseScriptBlock(Statement st) {
-        ModelASTScriptBlock scriptBlock = new ModelASTScriptBlock(st)
+        return parseCodeBlockInternal(st, new ModelASTScriptBlock(st), "Script")
+    }
+
+    private <T extends AbstractModelASTCodeBlock> T parseCodeBlockInternal(Statement st, T scriptBlock, String pronoun) {
         // TODO: Probably error out for cases with parameters?
         def bs = matchBlockStatement(st);
         if (bs != null) {
@@ -649,7 +662,7 @@ class ModelParser {
             groovyBlock.value = ModelASTValue.fromConstant(getSourceText(bs.body.code), bs.body.code)
             scriptBlock.args = groovyBlock
         } else {
-            errorCollector.error(scriptBlock, "Script step without a script block")
+            errorCollector.error(scriptBlock, "${pronoun} step without a block")
         }
 
         return scriptBlock
@@ -947,16 +960,34 @@ class ModelParser {
      */
     protected String getSourceText(ASTNode n) {
         def result = new StringBuilder();
-        for (int x = n.getLineNumber(); x <= n.getLastLineNumber(); x++) {
+        int beginLine = n.getLineNumber()
+        int endLine = n.getLastLineNumber()
+        int beginLineColumn = n.getColumnNumber()
+        int endLineLastColumn = n.getLastColumnNumber()
+
+        //The node seems to be lying about the last line, so go through each statement to try to make sure
+        if (n instanceof BlockStatement) {
+            for (Statement s : n.statements) {
+                if (s.lineNumber < beginLine) {
+                    beginLine = s.lineNumber
+                    beginLineColumn = s.columnNumber
+                }
+                if (s.lastLineNumber > endLine) {
+                    endLine = s.lastLineNumber
+                    endLineLastColumn = s.lastColumnNumber
+                }
+            }
+        }
+        for (int x = beginLine; x <= endLine; x++) {
             String line = sourceUnit.source.getLine(x, null);
             if (line == null)
                 throw new AssertionError("Unable to get source line"+x);
 
-            if (x == n.getLastLineNumber()) {
-                line = line.substring(0, n.getLastColumnNumber() - 1);
+            if (x == endLine) {
+                line = line.substring(0, endLineLastColumn - 1);
             }
-            if (x == n.getLineNumber()) {
-                line = line.substring(n.getColumnNumber() - 1);
+            if (x == beginLine) {
+                line = line.substring(beginLineColumn - 1);
             }
             result.append(line).append('\n');
         }

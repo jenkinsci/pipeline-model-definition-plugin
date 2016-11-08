@@ -60,6 +60,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
@@ -196,6 +197,12 @@ class JSONParser {
             }
         }
 
+        if (j.has("when")) {
+            def object = j.getJSONObject("when")
+            if (!object.isNullObject()) {
+                stage.when = parseWhen(object)
+            }
+        }
         return stage
 
     }
@@ -408,6 +415,13 @@ class JSONParser {
 
     public @CheckForNull ModelASTScriptBlock parseScriptBlock(JSONObject j) {
         ModelASTScriptBlock scriptBlock = new ModelASTScriptBlock(j)
+        scriptBlock.args = parseArgumentList(j.getJSONObject("arguments"))
+
+        return scriptBlock
+    }
+
+    public @CheckForNull ModelASTWhen parseWhen(JSONObject j) {
+        ModelASTWhen scriptBlock = new ModelASTWhen(j)
         scriptBlock.args = parseArgumentList(j.getJSONObject("arguments"))
 
         return scriptBlock

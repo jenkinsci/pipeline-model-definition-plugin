@@ -59,6 +59,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
@@ -187,6 +188,16 @@ class ModelValidatorImpl implements ModelValidator {
 
         return valid
     }
+
+    public boolean validateElement(ModelASTWhen when) {
+        //TODO can we evaluate if the closure will return something that can be tries for true?
+        if (when.toGroovy() =~ /\Awhen\s[{\s}]*\z/) {
+            errorCollector.error(when, "Empty when closure, remove the property or add some content.")
+            return false
+        }
+        return true
+    }
+
 
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
