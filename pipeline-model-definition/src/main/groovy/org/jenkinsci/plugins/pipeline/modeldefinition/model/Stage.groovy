@@ -45,6 +45,8 @@ public class Stage implements NestedModel, Serializable {
 
     PostStage post
 
+    StepsBlock when
+
     Tools tools
 
     Environment environment
@@ -68,7 +70,7 @@ public class Stage implements NestedModel, Serializable {
         this.agent = new Agent(s)
         return this
     }
-    
+
     Stage steps(StepsBlock s) {
         this.steps = s
         return this
@@ -76,6 +78,11 @@ public class Stage implements NestedModel, Serializable {
 
     Stage post(PostStage post) {
         this.post = post
+        return this
+    }
+
+    Stage when(StepsBlock when) {
+        this.when = when
         return this
     }
 
