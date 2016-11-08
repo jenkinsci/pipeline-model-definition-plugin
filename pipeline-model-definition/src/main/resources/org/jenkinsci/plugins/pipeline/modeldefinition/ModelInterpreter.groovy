@@ -160,37 +160,37 @@ public class ModelInterpreter implements Serializable {
                                 }
                             }.call()
                         }.call()
-
-                        try {
-                            // And finally, run the notifications.
-                            List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
-
-                            catchRequiredContextForNode(root.agent, true) {
-                                if (notificationClosures.size() > 0) {
-                                    script.stage("Notifications") {
-                                        for (int i = 0; i < notificationClosures.size(); i++) {
-                                            setUpDelegate(notificationClosures.get(i)).call()
-                                        }
-                                    }
-                                }
-                            }.call()
-                        } catch (Exception e) {
-                            script.echo "Error in notifications execution: ${e.getMessage()}"
-                            script.getProperty("currentBuild").result = Result.FAILURE
-                            if (firstError == null) {
-                                firstError = e
-                            }
-                        }
                     }.call()
 
-                }.call()
+                    try {
+                        // And finally, run the notifications.
+                        List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
 
-                if (firstError != null) {
-                    throw firstError
-                }
+                        catchRequiredContextForNode(root.agent, true) {
+                            if (notificationClosures.size() > 0) {
+                                script.stage("Notifications") {
+                                    for (int i = 0; i < notificationClosures.size(); i++) {
+                                        setUpDelegate(notificationClosures.get(i)).call()
+                                    }
+                                }
+                            }
+                        }.call()
+                    } catch (Exception e) {
+                        script.echo "Error in notifications execution: ${e.getMessage()}"
+                        script.getProperty("currentBuild").result = Result.FAILURE
+                        if (firstError == null) {
+                            firstError = e
+                        }
+                    }
+                }.call()
+            }.call()
+
+            if (firstError != null) {
+                throw firstError
             }
         }
     }
+
 
     Closure setUpDelegate(Closure c) {
         c.delegate = script
