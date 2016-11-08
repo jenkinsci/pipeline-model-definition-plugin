@@ -93,6 +93,7 @@ public class ModelInterpreter implements Serializable {
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
 
+                                runStageOrNot(thisStage, firstError) {
                                     script.stage(thisStage.name) {
                                         withEnvBlock(thisStage.getEnvVars()) {
                                             if (firstError == null) {
@@ -136,27 +137,27 @@ public class ModelInterpreter implements Serializable {
                                             }
                                         }.call()
                                     }
-                                }
+                                }.call()
+                            }
 
-                                try {
-                                    catchRequiredContextForNode(root.agent) {
-                                        List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
-                                        if (postBuildClosures.size() > 0) {
-                                            script.stage("Post Build Actions") {
-                                                for (int i = 0; i < postBuildClosures.size(); i++) {
-                                                    setUpDelegate(postBuildClosures.get(i)).call()
-                                                }
+                            try {
+                                catchRequiredContextForNode(root.agent) {
+                                    List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
+                                    if (postBuildClosures.size() > 0) {
+                                        script.stage("Post Build Actions") {
+                                            for (int i = 0; i < postBuildClosures.size(); i++) {
+                                                setUpDelegate(postBuildClosures.get(i)).call()
                                             }
                                         }
-                                    }.call()
-                                } catch (Exception e) {
-                                    script.echo "Error in postBuild execution: ${e.getMessage()}"
-                                    script.getProperty("currentBuild").result = Result.FAILURE
-                                    if (firstError == null) {
-                                        firstError = e
                                     }
+                                }.call()
+                            } catch (Exception e) {
+                                script.echo "Error in postBuild execution: ${e.getMessage()}"
+                                script.getProperty("currentBuild").result = Result.FAILURE
+                                if (firstError == null) {
+                                    firstError = e
                                 }
-                            }.call()
+                            }
                         }.call()
                     }.call()
 
@@ -329,6 +330,20 @@ public class ModelInterpreter implements Serializable {
                         recursiveWrappers(wrapperNames, wrappers, body).call()
                     }
                 }
+            }
+        }
+    }
+
+    def runStageOrNot(Stage stage, Throwable firstError, Closure body) {
+        if (stage.when != null && firstError == null) {
+            return {
+                if (setUpDelegate(stage.when.closure).call()) {
+                    body.call()
+                }
+            }
+        } else {
+            return {
+                body.call()
             }
         }
     }
