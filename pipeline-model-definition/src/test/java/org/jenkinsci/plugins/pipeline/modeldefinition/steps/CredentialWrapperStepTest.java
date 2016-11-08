@@ -82,6 +82,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         store.addCredentials(Domain.global(), mixedEnvCred2);
 
         folder = j.jenkins.createProject(Folder.class, "testFolder");
+        folder.addProperty(new FolderCredentialsProvider.FolderCredentialsProperty(new DomainCredentials[0]));
         j.configRoundtrip(folder);
         CredentialsStore folderStore = folder.getProperties().get(FolderCredentialsProvider.FolderCredentialsProperty.class).getStore();
         StringCredentialsImpl sc = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred1Id, "test", Secret.fromString(mixedEnvInFolderCred1Secret));
