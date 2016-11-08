@@ -93,100 +93,101 @@ public class ModelInterpreter implements Serializable {
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
 
-                                runStageOrNot(thisStage, firstError) {
-                                    script.stage(thisStage.name) {
-                                        withEnvBlock(thisStage.getEnvVars()) {
-                                            if (firstError == null) {
-                                                inDeclarativeAgent(thisStage.agent) {
-                                                    withCredentialsBlock(thisStage.getEnvCredentials()) {
-                                                        toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                            try {
-                                                                catchRequiredContextForNode(root.agent) {
-                                                                    setUpDelegate(thisStage.steps.closure).call()
-                                                                }.call()
-                                                            } catch (Exception e) {
-                                                                script.echo "Error in stages execution: ${e.getMessage()}"
-                                                                script.getProperty("currentBuild").result = Result.FAILURE
-                                                                if (firstError == null) {
-                                                                    firstError = e
-                                                                }
-                                                            } finally {
-                                                                // And finally, run the post stage steps.
-                                                                List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-                                                                catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
-                                                                    if (postClosures.size() > 0) {
-                                                                        script.echo("Post stage")
-                                                                        //TODO should this be a nested stage instead?
-                                                                        try {
-                                                                            for (int ni = 0; ni < postClosures.size(); ni++) {
-                                                                                setUpDelegate(postClosures.get(ni)).call()
-                                                                            }
-                                                                        } catch (Exception e) {
-                                                                            script.echo "Error in stage post: ${e.getMessage()}"
-                                                                            script.getProperty("currentBuild").result = Result.FAILURE
-                                                                            if (firstError == null) {
-                                                                                firstError = e
+                                    runStageOrNot(thisStage, firstError) {
+                                        script.stage(thisStage.name) {
+                                            withEnvBlock(thisStage.getEnvVars()) {
+                                                if (firstError == null) {
+                                                    inDeclarativeAgent(thisStage.agent) {
+                                                        withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                            toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                                try {
+                                                                    catchRequiredContextForNode(root.agent) {
+                                                                        setUpDelegate(thisStage.steps.closure).call()
+                                                                    }.call()
+                                                                } catch (Exception e) {
+                                                                    script.echo "Error in stages execution: ${e.getMessage()}"
+                                                                    script.getProperty("currentBuild").result = Result.FAILURE
+                                                                    if (firstError == null) {
+                                                                        firstError = e
+                                                                    }
+                                                                } finally {
+                                                                    // And finally, run the post stage steps.
+                                                                    List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
+                                                                    catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
+                                                                        if (postClosures.size() > 0) {
+                                                                            script.echo("Post stage")
+                                                                            //TODO should this be a nested stage instead?
+                                                                            try {
+                                                                                for (int ni = 0; ni < postClosures.size(); ni++) {
+                                                                                    setUpDelegate(postClosures.get(ni)).call()
+                                                                                }
+                                                                            } catch (Exception e) {
+                                                                                script.echo "Error in stage post: ${e.getMessage()}"
+                                                                                script.getProperty("currentBuild").result = Result.FAILURE
+                                                                                if (firstError == null) {
+                                                                                    firstError = e
+                                                                                }
                                                                             }
                                                                         }
-                                                                    }
-                                                                }.call()
-                                                            }
+                                                                    }.call()
+                                                                }
+                                                            }.call()
                                                         }.call()
                                                     }.call()
-                                                }.call()
-                                            }
-                                        }.call()
-                                    }
-                                }.call()
-                            }
+                                                }
+                                            }.call()
+                                        }
+                                    }.call()
+                                }
 
-                            try {
-                                catchRequiredContextForNode(root.agent) {
-                                    List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
-                                    if (postBuildClosures.size() > 0) {
-                                        script.stage("Post Build Actions") {
-                                            for (int i = 0; i < postBuildClosures.size(); i++) {
-                                                setUpDelegate(postBuildClosures.get(i)).call()
+                                try {
+                                    catchRequiredContextForNode(root.agent) {
+                                        List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
+                                        if (postBuildClosures.size() > 0) {
+                                            script.stage("Post Build Actions") {
+                                                for (int i = 0; i < postBuildClosures.size(); i++) {
+                                                    setUpDelegate(postBuildClosures.get(i)).call()
+                                                }
                                             }
                                         }
+                                    }.call()
+                                } catch (Exception e) {
+                                    script.echo "Error in postBuild execution: ${e.getMessage()}"
+                                    script.getProperty("currentBuild").result = Result.FAILURE
+                                    if (firstError == null) {
+                                        firstError = e
                                     }
-                                }.call()
-                            } catch (Exception e) {
-                                script.echo "Error in postBuild execution: ${e.getMessage()}"
-                                script.getProperty("currentBuild").result = Result.FAILURE
-                                if (firstError == null) {
-                                    firstError = e
                                 }
-                            }
+                            }.call()
                         }.call()
+
+                        try {
+                            // And finally, run the notifications.
+                            List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
+
+                            catchRequiredContextForNode(root.agent, true) {
+                                if (notificationClosures.size() > 0) {
+                                    script.stage("Notifications") {
+                                        for (int i = 0; i < notificationClosures.size(); i++) {
+                                            setUpDelegate(notificationClosures.get(i)).call()
+                                        }
+                                    }
+                                }
+                            }.call()
+                        } catch (Exception e) {
+                            script.echo "Error in notifications execution: ${e.getMessage()}"
+                            script.getProperty("currentBuild").result = Result.FAILURE
+                            if (firstError == null) {
+                                firstError = e
+                            }
+                        }
                     }.call()
 
-                    try {
-                        // And finally, run the notifications.
-                        List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
-
-                        catchRequiredContextForNode(root.agent, true) {
-                            if (notificationClosures.size() > 0) {
-                                script.stage("Notifications") {
-                                    for (int i = 0; i < notificationClosures.size(); i++) {
-                                        setUpDelegate(notificationClosures.get(i)).call()
-                                    }
-                                }
-                            }
-                        }.call()
-                    } catch (Exception e) {
-                        script.echo "Error in notifications execution: ${e.getMessage()}"
-                        script.getProperty("currentBuild").result = Result.FAILURE
-                        if (firstError == null) {
-                            firstError = e
-                        }
-                    }
                 }.call()
 
-            }.call()
-
-            if (firstError != null) {
-                throw firstError
+                if (firstError != null) {
+                    throw firstError
+                }
             }
         }
     }
