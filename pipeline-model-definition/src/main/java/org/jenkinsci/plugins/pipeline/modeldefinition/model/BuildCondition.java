@@ -26,14 +26,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 import hudson.ExtensionComponent;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,11 +43,13 @@ import java.util.Set;
  * @author Andrew Bayer
  */
 public abstract class BuildCondition implements Serializable, ExtensionPoint {
-    @Whitelisted
+
     public abstract boolean meetsCondition(WorkflowRun r);
 
     /**
      * All the registered {@link BuildCondition}s.
+     *
+     * @return A list of all registered {@link BuildCondition}s.
      */
     public static ExtensionList<BuildCondition> all() {
         return ExtensionList.lookup(BuildCondition.class);

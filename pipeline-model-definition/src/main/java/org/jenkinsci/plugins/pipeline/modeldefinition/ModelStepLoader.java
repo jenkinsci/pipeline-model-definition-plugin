@@ -24,14 +24,11 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapperWhitelist;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.ProxyWhitelist;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
+import org.jenkinsci.plugins.workflow.cps.CpsThread;
 import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 
 /**
  * Loads the main "pipeline" step as well as the additional CPS-transformed code it depends on.
@@ -51,6 +48,10 @@ public class ModelStepLoader extends GlobalVariable {
     @Override
     @Nonnull
     public Object getValue(@Nonnull CpsScript script) throws Exception {
+        CpsThread c = CpsThread.current();
+        if (c == null)
+            throw new IllegalStateException("Expected to be called from CpsThread");
+
         // Make sure we've already loaded ClosureModelTranslator or load it now.
         script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ClosureModelTranslator");
         script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.PropertiesToMapTranslator");
@@ -63,20 +64,4 @@ public class ModelStepLoader extends GlobalVariable {
                 .newInstance(script);
     }
 
-    // TODO: Remember to prune out debugging stuff from the whitelist in place of a better debugging setup.
-    @Extension
-    public static class ModelDefinitionWhitelist extends ProxyWhitelist {
-        public ModelDefinitionWhitelist() throws IOException {
-            super(new MethodMissingWrapperWhitelist(), new StaticWhitelist(
-                    "method java.util.Map containsKey java.lang.Object",
-                    "method java.util.Collection isEmpty",
-                    "method java.util.Map putAll java.util.Map",
-                    "method java.util.Collection addAll java.util.Collection",
-
-                    // Used for debugging - can probably be removed eventually
-                    "staticField java.lang.System err",
-                    "method java.io.PrintStream println java.lang.String"
-            ));
-        }
-    }
 }

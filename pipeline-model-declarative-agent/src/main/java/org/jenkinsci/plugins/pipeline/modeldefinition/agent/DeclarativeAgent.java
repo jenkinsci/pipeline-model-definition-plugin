@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 
@@ -47,13 +46,13 @@ public abstract class DeclarativeAgent extends AbstractDescribableImpl<Declarati
      * @throws Exception if the script source cannot be loaded or we're called from outside a CpsThread.
      */
     @SuppressWarnings("unchecked")
-    @Whitelisted
     public DeclarativeAgentScript getScript(CpsScript cpsScript) throws Exception {
         CpsThread c = CpsThread.current();
         if (c == null)
             throw new IllegalStateException("Expected to be called from CpsThread");
 
-        return (DeclarativeAgentScript) cpsScript.getClass().getClassLoader()
+        return (DeclarativeAgentScript) cpsScript.getClass()
+                .getClassLoader()
                 .loadClass(getDescriptor().getDeclarativeAgentScriptClass())
                 .getConstructor(CpsScript.class, DeclarativeAgent.class)
                 .newInstance(cpsScript, this);

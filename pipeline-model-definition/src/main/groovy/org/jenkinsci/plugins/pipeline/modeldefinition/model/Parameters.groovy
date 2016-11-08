@@ -31,7 +31,6 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import hudson.model.ParameterDefinition
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.Nonnull
 
@@ -61,7 +60,6 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
      *
      * @return A map of valid parameter type keys to their actual type IDs.
      */
-    @Whitelisted
     public static Map<String,String> getAllowedParameterTypes() {
         return parameterTypeCache.get(CACHE_KEY)
     }
@@ -72,7 +70,6 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the parameter types cache.
      */
-    @Whitelisted
     public static String typeForKey(@Nonnull String key) {
         return getAllowedParameterTypes().get(key)
     }
