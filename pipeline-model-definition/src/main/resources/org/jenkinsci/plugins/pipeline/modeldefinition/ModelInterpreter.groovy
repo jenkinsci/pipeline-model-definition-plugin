@@ -23,17 +23,17 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
+
+import javax.annotation.Nonnull
 
 /**
  * CPS-transformed code for actually performing the build.
@@ -83,83 +83,85 @@ public class ModelInterpreter implements Serializable {
                     // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
                     // We save the caught error, if any, for throwing at the end of the build.
                     inDeclarativeAgent(root.agent) {
-                        toolsBlock(root.agent, root.tools) {
-                            // If we have an agent and script.scm isn't null, run checkout scm
-                            if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                        withCredentialsBlock(root.getEnvCredentials()) {
+                            toolsBlock(root.agent, root.tools) {
+                                // If we have an agent and script.scm isn't null, run checkout scm
                                 script.stage(StageTagsMetadata.checkout()) {
                                     Utils.markSyntheticStage(StageTagsMetadata.checkout(), StageTagsMetadata.SYNTHETIC_PRE)
                                     script.checkout script.scm
                                 }
-                            }
 
-                            for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                Stage thisStage = root.stages.getStages().get(i)
+                                for (int i = 0; i < root.stages.getStages().size(); i++) {
+                                    Stage thisStage = root.stages.getStages().get(i)
 
-                                runStageOrNot(thisStage, firstError) {
-                                    script.stage(thisStage.name) {
-                                        withEnvBlock(thisStage.getEnvVars()) {
-                                            if (firstError == null) {
-                                                inDeclarativeAgent(thisStage.agent) {
-                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                        try {
-                                                            catchRequiredContextForNode(root.agent) {
-                                                                setUpDelegate(thisStage.steps.closure).call()
-                                                            }.call()
-                                                        } catch (Exception e) {
-                                                            script.echo "Error in stages execution: ${e.getMessage()}"
-                                                            script.getProperty("currentBuild").result = Result.FAILURE
-                                                            if (firstError == null) {
-                                                                firstError = e
-                                                            }
-                                                        } finally {
-                                                            // And finally, run the post stage steps.
-                                                            List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-                                                            catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
-                                                                if (postClosures.size() > 0) {
-                                                                    script.echo("Post stage")
-                                                                    //TODO should this be a nested stage instead?
-                                                                    try {
-                                                                        for (int ni = 0; ni < postClosures.size(); ni++) {
-                                                                            setUpDelegate(postClosures.get(ni)).call()
-                                                                        }
-                                                                    } catch (Exception e) {
-                                                                        script.echo "Error in stage post: ${e.getMessage()}"
-                                                                        script.getProperty("currentBuild").result = Result.FAILURE
-                                                                        if (firstError == null) {
-                                                                            firstError = e
-                                                                        }
+                                    runStageOrNot(thisStage, firstError) {
+                                        script.stage(thisStage.name) {
+                                            withEnvBlock(thisStage.getEnvVars()) {
+                                                if (firstError == null) {
+                                                    inDeclarativeAgent(thisStage.agent) {
+                                                        withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                            toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                                try {
+                                                                    catchRequiredContextForNode(root.agent) {
+                                                                        setUpDelegate(thisStage.steps.closure).call()
+                                                                    }.call()
+                                                                } catch (Exception e) {
+                                                                    script.echo "Error in stages execution: ${e.getMessage()}"
+                                                                    script.getProperty("currentBuild").result = Result.FAILURE
+                                                                    if (firstError == null) {
+                                                                        firstError = e
                                                                     }
+                                                                } finally {
+                                                                    // And finally, run the post stage steps.
+                                                                    List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
+                                                                    catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
+                                                                        if (postClosures.size() > 0) {
+                                                                            script.echo("Post stage")
+                                                                            //TODO should this be a nested stage instead?
+                                                                            try {
+                                                                                for (int ni = 0; ni < postClosures.size(); ni++) {
+                                                                                    setUpDelegate(postClosures.get(ni)).call()
+                                                                                }
+                                                                            } catch (Exception e) {
+                                                                                script.echo "Error in stage post: ${e.getMessage()}"
+                                                                                script.getProperty("currentBuild").result = Result.FAILURE
+                                                                                if (firstError == null) {
+                                                                                    firstError = e
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }.call()
                                                                 }
                                                             }.call()
-                                                        }
+                                                        }.call()
                                                     }.call()
-                                                }.call()
-                                            } else {
-                                                Utils.markStageSkippedForFailure(thisStage.name)
-                                            }
-                                        }.call()
-                                    }
-                                }.call()
-                            }
-                            try {
-                                catchRequiredContextForNode(root.agent) {
-                                    List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
-                                    if (postBuildClosures.size() > 0) {
-                                        script.stage(StageTagsMetadata.postBuild()) {
-                                            Utils.markSyntheticStage(StageTagsMetadata.postBuild(), StageTagsMetadata.SYNTHETIC_POST)
-                                            for (int i = 0; i < postBuildClosures.size(); i++) {
-                                                setUpDelegate(postBuildClosures.get(i)).call()
+                                                } else {
+                                                    Utils.markStageSkippedForFailure(thisStage.name)
+                                                }
+                                            }.call()
+                                        }
+                                    }.call()
+                                }
+                                try {
+                                    catchRequiredContextForNode(root.agent) {
+                                        List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
+                                        if (postBuildClosures.size() > 0) {
+                                            script.stage(StageTagsMetadata.postBuild()) {
+                                                Utils.markSyntheticStage(StageTagsMetadata.postBuild(), StageTagsMetadata.SYNTHETIC_POST)
+                                                for (int i = 0; i < postBuildClosures.size(); i++) {
+                                                    setUpDelegate(postBuildClosures.get(i)).call()
+                                                }
                                             }
                                         }
+                                    }.call()
+                                } catch (Exception e) {
+                                    script.echo "Error in post execution: ${e.getMessage()}"
+                                    script.getProperty("currentBuild").result = Result.FAILURE
+                                    if (firstError == null) {
+                                        firstError = e
                                     }
-                                }.call()
-                            } catch (Exception e) {
-                                script.echo "Error in postBuild execution: ${e.getMessage()}"
-                                script.getProperty("currentBuild").result = Result.FAILURE
-                                if (firstError == null) {
-                                    firstError = e
                                 }
-                            }
+                            }.call()
                         }.call()
                     }.call()
 
@@ -184,7 +186,6 @@ public class ModelInterpreter implements Serializable {
                         }
                     }
                 }.call()
-
             }.call()
 
             if (firstError != null) {
@@ -192,6 +193,7 @@ public class ModelInterpreter implements Serializable {
             }
         }
     }
+
 
     Closure setUpDelegate(Closure c) {
         c.delegate = script
@@ -209,7 +211,7 @@ public class ModelInterpreter implements Serializable {
                         script.error("Attempted to execute a notification step that requires a node context. Notifications do not run inside a 'node { ... }' block.")
                     } else if (!agent.hasAgent()) {
                         script.error("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
-                            "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.")
+                                "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.")
                     } else {
                         throw e
                     }
@@ -232,6 +234,32 @@ public class ModelInterpreter implements Serializable {
                 body.call()
             }
         }
+    }
+
+    def withCredentialsBlock(@Nonnull Map<String, CredentialWrapper> credentials, Closure body) {
+        if (!credentials.isEmpty()) {
+            List<Map<String, Object>> parameters = createWithCredentialsParameters(credentials)
+            return {
+                script.withCredentials(parameters) {
+                    body.call()
+                }
+            }
+        } else {
+            return {
+                body.call()
+            }
+        }
+    }
+
+    @NonCPS
+    private List<Map<String, Object>> createWithCredentialsParameters(
+            @Nonnull Map<String, CredentialWrapper> credentials) {
+        List<Map<String, Object>> parameters = []
+        Set<Map.Entry<String, CredentialWrapper>> set = credentials.entrySet()
+        for (Map.Entry<String, CredentialWrapper> entry : set) {
+            entry.value.addParameters(entry.key, parameters)
+        }
+        parameters
     }
 
     def toolsBlock(Agent agent, Tools tools, Closure body) {
