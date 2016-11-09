@@ -318,20 +318,31 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    /**
+     * Executes a given closure if there is no error and either there is no when condition on the stage or the when condition
+     * passes.
+     *
+     * @param stage The stage we're executing
+     * @param firstError The current error state
+     * @param body The closure to execute
+     * @return The return of the resulting executed closure
+     */
     def runStageOrNot(Stage stage, Throwable firstError, Closure body) {
-        if (stage.when != null && firstError == null) {
-            return {
-                if (setUpDelegate(stage.when.closure)) {
-                    body.call()
-                }
-            }.call()
-        } else {
+        if (firstError == null && (stage.when == null || setUpDelegate(stage.when.closure))) {
             return {
                 body.call()
             }.call()
         }
     }
 
+    /**
+     * Executes a single stage and post-stage actions, and returns any error it may have generated.
+     *
+     * @param root The root context we're running in
+     * @param thisStage The stage context we're running in
+     * @param firstError The current error state
+     * @return The updated current error state
+     */
     def executeSingleStage(Root root, Stage thisStage, Throwable firstError) {
         try {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
@@ -368,6 +379,12 @@ public class ModelInterpreter implements Serializable {
         return firstError
     }
 
+    /**
+     * Executes the notifications for this build.
+     * @param root The root context we're running in.
+     * @param firstError The current error state
+     * @return The updated current error state
+     */
     def executeNotifications(Root root, Throwable firstError) {
         try {
             // And finally, run the notifications.
@@ -393,6 +410,12 @@ public class ModelInterpreter implements Serializable {
         return firstError
     }
 
+    /**
+     * Executes the post build actions for this build
+     * @param root The root context we're executing in
+     * @param firstError The current error state
+     * @return The updated current error state
+     */
     def executePostBuild(Root root, Throwable firstError) {
         try {
             catchRequiredContextForNode(root.agent) {
@@ -416,6 +439,11 @@ public class ModelInterpreter implements Serializable {
         return firstError
     }
 
+    /**
+     * Sets any appropriate job properties for this build.
+     *
+     * @param root The root context we're running in
+     */
     def executeProperties(Root root) {
         def jobProps = []
 
