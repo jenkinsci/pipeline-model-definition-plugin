@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import hudson.Launcher;
 import hudson.model.ParameterDefinition;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
@@ -42,9 +43,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
+import org.hamcrest.Matcher;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
@@ -63,19 +66,19 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.text.IsEqualIgnoringWhiteSpace.equalToIgnoringWhiteSpace;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -416,9 +419,8 @@ public abstract class AbstractModelDefTest {
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
         private boolean hasFailureCause;
-        private String archivedFile;
-        private String archivedFileContents;
         private List<String> inLogInOrder;
+        private List<Matcher<Run>> buildMatchers;
 
         private ExpectationsBuilder(String resourceParent, String resource) {
             this(Result.SUCCESS, resourceParent, resource);
@@ -428,6 +430,7 @@ public abstract class AbstractModelDefTest {
             this.result = result;
             this.resourceParent = resourceParent;
             this.resource = resource;
+            buildMatchers = new ArrayList<>();
         }
 
         public ExpectationsBuilder inLogInOrder(String... msgsInOrder) {
@@ -468,15 +471,25 @@ public abstract class AbstractModelDefTest {
             return this;
         }
 
-        public ExpectationsBuilder archivedFile(String file) {
-            return archivedFileWithContents(file, null);
+        public ExpectationsBuilder buildMatches(Matcher<Run>... matchers) {
+            buildMatchers.addAll(Arrays.asList(matchers));
+            return this;
         }
 
-        public ExpectationsBuilder archivedFileWithContents(String file, String contents) {
-            this.archivedFile = file;
-            this.archivedFileContents = contents;
+        public ExpectationsBuilder archives(Matcher<String> fileName, Matcher<String> content, Charset encoding) {
+            return buildMatches(HasArchived.hasArchivedString(fileName, content, encoding));
+        }
 
-            return this;
+        public ExpectationsBuilder archives(Matcher<String> fileName, Matcher<String> content) {
+            return buildMatches(HasArchived.hasArchivedString(fileName, content));
+        }
+
+        public ExpectationsBuilder archives(String fileName, String content) {
+            return buildMatches(HasArchived.hasArchivedString(equalTo(fileName), equalToIgnoringWhiteSpace(content)));
+        }
+
+        public ExpectationsBuilder archives(String fileName, Matcher<String> content) {
+            return buildMatches(HasArchived.hasArchivedString(equalTo(fileName), content));
         }
 
         public WorkflowRun go() throws Exception {
@@ -510,18 +523,14 @@ public abstract class AbstractModelDefTest {
             if (hasFailureCause) {
                 assertNotNull(run.getExecution().getCauseOfFailure());
             }
-            if (archivedFile != null) {
-                VirtualFile f = run.getArtifactManager().root().child(archivedFile);
-                assertTrue(f.exists());
-                if (archivedFileContents != null) {
-                    assertEquals(archivedFileContents, IOUtils.toString(f.open()));
-                }
-            }
             if (inLogInOrder != null && !inLogInOrder.isEmpty()) {
                 String buildLog = JenkinsRule.getLog(run);
                 assertThat(buildLog, stringContainsInOrder(inLogInOrder));
             }
 
+            for (Matcher<Run> matcher : buildMatchers) {
+                assertThat(run, matcher);
+            }
             return run;
         }
 
@@ -530,6 +539,7 @@ public abstract class AbstractModelDefTest {
             resource = null;
             logContains = null;
             logNotContains = null;
+            buildMatchers = new ArrayList<>();
             return this;
         }
     }

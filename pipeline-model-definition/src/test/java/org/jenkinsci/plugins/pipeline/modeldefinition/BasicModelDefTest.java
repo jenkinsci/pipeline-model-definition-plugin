@@ -137,7 +137,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         env(s).set();
         expect("metaStepSyntax")
                 .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
-                .archivedFileWithContents("msg.out", "hello world")
+                .archives("msg.out", "hello world")
                 .go();
     }
 
@@ -146,7 +146,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         env(s).set();
         expect("legacyMetaStepSyntax")
                 .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
-                .archivedFileWithContents("msg.out", "hello world")
+                .archives("msg.out", "hello world")
                 .go();
     }
 
