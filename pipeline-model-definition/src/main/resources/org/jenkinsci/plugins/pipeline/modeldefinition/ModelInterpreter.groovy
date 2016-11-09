@@ -98,7 +98,7 @@ public class ModelInterpreter implements Serializable {
                                             withEnvBlock(thisStage.getEnvVars()) {
                                                 if (firstError == null) {
                                                     inDeclarativeAgent(thisStage.agent) {
-                                                        withCredentialsBlock(root.getEnvCredentials()) {
+                                                        withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                             toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                 try {
                                                                     catchRequiredContextForNode(root.agent) {
