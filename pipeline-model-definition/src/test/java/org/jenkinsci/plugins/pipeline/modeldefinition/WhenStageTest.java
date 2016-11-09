@@ -71,8 +71,8 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenException() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
         expect(Result.FAILURE, "when", "whenException").runFromRepo(false)
-                .logContains("One", "Hello", "Should I run?", "NullPointerException")
-                .logNotContains("Two", "World").go();
+                .logContains("One", "Hello", "Two", "Should I run?", "NullPointerException")
+                .logNotContains("World").go();
     }
 
     @Test
