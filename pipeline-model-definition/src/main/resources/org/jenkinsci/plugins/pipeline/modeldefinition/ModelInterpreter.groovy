@@ -86,9 +86,11 @@ public class ModelInterpreter implements Serializable {
                         withCredentialsBlock(root.getEnvCredentials()) {
                             toolsBlock(root.agent, root.tools) {
                                 // If we have an agent and script.scm isn't null, run checkout scm
-                                script.stage(StageTagsMetadata.checkout()) {
-                                    Utils.markSyntheticStage(StageTagsMetadata.checkout(), StageTagsMetadata.SYNTHETIC_PRE)
-                                    script.checkout script.scm
+                                if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                                    script.stage(StageTagsMetadata.checkout()) {
+                                        Utils.markSyntheticStage(StageTagsMetadata.checkout(), StageTagsMetadata.SYNTHETIC_PRE)
+                                        script.checkout script.scm
+                                    }
                                 }
 
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
