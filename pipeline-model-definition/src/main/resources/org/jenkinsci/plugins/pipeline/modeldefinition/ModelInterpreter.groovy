@@ -94,9 +94,9 @@ public class ModelInterpreter implements Serializable {
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
 
-                                    runStageOrNot(thisStage, firstError) {
-                                        script.stage(thisStage.name) {
-                                            withEnvBlock(thisStage.getEnvVars()) {
+                                    script.stage(thisStage.name) {
+                                        withEnvBlock(thisStage.getEnvVars()) {
+                                            if (thisStage.when == null || setUpDelegate(thisStage.when.closure).call()) {
                                                 if (firstError == null) {
                                                     inDeclarativeAgent(thisStage.agent) {
                                                         withCredentialsBlock(thisStage.getEnvCredentials()) {
@@ -138,9 +138,11 @@ public class ModelInterpreter implements Serializable {
                                                 } else {
                                                     Utils.markStageSkippedForFailure(thisStage.name)
                                                 }
-                                            }.call()
-                                        }
-                                    }.call()
+                                            } else {
+                                                Utils.markStageSkippedForConditional(thisStage.name)
+                                            }
+                                        }.call()
+                                    }
                                 }
                                 try {
                                     catchRequiredContextForNode(root.agent) {
@@ -348,20 +350,6 @@ public class ModelInterpreter implements Serializable {
                         recursiveWrappers(wrapperNames, wrappers, body).call()
                     }
                 }
-            }
-        }
-    }
-
-    def runStageOrNot(Stage stage, Throwable firstError, Closure body) {
-        if (stage.when != null && firstError == null) {
-            return {
-                if (setUpDelegate(stage.when.closure).call()) {
-                    body.call()
-                }
-            }
-        } else {
-            return {
-                body.call()
             }
         }
     }

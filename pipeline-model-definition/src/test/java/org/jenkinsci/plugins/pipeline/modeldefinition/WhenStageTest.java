@@ -62,7 +62,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void simpleWhen() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
         ExpectationsBuilder expect = expect("when", "simpleWhen").runFromRepo(false);
-        expect.logContains("One", "Hello", "Should I run?").logNotContains("Two", "World").go();
+        expect.logContains("One", "Hello", "Two", "Should I run?").logNotContains("World").go();
         env(s).put("SECOND_STAGE", "RUN").set();
         expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Should I run?", "Two", "World").go();
     }
