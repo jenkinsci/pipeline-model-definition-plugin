@@ -77,7 +77,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
         j.assertLogContains("BUILD_NUM_ENV is 1", b);
         j.assertLogContains("ANOTHER_ENV is 1", b);
         j.assertLogContains("INHERITED_ENV is 1 is inherited", b);
-        j.assertLogContains("ACME_FUNC is [banana] tada", b);
+        j.assertLogContains("ACME_FUNC is banana tada", b);
     }
 
 }

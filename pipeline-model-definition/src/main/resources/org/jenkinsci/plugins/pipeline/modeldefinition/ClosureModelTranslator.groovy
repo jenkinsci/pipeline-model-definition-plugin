@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.ClosureContentsChecker
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
@@ -131,7 +132,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                     }
                     // if it's a PropertiesToMap, we use PropertiesToMapTranslator to translate it into the right form.
                     else if (Utils.assignableFromWrapper(PropertiesToMap.class, actualType)) {
-                        def ptm = new PropertiesToMapTranslator(script)
+                        def ptm = new PropertiesToMapTranslator(script, Utils.assignableFromWrapper(Environment.class, actualType))
                         resolveClosure(argValue, ptm)
                         resultValue = ptm.toNestedModel(actualType)
                     }
