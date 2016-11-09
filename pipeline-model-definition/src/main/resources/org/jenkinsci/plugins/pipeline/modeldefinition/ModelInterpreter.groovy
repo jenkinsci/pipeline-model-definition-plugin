@@ -23,20 +23,17 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
+
+import javax.annotation.Nonnull
 
 /**
  * CPS-transformed code for actually performing the build.
@@ -73,36 +70,39 @@ public class ModelInterpreter implements Serializable {
                     // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
                     // We save the caught error, if any, for throwing at the end of the build.
                     inDeclarativeAgent(root.agent) {
-                        toolsBlock(root.agent, root.tools) {
-                            // If we have an agent and script.scm isn't null, run checkout scm
-                            if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                script.checkout script.scm
-                            }
+                        withCredentialsBlock(root.getEnvCredentials()) {
+                            toolsBlock(root.agent, root.tools) {
+                                // If we have an agent and script.scm isn't null, run checkout scm
+                                if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                                    script.checkout script.scm
+                                }
 
-                            for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                Stage thisStage = root.stages.getStages().get(i)
+                                for (int i = 0; i < root.stages.getStages().size(); i++) {
+                                    Stage thisStage = root.stages.getStages().get(i)
 
-                                runStageOrNot(thisStage, firstError) {
-                                    script.stage(thisStage.name) {
-                                        withEnvBlock(thisStage.getEnvVars()) {
-                                            if (firstError == null) {
-                                                inDeclarativeAgent(thisStage.agent) {
-                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                        // Execute the actual stage and potential post-stage actions
-                                                        firstError = executeSingleStage(root, thisStage, firstError)
+                                    runStageOrNot(thisStage, firstError) {
+                                        script.stage(thisStage.name) {
+                                            withEnvBlock(thisStage.getEnvVars()) {
+                                                if (firstError == null) {
+                                                    inDeclarativeAgent(thisStage.agent) {
+                                                        withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                            toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                                // Execute the actual stage and potential post-stage actions
+                                                                firstError = executeSingleStage(root, thisStage, firstError)
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            // Execute post-build actions now that we've finished all stages.
-                            firstError = executePostBuild(root, firstError)
+                                // Execute post-build actions now that we've finished all stages.
+                                firstError = executePostBuild(root, firstError)
+                            }
                         }
                     }
-
                     // Execute notifications now that we've gotten past post-build and left the node.
                     firstError = executeNotifications(root, firstError)
                 }
@@ -113,6 +113,7 @@ public class ModelInterpreter implements Serializable {
             }
         }
     }
+
 
     Closure setUpDelegate(Closure c) {
         c.delegate = script
@@ -130,7 +131,7 @@ public class ModelInterpreter implements Serializable {
                         script.error("Attempted to execute a notification step that requires a node context. Notifications do not run inside a 'node { ... }' block.")
                     } else if (!agent.hasAgent()) {
                         script.error("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
-                            "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.")
+                                "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.")
                     } else {
                         throw e
                     }
@@ -155,6 +156,32 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    def withCredentialsBlock(@Nonnull Map<String, CredentialWrapper> credentials, Closure body) {
+        if (!credentials.isEmpty()) {
+            List<Map<String, Object>> parameters = createWithCredentialsParameters(credentials)
+            return {
+                script.withCredentials(parameters) {
+                    body.call()
+                }
+            }.call()
+        } else {
+            return {
+                body.call()
+            }.call()
+        }
+    }
+
+    @NonCPS
+    private List<Map<String, Object>> createWithCredentialsParameters(
+            @Nonnull Map<String, CredentialWrapper> credentials) {
+        List<Map<String, Object>> parameters = []
+        Set<Map.Entry<String, CredentialWrapper>> set = credentials.entrySet()
+        for (Map.Entry<String, CredentialWrapper> entry : set) {
+            entry.value.addParameters(entry.key, parameters)
+        }
+        parameters
+    }
+
     def toolsBlock(Agent agent, Tools tools, Closure body) {
         // If there's no agent, don't install tools in the first place.
         if (agent.hasAgent() && tools != null) {
@@ -163,9 +190,9 @@ public class ModelInterpreter implements Serializable {
             for (int i = 0; i < toolsList.size(); i++) {
                 def entry = toolsList.get(i)
                 String k = entry.get(0)
-                String v= entry.get(1)
+                String v = entry.get(1)
 
-                String toolPath = script.tool(name:v, type:Tools.typeForKey(k))
+                String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
 
                 toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
             }
