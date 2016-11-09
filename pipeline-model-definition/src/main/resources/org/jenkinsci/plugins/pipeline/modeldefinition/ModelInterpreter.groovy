@@ -114,13 +114,27 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-
-    Closure setUpDelegate(Closure c) {
+    /**
+     * Actually execute a closure for a stage, conditional or post action.
+     *
+     * @param c The closure to execute
+     */
+    def setUpDelegate(Closure c) {
         c.delegate = script
         c.resolveStrategy = Closure.DELEGATE_FIRST
-        return c
+        c.call()
     }
 
+    /**
+     * Execute the given body closure while watching for errors that will specifically show up when there's an attempt to
+     * run a step that needs a node context but doesn't have one.
+     *
+     * @param agent The {@link Agent} that applies to this execution. Used to clarify error message.
+     * @param inNotifications Whether we're currently in the notifications section, for error message clarification.
+     * @param body The closure to call
+     * @return The return of the resulting executed closure
+     * @throws Exception
+     */
     def catchRequiredContextForNode(Agent agent, boolean inNotifications = false, Closure body) throws Exception {
         return {
             try {
@@ -142,6 +156,13 @@ public class ModelInterpreter implements Serializable {
         }.call()
     }
 
+    /**
+     * Execute a body closure within a "withEnv" block.
+     *
+     * @param envVars A list of "FOO=BAR" environment variables. Can be null.
+     * @param body The closure to execute
+     * @return The return of the resulting executed closure
+     */
     def withEnvBlock(List<String> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
             return {
@@ -156,6 +177,13 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    /**
+     * Execute a given closure within a "withCredentials" block.
+     *
+     * @param credentials A map of strings to {@link CredentialWrapper}s
+     * @param body The closure to execute
+     * @return The return of the resulting executed closure
+     */
     def withCredentialsBlock(@Nonnull Map<String, CredentialWrapper> credentials, Closure body) {
         if (!credentials.isEmpty()) {
             List<Map<String, Object>> parameters = createWithCredentialsParameters(credentials)
@@ -171,6 +199,11 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    /**
+     * Takes a map of credential wrappers and generates the proper output for the "withCredentials" block argument.
+     * @param credentials A map of strings to {@link CredentialWrapper}s
+     * @return A list of string->object maps suitable for passing to "withCredentials"
+     */
     @NonCPS
     private List<Map<String, Object>> createWithCredentialsParameters(
             @Nonnull Map<String, CredentialWrapper> credentials) {
@@ -182,6 +215,13 @@ public class ModelInterpreter implements Serializable {
         parameters
     }
 
+    /**
+     * Executes a given closure in a "withEnv" block after installing the specified tools
+     * @param agent The agent context we're running in
+     * @param tools The tools configuration we're using
+     * @param body The closure to execute
+     * @return The return of the resulting executed closure
+     */
     def toolsBlock(Agent agent, Tools tools, Closure body) {
         // If there's no agent, don't install tools in the first place.
         if (agent.hasAgent() && tools != null) {
@@ -209,6 +249,13 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    /**
+     * Executes the given closure inside a declarative agent block, if appropriate.
+     *
+     * @param agent The agent context we're running in
+     * @param body The closure to execute
+     * @return The return of the resulting executed closure
+     */
     def inDeclarativeAgent(Agent agent, Closure body) {
         if (agent == null) {
             return {
@@ -221,6 +268,12 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    /**
+     * Executes the given closure inside 0 or more wrapper blocks if appropriate
+     * @param wrappers The wrapper configuration we're executing in
+     * @param body The closure to execute
+     * @return The return of the resulting executed closure
+     */
     def inWrappers(Wrappers wrappers, Closure body) {
         if (wrappers != null) {
             return {
@@ -233,6 +286,13 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    /**
+     * Generates and executes a single (or no) wrapper block, recursively calling itself on any remaining wrapper names.
+     * @param wrapperNames A list of wrapper names remaining to run
+     * @param wrappers The wrappers configuration we're executing in
+     * @param body The closure to execute
+     * @return The return of the resulting executed closure
+     */
     def recursiveWrappers(List<String> wrapperNames, Wrappers wrappers, Closure body) {
         if (wrapperNames.isEmpty()) {
             return {
@@ -261,7 +321,7 @@ public class ModelInterpreter implements Serializable {
     def runStageOrNot(Stage stage, Throwable firstError, Closure body) {
         if (stage.when != null && firstError == null) {
             return {
-                if (setUpDelegate(stage.when.closure).call()) {
+                if (setUpDelegate(stage.when.closure)) {
                     body.call()
                 }
             }.call()
@@ -275,7 +335,7 @@ public class ModelInterpreter implements Serializable {
     def executeSingleStage(Root root, Stage thisStage, Throwable firstError) {
         try {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
-                setUpDelegate(thisStage.steps.closure).call()
+                setUpDelegate(thisStage.steps.closure)
             }
         } catch (Exception e) {
             script.echo "Error in stages execution: ${e.getMessage()}"
@@ -292,7 +352,7 @@ public class ModelInterpreter implements Serializable {
                     //TODO should this be a nested stage instead?
                     try {
                         for (int ni = 0; ni < postClosures.size(); ni++) {
-                            setUpDelegate(postClosures.get(ni)).call()
+                            setUpDelegate(postClosures.get(ni))
                         }
                     } catch (Exception e) {
                         script.echo "Error in stage post: ${e.getMessage()}"
@@ -317,7 +377,7 @@ public class ModelInterpreter implements Serializable {
                 if (notificationClosures.size() > 0) {
                     script.stage("Notifications") {
                         for (int i = 0; i < notificationClosures.size(); i++) {
-                            setUpDelegate(notificationClosures.get(i)).call()
+                            setUpDelegate(notificationClosures.get(i))
                         }
                     }
                 }
@@ -340,7 +400,7 @@ public class ModelInterpreter implements Serializable {
                 if (postBuildClosures.size() > 0) {
                     script.stage("Post Build Actions") {
                         for (int i = 0; i < postBuildClosures.size(); i++) {
-                            setUpDelegate(postBuildClosures.get(i)).call()
+                            setUpDelegate(postBuildClosures.get(i))
                         }
                     }
                 }
