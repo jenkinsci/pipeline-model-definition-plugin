@@ -210,39 +210,47 @@ public class Utils {
 
         LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
 
-        FlowNode stageNode = scanner.findFirstMatch(execution, isStageWithOptionalName())
+        FlowNode stageNode = execution.currentHeads.find { h ->
+            scanner.findFirstMatch(h, isStageWithOptionalName())
+        }
 
         return stageNode != null
     }
 
-    private static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
+    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
         return new Predicate<FlowNode>() {
             @Override
             boolean apply(@Nullable FlowNode input) {
                 return input != null &&
                     input instanceof StepStartNode &&
-                    ((StepStartNode)input).descriptor instanceof StageStep.DescriptorImpl &&
+                    ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
                     (stageName == null || input.displayName?.equals(stageName))
             }
         }
     }
 
-    private static void markStageWithTag(String stageName, String tagName, String tagValue) {
+    private static FlowNode findStageFlowNode(String stageName) {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
         LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
 
-        FlowNode currentNode = scanner.findFirstMatch(execution, isStageWithOptionalName(stageName))
+        return scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+    }
 
-        TagsAction tagsAction = currentNode.getAction(TagsAction.class)
-        if (tagsAction == null) {
-            tagsAction = new TagsAction()
-            tagsAction.addTag(tagName, tagValue)
-            currentNode.addAction(tagsAction)
-        } else {
-            tagsAction.addTag(tagName, tagValue)
-            currentNode.save()
+    private static void markStageWithTag(String stageName, String tagName, String tagValue) {
+        FlowNode currentNode = findStageFlowNode(stageName)
+
+        if (currentNode != null) {
+            TagsAction tagsAction = currentNode.getAction(TagsAction.class)
+            if (tagsAction == null) {
+                tagsAction = new TagsAction()
+                tagsAction.addTag(tagName, tagValue)
+                currentNode.addAction(tagsAction)
+            } else {
+                tagsAction.addTag(tagName, tagValue)
+                currentNode.save()
+            }
         }
     }
 
