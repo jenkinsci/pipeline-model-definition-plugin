@@ -322,10 +322,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         DepthFirstScanner scanner = new DepthFirstScanner();
 
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.toolInstall(), StageTagsMetadata.SYNTHETIC_PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.checkout(), StageTagsMetadata.SYNTHETIC_PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.postBuild(), StageTagsMetadata.SYNTHETIC_POST)));
-        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.agentSetup(), StageTagsMetadata.SYNTHETIC_PRE)));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.toolInstall(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().getPost())));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().getPre())));
     }
 
     @Test
@@ -347,10 +347,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         DepthFirstScanner scanner = new DepthFirstScanner();
 
-        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.toolInstall(), StageTagsMetadata.SYNTHETIC_PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.checkout(), StageTagsMetadata.SYNTHETIC_PRE)));
-        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.postBuild(), StageTagsMetadata.SYNTHETIC_POST)));
-        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(StageTagsMetadata.agentSetup(), StageTagsMetadata.SYNTHETIC_PRE)));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.toolInstall(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().getPost())));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().getPre())));
     }
 
     @Test
@@ -371,19 +371,19 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         DepthFirstScanner scanner = new DepthFirstScanner();
 
-        assertNull(scanner.findFirstMatch(heads, stageStatusPredicate("foo", StageTagsMetadata.STAGE_STATUS_SKIPPED_FOR_FAILURE)));
-        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("bar", StageTagsMetadata.STAGE_STATUS_SKIPPED_FOR_FAILURE)));
-        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("baz", StageTagsMetadata.STAGE_STATUS_SKIPPED_FOR_FAILURE)));
+        assertNull(scanner.findFirstMatch(heads, stageStatusPredicate("foo", Utils.getStageStatusMetadata().getSkippedForFailure())));
+        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("bar", Utils.getStageStatusMetadata().getSkippedForFailure())));
+        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("baz", Utils.getStageStatusMetadata().getSkippedForFailure())));
     }
 
     private Predicate<FlowNode> syntheticStagePredicate(String stageName,
                                                         String context) {
-        return stageTagPredicate(stageName, StageTagsMetadata.SYNTHETIC_STAGE_TAG, context);
+        return stageTagPredicate(stageName, Utils.getSyntheticStageMetadata().getTagName(), context);
     }
 
     private Predicate<FlowNode> stageStatusPredicate(String stageName,
                                                      String stageStatus) {
-        return stageTagPredicate(stageName, StageTagsMetadata.STAGE_STATUS_TAG, stageStatus);
+        return stageTagPredicate(stageName, Utils.getStageStatusMetadata().getTagName(), stageStatus);
     }
 
     private Predicate<FlowNode> stageTagPredicate(final String stageName,

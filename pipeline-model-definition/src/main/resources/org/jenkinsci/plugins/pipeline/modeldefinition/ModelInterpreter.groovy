@@ -87,8 +87,8 @@ public class ModelInterpreter implements Serializable {
                             toolsBlock(root.agent, root.tools) {
                                 // If we have an agent and script.scm isn't null, run checkout scm
                                 if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                    script.stage(StageTagsMetadata.checkout()) {
-                                        Utils.markSyntheticStage(StageTagsMetadata.checkout(), StageTagsMetadata.SYNTHETIC_PRE)
+                                    script.stage(SyntheticStageNames.checkout()) {
+                                        Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
                                         script.checkout script.scm
                                     }
                                 }
@@ -150,8 +150,8 @@ public class ModelInterpreter implements Serializable {
                                     catchRequiredContextForNode(root.agent) {
                                         List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
                                         if (postBuildClosures.size() > 0) {
-                                            script.stage(StageTagsMetadata.postBuild()) {
-                                                Utils.markSyntheticStage(StageTagsMetadata.postBuild(), StageTagsMetadata.SYNTHETIC_POST)
+                                            script.stage(SyntheticStageNames.postBuild()) {
+                                                Utils.markSyntheticStage(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().post)
                                                 for (int i = 0; i < postBuildClosures.size(); i++) {
                                                     setUpDelegate(postBuildClosures.get(i)).call()
                                                 }
@@ -272,8 +272,8 @@ public class ModelInterpreter implements Serializable {
             def toolEnv = []
             def toolsList = tools.getToolEntries()
             if (!Utils.withinAStage()) {
-                script.stage(StageTagsMetadata.toolInstall()) {
-                    Utils.markSyntheticStage(StageTagsMetadata.toolInstall(), StageTagsMetadata.SYNTHETIC_PRE)
+                script.stage(SyntheticStageNames.toolInstall()) {
+                    Utils.markSyntheticStage(SyntheticStageNames.toolInstall(), Utils.getSyntheticStageMetadata().pre)
                     toolEnv = actualToolsInstall(toolsList)
                 }
             } else {

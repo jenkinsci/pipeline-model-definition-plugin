@@ -33,6 +33,9 @@ import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
 import org.apache.commons.codec.digest.DigestUtils
+import org.jenkinsci.plugins.pipeline.StageStatus
+import org.jenkinsci.plugins.pipeline.StageTagsMetadata
+import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
@@ -243,6 +246,18 @@ public class Utils {
         }
     }
 
+    static <T extends StageTagsMetadata> T getTagMetadata(Class<T> c) {
+        return ExtensionList.lookup(StageTagsMetadata.class).get(c)
+    }
+
+    static StageStatus getStageStatusMetadata() {
+        return getTagMetadata(StageStatus.class)
+    }
+
+    static SyntheticStage getSyntheticStageMetadata() {
+        return getTagMetadata(SyntheticStage.class)
+    }
+
     /**
      * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
      *
@@ -250,15 +265,15 @@ public class Utils {
      * @param context
      */
     static void markSyntheticStage(String stageName, String context) {
-        markStageWithTag(stageName, StageTagsMetadata.SYNTHETIC_STAGE_TAG, context)
+        markStageWithTag(stageName, getSyntheticStageMetadata().tagName, context)
     }
 
     static void markStageSkippedForFailure(String stageName) {
-        markStageWithTag(stageName, StageTagsMetadata.STAGE_STATUS_TAG, StageTagsMetadata.STAGE_STATUS_SKIPPED_FOR_FAILURE)
+        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
     static void markStageSkippedForConditional(String stageName) {
-        markStageWithTag(stageName, StageTagsMetadata.STAGE_STATUS_TAG, StageTagsMetadata.STAGE_STATUS_SKIPPED_FOR_CONDITIONAL)
+        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
     }
 
     /**
