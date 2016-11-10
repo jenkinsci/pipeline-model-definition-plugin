@@ -158,6 +158,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((StepStartNode)startFoo));
         assertNotNull(endFoo);
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+
+        FlowNode shouldBeFailedNode = execution.getNode("" + (Integer.valueOf(endFoo.getId()) - 1));
     }
 
     @Test
