@@ -107,6 +107,7 @@ public class ModelInterpreter implements Serializable {
                                                                 } catch (Exception e) {
                                                                     script.echo "Error in stages execution: ${e.getMessage()}"
                                                                     script.getProperty("currentBuild").result = Result.FAILURE
+                                                                    Utils.attachErrorToStep(e)
                                                                     if (firstError == null) {
                                                                         firstError = e
                                                                     }
@@ -124,6 +125,7 @@ public class ModelInterpreter implements Serializable {
                                                                             } catch (Exception e) {
                                                                                 script.echo "Error in stage post: ${e.getMessage()}"
                                                                                 script.getProperty("currentBuild").result = Result.FAILURE
+                                                                                Utils.attachErrorToStep(e)
                                                                                 if (firstError == null) {
                                                                                     firstError = e
                                                                                 }
@@ -154,6 +156,7 @@ public class ModelInterpreter implements Serializable {
                                 } catch (Exception e) {
                                     script.echo "Error in postBuild execution: ${e.getMessage()}"
                                     script.getProperty("currentBuild").result = Result.FAILURE
+                                    Utils.attachErrorToStep(e)
                                     if (firstError == null) {
                                         firstError = e
                                     }
@@ -162,24 +165,25 @@ public class ModelInterpreter implements Serializable {
                         }.call()
                     }.call()
 
-                    try {
-                        // And finally, run the notifications.
-                        List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
+                    // And finally, run the notifications.
+                    List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
 
-                        catchRequiredContextForNode(root.agent, true) {
-                            if (notificationClosures.size() > 0) {
-                                script.stage("Notifications") {
+                    if (notificationClosures.size() > 0) {
+                        script.stage("Notifications") {
+                            try {
+                                catchRequiredContextForNode(root.agent, true) {
                                     for (int i = 0; i < notificationClosures.size(); i++) {
                                         setUpDelegate(notificationClosures.get(i)).call()
                                     }
+                                }.call()
+                            } catch (Exception e) {
+                                script.echo "Error in notifications execution: ${e.getMessage()}"
+                                script.getProperty("currentBuild").result = Result.FAILURE
+                                Utils.attachErrorToStep(e)
+                                if (firstError == null) {
+                                    firstError = e
                                 }
                             }
-                        }.call()
-                    } catch (Exception e) {
-                        script.echo "Error in notifications execution: ${e.getMessage()}"
-                        script.getProperty("currentBuild").result = Result.FAILURE
-                        if (firstError == null) {
-                            firstError = e
                         }
                     }
                 }.call()

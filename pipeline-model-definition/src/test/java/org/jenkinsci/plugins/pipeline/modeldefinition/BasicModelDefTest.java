@@ -36,7 +36,13 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
+import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -142,6 +148,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("[Pipeline] { (bar)", b);
+
+        FlowExecution execution = b.getExecution();
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        assertNotNull(startFoo);
+        assertTrue(startFoo instanceof StepStartNode);
+        FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((StepStartNode)startFoo));
+        assertNotNull(endFoo);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
     }
 
     @Test

@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache;
@@ -38,9 +39,18 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.workflow.actions.ErrorAction
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
+import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
+import javax.annotation.Nullable
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit;
@@ -181,6 +191,48 @@ public class Utils {
         stages.removeSourceLocation()
 
         r.addAction(new ExecutionModelAction(stages))
+    }
+
+    static void attachErrorToStep(Throwable e) {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+        FlowNode currentNode = execution.currentHeads?.get(0)
+        if (currentNode?.getError() == null) {
+            ErrorAction errorAction = new ErrorAction(e)
+            currentNode.addAction(errorAction)
+        }
+    }
+
+    static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input != null &&
+                    input instanceof StepEndNode &&
+                    input.getStartNode().equals(startNode)
+            }
+        }
+    }
+
+    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input != null &&
+                    input instanceof StepStartNode &&
+                    ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
+                    (stageName == null || input.displayName?.equals(stageName))
+            }
+        }
+    }
+
+    private static FlowNode findStageFlowNode(String stageName) {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
+
+        return scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
     }
 
     public static String stringToSHA1(String s) {
