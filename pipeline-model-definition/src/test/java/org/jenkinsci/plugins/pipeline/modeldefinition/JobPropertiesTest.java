@@ -50,8 +50,8 @@ public class JobPropertiesTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
 
         WorkflowJob p = b.getParent();
@@ -73,8 +73,8 @@ public class JobPropertiesTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
 
         WorkflowJob p = b.getParent();

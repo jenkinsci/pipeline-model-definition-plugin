@@ -76,8 +76,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
     }
 
@@ -88,8 +88,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("goodbye", b);
         j.assertLogContains("farewell", b);
@@ -103,8 +103,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("goodbye", b);
         j.assertLogContains("farewell", b);
@@ -118,8 +118,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("goodbye", b);
         j.assertLogContains("farewell", b);
@@ -309,11 +309,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
-        j.assertLogContains("[Pipeline] { (Tool Install)", b);
-        j.assertLogContains("[Pipeline] { (Checkout SCM)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.toolInstall() + ")", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.checkout() + ")", b);
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
         j.assertLogContains("I AM A POST-BUILD", b);
 
         FlowExecution execution = b.getExecution();
@@ -335,10 +335,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
-        j.assertLogContains("[Pipeline] { (Checkout SCM)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.checkout() + ")", b);
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
         j.assertLogContains("I AM A POST-BUILD", b);
 
         FlowExecution execution = b.getExecution();

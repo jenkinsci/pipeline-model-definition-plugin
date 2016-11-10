@@ -51,8 +51,8 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
         j.assertLogContains("I HAVE FINISHED", b);
         j.assertLogContains("MOST DEFINITELY FINISHED", b);
         j.assertLogNotContains("I FAILED", b);
@@ -66,8 +66,8 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("I HAVE FINISHED", b);
         j.assertLogContains("MOST DEFINITELY FINISHED", b);
         j.assertLogNotContains("I FAILED", b);
@@ -81,8 +81,8 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("I AM FAILING", b);
         j.assertLogContains("I HAVE FAILED", b);
         j.assertLogNotContains("I HAVE SUCCEEDED", b);

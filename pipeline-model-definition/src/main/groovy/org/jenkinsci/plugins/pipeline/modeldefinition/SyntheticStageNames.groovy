@@ -28,22 +28,22 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 public class SyntheticStageNames {
     public static String checkout() {
-        return "Checkout SCM"
+        return "Declarative: Checkout SCM"
     }
 
     public static String agentSetup() {
-        return "Agent Setup"
+        return "Declarative: Agent Setup"
     }
 
     public static String toolInstall() {
-        return "Tool Install"
+        return "Declarative: Tool Install"
     }
 
     public static String postBuild() {
-        return "Post Build Actions"
+        return "Declarative: Post Build Actions"
     }
 
     public static String notifications() {
-        return "Notifications"
+        return "Declarative: Notifications"
     }
 }
