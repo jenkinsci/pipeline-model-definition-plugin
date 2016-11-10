@@ -42,4 +42,8 @@ public class SyntheticStageNames {
     public static String postBuild() {
         return "Post Build Actions"
     }
+
+    public static String notifications() {
+        return "Notifications"
+    }
 }

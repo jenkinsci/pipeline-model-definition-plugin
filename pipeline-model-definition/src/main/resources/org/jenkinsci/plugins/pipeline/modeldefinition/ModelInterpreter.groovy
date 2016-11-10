@@ -110,6 +110,7 @@ public class ModelInterpreter implements Serializable {
                                                                 } catch (Exception e) {
                                                                     script.echo "Error in stages execution: ${e.getMessage()}"
                                                                     script.getProperty("currentBuild").result = Result.FAILURE
+                                                                    Utils.markStageFailedAndContinued(thisStage.name)
                                                                     if (firstError == null) {
                                                                         firstError = e
                                                                     }
@@ -127,6 +128,7 @@ public class ModelInterpreter implements Serializable {
                                                                             } catch (Exception e) {
                                                                                 script.echo "Error in stage post: ${e.getMessage()}"
                                                                                 script.getProperty("currentBuild").result = Result.FAILURE
+                                                                                Utils.markStageFailedAndContinued(thisStage.name)
                                                                                 if (firstError == null) {
                                                                                     firstError = e
                                                                                 }
@@ -161,6 +163,7 @@ public class ModelInterpreter implements Serializable {
                                 } catch (Exception e) {
                                     script.echo "Error in post execution: ${e.getMessage()}"
                                     script.getProperty("currentBuild").result = Result.FAILURE
+                                    Utils.markStageFailedAndContinued(SyntheticStageNames.postBuild())
                                     if (firstError == null) {
                                         firstError = e
                                     }
@@ -175,7 +178,7 @@ public class ModelInterpreter implements Serializable {
 
                         catchRequiredContextForNode(root.agent, true) {
                             if (notificationClosures.size() > 0) {
-                                script.stage("Notifications") {
+                                script.stage(SyntheticStageNames.notifications()) {
                                     for (int i = 0; i < notificationClosures.size(); i++) {
                                         setUpDelegate(notificationClosures.get(i)).call()
                                     }
@@ -185,6 +188,7 @@ public class ModelInterpreter implements Serializable {
                     } catch (Exception e) {
                         script.echo "Error in notifications execution: ${e.getMessage()}"
                         script.getProperty("currentBuild").result = Result.FAILURE
+                        Utils.markStageFailedAndContinued(SyntheticStageNames.notifications())
                         if (firstError == null) {
                             firstError = e
                         }

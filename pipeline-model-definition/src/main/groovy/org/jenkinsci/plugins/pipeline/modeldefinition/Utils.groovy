@@ -268,6 +268,10 @@ public class Utils {
         markStageWithTag(stageName, getSyntheticStageMetadata().tagName, context)
     }
 
+    static void markStageFailedAndContinued(String stageName) {
+        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().failedAndContinued)
+    }
+
     static void markStageSkippedForFailure(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }

@@ -44,12 +44,17 @@ public class StageStatus extends StageTagsMetadata {
 
         // When there are other categories of status values, we'll add their methods too.
         vals.addAll(getSkippedStageValues());
+        vals.add(getFailedAndContinued());
 
         return vals;
     }
 
     public List<String> getSkippedStageValues() {
         return Arrays.asList(getSkippedForConditional(), getSkippedForFailure());
+    }
+
+    public String getFailedAndContinued() {
+        return "FAILED_AND_CONTINUED";
     }
 
     public String getSkippedForFailure() {

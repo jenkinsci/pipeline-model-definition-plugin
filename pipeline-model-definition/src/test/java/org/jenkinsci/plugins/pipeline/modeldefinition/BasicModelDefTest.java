@@ -372,6 +372,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         DepthFirstScanner scanner = new DepthFirstScanner();
 
         assertNull(scanner.findFirstMatch(heads, stageStatusPredicate("foo", Utils.getStageStatusMetadata().getSkippedForFailure())));
+        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("foo", Utils.getStageStatusMetadata().getFailedAndContinued())));
         assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("bar", Utils.getStageStatusMetadata().getSkippedForFailure())));
         assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("baz", Utils.getStageStatusMetadata().getSkippedForFailure())));
     }
