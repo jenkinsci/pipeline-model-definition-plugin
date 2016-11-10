@@ -46,4 +46,8 @@ public class SyntheticStageNames {
     public static String notifications() {
         return "Declarative: Notifications"
     }
+
+    public static String postStage(String stageName) {
+        return "Declarative: Post Stage (${stageName}) Actions"
+    }
 }

@@ -96,10 +96,12 @@ public class ModelInterpreter implements Serializable {
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
 
+                                    boolean stageExecuted = false
                                     script.stage(thisStage.name) {
                                         withEnvBlock(thisStage.getEnvVars()) {
                                             if (thisStage.when == null || setUpDelegate(thisStage.when.closure).call()) {
                                                 if (firstError == null) {
+                                                    stageExecuted = true
                                                     inDeclarativeAgent(thisStage.agent) {
                                                         withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                             toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
@@ -114,27 +116,6 @@ public class ModelInterpreter implements Serializable {
                                                                     if (firstError == null) {
                                                                         firstError = e
                                                                     }
-                                                                } finally {
-                                                                    // And finally, run the post stage steps.
-                                                                    List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-                                                                    catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
-                                                                        if (postClosures.size() > 0) {
-                                                                            script.echo("Post stage")
-                                                                            //TODO should this be a nested stage instead?
-                                                                            try {
-                                                                                for (int ni = 0; ni < postClosures.size(); ni++) {
-                                                                                    setUpDelegate(postClosures.get(ni)).call()
-                                                                                }
-                                                                            } catch (Exception e) {
-                                                                                script.echo "Error in stage post: ${e.getMessage()}"
-                                                                                script.getProperty("currentBuild").result = Result.FAILURE
-                                                                                Utils.markStageFailedAndContinued(thisStage.name)
-                                                                                if (firstError == null) {
-                                                                                    firstError = e
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }.call()
                                                                 }
                                                             }.call()
                                                         }.call()
@@ -146,6 +127,30 @@ public class ModelInterpreter implements Serializable {
                                                 Utils.markStageSkippedForConditional(thisStage.name)
                                             }
                                         }.call()
+                                    }
+                                    if (stageExecuted) {
+                                        // And finally, run the post stage steps.
+                                        List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
+                                        if (postClosures.size() > 0) {
+                                            script.stage(SyntheticStageNames.postStage(thisStage.name)) {
+                                                Utils.markSyntheticStage(SyntheticStageNames.postStage(thisStage.name),
+                                                    Utils.getSyntheticStageMetadata().postStage)
+                                                catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
+                                                    try {
+                                                        for (int ni = 0; ni < postClosures.size(); ni++) {
+                                                            setUpDelegate(postClosures.get(ni)).call()
+                                                        }
+                                                    } catch (Exception e) {
+                                                        script.echo "Error in stage post: ${e.getMessage()}"
+                                                        script.getProperty("currentBuild").result = Result.FAILURE
+                                                        Utils.markStageFailedAndContinued(thisStage.name)
+                                                        if (firstError == null) {
+                                                            firstError = e
+                                                        }
+                                                    }
+                                                }
+                                            }.call()
+                                        }
                                     }
                                 }
                                 try {
@@ -179,6 +184,7 @@ public class ModelInterpreter implements Serializable {
                         catchRequiredContextForNode(root.agent, true) {
                             if (notificationClosures.size() > 0) {
                                 script.stage(SyntheticStageNames.notifications()) {
+                                    Utils.markSyntheticStage(SyntheticStageNames.notifications(), Utils.getSyntheticStageMetadata().post)
                                     for (int i = 0; i < notificationClosures.size(); i++) {
                                         setUpDelegate(notificationClosures.get(i)).call()
                                     }
