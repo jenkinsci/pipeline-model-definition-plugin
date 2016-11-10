@@ -80,7 +80,7 @@ public class ModelInterpreter implements Serializable {
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
 
-                                    runStageOrNot(thisStage, firstError) {
+                                    runStageOrNot(thisStage) {
                                         script.stage(thisStage.name) {
                                             withEnvBlock(thisStage.getEnvVars()) {
                                                 if (firstError == null) {
@@ -323,12 +323,11 @@ public class ModelInterpreter implements Serializable {
      * passes.
      *
      * @param stage The stage we're executing
-     * @param firstError The current error state
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def runStageOrNot(Stage stage, Throwable firstError, Closure body) {
-        if (firstError == null && (stage.when == null || setUpDelegate(stage.when.closure))) {
+    def runStageOrNot(Stage stage, Closure body) {
+        if (stage.when == null || setUpDelegate(stage.when.closure)) {
             return {
                 body.call()
             }.call()
