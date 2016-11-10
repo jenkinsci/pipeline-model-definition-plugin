@@ -160,6 +160,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
 
         FlowNode shouldBeFailedNode = execution.getNode("" + (Integer.valueOf(endFoo.getId()) - 1));
+        assertNotNull(shouldBeFailedNode);
+        assertNotNull(shouldBeFailedNode.getError());
     }
 
     @Test
