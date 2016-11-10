@@ -121,7 +121,11 @@
       <artifactId>credentials-binding</artifactId>
       <version>1.9</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-support</artifactId>
+      <version>2.10</version>
+    </dependency>
     <!-- JSON schema stuff -->
     <dependency>
       <groupId>com.github.fge</groupId>
