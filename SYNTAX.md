@@ -47,14 +47,22 @@ executed within.
 * *Takes a Closure*: Yes
 * *Closure Contents*: One or more lines with `foo = 'bar'` variable name/value pairs.
     * The name doesn't need to be quoted.
+    * Bind credentials using the `credentials('<id>')` function.
+      *NOTE*: credentials binding requires that the pipeline or stage is running within an agent.
+      In the example below the credentials gets bound in slightly different ways depending of the type of the key;
+        * If it is a `Secret Text` the variable `SAUCE_ACCESS` will contain that text.
+        * If it is a `Secret File` the variable `SAUCE_ACCESS` will contain a path to the file on the build agent.
+        * If it is a `Standard username and password` credential, three variables will be added to the environment:
+            * `SAUCE_ACCESS` containing `<username>:<password>`
+            * `SAUCE_ACCESS_USR` containing the username
+            * `SAUCE_ACCESS_PSW` containing the password
 * *Examples*:
 
-```
+```groovy
 environment {
-   CXX              = 'g++-4.8'
-   SAUCE_USERNAME   = 'angular-ci'
-   SAUCE_ACCESS_KEY = '9b988f434ff8-fbca-8aa4-4ae3-35442987'
-   someVar          = 'someValue'
+   CXX          = 'g++-4.8'
+   SAUCE_ACCESS = credentials('sauce-lab-dev')
+   someVar      = 'someValue'
 }
 ```
 
@@ -72,15 +80,17 @@ to-be-released block-scoped `stage` syntax in base Pipeline.
 * *Required*: At least one is required.
 * *Parameters*: A single `String`, the name for the `stage`.
 * *Takes a Closure*: Yes
-* *Closure Contents*: A `steps` block containing one or more Pipeline steps, including block-scoped steps and the 
-special `script` block described below, and optionally, certain configuration sections that allow being set on a 
-per-stage basis.
-    * *NOTE*: Currently only the `agent` section can be configured per-stage.
-    * *NOTE*: Only the "declarative subset" of Groovy is allowed by default. See below for details on that subset.
-    * *NOTE*: The `parallel` step is a special case - it can only be used if it's the sole step in the `stage`.
+* *Closure Contents*: 
+    * A `steps` block containing one or more Pipeline steps, including block-scoped steps and the special `script` block described below, and optionally, certain configuration sections that allow being set on a per-stage basis.
+        * *NOTE*: Only the "declarative subset" of Groovy is allowed by default. See below for details on that subset.
+        * *NOTE*: The `parallel` step is a special case - it can only be used if it's the sole step in the `stage`.
+    * An `agent` section can be configured per-stage, see above.
+    * An optional `when` block specifying if the stage should run or not.
+      It can contain arbitrary Groovy code, but needs to return `true` if the stage should run or `false` if not.
+    * An optional `post` block that runs after the steps in the stage. See `postBuild` and `notifications` below.  
 * *Examples*:
 
-```
+```groovy
 stages {
     stage('foo') {
         steps {
@@ -100,9 +110,20 @@ stages {
         
     stage('second') {
         agent label:'some-node'
+        when {
+            env.BRANCH == 'master'
+        }
         steps {
             checkout scm
             sh "mvn clean install"
+        }
+        post {
+            always {
+                email recipient: ['one@example.com','two@example.com'], subject: "Master Build complete", body: "Your build has completed"
+            }
+            failure {
+                sh "bash ./cleanup-from-failure.sh"
+            }
         }
     }
 }
@@ -132,14 +153,16 @@ described below.
 * *Closure Contents*: Any valid Pipeline code.
 * *Examples*:
 
-```
+```groovy
 image docker:'java:7'
 stages {
     stage 'build' {
-        sh 'mvn install'
-        script {
-            // any valid Pipeline Script goes here
-            ['ie','chrome'].each { sh "./test.sh ${it}" }
+        steps {
+            sh 'mvn install'
+            script {
+                // any valid Pipeline Script goes here
+                ['ie','chrome'].each { sh "./test.sh ${it}" }
+            }
         }
     }
 }
@@ -159,7 +182,7 @@ is specified.
     * Tool versions are the names for specific tool installations configured in Jenkins.
 * *Examples*:
 
-```
+```groovy
 tools {
     maven "apache-maven-3.0.1"
     java "JDK 1.8"
@@ -203,7 +226,7 @@ met.
 `node { ... }` block if `image none` was specified.
 * *Examples*:
 
-```
+```groovy
 notifications {
     always {
         email recipient: ['one@example.com','two@example.com'], subject: "Build complete", body: "Your build has completed"
@@ -231,7 +254,7 @@ postBuild {
     * Also note that the `SCMTrigger` won't work with the `scm` `@Symbol` - with Jenkins 2.22 or later, the `pollScm` symbol does work.
 * *Examples*:
 
-```
+```groovy
 triggers {
     cron('@daily')
 }
@@ -247,7 +270,7 @@ triggers {
     * Note that `[$class: 'Foo', arg1: 'something', ...]` syntax can not be used, only `booleanParam(...)` and the like.
 * *Examples*:
 
-```
+```groovy
 parameters {
     booleanParam(defaultValue: true, description: '', name: 'flag')
     string(defaultValue: '', description: '', name: 'SOME_STRING')
@@ -265,7 +288,7 @@ parameters {
     * Note that the `parameters` and `pipelineTriggers` `@Symbol`s cannot be used here directly.
 * *Examples*:
 
-```
+```groovy
 jobProperties {
     buildDiscarder(logRotator(numToKeepStr:'1'))
     disableConcurrentBuilds()
