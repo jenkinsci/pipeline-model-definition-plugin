@@ -105,9 +105,7 @@ public class ModelInterpreter implements Serializable {
                                                                         setUpDelegate(thisStage.steps.closure).call()
                                                                     }.call()
                                                                 } catch (Exception e) {
-                                                                    script.echo "Error in stages execution: ${e.getMessage()}"
                                                                     script.getProperty("currentBuild").result = Result.FAILURE
-                                                                    Utils.attachErrorToStep(e)
                                                                     if (firstError == null) {
                                                                         firstError = e
                                                                     }
@@ -123,9 +121,7 @@ public class ModelInterpreter implements Serializable {
                                                                                     setUpDelegate(postClosures.get(ni)).call()
                                                                                 }
                                                                             } catch (Exception e) {
-                                                                                script.echo "Error in stage post: ${e.getMessage()}"
                                                                                 script.getProperty("currentBuild").result = Result.FAILURE
-                                                                                Utils.attachErrorToStep(e)
                                                                                 if (firstError == null) {
                                                                                     firstError = e
                                                                                 }
@@ -154,9 +150,7 @@ public class ModelInterpreter implements Serializable {
                                         }
                                     }.call()
                                 } catch (Exception e) {
-                                    script.echo "Error in postBuild execution: ${e.getMessage()}"
                                     script.getProperty("currentBuild").result = Result.FAILURE
-                                    Utils.attachErrorToStep(e)
                                     if (firstError == null) {
                                         firstError = e
                                     }
@@ -177,9 +171,7 @@ public class ModelInterpreter implements Serializable {
                                     }
                                 }.call()
                             } catch (Exception e) {
-                                script.echo "Error in notifications execution: ${e.getMessage()}"
                                 script.getProperty("currentBuild").result = Result.FAILURE
-                                Utils.attachErrorToStep(e)
                                 if (firstError == null) {
                                     firstError = e
                                 }
