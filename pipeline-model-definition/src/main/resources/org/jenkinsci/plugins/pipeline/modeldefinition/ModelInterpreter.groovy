@@ -93,49 +93,58 @@ public class ModelInterpreter implements Serializable {
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
 
-                                    runStageOrNot(thisStage, firstError) {
-                                        script.stage(thisStage.name) {
-                                            withEnvBlock(thisStage.getEnvVars()) {
-                                                if (firstError == null) {
-                                                    inDeclarativeAgent(thisStage.agent) {
-                                                        withCredentialsBlock(thisStage.getEnvCredentials()) {
-                                                            toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                                try {
-                                                                    catchRequiredContextForNode(root.agent) {
-                                                                        setUpDelegate(thisStage.steps.closure).call()
-                                                                    }.call()
-                                                                } catch (Exception e) {
-                                                                    script.getProperty("currentBuild").result = Result.FAILURE
-                                                                    if (firstError == null) {
-                                                                        firstError = e
-                                                                    }
-                                                                } finally {
-                                                                    // And finally, run the post stage steps.
-                                                                    List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-                                                                    catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
-                                                                        if (postClosures.size() > 0) {
-                                                                            script.echo("Post stage")
-                                                                            //TODO should this be a nested stage instead?
-                                                                            try {
-                                                                                for (int ni = 0; ni < postClosures.size(); ni++) {
-                                                                                    setUpDelegate(postClosures.get(ni)).call()
-                                                                                }
-                                                                            } catch (Exception e) {
-                                                                                script.getProperty("currentBuild").result = Result.FAILURE
-                                                                                if (firstError == null) {
-                                                                                    firstError = e
+                                    try {
+                                        Throwable stageError
+
+                                        runStageOrNot(thisStage, firstError) {
+                                            script.stage(thisStage.name) {
+                                                withEnvBlock(thisStage.getEnvVars()) {
+                                                    if (firstError == null) {
+                                                        inDeclarativeAgent(thisStage.agent) {
+                                                            withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                                    try {
+                                                                        catchRequiredContextForNode(root.agent) {
+                                                                            setUpDelegate(thisStage.steps.closure).call()
+                                                                        }.call()
+                                                                    } catch (Exception e) {
+                                                                        script.getProperty("currentBuild").result = Result.FAILURE
+                                                                        if (stageError == null) {
+                                                                            stageError = e
+                                                                        }
+                                                                    } finally {
+                                                                        // And finally, run the post stage steps.
+                                                                        List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
+                                                                        catchRequiredContextForNode(thisStage.agent != null ? thisStage.agent : root.agent, false) {
+                                                                            if (postClosures.size() > 0) {
+                                                                                script.echo("Post stage")
+                                                                                //TODO should this be a nested stage instead?
+                                                                                try {
+                                                                                    for (int ni = 0; ni < postClosures.size(); ni++) {
+                                                                                        setUpDelegate(postClosures.get(ni)).call()
+                                                                                    }
+                                                                                } catch (Exception e) {
+                                                                                    script.getProperty("currentBuild").result = Result.FAILURE
+                                                                                    if (stageError == null) {
+                                                                                        stageError = e
+                                                                                    }
                                                                                 }
                                                                             }
-                                                                        }
-                                                                    }.call()
-                                                                }
+                                                                        }.call()
+                                                                    }
+                                                                }.call()
                                                             }.call()
                                                         }.call()
-                                                    }.call()
+                                                    }
+                                                }.call()
+                                                if (stageError != null) {
+                                                    throw stageError
                                                 }
-                                            }.call()
-                                        }
-                                    }.call()
+                                            }
+                                        }.call()
+                                    } catch (Exception e) {
+                                        firstError = e
+                                    }
                                 }
 
                                 try {
