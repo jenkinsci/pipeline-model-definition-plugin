@@ -79,7 +79,7 @@ public class ModelInterpreter implements Serializable {
 
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
-//                                    System.err.println("current firstError: ${firstError}")
+
                                     try {
                                         runStageOrNot(thisStage) {
                                             script.stage(thisStage.name) {
