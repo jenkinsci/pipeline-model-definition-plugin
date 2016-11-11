@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache;
@@ -39,8 +40,13 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
+import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
+import javax.annotation.Nullable
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit;
@@ -181,6 +187,29 @@ public class Utils {
         stages.removeSourceLocation()
 
         r.addAction(new ExecutionModelAction(stages))
+    }
+
+    static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input != null &&
+                    input instanceof StepEndNode &&
+                    input.getStartNode().equals(startNode)
+            }
+        }
+    }
+
+    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input != null &&
+                    input instanceof StepStartNode &&
+                    ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
+                    (stageName == null || input.displayName?.equals(stageName))
+            }
+        }
     }
 
     public static String stringToSHA1(String s) {
