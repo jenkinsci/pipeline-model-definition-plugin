@@ -44,7 +44,7 @@
         <artifactId>maven-hpi-plugin</artifactId>
         <extensions>true</extensions>
         <configuration>
-          <compatibleSinceVersion>0.5</compatibleSinceVersion>
+          <compatibleSinceVersion>0.6</compatibleSinceVersion>
         </configuration>
       </plugin>
     </plugins>
@@ -126,6 +126,7 @@
       <artifactId>workflow-support</artifactId>
       <version>2.10</version>
     </dependency>
+
     <!-- JSON schema stuff -->
     <dependency>
       <groupId>com.github.fge</groupId>
@@ -163,6 +164,13 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps-global-lib</artifactId>
       <version>2.3</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>pipeline-graph-analysis</artifactId>
+      <version>1.2</version>
       <scope>test</scope>
     </dependency>
 

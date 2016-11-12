@@ -55,15 +55,15 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Test
     public void globalAndLocalAlways() throws Exception {
-        expect("globalAndLocalAlways").logContains("Declarative: Post Stage", SyntheticStageNames.notifications(), "Local Always", "Global Always").go();
+        expect("globalAndLocalAlways").logContains("Post stage", "Local Always", "Global Always").go();
     }
 
     @Test
     public void localAlways() throws Exception {
-        expect("localAlways").logContains("Declarative: Post Stage", "Local Always").go();
+        expect("localAlways").logContains("Post stage", "Local Always").go();
     }
 
-    public static final String[] ALL_LOCAL_ALWAYS = {"Declarative: Post Stage", "hello", SyntheticStageNames.notifications(), "And AAAAIIIAAAIAI", "I AM ALWAYS WITH YOU"};
+    public static final String[] ALL_LOCAL_ALWAYS = {"Post stage", "hello", "And AAAAIIIAAAIAI", "I AM ALWAYS WITH YOU"};
 
     @Test
     public void withAllLocalUnstable() throws Exception {
@@ -116,13 +116,6 @@ public class PostStageTest extends AbstractModelDefTest {
                 .logContains("Setting build result UNSTABLE", "I AM UNSTABLE", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "MOST DEFINITELY FINISHED").go();
 
-    }
-
-    @Test
-    public void failingNotifications() throws Exception {
-        expect(Result.FAILURE, "failingNotifications")
-                .logContains("hello", "Declarative: Post Stage", "farewell", "Error in stage post:", "I AM HERE STILL")
-                .logNotContains("world").go();
     }
 
     @Override

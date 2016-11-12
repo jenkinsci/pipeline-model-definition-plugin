@@ -12,7 +12,7 @@
       }]
     }]
   }],
-  "postBuild": { "conditions": [ ] },
+  "post": { "conditions": [ ] },
   "agent": [  {
     "key": "label",
     "value":     {

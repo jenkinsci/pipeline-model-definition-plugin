@@ -12,7 +12,7 @@
       }]
     }]
   }],
-  "notifications": {"conditions":   [
+  "post": {"conditions":   [
         {
       "condition": "banana",
       "branch":       {
@@ -40,19 +40,6 @@
       }
     }
   ]},
-  "postBuild": {"conditions": [  {
-    "condition": "always",
-    "branch":     {
-      "name": "default",
-      "steps": [      {
-        "name": "error",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "I AM FAILING"
-        }
-      }]
-    }
-  }]},
   "agent":   {
     "isLiteral": true,
     "value": "none"

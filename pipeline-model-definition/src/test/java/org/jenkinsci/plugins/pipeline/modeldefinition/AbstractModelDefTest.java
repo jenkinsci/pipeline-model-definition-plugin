@@ -108,14 +108,12 @@ public abstract class AbstractModelDefTest {
             "agentLabel",
             "agentNoneWithNode",
             "metaStepSyntax",
-            "postBuildAndNotifications",
             "simpleEnvironment",
             "simpleScript",
             "twoStagePipeline",
             "validStepParameters",
             "simpleEnvironment",
             "parallelPipeline",
-            "simpleNotification",
             "simplePostBuild",
             "simpleTools",
             "legacyMetaStepSyntax",
@@ -140,8 +138,7 @@ public abstract class AbstractModelDefTest {
 
         result.add(new Object[]{"emptyStages", "At /pipeline/stages: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyEnvironment", "At /pipeline/environment: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"emptyPostBuild", "At /pipeline/postBuild/conditions: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"emptyNotifications", "At /pipeline/notifications/conditions: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"emptyPostBuild", "At /pipeline/post/conditions: Array has 0 entries, requires minimum of 1"});
 
         result.add(new Object[]{"rejectStageInSteps", "Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines"});
         result.add(new Object[]{"rejectParallelMixedInSteps", "Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block"});
@@ -171,6 +168,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"unknownBareAgentType", "Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]."});
         result.add(new Object[]{"agentMissingRequiredParam", "Missing required parameter for agent type 'otherField': label"});
         result.add(new Object[]{"agentUnknownParamForType", "Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]"});
+        result.add(new Object[]{"notificationsSectionRemoved", "At /pipeline: additional properties are not allowed"});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +

@@ -38,10 +38,13 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
+import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -77,7 +80,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
     }
 
@@ -89,10 +91,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("goodbye", b);
-        j.assertLogContains("farewell", b);
         assertTrue(b.getExecution().getCauseOfFailure() != null);
     }
 
@@ -104,25 +104,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("goodbye", b);
-        j.assertLogContains("farewell", b);
-        assertTrue(b.getExecution().getCauseOfFailure() != null);
-    }
-
-    @Test
-    public void failingNotifications() throws Exception {
-        prepRepoWithJenkinsfile("failingNotifications");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("goodbye", b);
-        j.assertLogContains("farewell", b);
         assertTrue(b.getExecution().getCauseOfFailure() != null);
     }
 
@@ -148,6 +131,21 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("[Pipeline] { (bar)", b);
+
+        FlowExecution execution = b.getExecution();
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        assertNotNull(startFoo);
+        assertTrue(startFoo instanceof StepStartNode);
+        FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((StepStartNode)startFoo));
+        assertNotNull(endFoo);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+        assertNotNull(endFoo.getError());
+
+        FlowNode shouldBeFailedNode = execution.getNode("" + (Integer.valueOf(endFoo.getId()) - 1));
+        assertNotNull(shouldBeFailedNode);
+        assertNotNull(shouldBeFailedNode.getError());
     }
 
     @Test

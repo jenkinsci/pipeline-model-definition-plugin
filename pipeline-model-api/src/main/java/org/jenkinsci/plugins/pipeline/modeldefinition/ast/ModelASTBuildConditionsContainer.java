@@ -12,7 +12,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * Corresponds to {@code Notifications} or  {@code PostBuild}
  *
  * @author Robert Sandell &lt;rsandell@cloudbees.com&gt;.
- * @see ModelASTNotifications
+ * @see ModelASTPostStage
  * @see ModelASTPostBuild
  */
 public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {

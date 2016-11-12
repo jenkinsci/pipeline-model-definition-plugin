@@ -34,7 +34,7 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         always {
             echo "I AM A POST-BUILD"
         }

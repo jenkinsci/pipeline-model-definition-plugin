@@ -49,8 +49,4 @@ public class SyntheticStage extends StageTagsMetadata {
     public String getPost() {
         return "POST";
     }
-
-    public String getPostStage() {
-        return "POST_STAGE";
-    }
 }

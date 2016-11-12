@@ -46,9 +46,10 @@ import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
+import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
@@ -195,6 +196,29 @@ public class Utils {
         r.addAction(new ExecutionModelAction(stages))
     }
 
+    static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input != null &&
+                    input instanceof StepEndNode &&
+                    input.getStartNode().equals(startNode)
+            }
+        }
+    }
+
+    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input != null &&
+                    input instanceof StepStartNode &&
+                    ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
+                    (stageName == null || input.displayName?.equals(stageName))
+            }
+        }
+    }
+
     public static String stringToSHA1(String s) {
         return DigestUtils.sha1Hex(s)
     }
@@ -215,18 +239,6 @@ public class Utils {
         }
 
         return stageNode != null
-    }
-
-    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
-        return new Predicate<FlowNode>() {
-            @Override
-            boolean apply(@Nullable FlowNode input) {
-                return input != null &&
-                    input instanceof StepStartNode &&
-                    ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
-                    (stageName == null || input.displayName?.equals(stageName))
-            }
-        }
     }
 
     private static FlowNode findStageFlowNode(String stageName) {

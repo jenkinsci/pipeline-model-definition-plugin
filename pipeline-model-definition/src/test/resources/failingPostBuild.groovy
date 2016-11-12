@@ -31,14 +31,9 @@ pipeline {
             }
         }
     }
-    postBuild {
+    post {
         always {
             error "goodbye"
-        }
-    }
-    notifications {
-        always {
-            echo "farewell"
         }
     }
 }

@@ -46,7 +46,6 @@ public class ParametersTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-        j.assertLogNotContains("[Pipeline] { (" + SyntheticStageNames.notifications() + ")", b);
         j.assertLogContains("hello", b);
 
         WorkflowJob p = b.getParent();

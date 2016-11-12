@@ -31,7 +31,7 @@ pipeline {
             }
         }
     }
-    notifications {
+    post {
         always {
             echo "I AM ALWAYS"
         }
