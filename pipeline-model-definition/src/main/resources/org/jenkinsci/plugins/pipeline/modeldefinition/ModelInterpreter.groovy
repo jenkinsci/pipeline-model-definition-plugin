@@ -112,11 +112,11 @@ public class ModelInterpreter implements Serializable {
                                         firstError = e
                                     }
                                 }
-                            }.call()
-                        }.call()
-                    }.call()
-                }.call()
-            }.call()
+                            }
+                        }
+                    }
+                }
+            }
             if (firstError != null) {
                 script.echo "An error was encountered in execution: ${firstError.getMessage()}"
                 throw firstError
@@ -362,7 +362,7 @@ public class ModelInterpreter implements Serializable {
         } finally {
             // And finally, run the post stage steps.
             List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-            catchRequiredContextForNode(thisStage.agent ?: root.agent, false) {
+            catchRequiredContextForNode(thisStage.agent ?: root.agent) {
                 if (postClosures.size() > 0) {
                     script.echo("Post stage")
                     //TODO should this be a nested stage instead?
