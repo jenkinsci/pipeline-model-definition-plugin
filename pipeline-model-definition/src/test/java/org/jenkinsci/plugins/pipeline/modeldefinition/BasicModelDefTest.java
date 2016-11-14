@@ -295,4 +295,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("running inside closure2", b);
 
     }
+
+    @Test
+    public void basicWhen() throws Exception {
+        prepRepoWithJenkinsfile("basicWhen");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (One)", b);
+        j.assertLogContains("[Pipeline] { (Two)", b);
+    }
 }
