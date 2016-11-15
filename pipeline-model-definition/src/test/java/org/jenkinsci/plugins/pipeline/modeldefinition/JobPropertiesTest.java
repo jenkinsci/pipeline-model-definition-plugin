@@ -47,7 +47,7 @@ public class JobPropertiesTest extends AbstractModelDefTest {
     public void simpleJobProperties() throws Exception {
         WorkflowRun b = expect("simpleJobProperties")
                 .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)", "[Pipeline] { (Notifications)")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
                 .go();
 
         WorkflowJob p = b.getParent();
@@ -66,7 +66,7 @@ public class JobPropertiesTest extends AbstractModelDefTest {
     public void multipleProperties() throws Exception {
         WorkflowRun b = expect("multipleProperties")
                 .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)", "[Pipeline] { (Notifications)")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
                 .go();
 
         WorkflowJob p = b.getParent();

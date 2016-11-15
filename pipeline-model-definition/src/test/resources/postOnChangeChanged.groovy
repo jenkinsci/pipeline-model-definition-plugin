@@ -31,15 +31,9 @@ pipeline {
             }
         }
     }
-    notifications {
-        always {
-            def parallelArg = ["first": { echo "first" },
-                               "second": {echo "second" }]
-            parallel parallelArg
-            echo "I HAVE FINISHED"
-        }
-        success {
-            echo "MOST DEFINITELY FINISHED"
+    post {
+        changed {
+            echo "I CHANGED"
         }
         failure {
             echo "I FAILED"

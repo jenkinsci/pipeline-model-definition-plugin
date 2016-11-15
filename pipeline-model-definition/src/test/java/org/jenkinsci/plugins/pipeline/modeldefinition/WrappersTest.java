@@ -25,7 +25,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
 
 /**
@@ -38,8 +37,7 @@ public class WrappersTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "[Pipeline] timeout",
                         "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)",
-                        "[Pipeline] { (Notifications)")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
                 .go();
     }
 
@@ -50,8 +48,7 @@ public class WrappersTest extends AbstractModelDefTest {
                         "[Pipeline] timeout",
                         "[Pipeline] retry",
                         "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)",
-                        "[Pipeline] { (Notifications)")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
                 .go();
     }
 }

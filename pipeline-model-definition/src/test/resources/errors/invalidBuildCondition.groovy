@@ -31,7 +31,7 @@ pipeline {
             }
         }
     }
-    notifications {
+    post {
         banana {
             echo "I HAVE FINISHED"
         }

@@ -31,7 +31,7 @@ pipeline {
             }
         }
     }
-    notifications {
+    post {
         changed {
             echo "I CHANGED"
         }

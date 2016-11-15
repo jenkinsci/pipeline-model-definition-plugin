@@ -25,10 +25,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
 import hudson.model.Slave;
-import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
-import jenkins.util.VirtualFile;
-import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
@@ -72,7 +68,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void simplePipeline() throws Exception {
         expect("simplePipeline")
                 .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)", "[Pipeline] { (Notifications)")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
                 .go();
     }
 
@@ -83,8 +79,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "hello",
                         "goodbye",
                         "farewell",
-                        "[Pipeline] { (Post Build Actions)",
-                        "[Pipeline] { (Notifications)")
+                        "[Pipeline] { (Post Build Actions)")
                 .hasFailureCase()
                 .go();
     }
@@ -96,21 +91,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "hello",
                         "goodbye",
                         "farewell",
-                        "[Pipeline] { (Post Build Actions)",
-                        "[Pipeline] { (Notifications)")
-                .hasFailureCase()
-                .go();
-    }
-
-    @Test
-    public void failingNotifications() throws Exception {
-        expect(Result.FAILURE, "failingNotifications")
-                .logContains("[Pipeline] { (foo)",
-                        "hello",
-                        "goodbye",
-                        "farewell",
-                        "[Pipeline] { (Post Build Actions)",
-                        "[Pipeline] { (Notifications)")
+                        "[Pipeline] { (Post Build Actions)")
                 .hasFailureCase()
                 .go();
     }

@@ -34,40 +34,8 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.AbstractModelASTCodeBlock
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -175,10 +143,7 @@ class ModelParser {
                     case 'environment':
                         r.environment = parseEnvironment(stmt);
                         break;
-                    case 'notifications':
-                        r.notifications = parseNotifications(stmt);
-                        break;
-                    case 'postBuild':
+                    case 'post':
                         r.postBuild = parsePostBuild(stmt);
                         break;
                     case 'agent':
@@ -198,6 +163,12 @@ class ModelParser {
                         break
                     case 'wrappers':
                         r.wrappers = parseWrappers(stmt)
+                        break
+                    case 'notifications':
+                        errorCollector.error(r, "The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
+                        break
+                    case 'postBuild':
+                        errorCollector.error(r, "The 'postBuild' section has been renamed as of version 0.6. Use 'post' for all post-build actions.")
                         break
                     default:
                         // We need to check for unknowns here.
@@ -682,12 +653,6 @@ class ModelParser {
         agent.args = parseArgumentList(args)
 
         return agent
-    }
-
-    public @Nonnull ModelASTNotifications parseNotifications(Statement stmt) {
-        def r = new ModelASTNotifications(stmt);
-
-        return parseBuildConditionResponder(stmt, r);
     }
 
     public @Nonnull ModelASTPostBuild parsePostBuild(Statement stmt) {

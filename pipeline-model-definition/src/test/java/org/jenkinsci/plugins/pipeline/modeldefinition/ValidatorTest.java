@@ -25,13 +25,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
 import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -289,23 +286,9 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void emptyNotification() throws Exception {
-        expect(Result.FAILURE, "errors", "emptyNotifications")
-                .logContains("notifications can not be empty")
-                .go();
-    }
-
-    @Test
     public void emptyPostBuild() throws Exception {
         expect(Result.FAILURE, "errors", "emptyPostBuild")
                 .logContains("postBuild can not be empty")
-                .go();
-    }
-
-    @Test
-    public void duplicateNotificationConditions() throws Exception {
-        expect(Result.FAILURE, "errors", "duplicateNotificationConditions")
-                .logContains("Duplicate build condition name: 'always'")
                 .go();
     }
 
@@ -399,6 +382,13 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void invalidWrapperType() throws Exception {
         expect(Result.FAILURE, "errors", "invalidWrapperType")
                 .logContains("Invalid wrapper type 'echo'. Valid wrapper types: " + Wrappers.getEligibleSteps())
+                .go();
+    }
+
+    @Test
+    public void notificationsSectionRemoved() throws Exception {
+        expect(Result.FAILURE, "errors", "notificationsSectionRemoved")
+                .logContains("The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
                 .go();
     }
 }

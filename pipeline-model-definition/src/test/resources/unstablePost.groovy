@@ -34,7 +34,7 @@ pipeline {
             }
         }
     }
-    notifications {
+    post {
         unstable {
             echo "I AM UNSTABLE"
         }

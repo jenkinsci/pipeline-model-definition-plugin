@@ -44,27 +44,6 @@ import static org.junit.Assert.assertTrue;
 public class ModelConverterActionTest extends AbstractModelDefTest {
 
     @Test
-    public void doSchema() throws Exception {
-        JenkinsRule.WebClient wc = j.createWebClient();
-        String rawSchema = wc.goTo(ModelConverterAction.PIPELINE_CONVERTER_URL + "/schema", "application/json").getWebResponse().getContentAsString();
-        assertNotNull(rawSchema);
-        JSONObject remoteSchema = JSONObject.fromObject(rawSchema);
-        assertNotNull(remoteSchema);
-        assertFalse(remoteSchema.isEmpty());
-        assertFalse(remoteSchema.isNullObject());
-
-        String rawInternalSchema = fileContentsFromResources("ast-schema.json");
-        assertNotNull(rawInternalSchema);
-        JSONObject internalSchema = JSONObject.fromObject(rawInternalSchema);
-
-        assertNotNull(internalSchema);
-        assertFalse(internalSchema.isEmpty());
-        assertFalse(internalSchema.isNullObject());
-
-        assertEquals(internalSchema, remoteSchema);
-    }
-
-    @Test
     public void testFailedValidateJsonInvalidBuildCondition() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
         WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);

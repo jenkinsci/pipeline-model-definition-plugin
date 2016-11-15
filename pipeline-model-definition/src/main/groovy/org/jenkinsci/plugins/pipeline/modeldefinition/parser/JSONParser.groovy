@@ -30,40 +30,8 @@ import com.github.fge.jsonschema.report.ProcessingReport
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodArg
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
@@ -129,11 +97,8 @@ class JSONParser {
                 case 'agent':
                     pipelineDef.agent = parseAgent(pipelineJson.get("agent"))
                     break
-                case 'postBuild':
-                    pipelineDef.postBuild = parsePostBuild(pipelineJson.getJSONObject("postBuild"))
-                    break
-                case 'notifications':
-                    pipelineDef.notifications = parseNotifications(pipelineJson.getJSONObject("notifications"))
+                case 'post':
+                    pipelineDef.postBuild = parsePostBuild(pipelineJson.getJSONObject("post"))
                     break
                 case 'tools':
                     pipelineDef.tools = parseTools(pipelineJson.getJSONArray("tools"))
@@ -451,12 +416,6 @@ class JSONParser {
         condition.branch = parseBranch(j.getJSONObject("branch"))
 
         return condition
-    }
-
-    public @CheckForNull ModelASTNotifications parseNotifications(JSONObject j) {
-        ModelASTNotifications notifications = new ModelASTNotifications(j)
-
-        return parseBuildConditionResponder(j, notifications)
     }
 
     public @CheckForNull ModelASTPostBuild parsePostBuild(JSONObject j) {
