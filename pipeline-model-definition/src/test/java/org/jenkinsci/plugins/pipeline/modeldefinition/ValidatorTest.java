@@ -288,7 +288,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void emptyPostBuild() throws Exception {
         expect(Result.FAILURE, "errors", "emptyPostBuild")
-                .logContains("postBuild can not be empty")
+                .logContains("post can not be empty")
                 .go();
     }
 

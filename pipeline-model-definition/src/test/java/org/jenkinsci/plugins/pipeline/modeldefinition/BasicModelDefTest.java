@@ -78,7 +78,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "hello",
                         "goodbye",
-                        "farewell",
                         "[Pipeline] { (Post Build Actions)")
                 .hasFailureCase()
                 .go();
@@ -90,7 +89,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "hello",
                         "goodbye",
-                        "farewell",
                         "[Pipeline] { (Post Build Actions)")
                 .hasFailureCase()
                 .go();
