@@ -79,32 +79,49 @@ public class ModelInterpreter implements Serializable {
 
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
-
-                                    runStageOrNot(thisStage) {
-                                        script.stage(thisStage.name) {
-                                            withEnvBlock(thisStage.getEnvVars()) {
-                                                if (firstError == null) {
-                                                    inDeclarativeAgent(thisStage.agent) {
-                                                        withCredentialsBlock(thisStage.getEnvCredentials()) {
-                                                            toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                                // Execute the actual stage and potential post-stage actions
-                                                                firstError = executeSingleStage(root, thisStage, firstError)
+                                    try {
+                                        runStageOrNot(thisStage) {
+                                            script.stage(thisStage.name) {
+                                                withEnvBlock(thisStage.getEnvVars()) {
+                                                    if (firstError == null) {
+                                                        inDeclarativeAgent(thisStage.agent) {
+                                                            withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                                    // Execute the actual stage and potential post-stage actions
+                                                                    executeSingleStage(root, thisStage)
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+                                    } catch (Exception e) {
+                                        if (firstError == null) {
+                                            firstError = e
+                                        }
                                     }
                                 }
 
                                 // Execute post-build actions now that we've finished all stages.
-                                firstError = executePostBuild(root, firstError)
+                                try {
+                                    executePostBuild(root)
+                                } catch (Exception e) {
+                                    if (firstError == null) {
+                                        firstError = e
+                                    }
+                                }
                             }
                         }
                     }
                     // Execute notifications now that we've gotten past post-build and left the node.
-                    firstError = executeNotifications(root, firstError)
+                    try {
+                        executeNotifications(root)
+                    } catch (Exception e) {
+                        if (firstError == null) {
+                            firstError = e
+                        }
+                    }
                 }
             }
 
@@ -339,19 +356,17 @@ public class ModelInterpreter implements Serializable {
      *
      * @param root The root context we're running in
      * @param thisStage The stage context we're running in
-     * @param firstError The current error state
-     * @return The updated current error state
      */
-    def executeSingleStage(Root root, Stage thisStage, Throwable firstError) {
+    def executeSingleStage(Root root, Stage thisStage) throws Throwable {
+        Throwable stageError
         try {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
                 setUpDelegate(thisStage.steps.closure)
             }
         } catch (Exception e) {
-            script.echo "Error in stages execution: ${e.getMessage()}"
             script.getProperty("currentBuild").result = Result.FAILURE
-            if (firstError == null) {
-                firstError = e
+            if (stageError == null) {
+                stageError = e
             }
         } finally {
             // And finally, run the post stage steps.
@@ -365,77 +380,74 @@ public class ModelInterpreter implements Serializable {
                             setUpDelegate(postClosures.get(ni))
                         }
                     } catch (Exception e) {
-                        script.echo "Error in stage post: ${e.getMessage()}"
                         script.getProperty("currentBuild").result = Result.FAILURE
-                        if (firstError == null) {
-                            firstError = e
+                        if (stageError == null) {
+                            stageError = e
                         }
                     }
                 }
             }
         }
 
-        return firstError
+        if (stageError != null) {
+            throw stageError
+        }
     }
 
     /**
      * Executes the notifications for this build.
      * @param root The root context we're running in.
-     * @param firstError The current error state
-     * @return The updated current error state
      */
-    def executeNotifications(Root root, Throwable firstError) {
-        try {
-            // And finally, run the notifications.
-            List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
+    def executeNotifications(Root root) throws Throwable {
+        Throwable stageError
 
-            catchRequiredContextForNode(root.agent, true) {
-                if (notificationClosures.size() > 0) {
-                    script.stage("Notifications") {
+        // And finally, run the notifications.
+        List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
+        if (notificationClosures.size() > 0) {
+            try {
+                script.stage("Notifications") {
+                    catchRequiredContextForNode(root.agent, true) {
                         for (int i = 0; i < notificationClosures.size(); i++) {
                             setUpDelegate(notificationClosures.get(i))
                         }
                     }
                 }
-            }
-        } catch (Exception e) {
-            script.echo "Error in notifications execution: ${e.getMessage()}"
-            script.getProperty("currentBuild").result = Result.FAILURE
-            if (firstError == null) {
-                firstError = e
+            } catch (Exception e) {
+                script.getProperty("currentBuild").result = Result.FAILURE
+                stageError = e
             }
         }
 
-        return firstError
+        if (stageError != null) {
+            throw stageError
+        }
     }
 
     /**
      * Executes the post build actions for this build
      * @param root The root context we're executing in
-     * @param firstError The current error state
-     * @return The updated current error state
      */
-    def executePostBuild(Root root, Throwable firstError) {
-        try {
-            catchRequiredContextForNode(root.agent) {
-                List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
-                if (postBuildClosures.size() > 0) {
-                    script.stage("Post Build Actions") {
+    def executePostBuild(Root root) throws Throwable {
+        Throwable stageError
+        List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
+        if (postBuildClosures.size() > 0) {
+            try {
+                script.stage("Post Build Actions") {
+                    catchRequiredContextForNode(root.agent) {
                         for (int i = 0; i < postBuildClosures.size(); i++) {
                             setUpDelegate(postBuildClosures.get(i))
                         }
                     }
                 }
-            }
-        } catch (Exception e) {
-            script.echo "Error in postBuild execution: ${e.getMessage()}"
-            script.getProperty("currentBuild").result = Result.FAILURE
-            if (firstError == null) {
-                firstError = e
+            } catch (Exception e) {
+                script.getProperty("currentBuild").result = Result.FAILURE
+                stageError = e
             }
         }
 
-        return firstError
+        if (stageError != null) {
+            throw stageError
+        }
     }
 
     /**
