@@ -79,7 +79,6 @@ public class ModelInterpreter implements Serializable {
 
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
-
                                     try {
                                         runStageOrNot(thisStage) {
                                             script.stage(thisStage.name) {
@@ -118,7 +117,6 @@ public class ModelInterpreter implements Serializable {
                 }
             }
             if (firstError != null) {
-                script.echo "An error was encountered in execution: ${firstError.getMessage()}"
                 throw firstError
             }
         }
