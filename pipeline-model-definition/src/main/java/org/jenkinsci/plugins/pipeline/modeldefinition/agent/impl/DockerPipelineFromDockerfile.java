@@ -74,7 +74,7 @@ public class DockerPipelineFromDockerfile extends DeclarativeAgent {
         }
     }
 
-    @Extension(ordinal = 999) @Symbol("dockerfile")
+    @Extension(ordinal = 999, optional = true) @Symbol("dockerfile")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
     }
 }
