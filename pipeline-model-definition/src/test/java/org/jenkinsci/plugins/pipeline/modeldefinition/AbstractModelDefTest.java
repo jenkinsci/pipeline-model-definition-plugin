@@ -130,7 +130,8 @@ public abstract class AbstractModelDefTest {
             "agentTypeOrdering",
             "toolsInStage",
             "environmentInStage",
-            "basicWhen"
+            "basicWhen",
+            "skippedWhen"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

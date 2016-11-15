@@ -304,5 +304,17 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (One)", b);
         j.assertLogContains("[Pipeline] { (Two)", b);
+        j.assertLogContains("World", b);
+    }
+
+    @Test
+    public void skippedWhen() throws Exception {
+        prepRepoWithJenkinsfile("skippedWhen");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (One)", b);
+        j.assertLogNotContains("[Pipeline] { (Two)", b);
+        j.assertLogNotContains("World", b);
     }
 }
