@@ -77,7 +77,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
     }
 
@@ -89,10 +88,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("goodbye", b);
-        j.assertLogContains("farewell", b);
         assertTrue(b.getExecution().getCauseOfFailure() != null);
     }
 
@@ -104,25 +101,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
         j.assertLogContains("goodbye", b);
-        j.assertLogContains("farewell", b);
-        assertTrue(b.getExecution().getCauseOfFailure() != null);
-    }
-
-    @Test
-    public void failingNotifications() throws Exception {
-        prepRepoWithJenkinsfile("failingNotifications");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("[Pipeline] { (Notifications)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("goodbye", b);
-        j.assertLogContains("farewell", b);
         assertTrue(b.getExecution().getCauseOfFailure() != null);
     }
 

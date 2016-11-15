@@ -15,7 +15,7 @@ public final class ModelASTPostBuild extends ModelASTBuildConditionsContainer {
 
     @Override
     public java.lang.String getName() {
-        return "postBuild";
+        return "post";
     }
 
     @Override

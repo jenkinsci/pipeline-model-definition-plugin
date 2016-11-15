@@ -302,25 +302,8 @@
       "additionalProperties": false
 
     },
-    "notifications": {
-      "description": "An array of build conditions with blocks of steps to run if those conditions are satisfied at the end of the build",
-      "type": "object",
-      "properties": {
-        "conditions": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/buildCondition"
-          }
-        }
-      },
-      "required": [
-        "conditions"
-      ],
-      "additionalProperties": false
-    },
-    "postBuild": {
-      "description": "An array of build conditions with blocks of steps to run if those conditions are satisfied at the end of the build while still on the image/node the build ran on, before notifications",
+    "post": {
+      "description": "An array of build conditions with blocks of steps to run if those conditions are satisfied at the end of the build while still on the image/node the build ran on",
       "type": "object",
       "properties": {
         "conditions": {
@@ -350,7 +333,7 @@
           "$ref": "#/definitions/when"
         },
         "post": {
-          "$ref": "#/definitions/notifications"
+          "$ref": "#/definitions/post"
         },
         "tools": {
           "$ref": "#/definitions/tools"
@@ -385,11 +368,8 @@
         "stages": {
           "$ref": "#/definitions/stages"
         },
-        "notifications": {
-          "$ref": "#/definitions/notifications"
-        },
-        "postBuild": {
-          "$ref": "#/definitions/postBuild"
+        "post": {
+          "$ref": "#/definitions/post"
         },
         "environment": {
           "$ref": "#/definitions/environment"

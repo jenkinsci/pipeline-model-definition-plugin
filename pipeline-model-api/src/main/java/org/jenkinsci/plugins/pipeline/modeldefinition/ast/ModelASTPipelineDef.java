@@ -12,7 +12,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  */
 public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTStages stages;
-    private ModelASTNotifications notifications;
     private ModelASTPostBuild postBuild;
     private ModelASTEnvironment environment;
     private ModelASTAgent agent;
@@ -30,8 +29,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     public JSONObject toJSON() {
         JSONObject a = new JSONObject();
         a.put("stages", stages != null ? stages.toJSON() : null);
-        a.put("notifications", notifications != null ? notifications.toJSON() : null);
-        a.put("postBuild", postBuild != null ? postBuild.toJSON() : null);
+        a.put("post", postBuild != null ? postBuild.toJSON() : null);
         a.put("environment", environment != null ? environment.toJSON() : null);
         a.put("agent", agent != null ? agent.toJSON() : null);
         a.put("tools", tools != null ? tools.toJSON() : null);
@@ -64,9 +62,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
 
         if (stages != null) {
             stages.validate(validator);
-        }
-        if (notifications != null) {
-            notifications.validate(validator);
         }
         if (postBuild != null) {
             postBuild.validate(validator);
@@ -112,9 +107,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         }
         if (postBuild != null) {
             result.append(postBuild.toGroovy()).append('\n');
-        }
-        if (notifications != null) {
-            result.append(notifications.toGroovy()).append('\n');
         }
         if (jobProperties != null && !jobProperties.getProperties().isEmpty()) {
             result.append(jobProperties.toGroovy()).append('\n');
@@ -181,9 +173,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (stages != null) {
             stages.removeSourceLocation();
         }
-        if (notifications != null) {
-            notifications.removeSourceLocation();
-        }
         if (postBuild != null) {
             postBuild.removeSourceLocation();
         }
@@ -217,14 +206,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
 
     public void setStages(ModelASTStages stages) {
         this.stages = stages;
-    }
-
-    public ModelASTNotifications getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(ModelASTNotifications notifications) {
-        this.notifications = notifications;
     }
 
     public ModelASTPostBuild getPostBuild() {
@@ -295,8 +276,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     public String toString() {
         return "ModelASTPipelineDef{" +
                 "stages=" + stages +
-                ", notifications=" + notifications +
-                ", postBuild=" + postBuild +
+                ", post=" + postBuild +
                 ", environment=" + environment +
                 ", agent=" + agent +
                 ", tools=" + tools +
@@ -322,11 +302,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         ModelASTPipelineDef that = (ModelASTPipelineDef) o;
 
         if (getStages() != null ? !getStages().equals(that.getStages()) : that.getStages() != null) {
-            return false;
-        }
-        if (getNotifications() != null
-                ? !getNotifications().equals(that.getNotifications())
-                : that.getNotifications() != null) {
             return false;
         }
         if (getPostBuild() != null ? !getPostBuild().equals(that.getPostBuild()) : that.getPostBuild() != null) {
@@ -362,7 +337,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (getStages() != null ? getStages().hashCode() : 0);
-        result = 31 * result + (getNotifications() != null ? getNotifications().hashCode() : 0);
         result = 31 * result + (getPostBuild() != null ? getPostBuild().hashCode() : 0);
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getAgent() != null ? getAgent().hashCode() : 0);

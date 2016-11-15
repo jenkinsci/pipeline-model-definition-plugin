@@ -44,7 +44,7 @@
         <artifactId>maven-hpi-plugin</artifactId>
         <extensions>true</extensions>
         <configuration>
-          <compatibleSinceVersion>0.5</compatibleSinceVersion>
+          <compatibleSinceVersion>0.6</compatibleSinceVersion>
         </configuration>
       </plugin>
     </plugins>
@@ -112,19 +112,7 @@
       <version>1.9</version>
     </dependency>
 
-    <!-- JSON schema stuff -->
-    <dependency>
-      <groupId>com.github.fge</groupId>
-      <artifactId>json-schema-validator</artifactId>
-      <version>2.0.4</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-json-org</artifactId>
-      <version>2.2.3</version>
-    </dependency>
-
-    <!-- TEST deps --> 
+    <!-- TEST deps -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>

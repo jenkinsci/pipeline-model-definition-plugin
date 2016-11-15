@@ -41,7 +41,6 @@ public class WrappersTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("[Pipeline] timeout", b);
         j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
     }
 
@@ -55,7 +54,6 @@ public class WrappersTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] timeout", b);
         j.assertLogContains("[Pipeline] retry", b);
         j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogNotContains("[Pipeline] { (Notifications)", b);
         j.assertLogContains("hello", b);
     }
 }

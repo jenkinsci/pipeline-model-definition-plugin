@@ -67,7 +67,7 @@ public class ModelInterpreter implements Serializable {
             withEnvBlock(root.getEnvVars()) {
                 inWrappers(root.wrappers) {
                     // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
-                    // even if the build fails, and we still send notifications if the build and/or post-build actions fail.
+                    // even if the build fails.
                     // We save the caught error, if any, for throwing at the end of the build.
                     inDeclarativeAgent(root.agent) {
                         withCredentialsBlock(root.getEnvCredentials()) {
@@ -114,17 +114,8 @@ public class ModelInterpreter implements Serializable {
                             }
                         }
                     }
-                    // Execute notifications now that we've gotten past post-build and left the node.
-                    try {
-                        executeNotifications(root)
-                    } catch (Exception e) {
-                        if (firstError == null) {
-                            firstError = e
-                        }
-                    }
                 }
             }
-
             if (firstError != null) {
                 throw firstError
             }
@@ -152,15 +143,13 @@ public class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      * @throws Exception
      */
-    def catchRequiredContextForNode(Agent agent, boolean inNotifications = false, Closure body) throws Exception {
+    def catchRequiredContextForNode(Agent agent, Closure body) throws Exception {
         return {
             try {
                 body.call()
             } catch (MissingContextVariableException e) {
                 if (FilePath.class.equals(e.type) || Launcher.class.equals(e.type)) {
-                    if (inNotifications) {
-                        script.error("Attempted to execute a notification step that requires a node context. Notifications do not run inside a 'node { ... }' block.")
-                    } else if (!agent.hasAgent()) {
+                    if (!agent.hasAgent()) {
                         script.error("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
                                 "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.")
                     } else {
@@ -371,7 +360,7 @@ public class ModelInterpreter implements Serializable {
         } finally {
             // And finally, run the post stage steps.
             List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-            catchRequiredContextForNode(thisStage.agent ?: root.agent, false) {
+            catchRequiredContextForNode(thisStage.agent ?: root.agent) {
                 if (postClosures.size() > 0) {
                     script.echo("Post stage")
                     //TODO should this be a nested stage instead?
@@ -386,35 +375,6 @@ public class ModelInterpreter implements Serializable {
                         }
                     }
                 }
-            }
-        }
-
-        if (stageError != null) {
-            throw stageError
-        }
-    }
-
-    /**
-     * Executes the notifications for this build.
-     * @param root The root context we're running in.
-     */
-    def executeNotifications(Root root) throws Throwable {
-        Throwable stageError
-
-        // And finally, run the notifications.
-        List<Closure> notificationClosures = root.satisfiedNotifications(script.getProperty("currentBuild"))
-        if (notificationClosures.size() > 0) {
-            try {
-                script.stage("Notifications") {
-                    catchRequiredContextForNode(root.agent, true) {
-                        for (int i = 0; i < notificationClosures.size(); i++) {
-                            setUpDelegate(notificationClosures.get(i))
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                stageError = e
             }
         }
 

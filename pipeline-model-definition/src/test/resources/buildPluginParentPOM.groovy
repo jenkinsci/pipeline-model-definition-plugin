@@ -19,7 +19,7 @@ pipeline {
         }
     }
 
-    postBuild {
+    post {
         always {
             archive "target/**/*"
         }

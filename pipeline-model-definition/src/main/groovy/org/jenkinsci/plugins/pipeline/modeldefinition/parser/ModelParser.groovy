@@ -58,7 +58,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNotifications
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock
@@ -175,10 +174,7 @@ class ModelParser {
                     case 'environment':
                         r.environment = parseEnvironment(stmt);
                         break;
-                    case 'notifications':
-                        r.notifications = parseNotifications(stmt);
-                        break;
-                    case 'postBuild':
+                    case 'post':
                         r.postBuild = parsePostBuild(stmt);
                         break;
                     case 'agent':
@@ -198,6 +194,12 @@ class ModelParser {
                         break
                     case 'wrappers':
                         r.wrappers = parseWrappers(stmt)
+                        break
+                    case 'notifications':
+                        errorCollector.error(r, "The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
+                        break
+                    case 'postBuild':
+                        errorCollector.error(r, "The 'postBuild' section has been renamed as of version 0.6. Use 'post' for all post-build actions.")
                         break
                     default:
                         // We need to check for unknowns here.
@@ -682,12 +684,6 @@ class ModelParser {
         agent.args = parseArgumentList(args)
 
         return agent
-    }
-
-    public @Nonnull ModelASTNotifications parseNotifications(Statement stmt) {
-        def r = new ModelASTNotifications(stmt);
-
-        return parseBuildConditionResponder(stmt, r);
     }
 
     public @Nonnull ModelASTPostBuild parsePostBuild(Statement stmt) {

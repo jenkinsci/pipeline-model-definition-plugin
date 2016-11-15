@@ -12,7 +12,7 @@
       }]
     }]
   }],
-  "postBuild": {"conditions":   [
+  "post": {"conditions":   [
         {
       "condition": "success",
       "branch":       {
