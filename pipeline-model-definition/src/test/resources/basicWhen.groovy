@@ -22,33 +22,26 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition;
+pipeline {
+    agent any
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                echo "Should I run?"
+                return true
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-
-import org.junit.Test;
-
-/**
- * @author Andrew Bayer
- */
-public class WrappersTest extends AbstractModelDefTest {
-    @Test
-    public void simpleWrapper() throws Exception {
-        expect("simpleWrapper")
-                .logContains("[Pipeline] { (foo)",
-                        "[Pipeline] timeout",
-                        "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)")
-                .go();
-    }
-
-    @Test
-    public void multipleWrappers() throws Exception {
-        expect("multipleWrappers")
-                .logContains("[Pipeline] { (foo)",
-                        "[Pipeline] timeout",
-                        "[Pipeline] retry",
-                        "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)")
-                .go();
+            }
+        }
     }
 }

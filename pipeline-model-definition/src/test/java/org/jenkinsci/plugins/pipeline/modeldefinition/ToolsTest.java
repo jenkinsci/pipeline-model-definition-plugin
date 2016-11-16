@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.JDK;
+import hudson.model.Slave;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.Maven;
@@ -40,39 +41,30 @@ import static org.jvnet.hudson.test.ToolInstallations.configureDefaultMaven;
  */
 public class ToolsTest extends AbstractModelDefTest {
 
-    private static DumbSlave s;
+    private static Slave s;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
     }
 
     @Test
     public void simpleTools() throws Exception {
-        prepRepoWithJenkinsfile("simpleTools");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("Apache Maven 3.0.1", b);
+        expect("simpleTools")
+                .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
+                .go();
     }
 
     @Test
     public void toolsInStage() throws Exception {
-        prepRepoWithJenkinsfile("toolsInStage");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("Apache Maven 3.0.1", b);
+        expect("toolsInStage")
+                .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
+                .go();
     }
 
     @Test
     public void buildPluginParentPOM() throws Exception {
-        prepRepoWithJenkinsfile("buildPluginParentPOM");
 
         Maven.MavenInstallation mvn = configureDefaultMaven("apache-maven-3.1.0", Maven.MavenInstallation.MAVEN_30);
 
@@ -87,11 +79,11 @@ public class ToolsTest extends AbstractModelDefTest {
         }
         assertNotNull("Couldn't find JDK named 'default'", thisJdk);
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (build)", b);
-        j.assertLogContains("[INFO] BUILD SUCCESS", b);
-        j.assertLogContains("M2_HOME: " + m3.getHome(), b);
-        j.assertLogContains("JAVA_HOME: " + thisJdk.getHome(), b);
+        expect("buildPluginParentPOM")
+                .logContains("[Pipeline] { (build)",
+                        "[INFO] BUILD SUCCESS",
+                        "M2_HOME: " + m3.getHome(),
+                        "JAVA_HOME: " + thisJdk.getHome())
+                .go();
     }
 }
