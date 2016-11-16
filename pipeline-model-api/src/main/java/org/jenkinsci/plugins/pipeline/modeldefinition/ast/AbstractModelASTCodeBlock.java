@@ -25,6 +25,11 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import org.apache.commons.lang.StringUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents the special step which are executed without validation against the declarative subset.
  * @see ModelASTScriptBlock
@@ -40,16 +45,56 @@ public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
     @Override
     public String toGroovy() {
         StringBuilder result = new StringBuilder(getName()).append(" {\n");
-        if (getArgs() != null
-                && getArgs() instanceof ModelASTSingleArgument
-                && ((ModelASTSingleArgument) getArgs()).getValue()!=null
-                && ((ModelASTSingleArgument) getArgs()).getValue().isLiteral()) {
-            result.append(((ModelASTSingleArgument) getArgs()).getValue().getValue());
-        } else if (getArgs() != null) {
-            result.append(getArgs().toGroovy());
-        }
+        result.append(codeBlockAsString());
         result.append("\n}\n");
         return result.toString();
+    }
+
+    protected String codeBlockAsString() {
+        if (getArgs() == null) {
+            return null;
+        } else if (isLiteralSingleArg()) {
+            Object v = ((ModelASTSingleArgument) getArgs()).getValue().getValue();
+            if (v instanceof String) {
+                List<String> retList = new ArrayList<>();
+                for (String s : v.toString().split("\\r?\\n")) {
+                    retList.add(s.trim());
+                }
+                return StringUtils.join(retList, "\n");
+            } else {
+                return v.toString();
+            }
+        } else {
+            return getArgs().toGroovy();
+        }
+    }
+
+    protected boolean isLiteralSingleArg() {
+        return getArgs() != null
+                && getArgs() instanceof ModelASTSingleArgument
+                && ((ModelASTSingleArgument) getArgs()).getValue()!=null
+                && ((ModelASTSingleArgument) getArgs()).getValue().isLiteral();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        AbstractModelASTCodeBlock that = (AbstractModelASTCodeBlock) o;
+
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
+            return false;
+        }
+        if (isLiteralSingleArg() && that.isLiteralSingleArg()) {
+            return codeBlockAsString().equals(that.codeBlockAsString());
+        } else {
+            return getArgs() != null ? getArgs().equals(that.getArgs()) : that.getArgs() == null;
+        }
     }
 
     @Override
@@ -59,4 +104,5 @@ public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
                 ", args=" + getArgs() +
                 "}";
     }
+
 }

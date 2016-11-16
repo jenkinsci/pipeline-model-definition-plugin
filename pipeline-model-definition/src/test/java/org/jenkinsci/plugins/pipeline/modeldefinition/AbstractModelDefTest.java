@@ -127,7 +127,9 @@ public abstract class AbstractModelDefTest {
             "multipleWrappers",
             "agentTypeOrdering",
             "toolsInStage",
-            "environmentInStage"
+            "environmentInStage",
+            "basicWhen",
+            "skippedWhen"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

@@ -249,4 +249,26 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "running inside closure2")
                 .go();
     }
+
+    @Test
+    public void basicWhen() throws Exception {
+        prepRepoWithJenkinsfile("basicWhen");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (One)", b);
+        j.assertLogContains("[Pipeline] { (Two)", b);
+        j.assertLogContains("World", b);
+    }
+
+    @Test
+    public void skippedWhen() throws Exception {
+        prepRepoWithJenkinsfile("skippedWhen");
+
+        WorkflowRun b = getAndStartBuild();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (One)", b);
+        j.assertLogNotContains("[Pipeline] { (Two)", b);
+        j.assertLogNotContains("World", b);
+    }
 }
