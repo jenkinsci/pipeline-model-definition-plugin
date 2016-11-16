@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.Slave;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -34,24 +35,19 @@ import org.junit.Test;
  */
 public class ScriptStepTest extends AbstractModelDefTest {
 
-    private static DumbSlave s;
+    private static Slave s;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
     }
 
     @Test
     public void simpleScript() throws Exception {
-        prepRepoWithJenkinsfile("simpleScript");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("In a script step", b);
+        expect("simpleScript")
+                .logContains("[Pipeline] { (foo)", "In a script step")
+                .go();
     }
 
     @Test
@@ -60,30 +56,24 @@ public class ScriptStepTest extends AbstractModelDefTest {
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
 
-        prepRepoWithJenkinsfile("dockerGlobalVariableInScript");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("image: ubuntu", b);
+        expect("dockerGlobalVariableInScript")
+                .logContains("[Pipeline] { (foo)", "image: ubuntu")
+                .go();
     }
 
     @Test
     public void globalLibrarySuccessInScript() throws Exception {
 
-        // Test the successful, albeit limited, case.
-        prepRepoWithJenkinsfile("globalLibrarySuccessInScript");
-
         initGlobalLibrary();
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-
-        j.assertLogContains("Hello Pipeline", b);
-        j.assertLogContains("[seed-set-get]", b);
-        j.assertLogContains("[nothing here]", b);
-        j.assertLogContains("call(1,2)", b);
-        j.assertLogContains("map call(3,4)", b);
-        j.assertLogContains("title was yolo", b);
+        // Test the successful, albeit limited, case.
+        expect("globalLibrarySuccessInScript")
+                .logContains("Hello Pipeline",
+                        "[seed-set-get]",
+                        "[nothing here]",
+                        "call(1,2)",
+                        "map call(3,4)",
+                        "title was yolo")
+                .go();
     }
 }

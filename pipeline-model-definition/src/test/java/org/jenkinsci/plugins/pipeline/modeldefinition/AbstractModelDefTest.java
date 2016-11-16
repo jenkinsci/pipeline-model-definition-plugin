@@ -45,7 +45,6 @@ import org.apache.commons.lang.SystemUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
@@ -72,10 +71,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.text.IsEqualIgnoringWhiteSpace.equalToIgnoringWhiteSpace;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.text.IsEqualIgnoringWhiteSpace.equalToIgnoringWhiteSpace;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -414,6 +414,8 @@ public abstract class AbstractModelDefTest {
         private WorkflowRun run;
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
+        private boolean hasFailureCause;
+        private List<String> inLogInOrder;
         private List<Matcher<Run>> buildMatchers;
 
         private ExpectationsBuilder(String resourceParent, String resource) {
@@ -425,6 +427,11 @@ public abstract class AbstractModelDefTest {
             this.resourceParent = resourceParent;
             this.resource = resource;
             buildMatchers = new ArrayList<>();
+        }
+
+        public ExpectationsBuilder inLogInOrder(String... msgsInOrder) {
+            this.inLogInOrder = Arrays.asList(msgsInOrder);
+            return this;
         }
 
         public ExpectationsBuilder runFromRepo(boolean mode) {
@@ -455,6 +462,11 @@ public abstract class AbstractModelDefTest {
             return this;
         }
 
+        public ExpectationsBuilder hasFailureCase() {
+            this.hasFailureCause = true;
+            return this;
+        }
+
         public ExpectationsBuilder buildMatches(Matcher<Run>... matchers) {
             buildMatchers.addAll(Arrays.asList(matchers));
             return this;
@@ -476,7 +488,7 @@ public abstract class AbstractModelDefTest {
             return buildMatches(HasArchived.hasArchivedString(equalTo(fileName), content));
         }
 
-        public void go() throws Exception {
+        public WorkflowRun go() throws Exception {
             String resourceFullName = resource;
             if (resourceParent != null) {
                 resourceFullName = resourceParent + "/" + resource;
@@ -504,9 +516,18 @@ public abstract class AbstractModelDefTest {
                     j.assertLogNotContains(logNotContain, run);
                 }
             }
+            if (hasFailureCause) {
+                assertNotNull(run.getExecution().getCauseOfFailure());
+            }
+            if (inLogInOrder != null && !inLogInOrder.isEmpty()) {
+                String buildLog = JenkinsRule.getLog(run);
+                assertThat(buildLog, stringContainsInOrder(inLogInOrder));
+            }
+
             for (Matcher<Run> matcher : buildMatchers) {
                 assertThat(run, matcher);
             }
+            return run;
         }
 
         public ExpectationsBuilder resetForNewRun(Result result) {

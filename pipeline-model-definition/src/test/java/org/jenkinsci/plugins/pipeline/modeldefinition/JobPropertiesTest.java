@@ -45,13 +45,10 @@ import static org.junit.Assert.assertTrue;
 public class JobPropertiesTest extends AbstractModelDefTest {
     @Test
     public void simpleJobProperties() throws Exception {
-        prepRepoWithJenkinsfile("simpleJobProperties");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("hello", b);
+        WorkflowRun b = expect("simpleJobProperties")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .go();
 
         WorkflowJob p = b.getParent();
 
@@ -67,13 +64,10 @@ public class JobPropertiesTest extends AbstractModelDefTest {
 
     @Test
     public void multipleProperties() throws Exception {
-        prepRepoWithJenkinsfile("multipleProperties");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("hello", b);
+        WorkflowRun b = expect("multipleProperties")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .go();
 
         WorkflowJob p = b.getParent();
 

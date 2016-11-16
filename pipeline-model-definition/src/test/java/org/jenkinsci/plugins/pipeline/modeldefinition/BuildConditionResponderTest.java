@@ -27,16 +27,8 @@ import hudson.model.Result;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Arrays;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.stringContainsInOrder;
 
 /**
  * @author Andrew Bayer
@@ -45,16 +37,14 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void simplePostBuild() throws Exception {
-        prepRepoWithJenkinsfile("simplePostBuild");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("I HAVE FINISHED", b);
-        j.assertLogContains("MOST DEFINITELY FINISHED", b);
-        j.assertLogNotContains("I FAILED", b);
+        expect("simplePostBuild")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (Post Build Actions)",
+                        "I HAVE FINISHED",
+                        "MOST DEFINITELY FINISHED")
+                .logNotContains("I FAILED")
+                .go();
     }
 
     @Test
@@ -83,29 +73,18 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void unstablePost() throws Exception {
-        prepRepoWithJenkinsfile("unstablePost");
-
-        WorkflowRun b = getAndStartBuild();
-
-        j.assertBuildStatus(Result.UNSTABLE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("I AM UNSTABLE", b);
-        j.assertLogNotContains("I FAILED", b);
+            expect(Result.UNSTABLE, "unstablePost")
+                    .logContains("[Pipeline] { (foo)", "hello", "I AM UNSTABLE")
+                    .logNotContains("I FAILED")
+                    .go();
     }
 
     @Issue("JENKINS-38993")
     @Test
     public void buildConditionOrdering() throws Exception {
-        prepRepoWithJenkinsfile("buildConditionOrdering");
-
-        WorkflowRun b = getAndStartBuild();
-
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-
-        String buildLog = JenkinsRule.getLog(b);
-        assertThat(buildLog, stringContainsInOrder(Arrays.asList("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")));
+        expect("buildConditionOrdering")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .inLogInOrder("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")
+                .go();
     }
 }

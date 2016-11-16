@@ -26,9 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
-import hudson.tasks.LogRotator;
-import jenkins.model.BuildDiscarder;
-import jenkins.model.BuildDiscarderProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
@@ -40,13 +37,10 @@ import static org.junit.Assert.assertTrue;
 public class ParametersTest extends AbstractModelDefTest {
     @Test
     public void simpleParameters() throws Exception {
-        prepRepoWithJenkinsfile("simpleParameters");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("hello", b);
+        WorkflowRun b = expect("simpleParameters")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .go();
 
         WorkflowJob p = b.getParent();
 

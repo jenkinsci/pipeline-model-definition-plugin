@@ -24,10 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
-import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
-import jenkins.util.VirtualFile;
-import org.apache.commons.io.IOUtils;
+import hudson.model.Slave;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
@@ -59,75 +56,58 @@ import static org.junit.Assert.assertTrue;
  */
 public class BasicModelDefTest extends AbstractModelDefTest {
 
-    private static DumbSlave s;
+    private static Slave s;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
-
     }
 
     @Test
     public void simplePipeline() throws Exception {
-        prepRepoWithJenkinsfile("simplePipeline");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogNotContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("hello", b);
+        expect("simplePipeline")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .go();
     }
 
     @Test
     public void failingPipeline() throws Exception {
-        prepRepoWithJenkinsfile("failingPipeline");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("goodbye", b);
-        assertTrue(b.getExecution().getCauseOfFailure() != null);
+        expect(Result.FAILURE, "failingPipeline")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "goodbye",
+                        "[Pipeline] { (Post Build Actions)")
+                .hasFailureCase()
+                .go();
     }
 
     @Test
     public void failingPostBuild() throws Exception {
-        prepRepoWithJenkinsfile("failingPostBuild");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] { (Post Build Actions)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("goodbye", b);
-        assertTrue(b.getExecution().getCauseOfFailure() != null);
+        expect(Result.FAILURE, "failingPostBuild")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "goodbye",
+                        "[Pipeline] { (Post Build Actions)")
+                .hasFailureCase()
+                .go();
     }
 
     @Test
     public void twoStagePipeline() throws Exception {
-        prepRepoWithJenkinsfile("twoStagePipeline");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (bar)", b);
-        j.assertLogContains("goodbye", b);
+        expect("twoStagePipeline")
+                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)", "goodbye")
+                .go();
     }
 
     @Issue("JENKINS-38097")
     @Test
     public void allStagesExist() throws Exception {
-        prepRepoWithJenkinsfile("allStagesExist");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (bar)", b);
+        WorkflowRun b = expect(Result.FAILURE, "allStagesExist")
+                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)")
+                .hasFailureCase()
+                .go();
 
         FlowExecution execution = b.getExecution();
         List<FlowNode> heads = execution.getCurrentHeads();
@@ -147,52 +127,34 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void validStepParameters() throws Exception {
-        prepRepoWithJenkinsfile("validStepParameters");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[Pipeline] timeout", b);
-        j.assertLogContains("hello", b);
+        expect("validStepParameters")
+                .logContains("[Pipeline] { (foo)", "[Pipeline] timeout", "hello")
+                .go();
     }
 
     @Test
     public void metaStepSyntax() throws Exception {
-        prepRepoWithJenkinsfile("metaStepSyntax");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("ONSLAVE=true", b);
-
-        VirtualFile archivedFile = b.getArtifactManager().root().child("msg.out");
-        assertTrue(archivedFile.exists());
-        assertEquals("hello world", IOUtils.toString(archivedFile.open()));
+        env(s).set();
+        expect("metaStepSyntax")
+                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .archives("msg.out", "hello world")
+                .go();
     }
 
     @Test
     public void legacyMetaStepSyntax() throws Exception {
-        prepRepoWithJenkinsfile("legacyMetaStepSyntax");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("ONSLAVE=true", b);
-
-        VirtualFile archivedFile = b.getArtifactManager().root().child("msg.out");
-        assertTrue(archivedFile.exists());
-        assertEquals("hello world", IOUtils.toString(archivedFile.open()));
+        env(s).set();
+        expect("legacyMetaStepSyntax")
+                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .archives("msg.out", "hello world")
+                .go();
     }
 
     @Test
     public void parallelPipeline() throws Exception {
-        prepRepoWithJenkinsfile("parallelPipeline");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[first] { (Branch: first)", b);
-        j.assertLogContains("[second] { (Branch: second)", b);
+        expect("parallelPipeline")
+                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .go();
     }
 
     @Test
@@ -266,34 +228,25 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
-        prepRepoWithJenkinsfile("dockerGlobalVariable");
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("image: ubuntu", b);
+        expect("dockerGlobalVariable")
+                .logContains("[Pipeline] { (foo)", "image: ubuntu")
+                .go();
     }
 
     @Test
     public void globalLibrarySuccess() throws Exception {
 
-        // Test the successful, albeit limited, case.
-        prepRepoWithJenkinsfile("globalLibrarySuccess");
-
         initGlobalLibrary();
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-
-        j.assertLogContains("[nothing here]", b);
-        j.assertLogContains("map call(1,2)", b);
-
-        j.assertLogContains("closure1(1)", b);
-
-        j.assertLogContains("running inside closure1", b);
-
-        j.assertLogContains("closure2(1, 2)", b);
-        j.assertLogContains("running inside closure2", b);
-
+        // Test the successful, albeit limited, case.
+        expect("globalLibrarySuccess")
+                .logContains("[nothing here]",
+                        "map call(1,2)",
+                        "closure1(1)",
+                        "running inside closure1",
+                        "closure2(1, 2)",
+                        "running inside closure2")
+                .go();
     }
 }
