@@ -159,9 +159,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void executionModelAction() throws Exception {
-        prepRepoWithJenkinsfile("executionModelAction");
-
-        WorkflowRun b = getAndStartBuild();
+        WorkflowRun b = expect("executionModelAction").go();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
         assertNotNull(action);
@@ -252,23 +250,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void basicWhen() throws Exception {
-        prepRepoWithJenkinsfile("basicWhen");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (One)", b);
-        j.assertLogContains("[Pipeline] { (Two)", b);
-        j.assertLogContains("World", b);
+        expect("basicWhen")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
     }
 
     @Test
     public void skippedWhen() throws Exception {
-        prepRepoWithJenkinsfile("skippedWhen");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (One)", b);
-        j.assertLogNotContains("[Pipeline] { (Two)", b);
-        j.assertLogNotContains("World", b);
+        expect("skippedWhen")
+                .logContains("[Pipeline] { (One)")
+                .logNotContains("[Pipeline] { (Two)", "World")
+                .go();
     }
 }
