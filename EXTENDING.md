@@ -34,6 +34,18 @@ All API endpoints are exposed under `JENKINS_URL/pipeline-model-converter` curre
 * *Info*: Takes the JSON representation of the model and converts it to the contents for a `Jenkinsfile` invoking the `pipeline` step.
 * *Returns*: JSON with a `result` field that will either be `success` or `failure`. If `success`, the `Jenkinsfile` contents will be in the `jenkinsfile` field. If `failure`, there'll be an additional array in the `errors` field of the error messages encountered.
 
+### Conversion of one or more steps to JSON representation from Groovy
+* *URL*: `JENKINS_URL/pipeline-model-converter/stepsToJson`
+* *Parameters*: `jenkinsfile` - the Groovy representation of the steps
+* *Info*: Takes a snippet of Groovy code containing one or more steps and converts it to the JSON representation for the step(s) it contains.
+* *Returns*: JSON with a `result` field that will either be `success` or `failure`. If `success`, the JSON representation will be in the `json` field. If `failure`, there'll be an additional array in the `errors` field of the error messages encountered.
+
+### Conversion of one more steps to Groovy from JSON representation
+* *URL*: `JENKINS_URL/pipeline-model-converter/stepsToJenkinsfile`
+* *Parameters*: `json` - the JSON representation of the steps
+* *Info*: Takes the JSON representation of the steps and converts it to a snippet of Groovy code executing those steps.
+* *Returns*: JSON with a `result` field that will either be `success` or `failure`. If `success`, the Groovy contents will be in the `jenkinsfile` field. If `failure`, there'll be an additional array in the `errors` field of the error messages encountered.
+
 ## Java API
 
 ### JSON schema
