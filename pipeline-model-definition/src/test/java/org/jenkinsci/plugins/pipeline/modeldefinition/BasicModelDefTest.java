@@ -277,17 +277,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void syntheticStages() throws Exception {
-        prepRepoWithJenkinsfile("syntheticStages");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.toolInstall() + ")", b);
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.checkout() + ")", b);
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-        j.assertLogContains("I AM A POST-BUILD", b);
+        WorkflowRun b = expect("syntheticStages")
+                .logContains("[Pipeline] { (" + SyntheticStageNames.toolInstall() + ")",
+                        "[Pipeline] { (" + SyntheticStageNames.checkout() + ")",
+                        "[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
+                        "I AM A POST-BUILD")
+                .go();
 
         FlowExecution execution = b.getExecution();
 
@@ -303,16 +300,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void noToolSyntheticStage() throws Exception {
-        prepRepoWithJenkinsfile("noToolSyntheticStage");
-
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.checkout() + ")", b);
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-        j.assertLogContains("I AM A POST-BUILD", b);
+        WorkflowRun b = expect("noToolSyntheticStage")
+                .logContains("[Pipeline] { (" + SyntheticStageNames.checkout() + ")",
+                        "[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
+                        "I AM A POST-BUILD")
+                .go();
 
         FlowExecution execution = b.getExecution();
 
@@ -328,14 +322,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void skippedStagesForFailure() throws Exception {
-        prepRepoWithJenkinsfile("skippedStagesForFailure");
+        WorkflowRun b = expect(Result.FAILURE, "skippedStagesForFailure")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("I will be skipped", "I also will be skipped")
+                .go();
 
-        WorkflowRun b = getAndStartBuild();
-        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
-        j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("hello", b);
-        j.assertLogNotContains("I will be skipped", b);
-        j.assertLogNotContains("I also will be skipped", b);
         assertTrue(b.getExecution().getCauseOfFailure() != null);
 
         FlowExecution execution = b.getExecution();
