@@ -108,8 +108,9 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTBuildCondition buildCondition) {
         boolean valid = true
 
-        // Only do the symbol lookup if we have a Jenkins instance
-        if (Jenkins.getInstance() != null) {
+        // Only do the symbol lookup if we have a Jenkins instance and condition/branch aren't null. That only happens
+        // when there's a failure at parse-time.
+        if (Jenkins.getInstance() != null && buildCondition.condition != null && buildCondition.branch != null) {
             if (SymbolLookup.get().find(BuildCondition.class, buildCondition.condition) == null) {
                 errorCollector.error(buildCondition, "Invalid condition '${buildCondition.condition}' - valid conditions are ${BuildCondition.getOrderedConditionNames()}")
                 valid = false
