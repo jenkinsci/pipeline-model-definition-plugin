@@ -30,7 +30,9 @@ pipeline {
     stages {
         // While there's only one stage here, you can specify as many stages as you like!
         stage("build") {
-            sh 'mvn clean install -Dmaven.test.failure.ignore=true'
+            steps {
+                sh 'mvn clean install -Dmaven.test.failure.ignore=true'
+            }
         }
     }
 

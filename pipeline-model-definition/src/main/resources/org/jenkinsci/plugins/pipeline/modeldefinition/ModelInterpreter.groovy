@@ -84,9 +84,9 @@ public class ModelInterpreter implements Serializable {
                                     Stage thisStage = root.stages.getStages().get(i)
                                     try {
                                         script.stage(thisStage.name) {
-                                            withEnvBlock(thisStage.getEnvVars()) {
-                                                if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) {
-                                                    if (firstError == null) {
+                                            if (firstError == null) {
+                                                withEnvBlock(thisStage.getEnvVars()) {
+                                                    if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) {
                                                         inDeclarativeAgent(thisStage.agent) {
                                                             withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                                 toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
@@ -96,12 +96,12 @@ public class ModelInterpreter implements Serializable {
                                                             }
                                                         }
                                                     } else {
-                                                        Utils.markStageSkippedForFailure(thisStage.name)
+                                                        Utils.markStageSkippedForConditional(thisStage.name)
                                                     }
-                                                } else {
-                                                    Utils.markStageSkippedForConditional(thisStage.name)
                                                 }
-                                            }
+                                            }else {
+                                                Utils.markStageSkippedForFailure(thisStage.name)
+                                                }
                                         }
                                     } catch (Exception e) {
                                         if (firstError == null) {
