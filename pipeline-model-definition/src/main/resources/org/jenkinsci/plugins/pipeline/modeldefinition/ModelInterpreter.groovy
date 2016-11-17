@@ -80,10 +80,10 @@ public class ModelInterpreter implements Serializable {
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
                                     try {
-                                        runStageOrNot(thisStage) {
-                                            script.stage(thisStage.name) {
-                                                withEnvBlock(thisStage.getEnvVars()) {
-                                                    if (firstError == null) {
+                                        script.stage(thisStage.name) {
+                                            runStageOrNot(thisStage) {
+                                                if (firstError == null) {
+                                                    withEnvBlock(thisStage.getEnvVars()) {
                                                         inDeclarativeAgent(thisStage.agent) {
                                                             withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                                 toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
