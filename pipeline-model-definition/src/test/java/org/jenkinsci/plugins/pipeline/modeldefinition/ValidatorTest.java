@@ -391,4 +391,16 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains("The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
                 .go();
     }
+
+    @Issue("JENKINS-39799")
+    @Test
+    public void badPostContent() throws Exception {
+        expect(Result.FAILURE, "errors", "badPostContent")
+                .logContains("MultipleCompilationErrorsException: startup failed:",
+                        "The 'post' section can only contain build condition names with code blocks. "
+                                + "Valid condition names are " + BuildCondition.getOrderedConditionNames(),
+                        "post can not be empty")
+                .logNotContains("Caused by: java.lang.NullPointerException")
+                .go();
+    }
 }
