@@ -33,7 +33,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-parent</artifactId>
-  <version>0.6-synthetic-stage-SNAPSHOT</version> <!-- Revert back to 0.6-SNAPSHOT after merge -->
+  <version>0.7-synthetic-stage-SNAPSHOT</version> <!-- Revert back to 0.6-SNAPSHOT after merge -->
   <packaging>pom</packaging>
   <name>Pipeline: Model Parent POM</name>
   <description>An opinionated, declarative Pipeline</description>

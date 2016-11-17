@@ -87,7 +87,7 @@ to-be-released block-scoped `stage` syntax in base Pipeline.
     * An `agent` section can be configured per-stage, see above.
     * An optional `when` block specifying if the stage should run or not.
       It can contain arbitrary Groovy code, but needs to return `true` if the stage should run or `false` if not.
-    * An optional `post` block that runs after the steps in the stage. See `postBuild` and `notifications` below.  
+    * An optional `post` block that runs after the steps in the stage. See `post` below.  
 * *Examples*:
 
 ```groovy
@@ -189,18 +189,8 @@ tools {
 }
 ```
 
-### notifications
-* *Description*: Defines notifications to be sent after build completion, assuming build status conditions are met.
-* *Required*: No
-* *Allowed In*: Top-level `pipeline` closure only.
-* *Parameters*: None
-* *Takes a Closure*: Yes
-* *Closure Contents*: A sequence of one or more build conditions containing Pipeline steps to run. See below for 
-definitions of build conditions and their contents.
-
-### postBuild
+### post
 * *Description*: Defines post-build actions to be run after build completion, assuming build status conditions are met.
-Note that `postBuild` steps are run *before* `notifications`.
 * *Required*: No
 * *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
@@ -211,7 +201,7 @@ definition of build conditions and their contents.
 ### Build Conditions
 * *Description*: Closures named for a particular build condition, containing Pipeline steps to run if that condition is
 met.
-* *Required*: One or more required in either `notifications` or `postBuild` if they exist.
+* *Required*: One or more required in `post` if it exists.
 * *Parameters*: None
 * *Possible Condition Names*:
     * Currently hardcoded, but will be changed to be extensible.
@@ -227,13 +217,10 @@ met.
 * *Examples*:
 
 ```groovy
-notifications {
+post {
     always {
         email recipient: ['one@example.com','two@example.com'], subject: "Build complete", body: "Your build has completed"
     }
-}
-    
-postBuild {
     failure {
         sh "bash ./cleanup-from-failure.sh"
     }
