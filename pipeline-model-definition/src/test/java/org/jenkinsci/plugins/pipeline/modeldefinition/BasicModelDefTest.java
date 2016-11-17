@@ -271,7 +271,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = getAndStartBuild();
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (One)", b);
-        j.assertLogNotContains("[Pipeline] { (Two)", b);
+        j.assertLogContains("[Pipeline] { (Two)", b);
         j.assertLogNotContains("World", b);
     }
 
