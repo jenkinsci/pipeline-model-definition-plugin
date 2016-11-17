@@ -36,6 +36,7 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -675,7 +676,10 @@ class ModelParser {
             errorCollector.error(responder,"Expected a block");
         } else {
             eachStatement(m.body.code) {
-                responder.conditions.add(parseBuildCondition(it));
+                ModelASTBuildCondition bc = parseBuildCondition(it)
+                if (bc.condition != null && bc.branch != null) {
+                    responder.conditions.add(bc);
+                }
             }
         }
         return responder;
@@ -685,7 +689,8 @@ class ModelParser {
         ModelASTBuildCondition b = new ModelASTBuildCondition(st)
         def m = matchBlockStatement(st);
         if (m == null) {
-            errorCollector.error(b,"Expected a build condition")
+            errorCollector.error(b,"The 'post' section can only contain build condition names with code blocks. "
+                + "Valid condition names are " + BuildCondition.getOrderedConditionNames())
         } else {
             b.branch = parseBranch("default", asBlock(m.body.code))
 
