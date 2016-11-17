@@ -160,7 +160,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Test
     public void executionModelAction() throws Exception {
         WorkflowRun b = expect("executionModelAction").go();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
         ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
         assertNotNull(action);
         ModelASTStages stages = action.getStages();
