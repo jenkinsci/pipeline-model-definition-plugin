@@ -259,7 +259,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void skippedWhen() throws Exception {
         expect("skippedWhen")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("[Pipeline] { (Two)", "World")
+                .logNotContains("World")
                 .go();
     }
 }
