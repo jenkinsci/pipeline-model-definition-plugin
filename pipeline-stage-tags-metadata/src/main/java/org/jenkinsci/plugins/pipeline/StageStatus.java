@@ -33,9 +33,11 @@ import java.util.List;
 @Extension
 public class StageStatus extends StageTagsMetadata {
 
+    public static final String TAG_NAME = "STAGE_STATUS";
+
     @Override
     public String getTagName() {
-        return "STAGE_STATUS";
+        return TAG_NAME;
     }
 
     @Override
@@ -53,15 +55,15 @@ public class StageStatus extends StageTagsMetadata {
         return Arrays.asList(getSkippedForConditional(), getSkippedForFailure());
     }
 
-    public String getFailedAndContinued() {
+    public static String getFailedAndContinued() {
         return "FAILED_AND_CONTINUED";
     }
 
-    public String getSkippedForFailure() {
+    public static String getSkippedForFailure() {
         return "SKIPPED_FOR_FAILURE";
     }
 
-    public String getSkippedForConditional() {
+    public static String getSkippedForConditional() {
         return "SKIPPED_FOR_CONDITIONAL";
     }
 }

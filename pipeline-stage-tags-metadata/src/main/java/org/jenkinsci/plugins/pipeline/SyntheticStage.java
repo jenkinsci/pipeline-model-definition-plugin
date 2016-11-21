@@ -32,9 +32,11 @@ import java.util.List;
 @Extension
 public class SyntheticStage extends StageTagsMetadata {
 
+    public static final String TAG_NAME = "SYNTHETIC_STAGE";
+
     @Override
     public String getTagName() {
-        return "SYNTHETIC_STAGE";
+        return TAG_NAME;
     }
 
     @Override
@@ -42,11 +44,11 @@ public class SyntheticStage extends StageTagsMetadata {
         return Arrays.asList(getPre(), getPost());
     }
 
-    public String getPre() {
+    public static String getPre() {
         return "PRE";
     }
 
-    public String getPost() {
+    public static String getPost() {
         return "POST";
     }
 }
