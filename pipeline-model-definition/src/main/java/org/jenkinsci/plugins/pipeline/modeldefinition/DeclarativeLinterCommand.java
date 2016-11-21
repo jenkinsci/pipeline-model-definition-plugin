@@ -34,7 +34,12 @@ import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
+import org.kohsuke.args4j.Argument;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -42,42 +47,59 @@ import java.util.List;
 
 @Extension
 public class DeclarativeLinterCommand extends CLICommand {
+    @Argument(metaVar="JENKINSFILE", usage="Path to the Jenkinsfile to validate", required=true)
+    String jenkinsfile;
+
     @Override
     public String getShortDescription() {
         return Messages.DeclarativeLinterCommand_ShortDescription();
     }
 
     protected int run() throws Exception {
-        StringWriter w = new StringWriter();
-        IOUtils.copy(stdin, w);
+        File jf = new File(jenkinsfile);
 
         int retVal = 0;
         List<String> output = new ArrayList<>();
 
+        String script = null;
+
         try {
-            Converter.scriptToPipelineDef(w.toString());
-            output.add("Jenkinsfile successfully validated.");
-            retVal = 0;
-        } catch (Exception e) {
-            output.add("Errors encountered validating Jenkinsfile:");
+            FileInputStream fif = new FileInputStream(jf);
+            script = IOUtils.toString(fif);
+        } catch (FileNotFoundException e) {
             retVal = 1;
-            if (e instanceof MultipleCompilationErrorsException) {
-                MultipleCompilationErrorsException ce = (MultipleCompilationErrorsException)e;
-                for (Object o : ce.getErrorCollector().getErrors()) {
-                    if (o instanceof SyntaxErrorMessage) {
-                        SyntaxErrorMessage s = (SyntaxErrorMessage)o;
-                        StringWriter sw = new StringWriter();
-                        PrintWriter pw = new PrintWriter(sw);
-                        s.write(pw);
-                        pw.close();
-                        output.add(sw.toString());
-                    }
-                }
-            } else {
-                output.add(e.getMessage());
-            }
+            output.add("Jenkinsfile '" + jenkinsfile + "' does not exist or cannot be read.");
+        } catch (IOException e) {
+            retVal = 1;
+            output.add("IOException reading Jenkinsfile '" + jenkinsfile + "': " + e.getMessage());
         }
 
+        if (script != null) {
+            try {
+                Converter.scriptToPipelineDef(script);
+                output.add("Jenkinsfile successfully validated.");
+                retVal = 0;
+            } catch (Exception e) {
+                output.add("Errors encountered validating Jenkinsfile:");
+                retVal = 1;
+                if (e instanceof MultipleCompilationErrorsException) {
+                    MultipleCompilationErrorsException ce = (MultipleCompilationErrorsException) e;
+                    for (Object o : ce.getErrorCollector().getErrors()) {
+                        if (o instanceof SyntaxErrorMessage) {
+                            SyntaxErrorMessage s = (SyntaxErrorMessage) o;
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            s.write(pw);
+                            pw.close();
+                            output.add(sw.toString());
+                        }
+                    }
+                } else {
+                    output.add(e.getMessage());
+                }
+            }
+        }
+        
         IOUtils.writeLines(output, null, stdout);
 
         return retVal;
