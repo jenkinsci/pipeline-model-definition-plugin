@@ -31,6 +31,8 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
@@ -42,6 +44,8 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -240,6 +244,50 @@ public class ModelConverterAction implements RootAction {
 
     }
 
+    @SuppressWarnings("unused")
+    @RequirePOST
+    public HttpResponse doValidate(StaplerRequest req) {
+        Jenkins.getInstance().checkPermission(READ);
+
+        List<String> output = new ArrayList<>();
+
+        String groovyAsString = req.getParameter("jenkinsfile");
+
+        if (groovyAsString != null) {
+            try {
+                Converter.scriptToPipelineDef(groovyAsString);
+                output.add("Jenkinsfile successfully validated.");
+            } catch (Exception e) {
+                output.add("Errors encountered validating Jenkinsfile:");
+                output.addAll(ModelConverterAction.errorToStrings(e));
+            }
+        } else {
+            output.add("No Jenkinsfile specified");
+        }
+
+        return HttpResponses.plainText(StringUtils.join(output, "\n"));
+    }
+
+    public static List<String> errorToStrings(Exception e) {
+        List<String> output = new ArrayList<>();
+        if (e instanceof MultipleCompilationErrorsException) {
+            MultipleCompilationErrorsException ce = (MultipleCompilationErrorsException) e;
+            for (Object o : ce.getErrorCollector().getErrors()) {
+                if (o instanceof SyntaxErrorMessage) {
+                    SyntaxErrorMessage s = (SyntaxErrorMessage) o;
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    s.write(pw);
+                    pw.close();
+                    output.add(sw.toString());
+                }
+            }
+        } else {
+            output.add(e.getMessage());
+        }
+
+        return output;
+    }
     /**
      * Checks the error collector for errors, and if there are any set the result as failure
      * @param result the result to mutate if so

@@ -57,7 +57,7 @@ public class DeclarativeLinterCommand extends CLICommand {
         int retVal = 0;
         List<String> output = new ArrayList<>();
 
-        String script = script = IOUtils.toString(stdin);
+        String script = IOUtils.toString(stdin);
 
         if (script != null) {
             try {
@@ -67,21 +67,7 @@ public class DeclarativeLinterCommand extends CLICommand {
             } catch (Exception e) {
                 output.add("Errors encountered validating Jenkinsfile:");
                 retVal = 1;
-                if (e instanceof MultipleCompilationErrorsException) {
-                    MultipleCompilationErrorsException ce = (MultipleCompilationErrorsException) e;
-                    for (Object o : ce.getErrorCollector().getErrors()) {
-                        if (o instanceof SyntaxErrorMessage) {
-                            SyntaxErrorMessage s = (SyntaxErrorMessage) o;
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            s.write(pw);
-                            pw.close();
-                            output.add(sw.toString());
-                        }
-                    }
-                } else {
-                    output.add(e.getMessage());
-                }
+                output.addAll(ModelConverterAction.errorToStrings(e));
             }
         }
         
