@@ -54,9 +54,9 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
 
     @Test
     public void validJenkinsfile() throws Exception {
-        String testPath = writeJenkinsfileToTmpFile("simplePipeline");
+        File testPath = writeJenkinsfileToTmpFile("simplePipeline");
 
-        final CLICommandInvoker.Result result = command.invokeWithArgs(testPath);
+        final CLICommandInvoker.Result result = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
 
         assertThat(result, succeeded());
         assertThat(result, hasNoErrorOutput());
@@ -65,9 +65,9 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
 
     @Test
     public void invalidJenkinsfile() throws Exception {
-        String testPath = writeJenkinsfileToTmpFile("errors", "emptyAgent");
+        File testPath = writeJenkinsfileToTmpFile("errors", "emptyAgent");
 
-        final CLICommandInvoker.Result result = command.invokeWithArgs(testPath);
+        final CLICommandInvoker.Result result = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
 
         assertThat(result, failedWith(1));
         assertThat(result, hasNoErrorOutput());
@@ -75,29 +75,17 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
         assertThat(result.stdout(), containsString("Not a valid section definition: 'agent'. Some extra configuration is required"));
     }
 
-    @Test
-    public void notFoundJenkinsfile() throws Exception {
-        File tempFile = tmp.newFile();
-        String badPath = tempFile.getAbsolutePath();
-        tempFile.delete();
-
-        final CLICommandInvoker.Result result = command.invokeWithArgs(badPath);
-
-        assertThat(result, failedWith(1));
-        assertThat(result.stdout(), containsString("does not exist or cannot be read"));
-    }
-
-    private String writeJenkinsfileToTmpFile(String dir, String testName) throws IOException {
+    private File writeJenkinsfileToTmpFile(String dir, String testName) throws IOException {
         return writeJenkinsfileToTmpFile(dir + "/" + testName);
     }
 
-    private String writeJenkinsfileToTmpFile(String testName) throws IOException {
+    private File writeJenkinsfileToTmpFile(String testName) throws IOException {
         File jf = tmp.newFile();
 
         String contents = pipelineSourceFromResources(testName);
 
         FileUtils.writeStringToFile(jf, contents);
 
-        return jf.getAbsolutePath();
+        return jf;
     }
 }

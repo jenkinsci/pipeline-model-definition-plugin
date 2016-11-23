@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
 import hudson.cli.CLICommand;
+import hudson.cli.util.ScriptLoader;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -47,32 +48,16 @@ import java.util.List;
 
 @Extension
 public class DeclarativeLinterCommand extends CLICommand {
-    @Argument(metaVar="JENKINSFILE", usage="Path to the Jenkinsfile to validate", required=true)
-    String jenkinsfile;
-
     @Override
     public String getShortDescription() {
         return Messages.DeclarativeLinterCommand_ShortDescription();
     }
 
     protected int run() throws Exception {
-        File jf = new File(jenkinsfile);
-
         int retVal = 0;
         List<String> output = new ArrayList<>();
 
-        String script = null;
-
-        try {
-            FileInputStream fif = new FileInputStream(jf);
-            script = IOUtils.toString(fif);
-        } catch (FileNotFoundException e) {
-            retVal = 1;
-            output.add("Jenkinsfile '" + jenkinsfile + "' does not exist or cannot be read.");
-        } catch (IOException e) {
-            retVal = 1;
-            output.add("IOException reading Jenkinsfile '" + jenkinsfile + "': " + e.getMessage());
-        }
+        String script = script = IOUtils.toString(stdin);
 
         if (script != null) {
             try {
