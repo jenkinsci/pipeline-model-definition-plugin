@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
-import com.google.inject.Inject;
 import hudson.Extension;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
@@ -71,8 +70,6 @@ public final class ScriptStep extends AbstractStepImpl implements Serializable {
     }
 
     public static final class ScriptStepExecution extends AbstractStepExecutionImpl {
-        @Inject
-        private transient ScriptStep step;
 
         private BodyExecution body;
 
