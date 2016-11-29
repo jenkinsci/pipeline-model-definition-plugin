@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.cli.util.ScriptLoader;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -46,6 +47,8 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static hudson.security.Permission.READ;
+
 @Extension
 public class DeclarativeLinterCommand extends CLICommand {
     @Override
@@ -54,6 +57,7 @@ public class DeclarativeLinterCommand extends CLICommand {
     }
 
     protected int run() throws Exception {
+        Jenkins.getInstance().checkPermission(READ);
         int retVal = 0;
         List<String> output = new ArrayList<>();
 
