@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
@@ -44,14 +45,28 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
         }
         LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
         return labelScript.run {
+            if (!Utils.withinAStage()) {
+                script.stage(SyntheticStageNames.agentSetup()) {
+                    Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
+                    buildImage().call()
+                }
+            } else {
+                buildImage().call()
+            }
+            img.inside(declarativeAgent.dockerArgs, {
+                body.call()
+            })
+
+        }
+    }
+
+    private Closure buildImage() {
+        return {
             script.checkout script.scm
             try {
                 def hash = Utils.stringToSHA1(script.readFile(declarativeAgent.getDockerfileAsString()))
                 def imgName = "${hash}"
                 def img = script.getProperty("docker").build(imgName, "-f ${declarativeAgent.getDockerfileAsString()} .")
-                img.inside(declarativeAgent.dockerArgs, {
-                    body.call()
-                })
             } catch (FileNotFoundException f) {
                 script.error("No Dockerfile found at root of repository - failing.")
             }

@@ -33,13 +33,20 @@ import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
 import org.apache.commons.codec.digest.DigestUtils
+import org.jenkinsci.plugins.pipeline.StageStatus
+import org.jenkinsci.plugins.pipeline.StageTagsMetadata
+import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.workflow.actions.TagsAction
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
@@ -214,6 +221,83 @@ public class Utils {
 
     public static String stringToSHA1(String s) {
         return DigestUtils.sha1Hex(s)
+    }
+
+    /**
+     * Returns true if we're currently nested under a stage.
+     *
+     * @return true if we're in a stage and false otherwise
+     */
+    static boolean withinAStage() {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
+
+        FlowNode stageNode = execution.currentHeads.find { h ->
+            scanner.findFirstMatch(h, isStageWithOptionalName())
+        }
+
+        return stageNode != null
+    }
+
+    private static FlowNode findStageFlowNode(String stageName) {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
+
+        return scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+    }
+
+    private static void markStageWithTag(String stageName, String tagName, String tagValue) {
+        FlowNode currentNode = findStageFlowNode(stageName)
+
+        if (currentNode != null) {
+            TagsAction tagsAction = currentNode.getAction(TagsAction.class)
+            if (tagsAction == null) {
+                tagsAction = new TagsAction()
+                tagsAction.addTag(tagName, tagValue)
+                currentNode.addAction(tagsAction)
+            } else {
+                tagsAction.addTag(tagName, tagValue)
+                currentNode.save()
+            }
+        }
+    }
+
+    static <T extends StageTagsMetadata> T getTagMetadata(Class<T> c) {
+        return ExtensionList.lookup(StageTagsMetadata.class).get(c)
+    }
+
+    static StageStatus getStageStatusMetadata() {
+        return getTagMetadata(StageStatus.class)
+    }
+
+    static SyntheticStage getSyntheticStageMetadata() {
+        return getTagMetadata(SyntheticStage.class)
+    }
+
+    /**
+     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
+     *
+     * @param stageName
+     * @param context
+     */
+    static void markSyntheticStage(String stageName, String context) {
+        markStageWithTag(stageName, getSyntheticStageMetadata().tagName, context)
+    }
+
+    static void markStageFailedAndContinued(String stageName) {
+        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().failedAndContinued)
+    }
+
+    static void markStageSkippedForFailure(String stageName) {
+        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
+    }
+
+    static void markStageSkippedForConditional(String stageName) {
+        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
     }
 
     /**

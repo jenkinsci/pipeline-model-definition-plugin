@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.google.common.base.Predicate;
 import hudson.model.Result;
 import hudson.model.Slave;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
@@ -33,6 +34,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -44,6 +46,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -68,7 +71,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void simplePipeline() throws Exception {
         expect("simplePipeline")
                 .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();
     }
 
@@ -78,7 +81,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "hello",
                         "goodbye",
-                        "[Pipeline] { (Post Build Actions)")
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .hasFailureCase()
                 .go();
     }
@@ -89,7 +92,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "hello",
                         "goodbye",
-                        "[Pipeline] { (Post Build Actions)")
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .hasFailureCase()
                 .go();
     }
@@ -270,5 +273,95 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (One)", b);
         j.assertLogContains("[Pipeline] { (Two)", b);
         j.assertLogNotContains("World", b);
+    }
+
+    @Test
+    public void syntheticStages() throws Exception {
+        WorkflowRun b = expect("syntheticStages")
+                .logContains("[Pipeline] { (" + SyntheticStageNames.toolInstall() + ")",
+                        "[Pipeline] { (" + SyntheticStageNames.checkout() + ")",
+                        "[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
+                        "I AM A POST-BUILD")
+                .go();
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.toolInstall(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().getPost())));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().getPre())));
+    }
+
+    @Test
+    public void noToolSyntheticStage() throws Exception {
+        WorkflowRun b = expect("noToolSyntheticStage")
+                .logContains("[Pipeline] { (" + SyntheticStageNames.checkout() + ")",
+                        "[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
+                        "I AM A POST-BUILD")
+                .go();
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.toolInstall(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().getPre())));
+        assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().getPost())));
+        assertNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().getPre())));
+    }
+
+    @Test
+    public void skippedStagesForFailure() throws Exception {
+        WorkflowRun b = expect(Result.FAILURE, "skippedStagesForFailure")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("I will be skipped", "I also will be skipped")
+                .go();
+
+        assertTrue(b.getExecution().getCauseOfFailure() != null);
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        assertNull(scanner.findFirstMatch(heads, stageStatusPredicate("foo", Utils.getStageStatusMetadata().getSkippedForFailure())));
+        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("foo", Utils.getStageStatusMetadata().getFailedAndContinued())));
+        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("bar", Utils.getStageStatusMetadata().getSkippedForFailure())));
+        assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("baz", Utils.getStageStatusMetadata().getSkippedForFailure())));
+    }
+
+    private Predicate<FlowNode> syntheticStagePredicate(String stageName,
+                                                        String context) {
+        return stageTagPredicate(stageName, Utils.getSyntheticStageMetadata().getTagName(), context);
+    }
+
+    private Predicate<FlowNode> stageStatusPredicate(String stageName,
+                                                     String stageStatus) {
+        return stageTagPredicate(stageName, Utils.getStageStatusMetadata().getTagName(), stageStatus);
+    }
+
+    private Predicate<FlowNode> stageTagPredicate(final String stageName,
+                                                  final String tagName,
+                                                  final String tagValue) {
+        return new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(FlowNode input) {
+                return input.getDisplayName().equals(stageName) &&
+                        input.getAction(TagsAction.class) != null &&
+                        input.getAction(TagsAction.class).getTagValue(tagName) != null &&
+                        input.getAction(TagsAction.class).getTagValue(tagName).equals(tagValue);
+            }
+        };
     }
 }

@@ -74,16 +74,19 @@ public class ModelInterpreter implements Serializable {
                             toolsBlock(root.agent, root.tools) {
                                 // If we have an agent and script.scm isn't null, run checkout scm
                                 if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                    script.checkout script.scm
+                                    script.stage(SyntheticStageNames.checkout()) {
+                                        Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
+                                        script.checkout script.scm
+                                    }
                                 }
 
                                 for (int i = 0; i < root.stages.getStages().size(); i++) {
                                     Stage thisStage = root.stages.getStages().get(i)
                                     try {
                                         script.stage(thisStage.name) {
-                                            runStageOrNot(thisStage) {
-                                                if (firstError == null) {
-                                                    withEnvBlock(thisStage.getEnvVars()) {
+                                            if (firstError == null) {
+                                                withEnvBlock(thisStage.getEnvVars()) {
+                                                    if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) {
                                                         inDeclarativeAgent(thisStage.agent) {
                                                             withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                                 toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
@@ -92,9 +95,13 @@ public class ModelInterpreter implements Serializable {
                                                                 }
                                                             }
                                                         }
+                                                    } else {
+                                                        Utils.markStageSkippedForConditional(thisStage.name)
                                                     }
                                                 }
-                                            }
+                                            }else {
+                                                Utils.markStageSkippedForFailure(thisStage.name)
+                                                }
                                         }
                                     } catch (Exception e) {
                                         if (firstError == null) {
@@ -233,16 +240,14 @@ public class ModelInterpreter implements Serializable {
         if (agent.hasAgent() && tools != null) {
             def toolEnv = []
             def toolsList = tools.getToolEntries()
-            for (int i = 0; i < toolsList.size(); i++) {
-                def entry = toolsList.get(i)
-                String k = entry.get(0)
-                String v = entry.get(1)
-
-                String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
-
-                toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+            if (!Utils.withinAStage()) {
+                script.stage(SyntheticStageNames.toolInstall()) {
+                    Utils.markSyntheticStage(SyntheticStageNames.toolInstall(), Utils.getSyntheticStageMetadata().pre)
+                    toolEnv = actualToolsInstall(toolsList)
+                }
+            } else {
+                toolEnv = actualToolsInstall(toolsList)
             }
-
             return {
                 script.withEnv(toolEnv) {
                     body.call()
@@ -253,6 +258,21 @@ public class ModelInterpreter implements Serializable {
                 body.call()
             }.call()
         }
+    }
+
+    def actualToolsInstall(List<List<Object>> toolsList) {
+        def toolEnv = []
+        for (int i = 0; i < toolsList.size(); i++) {
+            def entry = toolsList.get(i)
+            String k = entry.get(0)
+            String v = entry.get(1)
+
+            String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
+
+            toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+        }
+
+        return toolEnv
     }
 
     /**
@@ -325,22 +345,6 @@ public class ModelInterpreter implements Serializable {
     }
 
     /**
-     * Executes a given closure if there is no error and either there is no when condition on the stage or the when condition
-     * passes.
-     *
-     * @param stage The stage we're executing
-     * @param body The closure to execute
-     * @return The return of the resulting executed closure
-     */
-    def runStageOrNot(Stage stage, Closure body) {
-        if (stage.when == null || setUpDelegate(stage.when.closure)) {
-            return {
-                body.call()
-            }.call()
-        }
-    }
-
-    /**
      * Executes a single stage and post-stage actions, and returns any error it may have generated.
      *
      * @param root The root context we're running in
@@ -354,6 +358,7 @@ public class ModelInterpreter implements Serializable {
             }
         } catch (Exception e) {
             script.getProperty("currentBuild").result = Result.FAILURE
+            Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
                 stageError = e
             }
@@ -370,6 +375,7 @@ public class ModelInterpreter implements Serializable {
                         }
                     } catch (Exception e) {
                         script.getProperty("currentBuild").result = Result.FAILURE
+                        Utils.markStageFailedAndContinued(thisStage.name)
                         if (stageError == null) {
                             stageError = e
                         }
@@ -392,7 +398,8 @@ public class ModelInterpreter implements Serializable {
         List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
         if (postBuildClosures.size() > 0) {
             try {
-                script.stage("Post Build Actions") {
+                script.stage(SyntheticStageNames.postBuild()) {
+                    Utils.markSyntheticStage(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().post)
                     catchRequiredContextForNode(root.agent) {
                         for (int i = 0; i < postBuildClosures.size(); i++) {
                             setUpDelegate(postBuildClosures.get(i))
