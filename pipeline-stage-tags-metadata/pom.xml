@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>0.7-synthetic-stage-SNAPSHOT</version> <!-- Revert back to 0.6-SNAPSHOT after merge -->
+    <version>0.7-SNAPSHOT</version>
   </parent>
 
   <artifactId>pipeline-stage-tags-metadata</artifactId>
