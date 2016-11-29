@@ -40,7 +40,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         expect("simplePostBuild")
                 .logContains("[Pipeline] { (foo)",
                         "hello",
-                        "[Pipeline] { (Post Build Actions)",
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
                         "I HAVE FINISHED",
                         "MOST DEFINITELY FINISHED")
                 .logNotContains("I FAILED")
