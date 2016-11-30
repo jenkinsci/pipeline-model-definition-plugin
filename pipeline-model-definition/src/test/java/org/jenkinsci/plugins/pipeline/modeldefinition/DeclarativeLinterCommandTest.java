@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.cli.CLICommandInvoker;
+import hudson.security.GlobalMatrixAuthorizationStrategy;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,6 +39,7 @@ import static hudson.cli.CLICommandInvoker.Matcher.failedWith;
 import static hudson.cli.CLICommandInvoker.Matcher.hasNoErrorOutput;
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
@@ -55,6 +57,7 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
     @Test
     public void validJenkinsfile() throws Exception {
         File testPath = writeJenkinsfileToTmpFile("simplePipeline");
+        j.jenkins.disableSecurity();
 
         final CLICommandInvoker.Result result = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
 
@@ -66,6 +69,7 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
     @Test
     public void invalidJenkinsfile() throws Exception {
         File testPath = writeJenkinsfileToTmpFile("errors", "emptyAgent");
+        j.jenkins.disableSecurity();
 
         final CLICommandInvoker.Result result = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
 
@@ -73,6 +77,18 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
         assertThat(result, hasNoErrorOutput());
         assertThat(result.stdout(), containsString("Errors encountered validating Jenkinsfile:"));
         assertThat(result.stdout(), containsString("Not a valid section definition: 'agent'. Some extra configuration is required"));
+    }
+
+    @Test
+    public void invalidUser() throws Exception {
+        File testPath = writeJenkinsfileToTmpFile("simplePipeline");
+
+        j.jenkins.setAuthorizationStrategy(new GlobalMatrixAuthorizationStrategy());
+
+        final CLICommandInvoker.Result result = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
+
+        assertThat(result, not(succeeded()));
+        assertThat(result.stderr(), containsString("ERROR: anonymous is missing the Overall/Read permission"));
     }
 
     private File writeJenkinsfileToTmpFile(String dir, String testName) throws IOException {
