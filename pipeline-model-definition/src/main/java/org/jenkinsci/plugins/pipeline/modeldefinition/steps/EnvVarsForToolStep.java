@@ -82,6 +82,11 @@ public final class EnvVarsForToolStep extends AbstractStepImpl implements Serial
             super(EnvVarsForToolStepExecution.class);
         }
 
+        @Override
+        public boolean isAdvanced() {
+            return true;
+        }
+
         @Override public String getFunctionName() {
             return "envVarsForTool";
         }

@@ -58,6 +58,11 @@ public class DockerLabelStep extends AbstractStepImpl implements Serializable {
         }
 
         @Override
+        public boolean isAdvanced() {
+            return true;
+        }
+
+        @Override
         public String getFunctionName() {
             return "dockerLabel";
         }
