@@ -25,12 +25,15 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.cli.CLICommandInvoker;
+import hudson.model.Item;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +86,12 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
     public void invalidUser() throws Exception {
         File testPath = writeJenkinsfileToTmpFile("simplePipeline");
 
-        j.jenkins.setAuthorizationStrategy(new GlobalMatrixAuthorizationStrategy());
+        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+        j.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy()
+                .grant(Jenkins.ADMINISTER).everywhere().to("bob")
+                .grant(Jenkins.READ,
+                        Item.READ,
+                        Item.EXTENDED_READ).everywhere().to("alice"));
 
         final CLICommandInvoker.Result result = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
 
