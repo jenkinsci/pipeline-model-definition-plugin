@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.cli.CLICommandInvoker;
 import hudson.model.Item;
-import hudson.security.GlobalMatrixAuthorizationStrategy;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
