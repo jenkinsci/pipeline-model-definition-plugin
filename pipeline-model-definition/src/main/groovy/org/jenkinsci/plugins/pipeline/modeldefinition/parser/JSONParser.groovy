@@ -151,6 +151,10 @@ class JSONParser {
             stage.branches.add(parseBranch(o))
         }
 
+        if (j.has("failFast") && stage.branches.size() > 1) {
+            stage.failFast = j.getBoolean("failFast")
+        }
+
         if (j.has("environment")) {
             stage.environment = parseEnvironment(j.getJSONArray("environment"))
         }

@@ -29,7 +29,14 @@ public class ParallelMatch {
      */
     public final Map<String,ClosureExpression> args = new LinkedHashMap<String, ClosureExpression>();
 
-    public ParallelMatch(MethodCallExpression whole) {
+    /**
+     * Whether this parallel invocation should fail fast
+     */
+    public final Boolean failFast;
+
+    public ParallelMatch(MethodCallExpression whole, Map<String,ClosureExpression> args, Boolean failFast) {
         this.whole = whole;
+        this.args.putAll(args)
+        this.failFast = failFast
     }
 }

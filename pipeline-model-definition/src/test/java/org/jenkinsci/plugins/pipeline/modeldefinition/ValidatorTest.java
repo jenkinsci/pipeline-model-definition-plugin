@@ -173,6 +173,20 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void parallelPipelineWithInvalidFailFast() throws Exception {
+        expect(Result.FAILURE, "errors", "parallelPipelineWithInvalidFailFast")
+                .logContains("Expected a boolean with failFast")
+                .go();
+    }
+
+    @Test
+    public void parallelPipelineWithInvalidExtraKey() throws Exception {
+        expect(Result.FAILURE, "errors", "parallelPipelineWithInvalidExtraKey")
+                .logContains("Expected closure or failFast")
+                .go();
+    }
+
+    @Test
     public void missingAgent() throws Exception {
         expect(Result.FAILURE, "errors", "missingAgent")
                 .logContains("Missing required section 'agent'")

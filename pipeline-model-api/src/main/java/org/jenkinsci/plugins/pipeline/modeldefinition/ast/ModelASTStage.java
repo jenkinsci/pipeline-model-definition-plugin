@@ -21,6 +21,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTWhen when;
     private ModelASTTools tools;
     private ModelASTEnvironment environment;
+    private Boolean failFast;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -35,6 +36,9 @@ public final class ModelASTStage extends ModelASTElement {
         JSONObject o = new JSONObject();
         o.accumulate("name", name);
         o.accumulate("branches", a);
+        if (failFast != null) {
+            o.accumulate("failFast", failFast);
+        }
         if (agent != null) {
             o.accumulate("agent", agent.toJSON());
         }
@@ -109,6 +113,9 @@ public final class ModelASTStage extends ModelASTElement {
                 }
                 result.append('\n');
                 result.append(branch.getName()).append(": {\n").append(branch.toGroovy()).append("\n}");
+            }
+            if (failFast != null && failFast) {
+                result.append(",\nfailFast: true");
             }
             result.append("\n)\n");
         } else if (branches.size() == 1) {
@@ -205,6 +212,14 @@ public final class ModelASTStage extends ModelASTElement {
         this.environment = environment;
     }
 
+    public Boolean getFailFast() {
+        return failFast;
+    }
+
+    public void setFailFast(Boolean f) {
+        this.failFast = f;
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
@@ -215,6 +230,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", post=" + post +
                 ", tools=" + tools +
                 ", environment=" + environment +
+                ", failFast=" + failFast +
                 "}";
     }
 
@@ -245,6 +261,9 @@ public final class ModelASTStage extends ModelASTElement {
             return false;
         }
 
+        if (getFailFast() != null ? !getFailFast().equals(that.getFailFast()) : that.getFailFast() != null) {
+            return false;
+        }
         if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
             return false;
         }
@@ -265,6 +284,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getPost() != null ? getPost().hashCode() : 0);
         result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
+        result = 31 * result + (getFailFast() != null ? getFailFast().hashCode() : 0);
         return result;
     }
 }

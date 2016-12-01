@@ -161,6 +161,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void parallelPipelineWithFailFast() throws Exception {
+        expect("parallelPipelineWithFailFast")
+                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .go();
+    }
+
+    @Test
     public void executionModelAction() throws Exception {
         prepRepoWithJenkinsfile("executionModelAction");
 
