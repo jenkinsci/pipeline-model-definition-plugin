@@ -306,7 +306,25 @@ class ModelParser {
                             break
                         case 'steps':
                             def stepsBlock = matchBlockStatement(s);
-                            stage.branches.addAll(parseStepsBlock(asBlock(stepsBlock.body.code)))
+                            BlockStatement block = asBlock(stepsBlock.body.code)
+
+                            // Handle parallel as a special case
+                            if (block.statements.size()==1) {
+                                def parallel = matchParallel(block.statements[0]);
+
+                                if (parallel != null) {
+                                    parallel.args.each { k, v ->
+                                        stage.branches.add(parseBranch(k, asBlock(v.code)));
+                                    }
+                                    stage.failFast = parallel.failFast
+                                } else {
+                                    // otherwise it's a single line of execution
+                                    stage.branches.add(parseBranch("default", block));
+                                }
+                            } else {
+                                // otherwise it's a single line of execution
+                                stage.branches.add(parseBranch("default", block));
+                            }
                             break
                         case 'post':
                             stage.post = parsePostStage(s)
@@ -324,26 +342,6 @@ class ModelParser {
             }
         }
         return stage
-    }
-
-    protected List<ModelASTBranch> parseStepsBlock(BlockStatement block) {
-        List<ModelASTBranch> branches = []
-
-        // Handle parallel as a special case
-        if (block.statements.size()==1) {
-            def parallel = matchParallel(block.statements[0]);
-            if (parallel != null) {
-                parallel.args.each { k, v ->
-                    branches.add(parseBranch(k, asBlock(v.code)));
-                }
-                return branches
-            }
-        }
-
-        // otherwise it's a single line of execution
-        branches.add(parseBranch("default", block));
-
-        return branches
     }
 
     /**
@@ -853,21 +851,32 @@ class ModelParser {
 
                 def args = (TupleExpression)whole.arguments; // list of arguments. in this case it should be just one
                 int sz = args.expressions.size();
-                def r = new ParallelMatch(whole);
+                Boolean failFast = null
+                Map<String,ClosureExpression> parallelArgs = new LinkedHashMap<>()
                 if (sz==1) {
                     def branches = castOrNull(NamedArgumentListExpression, args.getExpression(sz - 1));
                     if (branches!=null) {
                         for (MapEntryExpression e : branches.mapEntryExpressions) {
-                            ClosureExpression value = castOrNull(ClosureExpression, e.valueExpression);
-                            if (value == null) {
-                                errorCollector.error(new ModelASTKey(e.keyExpression, null), "Expected closure")
+                            String keyName = matchStringLiteral(e.keyExpression)
+                            if (keyName != null && keyName.equals("failFast")) {
+                                ConstantExpression exp = castOrNull(ConstantExpression.class, e.valueExpression)
+                                if (exp == null || !(exp.value instanceof Boolean)) {
+                                    errorCollector.error(new ModelASTKey(e.keyExpression), "Expected a boolean with failFast")
+                                } else {
+                                    failFast = exp.value
+                                }
                             } else {
-                                r.args[parseStringLiteral(e.keyExpression)] = value;
+                                ClosureExpression value = castOrNull(ClosureExpression, e.valueExpression);
+                                if (value == null) {
+                                    errorCollector.error(new ModelASTKey(e.keyExpression), "Expected closure or failFast")
+                                } else {
+                                    parallelArgs[parseStringLiteral(e.keyExpression)] = value;
+                                }
                             }
                         }
                     }
                 }
-                return r;
+                return new ParallelMatch(whole, parallelArgs, failFast);
             }
         }
 
