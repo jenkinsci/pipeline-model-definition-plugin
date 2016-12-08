@@ -29,6 +29,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import hudson.ExtensionList
+import hudson.FilePath
 import hudson.Launcher
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
@@ -51,7 +52,8 @@ public class Wrappers extends MappedClosure<String, Wrappers> implements Wrapper
         ExtensionList.lookup(StepDescriptor.class).each { s ->
             if (s.takesImplicitBlockArgument()
                 && !(s.getFunctionName() in ModelASTStep.blockedSteps.keySet())
-                && !(Launcher.class in s.getRequiredContext())) {
+                && !(Launcher.class in s.getRequiredContext())
+                && !(FilePath.class in s.getRequiredContext())) {
                 stepNames.add(s.getFunctionName())
             }
         }
