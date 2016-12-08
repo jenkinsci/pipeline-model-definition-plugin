@@ -43,6 +43,15 @@ pipeline {
             }
         }
     }
+
+    post {
+        failure {
+            echo "I have failed"
+        }
+        success {
+            echo "I have succeeded"
+        }
+    }
 }
 
 
