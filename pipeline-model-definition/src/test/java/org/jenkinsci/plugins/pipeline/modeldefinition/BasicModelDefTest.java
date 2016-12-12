@@ -321,8 +321,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Test
     public void skippedStagesForFailure() throws Exception {
         WorkflowRun b = expect(Result.FAILURE, "skippedStagesForFailure")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("I will be skipped", "I also will be skipped")
+                .logContains("[Pipeline] { (foo)", "hello", "I have failed")
+                .logNotContains("I will be skipped", "I also will be skipped", "I have succeeded")
                 .go();
 
         assertTrue(b.getExecution().getCauseOfFailure() != null);
@@ -337,6 +337,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("foo", Utils.getStageStatusMetadata().getFailedAndContinued())));
         assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("bar", Utils.getStageStatusMetadata().getSkippedForFailure())));
         assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("baz", Utils.getStageStatusMetadata().getSkippedForFailure())));
+    }
+
+    @Issue("JENKINS-40226")
+    @Test
+    public void failureBeforeStages() throws Exception {
+        // This should fail whether we've got Docker available or not. Hopefully.
+        expect(Result.FAILURE, "failureBeforeStages")
+                .logContains("Dockerfile failed")
+                .logNotContains("This should never happen")
+                .go();
     }
 
     private Predicate<FlowNode> syntheticStagePredicate(String stageName,

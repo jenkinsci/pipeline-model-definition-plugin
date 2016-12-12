@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
+import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
@@ -48,12 +49,23 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
-                    script.getProperty("docker").image(declarativeAgent.docker).pull()
+                    try {
+                        script.getProperty("docker").image(declarativeAgent.docker).pull()
+                    } catch (Exception e) {
+                        script.getProperty("currentBuild").result = Result.FAILURE
+                        Utils.markStageFailedAndContinued(SyntheticStageNames.agentSetup())
+                        throw e
+                    }
                 }
             }
-            script.getProperty("docker").image(declarativeAgent.docker).inside(declarativeAgent.dockerArgs, {
-                body.call()
-            })
+            try {
+                script.getProperty("docker").image(declarativeAgent.docker).inside(declarativeAgent.dockerArgs, {
+                    body.call()
+                })
+            } catch (Exception e) {
+                script.getProperty("currentBuild").result = Result.FAILURE
+                throw e
+            }
         }
     }
 }

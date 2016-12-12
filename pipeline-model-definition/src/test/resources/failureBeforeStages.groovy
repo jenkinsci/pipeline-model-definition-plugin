@@ -22,31 +22,25 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
-
-import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-public class LabelScript extends DeclarativeAgentScript {
-
-    public LabelScript(CpsScript s, DeclarativeAgent a) {
-        super(s, a)
-    }
-
-    @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(declarativeAgent?.label) {
-                    body.call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
+pipeline {
+    agent dockerfile:true, dockerArgs:"-v /tmp:/tmp -p 8000:8000"
+    stages {
+        stage("foo") {
+            steps {
+                sh 'cat /hi-there'
+                sh 'echo "The answer is 42"'
             }
         }
     }
+    post {
+        failure {
+            echo "Dockerfile failed"
+        }
+        success {
+            echo "This should never happen"
+        }
+    }
 }
+
+
+
