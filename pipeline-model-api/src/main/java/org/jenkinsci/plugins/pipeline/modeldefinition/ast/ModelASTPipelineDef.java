@@ -240,11 +240,11 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         this.tools = tools;
     }
 
-    public ModelASTJobProperties getJobProperties() {
+    public ModelASTJobProperties getProperties() {
         return properties;
     }
 
-    public void setJobProperties(ModelASTJobProperties properties) {
+    public void setProperties(ModelASTJobProperties properties) {
         this.properties = properties;
     }
 
@@ -318,9 +318,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
             return false;
         }
-        if (getJobProperties() != null
-                ? !getJobProperties().equals(that.getJobProperties())
-                : that.getJobProperties() != null) {
+        if (getProperties() != null
+                ? !getProperties().equals(that.getProperties())
+                : that.getProperties() != null) {
             return false;
         }
         if (getParameters() != null ? !getParameters().equals(that.getParameters()) : that.getParameters() != null) {
@@ -341,7 +341,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getAgent() != null ? getAgent().hashCode() : 0);
         result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
-        result = 31 * result + (getJobProperties() != null ? getJobProperties().hashCode() : 0);
+        result = 31 * result + (getProperties() != null ? getProperties().hashCode() : 0);
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getTriggers() != null ? getTriggers().hashCode() : 0);
         result = 31 * result + (getWrappers() != null ? getWrappers().hashCode() : 0);

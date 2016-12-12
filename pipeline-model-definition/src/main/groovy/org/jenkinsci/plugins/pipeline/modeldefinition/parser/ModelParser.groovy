@@ -165,6 +165,9 @@ class ModelParser {
                     case 'wrappers':
                         r.wrappers = parseWrappers(stmt)
                         break
+                    case 'jobProperties':
+                        errorCollector.error(r, "The 'jobProperties' section has been renamed as of version 0.7. Use 'properties' instead.")
+                        break
                     case 'notifications':
                         errorCollector.error(r, "The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
                         break
