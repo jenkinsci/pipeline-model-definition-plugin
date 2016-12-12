@@ -130,7 +130,8 @@ public abstract class AbstractModelDefTest {
             "environmentInStage",
             "basicWhen",
             "skippedWhen",
-            "parallelPipelineWithFailFast"
+            "parallelPipelineWithFailFast",
+            "optionsSkipCheckout"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

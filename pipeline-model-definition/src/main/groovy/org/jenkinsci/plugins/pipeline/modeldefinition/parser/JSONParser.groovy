@@ -479,17 +479,17 @@ class JSONParser {
         ModelASTOptions options = new ModelASTOptions(j)
 
         j.keySet().each { String k ->
-            Field f = ModelASTOptions.class.getDeclaredField(k)
-            if (f == null) {
-                errorCollector.error(options, "Unknown global configuration option '${k}'")
-            } else {
+            try {
+                Field f = ModelASTOptions.class.getDeclaredField(k)
                 Object o = j.get(k)
 
                 if (!f.getType().isInstance(o)) {
-                    errorCollector.error(options, "Expected a ${f.getType().name} for option '${k}'")
+                    errorCollector.error(options, "Expected a ${f.getType().simpleName} for option '${k}'")
                 } else {
-                    f.set(options, o)
+                    options."${k}" = o
                 }
+            } catch (NoSuchFieldException e) {
+                errorCollector.error(options, "Unknown global configuration option '${k}'")
             }
         }
 

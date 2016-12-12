@@ -417,4 +417,18 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logNotContains("Caused by: java.lang.NullPointerException")
                 .go();
     }
+
+    @Test
+    public void optionsUnknownOption() throws Exception {
+        expect(Result.FAILURE, "errors", "optionsUnknownOption")
+                .logContains("Unknown global configuration option 'banana'")
+                .go();
+    }
+
+    @Test
+    public void optionsWrongType() throws Exception {
+        expect(Result.FAILURE, "errors", "optionsWrongType")
+                .logContains("Expected a Boolean for option 'skipCheckout'")
+                .go();
+    }
 }

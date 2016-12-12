@@ -1,0 +1,36 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "sh",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "echo \"THIS WORKS\""
+          }
+        },
+        {
+          "name": "sh",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "test -f Jenkinsfile"
+          }
+        },
+        {
+          "name": "echo",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "Should never get here"
+          }
+        }
+      ]
+    }]
+  }],
+  "agent":   {
+    "isLiteral": true,
+    "value": "any"
+  },
+  "options": {"skipCheckout": true}
+}}

@@ -755,10 +755,8 @@ class ModelParser {
 
                 def optionKey = parseKey(mc.method);
 
-                Field f = ModelASTOptions.class.getDeclaredField(optionKey.key)
-                if (f == null) {
-                    errorCollector.error(optionKey, "Unknown global configuration option '${optionKey.key}'")
-                } else {
+                try {
+                    Field f = ModelASTOptions.class.getDeclaredField(optionKey.key)
                     List<Expression> args = ((TupleExpression) mc.arguments).expressions
                     if (args.isEmpty()) {
                         errorCollector.error(optionKey, "No argument for option '${optionKey.key}'")
@@ -767,11 +765,13 @@ class ModelParser {
                     } else {
                         ConstantExpression exp = castOrNull(ConstantExpression.class, args[0])
                         if (exp == null || !(f.getType().isInstance(exp.value))) {
-                            errorCollector.error(optionKey, "Expected a ${f.getType().name} for option '${optionKey.key}'")
+                            errorCollector.error(optionKey, "Expected a ${f.getType().simpleName} for option '${optionKey.key}'")
                         } else {
-                            f.set(r, exp.value)
+                            r."${optionKey.key}" = exp.value
                         }
                     }
+                } catch (NoSuchFieldException e) {
+                    errorCollector.error(optionKey, "Unknown global configuration option '${optionKey.key}'")
                 }
             }
         }
