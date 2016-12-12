@@ -45,18 +45,20 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
         }
         LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
         return labelScript.run {
+            def img = null
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
-                    buildImage().call()
+                    img = buildImage().call()
                 }
             } else {
-                buildImage().call()
+                img = buildImage().call()
             }
-            img.inside(declarativeAgent.dockerArgs, {
-                body.call()
-            })
-
+            if (img != null) {
+                img.inside(declarativeAgent.dockerArgs, {
+                    body.call()
+                })
+            }
         }
     }
 
@@ -66,9 +68,10 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
             try {
                 def hash = Utils.stringToSHA1(script.readFile(declarativeAgent.getDockerfileAsString()))
                 def imgName = "${hash}"
-                def img = script.getProperty("docker").build(imgName, "-f ${declarativeAgent.getDockerfileAsString()} .")
+                return script.getProperty("docker").build(imgName, "-f ${declarativeAgent.getDockerfileAsString()} .")
             } catch (FileNotFoundException f) {
                 script.error("No Dockerfile found at root of repository - failing.")
+                return null
             }
         }
     }
