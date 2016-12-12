@@ -44,6 +44,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorC
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+import java.lang.reflect.Field
 
 /**
  * Recursively walks AST tree of parsed Jenkinsfile and builds validation model into {@link ModelASTPipelineDef}
@@ -164,6 +165,9 @@ class ModelParser {
                         break
                     case 'wrappers':
                         r.wrappers = parseWrappers(stmt)
+                        break
+                    case 'options':
+                        r.options = parseOptions(stmt)
                         break
                     case 'notifications':
                         errorCollector.error(r, "The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
@@ -732,6 +736,46 @@ class ModelParser {
             }
             return l
         }
+    }
+
+    private ModelASTOptions parseOptions(Statement stmt) {
+        def r = new ModelASTOptions(stmt);
+
+        def m = matchBlockStatement(stmt);
+        if (m==null) {
+
+            return r
+        } else {
+            eachStatement(m.body.code) { s ->
+                def mc = matchMethodCall(s);
+                if (mc == null) {
+                    // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                    errorCollector.error(r,"Expected to find '<someConfigOption> \"configValue\"'");
+                }
+
+                def optionKey = parseKey(mc.method);
+
+                Field f = ModelASTOptions.class.getDeclaredField(optionKey.key)
+                if (f == null) {
+                    errorCollector.error(optionKey, "Unknown global configuration option '${optionKey.key}'")
+                } else {
+                    List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                    if (args.isEmpty()) {
+                        errorCollector.error(optionKey, "No argument for option '${optionKey.key}'")
+                    } else if (args.size() > 1) {
+                        errorCollector.error(optionKey, "Too many arguments for option '${optionKey.key}'")
+                    } else {
+                        ConstantExpression exp = castOrNull(ConstantExpression.class, args[0])
+                        if (exp == null || !(f.getType().isInstance(exp.value))) {
+                            errorCollector.error(optionKey, "Expected a ${f.getType().name} for option '${optionKey.key}'")
+                        } else {
+                            f.set(r, exp.value)
+                        }
+                    }
+                }
+            }
+        }
+        return r;
     }
 
     /**

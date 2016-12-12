@@ -585,6 +585,11 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
+    public boolean validateElement(@Nonnull ModelASTOptions options) {
+        // no-op for now since the actual "validation" is at parse-time
+        return true
+    }
+
     private DescribableModel<? extends Step> modelForStep(String n) {
         if (!modelMap.containsKey(n)) {
             Class<? extends Step> c = lookupStepDescriptor(n)?.clazz
