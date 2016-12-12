@@ -37,7 +37,7 @@ public final class ModelASTJobProperties extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("jobProperties {\n");
+        StringBuilder result = new StringBuilder("properties {\n");
         for (ModelASTJobProperty property : properties) {
             result.append(property.toGroovy()).append("\n");
         }

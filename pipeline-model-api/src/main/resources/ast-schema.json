@@ -116,7 +116,7 @@
         }
       ]
     },
-    "jobProperties": {
+    "properties": {
       "description": "One or more job properties",
       "type": "object",
       "properties": {
@@ -383,8 +383,8 @@
         "tools": {
           "$ref": "#/definitions/tools"
         },
-        "jobProperties": {
-          "$ref": "#/definitions/jobProperties"
+        "properties": {
+          "$ref": "#/definitions/properties"
         },
         "triggers": {
           "$ref": "#/definitions/triggers"

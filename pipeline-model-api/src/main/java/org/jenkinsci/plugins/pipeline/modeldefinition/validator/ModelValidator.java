@@ -72,7 +72,7 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTMethodCall methodCall);
 
-    boolean validateElement(ModelASTJobProperties jobProperties);
+    boolean validateElement(ModelASTJobProperties properties);
 
     boolean validateElement(ModelASTTriggers triggers);
 

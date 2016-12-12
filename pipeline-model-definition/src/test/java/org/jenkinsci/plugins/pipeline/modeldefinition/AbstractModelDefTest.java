@@ -150,7 +150,7 @@ public abstract class AbstractModelDefTest {
 
         result.add(new Object[]{"emptyParallel", "Nothing to execute within stage 'foo'"});
 
-        result.add(new Object[]{"emptyJobProperties", "At /pipeline/jobProperties/properties: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"emptyJobProperties", "At /pipeline/properties/properties: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyParameters", "At /pipeline/parameters/parameters: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyTriggers", "At /pipeline/triggers/triggers: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"mixedMethodArgs", "Can't mix named and unnamed parameter definition arguments"});

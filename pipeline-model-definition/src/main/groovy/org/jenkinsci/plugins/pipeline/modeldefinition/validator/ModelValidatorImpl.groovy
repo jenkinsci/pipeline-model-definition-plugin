@@ -333,7 +333,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTJobProperties props) {
         if (props.properties.isEmpty()) {
-            errorCollector.error(props, "Cannot have empty jobProperties section")
+            errorCollector.error(props, "Cannot have empty properties section")
             return false
         }
 

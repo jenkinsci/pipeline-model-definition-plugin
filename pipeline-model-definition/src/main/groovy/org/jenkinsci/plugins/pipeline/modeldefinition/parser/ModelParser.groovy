@@ -153,8 +153,8 @@ class ModelParser {
                     case 'tools':
                         r.tools = parseTools(stmt)
                         break
-                    case 'jobProperties':
-                        r.jobProperties = parseJobProperties(stmt)
+                    case 'properties':
+                        r.properties = parseJobProperties(stmt)
                         break
                     case 'parameters':
                         r.parameters = parseBuildParameters(stmt)

@@ -16,7 +16,7 @@
     "isLiteral": true,
     "value": "none"
   },
-  "jobProperties": {"properties": [  {
+  "properties": {"properties": [  {
     "name": "buildDiscarder",
     "arguments": [    {
       "name": "logRotator",
