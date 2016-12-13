@@ -35,6 +35,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage;
@@ -93,4 +94,6 @@ public interface ModelValidator {
     boolean validateElement(ModelASTWrapper wrapper);
 
     boolean validateElement(ModelASTWrappers wrappers);
+
+    boolean validateElement(ModelASTOptions options);
 }

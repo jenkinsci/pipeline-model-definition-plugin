@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorIm
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+import java.lang.reflect.Field
 
 /**
  * Parses input JSON into a {@link ModelASTPipelineDef}.
@@ -114,6 +115,9 @@ class JSONParser {
                     break
                 case 'wrappers':
                     pipelineDef.wrappers = parseWrappers(pipelineJson.getJSONObject("wrappers"))
+                    break
+                case 'options':
+                    pipelineDef.options = parseOptions(pipelineJson.getJSONObject("options"))
                     break
                 default:
                     errorCollector.error(pipelineDef, "Undefined section '${sectionName}'")
@@ -469,6 +473,27 @@ class JSONParser {
             tools.tools.put(key, value)
         }
         return tools
+    }
+
+    public @CheckForNull ModelASTOptions parseOptions(JSONObject j) {
+        ModelASTOptions options = new ModelASTOptions(j)
+
+        j.keySet().each { String k ->
+            try {
+                Field f = ModelASTOptions.class.getDeclaredField(k)
+                Object o = j.get(k)
+
+                if (!f.getType().isInstance(o)) {
+                    errorCollector.error(options, "Expected a ${f.getType().simpleName} for option '${k}'")
+                } else {
+                    options."${k}" = o
+                }
+            } catch (NoSuchFieldException e) {
+                errorCollector.error(options, "Unknown global configuration option '${k}'")
+            }
+        }
+
+        return options
     }
 
     public @CheckForNull ModelASTAgent parseAgent(Object j) {

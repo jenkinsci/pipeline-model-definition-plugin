@@ -20,6 +20,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTBuildParameters parameters;
     private ModelASTTriggers triggers;
     private ModelASTWrappers wrappers;
+    private ModelASTOptions options;
 
     public ModelASTPipelineDef(Object sourceLocation) {
         super(sourceLocation);
@@ -52,6 +53,11 @@ public final class ModelASTPipelineDef extends ModelASTElement {
             a.put("wrappers", wrappers.toJSON());
         } else {
             a.put("wrappers", null);
+        }
+        if (options != null && !options.equals(new ModelASTOptions(null))) {
+            a.put("options", options.toJSON());
+        } else {
+            a.put("options", null);
         }
         return new JSONObject().accumulate("pipeline", a);
     }
@@ -87,6 +93,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (wrappers != null) {
             wrappers.validate(validator);
         }
+        if (options != null) {
+            options.validate(validator);
+        }
     }
 
     @Override
@@ -119,6 +128,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         }
         if (wrappers != null && !wrappers.getWrappers().isEmpty()) {
             result.append(wrappers.toGroovy()).append('\n');
+        }
+        if (options != null && !options.equals(new ModelASTOptions(null))) {
+            result.append(options.toGroovy()).append('\n');
         }
 
         result.append("}\n");
@@ -193,6 +205,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         }
         if (wrappers != null) {
             wrappers.removeSourceLocation();
+        }
+        if (options != null) {
+            options.removeSourceLocation();
         }
     }
 
@@ -272,6 +287,14 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         this.wrappers = wrappers;
     }
 
+    public ModelASTOptions getOptions() {
+        return options;
+    }
+
+    public void setOptions(ModelASTOptions options) {
+        this.options = options;
+    }
+
     @Override
     public String toString() {
         return "ModelASTPipelineDef{" +
@@ -284,6 +307,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 ", parameters=" + parameters +
                 ", triggers=" + triggers +
                 ", wrappers=" + wrappers +
+                ", options=" + options +
                 "}";
     }
 
@@ -329,6 +353,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (getTriggers() != null ? !getTriggers().equals(that.getTriggers()) : that.getTriggers() != null) {
             return false;
         }
+        if (getOptions() != null ? !getOptions().equals(that.getOptions()) : that.getOptions() != null) {
+            return false;
+        }
         return getWrappers() != null ? getWrappers().equals(that.getWrappers()) : that.getWrappers() == null;
 
     }
@@ -345,6 +372,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getTriggers() != null ? getTriggers().hashCode() : 0);
         result = 31 * result + (getWrappers() != null ? getWrappers().hashCode() : 0);
+        result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         return result;
     }
 }

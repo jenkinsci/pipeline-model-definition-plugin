@@ -365,6 +365,16 @@
         "$ref": "#/definitions/stage"
       }
     },
+    "options": {
+      "description": "Top level section containing global configuration options",
+      "type": "object",
+      "properties": {
+        "skipCheckout": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
     "pipeline": {
       "type": "object",
       "properties": {
@@ -394,6 +404,9 @@
         },
         "wrappers": {
           "$ref": "#/definitions/wrappers"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
         }
       },
       "required": [
