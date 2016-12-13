@@ -22,31 +22,19 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-/**
- * A block scoped step to wrap the entire build within.
- *
- * @author Andrew Bayer
- */
-public class ModelASTWrapper extends ModelASTMethodCall {
-    public ModelASTWrapper(Object sourceLocation) {
-        super(sourceLocation);
+pipeline {
+    agent none
+    parameters {
+        bananaParam(defaultValue: true, description: '', name: 'flag')
     }
-
-    @Override
-    public void validate(final ModelValidator validator) {
-        validator.validateElement(this);
-        super.validate(validator);
-    }
-
-    @Override
-    public String toString() {
-        return "ModelASTWrapper{" +
-                "name='" + getName() + '\'' +
-                ", args=" + getArgs() +
-                "}";
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
 }
+
+
+

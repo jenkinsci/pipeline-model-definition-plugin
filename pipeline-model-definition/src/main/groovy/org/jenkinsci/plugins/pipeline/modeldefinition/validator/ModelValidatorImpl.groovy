@@ -342,7 +342,6 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTTrigger trig) {
         boolean valid = true
-
         if (trig.name == null) {
             // This means that we failed at compilation time so can move on.
         }

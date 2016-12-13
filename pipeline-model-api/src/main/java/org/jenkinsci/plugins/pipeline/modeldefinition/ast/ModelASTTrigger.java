@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+
 /**
  * A single trigger, corresponding eventually to a {@code Trigger}
  *
@@ -8,6 +10,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 public class ModelASTTrigger extends ModelASTMethodCall {
     public ModelASTTrigger(Object sourceLocation) {
         super(sourceLocation);
+    }
+
+    @Override
+    public void validate(final ModelValidator validator) {
+        validator.validateElement(this);
+        super.validate(validator);
     }
 
     @Override

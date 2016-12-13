@@ -404,6 +404,10 @@ public abstract class AbstractModelDefTest {
         return new ExpectationsBuilder(resourceParent, resource);
     }
 
+    protected ExpectationsBuilder expectError(String resource) {
+        return expect(Result.FAILURE, "errors", resource);
+    }
+
     protected ExpectationsBuilder expect(Result result, String resourceParent, String resource) {
         return new ExpectationsBuilder(result, resourceParent, resource);
     }
