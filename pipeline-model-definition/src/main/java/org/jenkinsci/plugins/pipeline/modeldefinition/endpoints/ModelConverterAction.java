@@ -118,8 +118,12 @@ public class ModelConverterAction implements RootAction {
         if (groovyAsString != null && !groovyAsString.equals("")) {
             try {
                 ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
-                result.accumulate("result", "success");
-                result.accumulate("json", pipelineDef.toJSON());
+                if (pipelineDef != null) {
+                    result.accumulate("result", "success");
+                    result.accumulate("json", pipelineDef.toJSON());
+                } else {
+                    reportFailure(result, "Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step");
+                }
             } catch (Exception e) {
                 reportFailure(result, e);
             }
@@ -227,7 +231,12 @@ public class ModelConverterAction implements RootAction {
         if (groovyAsString != null && !groovyAsString.equals("")) {
             try {
                 ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
-                result.accumulate("result", "success");
+                if (pipelineDef != null) {
+                    result.accumulate("result", "success");
+                } else {
+                    reportFailure(result, "Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step");
+                }
+
             } catch (Exception e) {
                 reportFailure(result, e);
             }
@@ -280,8 +289,11 @@ public class ModelConverterAction implements RootAction {
 
         if (groovyAsString != null) {
             try {
-                Converter.scriptToPipelineDef(groovyAsString);
-                output.add("Jenkinsfile successfully validated.");
+                if (Converter.scriptToPipelineDef(groovyAsString) != null) {
+                    output.add("Jenkinsfile successfully validated.");
+                } else {
+                   output.add("Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step");
+                }
             } catch (Exception e) {
                 output.add("Errors encountered validating Jenkinsfile:");
                 output.addAll(ModelConverterAction.errorToStrings(e));
