@@ -436,8 +436,8 @@ public class ModelInterpreter implements Serializable {
     def executeProperties(Root root) {
         def jobProps = []
 
-        if (root.jobProperties != null) {
-            jobProps.addAll(root.jobProperties.properties)
+        if (root.properties != null) {
+            jobProps.addAll(root.properties.properties)
         }
         if (root.triggers != null) {
             jobProps.add(script.pipelineTriggers(root.triggers.triggers))

@@ -33,7 +33,7 @@ import hudson.model.Describable
  * <p>
  * For example:
  * <pre>
- * jobProperties {
+ * properties {
  *     buildDiscarder(logRotator(numToKeepStr:'1')
  *     disableConcurrentBuilds()
  * }

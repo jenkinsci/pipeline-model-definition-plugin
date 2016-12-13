@@ -103,8 +103,8 @@ class JSONParser {
                 case 'tools':
                     pipelineDef.tools = parseTools(pipelineJson.getJSONArray("tools"))
                     break
-                case 'jobProperties':
-                    pipelineDef.jobProperties = parseJobProperties(pipelineJson.getJSONObject("jobProperties"))
+                case 'properties':
+                    pipelineDef.properties = parseJobProperties(pipelineJson.getJSONObject("properties"))
                     break
                 case 'triggers':
                     pipelineDef.triggers = parseTriggers(pipelineJson.getJSONObject("triggers"))

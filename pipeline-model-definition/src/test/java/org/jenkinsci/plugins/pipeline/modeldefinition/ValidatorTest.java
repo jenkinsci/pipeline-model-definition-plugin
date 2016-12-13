@@ -77,7 +77,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void emptyJobProperties() throws Exception {
         expect(Result.FAILURE, "errors", "emptyJobProperties")
-                .logContains("Cannot have empty jobProperties section")
+                .logContains("Cannot have empty properties section")
                 .go();
     }
 

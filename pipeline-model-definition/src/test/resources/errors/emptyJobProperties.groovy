@@ -24,7 +24,7 @@
 
 pipeline {
     agent none
-    jobProperties {
+    properties {
     }
     stages {
         stage("foo") {

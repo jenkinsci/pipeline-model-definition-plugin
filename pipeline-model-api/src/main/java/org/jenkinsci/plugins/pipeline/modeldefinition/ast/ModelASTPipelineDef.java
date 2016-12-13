@@ -16,7 +16,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTEnvironment environment;
     private ModelASTAgent agent;
     private ModelASTTools tools;
-    private ModelASTJobProperties jobProperties;
+    private ModelASTJobProperties properties;
     private ModelASTBuildParameters parameters;
     private ModelASTTriggers triggers;
     private ModelASTWrappers wrappers;
@@ -33,10 +33,10 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         a.put("environment", environment != null ? environment.toJSON() : null);
         a.put("agent", agent != null ? agent.toJSON() : null);
         a.put("tools", tools != null ? tools.toJSON() : null);
-        if (jobProperties != null && !jobProperties.getProperties().isEmpty()) {
-            a.put("jobProperties", jobProperties.toJSON());
+        if (properties != null && !properties.getProperties().isEmpty()) {
+            a.put("properties", properties.toJSON());
         } else {
-            a.put("jobProperties", null);
+            a.put("properties", null);
         }
         if (parameters != null && !parameters.getParameters().isEmpty()) {
             a.put("parameters", parameters.toJSON());
@@ -75,8 +75,8 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (tools != null) {
             tools.validate(validator);
         }
-        if (jobProperties != null) {
-            jobProperties.validate(validator);
+        if (properties != null) {
+            properties.validate(validator);
         }
         if (parameters != null) {
             parameters.validate(validator);
@@ -108,8 +108,8 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (postBuild != null) {
             result.append(postBuild.toGroovy()).append('\n');
         }
-        if (jobProperties != null && !jobProperties.getProperties().isEmpty()) {
-            result.append(jobProperties.toGroovy()).append('\n');
+        if (properties != null && !properties.getProperties().isEmpty()) {
+            result.append(properties.toGroovy()).append('\n');
         }
         if (parameters != null && !parameters.getParameters().isEmpty()) {
             result.append(parameters.toGroovy()).append('\n');
@@ -182,8 +182,8 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (tools != null) {
             tools.removeSourceLocation();
         }
-        if (jobProperties != null) {
-            jobProperties.removeSourceLocation();
+        if (properties != null) {
+            properties.removeSourceLocation();
         }
         if (parameters != null) {
             parameters.removeSourceLocation();
@@ -240,12 +240,12 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         this.tools = tools;
     }
 
-    public ModelASTJobProperties getJobProperties() {
-        return jobProperties;
+    public ModelASTJobProperties getProperties() {
+        return properties;
     }
 
-    public void setJobProperties(ModelASTJobProperties jobProperties) {
-        this.jobProperties = jobProperties;
+    public void setProperties(ModelASTJobProperties properties) {
+        this.properties = properties;
     }
 
     public ModelASTBuildParameters getParameters() {
@@ -280,7 +280,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 ", environment=" + environment +
                 ", agent=" + agent +
                 ", tools=" + tools +
-                ", jobProperties=" + jobProperties +
+                ", properties=" + properties +
                 ", parameters=" + parameters +
                 ", triggers=" + triggers +
                 ", wrappers=" + wrappers +
@@ -318,9 +318,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
             return false;
         }
-        if (getJobProperties() != null
-                ? !getJobProperties().equals(that.getJobProperties())
-                : that.getJobProperties() != null) {
+        if (getProperties() != null
+                ? !getProperties().equals(that.getProperties())
+                : that.getProperties() != null) {
             return false;
         }
         if (getParameters() != null ? !getParameters().equals(that.getParameters()) : that.getParameters() != null) {
@@ -341,7 +341,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getAgent() != null ? getAgent().hashCode() : 0);
         result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
-        result = 31 * result + (getJobProperties() != null ? getJobProperties().hashCode() : 0);
+        result = 31 * result + (getProperties() != null ? getProperties().hashCode() : 0);
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getTriggers() != null ? getTriggers().hashCode() : 0);
         result = 31 * result + (getWrappers() != null ? getWrappers().hashCode() : 0);
