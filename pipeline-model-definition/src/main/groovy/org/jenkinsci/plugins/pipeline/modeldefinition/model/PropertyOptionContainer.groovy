@@ -25,21 +25,26 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import hudson.model.Describable
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+import hudson.model.JobProperty
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+
 
 /**
- * Used to mark model classes that are composed of lists of {@link Describable} classes extending a specific type
- * for proper parsing and translating.
- *
- * <p>
- * For example:
- * <pre>
- * triggers {
- *     cron('@daily')
- * }
- * </pre>
+ * Container for an individual {@link JobProperty} or {@link DeclarativeOption}
  *
  * @author Andrew Bayer
  */
-public interface MethodsToList<T extends Describable> {
+@ToString
+@EqualsAndHashCode
+class PropertyOptionContainer {
+    public final JobProperty property
+    public final DeclarativeOption option
+
+    public PropertyOptionContainer(JobProperty property, DeclarativeOption option) {
+        this.property = property
+        this.option = option
+    }
+
 }

@@ -23,7 +23,7 @@
  */
 
 pipeline {
-    agent none
+    agent any
     parameters {
         booleanParam(defaultValue: true, description: '', name: 'flag')
         // TODO: Be prepared to change this to "stringParam" once we're on a new enough core.
@@ -33,14 +33,16 @@ pipeline {
         // TODO: Add a second trigger. Needs to be one with a symbol, and "upstream" has issues due to Result.
         cron('@daily')
     }
-    properties {
+    options {
         buildDiscarder(logRotator(numToKeepStr:'1'))
         disableConcurrentBuilds()
+        skipCheckout(true)
     }
     stages {
         stage("foo") {
             steps {
                 echo "hello"
+                sh "test -f Jenkinsfile"
             }
         }
     }

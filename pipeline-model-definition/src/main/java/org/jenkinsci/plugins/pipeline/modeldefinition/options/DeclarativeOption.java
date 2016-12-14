@@ -22,24 +22,18 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.options;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
+import hudson.ExtensionPoint;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.JobProperty;
 
-import hudson.model.Describable
+import java.io.Serializable;
 
-/**
- * Used to mark model classes that are composed of lists of {@link Describable} classes extending a specific type
- * for proper parsing and translating.
- *
- * <p>
- * For example:
- * <pre>
- * triggers {
- *     cron('@daily')
- * }
- * </pre>
- *
- * @author Andrew Bayer
- */
-public interface MethodsToList<T extends Describable> {
+public abstract class DeclarativeOption extends AbstractDescribableImpl<DeclarativeOption> implements Serializable, ExtensionPoint {
+
+    @Override
+    public DeclarativeOptionDescriptor getDescriptor() {
+        return (DeclarativeOptionDescriptor) super.getDescriptor();
+    }
 }

@@ -32,34 +32,51 @@ import groovy.transform.ToString
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 import javax.annotation.Nonnull
 
 /**
- * Container for job properties.
+ * Container for job options.
  *
  * @author Andrew Bayer
  */
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class JobProperties implements Serializable, MethodsToList<JobProperty> {
+public class Options implements Serializable {
     // Transient since JobProperty isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
     // anyway.
     transient List<JobProperty> properties = []
+    transient Map<String, DeclarativeOption> options = [:]
 
-    public JobProperties(List<JobProperty> props) {
-        this.properties = props
+    public Options(List<UninstantiatedDescribable> input) {
+        input.each { i ->
+            def o = i.instantiate()
+            if (o instanceof JobProperty) {
+                properties << o
+            } else if (o instanceof DeclarativeOption) {
+                options[o.descriptor.name] = o
+            }
+        }
     }
+
+    private static final Object OPTION_CACHE_KEY = new Object()
     private static final Object CACHE_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
         Utils.generateTypeCache(JobPropertyDescriptor.class, false, ["pipelineTriggers", "parameters"])
 
+    private static final LoadingCache<Object,Map<String,String>> optionTypeCache =
+        Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [])
+
 
     protected Object readResolve() throws IOException {
-        // Need to make sure properties is initialized on deserialization, even if it's going to be empty.
+        // Need to make sure options is initialized on deserialization, even if it's going to be empty.
         this.properties = []
+        this.options = [:]
         return this;
     }
 
@@ -69,8 +86,10 @@ public class JobProperties implements Serializable, MethodsToList<JobProperty> {
      *
      * @return A map of valid property type keys to their actual type IDs.
      */
-    public static Map<String,String> getAllowedPropertyTypes() {
-        return propertyTypeCache.get(CACHE_KEY)
+    public static Map<String,String> getAllowedOptionTypes() {
+        Map<String,String> c = propertyTypeCache.get(CACHE_KEY)
+        c.putAll(optionTypeCache.get(OPTION_CACHE_KEY))
+        return c
     }
 
     /**
@@ -80,6 +99,6 @@ public class JobProperties implements Serializable, MethodsToList<JobProperty> {
      * @return The type ID for that key, if it's in the property types cache.
      */
     public static String typeForKey(@Nonnull String key) {
-        return getAllowedPropertyTypes().get(key)
+        return getAllowedOptionTypes().get(key)
     }
 }

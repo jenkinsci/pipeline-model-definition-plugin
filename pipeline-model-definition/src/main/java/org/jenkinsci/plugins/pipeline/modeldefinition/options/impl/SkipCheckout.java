@@ -22,24 +22,28 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-import hudson.model.Describable
+public class SkipCheckout extends DeclarativeOption {
+    boolean skipCheckout;
 
-/**
- * Used to mark model classes that are composed of lists of {@link Describable} classes extending a specific type
- * for proper parsing and translating.
- *
- * <p>
- * For example:
- * <pre>
- * triggers {
- *     cron('@daily')
- * }
- * </pre>
- *
- * @author Andrew Bayer
- */
-public interface MethodsToList<T extends Describable> {
+    @DataBoundConstructor
+    public SkipCheckout(boolean skipCheckout) {
+        this.skipCheckout = skipCheckout;
+    }
+
+    public boolean isSkipCheckout() {
+        return skipCheckout;
+    }
+
+    @Extension @Symbol("skipCheckout")
+    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+
+    }
 }

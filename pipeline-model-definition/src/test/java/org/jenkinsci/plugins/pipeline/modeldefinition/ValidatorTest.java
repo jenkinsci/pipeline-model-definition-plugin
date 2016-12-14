@@ -23,10 +23,9 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import hudson.model.Result;
 import hudson.slaves.DumbSlave;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
@@ -80,7 +79,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void emptyJobProperties() throws Exception {
         expectError("emptyJobProperties")
-                .logContains("Cannot have empty properties section")
+                .logContains("Cannot have empty options section")
                 .go();
     }
 
@@ -101,7 +100,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void blockInJobProperties() throws Exception {
         expectError("blockInJobProperties")
-                .logContains("Job property definitions cannot have blocks")
+                .logContains("Option definitions cannot have blocks")
                 .go();
     }
 
@@ -235,8 +234,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void invalidPropertiesType() throws Exception {
         expectError("invalidPropertiesType")
-                .logContains("Invalid job property type 'banana'. Valid job property types: "
-                        + JobProperties.getAllowedPropertyTypes().keySet())
+                .logContains("Invalid option type 'banana'. Valid option types: "
+                        + Options.getAllowedOptionTypes().keySet())
                 .go();
     }
 

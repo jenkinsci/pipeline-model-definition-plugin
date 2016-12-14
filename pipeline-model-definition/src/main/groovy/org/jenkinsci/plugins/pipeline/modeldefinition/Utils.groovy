@@ -40,6 +40,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelActi
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
+
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.workflow.actions.TagsAction
@@ -143,7 +144,9 @@ public class Utils {
         Class retClass
         c.genericInterfaces.each { Type t ->
             if (t instanceof ParameterizedType) {
-                if (t.rawType.equals(MethodsToList.class) && t.getActualTypeArguments().first() instanceof Class) {
+                if (t.getRawType() instanceof Class
+                    && MethodsToList.class.isAssignableFrom((Class)t.getRawType())
+                    && t.getActualTypeArguments().first() instanceof Class) {
                     retClass = (Class)t.actualTypeArguments.first()
                 }
             }

@@ -24,7 +24,7 @@
 
 pipeline {
     agent none
-    properties {
+    options {
         banana(logRotator(numToKeepStr:'1'))
     }
     stages {

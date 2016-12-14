@@ -24,7 +24,7 @@
 
 pipeline {
     agent none
-    properties {
+    options {
         buildDiscarder(logRotator(numToKeepStr:'1'))
     }
     stages {
