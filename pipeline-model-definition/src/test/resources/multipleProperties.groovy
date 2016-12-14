@@ -33,7 +33,7 @@ pipeline {
         // TODO: Add a second trigger. Needs to be one with a symbol, and "upstream" has issues due to Result.
         cron('@daily')
     }
-    jobProperties {
+    properties {
         buildDiscarder(logRotator(numToKeepStr:'1'))
         disableConcurrentBuilds()
     }

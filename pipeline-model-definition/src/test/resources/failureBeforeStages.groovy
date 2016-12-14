@@ -22,28 +22,25 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
-
-import hudson.model.Describable
-
-/**
- * Used to mark model classes that are composed of lists of {@link Describable} classes for proper parsing and translating.
- *
- * <p>
- * For example:
- * <pre>
- * properties {
- *     buildDiscarder(logRotator(numToKeepStr:'1')
- *     disableConcurrentBuilds()
- * }
- *
- * triggers {
- *     cron('@daily')
- * }
- * </pre>
- *
- * @author Andrew Bayer
- */
-public interface MethodsToList<T extends Describable> {
+pipeline {
+    agent dockerfile:true, dockerArgs:"-v /tmp:/tmp -p 8000:8000"
+    stages {
+        stage("foo") {
+            steps {
+                sh 'cat /hi-there'
+                sh 'echo "The answer is 42"'
+            }
+        }
+    }
+    post {
+        failure {
+            echo "Dockerfile failed"
+        }
+        success {
+            echo "This should never happen"
+        }
+    }
 }
+
+
+

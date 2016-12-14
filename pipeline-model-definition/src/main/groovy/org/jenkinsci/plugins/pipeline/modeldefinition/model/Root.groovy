@@ -49,7 +49,7 @@ public class Root implements NestedModel, Serializable {
 
     Tools tools
 
-    JobProperties jobProperties
+    JobProperties properties
 
     Triggers triggers
 
@@ -87,8 +87,8 @@ public class Root implements NestedModel, Serializable {
         return this
     }
 
-    Root jobProperties(JobProperties p) {
-        this.jobProperties = p
+    Root properties(JobProperties p) {
+        this.properties = p
         return this
     }
 

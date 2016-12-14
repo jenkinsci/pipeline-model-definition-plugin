@@ -61,66 +61,78 @@ public class ModelInterpreter implements Serializable {
         Throwable firstError
 
         if (root != null) {
-            executeProperties(root)
+            boolean postBuildRun = false
 
-            // Entire build, including notifications, runs in the withEnv.
-            withEnvBlock(root.getEnvVars()) {
-                inWrappers(root.wrappers) {
-                    // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
-                    // even if the build fails.
-                    // We save the caught error, if any, for throwing at the end of the build.
-                    inDeclarativeAgent(root.agent) {
-                        withCredentialsBlock(root.getEnvCredentials()) {
-                            toolsBlock(root.agent, root.tools) {
-                                // If we have an agent and script.scm isn't null, run checkout scm
-                                if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
-                                    script.stage(SyntheticStageNames.checkout()) {
-                                        Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
-                                        script.checkout script.scm
+            try {
+                executeProperties(root)
+
+                // Entire build, including notifications, runs in the withEnv.
+                withEnvBlock(root.getEnvVars()) {
+                    inWrappers(root.wrappers) {
+                        // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
+                        // even if the build fails.
+                        // We save the caught error, if any, for throwing at the end of the build.
+                        inDeclarativeAgent(root.agent) {
+                            withCredentialsBlock(root.getEnvCredentials()) {
+                                toolsBlock(root.agent, root.tools) {
+                                    // If we have an agent and script.scm isn't null, run checkout scm
+                                    if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                                        script.stage(SyntheticStageNames.checkout()) {
+                                            Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
+                                            script.checkout script.scm
+                                        }
                                     }
-                                }
 
-                                for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                    Stage thisStage = root.stages.getStages().get(i)
-                                    try {
-                                        script.stage(thisStage.name) {
-                                            if (firstError == null) {
-                                                withEnvBlock(thisStage.getEnvVars()) {
-                                                    if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) {
-                                                        inDeclarativeAgent(thisStage.agent) {
-                                                            withCredentialsBlock(thisStage.getEnvCredentials()) {
-                                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                                    // Execute the actual stage and potential post-stage actions
-                                                                    executeSingleStage(root, thisStage)
+                                    for (int i = 0; i < root.stages.getStages().size(); i++) {
+                                        Stage thisStage = root.stages.getStages().get(i)
+                                        try {
+                                            script.stage(thisStage.name) {
+                                                if (firstError == null) {
+                                                    withEnvBlock(thisStage.getEnvVars()) {
+                                                        if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) {
+                                                            inDeclarativeAgent(thisStage.agent) {
+                                                                withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                                        // Execute the actual stage and potential post-stage actions
+                                                                        executeSingleStage(root, thisStage)
+                                                                    }
                                                                 }
                                                             }
+                                                        } else {
+                                                            Utils.markStageSkippedForConditional(thisStage.name)
                                                         }
-                                                    } else {
-                                                        Utils.markStageSkippedForConditional(thisStage.name)
                                                     }
+                                                } else {
+                                                    Utils.markStageSkippedForFailure(thisStage.name)
                                                 }
-                                            }else {
-                                                Utils.markStageSkippedForFailure(thisStage.name)
-                                                }
+                                            }
+                                        } catch (Exception e) {
+                                            script.getProperty("currentBuild").result = Result.FAILURE
+                                            Utils.markStageFailedAndContinued(thisStage.name)
+                                            if (firstError == null) {
+                                                firstError = e
+                                            }
                                         }
+                                    }
+
+                                    // Execute post-build actions now that we've finished all stages.
+                                    try {
+                                        postBuildRun = true
+                                        executePostBuild(root)
                                     } catch (Exception e) {
                                         if (firstError == null) {
                                             firstError = e
                                         }
                                     }
                                 }
-
-                                // Execute post-build actions now that we've finished all stages.
-                                try {
-                                    executePostBuild(root)
-                                } catch (Exception e) {
-                                    if (firstError == null) {
-                                        firstError = e
-                                    }
-                                }
                             }
                         }
                     }
+                }
+            } finally {
+                // If we hit an exception somewhere *before* we got to stages, we still need to do post-build tasks.
+                if (!postBuildRun) {
+                    executePostBuild(root)
                 }
             }
             if (firstError != null) {
@@ -368,7 +380,6 @@ public class ModelInterpreter implements Serializable {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
                 if (postClosures.size() > 0) {
                     script.echo("Post stage")
-                    //TODO should this be a nested stage instead?
                     try {
                         for (int ni = 0; ni < postClosures.size(); ni++) {
                             setUpDelegate(postClosures.get(ni))
@@ -425,8 +436,8 @@ public class ModelInterpreter implements Serializable {
     def executeProperties(Root root) {
         def jobProps = []
 
-        if (root.jobProperties != null) {
-            jobProps.addAll(root.jobProperties.properties)
+        if (root.properties != null) {
+            jobProps.addAll(root.properties.properties)
         }
         if (root.triggers != null) {
             jobProps.add(script.pipelineTriggers(root.triggers.triggers))

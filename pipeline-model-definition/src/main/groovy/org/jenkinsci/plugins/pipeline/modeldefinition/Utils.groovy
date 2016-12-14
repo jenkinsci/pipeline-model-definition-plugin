@@ -259,7 +259,7 @@ public class Utils {
                 tagsAction = new TagsAction()
                 tagsAction.addTag(tagName, tagValue)
                 currentNode.addAction(tagsAction)
-            } else {
+            } else if (tagsAction.getTagValue(tagName) == null) {
                 tagsAction.addTag(tagName, tagValue)
                 currentNode.save()
             }

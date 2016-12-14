@@ -150,7 +150,7 @@ public abstract class AbstractModelDefTest {
 
         result.add(new Object[]{"emptyParallel", "Nothing to execute within stage 'foo'"});
 
-        result.add(new Object[]{"emptyJobProperties", "At /pipeline/jobProperties/properties: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"emptyJobProperties", "At /pipeline/properties/properties: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyParameters", "At /pipeline/parameters/parameters: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"emptyTriggers", "At /pipeline/triggers/triggers: Array has 0 entries, requires minimum of 1"});
         result.add(new Object[]{"mixedMethodArgs", "Can't mix named and unnamed parameter definition arguments"});
@@ -166,7 +166,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
 
         result.add(new Object[]{"unknownAgentType", "No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]"});
-        result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [retry, script, timeout, withEnv]"});
+        result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [catchError, node, retry, script, timeout, waitUntil, withContext, withEnv, ws]"});
 
         result.add(new Object[]{"unknownBareAgentType", "Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]."});
         result.add(new Object[]{"agentMissingRequiredParam", "Missing required parameter for agent type 'otherField': label"});

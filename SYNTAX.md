@@ -276,7 +276,7 @@ parameters {
 * *Examples*:
 
 ```groovy
-jobProperties {
+properties {
     buildDiscarder(logRotator(numToKeepStr:'1'))
     disableConcurrentBuilds()
 }
