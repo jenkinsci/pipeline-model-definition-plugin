@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.transform.EqualsAndHashCode;
 import groovy.transform.ToString;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
  * A single parameter definition, eventually corresponding to a {@code ParameterDefinition}
@@ -12,6 +13,12 @@ import groovy.transform.ToString;
 public class ModelASTBuildParameter extends ModelASTMethodCall {
     public ModelASTBuildParameter(Object sourceLocation) {
         super(sourceLocation);
+    }
+
+    @Override
+    public void validate(final ModelValidator validator) {
+        validator.validateElement(this);
+        super.validate(validator);
     }
 
     @Override

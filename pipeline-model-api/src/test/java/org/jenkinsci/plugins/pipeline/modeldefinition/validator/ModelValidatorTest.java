@@ -4,8 +4,12 @@ import java.util.Collections;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodArg;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -42,6 +46,20 @@ public class ModelValidatorTest {
         inOrder.verify(validator, Mockito.times(1)).validateElement((ModelASTBuildConditionsContainer) instance);
         inOrder.verify(validator, Mockito.times(1)).validateElement(condition);
         inOrder.verify(validator, Mockito.times(1)).validateElement(branch);
+    }
+
+    @Test
+    public void triggerValidateCallsRightMethod() throws Exception {
+        ModelValidator validator = Mockito.mock(ModelValidator.class);
+
+        ModelASTTrigger trigger = new ModelASTTrigger(null);
+        ModelASTMethodArg arg = ModelASTValue.fromConstant("bar", null);
+        trigger.setArgs(Collections.singletonList(arg));
+        trigger.setName("foo");
+        trigger.validate(validator);
+        InOrder inOrder = Mockito.inOrder(validator);
+        inOrder.verify(validator, Mockito.times(1)).validateElement(trigger);
+        inOrder.verify(validator, Mockito.times(1)).validateElement((ModelASTMethodCall)trigger);
     }
 
 }
