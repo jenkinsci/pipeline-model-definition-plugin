@@ -29,7 +29,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipCheckout
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
@@ -79,7 +79,7 @@ public class ModelInterpreter implements Serializable {
                                     // If we have an agent and script.scm isn't null, run checkout scm
                                     if (root.agent.hasAgent()
                                         && Utils.hasScmContext(script)
-                                        && !((SkipCheckout)root.options?.options?.get("skipCheckout"))?.isSkipCheckout()) {
+                                        && !((SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout"))?.isSkipDefaultCheckout()) {
                                         script.stage(SyntheticStageNames.checkout()) {
                                             Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
                                             script.checkout script.scm

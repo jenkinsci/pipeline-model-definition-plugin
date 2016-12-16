@@ -90,12 +90,12 @@ public abstract class DeclarativeOptionDescriptor extends Descriptor<Declarative
      * @return The instantiated {@link DeclarativeOption} instance, or null if the name isn't found.
      * @throws Exception
      */
-    public static @Nullable DeclarativeOption instanceForName(@Nonnull String name,
-                                                              Map<String,Object> arguments) throws Exception {
+    public static @Nullable DeclarativeOption instanceFromName(@Nonnull String name,
+                                                               Map<String,Object> arguments) throws Exception {
         DeclarativeOptionDescriptor descriptor = byName(name);
 
         if (descriptor != null) {
-            return instanceForDescriptor(descriptor, arguments);
+            return instanceFromDescriptor(descriptor, arguments);
         }
 
         return null;
@@ -121,8 +121,8 @@ public abstract class DeclarativeOptionDescriptor extends Descriptor<Declarative
      * @return The instantiated {@link DeclarativeOption} instance.
      * @throws Exception
      */
-    public static @Nonnull DeclarativeOption instanceForDescriptor(@Nonnull DeclarativeOptionDescriptor descriptor,
-                                                                   Map<String,Object> arguments) throws Exception {
+    public static @Nonnull DeclarativeOption instanceFromDescriptor(@Nonnull DeclarativeOptionDescriptor descriptor,
+                                                                    Map<String,Object> arguments) throws Exception {
         return descriptor.newInstance(arguments);
     }
 

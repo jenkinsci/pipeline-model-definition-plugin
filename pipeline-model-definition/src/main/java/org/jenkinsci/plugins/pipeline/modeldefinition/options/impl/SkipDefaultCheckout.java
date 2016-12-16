@@ -30,19 +30,19 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class SkipCheckout extends DeclarativeOption {
-    boolean skipCheckout;
+public class SkipDefaultCheckout extends DeclarativeOption {
+    boolean skipDefaultCheckout;
 
     @DataBoundConstructor
-    public SkipCheckout(boolean skipCheckout) {
-        this.skipCheckout = skipCheckout;
+    public SkipDefaultCheckout(boolean skipDefaultCheckout) {
+        this.skipDefaultCheckout = skipDefaultCheckout;
     }
 
-    public boolean isSkipCheckout() {
-        return skipCheckout;
+    public boolean isSkipDefaultCheckout() {
+        return skipDefaultCheckout;
     }
 
-    @Extension @Symbol("skipCheckout")
+    @Extension @Symbol("skipDefaultCheckout")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
 
     }
