@@ -162,11 +162,11 @@ class ModelParser {
                     case 'triggers':
                         r.triggers = parseTriggers(stmt)
                         break
-                    case 'wrappers':
-                        r.wrappers = parseWrappers(stmt)
-                        break
                     case 'properties':
                         errorCollector.error(r, "The 'properties' section has been renamed as of version 0.8. Use 'options' instead.")
+                        break
+                    case 'wrappers':
+                        errorCollector.error(r, "The 'wrappers' section has been removed as of version 0.8. Use 'options' instead.")
                         break
                     case 'jobProperties':
                         errorCollector.error(r, "The 'jobProperties' section has been renamed as of version 0.7. Use 'options' instead.")
@@ -360,51 +360,6 @@ class ModelParser {
             b.steps.add(parseStep(st));
         }
         return b;
-    }
-
-    public @Nonnull ModelASTWrappers parseWrappers(Statement stmt) {
-        def w = new ModelASTWrappers(stmt)
-        def m = matchBlockStatement(stmt)
-
-        if (m == null) {
-            return w
-        } else {
-            eachStatement(m.body.code) { s ->
-                w.wrappers.add(parseWrapper(s));
-            }
-        }
-
-        return w
-    }
-
-    /**
-     * Parses a statement into a {@link ModelASTWrapper}
-     */
-    public ModelASTWrapper parseWrapper(Statement st) {
-        ModelASTWrapper thisWrapper = new ModelASTWrapper(st)
-        def mc = matchMethodCall(st);
-        if (mc == null) {
-            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(thisWrapper,"Wrappers cannot be defined as maps")
-                return thisWrapper
-            } else {
-                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(thisWrapper, "Expected a wrapper");
-                return thisWrapper
-            }
-        };
-
-        def bs = matchBlockStatement(st);
-        if (bs != null) {
-            errorCollector.error(thisWrapper,"Wrapper definitions cannot have blocks")
-            return thisWrapper
-        } else {
-            ModelASTMethodCall mArgs = parseMethodCall(mc)
-            thisWrapper.args = mArgs.args
-            thisWrapper.name = mArgs.name
-        }
-
-        return thisWrapper
     }
 
     /**

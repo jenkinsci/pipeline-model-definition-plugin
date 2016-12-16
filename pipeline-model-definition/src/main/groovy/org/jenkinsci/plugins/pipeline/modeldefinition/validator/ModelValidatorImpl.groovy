@@ -40,7 +40,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
@@ -439,36 +438,6 @@ class ModelValidatorImpl implements ModelValidator {
                 return false
             }
         }
-        return true
-    }
-
-    public boolean validateElement(@Nonnull ModelASTWrapper wrapper) {
-        boolean valid = true
-
-        if (wrapper.name == null) {
-            // This means that we failed at compilation time so can move on.
-        }
-        // We can't do trigger validation without a Jenkins instance, so move on.
-        else if (!(wrapper.name in Wrappers.getEligibleSteps())) {
-            errorCollector.error(wrapper,
-                "Invalid wrapper type '${wrapper.name}'. Valid wrapper types: ${Wrappers.getEligibleSteps()}")
-            valid = false
-        } else if (wrapper.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
-            && !wrapper.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(wrapper, "Can't mix named and unnamed wrapper arguments")
-            valid = false
-        } else {
-            valid = validateElement((ModelASTMethodCall)wrapper)
-        }
-        return valid
-    }
-
-    public boolean validateElement(@Nonnull ModelASTWrappers wrappers) {
-        if (wrappers.wrappers.isEmpty()) {
-            errorCollector.error(wrappers, "Cannot have empty wrappers section")
-            return false
-        }
-
         return true
     }
 

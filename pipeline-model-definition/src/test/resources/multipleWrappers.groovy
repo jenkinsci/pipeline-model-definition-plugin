@@ -24,7 +24,7 @@
 
 pipeline {
     agent none
-    wrappers {
+    options {
         timeout(time: 5, unit: 'MINUTES')
         retry(3)
     }
