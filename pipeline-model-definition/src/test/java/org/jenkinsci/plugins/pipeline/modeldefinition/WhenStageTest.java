@@ -79,7 +79,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenEmpty() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
         expect(Result.FAILURE, "when", "whenEmpty").runFromRepo(false)
-                .logContains("Empty when closure").logNotContains("Two", "World").go();
+                .logContains(Messages.ModelValidatorImpl_EmptyWhen()).logNotContains("Two", "World").go();
     }
 
     @Test

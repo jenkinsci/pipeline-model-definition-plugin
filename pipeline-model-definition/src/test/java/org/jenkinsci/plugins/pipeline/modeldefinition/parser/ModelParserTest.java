@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -27,7 +28,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
         System.out.println("----");
         System.out.println(msg);
         System.out.println("----");
-        assertTrue(msg.contains("Expected string literal"));
+        assertTrue(msg.contains(Messages.ModelParser_ExpectedStringLiteral()));
         assertFalse(msg.contains("Exception")); // we don't want stack trace please
     }
 }

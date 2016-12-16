@@ -29,6 +29,7 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertNotNull(resultData);
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
 
-        String expectedError = "Invalid condition 'banana' - valid conditions are " + BuildCondition.getOrderedConditionNames();
+        String expectedError = Messages.ModelValidatorImpl_InvalidBuildCondition("banana", BuildCondition.getOrderedConditionNames());
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedError(expectedError, resultData.getJSONArray("errors")));
     }
@@ -116,7 +117,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertNotNull(resultData);
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
 
-        String expectedError = "Invalid tool type 'banana'. Valid tool types: " + Tools.getAllowedToolTypes().keySet();
+        String expectedError = Messages.ModelValidatorImpl_InvalidSectionType("tool", "banana", Tools.getAllowedToolTypes().keySet());
 
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedError(expectedError, resultData.getJSONArray("errors")));

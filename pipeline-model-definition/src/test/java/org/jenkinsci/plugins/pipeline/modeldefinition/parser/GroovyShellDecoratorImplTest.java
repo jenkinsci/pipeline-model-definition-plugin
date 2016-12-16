@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
 import hudson.model.Result;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -26,9 +27,8 @@ public class GroovyShellDecoratorImplTest {
         job.setDefinition(new CpsFlowDefinition("pipeline { stages { stage { sh './test.sh' } } }"));
         WorkflowRun b = j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
 
-        j.assertLogContains(
-                "WorkflowScript: 1: Expected string literal @ line 1, column 27.\n" +
-                "   pipeline { stages { stage { sh './test.sh' } } }\n" +
+        j.assertLogContains(Messages.ModelParser_ExpectedStringLiteral(), b);
+        j.assertLogContains("   pipeline { stages { stage { sh './test.sh' } } }\n" +
                 "                             ^\n"
                 ,b);
     }
