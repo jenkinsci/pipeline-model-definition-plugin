@@ -84,7 +84,7 @@ public class ModelConverterAction implements RootAction {
 
         String jsonAsString = req.getParameter("json");
 
-        if (jsonAsString != null && !jsonAsString.equals("")) {
+        if (!StringUtils.isEmpty(jsonAsString)) {
             try {
                 JSONObject json = JSONObject.fromObject(jsonAsString);
 
@@ -115,7 +115,7 @@ public class ModelConverterAction implements RootAction {
 
         String groovyAsString = req.getParameter("jenkinsfile");
 
-        if (groovyAsString != null && !groovyAsString.equals("")) {
+        if (!StringUtils.isEmpty(groovyAsString)) {
             try {
                 ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
                 if (pipelineDef != null) {
@@ -143,7 +143,7 @@ public class ModelConverterAction implements RootAction {
 
         String groovyAsString = req.getParameter("jenkinsfile");
 
-        if (groovyAsString != null && !groovyAsString.equals("")) {
+        if (!StringUtils.isEmpty(groovyAsString)) {
             try {
                 List<ModelASTStep> steps = Converter.scriptToPlainSteps(groovyAsString);
                 JSONArray array = new JSONArray();
@@ -170,7 +170,7 @@ public class ModelConverterAction implements RootAction {
         JSONObject result = new JSONObject();
 
         String jsonAsString = req.getParameter("json");
-        if (jsonAsString != null && !jsonAsString.equals("")) {
+        if (!StringUtils.isEmpty(jsonAsString)) {
             try {
                 JSON json = JSONSerializer.toJSON(jsonAsString);
 
@@ -228,7 +228,7 @@ public class ModelConverterAction implements RootAction {
 
         String groovyAsString = req.getParameter("jenkinsfile");
 
-        if (groovyAsString != null && !groovyAsString.equals("")) {
+        if (!StringUtils.isEmpty(groovyAsString)) {
             try {
                 ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
                 if (pipelineDef != null) {
@@ -255,7 +255,7 @@ public class ModelConverterAction implements RootAction {
         JSONObject result = new JSONObject();
 
         String jsonAsString = req.getParameter("json");
-        if (jsonAsString != null && !jsonAsString.equals("")) {
+        if (!StringUtils.isEmpty(jsonAsString)) {
             try {
 
                 JSONObject json = JSONObject.fromObject(jsonAsString);
