@@ -474,7 +474,15 @@ class JSONParser {
     public @CheckForNull ModelASTAgent parseAgent(Object j) {
         ModelASTAgent agent = new ModelASTAgent(j)
 
-        agent.args = parseArgumentList(j)
+        j.each { rawEntry ->
+            JSONObject entry = (JSONObject) rawEntry
+            // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
+            ModelASTKey key = parseKey(entry)
+
+            ModelASTValue value = parseValue(entry.getJSONObject("value"))
+
+            agent.variables.put(key, value)
+        }
 
         return agent
     }

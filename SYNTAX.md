@@ -13,7 +13,7 @@ These are sections that are specified directly within the `pipeline` argument cl
 * *Description*: Specifies where the build or stage will run. 
 * *Required*: Yes for the top-level `pipeline` closure, optional for individual `stage` closures.
 * *Allowed In*: Top-level `pipeline` closure and individual `stage` closures.
-* *Parameters*: Either a `Map` of one or more arguments or one of two constants - `none` or `any`.
+* *Parameters*: Either a `Closure` of one or more arguments or one of two constants - `none` or `any`.
     * *Map Keys*:
         * Note that this will be an `ExtensionPoint`, so plugins will be able to add to the available image providers.
         * `docker`
@@ -30,13 +30,27 @@ These are sections that are specified directly within the `pipeline` argument cl
         * *Type*: bareword
         * *Description*: If given, node/image management will need to be specified explicitly in stages and no 
         automatic `checkout scm` call will occur.
-* *Takes a Closure*: No
+* *Takes a Closure*: yes
 * *Examples*:
-    * `agent label:'has-docker', docker:'ubuntu:lts'`
-    * `agent docker:'ubuntu:lts'`
-    * `agent label:'hi-speed'`
-    * `agent none`
-    * `agent any`
+
+```groovy
+agent {
+    label 'has-docker'
+    docker 'ubuntu:lts'
+}
+
+agent {
+    docker 'ubuntu:lts'
+}
+ 
+agent {
+    label 'hi-speed'
+}
+
+agent none
+
+agent any
+```
 
 ### environment
 * *Description*: A sequence of `key = value` pairs, which will be passed to the `withEnv` step the build will be 
@@ -109,7 +123,9 @@ stages {
     }
         
     stage('second') {
-        agent label:'some-node'
+        agent {
+            label 'some-node'
+        }
         when {
             env.BRANCH == 'master'
         }

@@ -542,45 +542,31 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTAgent agent) {
         boolean valid = true
 
-        if (agent.args instanceof ModelASTSingleArgument) {
-            ModelASTSingleArgument singleArg = (ModelASTSingleArgument) agent.args
-            Map<String,DescribableModel> zeroArgModels = DeclarativeAgentDescriptor.zeroArgModels()
-            if (!zeroArgModels.containsKey(singleArg.value.getValue())) {
-                errorCollector.error(agent.args, "Invalid argument for agent - '${singleArg.value.toGroovy()}' - must be map of config options or bare ${zeroArgModels.keySet().sort()}.")
-                valid = false
-            }
-        } else if (agent.args instanceof ModelASTNamedArgumentList) {
-            ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList)agent.args
-            List<String> argKeys = namedArgs.arguments.collect { k, v ->
-                k.key
-            }
+        List<String> keyNames = agent.getKeyNames()
+        Map<String, DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
 
-            Map<String,DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
+        List<String> orderedNames = DeclarativeAgentDescriptor.all().collect { it.name }
+        String typeName = orderedNames.find { it in keyNames }
 
-            List<String> orderedNames = DeclarativeAgentDescriptor.all().collect { it.name }
-            String typeName = orderedNames.find { it in argKeys }
-
-            if (typeName == null) {
-                errorCollector.error(agent, "No agent type specified. Must contain one of ${orderedNames}")
-                valid = false
-            } else {
-                DescribableModel model = possibleModels.get(typeName)
-                model.parameters.findAll { it.required }.each { p ->
-                    if (!argKeys.contains(p.name)) {
-                        errorCollector.error(agent, "Missing required parameter for agent type '${typeName}': ${p.name}")
-                        valid = false
-                    }
+        if (typeName == null) {
+            errorCollector.error(agent, "No agent type specified. Must contain one of ${orderedNames}")
+            valid = false
+        } else if (!(typeName in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
+            DescribableModel model = possibleModels.get(typeName)
+            model.parameters.findAll { it.required }.each { p ->
+                if (!keyNames.contains(p.name)) {
+                    errorCollector.error(agent, "Missing required parameter for agent type '${typeName}': ${p.name}")
+                    valid = false
                 }
-                namedArgs.arguments.each { k, v ->
-                    List<String> validParamNames = model.parameters.collect { it.name }
-                    if (!validParamNames.contains(k.key)) {
-                        errorCollector.error(k, "Invalid config option '${k.key}' for agent type '${typeName}'. Valid config options are ${validParamNames}")
-                        valid = false
-                    }
+            }
+            agent.variables.each { k, v ->
+                List<String> validParamNames = model.parameters.collect { it.name }
+                if (!validParamNames.contains(k.key)) {
+                    errorCollector.error(k, "Invalid config option '${k.key}' for agent type '${typeName}'. Valid config options are ${validParamNames}")
+                    valid = false
                 }
             }
         }
-
         return valid
     }
 

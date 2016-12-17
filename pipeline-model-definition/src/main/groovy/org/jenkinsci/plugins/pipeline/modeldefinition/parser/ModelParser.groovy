@@ -644,15 +644,47 @@ class ModelParser {
      */
     public @Nonnull ModelASTAgent parseAgent(Statement st) {
         ModelASTAgent agent = new ModelASTAgent(st)
-        def mc = matchMethodCall(st);
-        if (mc == null) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(agent,"Expected an agent")
-        };
+        def m = matchBlockStatement(st);
+        if (m==null) {
+            def mc = matchMethodCall(st);
+            if (mc == null) {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(agent,"Expected an agent")
+            } else {
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(agent, "No argument for agent")
+                } else if (args.size() > 1) {
+                    errorCollector.error(agent, "Only \"agent none\", \"agent any\" or \"agent {...}\" are allowed.")
+                } else {
+                    def agentCode = parseKey(args[0])
+                    if (agentCode.key != "none" && agentCode.key != "any") {
+                        errorCollector.error(agent, "Only \"agent none\", \"agent any\" or \"agent {...}\" are allowed.")
+                    } else {
+                        agent.variables[agentCode] = ModelASTValue.fromConstant(true, null)
+                    }
+                }
+            }
+        } else {
+            eachStatement(m.body.code) { s ->
+                def mc = matchMethodCall(s);
+                if (mc == null) {
+                    // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                    errorCollector.error(agent,"Expected to find 'key \"value\"'");
+                }
 
-        List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                def agentKey = parseKey(mc.method);
 
-        agent.args = parseArgumentList(args)
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(agentKey, "No argument for agent key '${agentKey.key}'")
+                } else if (args.size() > 1) {
+                    errorCollector.error(agentKey, "Too many arguments for agent key '${agentKey.key}'")
+                } else {
+                    agent.variables[agentKey] = parseArgument(args[0])
+                }
+            }
+        }
 
         return agent
     }

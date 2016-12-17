@@ -49,12 +49,16 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
     /**
      * Placeholder to make sure 'agent none' works.
      */
-    String none = "none"
+    Closure none = {
+        noneKey true
+    }
 
     /**
      * Placeholder to make sure 'agent any' works.
      */
-    String any = "any"
+    Closure any = {
+        anyKey true
+    }
 
     ClosureModelTranslator(Class clazz, CpsScript s) {
         actualClass = clazz

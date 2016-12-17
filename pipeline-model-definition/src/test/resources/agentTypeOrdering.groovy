@@ -23,7 +23,10 @@
  */
 
 pipeline {
-    agent label:"some-label", otherField:"banana"
+    agent {
+        label "some-label"
+        otherField "banana"
+    }
     stages {
         stage("foo") {
             steps {

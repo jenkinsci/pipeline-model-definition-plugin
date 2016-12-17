@@ -168,7 +168,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"unknownAgentType", "No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]"});
         result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [catchError, node, retry, script, timeout, waitUntil, withContext, withEnv, ws]"});
 
-        result.add(new Object[]{"unknownBareAgentType", "Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]."});
+        result.add(new Object[]{"unknownBareAgentType", "No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]"});
         result.add(new Object[]{"agentMissingRequiredParam", "Missing required parameter for agent type 'otherField': label"});
         result.add(new Object[]{"agentUnknownParamForType", "Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]"});
         result.add(new Object[]{"notificationsSectionRemoved", "At /pipeline: additional properties are not allowed"});
@@ -187,10 +187,14 @@ public abstract class AbstractModelDefTest {
                 "      }]\n" +
                 "    }]\n" +
                 "  }],\n" +
-                "  \"agent\":   {\n" +
-                "    \"isLiteral\": true,\n" +
-                "    \"value\": \"none\"\n" +
-                "  }\n" +
+                "  \"agent\": [\n" +
+                "    {\n" +
+                "      \"key\": \"none\",\n" +
+                "      \"value\": {\n" +
+                "        \"isLiteral\": true,\n" +
+                "        \"value\": true\n" +
+                "      }\n" +
+                "    }]\n" +
                 "}}"});
 
         return result;

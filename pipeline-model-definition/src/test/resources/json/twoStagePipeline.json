@@ -27,8 +27,12 @@
       }]
     }
   ],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": [
+    {
+      "key": "none",
+      "value": {
+        "isLiteral": true,
+        "value": true
+      }
+    }]
 }}

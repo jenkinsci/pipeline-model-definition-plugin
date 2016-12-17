@@ -23,7 +23,9 @@
  */
 
 pipeline {
-    agent label:"some-label"
+    agent {
+        label "some-label"
+    }
     tools {
         maven "apache-maven-3.0.1"
     }

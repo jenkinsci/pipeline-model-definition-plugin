@@ -386,7 +386,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void unknownBareAgentType() throws Exception {
         expectError("unknownBareAgentType")
-                .logContains("Invalid argument for agent - 'foo' - must be map of config options or bare [any, none]")
+                .logContains("Only \"agent none\", \"agent any\" or \"agent {...}\" are allowed.")
                 .go();
     }
 
