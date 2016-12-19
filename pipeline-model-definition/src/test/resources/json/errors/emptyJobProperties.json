@@ -12,7 +12,6 @@
       }]
     }]
   }],
-<<<<<<< HEAD
   "agent": [
     {
       "key": "none",
@@ -21,12 +20,5 @@
         "value": true
       }
     }],
-  "properties": {"properties": [ ] }
-=======
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  },
   "options": {"options": [ ] }
->>>>>>> master
 }}
