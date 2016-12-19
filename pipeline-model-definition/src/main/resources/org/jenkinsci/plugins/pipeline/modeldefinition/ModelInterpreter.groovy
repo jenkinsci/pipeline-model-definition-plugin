@@ -29,6 +29,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
@@ -76,7 +77,9 @@ public class ModelInterpreter implements Serializable {
                             withCredentialsBlock(root.getEnvCredentials()) {
                                 toolsBlock(root.agent, root.tools) {
                                     // If we have an agent and script.scm isn't null, run checkout scm
-                                    if (root.agent.hasAgent() && Utils.hasScmContext(script)) {
+                                    if (root.agent.hasAgent()
+                                        && Utils.hasScmContext(script)
+                                        && !((SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout"))?.isSkipDefaultCheckout()) {
                                         script.stage(SyntheticStageNames.checkout()) {
                                             Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
                                             script.checkout script.scm
@@ -436,8 +439,8 @@ public class ModelInterpreter implements Serializable {
     def executeProperties(Root root) {
         def jobProps = []
 
-        if (root.properties != null) {
-            jobProps.addAll(root.properties.properties)
+        if (root.options != null) {
+            jobProps.addAll(root.options.properties)
         }
         if (root.triggers != null) {
             jobProps.add(script.pipelineTriggers(root.triggers.triggers))

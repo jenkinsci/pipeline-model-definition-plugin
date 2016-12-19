@@ -36,7 +36,7 @@ import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
@@ -331,9 +331,9 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
-    public boolean validateElement(@Nonnull ModelASTJobProperties props) {
-        if (props.properties.isEmpty()) {
-            errorCollector.error(props, "Cannot have empty properties section")
+    public boolean validateElement(@Nonnull ModelASTOptions opts) {
+        if (opts.options.isEmpty()) {
+            errorCollector.error(opts, "Cannot have empty options section")
             return false
         }
 
@@ -400,23 +400,23 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
-    public boolean validateElement(@Nonnull ModelASTJobProperty prop) {
+    public boolean validateElement(@Nonnull ModelASTOption opt) {
         boolean valid = true
 
-        if (prop.name == null) {
+        if (opt.name == null) {
             // Validation failed at compilation time so move on.
         }
         // We can't do property validation without a Jenkins instance, so move on.
-        else if (JobProperties.typeForKey(prop.name) == null) {
-            errorCollector.error(prop,
-                "Invalid job property type '${prop.name}'. Valid job property types: ${JobProperties.getAllowedPropertyTypes().keySet()}")
+        else if (Options.typeForKey(opt.name) == null) {
+            errorCollector.error(opt,
+                "Invalid option type '${opt.name}'. Valid option types: ${Options.getAllowedOptionTypes().keySet()}")
             valid = false
-        } else if (prop.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
-            && !prop.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(prop, "Can't mix named and unnamed job property arguments")
+        } else if (opt.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
+            && !opt.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
+            errorCollector.error(opt, "Can't mix named and unnamed option arguments")
             valid = false
         } else {
-            valid = validateElement((ModelASTMethodCall)prop)
+            valid = validateElement((ModelASTMethodCall)opt)
         }
         return valid
     }

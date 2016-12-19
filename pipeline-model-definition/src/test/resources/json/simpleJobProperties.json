@@ -16,7 +16,7 @@
     "isLiteral": true,
     "value": "none"
   },
-  "properties": {"properties": [  {
+  "options": {"options": [  {
     "name": "buildDiscarder",
     "arguments": [    {
       "name": "logRotator",

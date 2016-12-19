@@ -28,16 +28,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import hudson.model.Describable
 
 /**
- * Used to mark model classes that are composed of lists of {@link Describable} classes for proper parsing and translating.
+ * Used to mark model classes that are composed of lists of {@link Describable} classes extending a specific type
+ * for proper parsing and translating.
  *
  * <p>
  * For example:
  * <pre>
- * properties {
- *     buildDiscarder(logRotator(numToKeepStr:'1')
- *     disableConcurrentBuilds()
- * }
- *
  * triggers {
  *     cron('@daily')
  * }

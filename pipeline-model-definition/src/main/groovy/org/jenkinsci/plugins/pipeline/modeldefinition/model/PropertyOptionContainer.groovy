@@ -22,30 +22,29 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent any
-    parameters {
-        booleanParam(defaultValue: true, description: '', name: 'flag')
-        // TODO: Be prepared to change this to "stringParam" once we're on a new enough core.
-        string(defaultValue: '', description: '', name: 'SOME_STRING')
+
+package org.jenkinsci.plugins.pipeline.modeldefinition.model
+
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+import hudson.model.JobProperty
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+
+
+/**
+ * Container for an individual {@link JobProperty} or {@link DeclarativeOption}
+ *
+ * @author Andrew Bayer
+ */
+@ToString
+@EqualsAndHashCode
+class PropertyOptionContainer {
+    public final JobProperty property
+    public final DeclarativeOption option
+
+    public PropertyOptionContainer(JobProperty property, DeclarativeOption option) {
+        this.property = property
+        this.option = option
     }
-    triggers {
-        // TODO: Add a second trigger. Needs to be one with a symbol, and "upstream" has issues due to Result.
-        cron('@daily')
-    }
-    options {
-        buildDiscarder(logRotator(numToKeepStr:'1'))
-        disableConcurrentBuilds()
-        skipDefaultCheckout(true)
-    }
-    stages {
-        stage("foo") {
-            steps {
-                echo "hello"
-                sh "test -f Jenkinsfile"
-            }
-        }
-    }
+
 }
-
-

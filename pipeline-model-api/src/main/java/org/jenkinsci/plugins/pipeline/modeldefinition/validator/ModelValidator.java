@@ -32,8 +32,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperties;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTJobProperty;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
@@ -72,13 +72,13 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTMethodCall methodCall);
 
-    boolean validateElement(ModelASTJobProperties properties);
+    boolean validateElement(ModelASTOptions properties);
 
     boolean validateElement(ModelASTTriggers triggers);
 
     boolean validateElement(ModelASTBuildParameters buildParameters);
 
-    boolean validateElement(ModelASTJobProperty jobProperty);
+    boolean validateElement(ModelASTOption jobProperty);
 
     boolean validateElement(ModelASTTrigger trigger);
 
