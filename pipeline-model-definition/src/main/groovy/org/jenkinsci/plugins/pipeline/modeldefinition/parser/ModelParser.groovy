@@ -437,14 +437,14 @@ class ModelParser implements Parser {
                 return thisOpt
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(thisProp, Messages.ModelParser_ExpectedOption());
+                errorCollector.error(thisOpt, Messages.ModelParser_ExpectedOption());
                 return thisOpt
             }
         };
 
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            errorCollector.error(thisProp, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Options()))
+            errorCollector.error(thisOpt, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Options()))
             return thisOpt
         } else {
             ModelASTMethodCall mArgs = parseMethodCall(mc)

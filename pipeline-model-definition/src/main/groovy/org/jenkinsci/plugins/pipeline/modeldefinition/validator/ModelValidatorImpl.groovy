@@ -335,7 +335,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTOptions opts) {
         if (opts.options.isEmpty()) {
-            errorCollector.error(props, Messages.ModelValidatorImpl_EmptySection("options"))
+            errorCollector.error(opts, Messages.ModelValidatorImpl_EmptySection("options"))
             return false
         }
 
