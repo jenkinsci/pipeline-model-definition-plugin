@@ -103,8 +103,8 @@ class JSONParser {
                 case 'tools':
                     pipelineDef.tools = parseTools(pipelineJson.getJSONArray("tools"))
                     break
-                case 'properties':
-                    pipelineDef.properties = parseJobProperties(pipelineJson.getJSONObject("properties"))
+                case 'options':
+                    pipelineDef.options = parseOptions(pipelineJson.getJSONObject("options"))
                     break
                 case 'triggers':
                     pipelineDef.triggers = parseTriggers(pipelineJson.getJSONObject("triggers"))
@@ -193,18 +193,18 @@ class JSONParser {
         return branch
     }
 
-    public @CheckForNull ModelASTJobProperties parseJobProperties(JSONObject j) {
-        ModelASTJobProperties properties = new ModelASTJobProperties(j)
+    public @CheckForNull ModelASTOptions parseOptions(JSONObject j) {
+        ModelASTOptions options = new ModelASTOptions(j)
 
-        j.getJSONArray("properties").each { p ->
-            ModelASTJobProperty prop = new ModelASTJobProperty(p)
+        j.getJSONArray("options").each { p ->
+            ModelASTOption opt = new ModelASTOption(p)
             ModelASTMethodCall m = parseMethodCall(p)
-            prop.args = m.args
-            prop.name = m.name
-            properties.properties.add(prop)
+            opt.args = m.args
+            opt.name = m.name
+            options.options.add(opt)
         }
 
-        return properties
+        return options
     }
 
     public @CheckForNull ModelASTTriggers parseTriggers(JSONObject j) {

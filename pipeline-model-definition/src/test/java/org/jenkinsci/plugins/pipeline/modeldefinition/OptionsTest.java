@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import hudson.tasks.LogRotator;
 import hudson.triggers.TimerTrigger;
@@ -42,7 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class JobPropertiesTest extends AbstractModelDefTest {
+public class OptionsTest extends AbstractModelDefTest {
     @Test
     public void simpleJobProperties() throws Exception {
         WorkflowRun b = expect("simpleJobProperties")
@@ -64,7 +65,7 @@ public class JobPropertiesTest extends AbstractModelDefTest {
 
     @Test
     public void multipleProperties() throws Exception {
-        WorkflowRun b = expect("multipleProperties")
+        WorkflowRun b = expect(Result.FAILURE, "multipleProperties")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();

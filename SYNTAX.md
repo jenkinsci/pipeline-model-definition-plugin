@@ -280,19 +280,20 @@ parameters {
 }
 ```
 
-### Job Properties
-* *Description*: Other job properties, such as build discarding, limiting concurrent builds, and more.
+### Options
+* *Description*: Other options exclusive to Declarative, such as `skipDefaultCheckout`, and traditional `JobProperty`s, such as 
+build discarding, limiting concurrent builds, and more.
 * *Required*: No
 * *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
 * *Takes a Closure*: Yes
-* *Closure Contents*: A sequence of one or more job property configurations, using `@Symbol` names for constructors.
+* *Closure Contents*: A sequence of one or more Declarative option or job property configurations, using `@Symbol` names for constructors.
     * Note that `[$class: 'Foo', arg1: 'something', ...]` syntax can not be used, only `booleanParam(...)` and the like.
     * Note that the `parameters` and `pipelineTriggers` `@Symbol`s cannot be used here directly.
 * *Examples*:
 
 ```groovy
-properties {
+options {
     buildDiscarder(logRotator(numToKeepStr:'1'))
     disableConcurrentBuilds()
 }
@@ -315,5 +316,5 @@ properties {
     * Literal list: `[exp,exp,...]`
     * Literal map where keys are all constants: `[a:exp, b:exp, ... ]`
     * Method calls where the left hand side is a variable reference or a sequence of property references: `x.y.z(...)`
-    * Method calls (including `@Symbol` constructors like used above in job properties, triggers and build parameters) where there is no left hand side.
+    * Method calls (including `@Symbol` constructors like used above in options, triggers and build parameters) where there is no left hand side.
     * Closure without parameters: `{ ... }`

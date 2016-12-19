@@ -116,11 +116,11 @@
         }
       ]
     },
-    "properties": {
-      "description": "One or more job properties",
+    "options": {
+      "description": "One or more options (including job properties)",
       "type": "object",
       "properties": {
-        "properties": {
+        "options": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/methodCall"
@@ -383,8 +383,8 @@
         "tools": {
           "$ref": "#/definitions/tools"
         },
-        "properties": {
-          "$ref": "#/definitions/properties"
+        "options": {
+          "$ref": "#/definitions/options"
         },
         "triggers": {
           "$ref": "#/definitions/triggers"

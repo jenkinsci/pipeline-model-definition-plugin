@@ -153,8 +153,8 @@ class ModelParser {
                     case 'tools':
                         r.tools = parseTools(stmt)
                         break
-                    case 'properties':
-                        r.properties = parseJobProperties(stmt)
+                    case 'options':
+                        r.options = parseOptions(stmt)
                         break
                     case 'parameters':
                         r.parameters = parseBuildParameters(stmt)
@@ -165,8 +165,11 @@ class ModelParser {
                     case 'wrappers':
                         r.wrappers = parseWrappers(stmt)
                         break
+                    case 'properties':
+                        errorCollector.error(r, "The 'properties' section has been renamed as of version 0.8. Use 'options' instead.")
+                        break
                     case 'jobProperties':
-                        errorCollector.error(r, "The 'jobProperties' section has been renamed as of version 0.7. Use 'properties' instead.")
+                        errorCollector.error(r, "The 'jobProperties' section has been renamed as of version 0.7. Use 'options' instead.")
                         break
                     case 'notifications':
                         errorCollector.error(r, "The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
@@ -405,50 +408,50 @@ class ModelParser {
     }
 
     /**
-     * Parses a block of code into {@link ModelASTJobProperties}
+     * Parses a block of code into {@link ModelASTOptions}
      */
-    public ModelASTJobProperties parseJobProperties(Statement stmt) {
-        def jp = new ModelASTJobProperties(stmt);
+    public ModelASTOptions parseOptions(Statement stmt) {
+        def o = new ModelASTOptions(stmt);
         def m = matchBlockStatement(stmt);
         if (m == null) {
             // Should be able to get this validation later.
-            return jp
+            return o
         } else {
             eachStatement(m.body.code) { s ->
-                jp.properties.add(parseProperty(s));
+                o.options.add(parseOption(s));
             }
         }
-        return jp;
+        return o;
     }
 
     /**
-     * Parses a statement into a {@link ModelASTJobProperty}
+     * Parses a statement into a {@link ModelASTOption}
      */
-    public ModelASTJobProperty parseProperty(Statement st) {
-        ModelASTJobProperty thisProp = new ModelASTJobProperty(st)
+    public ModelASTOption parseOption(Statement st) {
+        ModelASTOption thisOpt = new ModelASTOption(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(thisProp,"Job properties cannot be defined as maps")
-                return thisProp
+                errorCollector.error(thisOpt,"Options cannot be defined as maps")
+                return thisOpt
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(thisProp, "Expected a job property");
-                return thisProp
+                errorCollector.error(thisOpt, "Expected an option");
+                return thisOpt
             }
         };
 
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            errorCollector.error(thisProp,"Job property definitions cannot have blocks")
-            return thisProp
+            errorCollector.error(thisOpt,"Option definitions cannot have blocks")
+            return thisOpt
         } else {
             ModelASTMethodCall mArgs = parseMethodCall(mc)
-            thisProp.args = mArgs.args
-            thisProp.name = mArgs.name
+            thisOpt.args = mArgs.args
+            thisOpt.name = mArgs.name
         }
 
-        return thisProp
+        return thisOpt
     }
 
     /**

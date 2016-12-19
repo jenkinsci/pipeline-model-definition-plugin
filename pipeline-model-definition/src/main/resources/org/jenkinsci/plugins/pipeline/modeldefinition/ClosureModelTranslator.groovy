@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
@@ -134,18 +135,22 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                     if (Utils.assignableFromWrapper(StepsBlock.class, actualType)) {
                         resultValue = createStepsBlock(argValue)
                     }
+                    // If it's Options, use the special translator.
+                    else if (Utils.assignableFromWrapper(Options.class, actualType)) {
+                        def ot = new OptionsTranslator(script)
+                        resolveClosure(argValue, ot)
+                        resultValue = ot.toOptions()
+                    }
                     // if it's a PropertiesToMap, we use PropertiesToMapTranslator to translate it into the right form.
                     else if (Utils.assignableFromWrapper(PropertiesToMap.class, actualType)) {
                         def ptm = new PropertiesToMapTranslator(script, Utils.assignableFromWrapper(Environment.class, actualType))
                         resolveClosure(argValue, ptm)
                         resultValue = ptm.toNestedModel(actualType)
-                    }
-                    else if (Utils.assignableFromWrapper(MethodsToList.class, actualType)) {
+                    } else if (Utils.assignableFromWrapper(MethodsToList.class, actualType)) {
                         def mtl = new MethodsToListTranslator(script, actualType)
                         resolveClosure(argValue, mtl)
                         resultValue = mtl.toListModel(actualType)
-                    }
-                    else if (Utils.assignableFromWrapper(WrappersToMap.class, actualType)) {
+                    } else if (Utils.assignableFromWrapper(WrappersToMap.class, actualType)) {
                         def mtl = new WrappersToMapTranslator(script)
                         resolveClosure(argValue, mtl)
                         resultValue = mtl.toNestedModel(actualType)
