@@ -22,30 +22,28 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent any
-    parameters {
-        booleanParam(defaultValue: true, description: '', name: 'flag')
-        // TODO: Be prepared to change this to "stringParam" once we're on a new enough core.
-        string(defaultValue: '', description: '', name: 'SOME_STRING')
+package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
+
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+public class SkipDefaultCheckout extends DeclarativeOption {
+    boolean skipDefaultCheckout;
+
+    @DataBoundConstructor
+    public SkipDefaultCheckout(boolean skipDefaultCheckout) {
+        this.skipDefaultCheckout = skipDefaultCheckout;
     }
-    triggers {
-        // TODO: Add a second trigger. Needs to be one with a symbol, and "upstream" has issues due to Result.
-        cron('@daily')
+
+    public boolean isSkipDefaultCheckout() {
+        return skipDefaultCheckout;
     }
-    options {
-        buildDiscarder(logRotator(numToKeepStr:'1'))
-        disableConcurrentBuilds()
-        skipDefaultCheckout(true)
-    }
-    stages {
-        stage("foo") {
-            steps {
-                echo "hello"
-                sh "test -f Jenkinsfile"
-            }
-        }
+
+    @Extension @Symbol("skipDefaultCheckout")
+    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+
     }
 }
-
-

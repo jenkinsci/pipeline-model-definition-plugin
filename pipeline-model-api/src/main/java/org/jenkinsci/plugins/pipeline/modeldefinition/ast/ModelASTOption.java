@@ -3,12 +3,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
- * A single job property, corresponding eventually to {@code JobProperty}
+ * A single job property, corresponding eventually to {@code JobProperty} or DeclarativeOption.
  *
  * @author Andrew Bayer
  */
-public class ModelASTJobProperty extends ModelASTMethodCall {
-    public ModelASTJobProperty(Object sourceLocation) {
+public class ModelASTOption extends ModelASTMethodCall {
+    public ModelASTOption(Object sourceLocation) {
         super(sourceLocation);
     }
 
@@ -20,7 +20,7 @@ public class ModelASTJobProperty extends ModelASTMethodCall {
 
     @Override
     public String toString() {
-        return "ModelASTJobProperty{"+super.toString()+"}";
+        return "ModelASTOption{"+super.toString()+"}";
     }
 
     @Override

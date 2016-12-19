@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.slaves.DumbSlave;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
@@ -80,7 +80,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void emptyJobProperties() throws Exception {
         expectError("emptyJobProperties")
-                .logContains(Messages.ModelValidatorImpl_EmptySection("properties"))
+                .logContains(Messages.ModelValidatorImpl_EmptySection("options"))
                 .go();
     }
 
@@ -101,7 +101,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void blockInJobProperties() throws Exception {
         expectError("blockInJobProperties")
-                .logContains(Messages.ModelParser_CannotHaveBlocks(Messages.Parser_JobProperties()))
+                .logContains(Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Options()))
                 .go();
     }
 
@@ -235,8 +235,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void invalidPropertiesType() throws Exception {
         expectError("invalidPropertiesType")
-                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("job property", "banana",
-                        JobProperties.getAllowedPropertyTypes().keySet()))
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "banana",
+                        Options.getAllowedOptionTypes().keySet()))
                 .go();
     }
 

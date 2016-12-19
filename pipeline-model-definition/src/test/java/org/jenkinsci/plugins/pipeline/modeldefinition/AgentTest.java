@@ -132,6 +132,7 @@ public class AgentTest extends AbstractModelDefTest {
         onAllowedOS(PossibleOS.LINUX);
 
         sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
         sampleRepo.git("add", "Dockerfile");
         sampleRepo.git("commit", "--message=Dockerfile");
 
@@ -148,8 +149,8 @@ public class AgentTest extends AbstractModelDefTest {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
-
         sampleRepo.write("Dockerfile.alternate", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
         sampleRepo.git("add", "Dockerfile.alternate");
         sampleRepo.git("commit", "--message=Dockerfile");
 

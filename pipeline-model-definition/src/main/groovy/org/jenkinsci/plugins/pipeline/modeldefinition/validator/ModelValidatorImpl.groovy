@@ -37,7 +37,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.JobProperties
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
@@ -333,9 +333,9 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
-    public boolean validateElement(@Nonnull ModelASTJobProperties props) {
-        if (props.properties.isEmpty()) {
-            errorCollector.error(props, Messages.ModelValidatorImpl_EmptySection("properties"))
+    public boolean validateElement(@Nonnull ModelASTOptions opts) {
+        if (opts.options.isEmpty()) {
+            errorCollector.error(props, Messages.ModelValidatorImpl_EmptySection("options"))
             return false
         }
 
@@ -401,23 +401,23 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
-    public boolean validateElement(@Nonnull ModelASTJobProperty prop) {
+    public boolean validateElement(@Nonnull ModelASTOption opt) {
         boolean valid = true
 
-        if (prop.name == null) {
+        if (opt.name == null) {
             // Validation failed at compilation time so move on.
         }
         // We can't do property validation without a Jenkins instance, so move on.
-        else if (JobProperties.typeForKey(prop.name) == null) {
-            errorCollector.error(prop,
-                Messages.ModelValidatorImpl_InvalidSectionType("job property", prop.name, JobProperties.getAllowedPropertyTypes().keySet()))
+        else if (Options.typeForKey(opt.name) == null) {
+            errorCollector.error(opt,
+                Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name, Options.getAllowedOptionTypes().keySet()))
             valid = false
-        } else if (prop.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
-            && !prop.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(prop, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
+        } else if (opt.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
+            && !opt.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
+            errorCollector.error(opt, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         } else {
-            valid = validateElement((ModelASTMethodCall)prop)
+            valid = validateElement((ModelASTMethodCall)opt)
         }
         return valid
     }

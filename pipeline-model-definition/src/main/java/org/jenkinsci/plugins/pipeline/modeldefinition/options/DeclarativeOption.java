@@ -22,30 +22,18 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent any
-    parameters {
-        booleanParam(defaultValue: true, description: '', name: 'flag')
-        // TODO: Be prepared to change this to "stringParam" once we're on a new enough core.
-        string(defaultValue: '', description: '', name: 'SOME_STRING')
-    }
-    triggers {
-        // TODO: Add a second trigger. Needs to be one with a symbol, and "upstream" has issues due to Result.
-        cron('@daily')
-    }
-    options {
-        buildDiscarder(logRotator(numToKeepStr:'1'))
-        disableConcurrentBuilds()
-        skipDefaultCheckout(true)
-    }
-    stages {
-        stage("foo") {
-            steps {
-                echo "hello"
-                sh "test -f Jenkinsfile"
-            }
-        }
+package org.jenkinsci.plugins.pipeline.modeldefinition.options;
+
+import hudson.ExtensionPoint;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.JobProperty;
+
+import java.io.Serializable;
+
+public abstract class DeclarativeOption extends AbstractDescribableImpl<DeclarativeOption> implements Serializable, ExtensionPoint {
+
+    @Override
+    public DeclarativeOptionDescriptor getDescriptor() {
+        return (DeclarativeOptionDescriptor) super.getDescriptor();
     }
 }
-
-

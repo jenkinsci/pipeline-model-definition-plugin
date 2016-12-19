@@ -154,8 +154,8 @@ class ModelParser implements Parser {
                     case 'tools':
                         r.tools = parseTools(stmt)
                         break
-                    case 'properties':
-                        r.properties = parseJobProperties(stmt)
+                    case 'options':
+                        r.options = parseOptions(stmt)
                         break
                     case 'parameters':
                         r.parameters = parseBuildParameters(stmt)
@@ -165,6 +165,9 @@ class ModelParser implements Parser {
                         break
                     case 'wrappers':
                         r.wrappers = parseWrappers(stmt)
+                        break
+                    case 'properties':
+                        errorCollector.error(r, Messages.ModelParser_RenamedProperties())
                         break
                     case 'jobProperties':
                         errorCollector.error(r, Messages.ModelParser_RenamedJobProperties())
@@ -406,50 +409,50 @@ class ModelParser implements Parser {
     }
 
     /**
-     * Parses a block of code into {@link ModelASTJobProperties}
+     * Parses a block of code into {@link ModelASTOptions}
      */
-    public ModelASTJobProperties parseJobProperties(Statement stmt) {
-        def jp = new ModelASTJobProperties(stmt);
+    public ModelASTOptions parseOptions(Statement stmt) {
+        def o = new ModelASTOptions(stmt);
         def m = matchBlockStatement(stmt);
         if (m == null) {
             // Should be able to get this validation later.
-            return jp
+            return o
         } else {
             eachStatement(m.body.code) { s ->
-                jp.properties.add(parseProperty(s));
+                o.options.add(parseOption(s));
             }
         }
-        return jp;
+        return o;
     }
 
     /**
-     * Parses a statement into a {@link ModelASTJobProperty}
+     * Parses a statement into a {@link ModelASTOption}
      */
-    public ModelASTJobProperty parseProperty(Statement st) {
-        ModelASTJobProperty thisProp = new ModelASTJobProperty(st)
+    public ModelASTOption parseOption(Statement st) {
+        ModelASTOption thisOpt = new ModelASTOption(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(thisProp, Messages.ModelParser_MapNotAllowed(Messages.Parser_JobProperties()))
-                return thisProp
+                errorCollector.error(thisProp, Messages.ModelParser_MapNotAllowed(Messages.Parser_Options()))
+                return thisOpt
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(thisProp, Messages.ModelParser_ExpectedJobProperty());
-                return thisProp
+                errorCollector.error(thisProp, Messages.ModelParser_ExpectedOption());
+                return thisOpt
             }
         };
 
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            errorCollector.error(thisProp, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_JobProperties()))
-            return thisProp
+            errorCollector.error(thisProp, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Options()))
+            return thisOpt
         } else {
             ModelASTMethodCall mArgs = parseMethodCall(mc)
-            thisProp.args = mArgs.args
-            thisProp.name = mArgs.name
+            thisOpt.args = mArgs.args
+            thisOpt.name = mArgs.name
         }
 
-        return thisProp
+        return thisOpt
     }
 
     /**
