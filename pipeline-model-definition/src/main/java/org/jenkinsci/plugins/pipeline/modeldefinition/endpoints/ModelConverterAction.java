@@ -82,21 +82,25 @@ public class ModelConverterAction implements RootAction {
 
         JSONObject result = new JSONObject();
 
-        try {
-            String jsonAsString = req.getParameter("json");
+        String jsonAsString = req.getParameter("json");
 
-            JSONObject json = JSONObject.fromObject(jsonAsString);
+        if (!StringUtils.isEmpty(jsonAsString)) {
+            try {
+                JSONObject json = JSONObject.fromObject(jsonAsString);
 
-            JSONParser parser = new JSONParser(json);
+                JSONParser parser = new JSONParser(json);
 
-            ModelASTPipelineDef pipelineDef = parser.parse();
+                ModelASTPipelineDef pipelineDef = parser.parse();
 
-            if (!collectErrors(result, parser.getErrorCollector())) {
-                result.accumulate("result", "success");
-                result.accumulate("jenkinsfile", pipelineDef.toPrettyGroovy());
+                if (!collectErrors(result, parser.getErrorCollector())) {
+                    result.accumulate("result", "success");
+                    result.accumulate("jenkinsfile", pipelineDef.toPrettyGroovy());
+                }
+            } catch (Exception je) {
+                reportFailure(result, je);
             }
-        } catch (Exception je) {
-            reportFailure(result, je);
+        } else {
+            reportFailure(result, "No content found for 'json' parameter");
         }
 
         return HttpResponses.okJSON(result);
@@ -111,12 +115,20 @@ public class ModelConverterAction implements RootAction {
 
         String groovyAsString = req.getParameter("jenkinsfile");
 
-        try {
-            ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
-            result.accumulate("result", "success");
-            result.accumulate("json", pipelineDef.toJSON());
-        } catch (Exception e) {
-            reportFailure(result, e);
+        if (!StringUtils.isEmpty(groovyAsString)) {
+            try {
+                ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
+                if (pipelineDef != null) {
+                    result.accumulate("result", "success");
+                    result.accumulate("json", pipelineDef.toJSON());
+                } else {
+                    reportFailure(result, "Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step");
+                }
+            } catch (Exception e) {
+                reportFailure(result, e);
+            }
+        } else {
+            reportFailure(result, "No content found for 'jenkinsfile' parameter");
         }
 
         return HttpResponses.okJSON(result);
@@ -131,16 +143,20 @@ public class ModelConverterAction implements RootAction {
 
         String groovyAsString = req.getParameter("jenkinsfile");
 
-        try {
-            List<ModelASTStep> steps = Converter.scriptToPlainSteps(groovyAsString);
-            JSONArray array = new JSONArray();
-            for (ModelASTStep step : steps) {
-                array.add(step.toJSON());
+        if (!StringUtils.isEmpty(groovyAsString)) {
+            try {
+                List<ModelASTStep> steps = Converter.scriptToPlainSteps(groovyAsString);
+                JSONArray array = new JSONArray();
+                for (ModelASTStep step : steps) {
+                    array.add(step.toJSON());
+                }
+                result.accumulate("result", "success");
+                result.accumulate("json", array);
+            } catch (Exception e) {
+                reportFailure(result, e);
             }
-            result.accumulate("result", "success");
-            result.accumulate("json", array);
-        } catch (Exception e) {
-            reportFailure(result, e);
+        } else {
+            reportFailure(result, "No content found for 'jenkinsfile' parameter");
         }
 
         return HttpResponses.okJSON(result);
@@ -152,47 +168,52 @@ public class ModelConverterAction implements RootAction {
         Jenkins.getInstance().checkPermission(READ);
 
         JSONObject result = new JSONObject();
-        try {
-            String jsonAsString = req.getParameter("json");
-            JSON json = JSONSerializer.toJSON(jsonAsString);
 
-            JSONArray jsonSteps;
-            if (json.isArray()) {
-                jsonSteps = (JSONArray)json;
-            } else {
-                jsonSteps = new JSONArray();
-                jsonSteps.add(json);
-            }
-            JSONParser parser = new JSONParser(null);
-            List<ModelASTStep> astSteps = new ArrayList<>(jsonSteps.size());
-            for (Object jsonStep : jsonSteps) {
-                if (!(jsonStep instanceof JSONObject)) {
-                    continue;
+        String jsonAsString = req.getParameter("json");
+        if (!StringUtils.isEmpty(jsonAsString)) {
+            try {
+                JSON json = JSONSerializer.toJSON(jsonAsString);
+
+                JSONArray jsonSteps;
+                if (json.isArray()) {
+                    jsonSteps = (JSONArray) json;
+                } else {
+                    jsonSteps = new JSONArray();
+                    jsonSteps.add(json);
                 }
-                ModelASTStep astStep = parser.parseStep((JSONObject)jsonStep);
-                if (astStep != null) {
-                    astStep.validate(parser.getValidator());
-                    astSteps.add(astStep);
-                }
-            }
-
-            boolean collectedSomeErrors = collectErrors(result, parser.getErrorCollector());
-
-            if (!collectedSomeErrors && astSteps.isEmpty()) {
-                reportFailure(result, "No result.");
-            } else if (!collectedSomeErrors){
-                result.accumulate("result", "success");
-                StringBuilder jenkinsFile = new StringBuilder();
-                for (ModelASTStep step : astSteps) {
-                    if (jenkinsFile.length() > 0) {
-                        jenkinsFile.append('\n');
+                JSONParser parser = new JSONParser(null);
+                List<ModelASTStep> astSteps = new ArrayList<>(jsonSteps.size());
+                for (Object jsonStep : jsonSteps) {
+                    if (!(jsonStep instanceof JSONObject)) {
+                        continue;
                     }
-                    jenkinsFile.append(step.toGroovy());
+                    ModelASTStep astStep = parser.parseStep((JSONObject) jsonStep);
+                    if (astStep != null) {
+                        astStep.validate(parser.getValidator());
+                        astSteps.add(astStep);
+                    }
                 }
-                result.accumulate("jenkinsfile", jenkinsFile.toString());
+
+                boolean collectedSomeErrors = collectErrors(result, parser.getErrorCollector());
+
+                if (!collectedSomeErrors && astSteps.isEmpty()) {
+                    reportFailure(result, "No result.");
+                } else if (!collectedSomeErrors) {
+                    result.accumulate("result", "success");
+                    StringBuilder jenkinsFile = new StringBuilder();
+                    for (ModelASTStep step : astSteps) {
+                        if (jenkinsFile.length() > 0) {
+                            jenkinsFile.append('\n');
+                        }
+                        jenkinsFile.append(step.toGroovy());
+                    }
+                    result.accumulate("jenkinsfile", jenkinsFile.toString());
+                }
+            } catch (Exception je) {
+                reportFailure(result, je);
             }
-        } catch (Exception je) {
-            reportFailure(result, je);
+        } else {
+            reportFailure(result, "No content found for 'json' parameter");
         }
 
         return HttpResponses.okJSON(result);
@@ -207,11 +228,20 @@ public class ModelConverterAction implements RootAction {
 
         String groovyAsString = req.getParameter("jenkinsfile");
 
-        try {
-            ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
-            result.accumulate("result", "success");
-        } catch (Exception e) {
-            reportFailure(result, e);
+        if (!StringUtils.isEmpty(groovyAsString)) {
+            try {
+                ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(groovyAsString);
+                if (pipelineDef != null) {
+                    result.accumulate("result", "success");
+                } else {
+                    reportFailure(result, "Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step");
+                }
+
+            } catch (Exception e) {
+                reportFailure(result, e);
+            }
+        } else {
+            reportFailure(result, "No content found for 'jenkinsfile' parameter");
         }
 
         return HttpResponses.okJSON(result);
@@ -224,20 +254,24 @@ public class ModelConverterAction implements RootAction {
 
         JSONObject result = new JSONObject();
 
-        try {
-            String jsonAsString = req.getParameter("json");
+        String jsonAsString = req.getParameter("json");
+        if (!StringUtils.isEmpty(jsonAsString)) {
+            try {
 
-            JSONObject json = JSONObject.fromObject(jsonAsString);
+                JSONObject json = JSONObject.fromObject(jsonAsString);
 
-            JSONParser parser = new JSONParser(json);
+                JSONParser parser = new JSONParser(json);
 
-            parser.parse();
+                parser.parse();
 
-            if (!collectErrors(result, parser.getErrorCollector())) {
-                result.accumulate("result", "success");
+                if (!collectErrors(result, parser.getErrorCollector())) {
+                    result.accumulate("result", "success");
+                }
+            } catch (Exception je) {
+                reportFailure(result, je);
             }
-        } catch (Exception je) {
-            reportFailure(result, je);
+        } else {
+            reportFailure(result, "No content found for 'json' parameter");
         }
 
         return HttpResponses.okJSON(result);
@@ -255,8 +289,11 @@ public class ModelConverterAction implements RootAction {
 
         if (groovyAsString != null) {
             try {
-                Converter.scriptToPipelineDef(groovyAsString);
-                output.add("Jenkinsfile successfully validated.");
+                if (Converter.scriptToPipelineDef(groovyAsString) != null) {
+                    output.add("Jenkinsfile successfully validated.");
+                } else {
+                   output.add("Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step");
+                }
             } catch (Exception e) {
                 output.add("Errors encountered validating Jenkinsfile:");
                 output.addAll(ModelConverterAction.errorToStrings(e));
