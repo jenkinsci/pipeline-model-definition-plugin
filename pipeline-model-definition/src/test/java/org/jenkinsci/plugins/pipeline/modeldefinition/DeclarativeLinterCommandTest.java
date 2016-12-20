@@ -78,7 +78,7 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
         assertThat(result, failedWith(1));
         assertThat(result, hasNoErrorOutput());
         assertThat(result.stdout(), containsString("Errors encountered validating Jenkinsfile:"));
-        assertThat(result.stdout(), containsString("Not a valid section definition: 'agent'. Some extra configuration is required"));
+        assertThat(result.stdout(), containsString("Not a valid section definition: \"agent\". Some extra configuration is required"));
     }
 
     @Test
