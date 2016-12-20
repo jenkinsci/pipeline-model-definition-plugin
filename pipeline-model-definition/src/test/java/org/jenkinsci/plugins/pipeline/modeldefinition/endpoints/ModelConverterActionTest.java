@@ -29,6 +29,7 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.junit.Test;
@@ -42,6 +43,69 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class ModelConverterActionTest extends AbstractModelDefTest {
+
+    @Test
+    public void toJsonEmptyParam() throws Exception {
+        getExpectedErrorNoParam("jenkinsfile", "toJson");
+    }
+
+    @Test
+    public void validateJsonEmptyParam() throws Exception {
+        getExpectedErrorNoParam("json", "validateJson");
+    }
+
+    @Test
+    public void toJenkinsfileEmptyParam() throws Exception {
+        getExpectedErrorNoParam("json", "toJenkinsfile");
+    }
+
+    @Test
+    public void validateJenkinsfileEmptyParam() throws Exception {
+        getExpectedErrorNoParam("jenkinsfile", "validateJenkinsfile");
+    }
+
+    private void getExpectedErrorNoParam(String param, String endpoint) throws Exception {
+        JenkinsRule.WebClient wc = j.createWebClient();
+        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/" + endpoint), HttpMethod.POST);
+        String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+        assertNotNull(rawResult);
+
+        JSONObject result = JSONObject.fromObject(rawResult);
+        // TODO: Change this when we get proper JSON errors causing HTTP error codes
+        assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
+        JSONObject resultData = result.getJSONObject("data");
+        assertNotNull(resultData);
+        assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
+
+        String expectedError = "No content found for '" + param + "' parameter";
+        assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
+                foundExpectedError(expectedError, resultData.getJSONArray("errors")));
+
+    }
+
+    @Test
+    public void errorOnNoPipeline() throws Exception {
+        JenkinsRule.WebClient wc = j.createWebClient();
+        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
+        String groovyAsString = "echo 'nothing to see here'";
+        NameValuePair pair = new NameValuePair("jenkinsfile", groovyAsString);
+        req.setRequestParameters(Collections.singletonList(pair));
+
+        String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+        assertNotNull(rawResult);
+
+        JSONObject result = JSONObject.fromObject(rawResult);
+        // TODO: Change this when we get proper JSON errors causing HTTP error codes
+        assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
+        JSONObject resultData = result.getJSONObject("data");
+        assertNotNull(resultData);
+        assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
+
+        String expectedError = "Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step";
+        assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
+                foundExpectedError(expectedError, resultData.getJSONArray("errors")));
+
+    }
 
     @Test
     public void testFailedValidateJsonInvalidBuildCondition() throws Exception {
@@ -64,7 +128,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertNotNull(resultData);
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
 
-        String expectedError = "Invalid condition 'banana' - valid conditions are " + BuildCondition.getOrderedConditionNames();
+        String expectedError = Messages.ModelValidatorImpl_InvalidBuildCondition("banana", BuildCondition.getOrderedConditionNames());
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedError(expectedError, resultData.getJSONArray("errors")));
     }
@@ -116,7 +180,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertNotNull(resultData);
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
 
-        String expectedError = "Invalid tool type 'banana'. Valid tool types: " + Tools.getAllowedToolTypes().keySet();
+        String expectedError = Messages.ModelValidatorImpl_InvalidSectionType("tool", "banana", Tools.getAllowedToolTypes().keySet());
 
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedError(expectedError, resultData.getJSONArray("errors")));
