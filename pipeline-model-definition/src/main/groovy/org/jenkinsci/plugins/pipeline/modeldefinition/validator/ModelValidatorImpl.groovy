@@ -33,6 +33,7 @@ import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
@@ -41,6 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
@@ -164,12 +166,22 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     public boolean validateElement(ModelASTWhen when) {
-        //TODO can we evaluate if the closure will return something that can be tries for true?
-        if (when.toGroovy() =~ /\Awhen\s[{\s}]*\z/) {
-            errorCollector.error(when, "Empty when closure, remove the property or add some content.")
+        if (when.conditions.isEmpty()) {
+            errorCollector.error(when, Messages.ModelValidator_ModelASTWhen_empty())
             return false
+        } else {
+            def allNames = DeclarativeStageConditionalDescriptor.allNames()
+            boolean isUnknownName = false
+            when.conditions.each {step ->
+                if (!(step.name in allNames)) {
+                    errorCollector.error(when, Messages.ModelValidator_ModelASTWhen_unknown(step.name, allNames.join(", ")))
+                    isUnknownName = true
+                } else {
+                    step.args
+                }
+            }
+            return !isUnknownName
         }
-        return true
     }
 
 

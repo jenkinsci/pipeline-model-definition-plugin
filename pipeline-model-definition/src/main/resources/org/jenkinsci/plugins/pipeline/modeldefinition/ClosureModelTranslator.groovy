@@ -33,6 +33,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.WrappersToMap
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -136,6 +137,12 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                         def ot = new OptionsTranslator(script)
                         resolveClosure(argValue, ot)
                         resultValue = ot.toOptions()
+                    }
+                    //StageConditionals needs some special lookups
+                    else if (Utils.assignableFromWrapper(StageConditionals.class, actualType)) {
+                        def st = new StageConditionalTranslator()
+                        resolveClosure(argValue, st)
+                        resultValue = st.toWhen()
                     }
                     // if it's a PropertiesToMap, we use PropertiesToMapTranslator to translate it into the right form.
                     else if (Utils.assignableFromWrapper(PropertiesToMap.class, actualType)) {

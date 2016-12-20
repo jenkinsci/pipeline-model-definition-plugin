@@ -25,54 +25,29 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
- * If {@link ModelASTStage} will be executed or not.
+ * Code expression {@link ModelASTStage} will be executed or not.
  */
-public class ModelASTWhen extends ModelASTElement {
-
-    private List<ModelASTStep> conditions = new ArrayList<>();
-
-    ModelASTWhen(Object sourceLocation) {
-        super(sourceLocation);
-    }
-
-    public List<ModelASTStep> getConditions() {
-        return conditions;
-    }
-
-    public void setConditions(List<ModelASTStep> conditions) {
-        this.conditions = conditions;
+public class ModelASTWhenExpression extends AbstractModelASTCodeBlock {
+    public ModelASTWhenExpression(Object sourceLocation) {
+        super(sourceLocation, "expression");
     }
 
     @Override
-    public Object toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTStep step: conditions) {
-            a.add(step.toJSON());
+    public JSONObject toJSON() {
+        JSONObject o = new JSONObject();
+        if (getArgs() != null) {
+            o.accumulate("arguments", getArgs().toJSON());
         }
-        return new JSONObject().accumulate("conditions", a);
+        return o;
     }
 
     @Override
-    public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        for (ModelASTStep step: conditions) {
-            result.append(step.toGroovy()).append("\n");
-        }
-        return result.toString();
-    }
-
-    @Override
-    public void removeSourceLocation() {
-        super.removeSourceLocation();
-        for (ModelASTStep step: conditions) {
-            step.removeSourceLocation();
-        }
+    public void validate(ModelValidator validator) {
+        super.validate(validator);
+        validator.validateElement(this);
     }
 }

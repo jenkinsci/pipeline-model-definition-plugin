@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Represents the special step which are executed without validation against the declarative subset.
  * @see ModelASTScriptBlock
- * @see ModelASTWhen
+ * @see ModelASTWhenExpression
  */
 public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
 

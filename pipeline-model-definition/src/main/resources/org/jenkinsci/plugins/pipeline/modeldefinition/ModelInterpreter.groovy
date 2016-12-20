@@ -92,7 +92,7 @@ public class ModelInterpreter implements Serializable {
                                             script.stage(thisStage.name) {
                                                 if (firstError == null) {
                                                     withEnvBlock(thisStage.getEnvVars()) {
-                                                        if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) {
+                                                        if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) { //TODO get a hold of the current context and call when.evaluate
                                                             inDeclarativeAgent(thisStage.agent) {
                                                                 withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
