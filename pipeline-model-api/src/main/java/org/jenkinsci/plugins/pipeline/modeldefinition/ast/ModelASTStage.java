@@ -112,7 +112,7 @@ public final class ModelASTStage extends ModelASTElement {
                     result.append(',');
                 }
                 result.append('\n');
-                result.append(branch.getName()).append(": {\n").append(branch.toGroovy()).append("\n}");
+                result.append('"' + branch.getName() + '"').append(": {\n").append(branch.toGroovy()).append("\n}");
             }
             if (failFast != null && failFast) {
                 result.append(",\nfailFast: true");

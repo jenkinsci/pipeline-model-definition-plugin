@@ -161,6 +161,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void parallelPipelineWithSpaceInBranch() throws Exception {
+        expect("parallelPipelineWithSpaceInBranch")
+                .logContains("[Pipeline] { (foo)", "[first one] { (Branch: first one)", "[second one] { (Branch: second one)")
+                .go();
+    }
+
+    @Test
     public void parallelPipelineWithFailFast() throws Exception {
         expect("parallelPipelineWithFailFast")
                 .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
