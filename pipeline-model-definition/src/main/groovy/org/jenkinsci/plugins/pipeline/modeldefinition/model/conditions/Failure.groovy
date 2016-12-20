@@ -41,5 +41,10 @@ public class Failure extends BuildCondition {
         return r.getResult() != null && r.getResult().equals(Result.FAILURE)
     }
 
+    @Override
+    public String getDescription() {
+        return Messages.Failure_Description()
+    }
+
     public static final long serialVersionUID = 1L
 }
