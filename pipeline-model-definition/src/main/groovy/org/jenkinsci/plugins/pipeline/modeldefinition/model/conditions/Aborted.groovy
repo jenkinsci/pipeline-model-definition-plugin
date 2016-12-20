@@ -41,5 +41,10 @@ public class Aborted extends BuildCondition {
         return r.getResult() != null && r.getResult().equals(Result.ABORTED)
     }
 
+    @Override
+    public String getDescription() {
+        return Messages.Aborted_Description()
+    }
+
     public static final long serialVersionUID = 1L
 }

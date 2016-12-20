@@ -41,5 +41,10 @@ public class Success extends BuildCondition {
         return r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS)
     }
 
+    @Override
+    public String getDescription() {
+        return Messages.Success_Description()
+    }
+
     public static final long serialVersionUID = 1L
 }

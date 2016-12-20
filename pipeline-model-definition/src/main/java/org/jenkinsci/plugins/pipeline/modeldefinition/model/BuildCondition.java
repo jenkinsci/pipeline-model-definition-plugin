@@ -46,6 +46,8 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
 
     public abstract boolean meetsCondition(WorkflowRun r);
 
+    public abstract String getDescription();
+
     /**
      * All the registered {@link BuildCondition}s.
      *

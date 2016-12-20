@@ -41,5 +41,10 @@ public class Unstable extends BuildCondition {
         return r.getResult() != null && r.getResult().equals(Result.UNSTABLE)
     }
 
+    @Override
+    public String getDescription() {
+        return Messages.Unstable_Description()
+    }
+
     public static final long serialVersionUID = 1L
 }

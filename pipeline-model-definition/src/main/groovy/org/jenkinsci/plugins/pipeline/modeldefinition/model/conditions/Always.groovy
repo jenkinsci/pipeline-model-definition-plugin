@@ -40,6 +40,11 @@ public class Always extends BuildCondition {
         return true
     }
 
+    @Override
+    public String getDescription() {
+        return Messages.Always_Description()
+    }
+
     public static final long serialVersionUID = 1L
 
 }
