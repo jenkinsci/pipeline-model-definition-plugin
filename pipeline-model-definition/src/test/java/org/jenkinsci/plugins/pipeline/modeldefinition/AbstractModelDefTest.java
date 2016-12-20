@@ -168,7 +168,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
 
         result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]")});
-        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("wrapper", "echo", "[buildDiscarder, catchError, disableConcurrentBuilds, overrideIndexTriggers, retry, script, skipDefaultCheckout, timeout, waitUntil, withContext, withEnv, ws]")});
+        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", "[buildDiscarder, catchError, disableConcurrentBuilds, overrideIndexTriggers, retry, script, skipDefaultCheckout, timeout, waitUntil, withContext, withEnv, ws]")});
 
         result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgent("foo", "[any, none]")});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MissingAgentParameter("otherField", "label")});
