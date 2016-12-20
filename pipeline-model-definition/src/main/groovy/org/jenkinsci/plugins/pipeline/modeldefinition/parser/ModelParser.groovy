@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
@@ -59,7 +60,7 @@ import javax.annotation.Nonnull
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class ModelParser {
+class ModelParser implements Parser {
     /**
      * Represents the source file being processed.
      */
@@ -90,7 +91,7 @@ class ModelParser {
         if (b != null) {
             if (b.methodName == ModelStepLoader.STEP_NAME) {
                 ModelASTPipelineDef p = new ModelASTPipelineDef(statement)
-                errorCollector.error(p, "pipeline block must be at the top-level, not within another block.")
+                errorCollector.error(p, Messages.ModelParser_PipelineBlockNotAtTop(ModelStepLoader.STEP_NAME))
             }
             eachStatement(b.body.code) { s ->
                 checkForNestedPipelineStep(s)
@@ -120,7 +121,7 @@ class ModelParser {
         def pipelineBlock = matchBlockStatement(pst);
         if (pipelineBlock==null) {
             // We never get to the validator with this error
-            errorCollector.error(r,"Expected a block with the '${ModelStepLoader.STEP_NAME}' step")
+            errorCollector.error(r, Messages.ModelParser_PipelineStepWithoutBlock(ModelStepLoader.STEP_NAME))
             return null;
         }
 
@@ -128,13 +129,13 @@ class ModelParser {
         eachStatement(pipelineBlock.body.code) { stmt ->
             def mc = matchMethodCall(stmt);
             if (mc == null) {
-                errorCollector.error(r, "Not a valid section definition: '${getSourceText(stmt)}'. Some extra configuration is required.")
+                errorCollector.error(r, Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
             } else {
                 def name = parseMethodName(mc);
                 // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
                 if (!sectionsSeen.add(name)) {
                     // Also an error that we couldn't actually detect at model evaluation time.
-                    errorCollector.error(r, "Multiple occurrences of the $name section")
+                    errorCollector.error(r, Messages.Parser_MultipleOfSection(name))
                 }
 
                 switch (name) {
@@ -166,20 +167,20 @@ class ModelParser {
                         r.wrappers = parseWrappers(stmt)
                         break
                     case 'properties':
-                        errorCollector.error(r, "The 'properties' section has been renamed as of version 0.8. Use 'options' instead.")
+                        errorCollector.error(r, Messages.ModelParser_RenamedProperties())
                         break
                     case 'jobProperties':
-                        errorCollector.error(r, "The 'jobProperties' section has been renamed as of version 0.7. Use 'options' instead.")
+                        errorCollector.error(r, Messages.ModelParser_RenamedJobProperties())
                         break
                     case 'notifications':
-                        errorCollector.error(r, "The 'notifications' section has been removed as of version 0.6. Use 'post' for all post-build actions.")
+                        errorCollector.error(r, Messages.ModelParser_RenamedNotifications())
                         break
                     case 'postBuild':
-                        errorCollector.error(r, "The 'postBuild' section has been renamed as of version 0.6. Use 'post' for all post-build actions.")
+                        errorCollector.error(r, Messages.ModelParser_RenamedPostBuild())
                         break
                     default:
                         // We need to check for unknowns here.
-                        errorCollector.error(r, "Undefined section '$name'")
+                        errorCollector.error(r, Messages.Parser_UndefinedSection(name))
                 }
             }
         }
@@ -222,7 +223,7 @@ class ModelParser {
                             ModelASTKey key = parseKey(exp.leftExpression)
                             // Necessary check due to keys with identical names being equal.
                             if (r.variables.containsKey(key)) {
-                                errorCollector.error(key, "Duplicate environment variable name: '${key.key}'")
+                                errorCollector.error(key, Messages.ModelParser_DuplicateEnvVar(key.key))
                                 return
                             } else {
                                 r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression)
@@ -234,7 +235,7 @@ class ModelParser {
                 errorEncountered = true
             }
             if (errorEncountered) {
-                errorCollector.error(r, "Expected name=value pairs")
+                errorCollector.error(r, Messages.ModelParser_ExpectedNVPairs())
             }
         }
         return r;
@@ -252,16 +253,16 @@ class ModelParser {
                 def mc = matchMethodCall(s);
                 if (mc == null) {
                     // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                    errorCollector.error(r,"Expected to find 'someTool \"someVersion\"'");
+                    errorCollector.error(r,Messages.ModelParser_ExpectedTool());
                 }
 
                 def toolTypeKey = parseKey(mc.method);
 
                 List<Expression> args = ((TupleExpression) mc.arguments).expressions
                 if (args.isEmpty()) {
-                    errorCollector.error(toolTypeKey, "No argument for tool '${toolTypeKey.key}'")
+                    errorCollector.error(toolTypeKey, Messages.ModelParser_NoArgForTool(toolTypeKey.key))
                 } else if (args.size() > 1) {
-                    errorCollector.error(toolTypeKey, "Too many arguments for tool '${toolTypeKey.key}'")
+                    errorCollector.error(toolTypeKey, Messages.ModelParser_TooManyArgsForTool(toolTypeKey.key))
                 } else {
                     r.tools[toolTypeKey] = parseArgument(args[0])
                 }
@@ -275,33 +276,33 @@ class ModelParser {
         def m = matchBlockStatement(stmt);
         if (!m?.methodName?.equals("stage")) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(stage,"Expected a stage");
+            errorCollector.error(stage, Messages.ModelParser_ExpectedStage());
             return stage
         }
 
         def nameExp = m.getArgument(0);
         if (nameExp==null) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(stage,"Expected a stage name but didn't find any");
+            errorCollector.error(stage, Messages.ModelParser_ExpectedStageName());
         }
 
         stage.name = parseStringLiteral(nameExp)
         def sectionsSeen = new HashSet()
         def bodyExp = m.getArgument(1)
         if (bodyExp == null || !(bodyExp instanceof ClosureExpression)) {
-            errorCollector.error(stage, "Stage doesn't have a block")
+            errorCollector.error(stage, Messages.ModelParser_StageWithoutBlock())
         } else {
             eachStatement(((ClosureExpression)bodyExp).code) { s ->
                 def mc = matchMethodCall(s);
                 if (mc == null) {
-                    errorCollector.error(stage, "Not a valid stage section definition: '${getSourceText(s)}'. Some extra configuration is required.")
+                    errorCollector.error(stage, Messages.ModelParser_InvalidStageSectionDefinition(getSourceText(s)))
                 } else {
                     def name = parseMethodName(mc);
 
                     // Here, method name is a "section" name in the "stage" closure, which must be unique.
                     if (!sectionsSeen.add(name)) {
                         // Also an error that we couldn't actually detect at model evaluation time.
-                        errorCollector.error(stage, "Multiple occurrences of the $name section")
+                        errorCollector.error(stage, Messages.Parser_MultipleOfSection(name))
                     }
                     switch (name) {
                         case 'agent':
@@ -342,7 +343,7 @@ class ModelParser {
                             stage.environment = parseEnvironment(s)
                             break
                         default:
-                            errorCollector.error(stage, "Unknown stage section '${name}'. Starting with version 0.5, steps in a stage must be in a 'steps' block.")
+                            errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
                     }
                 }
             }
@@ -385,18 +386,18 @@ class ModelParser {
         def mc = matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(thisWrapper,"Wrappers cannot be defined as maps")
+                errorCollector.error(thisWrapper, Messages.ModelParser_MapNotAllowed(Messages.Parser_Wrappers()))
                 return thisWrapper
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(thisWrapper, "Expected a wrapper");
+                errorCollector.error(thisWrapper, Messages.ModelParser_ExpectedWrapper());
                 return thisWrapper
             }
         };
 
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            errorCollector.error(thisWrapper,"Wrapper definitions cannot have blocks")
+            errorCollector.error(thisWrapper, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Wrappers()))
             return thisWrapper
         } else {
             ModelASTMethodCall mArgs = parseMethodCall(mc)
@@ -432,18 +433,18 @@ class ModelParser {
         def mc = matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(thisOpt,"Options cannot be defined as maps")
+                errorCollector.error(thisProp, Messages.ModelParser_MapNotAllowed(Messages.Parser_Options()))
                 return thisOpt
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(thisOpt, "Expected an option");
+                errorCollector.error(thisOpt, Messages.ModelParser_ExpectedOption());
                 return thisOpt
             }
         };
 
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            errorCollector.error(thisOpt,"Option definitions cannot have blocks")
+            errorCollector.error(thisOpt, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Options()))
             return thisOpt
         } else {
             ModelASTMethodCall mArgs = parseMethodCall(mc)
@@ -479,18 +480,18 @@ class ModelParser {
         def mc = matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(trig,"Triggers cannot be defined as maps")
+                errorCollector.error(trig, Messages.ModelParser_MapNotAllowed(Messages.Parser_Triggers()))
                 return trig
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(trig, "Expected a trigger");
+                errorCollector.error(trig, Messages.ModelParser_ExpectedTrigger());
                 return trig
             }
         };
 
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            errorCollector.error(trig,"Trigger definitions cannot have blocks")
+            errorCollector.error(trig, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Triggers()))
             return trig
         } else {
             ModelASTMethodCall mArgs = parseMethodCall(mc)
@@ -526,18 +527,18 @@ class ModelParser {
         def mc = matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(param,"Build parameters cannot be defined as maps")
+                errorCollector.error(param, Messages.ModelParser_MapNotAllowed(Messages.Parser_BuildParameters()))
                 return param
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(param, "Expected a build parameter definition");
+                 errorCollector.error(param, Messages.ModelParser_ExpectedBuildParameter());
                 return param
             }
         };
 
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            errorCollector.error(param,"Build parameter definitions cannot have blocks")
+            errorCollector.error(param, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_BuildParameters()))
             return param
         } else {
             ModelASTMethodCall mArgs = parseMethodCall(mc)
@@ -563,7 +564,7 @@ class ModelParser {
                     ModelASTKeyValueOrMethodCallPair keyPair = new ModelASTKeyValueOrMethodCallPair(e)
                     keyPair.key = parseKey(e.keyExpression)
                     if (e.valueExpression instanceof ClosureExpression) {
-                        errorCollector.error(keyPair, "Method call arguments cannot use closures")
+                        errorCollector.error(keyPair, Messages.ModelParser_MethodCallWithClosure())
                     } else if (e.valueExpression instanceof MethodCallExpression) {
                         keyPair.value = parseMethodCall((MethodCallExpression) e.valueExpression)
                     } else {
@@ -572,7 +573,7 @@ class ModelParser {
                     m.args << keyPair
                 }
             } else if (a instanceof ClosureExpression) {
-                errorCollector.error(m, "Method call arguments cannot use closures")
+                errorCollector.error(m, Messages.ModelParser_MethodCallWithClosure())
             } else if (a instanceof MethodCallExpression) {
                 m.args << parseMethodCall(a)
             } else {
@@ -591,7 +592,7 @@ class ModelParser {
         def mc = matchMethodCall(st);
         if (mc == null) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(thisStep,"Expected a step");
+             errorCollector.error(thisStep, Messages.ModelParser_ExpectedStep());
             return thisStep
         };
 
@@ -636,7 +637,7 @@ class ModelParser {
             groovyBlock.value = ModelASTValue.fromConstant(getSourceText(bs.body.code), bs.body.code)
             scriptBlock.args = groovyBlock
         } else {
-            errorCollector.error(scriptBlock, "${pronoun} step without a block")
+            errorCollector.error(scriptBlock, Messages.ModelParser_StepWithoutBlock(pronoun))
         }
 
         return scriptBlock
@@ -652,17 +653,17 @@ class ModelParser {
             def mc = matchMethodCall(st);
             if (mc == null) {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(agent,"Expected an agent")
+                errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
             } else {
                 List<Expression> args = ((TupleExpression) mc.arguments).expressions
                 if (args.isEmpty()) {
-                    errorCollector.error(agent, "No argument for agent")
+                    errorCollector.error(agent, Messages.ModelParser_NoArgForAgent())
                 } else if (args.size() > 1) {
-                    errorCollector.error(agent, "Only \"agent none\", \"agent any\" or \"agent {...}\" are allowed.")
+                    errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                 } else {
                     def agentCode = parseKey(args[0])
                     if (agentCode.key != "none" && agentCode.key != "any") {
-                        errorCollector.error(agent, "Only \"agent none\", \"agent any\" or \"agent {...}\" are allowed.")
+                        errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                     } else {
                         agent.variables[agentCode] = ModelASTValue.fromConstant(true, null)
                     }
@@ -673,16 +674,16 @@ class ModelParser {
                 def mc = matchMethodCall(s);
                 if (mc == null) {
                     // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                    errorCollector.error(agent,"Expected to find 'key \"value\"'");
+                    errorCollector.error(agent,Messages.ModelParser_ExpectedAgentKeyValue());
                 }
 
                 def agentKey = parseKey(mc.method);
 
                 List<Expression> args = ((TupleExpression) mc.arguments).expressions
                 if (args.isEmpty()) {
-                    errorCollector.error(agentKey, "No argument for agent key '${agentKey.key}'")
+                    errorCollector.error(agentKey, Messages.ModelParser_NoArgForAgentKey(agentKey.key))
                 } else if (args.size() > 1) {
-                    errorCollector.error(agentKey, "Too many arguments for agent key '${agentKey.key}'")
+                    errorCollector.error(agentKey, Messages.ModelParser_TooManyArgsForAgentKey(agentKey.key))
                 } else {
                     agent.variables[agentKey] = parseArgument(args[0])
                 }
@@ -709,7 +710,7 @@ class ModelParser {
         def m = matchBlockStatement(stmt);
 
         if (m==null) {
-            errorCollector.error(responder,"Expected a block");
+            errorCollector.error(responder, Messages.ModelParser_ExpectedBlock());
         } else {
             eachStatement(m.body.code) {
                 ModelASTBuildCondition bc = parseBuildCondition(it)
@@ -725,8 +726,7 @@ class ModelParser {
         ModelASTBuildCondition b = new ModelASTBuildCondition(st)
         def m = matchBlockStatement(st);
         if (m == null) {
-            errorCollector.error(b,"The 'post' section can only contain build condition names with code blocks. "
-                + "Valid condition names are " + BuildCondition.getOrderedConditionNames())
+            errorCollector.error(b, Messages.ModelParser_InvalidBuildCondition(BuildCondition.getOrderedConditionNames()))
         } else {
             b.branch = parseBranch("default", asBlock(m.body.code))
 
@@ -800,7 +800,7 @@ class ModelParser {
     protected String parseStringLiteral(Expression exp) {
         def s = matchStringLiteral(exp)
         if (s==null) {
-            errorCollector.error(ModelASTValue.fromConstant(null, exp), "Expected string literal")
+            errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedStringLiteral())
         }
         return s?:"error";
     }
@@ -823,7 +823,8 @@ class ModelParser {
         if (e instanceof ConstantExpression) {
             if (e.value instanceof String)
                 return (String)e.value
-            errorCollector.error(ModelASTValue.fromConstant(e.getValue(), e), "Expected string literal but got "+e.value)
+            errorCollector.error(ModelASTValue.fromConstant(e.getValue(), e),
+                Messages.ModelParser_ExpectedStringLiteralButGot(e.value))
             return "error";
         }
         if (e instanceof GStringExpression) {
@@ -850,7 +851,7 @@ class ModelParser {
     protected String parseMethodName(MethodCallExpression exp) {
         def s = matchMethodName(exp)
         if (s==null) {
-            errorCollector.error(ModelASTValue.fromConstant(null, exp), "Expected a symbol")
+            errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
             s = "error";
         }
         return s;
@@ -899,14 +900,16 @@ class ModelParser {
                             if (keyName != null && keyName.equals("failFast")) {
                                 ConstantExpression exp = castOrNull(ConstantExpression.class, e.valueExpression)
                                 if (exp == null || !(exp.value instanceof Boolean)) {
-                                    errorCollector.error(new ModelASTKey(e.keyExpression), "Expected a boolean with failFast")
+                                    errorCollector.error(new ModelASTKey(e.keyExpression),
+                                        Messages.ModelParser_ExpectedFailFast())
                                 } else {
                                     failFast = exp.value
                                 }
                             } else {
                                 ClosureExpression value = castOrNull(ClosureExpression, e.valueExpression);
                                 if (value == null) {
-                                    errorCollector.error(new ModelASTKey(e.keyExpression), "Expected closure or failFast")
+                                    errorCollector.error(new ModelASTKey(e.keyExpression),
+                                        Messages.ModelParser_ExpectedClosureOrFailFast())
                                 } else {
                                     parallelArgs[parseStringLiteral(e.keyExpression)] = value;
                                 }

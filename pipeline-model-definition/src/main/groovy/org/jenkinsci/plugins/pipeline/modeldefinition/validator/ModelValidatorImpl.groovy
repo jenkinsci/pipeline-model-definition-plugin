@@ -33,6 +33,7 @@ import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
@@ -89,7 +90,7 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (post.conditions.isEmpty()) {
-            errorCollector.error(post, "${post.getName()} can not be empty")
+            errorCollector.error(post, Messages.ModelValidatorImpl_EmptySection(post.getName()))
             valid = false
         }
 
@@ -98,7 +99,7 @@ class ModelValidatorImpl implements ModelValidator {
         }
 
         conditionNames.findAll { conditionNames.count(it) > 1 }.unique().each { sn ->
-            errorCollector.error(post, "Duplicate build condition name: '${sn}'")
+            errorCollector.error(post, Messages.ModelValidatorImpl_DuplicateBuildCondition(sn))
             valid = false
         }
 
@@ -112,7 +113,8 @@ class ModelValidatorImpl implements ModelValidator {
         // when there's a failure at parse-time.
         if (Jenkins.getInstance() != null && buildCondition.condition != null && buildCondition.branch != null) {
             if (SymbolLookup.get().find(BuildCondition.class, buildCondition.condition) == null) {
-                errorCollector.error(buildCondition, "Invalid condition '${buildCondition.condition}' - valid conditions are ${BuildCondition.getOrderedConditionNames()}")
+                errorCollector.error(buildCondition,
+                    Messages.ModelValidatorImpl_InvalidBuildCondition(buildCondition.condition, BuildCondition.getOrderedConditionNames()))
                 valid = false
             }
         }
@@ -124,7 +126,7 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (env.variables.isEmpty()) {
-            errorCollector.error(env, "No variables specified for environment")
+            errorCollector.error(env, Messages.ModelValidatorImpl_NoEnvVars())
             valid = false
         }
 
@@ -135,13 +137,13 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (t.tools.isEmpty()) {
-            errorCollector.error(t, "No tools specified.")
+            errorCollector.error(t, Messages.ModelValidatorImpl_NoTools())
             valid = false
         }
 
         t.tools.each { k, v ->
             if (Tools.typeForKey(k.key) == null) {
-                errorCollector.error(k, "Invalid tool type '${k.key}'. Valid tool types: ${Tools.getAllowedToolTypes().keySet()}")
+                errorCollector.error(k, Messages.ModelValidatorImpl_InvalidSectionType("tool", k.key, Tools.getAllowedToolTypes().keySet()))
                 valid = false
             } else {
                 // Don't bother checking whether the tool exists in this Jenkins master if we know it isn't an allowed tool type.
@@ -153,7 +155,7 @@ class ModelValidatorImpl implements ModelValidator {
                     def installer = desc.getInstallations().find { it.name.equals((String) v.value) }
                     if (installer == null) {
                         String possible = EditDistance.findNearest((String) v.value, desc.getInstallations().collect { it.name })
-                        errorCollector.error(v, "Tool type '${k.key}' does not have an install of '${v.value}' configured - did you mean '${possible}'?")
+                        errorCollector.error(v, Messages.ModelValidatorImpl_NoToolVersion(k.key, v.value, possible))
                         valid = false
                     }
                 }
@@ -166,7 +168,7 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(ModelASTWhen when) {
         //TODO can we evaluate if the closure will return something that can be tries for true?
         if (when.toGroovy() =~ /\Awhen\s[{\s}]*\z/) {
-            errorCollector.error(when, "Empty when closure, remove the property or add some content.")
+            errorCollector.error(when, Messages.ModelValidatorImpl_EmptyWhen())
             return false
         }
         return true
@@ -178,7 +180,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (ModelASTStep.blockedSteps.keySet().contains(step.name)) {
             errorCollector.error(step,
-                "Invalid step '${step.name}' used - not allowed in this context - ${ModelASTStep.blockedSteps.get(step.name)}")
+                Messages.ModelValidatorImpl_BlockedStep(step.name, ModelASTStep.blockedSteps.get(step.name)))
             valid = false
         } else {
             // We can't do step validation without a Jenkins instance, so move on.
@@ -205,7 +207,7 @@ class ModelValidatorImpl implements ModelValidator {
                                 String possible = EditDistance.findNearest(k.key, model.getParameters().collect {
                                     it.name
                                 })
-                                errorCollector.error(k, "Invalid parameter '${k.key}', did you mean '${possible}'?")
+                                errorCollector.error(k, Messages.ModelValidatorImpl_InvalidStepParameter(k.key, possible))
                                 valid = false
                                 return;
                             }
@@ -216,7 +218,7 @@ class ModelValidatorImpl implements ModelValidator {
                         }
                         model.parameters.each { p ->
                             if (p.isRequired() && !argList.containsKeyName(p.name)) {
-                                errorCollector.error(step, "Missing required parameter: '${p.name}'")
+                                errorCollector.error(step, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
                                 valid = false
                             }
                         }
@@ -226,7 +228,7 @@ class ModelValidatorImpl implements ModelValidator {
                         List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
                         if (requiredParams.size() != argList.arguments.size()) {
-                            errorCollector.error(step, "Step '${step.name}' should have ${requiredParams.size()} arguments but has ${argList.arguments.size()} arguments instead.")
+                            errorCollector.error(step, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(step.name, requiredParams.size(), argList.arguments.size()))
                             valid = false
                         } else {
                             requiredParams.eachWithIndex { DescribableParameter entry, int i ->
@@ -242,7 +244,7 @@ class ModelValidatorImpl implements ModelValidator {
 
                         def p = model.soleRequiredParameter;
                         if (p == null && !stepTakesClosure(desc)) {
-                            errorCollector.error(step, "Step does not take a single required parameter - use named parameters instead")
+                            errorCollector.error(step, Messages.ModelValidatorImpl_NotSingleRequiredParameter())
                             valid = false
                         } else {
                             Class erasedType = p?.erasedType
@@ -268,7 +270,7 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
         if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
             errorCollector.error(meth,
-                "Invalid step '${meth.name}' used - not allowed in this context - ${ModelASTMethodCall.blockedSteps.get(meth.name)}")
+                Messages.ModelValidatorImpl_BlockedStep(meth.name, ModelASTMethodCall.blockedSteps.get(meth.name)))
             valid = false
         }
         if (Jenkins.getInstance() != null) {
@@ -282,7 +284,7 @@ class ModelValidatorImpl implements ModelValidator {
                 if (meth.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }) {
                     meth.args.each { a ->
                         if (!(a instanceof ModelASTKeyValueOrMethodCallPair)) {
-                            errorCollector.error(meth, "Can't mix named and unnamed parameter definition arguments")
+                            errorCollector.error(meth, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
                             return
                         }
                         ModelASTKeyValueOrMethodCallPair kvm = (ModelASTKeyValueOrMethodCallPair) a
@@ -292,7 +294,7 @@ class ModelValidatorImpl implements ModelValidator {
                             String possible = EditDistance.findNearest(kvm.key.key, model.getParameters().collect {
                                 it.name
                             })
-                            errorCollector.error(kvm.key, "Invalid parameter '${kvm.key.key}', did you mean '${possible}'?")
+                            errorCollector.error(kvm.key, Messages.ModelValidatorImpl_InvalidStepParameter(kvm.key.key, possible))
                             valid = false
                             return;
                         }
@@ -301,7 +303,7 @@ class ModelValidatorImpl implements ModelValidator {
                             valid = validateElement((ModelASTMethodCall) kvm.value)
                         } else {
                             if (!validateParameterType((ModelASTValue) kvm.value, p.erasedType, kvm.key)) {
-                                errorCollector.error(kvm.key, "Invalid type for parameter '${kvm.key.key}'")
+                                errorCollector.error(kvm.key, Messages.ModelValidatorImpl_WrongBuildParameterType(kvm.key.key))
                                 valid = false
                             }
                         }
@@ -310,7 +312,7 @@ class ModelValidatorImpl implements ModelValidator {
                     List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
                     if (requiredParams.size() != meth.args.size()) {
-                        errorCollector.error(meth, "'${meth.name}' should have ${requiredParams.size()} arguments but has ${meth.args.size()} arguments instead.")
+                        errorCollector.error(meth, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(meth.name, requiredParams.size(), meth.args.size()))
                         valid = false
                     } else {
                         requiredParams.eachWithIndex { DescribableParameter entry, int i ->
@@ -319,7 +321,7 @@ class ModelValidatorImpl implements ModelValidator {
                                 valid = validateElement((ModelASTMethodCall) argVal)
                             } else {
                                 if (!validateParameterType((ModelASTValue) argVal, entry.erasedType)) {
-                                    errorCollector.error((ModelASTValue)argVal, "Invalid type for parameter '${entry.name}'")
+                                    errorCollector.error((ModelASTValue)argVal, Messages.ModelValidatorImpl_WrongParameterType(entry.name))
                                     valid = false
                                 }
                             }
@@ -333,7 +335,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTOptions opts) {
         if (opts.options.isEmpty()) {
-            errorCollector.error(opts, "Cannot have empty options section")
+            errorCollector.error(opts, Messages.ModelValidatorImpl_EmptySection("options"))
             return false
         }
 
@@ -348,11 +350,11 @@ class ModelValidatorImpl implements ModelValidator {
         // We can't do trigger validation without a Jenkins instance, so move on.
         else if (Triggers.typeForKey(trig.name) == null) {
             errorCollector.error(trig,
-                "Invalid trigger type '${trig.name}'. Valid trigger types: ${Triggers.getAllowedTriggerTypes().keySet()}")
+                Messages.ModelValidatorImpl_InvalidSectionType("trigger", trig.name, Triggers.getAllowedTriggerTypes().keySet()))
             valid = false
         } else if (trig.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
             && !trig.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(trig, "Can't mix named and unnamed trigger arguments")
+            errorCollector.error(trig, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         } else {
             valid = validateElement((ModelASTMethodCall)trig)
@@ -362,7 +364,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTTriggers triggers) {
         if (triggers.triggers.isEmpty()) {
-            errorCollector.error(triggers, "Cannot have empty triggers section")
+            errorCollector.error(triggers, Messages.ModelValidatorImpl_EmptySection("triggers"))
             return false
         }
 
@@ -378,12 +380,11 @@ class ModelValidatorImpl implements ModelValidator {
         // We can't do parameter validation without a Jenkins instance, so move on.
         else if (Parameters.typeForKey(param.name) == null) {
             errorCollector.error(param,
-                "Invalid parameter definition type '${param.name}'. Valid parameter definition types: "
-                    + Parameters.allowedParameterTypes.keySet())
+                Messages.ModelValidatorImpl_InvalidSectionType("parameter", param.name, Parameters.getAllowedParameterTypes().keySet()))
             valid = false
         } else if (param.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
             && !param.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(param, "Can't mix named and unnamed parameter definition arguments")
+            errorCollector.error(param, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         } else {
             valid = validateElement((ModelASTMethodCall)param)
@@ -393,7 +394,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTBuildParameters params) {
         if (params.parameters.isEmpty()) {
-            errorCollector.error(params, "Cannot have empty parameters section")
+            errorCollector.error(params, Messages.ModelValidatorImpl_EmptySection("parameters"))
             return false
         }
 
@@ -409,11 +410,11 @@ class ModelValidatorImpl implements ModelValidator {
         // We can't do property validation without a Jenkins instance, so move on.
         else if (Options.typeForKey(opt.name) == null) {
             errorCollector.error(opt,
-                "Invalid option type '${opt.name}'. Valid option types: ${Options.getAllowedOptionTypes().keySet()}")
+                Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name, Options.getAllowedOptionTypes().keySet()))
             valid = false
         } else if (opt.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
             && !opt.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(opt, "Can't mix named and unnamed option arguments")
+            errorCollector.error(opt, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         } else {
             valid = validateElement((ModelASTMethodCall)opt)
@@ -432,9 +433,9 @@ class ModelValidatorImpl implements ModelValidator {
                 ScriptBytecodeAdapter.castToType(v.value, erasedType);
             } catch (Exception e) {
                 if (k != null) {
-                    errorCollector.error(v, "Expecting ${erasedType} for parameter '${k.key}' but got '${v.value}' instead")
+                    errorCollector.error(v, Messages.ModelValidatorImpl_InvalidParameterType(erasedType, k.key, v.value.toString()))
                 } else {
-                    errorCollector.error(v, "Expecting ${erasedType} but got '${v.value}' instead")
+                    errorCollector.error(v, Messages.ModelValidatorImpl_InvalidUnnamedParameterType(erasedType, v.value.toString()))
                 }
                 return false
             }
@@ -451,11 +452,11 @@ class ModelValidatorImpl implements ModelValidator {
         // We can't do trigger validation without a Jenkins instance, so move on.
         else if (!(wrapper.name in Wrappers.getEligibleSteps())) {
             errorCollector.error(wrapper,
-                "Invalid wrapper type '${wrapper.name}'. Valid wrapper types: ${Wrappers.getEligibleSteps()}")
+                Messages.ModelValidatorImpl_InvalidSectionType("wrapper", wrapper.name, Wrappers.getEligibleSteps()))
             valid = false
         } else if (wrapper.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
             && !wrapper.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(wrapper, "Can't mix named and unnamed wrapper arguments")
+            errorCollector.error(wrapper, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         } else {
             valid = validateElement((ModelASTMethodCall)wrapper)
@@ -465,7 +466,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTWrappers wrappers) {
         if (wrappers.wrappers.isEmpty()) {
-            errorCollector.error(wrappers, "Cannot have empty wrappers section")
+            errorCollector.error(wrappers, Messages.ModelValidatorImpl_EmptySection("wrappers"))
             return false
         }
 
@@ -484,7 +485,7 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (branch.steps.isEmpty()) {
-            errorCollector.error(branch, "No steps specified for branch")
+            errorCollector.error(branch, Messages.ModelValidatorImpl_NoSteps())
             valid = false
         }
 
@@ -495,12 +496,12 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (pipelineDef.stages == null) {
-            errorCollector.error(pipelineDef, "Missing required section 'stages'")
+            errorCollector.error(pipelineDef, Messages.ModelValidatorImpl_RequiredSection("stages"))
             valid = false
         }
 
         if (pipelineDef.agent == null) {
-            errorCollector.error(pipelineDef, "Missing required section 'agent'")
+            errorCollector.error(pipelineDef, Messages.ModelValidatorImpl_RequiredSection("agent"))
         }
         return valid
     }
@@ -508,11 +509,11 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStage stage) {
         boolean valid = true
         if (stage.name == null) {
-            errorCollector.error(stage, "Stage does not have a name")
+            errorCollector.error(stage, Messages.ModelValidatorImpl_NoStageName())
             valid = false
         }
         if (stage.branches.isEmpty()) {
-            errorCollector.error(stage, "Nothing to execute within stage '${stage.name}'")
+            errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
         }
 
@@ -523,7 +524,7 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (stages.stages.isEmpty()) {
-            errorCollector.error(stages, "No stages specified")
+            errorCollector.error(stages, Messages.ModelValidatorImpl_NoStages())
             valid = false
         }
 
@@ -532,7 +533,7 @@ class ModelValidatorImpl implements ModelValidator {
         }
 
         stageNames.findAll { stageNames.count(it) > 1 }.unique().each { sn ->
-            errorCollector.error(stages, "Duplicate stage name: '${sn}'")
+            errorCollector.error(stages, Messages.ModelValidatorImpl_DuplicateStageName(sn))
             valid = false
         }
 
@@ -549,20 +550,20 @@ class ModelValidatorImpl implements ModelValidator {
         String typeName = orderedNames.find { it in keyNames }
 
         if (typeName == null) {
-            errorCollector.error(agent, "No agent type specified. Must contain one of ${orderedNames}")
+            errorCollector.error(agent, Messages.ModelValidatorImpl_NoAgentType(orderedNames))
             valid = false
         } else if (!(typeName in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
             DescribableModel model = possibleModels.get(typeName)
             model.parameters.findAll { it.required }.each { p ->
                 if (!keyNames.contains(p.name)) {
-                    errorCollector.error(agent, "Missing required parameter for agent type '${typeName}': ${p.name}")
+                    errorCollector.error(agent, Messages.ModelValidatorImpl_MissingAgentParameter(typeName, p.name))
                     valid = false
                 }
             }
             agent.variables.each { k, v ->
                 List<String> validParamNames = model.parameters.collect { it.name }
                 if (!validParamNames.contains(k.key)) {
-                    errorCollector.error(k, "Invalid config option '${k.key}' for agent type '${typeName}'. Valid config options are ${validParamNames}")
+                    errorCollector.error(k, Messages.ModelValidatorImpl_InvalidAgentParameter(k.key, typeName, validParamNames))
                     valid = false
                 }
             }

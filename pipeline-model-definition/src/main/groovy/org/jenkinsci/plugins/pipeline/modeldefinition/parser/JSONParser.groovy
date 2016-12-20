@@ -30,6 +30,7 @@ import com.github.fge.jsonschema.report.ProcessingReport
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
@@ -46,7 +47,7 @@ import javax.annotation.Nonnull
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class JSONParser {
+class JSONParser implements Parser {
     ErrorCollector errorCollector
 
     ModelValidator validator
@@ -84,7 +85,7 @@ class JSONParser {
         JSONObject pipelineJson = jsonObject.getJSONObject(ModelStepLoader.STEP_NAME)
         pipelineJson.keySet().each { sectionName ->
             if (!sectionsSeen.add(sectionName)) {
-                errorCollector.error(pipelineDef, "Multiple occurences of the ${sectionName} section")
+                errorCollector.error(pipelineDef, Messages.Parser_MultipleOfSection(sectionName))
             }
 
             switch (sectionName) {
@@ -116,7 +117,7 @@ class JSONParser {
                     pipelineDef.wrappers = parseWrappers(pipelineJson.getJSONObject("wrappers"))
                     break
                 default:
-                    errorCollector.error(pipelineDef, "Undefined section '${sectionName}'")
+                    errorCollector.error(pipelineDef, Messages.Parser_UndefinedSection(sectionName))
             }
         }
 
@@ -264,7 +265,7 @@ class JSONParser {
             // This is a single argument
             pair.value = parseValue(v)
         } else {
-            errorCollector.error(pair, "Invalid value type")
+            errorCollector.error(pair, Messages.JSONParser_InvalidValueType())
         }
 
         return pair
@@ -290,20 +291,20 @@ class JSONParser {
                             // This is a single argument
                             arg = parseValue(entry)
                         } else {
-                            errorCollector.error(meth, "Invalid argument syntax")
+                            errorCollector.error(meth, Messages.JSONParser_InvalidArgumentSyntax())
                         }
                         if (arg != null) {
                             meth.args << arg
                         }
                     } else {
-                        errorCollector.error(meth, "Individual method arguments must be a JSON object")
+                        errorCollector.error(meth, Messages.JSONParser_MethArgsMustBeObj())
                     }
                 }
             } else {
-                errorCollector.error(meth, "Method arguments missing or not an array")
+                errorCollector.error(meth, Messages.JSONParser_MethArgsMissing())
             }
         } else {
-            errorCollector.error(meth, "Method call definition must be a JSON object")
+            errorCollector.error(meth, Messages.JSONParser_MethCallMustBeObj())
         }
 
         return meth
@@ -363,8 +364,8 @@ class JSONParser {
             // No arguments.
             argList = new ModelASTNamedArgumentList(null)
         } else {
-                argList = new ModelASTNamedArgumentList(o)
-                errorCollector.error(argList, "Object ${o} is neither a JSONArray nor a JSONObject")
+            argList = new ModelASTNamedArgumentList(o)
+            errorCollector.error(argList, Messages.JSONParser_ObjNotJSON(o))
 
         }
 
@@ -494,12 +495,12 @@ class JSONParser {
         if (jsonNode.has("keyword")) {
             if (jsonNode.get("keyword").asText().equals("required")) {
                 String missingProps = jsonNode.get('missing').elements().collect { "'${it.asText()}'" }.join(", ")
-                return "At ${location}: Missing one or more required properties: ${missingProps}"
+                return Messages.JSONParser_MissingRequiredProperties(location, missingProps)
             } else if (jsonNode.get("keyword").asText().equals("minItems")) {
-                return "At ${location}: Array has ${jsonNode.get('found').asInt()} entries, requires minimum of ${jsonNode.get('minItems').asInt()}"
+                return Messages.JSONParser_TooFewItems(location, jsonNode.get('found').asInt(), jsonNode.get('minItems').asInt())
             }
         }
-        return "At ${location}: ${pm.message}"
+        return Messages.JSONParser_ProcessingError(location, pm.message)
     }
 
 }

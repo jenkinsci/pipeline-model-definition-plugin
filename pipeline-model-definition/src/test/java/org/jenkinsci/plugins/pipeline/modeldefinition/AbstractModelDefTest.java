@@ -45,6 +45,7 @@ import org.apache.commons.lang.SystemUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
@@ -136,41 +137,42 @@ public abstract class AbstractModelDefTest {
     public static Iterable<Object[]> configsWithErrors() {
         List<Object[]> result = new ArrayList<>();
         // First element is config name, second element is expected JSON error.
-        result.add(new Object[]{"missingStages", "At /pipeline: Missing one or more required properties: 'stages'"});
-        result.add(new Object[]{"missingAgent", "At /pipeline: Missing one or more required properties: 'agent'"});
+        result.add(new Object[]{"missingStages", Messages.JSONParser_MissingRequiredProperties("/pipeline", "'stages'")});
+        result.add(new Object[]{"missingAgent", Messages.JSONParser_MissingRequiredProperties("/pipeline", "'agent'")});
 
-        result.add(new Object[]{"emptyStages", "At /pipeline/stages: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"emptyEnvironment", "At /pipeline/environment: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"emptyPostBuild", "At /pipeline/post/conditions: Array has 0 entries, requires minimum of 1"});
+        result.add(new Object[]{"emptyStages", Messages.JSONParser_TooFewItems("/pipeline/stages", 0, 1)});
+        result.add(new Object[]{"emptyEnvironment", Messages.JSONParser_TooFewItems("/pipeline/environment", 0, 1)});
+        result.add(new Object[]{"emptyPostBuild", Messages.JSONParser_TooFewItems("/pipeline/post/conditions", 0, 1)});
 
-        result.add(new Object[]{"rejectStageInSteps", "Invalid step 'stage' used - not allowed in this context - The stage step cannot be used in Declarative Pipelines"});
-        result.add(new Object[]{"rejectParallelMixedInSteps", "Invalid step 'parallel' used - not allowed in this context - The parallel step can only be used as the only top-level step in a stage's step block"});
+        result.add(new Object[]{"rejectStageInSteps", Messages.ModelValidatorImpl_BlockedStep("stage", ModelASTStep.getBlockedSteps().get("stage"))});
+        result.add(new Object[]{"rejectParallelMixedInSteps", Messages.ModelValidatorImpl_BlockedStep("parallel", ModelASTStep.getBlockedSteps().get("parallel"))});
 
-        result.add(new Object[]{"stageWithoutName", "At /pipeline/stages/0: Missing one or more required properties: 'name'"});
+        result.add(new Object[]{"stageWithoutName", Messages.JSONParser_MissingRequiredProperties("/pipeline/stages/0", "'name'")});
 
-        result.add(new Object[]{"emptyParallel", "Nothing to execute within stage 'foo'"});
+        result.add(new Object[]{"emptyParallel", Messages.ModelValidatorImpl_NothingForStage("foo")});
 
-        result.add(new Object[]{"emptyJobProperties", "At /pipeline/options/options: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"emptyParameters", "At /pipeline/parameters/parameters: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"emptyTriggers", "At /pipeline/triggers/triggers: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"mixedMethodArgs", "Can't mix named and unnamed parameter definition arguments"});
+        result.add(new Object[]{"emptyJobProperties", Messages.JSONParser_TooFewItems("/pipeline/options/options", 0, 1)});
+        result.add(new Object[]{"emptyParameters", Messages.JSONParser_TooFewItems("/pipeline/parameters/parameters", 0, 1)});
+        result.add(new Object[]{"emptyTriggers", Messages.JSONParser_TooFewItems("/pipeline/triggers/triggers", 0, 1)});
+        result.add(new Object[]{"mixedMethodArgs", Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters()});
 
         result.add(new Object[]{"rejectPropertiesStepInMethodCall",
-                "Invalid step 'properties' used - not allowed in this context - The properties step cannot be used in Declarative Pipelines"});
+                Messages.ModelValidatorImpl_BlockedStep("properties", ModelASTStep.getBlockedSteps().get("properties"))});
 
-        result.add(new Object[]{"wrongParameterNameMethodCall", "Invalid parameter 'namd', did you mean 'name'?"});
-        result.add(new Object[]{"invalidParameterTypeMethodCall", "Expecting class java.lang.String for parameter 'name' but got '1234' instead"});
+        result.add(new Object[]{"wrongParameterNameMethodCall", Messages.ModelValidatorImpl_InvalidStepParameter("namd", "name")});
+        result.add(new Object[]{"invalidParameterTypeMethodCall", Messages.ModelValidatorImpl_InvalidParameterType("class java.lang.String", "name", "1234")});
 
-        result.add(new Object[]{"perStageConfigEmptySteps", "At /pipeline/stages/0/branches/0/steps: Array has 0 entries, requires minimum of 1"});
-        result.add(new Object[]{"perStageConfigMissingSteps", "At /pipeline/stages/0/branches/0: Missing one or more required properties: 'steps'"});
+        result.add(new Object[]{"perStageConfigEmptySteps", Messages.JSONParser_TooFewItems("/pipeline/stages/0/branches/0/steps", 0, 1)});
+        result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("/pipeline/stages/0/branches/0",
+                "'steps'")});
         result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
 
-        result.add(new Object[]{"unknownAgentType", "No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]"});
-        result.add(new Object[]{"invalidWrapperType", "Invalid wrapper type 'echo'. Valid wrapper types: [catchError, node, retry, script, timeout, waitUntil, withContext, withEnv, ws]"});
+        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]")});
+        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("wrapper", "echo", "[catchError, node, retry, script, timeout, waitUntil, withContext, withEnv, ws]")});
 
-        result.add(new Object[]{"unknownBareAgentType", "No agent type specified. Must contain one of [otherField, docker, dockerfile, label, any, none]"});
-        result.add(new Object[]{"agentMissingRequiredParam", "Missing required parameter for agent type 'otherField': label"});
-        result.add(new Object[]{"agentUnknownParamForType", "Invalid config option 'fruit' for agent type 'otherField'. Valid config options are [label, otherField]"});
+        result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]")});
+        result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MissingAgentParameter("otherField", "label")});
+        result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField]")});
         result.add(new Object[]{"notificationsSectionRemoved", "At /pipeline: additional properties are not allowed"});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
@@ -206,7 +208,7 @@ public abstract class AbstractModelDefTest {
             result.add(e);
         }
         result.add(new Object[] { "notInstalledToolVersion",
-                "Tool type 'maven' does not have an install of 'apache-maven-3.0.2' configured - did you mean 'apache-maven-3.0.1'?" });
+                Messages.ModelValidatorImpl_NoToolVersion("maven", "apache-maven-3.0.2", "apache-maven-3.0.1")});
 
         return result;
     }

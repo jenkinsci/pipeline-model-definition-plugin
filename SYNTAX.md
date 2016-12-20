@@ -177,7 +177,11 @@ stages {
             sh 'mvn install'
             script {
                 // any valid Pipeline Script goes here
-                ['ie','chrome'].each { sh "./test.sh ${it}" }
+                def browsers = ["ie", "chrome", "safari"]
+                for (int i = 0; i < browsers.size(); i++) {
+                    def browser = browsers.get(i)
+                    sh "./test.sh ${browser}"
+                }
             }
         }
     }
