@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
+import com.cloudbees.groovy.cps.NonCPS
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule
@@ -35,11 +36,14 @@ import org.codehaus.groovy.control.CompilationFailedException
 import org.codehaus.groovy.control.CompilationUnit
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.control.customizers.ImportCustomizer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ASTSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
+import org.jenkinsci.plugins.workflow.libs.Library
 
 import java.security.CodeSource
 import java.security.cert.Certificate
@@ -92,7 +96,7 @@ public class Converter {
      */
     public static ModelASTPipelineDef urlToPipelineDef(URL src) {
         CompilationUnit cu = new CompilationUnit(
-            CompilerConfiguration.DEFAULT,
+            makeCompilerConfiguration(),
             new CodeSource(src, new Certificate[0]),
             new GroovyClassLoader());
         cu.addSource(src);
@@ -108,7 +112,7 @@ public class Converter {
      */
     public static ModelASTPipelineDef scriptToPipelineDef(String script) {
         CompilationUnit cu = new CompilationUnit(
-            CompilerConfiguration.DEFAULT,
+            makeCompilerConfiguration(),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
             new GroovyClassLoader())
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
@@ -116,6 +120,20 @@ public class Converter {
         return compilationUnitToPipelineDef(cu)
     }
 
+    private static CompilerConfiguration makeCompilerConfiguration() {
+        CompilerConfiguration cc = new CompilerConfiguration();
+
+        ImportCustomizer ic = new ImportCustomizer();
+        ic.addStarImports(NonCPS.class.getPackage().getName());
+        ic.addStarImports("hudson.model","jenkins.model");
+        for (GroovyShellDecorator d : GroovyShellDecorator.all()) {
+            d.customizeImports(null, ic);
+        }
+
+        cc.addCompilationCustomizers(ic);
+
+        return cc;
+    }
     /**
      * Takes a {@link CompilationUnit}, copmiles it with the {@link ModelParser} injected, and returns the resulting
      * {@link ModelASTPipelineDef}
@@ -140,7 +158,7 @@ public class Converter {
 
     public static List<ModelASTStep> scriptToPlainSteps(String script) {
         CompilationUnit cu = new CompilationUnit(
-                CompilerConfiguration.DEFAULT,
+                makeCompilerConfiguration(),
                 new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
                 new GroovyClassLoader())
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
