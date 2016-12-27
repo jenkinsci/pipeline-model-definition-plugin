@@ -59,6 +59,12 @@ public class Changed extends BuildCondition {
         }
     }
 
+    @Override
+    public String getDescription() {
+        return Messages.Changed_Description()
+    }
+
+
     public static final long serialVersionUID = 1L
 
 }
