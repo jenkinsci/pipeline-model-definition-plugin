@@ -47,6 +47,7 @@ import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
@@ -131,7 +132,9 @@ public abstract class AbstractModelDefTest {
             "environmentInStage",
             "basicWhen",
             "skippedWhen",
-            "parallelPipelineWithFailFast"
+            "parallelPipelineWithFailFast",
+            "whenBranch",
+            "whenEnv"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -154,6 +157,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"emptyJobProperties", Messages.JSONParser_TooFewItems("/pipeline/options/options", 0, 1)});
         result.add(new Object[]{"emptyParameters", Messages.JSONParser_TooFewItems("/pipeline/parameters/parameters", 0, 1)});
         result.add(new Object[]{"emptyTriggers", Messages.JSONParser_TooFewItems("/pipeline/triggers/triggers", 0, 1)});
+        result.add(new Object[]{"emptyWhen", Messages.JSONParser_TooFewItems("/pipeline/when/conditions", 0, 1)});
         result.add(new Object[]{"mixedMethodArgs", Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters()});
 
         result.add(new Object[]{"rejectPropertiesStepInMethodCall",
@@ -174,6 +178,8 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MissingAgentParameter("otherField", "label")});
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField]")});
         result.add(new Object[]{"notificationsSectionRemoved", "At /pipeline: additional properties are not allowed"});
+        result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
+                "branch, environment, expression")});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +

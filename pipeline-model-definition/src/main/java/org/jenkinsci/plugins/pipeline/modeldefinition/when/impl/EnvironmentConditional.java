@@ -96,7 +96,7 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
     }
 
     @Extension
-    @Symbol("env")
+    @Symbol("environment")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
 
     }

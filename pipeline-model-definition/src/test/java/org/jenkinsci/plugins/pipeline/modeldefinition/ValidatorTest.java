@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.slaves.DumbSlave;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
@@ -31,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -95,6 +97,21 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void emptyTriggers() throws Exception {
         expectError("emptyTriggers")
                 .logContains(Messages.ModelValidatorImpl_EmptySection("triggers"))
+                .go();
+    }
+
+    @Test
+    public void emptyWhen() throws Exception {
+        expectError("emptyWhen")
+                .logContains(Messages.ModelValidatorImpl_EmptyWhen())
+                .go();
+    }
+
+    @Test
+    public void unknownWhenConditional() throws Exception {
+        expectError("unknownWhenConditional")
+                .logContains(Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
+                        StringUtils.join(DeclarativeStageConditionalDescriptor.allNames(), ", ")))
                 .go();
     }
 

@@ -58,13 +58,11 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
 
     public static boolean booleanFromReturn(Object o) throws AbortException {
         if (o == null) {
-            // TODO: Messages
-            throw new AbortException("When expression undefined or returned null");
+            throw new AbortException(Messages.ExpressionConditional_UndefinedOrNull());
         } else if (o instanceof Boolean) {
             return (Boolean)o;
         } else {
-            // TODO: Messages
-            throw new AbortException("Return value from when expression is of type " + o.getClass().getName());
+            throw new AbortException(Messages.ExpressionConditional_NonBooleanReturn(o.getClass().getName()));
         }
     }
 

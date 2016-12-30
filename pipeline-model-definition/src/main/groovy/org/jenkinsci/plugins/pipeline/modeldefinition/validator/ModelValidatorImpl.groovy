@@ -168,7 +168,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(ModelASTWhen when) {
         if (when.conditions.isEmpty()) {
-            errorCollector.error(when, Messages.ModelValidator_ModelASTWhen_empty())
+            errorCollector.error(when, Messages.ModelValidatorImpl_EmptyWhen())
             return false
         } else {
             def allNames = DeclarativeStageConditionalDescriptor.allNames()

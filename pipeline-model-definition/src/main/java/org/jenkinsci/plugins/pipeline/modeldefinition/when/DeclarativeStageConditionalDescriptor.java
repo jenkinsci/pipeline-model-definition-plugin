@@ -26,9 +26,11 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
 import hudson.ExtensionList;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,6 +60,22 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         return names;
     }
 
+    /**
+     * Get a map of name-to-{@link DescribableModel} of all known/registered descriptors.
+     *
+     * @return A map of name-to-{@link DescribableModel}s
+     */
+    public static Map<String,DescribableModel> getDescribableModels() {
+        Map<String,DescribableModel> models = new HashMap<>();
+
+        for (DeclarativeStageConditionalDescriptor d : all()) {
+            for (String s : SymbolLookup.getSymbolValue(d)) {
+                models.put(s, new DescribableModel<>(d.clazz));
+            }
+        }
+
+        return models;
+    }
     /**
      * Get the descriptor for a given name or null if not found.
      *
