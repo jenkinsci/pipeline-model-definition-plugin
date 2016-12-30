@@ -24,71 +24,21 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionList;
-import hudson.model.Descriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Descriptor for {@link DeclarativeAgent}.
  *
  * @author Andrew Bayer
  */
-public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeAgent> {
-
-    /**
-     * The name for this agent type. Defaults to the first string in the {@code Symbol} on the class.
-     *
-     * @return The name.
-     */
-    public @Nonnull String getName() {
-        Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
-        if (symbolValues.isEmpty()) {
-            throw new IllegalArgumentException("Declarative Agent descriptor class " + this.getClass().getName()
-                    + " does not have a @Symbol and does not override getName().");
-        }
-        return symbolValues.iterator().next();
-    }
-
-    /**
-     * The full package and class name for the {@link DeclarativeAgentScript} class corresponding to this. Defaults to
-     * the {@link DeclarativeAgent} class name with "Script" appended to the end.
-     *
-     * @return The class name, defaulting to the {@link DeclarativeAgent} {@link #clazz} class name with "Script" appended.
-     */
-    public @Nonnull String getDeclarativeAgentScriptClass() {
-        return clazz.getName() + "Script";
-    }
-
-    /**
-     * Creates an instance of the corresponding {@link DeclarativeAgent} from the given arguments.
-     *
-     * @param arguments A map of strings/objects to be passed to the constructor.
-     * @return An instantiated {@link DeclarativeAgent}
-     * @throws Exception
-     */
-    public DeclarativeAgent newInstance(Map<String,Object> arguments) throws Exception {
-        return new DescribableModel<>(clazz).instantiate(arguments);
-    }
-
-    /**
-     * Creates an instance of the corresponding {@link DeclarativeAgent} with no arguments.
-     *
-     * @return An instantiated {@link DeclarativeAgent}
-     * @throws Exception
-     */
-    public DeclarativeAgent newInstance() throws Exception {
-        return clazz.newInstance();
-    }
+public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> extends WithScriptDescriptor<A> {
 
     /**
      * Get all {@link DeclarativeAgentDescriptor}s.
@@ -150,7 +100,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * @return The instantiated {@link DeclarativeAgent} instance, or null if the name isn't found.
      * @throws Exception
      */
-    public static @Nullable DeclarativeAgent instanceForName(@Nonnull String name,
+    public static @Nullable DeclarativeAgent<?> instanceForName(@Nonnull String name,
                                                              Map<String,Object> arguments) throws Exception {
         DeclarativeAgentDescriptor descriptor = byName(name);
 
@@ -169,7 +119,7 @@ public abstract class DeclarativeAgentDescriptor extends Descriptor<DeclarativeA
      * @return The instantiated {@link DeclarativeAgent} instance.
      * @throws Exception
      */
-    public static @Nonnull DeclarativeAgent instanceForDescriptor(@Nonnull DeclarativeAgentDescriptor descriptor,
+    public static @Nonnull DeclarativeAgent<?> instanceForDescriptor(@Nonnull DeclarativeAgentDescriptor<?> descriptor,
                                                                    Map<String,Object> arguments) throws Exception {
         if (zeroArgModels().keySet().contains(descriptor.getName())) {
             return descriptor.newInstance();

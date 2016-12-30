@@ -26,13 +26,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class LabelScript extends DeclarativeAgentScript<Label> {
+public class AnyScript extends DeclarativeAgentScript<Any> {
 
-    public LabelScript(CpsScript s, Label a) {
+    public AnyScript(CpsScript s, Any a) {
         super(s, a)
     }
 
@@ -40,7 +39,7 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
     public Closure run(Closure body) {
         return {
             try {
-                script.node(describable?.label) {
+                script.node {
                     body.call()
                 }
             } catch (Exception e) {

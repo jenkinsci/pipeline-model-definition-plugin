@@ -31,6 +31,7 @@ import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 
@@ -92,7 +93,7 @@ public class ModelInterpreter implements Serializable {
                                             script.stage(thisStage.name) {
                                                 if (firstError == null) {
                                                     withEnvBlock(thisStage.getEnvVars()) {
-                                                        if (thisStage.when == null || setUpDelegate(thisStage.when.closure)) { //TODO get a hold of the current context and call when.evaluate
+                                                        if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage.agent) {
                                                                 withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
@@ -400,6 +401,23 @@ public class ModelInterpreter implements Serializable {
 
         if (stageError != null) {
             throw stageError
+        }
+    }
+
+    /**
+     *
+     */
+    def evaluateWhen(StageConditionals when) {
+        if (when == null) {
+            return true
+        } else {
+            for (int i = 0; i < when.conditions.size(); i++) {
+                DeclarativeStageConditional c = when.conditions.get(i)
+                if (!c.getScript(script).evaluate()) {
+                    return false
+                }
+            }
+            return true
         }
     }
 

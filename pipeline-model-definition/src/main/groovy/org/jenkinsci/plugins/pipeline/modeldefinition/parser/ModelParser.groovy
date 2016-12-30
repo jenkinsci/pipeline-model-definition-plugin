@@ -358,6 +358,8 @@ class ModelParser implements Parser {
         block.statements.each {s ->
             w.conditions.add(parseStep(s))
         }
+
+        return w
     }
 
     /**

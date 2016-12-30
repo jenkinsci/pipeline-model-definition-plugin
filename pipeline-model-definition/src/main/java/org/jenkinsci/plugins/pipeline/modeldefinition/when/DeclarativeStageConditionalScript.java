@@ -22,31 +22,17 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
+import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
-import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+public abstract class DeclarativeStageConditionalScript<S extends DeclarativeStageConditional<S>>
+        extends WithScriptScript<S> {
 
-public class LabelScript extends DeclarativeAgentScript<Label> {
-
-    public LabelScript(CpsScript s, Label a) {
-        super(s, a)
+    public DeclarativeStageConditionalScript(CpsScript s, S c) {
+        super(s, c);
     }
 
-    @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(describable?.label) {
-                    body.call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
-            }
-        }
-    }
+    public abstract boolean evaluate();
 }

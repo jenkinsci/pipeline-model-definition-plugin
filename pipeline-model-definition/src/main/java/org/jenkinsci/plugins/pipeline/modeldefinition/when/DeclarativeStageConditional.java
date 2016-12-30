@@ -25,28 +25,19 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
-import hudson.AbortException;
 import hudson.ExtensionPoint;
-import hudson.model.AbstractDescribableImpl;
-import org.jenkinsci.plugins.workflow.cps.CpsScript;
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.Serializable;
 
 /**
  * Conditionals for when to run a stage.
  */
-public abstract class DeclarativeStageConditional extends AbstractDescribableImpl<DeclarativeStageConditional> implements Serializable, ExtensionPoint {
-
-    public abstract boolean evaluate(CpsScript script) throws InterruptedException, AbortException;
-
-    @Override
-    public DeclarativeStageConditionalDescriptor getDescriptor() {
-        return (DeclarativeStageConditionalDescriptor) super.getDescriptor();
-    }
+public abstract class DeclarativeStageConditional<S extends DeclarativeStageConditional<S>>
+        extends WithScriptDescribable<S> implements ExtensionPoint {
 
     @Nullable
     protected <T> T getContextVariable(Class<T> key) throws IOException, InterruptedException {

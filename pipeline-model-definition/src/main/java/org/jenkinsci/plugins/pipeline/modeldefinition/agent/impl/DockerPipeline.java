@@ -34,7 +34,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class DockerPipeline extends DeclarativeAgent {
+public class DockerPipeline extends DeclarativeAgent<DockerPipeline> {
     private String label;
     private String docker;
     private String dockerArgs = "";
@@ -67,6 +67,6 @@ public class DockerPipeline extends DeclarativeAgent {
     }
 
     @Extension(ordinal = 1000) @Symbol("docker")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor {
+    public static class DescriptorImpl extends DeclarativeAgentDescriptor<DockerPipeline> {
     }
 }

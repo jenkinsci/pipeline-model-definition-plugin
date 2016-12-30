@@ -44,7 +44,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
-public class BranchConditional extends DeclarativeStageConditional {
+public class BranchConditional extends DeclarativeStageConditional<BranchConditional> {
     private final String compare;
 
     @DataBoundConstructor
@@ -52,8 +52,7 @@ public class BranchConditional extends DeclarativeStageConditional {
         this.compare = compare;
     }
 
-    @Override
-    public boolean evaluate(CpsScript script) throws InterruptedException, AbortException {
+    public boolean branchMatches() throws InterruptedException, AbortException {
         try {
             EnvVars vars = getContextVariable(EnvVars.class);
             if (vars != null) {
@@ -79,7 +78,7 @@ public class BranchConditional extends DeclarativeStageConditional {
 
     @Extension
     @Symbol("branch")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor {
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<BranchConditional> {
 
     }
 }

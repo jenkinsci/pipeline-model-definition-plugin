@@ -33,8 +33,10 @@ pipeline {
         }
         stage("Two") {
             when {
-                echo "Should I run?"
-                throw new NullPointerException("Gah")
+                expression {
+                    echo "Should I run?"
+                    throw new NullPointerException("Gah")
+                }
             }
             steps {
                 echo "World"

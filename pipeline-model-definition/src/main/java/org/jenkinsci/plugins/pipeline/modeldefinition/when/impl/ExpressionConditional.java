@@ -20,7 +20,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
@@ -28,76 +27,50 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
-import org.apache.commons.lang.StringUtils;
+import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
-import org.jenkinsci.plugins.workflow.cps.CpsThread;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
+import java.io.File;
 import java.io.IOException;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
- * Stage condition based on environment variable equality.
+ * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
+ * As populated by {@link jenkins.branch.BranchNameContributor}
  */
-public class EnvironmentConditional extends DeclarativeStageConditional<EnvironmentConditional> {
-    private final String name;
-    private final String value;
-    private boolean ignoreCase = false;
+public class ExpressionConditional extends DeclarativeStageConditional<ExpressionConditional> {
+    private final StepsBlock block;
 
     @DataBoundConstructor
-    public EnvironmentConditional(String name, String value) {
-        this.name = name;
-        this.value = value;
+    public ExpressionConditional(StepsBlock block) {
+        this.block = block;
     }
 
-    public String getName() {
-        return name;
+    public StepsBlock getBlock() {
+        return block;
     }
 
-    public String getValue() {
-        return value;
-    }
-
-    public boolean isIgnoreCase() {
-        return ignoreCase;
-    }
-
-    @DataBoundSetter
-    public void setIgnoreCase(boolean ignoreCase) {
-        this.ignoreCase = ignoreCase;
-    }
-
-    public boolean environmentMatches() throws InterruptedException, AbortException {
-        try {
-            EnvVars vars = getContextVariable(EnvVars.class);
-            if (vars != null) {
-                String var = vars.get(name, null);
-                if (isEmpty(var) && isEmpty(value)) {
-                    return true;
-                } else if (isEmpty(var)) {
-                    return false;
-                } else if (ignoreCase) {
-                    return var.equalsIgnoreCase(value);
-                } else {
-                    return var.equals(value);
-                }
-            } else {
-                return false;
-            }
-        } catch (IOException e) {
-            throw new AbortException(e.getMessage());
+    public static boolean booleanFromReturn(Object o) throws AbortException {
+        if (o == null) {
+            // TODO: Messages
+            throw new AbortException("When expression undefined or returned null");
+        } else if (o instanceof Boolean) {
+            return (Boolean)o;
+        } else {
+            // TODO: Messages
+            throw new AbortException("Return value from when expression is of type " + o.getClass().getName());
         }
     }
 
     @Extension
-    @Symbol("env")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
+    @Symbol("expression")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ExpressionConditional> {
 
     }
 }

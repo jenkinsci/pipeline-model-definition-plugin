@@ -38,6 +38,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.WrappersToMap
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
+import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.createStepsBlock
+
 /**
  * CPS-transformed code for translating from the closure argument to the pipeline step into the runtime model.
  *
@@ -140,7 +142,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                     }
                     //StageConditionals needs some special lookups
                     else if (Utils.assignableFromWrapper(StageConditionals.class, actualType)) {
-                        def st = new StageConditionalTranslator()
+                        def st = new StageConditionalTranslator(script)
                         resolveClosure(argValue, st)
                         resultValue = st.toWhen()
                     }
@@ -197,17 +199,6 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
         def mapCopy = [:]
         mapCopy.putAll(actualMap)
         return mapCopy
-    }
-
-    /**
-     * @param c The closure to wrap.
-     */
-    private StepsBlock createStepsBlock(c) {
-        // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
-        StepsBlock wrapper = new StepsBlock()
-        wrapper.setClosure(c)
-
-        return wrapper
     }
 
     /**

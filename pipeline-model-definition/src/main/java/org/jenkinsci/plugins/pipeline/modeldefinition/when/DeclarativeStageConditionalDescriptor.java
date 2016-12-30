@@ -26,11 +26,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
 import hudson.ExtensionList;
-import hudson.model.Descriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
-import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -39,17 +37,8 @@ import java.util.*;
 /**
  * Base descriptor for {@link DeclarativeStageConditional}.
  */
-public abstract class DeclarativeStageConditionalDescriptor extends Descriptor<DeclarativeStageConditional> {
-
-    public @Nonnull
-    String getName() {
-        Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
-        if (symbolValues.isEmpty()) {
-            throw new IllegalArgumentException("DeclarativeStageConditional descriptor class " + this.getClass().getName()
-                    + " does not have a @Symbol and does not override getName().");
-        }
-        return symbolValues.iterator().next();
-    }
+public abstract class DeclarativeStageConditionalDescriptor<S extends DeclarativeStageConditional<S>>
+        extends WithScriptDescriptor<S> {
 
     /**
      * Get all {@link DeclarativeStageConditionalDescriptor}s.
@@ -81,18 +70,6 @@ public abstract class DeclarativeStageConditionalDescriptor extends Descriptor<D
     }
 
     /**
-     * Creates an instance of the corresponding {@link DeclarativeOption} from the given arguments.
-     *
-     * @param arguments A map of strings/objects to be passed to the constructor.
-     * @return An instantiated {@link DeclarativeOption}
-     * @throws Exception
-     */
-    public DeclarativeStageConditional newInstance(Map<String,Object> arguments) throws Exception {
-        return new DescribableModel<>(clazz).instantiate(arguments);
-    }
-
-
-    /**
      * For a given descriptor and map of arguments, return an instance using those arguments.
      *
      * @param descriptor The descriptor instance
@@ -100,8 +77,9 @@ public abstract class DeclarativeStageConditionalDescriptor extends Descriptor<D
      * @return The instantiated {@link DeclarativeOption} instance.
      * @throws Exception
      */
-    public static @Nonnull DeclarativeStageConditional instanceFromDescriptor(@Nonnull DeclarativeStageConditionalDescriptor descriptor,
-                                                                    Map<String,Object> arguments) throws Exception {
+    @Nonnull
+    public static DeclarativeStageConditional<?> instanceFromDescriptor(@Nonnull DeclarativeStageConditionalDescriptor<?> descriptor,
+                                                                        Map<String,Object> arguments) throws Exception {
         return descriptor.newInstance(arguments);
     }
 }

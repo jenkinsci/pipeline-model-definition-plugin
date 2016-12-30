@@ -23,30 +23,20 @@
  */
 
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class LabelScript extends DeclarativeAgentScript<Label> {
 
-    public LabelScript(CpsScript s, Label a) {
-        super(s, a)
+class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<EnvironmentConditional> {
+    public EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
+        super(s, c)
     }
 
     @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(describable?.label) {
-                    body.call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
-            }
-        }
+    public boolean evaluate() {
+        return describable.environmentMatches()
     }
 }

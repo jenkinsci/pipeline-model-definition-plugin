@@ -40,9 +40,10 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelActi
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
-
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -350,5 +351,30 @@ public class Utils {
 
         return knownTypes
     }
+
+    /**
+     * Determines whether a given {@link UninstantiatedDescribable} is of a given type.
+     *
+     * @param ud The {@link UninstantiatedDescribable} to check
+     * @param base The {@link Class}
+     * @return True if the uninstantiated describable is of the type given
+     */
+    public static boolean isOfType(UninstantiatedDescribable ud, Class<?> base) {
+        Descriptor d = SymbolLookup.get().findDescriptor(base, ud.symbol)
+        return d != null
+    }
+
+    /**
+     * @param c The closure to wrap.
+     */
+    public static StepsBlock createStepsBlock(c) {
+        // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
+        StepsBlock wrapper = new StepsBlock()
+        wrapper.setClosure(c)
+
+        return wrapper
+    }
+
+
 
 }

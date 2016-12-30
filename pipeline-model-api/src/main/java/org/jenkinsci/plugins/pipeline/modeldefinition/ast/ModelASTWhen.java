@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,7 @@ public class ModelASTWhen extends ModelASTElement {
 
     private List<ModelASTStep> conditions = new ArrayList<>();
 
-    ModelASTWhen(Object sourceLocation) {
+    public ModelASTWhen(Object sourceLocation) {
         super(sourceLocation);
     }
 
@@ -75,4 +76,21 @@ public class ModelASTWhen extends ModelASTElement {
             step.removeSourceLocation();
         }
     }
+
+    @Override
+    public String toString() {
+        return "ModelASTWhen{" +
+                "conditions=" + conditions +
+                "}";
+    }
+
+    @Override
+    public void validate(final ModelValidator validator) {
+        validator.validateElement(this);
+        for (ModelASTStep s : conditions) {
+            s.validate(validator);
+        }
+    }
+
+
 }

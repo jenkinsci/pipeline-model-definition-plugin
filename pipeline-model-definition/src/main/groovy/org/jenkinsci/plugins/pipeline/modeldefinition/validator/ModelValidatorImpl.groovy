@@ -175,7 +175,7 @@ class ModelValidatorImpl implements ModelValidator {
             boolean isUnknownName = false
             when.conditions.each {step ->
                 if (!(step.name in allNames)) {
-                    errorCollector.error(when, Messages.ModelValidator_ModelASTWhen_unknown(step.name, allNames.join(", ")))
+                    errorCollector.error(when, Messages.ModelValidatorImpl_UnknownWhenConditional(step.name, allNames.join(", ")))
                     isUnknownName = true
                 } else {
                     step.args

@@ -30,9 +30,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
 
-public class None extends DeclarativeAgent {
+public class None extends DeclarativeAgent<None> {
 
     @DataBoundConstructor
     public None() {
@@ -40,6 +39,6 @@ public class None extends DeclarativeAgent {
     }
 
     @Extension(ordinal = -1000) @Symbol("none")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor {
+    public static class DescriptorImpl extends DeclarativeAgentDescriptor<None> {
     }
 }

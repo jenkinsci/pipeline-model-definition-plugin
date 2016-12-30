@@ -290,17 +290,28 @@
       ]
     },
     "when": {
-      "description": "Closure to evaluate if the stage should run or not",
+      "description": "Conditions to evaluate whether the stage should run or not",
       "type": "object",
       "properties": {
-        "arguments": {
-          "$ref": "#/definitions/rawArgument"
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/step"
+              },
+              {
+                "$ref": "#/definitions/treeStep"
+              }
+            ]
+          }
         }
-
       },
-
+      "required": [
+        "conditions"
+      ],
       "additionalProperties": false
-
     },
     "post": {
       "description": "An array of build conditions with blocks of steps to run if those conditions are satisfied at the end of the build while still on the image/node the build ran on",

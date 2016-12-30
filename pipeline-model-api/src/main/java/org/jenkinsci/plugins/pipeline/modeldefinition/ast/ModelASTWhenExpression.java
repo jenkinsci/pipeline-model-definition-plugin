@@ -25,7 +25,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
@@ -37,17 +36,7 @@ public class ModelASTWhenExpression extends AbstractModelASTCodeBlock {
     }
 
     @Override
-    public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        if (getArgs() != null) {
-            o.accumulate("arguments", getArgs().toJSON());
-        }
-        return o;
-    }
-
-    @Override
     public void validate(ModelValidator validator) {
-        super.validate(validator);
-        validator.validateElement(this);
+        // no-op - we don't do validation of script blocks
     }
 }

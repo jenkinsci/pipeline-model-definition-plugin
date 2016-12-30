@@ -22,31 +22,18 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
-import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import java.io.Serializable;
 
-public class LabelScript extends DeclarativeAgentScript<Label> {
+public abstract class WithScriptScript<T extends WithScriptDescribable<T>> implements Serializable {
+    protected CpsScript script;
+    protected T describable;
 
-    public LabelScript(CpsScript s, Label a) {
-        super(s, a)
-    }
-
-    @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(describable?.label) {
-                    body.call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
-            }
-        }
+    public WithScriptScript(CpsScript s, T d) {
+        this.script = s;
+        this.describable = d;
     }
 }

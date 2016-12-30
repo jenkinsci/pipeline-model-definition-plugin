@@ -27,7 +27,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import hudson.model.JobProperty
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.StepContext
 
@@ -36,20 +39,12 @@ import org.jenkinsci.plugins.workflow.steps.StepContext
  */
 @ToString
 @EqualsAndHashCode
-class StageConditionals implements MethodsToList<DeclarativeStageConditional>, Serializable {
-    private List<DeclarativeStageConditional> conditions;
+class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
+    public List<DeclarativeStageConditional> conditions = []
 
-    StageConditionals(List<DeclarativeStageConditional> conditions) {
-        this.conditions = conditions
-    }
-
-    public boolean evaluate(StepContext context, CpsScript script) {
-        for (int i = 0; i < conditions.size(); i++) {
-            DeclarativeStageConditional cond = conditions[i];
-            if (!cond.evaluate(context, script)) {
-                return false
-            }
+    public StageConditionals(List<UninstantiatedDescribable> input) {
+        input.each { i ->
+            conditions.add((DeclarativeStageConditional<? extends DeclarativeStageConditional>) i.instantiate())
         }
-        return true
     }
 }

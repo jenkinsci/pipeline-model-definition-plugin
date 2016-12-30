@@ -27,17 +27,30 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.workflow.cps.CpsScript
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.createStepsBlock
+import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.isOfType
 
 /**
  * Translates a closure containing a sequence of method calls into a {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals} implementation
  */
 public class StageConditionalTranslator implements MethodMissingWrapper, Serializable {
 
-    List<Object> actualList = []
+    List<UninstantiatedDescribable> actualList = []
+    CpsScript script
+
+    StageConditionalTranslator(CpsScript script) {
+        this.script = script
+    }
 
     def methodMissing(String s, args) {
-        /*def argVal
+        def argVal
+        def retVal
+
         if (args instanceof List || args instanceof Object[]) {
             if (args.size() > 0) {
                 argVal = args[0]
@@ -48,16 +61,26 @@ public class StageConditionalTranslator implements MethodMissingWrapper, Seriali
             argVal = args
         }
 
-        def retVal*/
+        if (Utils.instanceOfWrapper(Closure.class, argVal)) {
+            argVal = createStepsBlock(argVal)
+        }
 
         DeclarativeStageConditionalDescriptor descriptor = DeclarativeStageConditionalDescriptor.byName(s)
         if (descriptor == null) {
             throw new NoSuchMethodError(Messages.ModelValidator_ModelASTWhen_unknown(s, DeclarativeStageConditionalDescriptor.allNames().join(", ")))
         }
 
-        def instance = descriptor.newInstance(args) //TODO args probably needs to be massaged somehow, see org.jenkinsci.plugins.workflow.cps.DSL.parseArgs(java.lang.Object, boolean, java.lang.String, boolean) for inspiration
-        actualList << instance
-        return instance
+        if (argVal != null) {
+            retVal = script."${s}"(argVal)
+        } else {
+            retVal = script."${s}"()
+        }
+
+        if (isOfType((UninstantiatedDescribable) retVal, DeclarativeStageConditional.class)) {
+            actualList << (UninstantiatedDescribable) retVal
+        }
+
+        return retVal
 
     }
 
