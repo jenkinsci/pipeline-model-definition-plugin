@@ -62,10 +62,11 @@ public class ModelASTWhen extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder("when {\n");
         for (ModelASTStep step: conditions) {
             result.append(step.toGroovy()).append("\n");
         }
+        result.append("}\n");
         return result.toString();
     }
 
