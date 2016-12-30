@@ -157,7 +157,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"emptyJobProperties", Messages.JSONParser_TooFewItems("/pipeline/options/options", 0, 1)});
         result.add(new Object[]{"emptyParameters", Messages.JSONParser_TooFewItems("/pipeline/parameters/parameters", 0, 1)});
         result.add(new Object[]{"emptyTriggers", Messages.JSONParser_TooFewItems("/pipeline/triggers/triggers", 0, 1)});
-        result.add(new Object[]{"emptyWhen", Messages.JSONParser_TooFewItems("/pipeline/when/conditions", 0, 1)});
+        result.add(new Object[]{"emptyWhen", Messages.JSONParser_TooFewItems("/pipeline/stages/0/when/conditions", 0, 1)});
         result.add(new Object[]{"mixedMethodArgs", Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters()});
 
         result.add(new Object[]{"rejectPropertiesStepInMethodCall",
