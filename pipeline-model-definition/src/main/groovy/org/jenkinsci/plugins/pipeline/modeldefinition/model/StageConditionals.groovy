@@ -25,20 +25,18 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import hudson.model.JobProperty
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-import org.jenkinsci.plugins.workflow.steps.StepContext
 
 /**
  * The {@link Stage#when} block.
  */
 @ToString
 @EqualsAndHashCode
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
     public List<DeclarativeStageConditional> conditions = []
 

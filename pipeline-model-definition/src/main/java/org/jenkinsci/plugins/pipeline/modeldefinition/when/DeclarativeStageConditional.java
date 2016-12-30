@@ -42,7 +42,7 @@ public abstract class DeclarativeStageConditional<S extends DeclarativeStageCond
     @Nullable
     protected <T> T getContextVariable(Class<T> key) throws IOException, InterruptedException {
         CpsThread current = CpsThread.current();
-        if (current != null) {
+        if (current == null) {
             throw new IllegalStateException("Needs to be called within a CPS Thread");
         }
         StepExecution step = current.getStep();
