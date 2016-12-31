@@ -101,6 +101,13 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenInvalidParameterType() throws Exception {
+        expectError("whenInvalidParameterType")
+                .logContains(Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4))
+                .go();
+    }
+
+    @Test
     public void emptyWhen() throws Exception {
         expectError("emptyWhen")
                 .logContains(Messages.ModelValidatorImpl_EmptyWhen())
@@ -112,6 +119,20 @@ public class ValidatorTest extends AbstractModelDefTest {
         expectError("unknownWhenConditional")
                 .logContains(Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
                         StringUtils.join(DeclarativeStageConditionalDescriptor.allNames(), ", ")))
+                .go();
+    }
+
+    @Test
+    public void whenMissingRequiredParameter() throws Exception {
+        expectError("whenMissingRequiredParameter")
+                .logContains(Messages.ModelValidatorImpl_MissingRequiredStepParameter("value"))
+                .go();
+    }
+
+    @Test
+    public void whenUnknownParameter() throws Exception {
+        expectError("whenUnknownParameter")
+                .logContains(Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name"))
                 .go();
     }
 

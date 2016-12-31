@@ -37,25 +37,25 @@ import java.util.List;
  */
 public class ModelASTWhen extends ModelASTElement {
 
-    private List<ModelASTStep> conditions = new ArrayList<>();
+    private List<ModelASTWhenCondition> conditions = new ArrayList<>();
 
     public ModelASTWhen(Object sourceLocation) {
         super(sourceLocation);
     }
 
-    public List<ModelASTStep> getConditions() {
+    public List<ModelASTWhenCondition> getConditions() {
         return conditions;
     }
 
-    public void setConditions(List<ModelASTStep> conditions) {
+    public void setConditions(List<ModelASTWhenCondition> conditions) {
         this.conditions = conditions;
     }
 
     @Override
     public Object toJSON() {
         final JSONArray a = new JSONArray();
-        for (ModelASTStep step: conditions) {
-            a.add(step.toJSON());
+        for (ModelASTWhenCondition c: conditions) {
+            a.add(c.toJSON());
         }
         return new JSONObject().accumulate("conditions", a);
     }
@@ -63,8 +63,8 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public String toGroovy() {
         StringBuilder result = new StringBuilder("when {\n");
-        for (ModelASTStep step: conditions) {
-            result.append(step.toGroovy()).append("\n");
+        for (ModelASTWhenCondition c: conditions) {
+            result.append(c.toGroovy()).append("\n");
         }
         result.append("}\n");
         return result.toString();
@@ -73,8 +73,8 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTStep step: conditions) {
-            step.removeSourceLocation();
+        for (ModelASTWhenCondition c: conditions) {
+            c.removeSourceLocation();
         }
     }
 
@@ -88,8 +88,8 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTStep s : conditions) {
-            s.validate(validator);
+        for (ModelASTWhenCondition s : conditions) {
+            validator.validateElement(s);
         }
     }
 

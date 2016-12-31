@@ -180,6 +180,9 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"notificationsSectionRemoved", "At /pipeline: additional properties are not allowed"});
         result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
                 "branch, environment, expression")});
+        result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4)});
+        result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
+        result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
 
         result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
                 "  \"stages\": [  {\n" +
