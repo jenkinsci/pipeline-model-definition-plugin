@@ -172,15 +172,6 @@ class ModelValidatorImpl implements ModelValidator {
         if (when.conditions.isEmpty()) {
             errorCollector.error(when, Messages.ModelValidatorImpl_EmptyWhen())
             valid = false
-        } else {
-            def allNames = DeclarativeStageConditionalDescriptor.allNames()
-
-            when.conditions.each { step ->
-                if (!(step.name in allNames)) {
-                    errorCollector.error(when, Messages.ModelValidatorImpl_UnknownWhenConditional(step.name, allNames.join(", ")))
-                    valid = false
-                }
-            }
         }
 
         return valid
@@ -206,7 +197,12 @@ class ModelValidatorImpl implements ModelValidator {
 
     private boolean validateStep(ModelASTStep step, DescribableModel<? extends Describable> model, Descriptor desc) {
         boolean valid = true
-        
+
+        if (step instanceof AbstractModelASTCodeBlock) {
+            // No validation needed for code blocks like expression and script
+            return true
+        }
+
         if (step.args instanceof ModelASTNamedArgumentList) {
             ModelASTNamedArgumentList argList = (ModelASTNamedArgumentList) step.args
 
