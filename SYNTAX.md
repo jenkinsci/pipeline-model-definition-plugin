@@ -111,7 +111,7 @@ stages {
     stage('second') {
         agent label:'some-node'
         when {
-            env.BRANCH == 'master'
+            branch "master"
         }
         steps {
             checkout scm
@@ -144,6 +144,33 @@ stages {
 }
 ```
 
+#### when
+* *Description*: A block within a `stage` that determines whether the stage should be executed.
+* *Required*: No
+* *Parameters*: None
+* *Takes a Closure*: Yes
+* *Closure Contents*: One or more of the possible `when` conditions, provided by an extension point.
+    * *Built-In `when` Conditions*:
+        * `branch` - run when the branch being built matches the branch pattern given.
+        * `environment` - run when the environment contains a given environment variable with a given value.
+        * `expression` - run when an arbitrary Groovy expression returning a boolean is true.
+* *Examples*:
+```groovy
+when {
+    branch "*/master"
+}
+
+when {
+    environment name: "FOO", value: "SOME_OTHER_VALUE"
+}
+
+when {
+    expression {
+        return "foo" == "bar"
+    }
+}
+```
+        
 #### script
 * *Description*: A block within a `stage`'s steps that can contain Pipeline code not subject to the "declarative" subset
 described below.
