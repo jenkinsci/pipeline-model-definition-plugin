@@ -394,4 +394,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("something special")
                 .go();
     }
+
+    @Issue("JENKINS-40188")
+    @Test
+    public void booleanParamBuildStep() throws Exception {
+        env(s).set();
+        expect("booleanParamBuildStep")
+                .logContains("[Pipeline] { (promote)", "Scheduling project")
+                .go();
+    }
 }
