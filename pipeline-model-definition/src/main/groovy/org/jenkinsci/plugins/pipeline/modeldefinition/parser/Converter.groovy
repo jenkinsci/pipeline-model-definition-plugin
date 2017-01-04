@@ -43,7 +43,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
-import org.jenkinsci.plugins.workflow.libs.Library
 
 import java.security.CodeSource
 import java.security.cert.Certificate
