@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
@@ -112,7 +113,10 @@ public final class ModelASTStage extends ModelASTElement {
                     result.append(',');
                 }
                 result.append('\n');
-                result.append('"' + branch.getName() + '"').append(": {\n").append(branch.toGroovy()).append("\n}");
+                result.append('"' + StringEscapeUtils.escapeJava(branch.getName()) + '"')
+                        .append(": {\n")
+                        .append(branch.toGroovy())
+                        .append("\n}");
             }
             if (failFast != null && failFast) {
                 result.append(",\nfailFast: true");

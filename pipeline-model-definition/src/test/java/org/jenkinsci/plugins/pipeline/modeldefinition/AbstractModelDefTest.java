@@ -132,7 +132,8 @@ public abstract class AbstractModelDefTest {
             "basicWhen",
             "skippedWhen",
             "parallelPipelineWithFailFast",
-            "parallelPipelineWithSpaceInBranch"
+            "parallelPipelineWithSpaceInBranch",
+            "parallelPipelineQuoteEscaping"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
