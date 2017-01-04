@@ -60,7 +60,7 @@ public class Stage implements NestedModel, Serializable {
     }
 
     Stage agent(Agent a) {
-        this.agent = a.convertZeroArgs()
+        this.agent = a?.convertZeroArgs()
         return this
     }
 

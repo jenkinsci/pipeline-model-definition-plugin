@@ -69,7 +69,6 @@ public class Root implements NestedModel, Serializable {
 
     Root agent(Agent a) {
         this.agent = a.convertZeroArgs()
-        System.err.println("arg: ${this.agent}")
         return this
     }
 
