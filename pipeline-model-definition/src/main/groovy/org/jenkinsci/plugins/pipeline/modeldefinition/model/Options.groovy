@@ -76,6 +76,7 @@ public class Options implements Serializable {
 
     private static final Object OPTION_CACHE_KEY = new Object()
     private static final Object CACHE_KEY = new Object()
+    private static final Object WRAPPER_STEPS_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
         Utils.generateTypeCache(JobPropertyDescriptor.class, false, ["pipelineTriggers", "parameters"])
@@ -83,20 +84,18 @@ public class Options implements Serializable {
     private static final LoadingCache<Object,Map<String,String>> optionTypeCache =
         Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [])
 
-    public static Map<String,String> getEligibleWrapperStepClasses() {
-        Map<String,String> stepNames = [:]
-
-        // TODO: Figure out if we want to support metasteps? Don't think so.
-        ExtensionList.lookup(StepDescriptor.class).each { s ->
-            if (s.takesImplicitBlockArgument()
-                && !(s.getFunctionName() in ModelASTMethodCall.blockedSteps.keySet())
-                && !(Launcher.class in s.getRequiredContext())
-                && !(FilePath.class in s.getRequiredContext())) {
-                stepNames[s.getFunctionName()] = s.clazz.getName()
+    private static final LoadingCache<Object,Map<String,String>> wrapperStepsTypeCache  =
+        Utils.generateTypeCache(StepDescriptor.class, false, [],
+            { StepDescriptor s ->
+                return s.takesImplicitBlockArgument() &&
+                    !(s.getFunctionName() in ModelASTMethodCall.blockedSteps.keySet()) &&
+                    !(Launcher.class in s.getRequiredContext()) &&
+                    !(FilePath.class in s.getRequiredContext())
             }
-        }
+        )
 
-        return stepNames
+    public static Map<String,String> getEligibleWrapperStepClasses() {
+        return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
     }
 
     public static List<String> getEligibleWrapperSteps() {
