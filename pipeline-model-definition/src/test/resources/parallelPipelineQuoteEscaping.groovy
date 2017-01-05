@@ -21,30 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-
-/**
- * A {@link BuildCondition} for matching unstable builds.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=500d) @Symbol("unstable")
-public class Unstable extends BuildCondition {
-    @Override
-    public boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() != null && r.getResult().equals(Result.UNSTABLE)
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                parallel(first: {
+                    echo "First branch"
+                },
+                    '"second"': {
+                        echo "Second branch"
+                    })
+            }
+        }
     }
-
-    @Override
-    public String getDescription() {
-        return Messages.Unstable_Description()
-    }
-
-    public static final long serialVersionUID = 1L
 }
+
+
+
