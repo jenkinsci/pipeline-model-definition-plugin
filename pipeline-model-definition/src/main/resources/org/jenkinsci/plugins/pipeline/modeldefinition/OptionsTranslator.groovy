@@ -62,7 +62,11 @@ public class OptionsTranslator implements MethodMissingWrapper, Serializable {
 
         UninstantiatedDescribable retVal
 
-        if (argVal != null) {
+        if (s in Options.eligibleWrapperSteps) {
+            actualList << [s, argVal]
+
+            return true
+        } else if (argVal != null) {
             retVal = script."${s}"(argVal)
         } else {
             retVal = script."${s}"()

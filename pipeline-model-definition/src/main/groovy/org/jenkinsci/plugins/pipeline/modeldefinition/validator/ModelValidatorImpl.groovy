@@ -41,7 +41,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -472,36 +471,6 @@ class ModelValidatorImpl implements ModelValidator {
                 return false
             }
         }
-        return true
-    }
-
-    public boolean validateElement(@Nonnull ModelASTWrapper wrapper) {
-        boolean valid = true
-
-        if (wrapper.name == null) {
-            // This means that we failed at compilation time so can move on.
-        }
-        // We can't do trigger validation without a Jenkins instance, so move on.
-        else if (!(wrapper.name in Wrappers.getEligibleSteps())) {
-            errorCollector.error(wrapper,
-                Messages.ModelValidatorImpl_InvalidSectionType("wrapper", wrapper.name, Wrappers.getEligibleSteps()))
-            valid = false
-        } else if (wrapper.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
-            && !wrapper.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
-            errorCollector.error(wrapper, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
-            valid = false
-        } else {
-            valid = validateElement((ModelASTMethodCall)wrapper)
-        }
-        return valid
-    }
-
-    public boolean validateElement(@Nonnull ModelASTWrappers wrappers) {
-        if (wrappers.wrappers.isEmpty()) {
-            errorCollector.error(wrappers, Messages.ModelValidatorImpl_EmptySection("wrappers"))
-            return false
-        }
-
         return true
     }
 

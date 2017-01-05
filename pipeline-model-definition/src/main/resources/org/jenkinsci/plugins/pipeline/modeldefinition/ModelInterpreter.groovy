@@ -70,7 +70,7 @@ public class ModelInterpreter implements Serializable {
 
                 // Entire build, including notifications, runs in the withEnv.
                 withEnvBlock(root.getEnvVars()) {
-                    inWrappers(root.wrappers) {
+                    inWrappers(root.options) {
                         // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                         // even if the build fails.
                         // We save the caught error, if any, for throwing at the end of the build.
@@ -312,14 +312,14 @@ public class ModelInterpreter implements Serializable {
 
     /**
      * Executes the given closure inside 0 or more wrapper blocks if appropriate
-     * @param wrappers The wrapper configuration we're executing in
+     * @param options The options configuration we're executing in
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def inWrappers(Wrappers wrappers, Closure body) {
-        if (wrappers != null) {
+    def inWrappers(Options options, Closure body) {
+        if (options?.wrappers != null) {
             return {
-                recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
+                recursiveWrappers(options.wrappers.keySet().toList(), options.wrappers, body)
             }.call()
         } else {
             return {
@@ -335,7 +335,7 @@ public class ModelInterpreter implements Serializable {
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def recursiveWrappers(List<String> wrapperNames, Wrappers wrappers, Closure body) {
+    def recursiveWrappers(List<String> wrapperNames, Map<String,Object> wrappers, Closure body) {
         if (wrapperNames.isEmpty()) {
             return {
                 body.call()

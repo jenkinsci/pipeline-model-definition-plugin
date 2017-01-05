@@ -296,8 +296,7 @@ parameters {
 ```
 
 ### Options
-* *Description*: Other options exclusive to Declarative, such as `skipDefaultCheckout`, and traditional `JobProperty`s, such as 
-build discarding, limiting concurrent builds, and more.
+* *Description*: Traditional `JobProperty`s, such as `buildDiscarder` or `disableConcurrentBuilds`, Declarative-specifc options, such as `skipDefaultCheckout`, and "wrappers" that should wrap the entire build, such as `timeout`.
 * *Required*: No
 * *Allowed In*: Top-level `pipeline` closure only.
 * *Parameters*: None
