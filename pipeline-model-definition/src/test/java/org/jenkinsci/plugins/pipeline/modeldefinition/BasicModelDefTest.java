@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import com.google.common.base.Predicate;
 import hudson.model.Result;
 import hudson.model.Slave;
+import jenkins.plugins.git.GitSCMSource;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
@@ -40,6 +41,9 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.junit.BeforeClass;
@@ -47,6 +51,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -387,6 +392,23 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         };
     }
 
+    @Issue("JENKINS-40642")
+    @Test
+    public void libraryAnnotation() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
+        otherRepo.write("vars/myecho.txt", "Says something very special!");
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("echo-utils",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("libraryAnnotation")
+                .logContains("something special")
+                .go();
+    }
+
     @Issue("JENKINS-40188")
     @Test
     public void booleanParamBuildStep() throws Exception {
@@ -395,5 +417,4 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (promote)", "Scheduling project")
                 .go();
     }
-
 }
