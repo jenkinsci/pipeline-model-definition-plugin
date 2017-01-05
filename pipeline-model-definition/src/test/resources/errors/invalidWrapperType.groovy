@@ -24,7 +24,7 @@
 
 pipeline {
     agent none
-    wrappers {
+    options {
         echo "I am not eligble"
     }
     stages {

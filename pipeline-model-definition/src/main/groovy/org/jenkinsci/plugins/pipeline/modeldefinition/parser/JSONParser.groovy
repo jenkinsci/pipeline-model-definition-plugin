@@ -113,9 +113,6 @@ class JSONParser implements Parser {
                 case 'parameters':
                     pipelineDef.parameters = parseBuildParameters(pipelineJson.getJSONObject("parameters"))
                     break
-                case 'wrappers':
-                    pipelineDef.wrappers = parseWrappers(pipelineJson.getJSONObject("wrappers"))
-                    break
                 default:
                     errorCollector.error(pipelineDef, Messages.Parser_UndefinedSection(sectionName))
             }
@@ -234,20 +231,6 @@ class JSONParser implements Parser {
         }
 
         return params
-    }
-
-    public @CheckForNull ModelASTWrappers parseWrappers(JSONObject j) {
-        ModelASTWrappers wrappers = new ModelASTWrappers(j)
-
-        j.getJSONArray("wrappers").each { p ->
-            ModelASTWrapper w = new ModelASTWrapper(p)
-            ModelASTMethodCall m = parseMethodCall(p)
-            w.args = m.args
-            w.name = m.name
-            wrappers.wrappers.add(w)
-        }
-
-        return wrappers
     }
 
     public @CheckForNull parseKeyValueOrMethodCallPair(JSONObject j) {

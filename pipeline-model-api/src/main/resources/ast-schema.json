@@ -117,7 +117,7 @@
       ]
     },
     "options": {
-      "description": "One or more options (including job properties)",
+      "description": "One or more options (including job properties, wrappers, and options specific to Declarative Pipelines)",
       "type": "object",
       "properties": {
         "options": {
@@ -149,20 +149,6 @@
       "type": "object",
       "properties": {
         "parameters": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/methodCall"
-          },
-          "minItems": 1
-        }
-      },
-      "additionalProperties": false
-    },
-    "wrappers": {
-      "description": "One or more wrappers",
-      "type": "object",
-      "properties": {
-        "wrappers": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/methodCall"
@@ -391,9 +377,6 @@
         },
         "parameters": {
           "$ref": "#/definitions/parameters"
-        },
-        "wrappers": {
-          "$ref": "#/definitions/wrappers"
         }
       },
       "required": [

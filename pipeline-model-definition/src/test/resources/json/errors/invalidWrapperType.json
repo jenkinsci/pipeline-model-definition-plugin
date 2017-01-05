@@ -20,7 +20,8 @@
         "value": true
       }
     }],
-  "wrappers": {"wrappers": [  {
+  },
+  "options": {"options": [  {
     "name": "echo",
     "arguments": [    {
       "isLiteral": true,

@@ -52,6 +52,7 @@ import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
 import javax.annotation.Nullable
@@ -312,13 +313,13 @@ public class Utils {
      * @return A {@link LoadingCache} for looking up types from symbols.
      */
     static generateTypeCache(Class<? extends Descriptor> type, boolean includeClassNames = false,
-                             List<String> excludedSymbols = []) {
+                             List<String> excludedSymbols = [], Closure<Boolean> filter = null) {
         return CacheBuilder.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(new CacheLoader<Object, Map<String, String>>() {
             @Override
             Map<String, String> load(Object key) throws Exception {
-                return populateTypeCache(type, includeClassNames, excludedSymbols)
+                return populateTypeCache(type, includeClassNames, excludedSymbols, filter)
             }
         })
     }
@@ -333,18 +334,26 @@ public class Utils {
      */
     private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type,
                                                         boolean includeClassNames = false,
-                                                        List<String> excludedSymbols = []) {
+                                                        List<String> excludedSymbols = [],
+                                                        Closure<Boolean> filter = null) {
         Map<String,String> knownTypes = [:]
 
         ExtensionList.lookup(type).each { t ->
-            Set<String> symbolValue = SymbolLookup.getSymbolValue(t)
-            if (!symbolValue.isEmpty() && !symbolValue.any { excludedSymbols.contains(it) }) {
-                knownTypes.put(symbolValue.iterator().next(), t.clazz.getName())
-            }
+            if (filter == null || filter.call(t)) {
+                // Have to special-case StepDescriptor since it doesn't actually have symbols!
+                if (t instanceof StepDescriptor) {
+                    knownTypes.put(t.functionName, t.clazz.getName())
+                } else {
+                    Set<String> symbolValue = SymbolLookup.getSymbolValue(t)
+                    if (!symbolValue.isEmpty() && !symbolValue.any { excludedSymbols.contains(it) }) {
+                        knownTypes.put(symbolValue.iterator().next(), t.clazz.getName())
+                    }
+                }
 
-            if (includeClassNames) {
-                // Add the class name mapping even if we also found the symbol, for backwards compatibility reasons.
-                knownTypes.put(t.clazz.getName(), t.clazz.getName())
+                if (includeClassNames) {
+                    // Add the class name mapping even if we also found the symbol, for backwards compatibility reasons.
+                    knownTypes.put(t.clazz.getName(), t.clazz.getName())
+                }
             }
         }
 
