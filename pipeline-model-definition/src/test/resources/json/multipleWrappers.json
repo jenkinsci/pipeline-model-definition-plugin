@@ -19,8 +19,8 @@
         "isLiteral": true,
         "value": true
       }
-    }],
-  },
+    }
+  ],
   "options": {"options":   [
     {
       "name": "timeout",
