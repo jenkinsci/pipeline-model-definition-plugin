@@ -30,7 +30,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Wrappers;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -422,7 +421,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void invalidWrapperType() throws Exception {
         expectError("invalidWrapperType")
-                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("wrapper", "echo", Wrappers.getEligibleSteps()))
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", Options.getAllowedOptionTypes().keySet()))
                 .go();
     }
 

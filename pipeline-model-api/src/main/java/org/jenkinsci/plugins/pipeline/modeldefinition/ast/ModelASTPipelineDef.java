@@ -19,7 +19,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTOptions options;
     private ModelASTBuildParameters parameters;
     private ModelASTTriggers triggers;
-    private ModelASTWrappers wrappers;
 
     public ModelASTPipelineDef(Object sourceLocation) {
         super(sourceLocation);
@@ -47,11 +46,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
             a.put("triggers", triggers.toJSON());
         } else {
             a.put("triggers", null);
-        }
-        if (wrappers != null && !wrappers.getWrappers().isEmpty()) {
-            a.put("wrappers", wrappers.toJSON());
-        } else {
-            a.put("wrappers", null);
         }
         return new JSONObject().accumulate("pipeline", a);
     }
@@ -84,9 +78,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (triggers != null) {
             triggers.validate(validator);
         }
-        if (wrappers != null) {
-            wrappers.validate(validator);
-        }
     }
 
     @Override
@@ -116,9 +107,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         }
         if (triggers != null && !triggers.getTriggers().isEmpty()) {
             result.append(triggers.toGroovy()).append('\n');
-        }
-        if (wrappers != null && !wrappers.getWrappers().isEmpty()) {
-            result.append(wrappers.toGroovy()).append('\n');
         }
 
         result.append("}\n");
@@ -191,9 +179,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (triggers != null) {
             triggers.removeSourceLocation();
         }
-        if (wrappers != null) {
-            wrappers.removeSourceLocation();
-        }
     }
 
     private String indent(int count) {
@@ -264,13 +249,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         this.triggers = triggers;
     }
 
-    public ModelASTWrappers getWrappers() {
-        return wrappers;
-    }
-
-    public void setWrappers(ModelASTWrappers wrappers) {
-        this.wrappers = wrappers;
-    }
 
     @Override
     public String toString() {
@@ -283,7 +261,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 ", options=" + options +
                 ", parameters=" + parameters +
                 ", triggers=" + triggers +
-                ", wrappers=" + wrappers +
                 "}";
     }
 
@@ -326,10 +303,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (getParameters() != null ? !getParameters().equals(that.getParameters()) : that.getParameters() != null) {
             return false;
         }
-        if (getTriggers() != null ? !getTriggers().equals(that.getTriggers()) : that.getTriggers() != null) {
-            return false;
-        }
-        return getWrappers() != null ? getWrappers().equals(that.getWrappers()) : that.getWrappers() == null;
+        return getTriggers() != null ? getTriggers().equals(that.getTriggers()) : that.getTriggers() == null;
 
     }
 
@@ -344,7 +318,6 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getTriggers() != null ? getTriggers().hashCode() : 0);
-        result = 31 * result + (getWrappers() != null ? getWrappers().hashCode() : 0);
         return result;
     }
 }

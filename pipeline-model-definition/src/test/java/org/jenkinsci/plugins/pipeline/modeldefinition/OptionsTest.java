@@ -66,7 +66,9 @@ public class OptionsTest extends AbstractModelDefTest {
     @Test
     public void multipleProperties() throws Exception {
         WorkflowRun b = expect(Result.FAILURE, "multipleProperties")
-                .logContains("[Pipeline] { (foo)", "hello")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();
 
@@ -114,4 +116,26 @@ public class OptionsTest extends AbstractModelDefTest {
 
 
     }
+
+    @Test
+    public void simpleWrapper() throws Exception {
+        expect("simpleWrapper")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .go();
+    }
+
+    @Test
+    public void multipleWrappers() throws Exception {
+        expect("multipleWrappers")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "[Pipeline] retry",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .go();
+    }
+
 }
