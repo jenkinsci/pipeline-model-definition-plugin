@@ -91,8 +91,7 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentNone() throws Exception {
         expect(Result.FAILURE, "agentNone")
-                .logContains("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
-                        "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.",
+                .logContains(Messages.ModelInterpreter_NoNodeContext(),
                         "Perhaps you forgot to surround the code with a step that provides this, such as: node")
                 .go();
     }
