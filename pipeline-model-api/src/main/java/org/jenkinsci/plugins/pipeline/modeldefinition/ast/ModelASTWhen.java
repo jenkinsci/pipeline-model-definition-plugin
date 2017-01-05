@@ -37,24 +37,24 @@ import java.util.List;
  */
 public class ModelASTWhen extends ModelASTElement {
 
-    private List<ModelASTWhenCondition> conditions = new ArrayList<>();
+    private List<ModelASTStep> conditions = new ArrayList<>();
 
     public ModelASTWhen(Object sourceLocation) {
         super(sourceLocation);
     }
 
-    public List<ModelASTWhenCondition> getConditions() {
+    public List<ModelASTStep> getConditions() {
         return conditions;
     }
 
-    public void setConditions(List<ModelASTWhenCondition> conditions) {
+    public void setConditions(List<ModelASTStep> conditions) {
         this.conditions = conditions;
     }
 
     @Override
     public Object toJSON() {
         final JSONArray a = new JSONArray();
-        for (ModelASTWhenCondition c: conditions) {
+        for (ModelASTStep c: conditions) {
             a.add(c.toJSON());
         }
         return new JSONObject().accumulate("conditions", a);
@@ -63,7 +63,7 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public String toGroovy() {
         StringBuilder result = new StringBuilder("when {\n");
-        for (ModelASTWhenCondition c: conditions) {
+        for (ModelASTStep c: conditions) {
             result.append(c.toGroovy()).append("\n");
         }
         result.append("}\n");
@@ -73,7 +73,7 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTWhenCondition c: conditions) {
+        for (ModelASTStep c: conditions) {
             c.removeSourceLocation();
         }
     }
@@ -88,8 +88,8 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTWhenCondition s : conditions) {
-            validator.validateElement(s);
+        for (ModelASTStep s : conditions) {
+            validator.validateWhenCondition(s);
         }
     }
 

@@ -15,7 +15,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  */
 @ToString(includeSuper = true, includeSuperProperties = true)
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
-public class ModelASTStep extends ModelASTElement implements ModelASTWhenCondition {
+public class ModelASTStep extends ModelASTElement {
     private String name;
     private ModelASTArgumentList args;
 

@@ -367,7 +367,7 @@ public class Utils {
     /**
      * @param c The closure to wrap.
      */
-    public static StepsBlock createStepsBlock(c) {
+    public static StepsBlock createStepsBlock(Closure c) {
         // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
         StepsBlock wrapper = new StepsBlock()
         wrapper.setClosure(c)

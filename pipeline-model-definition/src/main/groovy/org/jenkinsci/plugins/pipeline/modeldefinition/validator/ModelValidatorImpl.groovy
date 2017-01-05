@@ -177,21 +177,19 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
-    public boolean validateElement(ModelASTWhenCondition condition) {
-        ModelASTStep step = (ModelASTStep) condition
-
+    public boolean validateWhenCondition(ModelASTStep condition) {
         def allNames = DeclarativeStageConditionalDescriptor.allNames()
 
-        if (!(step.name in allNames)) {
-            errorCollector.error(step, Messages.ModelValidatorImpl_UnknownWhenConditional(step.name, allNames.join(", ")))
+        if (!(condition.name in allNames)) {
+            errorCollector.error(condition, Messages.ModelValidatorImpl_UnknownWhenConditional(condition.name, allNames.join(", ")))
             return false
         } else {
             DescribableModel<? extends DeclarativeStageConditional> model =
-                DeclarativeStageConditionalDescriptor.describableModels.get(step.name)
+                DeclarativeStageConditionalDescriptor.describableModels.get(condition.name)
 
-            Descriptor desc = DeclarativeStageConditionalDescriptor.byName(step.name)
+            Descriptor desc = DeclarativeStageConditionalDescriptor.byName(condition.name)
 
-            return validateStep(step, model, desc)
+            return validateStep(condition, model, desc)
         }
     }
 
