@@ -17,7 +17,7 @@ These are sections that are specified directly within the `pipeline` argument cl
     * *Map Keys*:
         * Note that this will be an `ExtensionPoint`, so plugins will be able to add to the available image providers.
         * `docker`
-            * *Description*: If given, uses this Docker image for the container the build will run in. If no `nodeLabel` is 
+            * *Description*: If given, uses this Docker image for the container the build will run in. If no `label` is 
             given, the container will be run within a simple `node { ... }` block.
         * `dockerfile`
             * *Description*: If given, builds from the Dockerfile in the repository and runs in a container using the resulting image.
@@ -46,7 +46,7 @@ agent {
 agent {
     docker {
         image 'ubuntu:lts'
-        nodeLabel 'has-docker'
+        label 'has-docker'
         args "-v /tmp:/tmp -p 80:80"
     }
 }

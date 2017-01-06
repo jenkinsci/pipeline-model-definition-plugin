@@ -35,7 +35,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 public class DockerPipelineFromDockerfile extends DeclarativeAgent {
-    private String nodeLabel;
+    private String label;
     private Object dockerfile;
     private String args = "";
 
@@ -44,13 +44,13 @@ public class DockerPipelineFromDockerfile extends DeclarativeAgent {
         this.dockerfile = dockerfile;
     }
 
-    public @CheckForNull String getNodeLabel() {
-        return nodeLabel;
+    public @CheckForNull String getLabel() {
+        return label;
     }
 
     @DataBoundSetter
-    public void setNodeLabel(String nodeLabel) {
-        this.nodeLabel = nodeLabel;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public @CheckForNull String getArgs() {

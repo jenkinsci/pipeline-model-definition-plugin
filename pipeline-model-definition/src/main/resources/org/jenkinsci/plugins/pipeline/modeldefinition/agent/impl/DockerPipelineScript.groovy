@@ -40,7 +40,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = declarativeAgent.nodeLabel
+        String targetLabel = declarativeAgent.label
         if (targetLabel == null) {
             targetLabel = script.dockerLabel()?.trim()
         }

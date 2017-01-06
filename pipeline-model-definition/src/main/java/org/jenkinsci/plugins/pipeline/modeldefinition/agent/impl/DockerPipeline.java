@@ -35,7 +35,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class DockerPipeline extends DeclarativeAgent {
-    private String nodeLabel;
+    private String label;
     private String image;
     private String args = "";
 
@@ -44,13 +44,13 @@ public class DockerPipeline extends DeclarativeAgent {
         this.image = image;
     }
 
-    public @Nullable String getNodeLabel() {
-        return nodeLabel;
+    public @Nullable String getLabel() {
+        return label;
     }
 
     @DataBoundSetter
-    public void setNodeLabel(String nodeLabel) {
-        this.nodeLabel = nodeLabel;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public @Nullable String getArgs() {

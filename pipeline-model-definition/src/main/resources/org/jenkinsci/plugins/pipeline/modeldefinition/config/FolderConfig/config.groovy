@@ -29,7 +29,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig
 def f = namespace(lib.FormTagLib)
 
 f.section(title:_("Pipeline Model Definition")) {
-    f.entry(field: "nodeLabel", title: _("Docker Label")) {
+    f.entry(field: "dockerLabel", title: _("Docker Label")) {
         f.textbox()
     }
 }
