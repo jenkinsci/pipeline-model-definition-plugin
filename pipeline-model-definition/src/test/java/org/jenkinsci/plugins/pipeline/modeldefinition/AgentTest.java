@@ -144,6 +144,24 @@ public class AgentTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void fromDockerfileNoArgs() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        expect("fromDockerfile")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
+                        "HI THERE")
+                .go();
+    }
+
+    @Test
     public void fromAlternateDockerfile() throws Exception {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment
