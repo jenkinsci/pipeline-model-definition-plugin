@@ -522,28 +522,33 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         } else if (!(typeName in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
             DescribableModel model = possibleModels.get(typeName)
-            List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
-
-            if (agent.variables instanceof ModelASTClosureMap) {
-                ModelASTClosureMap map = (ModelASTClosureMap) agent.variables
-                requiredParams.each { p ->
-                    if (!map.containsKey(p.name)) {
-                        errorCollector.error(agent, Messages.ModelValidatorImpl_MissingAgentParameter(typeName, p.name))
-                        valid = false
-                    }
-                }
-                map.variables.each { k, v ->
-                    List<String> validParamNames = model.parameters.collect { it.name }
-                    if (!validParamNames.contains(k.key)) {
-                        errorCollector.error(k, Messages.ModelValidatorImpl_InvalidAgentParameter(k.key, typeName, validParamNames))
-                        valid = false
-                    }
-                }
-            } else if (requiredParams.size() > 1) {
-                errorCollector.error(agent,
-                    Messages.ModelValidatorImpl_MultipleAgentParameters(typeName,
-                        requiredParams.collect { it.name }))
+            if (model == null) {
+                errorCollector.error(agent, Messages.ModelValidatorImpl_NoAgentType(orderedNames))
                 valid = false
+            } else {
+                List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
+
+                if (agent.variables instanceof ModelASTClosureMap) {
+                    ModelASTClosureMap map = (ModelASTClosureMap) agent.variables
+                    requiredParams.each { p ->
+                        if (!map.containsKey(p.name)) {
+                            errorCollector.error(agent, Messages.ModelValidatorImpl_MissingAgentParameter(typeName, p.name))
+                            valid = false
+                        }
+                    }
+                    map.variables.each { k, v ->
+                        List<String> validParamNames = model.parameters.collect { it.name }
+                        if (!validParamNames.contains(k.key)) {
+                            errorCollector.error(k, Messages.ModelValidatorImpl_InvalidAgentParameter(k.key, typeName, validParamNames))
+                            valid = false
+                        }
+                    }
+                } else if (requiredParams.size() > 1) {
+                    errorCollector.error(agent,
+                        Messages.ModelValidatorImpl_MultipleAgentParameters(typeName,
+                            requiredParams.collect { it.name }))
+                    valid = false
+                }
             }
         }
         return valid

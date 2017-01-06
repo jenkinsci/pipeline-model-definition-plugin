@@ -548,19 +548,20 @@ class ModelParser implements Parser {
             if (mc == null) {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
                 errorCollector.error(map, Messages.ModelParser_ExpectedMapMethod());
-            }
-
-            def k = parseKey(mc.method);
-
-            List<Expression> args = ((TupleExpression) mc.arguments).expressions
-            if (args.isEmpty()) {
-                errorCollector.error(k, Messages.ModelParser_NoArgForMapMethodKey(k.key))
-            } else if (args.size() > 1) {
-                errorCollector.error(k, Messages.ModelParser_TooManyArgsForMapMethodKey(k.key))
-            } else if (args[0] instanceof ClosureExpression) {
-                map.variables[k] = parseClosureMap((ClosureExpression) args[0])
             } else {
-                map.variables[k] = parseArgument(args[0])
+
+                def k = parseKey(mc.method);
+
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(k, Messages.ModelParser_NoArgForMapMethodKey(k.key))
+                } else if (args.size() > 1) {
+                    errorCollector.error(k, Messages.ModelParser_TooManyArgsForMapMethodKey(k.key))
+                } else if (args[0] instanceof ClosureExpression) {
+                    map.variables[k] = parseClosureMap((ClosureExpression) args[0])
+                } else {
+                    map.variables[k] = parseArgument(args[0])
+                }
             }
         }
 

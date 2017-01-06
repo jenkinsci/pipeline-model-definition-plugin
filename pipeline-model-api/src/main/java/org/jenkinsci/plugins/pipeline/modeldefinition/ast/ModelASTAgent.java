@@ -36,7 +36,6 @@ public final class ModelASTAgent extends ModelASTElement {
     @Override
     public void validate(ModelValidator validator) {
         validator.validateElement(this);
-        agentType.validate(validator);
         if (variables != null) {
             variables.validate(validator);
         }
@@ -52,6 +51,7 @@ public final class ModelASTAgent extends ModelASTElement {
         } else {
             argStr.append("{\n");
             argStr.append(agentType.toGroovy());
+            argStr.append(" ");
             argStr.append(variables.toGroovy());
             argStr.append("}");
         }
@@ -62,7 +62,9 @@ public final class ModelASTAgent extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        agentType.removeSourceLocation();
+        if (agentType != null) {
+            agentType.removeSourceLocation();
+        }
         if (variables != null) {
             variables.removeSourceLocation();
         }

@@ -173,7 +173,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", "[buildDiscarder, catchError, disableConcurrentBuilds, overrideIndexTriggers, retry, script, skipDefaultCheckout, timeout, waitUntil, withContext, withEnv, ws]")});
 
         result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]")});
-        result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MissingAgentParameter("otherField", "label")});
+        result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField]")});
         result.add(new Object[]{"notificationsSectionRemoved", "At /pipeline: additional properties are not allowed"});
 
@@ -191,14 +191,7 @@ public abstract class AbstractModelDefTest {
                 "      }]\n" +
                 "    }]\n" +
                 "  }],\n" +
-                "  \"agent\": [\n" +
-                "    {\n" +
-                "      \"key\": \"none\",\n" +
-                "      \"value\": {\n" +
-                "        \"isLiteral\": true,\n" +
-                "        \"value\": true\n" +
-                "      }\n" +
-                "    }]\n" +
+                "  \"agent\": {\"type\": \"none\"}\n" +
                 "}}"});
 
         return result;

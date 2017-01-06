@@ -308,20 +308,16 @@
           "type": "string"
         },
         "arguments": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/rawArgument"
-            },
-            {
-              "$ref": "#/definitions/mapArgumentList"
-            }
-          ]
+          "$ref": "#/definitions/mapArgumentList"
         },
-        "required": [
-          "type"
-        ],
-        "additionalProperties": false
-      }
+        "argument": {
+          "$ref": "#/definitions/rawArgument"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
     },
     "when": {
       "description": "Closure to evaluate if the stage should run or not",

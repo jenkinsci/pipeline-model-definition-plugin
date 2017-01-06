@@ -294,6 +294,7 @@ class JSONParser implements Parser {
     }
 
     public @CheckForNull ModelASTStep parseStep(JSONObject j) {
+        System.err.println("j: ${j.toString(2)}")
         if (j.containsKey("children")) {
             return parseTreeStep(j)
         } else if (j.getString("name").equals("script")) {
@@ -465,11 +466,12 @@ class JSONParser implements Parser {
             // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
             ModelASTKey key = parseKey(entry)
 
-            if (entry.get("value") instanceof JSONArray) {
-                map.variables[key] = parseClosureMap(entry.getJSONArray("value"))
-            } else if (entry.has("isLiteral") && entry.has("value")) {
+            Object val = entry.get("value")
+            if (val instanceof JSONArray) {
+                map.variables[key] = parseClosureMap(val)
+            } else if (val instanceof JSONObject && val.has("isLiteral") && val.has("value")) {
                 // This is a single argument
-                map.variables[key] = parseValue(entry.getJSONObject("value"))
+                map.variables[key] = parseValue(val)
             } else {
                 errorCollector.error(key, Messages.JSONParser_InvalidArgumentSyntax())
             }
@@ -481,11 +483,14 @@ class JSONParser implements Parser {
     public @CheckForNull ModelASTAgent parseAgent(JSONObject j) {
         ModelASTAgent agent = new ModelASTAgent(j)
 
-        agent.agentType = parseKey(j.getJSONObject("type"))
+        agent.agentType = new ModelASTKey(j.get("type"))
+        agent.agentType.key = j.getString("type")
         if (j.has("arguments") &&
             j.get("arguments") instanceof JSONArray &&
             !j.getJSONArray("arguments").isEmpty()) {
             agent.variables = parseClosureMap(j.getJSONArray("arguments"))
+        } else if (j.has("argument") && j.get("argument") instanceof JSONObject) {
+            agent.variables = parseValue(j.getJSONObject("argument"))
         }
 
         return agent

@@ -12,5 +12,6 @@
       }]
     }]
   }],
-  "agent": {"type": "none"}
+  "agent": {"type": "none"},
+  "triggers": {"triggers": [ ] }
 }}

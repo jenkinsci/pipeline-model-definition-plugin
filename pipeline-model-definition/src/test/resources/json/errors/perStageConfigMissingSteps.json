@@ -1,7 +1,9 @@
 {"pipeline": {
   "stages": [  {
     "name": "foo",
-    "branches": [],
+    "branches": [{
+      "name": "default"
+    }],
     "agent":     {
       "type": "label",
       "argument":       {

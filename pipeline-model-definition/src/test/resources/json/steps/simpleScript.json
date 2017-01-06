@@ -1,16 +1,7 @@
-{"pipeline": {
-  "stages": [  {
-    "name": "foo",
-    "branches": [    {
-      "name": "default",
-      "steps": [      {
-        "name": "script",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "echo \"In a script step\""
-        }
-      }]
-    }]
-  }],
-  "agent": {"type": "none"}
-}}
+{
+  "name": "script",
+  "arguments": {
+    "isLiteral": true,
+    "value": "echo \"In a script step\""
+  }
+}

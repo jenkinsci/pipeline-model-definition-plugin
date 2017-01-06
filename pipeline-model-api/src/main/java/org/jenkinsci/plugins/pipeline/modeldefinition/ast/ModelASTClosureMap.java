@@ -68,7 +68,7 @@ public final class ModelASTClosureMap extends ModelASTElement implements ModelAS
     public String toGroovy() {
         StringBuilder result = new StringBuilder("{\n");
         for (Map.Entry<ModelASTKey, ModelASTMethodArg> entry : variables.entrySet()) {
-            result.append(entry.getKey().toGroovy()).append(" = ").append(entry.getValue().toGroovy()).append('\n');
+            result.append(entry.getKey().toGroovy()).append(" ").append(entry.getValue().toGroovy()).append('\n');
         }
         result.append("}\n");
         return result.toString();
