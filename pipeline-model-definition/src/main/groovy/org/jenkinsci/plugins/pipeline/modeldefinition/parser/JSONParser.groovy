@@ -294,7 +294,6 @@ class JSONParser implements Parser {
     }
 
     public @CheckForNull ModelASTStep parseStep(JSONObject j) {
-        System.err.println("j: ${j.toString(2)}")
         if (j.containsKey("children")) {
             return parseTreeStep(j)
         } else if (j.getString("name").equals("script")) {
