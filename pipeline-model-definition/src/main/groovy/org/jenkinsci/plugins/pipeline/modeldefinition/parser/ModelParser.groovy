@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
@@ -646,7 +647,7 @@ class ModelParser implements Parser {
                     errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                 } else {
                     def agentCode = parseKey(args[0])
-                    if (agentCode.key != "none" && agentCode.key != "any") {
+                    if (!(agentCode.key in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
                         errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                     } else {
                         agent.agentType = agentCode
@@ -767,10 +768,8 @@ class ModelParser implements Parser {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {
-            if (e.name.equals("none")) {
-                return ModelASTValue.fromConstant("none", e) // Special casing for agent none.
-            } else if (e.name.equals("any")) {
-                return ModelASTValue.fromConstant("any", e) // Special casing for agent any.
+            if (e.name in DeclarativeAgentDescriptor.zeroArgModels().keySet()) {
+                return ModelASTValue.fromConstant(e.name, e)
             }
         }
 
@@ -789,9 +788,7 @@ class ModelParser implements Parser {
     protected @CheckForNull String matchStringLiteral(Expression exp) {
         if (exp instanceof ConstantExpression) {
             return castOrNull(String,exp.value);
-        }
-        // TODO: This may be too broad a way to catch 'agent none' and 'agent any'.
-        else if (exp instanceof VariableExpression) {
+        } else if (exp instanceof VariableExpression) {
             return castOrNull(String,exp.name);
         }
         return null;
