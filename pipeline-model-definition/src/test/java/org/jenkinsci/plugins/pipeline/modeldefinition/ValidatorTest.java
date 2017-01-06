@@ -398,6 +398,13 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void multipleAgentTypes() throws Exception {
+        expectError("multipleAgentTypes")
+                .logContains(Messages.ModelParser_OneAgentMax())
+                .go();
+    }
+
+    @Test
     public void agentUnknownParamForType() throws Exception {
         expectError("agentUnknownParamForType")
                 .logContains(Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField]"))
