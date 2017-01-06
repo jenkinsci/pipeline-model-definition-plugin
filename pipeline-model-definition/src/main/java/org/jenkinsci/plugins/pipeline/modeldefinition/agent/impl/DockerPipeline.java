@@ -35,35 +35,35 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class DockerPipeline extends DeclarativeAgent {
-    private String label;
-    private String docker;
-    private String dockerArgs = "";
+    private String nodeLabel;
+    private String image;
+    private String args = "";
 
     @DataBoundConstructor
-    public DockerPipeline(@Nonnull String docker) {
-        this.docker = docker;
+    public DockerPipeline(@Nonnull String image) {
+        this.image = image;
     }
 
-    public @Nullable String getLabel() {
-        return label;
-    }
-
-    @DataBoundSetter
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public @Nullable String getDockerArgs() {
-        return dockerArgs;
+    public @Nullable String getNodeLabel() {
+        return nodeLabel;
     }
 
     @DataBoundSetter
-    public void setDockerArgs(String dockerArgs) {
-        this.dockerArgs = dockerArgs;
+    public void setNodeLabel(String nodeLabel) {
+        this.nodeLabel = nodeLabel;
     }
 
-    public @Nonnull String getDocker() {
-        return docker;
+    public @Nullable String getArgs() {
+        return args;
+    }
+
+    @DataBoundSetter
+    public void setArgs(String args) {
+        this.args = args;
+    }
+
+    public @Nonnull String getImage() {
+        return image;
     }
 
     @Extension(ordinal = 1000) @Symbol("docker")

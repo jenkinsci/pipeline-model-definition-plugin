@@ -12,10 +12,5 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  },
-  "triggers": {"triggers": [
-  ]}
+  "agent": {"type": "none"}
 }}

@@ -40,7 +40,7 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = declarativeAgent.label
+        String targetLabel = declarativeAgent.nodeLabel
         if (targetLabel == null) {
             targetLabel = script.dockerLabel()?.trim()
         }
@@ -68,7 +68,7 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
             }
             if (img != null) {
                 try {
-                    img.inside(declarativeAgent.dockerArgs, {
+                    img.inside(declarativeAgent.args, {
                         body.call()
                     })
                 } catch (Exception e) {

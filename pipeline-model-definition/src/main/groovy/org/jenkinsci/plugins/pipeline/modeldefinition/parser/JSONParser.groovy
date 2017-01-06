@@ -96,7 +96,7 @@ class JSONParser implements Parser {
                     pipelineDef.environment = parseEnvironment(pipelineJson.getJSONArray("environment"))
                     break
                 case 'agent':
-                    pipelineDef.agent = parseAgent(pipelineJson.get("agent"))
+                    pipelineDef.agent = parseAgent(pipelineJson.getJSONObject("agent"))
                     break
                 case 'post':
                     pipelineDef.postBuild = parsePostBuild(pipelineJson.getJSONObject("post"))
@@ -141,7 +141,7 @@ class JSONParser implements Parser {
         stage.name = j.getString("name")
 
         if (j.has("agent")) {
-            stage.agent = parseAgent(j.get("agent"))
+            stage.agent = parseAgent(j.getJSONObject("agent"))
         }
 
         j.getJSONArray("branches").each { b ->
@@ -455,10 +455,38 @@ class JSONParser implements Parser {
         return tools
     }
 
-    public @CheckForNull ModelASTAgent parseAgent(Object j) {
+    public @CheckForNull ModelASTClosureMap parseClosureMap(JSONArray j) {
+        ModelASTClosureMap map = new ModelASTClosureMap(j)
+
+        j.each { rawEntry ->
+            JSONObject entry = (JSONObject) rawEntry
+            ModelASTMethodArg arg
+
+            // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
+            ModelASTKey key = parseKey(entry)
+
+            if (entry.get("value") instanceof JSONArray) {
+                map.variables[key] = parseClosureMap(entry.getJSONArray("value"))
+            } else if (entry.has("isLiteral") && entry.has("value")) {
+                // This is a single argument
+                map.variables[key] = parseValue(entry.getJSONObject("value"))
+            } else {
+                errorCollector.error(key, Messages.JSONParser_InvalidArgumentSyntax())
+            }
+        }
+
+        return map
+    }
+
+    public @CheckForNull ModelASTAgent parseAgent(JSONObject j) {
         ModelASTAgent agent = new ModelASTAgent(j)
 
-        agent.args = parseArgumentList(j)
+        agent.agentType = parseKey(j.getJSONObject("type"))
+        if (j.has("arguments") &&
+            j.get("arguments") instanceof JSONArray &&
+            !j.getJSONArray("arguments").isEmpty()) {
+            agent.variables = parseClosureMap(j.getJSONArray("arguments"))
+        }
 
         return agent
     }

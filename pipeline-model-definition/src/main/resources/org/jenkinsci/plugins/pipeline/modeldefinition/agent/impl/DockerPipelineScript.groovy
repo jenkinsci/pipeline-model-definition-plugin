@@ -40,7 +40,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = declarativeAgent.label
+        String targetLabel = declarativeAgent.nodeLabel
         if (targetLabel == null) {
             targetLabel = script.dockerLabel()?.trim()
         }
@@ -50,7 +50,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
                     try {
-                        script.getProperty("docker").image(declarativeAgent.docker).pull()
+                        script.getProperty("docker").image(declarativeAgent.image).pull()
                     } catch (Exception e) {
                         script.getProperty("currentBuild").result = Result.FAILURE
                         Utils.markStageFailedAndContinued(SyntheticStageNames.agentSetup())
@@ -59,7 +59,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
                 }
             }
             try {
-                script.getProperty("docker").image(declarativeAgent.docker).inside(declarativeAgent.dockerArgs, {
+                script.getProperty("docker").image(declarativeAgent.image).inside(declarativeAgent.args, {
                     body.call()
                 })
             } catch (Exception e) {

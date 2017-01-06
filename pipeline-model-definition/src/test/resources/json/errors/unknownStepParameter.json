@@ -17,7 +17,7 @@
             "key": "banana",
             "value":             {
               "isLiteral": true,
-              "value": "SECONDS"
+              "value": "nope"
             }
           }
         ],
@@ -31,8 +31,5 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

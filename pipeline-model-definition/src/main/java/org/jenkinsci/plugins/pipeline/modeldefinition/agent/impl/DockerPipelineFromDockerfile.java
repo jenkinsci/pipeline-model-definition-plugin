@@ -35,31 +35,31 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 public class DockerPipelineFromDockerfile extends DeclarativeAgent {
-    private String label;
+    private String nodeLabel;
     private Object dockerfile;
-    private String dockerArgs = "";
+    private String args = "";
 
     @DataBoundConstructor
     public DockerPipelineFromDockerfile(@Nonnull Object dockerfile) {
         this.dockerfile = dockerfile;
     }
 
-    public @CheckForNull String getLabel() {
-        return label;
+    public @CheckForNull String getNodeLabel() {
+        return nodeLabel;
     }
 
     @DataBoundSetter
-    public void setLabel(String label) {
-        this.label = label;
+    public void setNodeLabel(String nodeLabel) {
+        this.nodeLabel = nodeLabel;
     }
 
-    public @CheckForNull String getDockerArgs() {
-        return dockerArgs;
+    public @CheckForNull String getArgs() {
+        return args;
     }
 
     @DataBoundSetter
-    public void setDockerArgs(String dockerArgs) {
-        this.dockerArgs = dockerArgs;
+    public void setArgs(String args) {
+        this.args = args;
     }
 
     public @Nonnull Object getDockerfile() {

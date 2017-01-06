@@ -12,27 +12,30 @@
       }]
     }]
   }],
-  "agent":   [
-    {
-      "key": "label",
-      "value":       {
-        "isLiteral": true,
-        "value": "some-label"
+  "agent":   {
+    "type": "otherField",
+    "arguments":     [
+            {
+        "key": "label",
+        "value":         {
+          "isLiteral": true,
+          "value": "some-label"
+        }
+      },
+            {
+        "key": "otherField",
+        "value":         {
+          "isLiteral": true,
+          "value": "banana"
+        }
+      },
+            {
+        "key": "fruit",
+        "value":         {
+          "isLiteral": true,
+          "value": "apple"
+        }
       }
-    },
-    {
-      "key": "otherField",
-      "value":       {
-        "isLiteral": true,
-        "value": "banana"
-      }
-    },
-    {
-      "key": "fruit",
-      "value":       {
-        "isLiteral": true,
-        "value": "apple"
-      }
-    }
-  ]
+    ]
+  }
 }}

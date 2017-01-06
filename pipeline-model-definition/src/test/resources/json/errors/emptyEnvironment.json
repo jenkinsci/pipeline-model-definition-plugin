@@ -12,12 +12,12 @@
       }]
     }]
   }],
-  "environment": [  ],
-  "agent": [  {
-    "key": "label",
-    "value":     {
+  "environment": [],
+  "agent":   {
+    "type": "label",
+    "argument":     {
       "isLiteral": true,
       "value": "some-label"
     }
-  }]
+  }
 }}

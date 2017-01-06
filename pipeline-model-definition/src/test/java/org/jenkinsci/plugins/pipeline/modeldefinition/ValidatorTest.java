@@ -386,7 +386,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void unknownBareAgentType() throws Exception {
         expectError("unknownBareAgentType")
-                .logContains(Messages.ModelValidatorImpl_InvalidAgent("foo", "[any, none]"))
+                .logContains(Messages.ModelParser_InvalidAgent())
                 .go();
     }
 

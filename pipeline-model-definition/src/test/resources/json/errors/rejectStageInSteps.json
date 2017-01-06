@@ -3,24 +3,23 @@
     "name": "foo",
     "branches": [    {
       "name": "default",
-      "steps": [      {
-        "name": "stage",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "hello"
-        }
-      },
-        {
+      "steps":       [
+                {
+          "name": "stage",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "broken"
+          }
+        },
+                {
           "name": "echo",
-          "arguments": {
+          "arguments":           {
             "isLiteral": true,
             "value": "hello"
           }
-        }]
+        }
+      ]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

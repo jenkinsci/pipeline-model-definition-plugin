@@ -4,39 +4,31 @@
     "branches": [    {
       "name": "default",
       "steps": [      {
-        "name": "echo",
+        "name": "sh",
         "arguments":         {
           "isLiteral": true,
-          "value": "hello"
+          "value": "echo ONSLAVE=$ONSLAVE"
         }
       }]
     }]
   }],
-  "agent": {"type": "none"},
-  "parameters": {"parameters": [  {
-    "name": "booleanParam",
+  "agent":   {
+    "type": "otherField",
     "arguments":     [
             {
-        "key": "defaultValue",
+        "key": "label",
         "value":         {
           "isLiteral": true,
-          "value": true
+          "value": "some-label"
         }
       },
             {
-        "key": "description",
+        "key": "otherField",
         "value":         {
           "isLiteral": true,
-          "value": ""
-        }
-      },
-            {
-        "key": "name",
-        "value":         {
-          "isLiteral": true,
-          "value": 1234
+          "value": "banana"
         }
       }
     ]
-  }]}
+  }
 }}

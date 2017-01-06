@@ -512,45 +512,40 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTAgent agent) {
         boolean valid = true
 
-        if (agent.args instanceof ModelASTSingleArgument) {
-            ModelASTSingleArgument singleArg = (ModelASTSingleArgument) agent.args
-            Map<String,DescribableModel> zeroArgModels = DeclarativeAgentDescriptor.zeroArgModels()
-            if (!zeroArgModels.containsKey(singleArg.value.getValue())) {
-                errorCollector.error(agent.args, Messages.ModelValidatorImpl_InvalidAgent(singleArg.value.toGroovy(), zeroArgModels.keySet().sort()))
-                valid = false
-            }
-        } else if (agent.args instanceof ModelASTNamedArgumentList) {
-            ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList)agent.args
-            List<String> argKeys = namedArgs.arguments.collect { k, v ->
-                k.key
-            }
+        Map<String, DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
 
-            Map<String,DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
+        List<String> orderedNames = DeclarativeAgentDescriptor.all().collect { it.name }
+        String typeName = agent.agentType?.key
 
-            List<String> orderedNames = DeclarativeAgentDescriptor.all().collect { it.name }
-            String typeName = orderedNames.find { it in argKeys }
+        if (typeName == null) {
+            errorCollector.error(agent, Messages.ModelValidatorImpl_NoAgentType(orderedNames))
+            valid = false
+        } else if (!(typeName in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
+            DescribableModel model = possibleModels.get(typeName)
+            List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
-            if (typeName == null) {
-                errorCollector.error(agent, Messages.ModelValidatorImpl_NoAgentType(orderedNames))
-                valid = false
-            } else {
-                DescribableModel model = possibleModels.get(typeName)
-                model.parameters.findAll { it.required }.each { p ->
-                    if (!argKeys.contains(p.name)) {
+            if (agent.variables instanceof ModelASTClosureMap) {
+                ModelASTClosureMap map = (ModelASTClosureMap) agent.variables
+                requiredParams.each { p ->
+                    if (!map.containsKey(p.name)) {
                         errorCollector.error(agent, Messages.ModelValidatorImpl_MissingAgentParameter(typeName, p.name))
                         valid = false
                     }
                 }
-                namedArgs.arguments.each { k, v ->
+                map.variables.each { k, v ->
                     List<String> validParamNames = model.parameters.collect { it.name }
                     if (!validParamNames.contains(k.key)) {
                         errorCollector.error(k, Messages.ModelValidatorImpl_InvalidAgentParameter(k.key, typeName, validParamNames))
                         valid = false
                     }
                 }
+            } else if (requiredParams.size() > 1) {
+                errorCollector.error(agent,
+                    Messages.ModelValidatorImpl_MultipleAgentParameters(typeName,
+                        requiredParams.collect { it.name }))
+                valid = false
             }
         }
-
         return valid
     }
 

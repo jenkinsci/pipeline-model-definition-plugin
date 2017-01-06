@@ -23,7 +23,9 @@
  */
 
 pipeline {
-    agent foo:"bar"
+    agent {
+        foo "bar"
+    }
     stages {
         stage("foo") {
             steps {

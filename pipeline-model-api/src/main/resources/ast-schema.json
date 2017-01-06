@@ -40,6 +40,37 @@
         "$ref": "#/definitions/argumentValue"
       }
     },
+    "mapArgumentValue": {
+      "description": "The value for a map argument",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/rawArgument"
+            },
+            {
+              "$ref": "#/definitions/mapArgumentList"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "mapArgumentList": {
+      "description": "Name/value argument pairs used as map entries",
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/mapArgumentValue"
+          }
+        ]
+      }
+    },
     "positionalArgumentList": {
       "description": "List of values used as positional parameters",
       "type": "array",
@@ -62,6 +93,14 @@
         },
         {
           "$ref": "#/definitions/positionalArgumentList"
+        }
+      ]
+    },
+    "argumentMap": {
+      "description": "A map value that may contain further maps",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/"
         }
       ]
     },
@@ -263,17 +302,26 @@
     },
     "agent": {
       "description": "Determines the node/image in which the build will run from either named parameters or a bare none",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/argumentList"
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
         },
-        {
-          "type": "string",
-          "enum": [
-            "none"
+        "arguments": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/rawArgument"
+            },
+            {
+              "$ref": "#/definitions/mapArgumentList"
+            }
           ]
-        }
-      ]
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      }
     },
     "when": {
       "description": "Closure to evaluate if the stage should run or not",

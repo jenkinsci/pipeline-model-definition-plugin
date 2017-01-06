@@ -4,14 +4,14 @@
     "branches": [    {
       "name": "default",
       "steps":       [
-        {
+                {
           "name": "echo",
           "arguments":           {
             "isLiteral": false,
             "value": "${'['+acmeVar.baz()+']'}"
           }
         },
-        {
+                {
           "name": "acmeFuncClosure1",
           "arguments":           {
             "isLiteral": true,
@@ -25,14 +25,14 @@
             }
           }]
         },
-        {
+                {
           "name": "acmeFuncClosure2",
           "arguments":           [
-            {
+                        {
               "isLiteral": true,
               "value": 1
             },
-            {
+                        {
               "isLiteral": true,
               "value": 2
             }
@@ -45,17 +45,17 @@
             }
           }]
         },
-        {
+                {
           "name": "acmeFuncMap",
           "arguments":           [
-            {
+                        {
               "key": "a",
               "value":               {
                 "isLiteral": true,
                 "value": 1
               }
             },
-            {
+                        {
               "key": "b",
               "value":               {
                 "isLiteral": true,
@@ -67,11 +67,11 @@
       ]
     }]
   }],
-  "agent": [  {
-    "key": "label",
-    "value":     {
+  "agent":   {
+    "type": "label",
+    "argument":     {
       "isLiteral": true,
       "value": "master"
     }
-  }]
+  }
 }}

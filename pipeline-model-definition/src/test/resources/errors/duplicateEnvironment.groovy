@@ -28,7 +28,9 @@ pipeline {
         FOO = "BAZ"
     }
 
-    agent label:"some-label"
+    agent {
+        label "some-label"
+    }
 
     stages {
         stage("foo") {

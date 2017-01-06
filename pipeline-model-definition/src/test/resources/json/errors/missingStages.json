@@ -1,6 +1,1 @@
-{"pipeline": {
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
-}}
+{"pipeline": {"agent": {"type": "none"}}}

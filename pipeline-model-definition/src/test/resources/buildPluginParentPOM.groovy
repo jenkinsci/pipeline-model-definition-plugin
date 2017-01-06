@@ -4,7 +4,9 @@ pipeline {
         jdk "default"
     }
 
-    agent label:"master"
+    agent {
+        label "master"
+    }
 
     stages {
         stage("build") {

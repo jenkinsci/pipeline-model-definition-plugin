@@ -12,22 +12,19 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  },
+  "agent": {"type": "none"},
   "options": {"options":   [
-    {
+        {
       "name": "timeout",
       "arguments":       [
-        {
+                {
           "key": "time",
           "value":           {
             "isLiteral": true,
             "value": 5
           }
         },
-        {
+                {
           "key": "unit",
           "value":           {
             "isLiteral": true,
@@ -36,7 +33,7 @@
         }
       ]
     },
-    {
+        {
       "name": "retry",
       "arguments": [      {
         "isLiteral": true,
