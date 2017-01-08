@@ -33,14 +33,35 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class DockerPipelineFromDockerfile extends DeclarativeAgent<DockerPipelineFromDockerfile> {
     private String label;
     private String filename;
     private String args = "";
+    private String registryUrl;
+    private String registryCredentialsId;
 
     @DataBoundConstructor
     public DockerPipelineFromDockerfile() {
+    }
+
+    public @Nullable String getRegistryUrl() {
+        return registryUrl;
+    }
+
+    @DataBoundSetter
+    public void setRegistryUrl(String registryUrl) {
+        this.registryUrl = registryUrl;
+    }
+
+    public @Nullable String getRegistryCredentialsId() {
+        return registryCredentialsId;
+    }
+
+    @DataBoundSetter
+    public void setRegistryCredentialsId(String registryCredentialsId) {
+        this.registryCredentialsId = registryCredentialsId;
     }
 
     public @CheckForNull String getLabel() {

@@ -46,6 +46,18 @@ public class DockerPipelineScript extends DeclarativeAgentScript<DockerPipeline>
         }
         LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
         return labelScript.run {
+            if (describable.registryUrl != null) {
+                script.getProperty("docker").withRegistry(describable.registryUrl, describable.registryCredentialsId) {
+                    runImage(body).call()
+                }
+            } else {
+                runImage(body).call()
+            }
+        }
+    }
+
+    public Closure runImage(Closure body) {
+        return {
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)

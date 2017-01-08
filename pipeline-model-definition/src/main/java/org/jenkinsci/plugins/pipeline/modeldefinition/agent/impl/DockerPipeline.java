@@ -38,11 +38,32 @@ public class DockerPipeline extends DeclarativeAgent<DockerPipeline> {
     private String label;
     private String image;
     private String args = "";
+    private String registryUrl;
+    private String registryCredentialsId;
 
     @DataBoundConstructor
     public DockerPipeline(@Nonnull String image) {
         this.image = image;
     }
+
+    public @Nullable String getRegistryUrl() {
+        return registryUrl;
+    }
+
+    @DataBoundSetter
+    public void setRegistryUrl(String registryUrl) {
+        this.registryUrl = registryUrl;
+    }
+
+    public @Nullable String getRegistryCredentialsId() {
+        return registryCredentialsId;
+    }
+
+    @DataBoundSetter
+    public void setRegistryCredentialsId(String registryCredentialsId) {
+        this.registryCredentialsId = registryCredentialsId;
+    }
+
 
     public @Nullable String getLabel() {
         return label;
