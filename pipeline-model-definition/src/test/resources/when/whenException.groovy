@@ -24,7 +24,9 @@
  */
 
 pipeline {
-    agent label: "here"
+    agent {
+        label "here"
+    }
     stages {
         stage("One") {
             steps {

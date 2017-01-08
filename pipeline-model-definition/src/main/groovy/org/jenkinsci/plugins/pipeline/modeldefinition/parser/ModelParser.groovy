@@ -603,15 +603,47 @@ class ModelParser implements Parser {
      */
     public @Nonnull ModelASTAgent parseAgent(Statement st) {
         ModelASTAgent agent = new ModelASTAgent(st)
-        def mc = matchMethodCall(st);
-        if (mc == null) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
-        };
+        def m = matchBlockStatement(st);
+        if (m==null) {
+            def mc = matchMethodCall(st);
+            if (mc == null) {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
+            } else {
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(agent, Messages.ModelParser_NoArgForAgent())
+                } else if (args.size() > 1) {
+                    errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
+                } else {
+                    def agentCode = parseKey(args[0])
+                    if (agentCode.key != "none" && agentCode.key != "any") {
+                        errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
+                    } else {
+                        agent.variables[agentCode] = ModelASTValue.fromConstant(true, null)
+                    }
+                }
+            }
+        } else {
+            eachStatement(m.body.code) { s ->
+                def mc = matchMethodCall(s);
+                if (mc == null) {
+                    // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                    errorCollector.error(agent,Messages.ModelParser_ExpectedAgentKeyValue());
+                }
 
-        List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                def agentKey = parseKey(mc.method);
 
-        agent.args = parseArgumentList(args)
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(agentKey, Messages.ModelParser_NoArgForAgentKey(agentKey.key))
+                } else if (args.size() > 1) {
+                    errorCollector.error(agentKey, Messages.ModelParser_TooManyArgsForAgentKey(agentKey.key))
+                } else {
+                    agent.variables[agentKey] = parseArgument(args[0])
+                }
+            }
+        }
 
         return agent
     }

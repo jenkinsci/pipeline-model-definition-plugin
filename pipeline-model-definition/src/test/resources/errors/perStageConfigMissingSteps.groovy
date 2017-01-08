@@ -26,7 +26,9 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            agent label:'some-label'
+            agent {
+                label 'some-label'
+            }
         }
     }
 }

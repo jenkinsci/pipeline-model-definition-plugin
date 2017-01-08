@@ -12,8 +12,12 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": false,
-    "value": "${foo}"
-  }
+  "agent": [
+    {
+      "key": "${foo}",
+      "value": {
+        "isLiteral": true,
+        "value": true
+      }
+    }]
 }}

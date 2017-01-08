@@ -23,7 +23,10 @@
  */
 
 pipeline {
-    agent docker:"httpd:2.4.12", dockerArgs:""
+    agent {
+        docker "httpd:2.4.12"
+        dockerArgs ""
+    }
     stages {
         stage("foo") {
             steps {
