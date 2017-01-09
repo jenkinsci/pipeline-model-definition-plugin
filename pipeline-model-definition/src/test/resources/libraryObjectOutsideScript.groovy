@@ -22,21 +22,22 @@
  * THE SOFTWARE.
  */
 
+@Library('zot-stuff@master')
+import org.foo.Zot
+
+def z = new Zot(steps)
+
 pipeline {
-    agent {
-        label "some-label"
-    }
-    tools {
-        maven "apache-maven-3.0.1"
-    }
+    agent any
     stages {
-        stage("foo") {
+        stage ('prepare') {
             steps {
-                sh 'mvn --version'
+                script {
+                    z.echo("hello")
+                }
             }
         }
     }
 }
-
 
 

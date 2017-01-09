@@ -12,9 +12,6 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  },
-  "parameters": {"parameters": [ ]}
+  "agent": {"type": "none"},
+  "parameters": {"parameters": [ ] }
 }}

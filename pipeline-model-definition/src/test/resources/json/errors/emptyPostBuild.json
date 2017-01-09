@@ -4,20 +4,14 @@
     "branches": [    {
       "name": "default",
       "steps": [      {
-        "name": "sh",
+        "name": "echo",
         "arguments":         {
           "isLiteral": true,
-          "value": "echo \"FOO is $FOO\""
+          "value": "hello"
         }
       }]
     }]
   }],
-  "post": { "conditions": [ ] },
-  "agent": [  {
-    "key": "label",
-    "value":     {
-      "isLiteral": true,
-      "value": "some-label"
-    }
-  }]
+  "post": {"conditions": []},
+  "agent": {"type": "none"}
 }}

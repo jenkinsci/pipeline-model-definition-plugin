@@ -24,15 +24,15 @@
 
 pipeline {
     agent {
-        label "some-label"
-    }
-    tools {
-        maven "apache-maven-3.0.1"
+        otherField {
+            label "some-label"
+            otherField "banana"
+        }
     }
     stages {
         stage("foo") {
             steps {
-                sh 'mvn --version'
+                sh('echo ONSLAVE=$ONSLAVE')
             }
         }
     }

@@ -27,6 +27,7 @@ import hudson.ExtensionList;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -83,6 +84,21 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
     }
 
     /**
+     * Get the map of the subset of descriptors with no required arguments.
+     * @return A map of descriptors with no required arguments.
+     */
+    public static Map<String,DescribableModel> noRequiredArgsModels() {
+        Map<String,DescribableModel> models = new HashMap<>();
+
+        for (Map.Entry<String,DescribableModel> entry : getDescribableModels().entrySet()) {
+            if (entry.getValue().getFirstRequiredParameter() == null) {
+                models.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return models;
+    }
+
+    /**
      * Get the descriptor for a given name or null if not found.
      *
      * @param name The name for the descriptor to look up
@@ -121,7 +137,10 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      */
     public static @Nonnull DeclarativeAgent<?> instanceForDescriptor(@Nonnull DeclarativeAgentDescriptor<?> descriptor,
                                                                    Map<String,Object> arguments) throws Exception {
-        if (zeroArgModels().keySet().contains(descriptor.getName())) {
+        if (zeroArgModels().keySet().contains(descriptor.getName()) ||
+                (noRequiredArgsModels().keySet().contains(descriptor.getName()) &&
+                        arguments.containsKey(UninstantiatedDescribable.ANONYMOUS_KEY) &&
+                        arguments.size() == 1)) {
             return descriptor.newInstance();
         } else {
             return descriptor.newInstance(arguments);

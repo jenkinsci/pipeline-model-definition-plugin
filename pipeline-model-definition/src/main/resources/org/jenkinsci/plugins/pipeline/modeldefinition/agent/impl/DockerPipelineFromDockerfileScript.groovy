@@ -67,7 +67,7 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript<D
             }
             if (img != null) {
                 try {
-                    img.inside(describable.dockerArgs, {
+                    img.inside(describable.args, {
                         body.call()
                     })
                 } catch (Exception e) {

@@ -173,8 +173,7 @@ public class ModelInterpreter implements Serializable {
             } catch (MissingContextVariableException e) {
                 if (FilePath.class.equals(e.type) || Launcher.class.equals(e.type)) {
                     if (!agent.hasAgent()) {
-                        script.error("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
-                                "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.")
+                        script.error(Messages.ModelInterpreter_NoNodeContext())
                     } else {
                         throw e
                     }

@@ -50,7 +50,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript<DockerPipeline>
                 script.stage(SyntheticStageNames.agentSetup()) {
                     Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
                     try {
-                        script.getProperty("docker").image(describable.docker).pull()
+                        script.getProperty("docker").image(describable.image).pull()
                     } catch (Exception e) {
                         script.getProperty("currentBuild").result = Result.FAILURE
                         Utils.markStageFailedAndContinued(SyntheticStageNames.agentSetup())
@@ -59,7 +59,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript<DockerPipeline>
                 }
             }
             try {
-                script.getProperty("docker").image(describable.docker).inside(describable.dockerArgs, {
+                script.getProperty("docker").image(describable.image).inside(describable.args, {
                     body.call()
                 })
             } catch (Exception e) {

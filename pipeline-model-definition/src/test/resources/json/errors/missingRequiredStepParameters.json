@@ -5,15 +5,7 @@
       "name": "default",
       "steps": [      {
         "name": "timeout",
-        "arguments":         [
-                    {
-            "key": "unit",
-            "value":             {
-              "isLiteral": true,
-              "value": "SECONDS"
-            }
-          }
-        ],
+        "arguments": [],
         "children": [        {
           "name": "echo",
           "arguments":           {
@@ -24,8 +16,5 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

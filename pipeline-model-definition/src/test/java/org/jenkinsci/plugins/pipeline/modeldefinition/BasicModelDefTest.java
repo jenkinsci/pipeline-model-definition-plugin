@@ -424,6 +424,57 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-40657")
+    @Test
+    public void libraryObjectInScript() throws Exception {
+        otherRepo.init();
+        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
+                "\n" +
+                "class Zot implements Serializable {\n" +
+                "  def steps\n" +
+                "  Zot(steps){\n" +
+                "    this.steps = steps\n" +
+                "  }\n" +
+                "  def echo(msg) {\n" +
+                "    steps.sh \"echo ${msg}\"\n" +
+                "  }\n" +
+                "}\n");
+        otherRepo.git("add", "src");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("zot-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("libraryObjectInScript")
+                .logContains("hello")
+                .go();
+    }
+
+    @Issue("JENKINS-40657")
+    @Test
+    public void libraryObjectOutsideScript() throws Exception {
+        otherRepo.init();
+        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
+                "\n" +
+                "class Zot implements Serializable {\n" +
+                "  def steps\n" +
+                "  Zot(steps){\n" +
+                "    this.steps = steps\n" +
+                "  }\n" +
+                "  def echo(msg) {\n" +
+                "    steps.sh \"echo ${msg}\"\n" +
+                "  }\n" +
+                "}\n");
+        otherRepo.git("add", "src");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("zot-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("libraryObjectOutsideScript")
+                .logContains("hello");
+    }
+
     @Issue("JENKINS-40188")
     @Test
     public void booleanParamBuildStep() throws Exception {

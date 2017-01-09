@@ -12,10 +12,7 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  },
+  "agent": {"type": "none"},
   "triggers": {"triggers": [  {
     "name": "cron",
     "arguments": []

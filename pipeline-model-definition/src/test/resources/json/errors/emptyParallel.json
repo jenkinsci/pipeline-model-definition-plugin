@@ -3,8 +3,5 @@
     "name": "foo",
     "branches": []
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

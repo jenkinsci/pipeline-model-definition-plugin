@@ -65,13 +65,8 @@ public class Root implements NestedModel, Serializable {
         return this
     }
 
-    Root agent(Map<String,String> args) {
-        this.agent = new Agent(args)
-        return this
-    }
-
-    Root agent(String s) {
-        this.agent = new Agent(s)
+    Root agent(Agent a) {
+        this.agent = a.convertZeroArgs()
         return this
     }
 

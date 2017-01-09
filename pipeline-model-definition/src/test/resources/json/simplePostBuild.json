@@ -14,6 +14,19 @@
   }],
   "post": {"conditions":   [
         {
+      "condition": "always",
+      "branch":       {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "I HAVE FINISHED"
+          }
+        }]
+      }
+    },
+        {
       "condition": "success",
       "branch":       {
         "name": "default",
@@ -21,7 +34,7 @@
           "name": "echo",
           "arguments":           {
             "isLiteral": true,
-            "value": "I HAVE DEFINITELY FINISHED"
+            "value": "MOST DEFINITELY FINISHED"
           }
         }]
       }
@@ -34,27 +47,11 @@
           "name": "echo",
           "arguments":           {
             "isLiteral": true,
-            "value": "I HAVE FAILED"
-          }
-        }]
-      }
-    },
-    {
-      "condition": "always",
-      "branch":     {
-        "name": "default",
-        "steps": [      {
-          "name": "echo",
-          "arguments":         {
-            "isLiteral": true,
-            "value": "I HAVE FINISHED"
+            "value": "I FAILED"
           }
         }]
       }
     }
   ]},
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}
