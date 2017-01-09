@@ -66,7 +66,7 @@ public class DockerPipeline extends DeclarativeAgent {
         return docker;
     }
 
-    @Extension(ordinal = 1000) @Symbol("docker")
+    @Extension(ordinal = 1000, optional = true) @Symbol("docker")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor {
     }
 }
