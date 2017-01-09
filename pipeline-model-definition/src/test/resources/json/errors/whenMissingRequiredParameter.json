@@ -44,8 +44,5 @@
       "value": "BAR"
     }
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "any"
-  }
+  "agent": {"type": "any"}
 }}
