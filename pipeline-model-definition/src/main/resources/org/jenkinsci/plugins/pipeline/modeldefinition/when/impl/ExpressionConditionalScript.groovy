@@ -25,7 +25,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -46,6 +45,6 @@ class ExpressionConditionalScript extends DeclarativeStageConditionalScript<Expr
             retVal = c.call()
         }
 
-        return ExpressionConditional.booleanFromReturn(retVal)
+        return retVal ? true : false
     }
 }

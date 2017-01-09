@@ -24,21 +24,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-import hudson.AbortException;
-import hudson.EnvVars;
 import hudson.Extension;
-import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
-import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.io.File;
-import java.io.IOException;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
@@ -54,16 +45,6 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
 
     public StepsBlock getBlock() {
         return block;
-    }
-
-    public static boolean booleanFromReturn(Object o) throws AbortException {
-        if (o == null) {
-            throw new AbortException(Messages.ExpressionConditional_UndefinedOrNull());
-        } else if (o instanceof Boolean) {
-            return (Boolean)o;
-        } else {
-            throw new AbortException(Messages.ExpressionConditional_NonBooleanReturn(o.getClass().getName()));
-        }
     }
 
     @Extension
