@@ -13,30 +13,48 @@ These are sections that are specified directly within the `pipeline` argument cl
 * *Description*: Specifies where the build or stage will run. 
 * *Required*: Yes for the top-level `pipeline` closure, optional for individual `stage` closures.
 * *Allowed In*: Top-level `pipeline` closure and individual `stage` closures.
-* *Parameters*: Either a `Map` of one or more arguments or one of two constants - `none` or `any`.
+* *Parameters*: Either a `Closure` of one key and either a single value or a `Closure` of multiple configuration pairs, or one of two constants - `none` or `any`.
     * *Map Keys*:
         * Note that this will be an `ExtensionPoint`, so plugins will be able to add to the available image providers.
         * `docker`
-            * *Type*: `String`
             * *Description*: If given, uses this Docker image for the container the build will run in. If no `label` is 
             given, the container will be run within a simple `node { ... }` block.
-            * *Example*: `docker:'ubuntu'`
+        * `dockerfile`
+            * *Description*: If given, builds from the Dockerfile in the repository and runs in a container using the resulting image.
         * `label` 
-            * *Type*: `String`
             * *Description*: If given, uses this label for the node the build will run on - if `docker` is also 
             specified, the container will run on that node.
-            * *Example*: `label:'hi-speed'`
     * `none`
         * *Type*: bareword
         * *Description*: If given, node/image management will need to be specified explicitly in stages and no 
         automatic `checkout scm` call will occur.
-* *Takes a Closure*: No
+    * `any`
+        * *Type*: bareword
+        * *Description*: If given, any available agent will be used.
+* *Takes a Closure*: yes
 * *Examples*:
-    * `agent label:'has-docker', docker:'ubuntu:lts'`
-    * `agent docker:'ubuntu:lts'`
-    * `agent label:'hi-speed'`
-    * `agent none`
-    * `agent any`
+
+```groovy
+agent {
+    label 'hi-speed'
+}
+
+agent {
+    docker 'ubuntu:lts'
+}
+ 
+agent {
+    docker {
+        image 'ubuntu:lts'
+        label 'has-docker'
+        args "-v /tmp:/tmp -p 80:80"
+    }
+}
+
+agent none
+
+agent any
+```
 
 ### environment
 * *Description*: A sequence of `key = value` pairs, which will be passed to the `withEnv` step the build will be 
@@ -109,7 +127,9 @@ stages {
     }
         
     stage('second') {
-        agent label:'some-node'
+        agent {
+            label 'some-node'
+        }
         when {
             env.BRANCH == 'master'
         }

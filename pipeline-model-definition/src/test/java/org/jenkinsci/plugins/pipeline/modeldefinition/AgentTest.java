@@ -91,8 +91,7 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentNone() throws Exception {
         expect(Result.FAILURE, "agentNone")
-                .logContains("Attempted to execute a step that requires a node context while 'agent none' was specified. " +
-                        "Be sure to specify your own 'node { ... }' blocks when using 'agent none'.",
+                .logContains(Messages.ModelInterpreter_NoNodeContext(),
                         "Perhaps you forgot to surround the code with a step that provides this, such as: node")
                 .go();
     }
@@ -112,8 +111,8 @@ public class AgentTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void agentTypeOrdering() throws Exception {
-        expect("agentTypeOrdering")
+    public void multipleVariablesForAgent() throws Exception {
+        expect("multipleVariablesForAgent")
                 .logContains("[Pipeline] { (foo)", "ONSLAVE=true", "Running in labelAndOtherField with otherField = banana")
                 .go();
     }
@@ -140,6 +139,24 @@ public class AgentTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
                         "-v /tmp:/tmp -p 8000:8000",
+                        "HI THERE")
+                .go();
+    }
+
+    @Test
+    public void fromDockerfileNoArgs() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        expect("fromDockerfileNoArgs")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
                         "HI THERE")
                 .go();
     }

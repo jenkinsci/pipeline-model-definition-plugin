@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FirstParam
+import org.apache.commons.io.FileUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -35,6 +36,7 @@ import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
@@ -539,6 +541,34 @@ class ModelParser implements Parser {
         return m
     }
 
+    public ModelASTClosureMap parseClosureMap(ClosureExpression expression) {
+        ModelASTClosureMap map = new ModelASTClosureMap(expression)
+
+        eachStatement(expression.code) { s ->
+            def mc = matchMethodCall(s);
+            if (mc == null) {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(map, Messages.ModelParser_ExpectedMapMethod());
+            } else {
+
+                def k = parseKey(mc.method);
+
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(k, Messages.ModelParser_NoArgForMapMethodKey(k.key))
+                } else if (args.size() > 1) {
+                    errorCollector.error(k, Messages.ModelParser_TooManyArgsForMapMethodKey(k.key))
+                } else if (args[0] instanceof ClosureExpression) {
+                    map.variables[k] = parseClosureMap((ClosureExpression) args[0])
+                } else {
+                    map.variables[k] = parseArgument(args[0])
+                }
+            }
+        }
+
+        return map
+    }
+
     /**
      * Parses a statement into a {@link ModelASTStep}
      */
@@ -603,15 +633,44 @@ class ModelParser implements Parser {
      */
     public @Nonnull ModelASTAgent parseAgent(Statement st) {
         ModelASTAgent agent = new ModelASTAgent(st)
+        def m = matchBlockStatement(st);
         def mc = matchMethodCall(st);
-        if (mc == null) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
-        };
-
-        List<Expression> args = ((TupleExpression) mc.arguments).expressions
-
-        agent.args = parseArgumentList(args)
+        if (m==null) {
+            if (mc == null) {
+                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
+            } else {
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(agent, Messages.ModelParser_NoArgForAgent())
+                } else if (args.size() > 1) {
+                    errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
+                } else {
+                    def agentCode = parseKey(args[0])
+                    if (!(agentCode.key in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
+                        errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
+                    } else {
+                        agent.agentType = agentCode
+                    }
+                }
+            }
+        } else {
+            def block = asBlock(m.body.code)
+            if (block.statements.isEmpty()) {
+                errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
+            } else if (block.statements.size() > 1) {
+                errorCollector.error(agent, Messages.ModelParser_OneAgentMax())
+            } else {
+                def typeMeth = matchMethodCall(block.statements[0])
+                if (typeMeth == null) {
+                    errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
+                } else {
+                    agent.agentType = parseKey(typeMeth.method)
+                    ModelASTClosureMap parsed = parseClosureMap(m.body)
+                    agent.variables = parsed.variables.get(agent.agentType)
+                }
+            }
+        }
 
         return agent
     }
@@ -709,10 +768,8 @@ class ModelParser implements Parser {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {
-            if (e.name.equals("none")) {
-                return ModelASTValue.fromConstant("none", e) // Special casing for agent none.
-            } else if (e.name.equals("any")) {
-                return ModelASTValue.fromConstant("any", e) // Special casing for agent any.
+            if (e.name in DeclarativeAgentDescriptor.zeroArgModels().keySet()) {
+                return ModelASTValue.fromConstant(e.name, e)
             }
         }
 
@@ -731,9 +788,7 @@ class ModelParser implements Parser {
     protected @CheckForNull String matchStringLiteral(Expression exp) {
         if (exp instanceof ConstantExpression) {
             return castOrNull(String,exp.value);
-        }
-        // TODO: This may be too broad a way to catch 'agent none' and 'agent any'.
-        else if (exp instanceof VariableExpression) {
+        } else if (exp instanceof VariableExpression) {
             return castOrNull(String,exp.name);
         }
         return null;

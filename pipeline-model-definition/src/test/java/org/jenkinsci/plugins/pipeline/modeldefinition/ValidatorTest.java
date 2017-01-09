@@ -386,14 +386,21 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void unknownBareAgentType() throws Exception {
         expectError("unknownBareAgentType")
-                .logContains(Messages.ModelValidatorImpl_InvalidAgent("foo", "[any, none]"))
+                .logContains(Messages.ModelParser_InvalidAgent())
                 .go();
     }
 
     @Test
     public void agentMissingRequiredParam() throws Exception {
         expectError("agentMissingRequiredParam")
-                .logContains(Messages.ModelValidatorImpl_MissingAgentParameter("otherField", "label"))
+                .logContains(Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]"))
+                .go();
+    }
+
+    @Test
+    public void multipleAgentTypes() throws Exception {
+        expectError("multipleAgentTypes")
+                .logContains(Messages.ModelParser_OneAgentMax())
                 .go();
     }
 

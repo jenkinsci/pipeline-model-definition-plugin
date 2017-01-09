@@ -36,12 +36,11 @@ import javax.annotation.Nonnull;
 
 public class DockerPipelineFromDockerfile extends DeclarativeAgent {
     private String label;
-    private Object dockerfile;
-    private String dockerArgs = "";
+    private String filename;
+    private String args = "";
 
     @DataBoundConstructor
-    public DockerPipelineFromDockerfile(@Nonnull Object dockerfile) {
-        this.dockerfile = dockerfile;
+    public DockerPipelineFromDockerfile() {
     }
 
     public @CheckForNull String getLabel() {
@@ -53,22 +52,27 @@ public class DockerPipelineFromDockerfile extends DeclarativeAgent {
         this.label = label;
     }
 
-    public @CheckForNull String getDockerArgs() {
-        return dockerArgs;
+    public @CheckForNull String getArgs() {
+        return args;
     }
 
     @DataBoundSetter
-    public void setDockerArgs(String dockerArgs) {
-        this.dockerArgs = dockerArgs;
+    public void setArgs(String args) {
+        this.args = args;
     }
 
-    public @Nonnull Object getDockerfile() {
-        return dockerfile;
+    public @Nonnull Object getFilename() {
+        return filename;
+    }
+
+    @DataBoundSetter
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public String getDockerfileAsString() {
-        if (dockerfile instanceof String) {
-            return (String)dockerfile;
+        if (filename != null) {
+            return filename;
         } else {
             return "Dockerfile";
         }

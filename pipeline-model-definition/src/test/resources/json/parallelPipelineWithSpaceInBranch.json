@@ -2,7 +2,7 @@
   "stages": [  {
     "name": "foo",
     "branches":     [
-      {
+            {
         "name": "first one",
         "steps": [        {
           "name": "echo",
@@ -12,7 +12,7 @@
           }
         }]
       },
-      {
+            {
         "name": "second one",
         "steps": [        {
           "name": "echo",
@@ -24,8 +24,5 @@
       }
     ]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

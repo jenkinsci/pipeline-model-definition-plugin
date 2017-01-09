@@ -12,11 +12,11 @@
       }]
     }]
   }],
-  "agent": [  {
-    "key": "otherField",
-    "value":     {
+  "agent":   {
+    "type": "otherField",
+    "argument":     {
       "isLiteral": true,
       "value": "banana"
     }
-  }]
+  }
 }}

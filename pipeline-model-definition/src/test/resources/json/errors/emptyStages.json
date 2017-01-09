@@ -1,7 +1,4 @@
 {"pipeline": {
-  "stages": [  ],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "stages": [],
+  "agent": {"type": "none"}
 }}

@@ -4,28 +4,28 @@
     "branches": [    {
       "name": "default",
       "steps":       [
-        {
+                {
           "name": "echo",
           "arguments":           {
             "isLiteral": true,
             "value": "hello"
           }
         },
-        {
+                {
           "name": "parallel",
           "arguments":           [
-            {
+                        {
               "key": "a",
               "value":               {
-                "isLiteral": true,
-                "value": "echo '1'"
+                "isLiteral": false,
+                "value": "${{\n                    echo '1'\n                }}"
               }
             },
-            {
+                        {
               "key": "b",
               "value":               {
-                "isLiteral": true,
-                "value": "echo '2'"
+                "isLiteral": false,
+                "value": "${{\n                        echo '2'\n                    }}"
               }
             }
           ]
@@ -33,8 +33,5 @@
       ]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

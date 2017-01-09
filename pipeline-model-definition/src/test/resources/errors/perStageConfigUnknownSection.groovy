@@ -29,7 +29,9 @@ pipeline {
             banana {
                 echo "monkey"
             }
-            agent label:'some-label'
+            agent {
+                label 'some-label'
+            }
             steps {
                 echo "hi"
             }

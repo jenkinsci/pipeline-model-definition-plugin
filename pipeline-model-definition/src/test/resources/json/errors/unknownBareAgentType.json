@@ -12,8 +12,5 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": false,
-    "value": "${foo}"
-  }
+  "agent": {"type": "${foo}"}
 }}

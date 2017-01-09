@@ -2,17 +2,7 @@
   "stages": [  {
     "name": "foo",
     "branches":     [
-      {
-        "name": "second",
-        "steps": [        {
-          "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "Second branch"
-          }
-        }]
-      },
-      {
+            {
         "name": "first",
         "steps": [        {
           "name": "echo",
@@ -21,12 +11,19 @@
             "value": "First branch"
           }
         }]
+      },
+            {
+        "name": "second",
+        "steps": [        {
+          "name": "echo",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "Second branch"
+          }
+        }]
       }
     ],
     "failFast": true
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

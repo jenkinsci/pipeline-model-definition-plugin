@@ -12,28 +12,25 @@
       }]
     }]
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  },
+  "agent": {"type": "none"},
   "parameters": {"parameters": [  {
     "name": "booleanParam",
     "arguments":     [
-      {
+            {
         "key": "defaultValue",
         "value":         {
           "isLiteral": true,
           "value": true
         }
       },
-      {
+            {
         "key": "description",
         "value":         {
           "isLiteral": true,
           "value": ""
         }
       },
-      {
+            {
         "key": "name",
         "value":         {
           "isLiteral": true,

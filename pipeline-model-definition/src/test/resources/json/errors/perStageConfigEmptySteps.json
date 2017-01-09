@@ -5,16 +5,13 @@
       "name": "default",
       "steps": []
     }],
-    "agent": [    {
-      "key": "label",
-      "value":       {
+    "agent":     {
+      "type": "label",
+      "argument":       {
         "isLiteral": true,
         "value": "some-label"
       }
-    }]
+    }
   }],
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

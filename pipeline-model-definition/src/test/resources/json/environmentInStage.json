@@ -26,11 +26,11 @@
       "value": "BAZ"
     }
   }],
-  "agent": [  {
-    "key": "label",
-    "value":     {
+  "agent":   {
+    "type": "label",
+    "argument":     {
       "isLiteral": true,
       "value": "some-label"
     }
-  }]
+  }
 }}

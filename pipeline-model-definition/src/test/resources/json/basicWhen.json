@@ -1,6 +1,6 @@
 {"pipeline": {
   "stages":   [
-    {
+        {
       "name": "One",
       "branches": [      {
         "name": "default",
@@ -13,7 +13,7 @@
         }]
       }]
     },
-    {
+        {
       "name": "Two",
       "branches": [      {
         "name": "default",
@@ -31,8 +31,5 @@
       }}
     }
   ],
-  "agent":   {
-    "isLiteral": true,
-    "value": "any"
-  }
+  "agent": {"type": "any"}
 }}

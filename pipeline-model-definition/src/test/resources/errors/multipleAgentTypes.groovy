@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +25,12 @@
 pipeline {
     agent {
         label "some-label"
-    }
-    tools {
-        maven "apache-maven-3.0.1"
+        docker "ubuntu:lts"
     }
     stages {
         stage("foo") {
             steps {
-                sh 'mvn --version'
+                sh('echo ONSLAVE=$ONSLAVE')
             }
         }
     }

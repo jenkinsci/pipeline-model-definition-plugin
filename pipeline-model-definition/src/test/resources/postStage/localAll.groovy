@@ -24,7 +24,9 @@ package postStage
  */
 
 pipeline {
-    agent label:"here"
+    agent {
+        label "here"
+    }
     stages {
         stage("foo") {
             steps {

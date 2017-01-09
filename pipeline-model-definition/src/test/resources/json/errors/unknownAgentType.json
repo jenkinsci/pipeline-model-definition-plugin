@@ -12,11 +12,11 @@
       }]
     }]
   }],
-  "agent": [  {
-    "key": "foo",
-    "value":     {
+  "agent":   {
+    "type": "foo",
+    "argument":     {
       "isLiteral": true,
       "value": "bar"
     }
-  }]
+  }
 }}

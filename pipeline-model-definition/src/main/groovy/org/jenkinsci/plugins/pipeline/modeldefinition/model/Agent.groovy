@@ -29,6 +29,7 @@ import groovy.transform.ToString
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 
 /**
@@ -40,20 +41,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Agent implements Serializable {
-    Map<String,String> arguments = [:]
-
-    public Agent(Map<String,String> args) {
-        this.arguments.putAll(args)
-    }
-
-    /**
-     * Special constructor for the no-additional-arguments agent types, i.e., none and any
-     */
-    public Agent(String s) {
-        this.arguments.put(s, "true")
-    }
-
+public class Agent extends MappedClosure<Object,Agent> implements Serializable {
     /**
      * Get the appropriate instantiated {@link DeclarativeAgent} corresponding to our arguments.
      *
@@ -61,11 +49,19 @@ public class Agent implements Serializable {
      */
     public DeclarativeAgent getDeclarativeAgent() {
         DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
-            arguments.containsKey(d.getName())
+            getMap().containsKey(d.getName())
         }
 
         if (foundDescriptor != null) {
-            return DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, arguments)
+            def val = getMap().get(foundDescriptor.getName())
+            def argMap = [:]
+            if (val instanceof Map) {
+                argMap.putAll(val)
+            } else {
+                argMap.put(UninstantiatedDescribable.ANONYMOUS_KEY, val)
+            }
+
+            return DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
         } else {
             return null
         }
@@ -74,5 +70,15 @@ public class Agent implements Serializable {
     public boolean hasAgent() {
         DeclarativeAgent a = getDeclarativeAgent()
         return a != null && !None.class.isInstance(a)
+    }
+
+    public Agent convertZeroArgs() {
+        Map<String,Object> inMap = getMap()
+        DeclarativeAgentDescriptor.zeroArgModels().keySet().each { k ->
+            if (inMap.keySet().contains("${k}Key".toString())) {
+                inMap.put(k, inMap.remove("${k}Key".toString()))
+            }
+        }
+        return new Agent(inMap)
     }
 }

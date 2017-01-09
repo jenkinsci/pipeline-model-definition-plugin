@@ -21,7 +21,20 @@
           "name": "echo",
           "arguments":           {
             "isLiteral": true,
-            "value": "I HAVE SUCCEEDED"
+            "value": "I HAVE FINISHED"
+          }
+        }]
+      }
+    },
+        {
+      "condition": "success",
+      "branch":       {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "MOST DEFINITELY FINISHED"
           }
         }]
       }
@@ -34,14 +47,11 @@
           "name": "echo",
           "arguments":           {
             "isLiteral": true,
-            "value": "I HAVE FAILED"
+            "value": "I FAILED"
           }
         }]
       }
     }
   ]},
-  "agent":   {
-    "isLiteral": true,
-    "value": "none"
-  }
+  "agent": {"type": "none"}
 }}

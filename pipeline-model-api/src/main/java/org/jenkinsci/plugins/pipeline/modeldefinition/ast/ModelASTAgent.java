@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
@@ -9,57 +10,87 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Andrew Bayer
  */
 public final class ModelASTAgent extends ModelASTElement {
-    private ModelASTArgumentList args;
+    private ModelASTMethodArg variables;
+    private ModelASTKey agentType;
 
     public ModelASTAgent(Object sourceLocation) {
         super(sourceLocation);
     }
 
     @Override
-    public Object toJSON() {
-        return args.toJSON();
+    public JSONObject toJSON() {
+        final JSONObject j = new JSONObject();
+        j.accumulate("type", agentType.toJSON());
+
+        if (variables != null) {
+            if (variables instanceof ModelASTClosureMap &&
+                    !((ModelASTClosureMap) variables).getVariables().isEmpty()) {
+                j.accumulate("arguments", variables.toJSON());
+            } else if (variables instanceof ModelASTValue) {
+                j.accumulate("argument", variables.toJSON());
+            }
+        }
+        return j;
     }
 
     @Override
     public void validate(ModelValidator validator) {
         validator.validateElement(this);
-
-        args.validate(validator);
+        if (variables != null) {
+            variables.validate(validator);
+        }
     }
 
     @Override
     public String toGroovy() {
-        String argStr;
-        // TODO: Stop special-casing agent none.
-        if (args instanceof ModelASTSingleArgument && (
-                ((ModelASTSingleArgument) args).getValue().getValue().equals("none") || ((ModelASTSingleArgument) args)
-                        .getValue().getValue().equals("any"))) {
-            argStr = (String)((ModelASTSingleArgument) args).getValue().getValue();
+        StringBuilder argStr = new StringBuilder();
+        if (variables == null ||
+                (variables instanceof ModelASTClosureMap &&
+                        ((ModelASTClosureMap)variables).getVariables().isEmpty())) {
+            argStr.append(agentType.toGroovy());
         } else {
-            argStr = args.toGroovy();
+            argStr.append("{\n");
+            argStr.append(agentType.toGroovy());
+            argStr.append(" ");
+            argStr.append(variables.toGroovy());
+            argStr.append("}");
         }
 
-        return "agent " + argStr + "\n";
+        return "agent " + argStr.toString() + "\n";
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        args.removeSourceLocation();
+        if (agentType != null) {
+            agentType.removeSourceLocation();
+        }
+        if (variables != null) {
+            variables.removeSourceLocation();
+        }
     }
 
-    public ModelASTArgumentList getArgs() {
-        return args;
+    public ModelASTKey getAgentType() {
+        return agentType;
     }
 
-    public void setArgs(ModelASTArgumentList args) {
-        this.args = args;
+    public void setAgentType(ModelASTKey k) {
+        this.agentType = k;
+    }
+
+    public ModelASTMethodArg getVariables() {
+        return variables;
+    }
+
+    public void setVariables(ModelASTMethodArg variables) {
+        this.variables = variables;
     }
 
     @Override
     public String toString() {
         return "ModelASTAgent{" +
-                "args=" + args +
+                "agentType=" + agentType +
+                "variables=" + variables +
                 "}";
     }
 
@@ -77,14 +108,19 @@ public final class ModelASTAgent extends ModelASTElement {
 
         ModelASTAgent that = (ModelASTAgent) o;
 
-        return getArgs() != null ? getArgs().equals(that.getArgs()) : that.getArgs() == null;
+        if (getAgentType() != null ? !getAgentType().equals(that.getAgentType()) : that.getAgentType() != null) {
+            return false;
+        }
+
+        return getVariables() != null ? getVariables().equals(that.getVariables()) : that.getVariables() == null;
 
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (getArgs() != null ? getArgs().hashCode() : 0);
+        result = 31 * result + (getAgentType() != null ? getAgentType().hashCode() : 0);
+        result = 31 * result + (getVariables() != null ? getVariables().hashCode() : 0);
         return result;
     }
 
