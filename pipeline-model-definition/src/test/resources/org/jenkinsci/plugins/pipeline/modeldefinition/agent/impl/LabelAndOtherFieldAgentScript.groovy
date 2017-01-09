@@ -25,20 +25,19 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript {
+public class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript<LabelAndOtherFieldAgent> {
 
-    public LabelAndOtherFieldAgentScript(CpsScript s, DeclarativeAgent a) {
+    public LabelAndOtherFieldAgentScript(CpsScript s, LabelAndOtherFieldAgent a) {
         super(s, a)
     }
 
     @Override
     public Closure run(Closure body) {
-        script.echo "Running in labelAndOtherField with otherField = ${declarativeAgent.getOtherField()}"
-        LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: declarativeAgent.label]).getScript(script)
+        script.echo "Running in labelAndOtherField with otherField = ${describable.getOtherField()}"
+        LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: describable.label]).getScript(script)
         return labelScript.run {
             body.call()
         }

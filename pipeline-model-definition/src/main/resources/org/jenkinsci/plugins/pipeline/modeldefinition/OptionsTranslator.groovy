@@ -25,15 +25,15 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import hudson.model.Descriptor
 import hudson.model.JobProperty
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 
-import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.isOfType
 
 /**
  * Translates a closure containing a sequence of method calls into a {@link Options} implementation.
@@ -41,7 +41,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
  * @author Andrew Bayer
  */
 public class OptionsTranslator implements MethodMissingWrapper, Serializable {
-    List<Object> actualList = []
+    List<UninstantiatedDescribable> actualList = []
     CpsScript script
 
     OptionsTranslator(CpsScript script) {
@@ -60,7 +60,7 @@ public class OptionsTranslator implements MethodMissingWrapper, Serializable {
             argVal = args
         }
 
-        def retVal
+        UninstantiatedDescribable retVal
 
         if (s in Options.eligibleWrapperSteps) {
             actualList << [s, argVal]
@@ -72,17 +72,12 @@ public class OptionsTranslator implements MethodMissingWrapper, Serializable {
             retVal = script."${s}"()
         }
 
-        if (isOfType((UninstantiatedDescribable)retVal, DeclarativeOption.class)
-            || isOfType((UninstantiatedDescribable)retVal, JobProperty.class)) {
+        if (isOfType(retVal, DeclarativeOption.class)
+            || isOfType(retVal, JobProperty.class)) {
             actualList << retVal
         }
 
         return retVal
-    }
-
-    private static boolean isOfType(UninstantiatedDescribable ud, Class<?> base) {
-        Descriptor d = SymbolLookup.get().findDescriptor(base, ud.symbol)
-        return d != null
     }
 
     Options toOptions() {

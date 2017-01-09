@@ -32,8 +32,10 @@ pipeline {
         }
         stage("Two") {
             when {
-                echo "Should I run?"
-                return false
+                expression {
+                    echo "Should I run?"
+                    return false
+                }
             }
             steps {
                 script {

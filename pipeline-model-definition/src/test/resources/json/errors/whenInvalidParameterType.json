@@ -1,0 +1,38 @@
+{"pipeline": {
+  "stages":   [
+    {
+      "name": "One",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "Hello"
+          }
+        }]
+      }]
+    },
+    {
+      "name": "Two",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "script",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "echo \"World\"\n                    echo \"Heal it\""
+          }
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "branch",
+        "arguments":         {
+          "isLiteral": true,
+          "value": 4
+        }
+      }]}
+    }
+  ],
+  "agent": {"type": "any"}
+}}

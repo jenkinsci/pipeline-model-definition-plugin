@@ -29,9 +29,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
-
-public class LabelAndOtherFieldAgent extends DeclarativeAgent {
+public class LabelAndOtherFieldAgent extends DeclarativeAgent<LabelAndOtherFieldAgent> {
     private String label;
     private String otherField;
 
@@ -50,15 +48,6 @@ public class LabelAndOtherFieldAgent extends DeclarativeAgent {
     }
 
     @Extension(ordinal = 1100) @Symbol("otherField")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor {
-        @Override
-        public @Nonnull String getName() {
-            return "otherField";
-        }
-
-        @Override
-        public @Nonnull String getDeclarativeAgentScriptClass() {
-            return "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.LabelAndOtherFieldAgentScript";
-        }
+    public static class DescriptorImpl extends DeclarativeAgentDescriptor<LabelAndOtherFieldAgent> {
     }
 }

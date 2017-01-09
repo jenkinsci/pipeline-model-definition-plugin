@@ -32,15 +32,15 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class DockerPipelineScript extends DeclarativeAgentScript {
+public class DockerPipelineScript extends DeclarativeAgentScript<DockerPipeline> {
 
-    public DockerPipelineScript(CpsScript s, DeclarativeAgent a) {
+    public DockerPipelineScript(CpsScript s, DockerPipeline a) {
         super(s, a)
     }
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = declarativeAgent.label
+        String targetLabel = describable.label
         if (targetLabel == null) {
             targetLabel = script.dockerLabel()?.trim()
         }
@@ -50,7 +50,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
                     try {
-                        script.getProperty("docker").image(declarativeAgent.image).pull()
+                        script.getProperty("docker").image(describable.image).pull()
                     } catch (Exception e) {
                         script.getProperty("currentBuild").result = Result.FAILURE
                         Utils.markStageFailedAndContinued(SyntheticStageNames.agentSetup())
@@ -59,7 +59,7 @@ public class DockerPipelineScript extends DeclarativeAgentScript {
                 }
             }
             try {
-                script.getProperty("docker").image(declarativeAgent.image).inside(declarativeAgent.args, {
+                script.getProperty("docker").image(describable.image).inside(describable.args, {
                     body.call()
                 })
             } catch (Exception e) {

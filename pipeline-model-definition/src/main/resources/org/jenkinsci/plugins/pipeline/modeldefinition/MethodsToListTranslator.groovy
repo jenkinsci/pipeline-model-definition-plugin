@@ -25,12 +25,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import hudson.model.Descriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
-import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.isOfType
 
 /**
  * Translates a closure containing a sequence of method calls into a {@link MethodsToList} implementation.
@@ -73,11 +73,6 @@ public class MethodsToListTranslator implements MethodMissingWrapper, Serializab
 
 
         return retVal
-    }
-
-    private boolean isOfType(UninstantiatedDescribable ud, Class<?> base) {
-        Descriptor d = SymbolLookup.get().findDescriptor(base, ud.symbol)
-        return d != null
     }
 
     MethodsToList toListModel(Class<MethodsToList> c) {

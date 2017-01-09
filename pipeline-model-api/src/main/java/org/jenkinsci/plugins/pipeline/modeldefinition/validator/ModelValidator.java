@@ -88,4 +88,6 @@ public interface ModelValidator {
     boolean validateElement(ModelASTStage stage);
 
     boolean validateElement(ModelASTStages stages);
+
+    boolean validateWhenCondition(ModelASTStep condition);
 }

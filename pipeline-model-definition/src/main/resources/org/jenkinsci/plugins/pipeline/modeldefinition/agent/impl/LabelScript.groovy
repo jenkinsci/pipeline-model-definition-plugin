@@ -30,9 +30,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class LabelScript extends DeclarativeAgentScript {
+public class LabelScript extends DeclarativeAgentScript<Label> {
 
-    public LabelScript(CpsScript s, DeclarativeAgent a) {
+    public LabelScript(CpsScript s, Label a) {
         super(s, a)
     }
 
@@ -40,7 +40,7 @@ public class LabelScript extends DeclarativeAgentScript {
     public Closure run(Closure body) {
         return {
             try {
-                script.node(declarativeAgent?.label) {
+                script.node(describable?.label) {
                     body.call()
                 }
             } catch (Exception e) {

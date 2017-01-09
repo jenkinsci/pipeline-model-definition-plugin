@@ -191,6 +191,15 @@ class JSONParser implements Parser {
         return branch
     }
 
+    public @CheckForNull ModelASTWhen parseWhen(JSONObject j) {
+        ModelASTWhen when = new ModelASTWhen(j)
+        j.getJSONArray("conditions").each { o ->
+            JSONObject s = (JSONObject)o
+            when.conditions.add(parseStep(s))
+        }
+        return when
+    }
+
     public @CheckForNull ModelASTOptions parseOptions(JSONObject j) {
         ModelASTOptions options = new ModelASTOptions(j)
 
@@ -296,8 +305,10 @@ class JSONParser implements Parser {
     public @CheckForNull ModelASTStep parseStep(JSONObject j) {
         if (j.containsKey("children")) {
             return parseTreeStep(j)
-        } else if (j.getString("name").equals("script")) {
+        } else if (j.getString("name") == "script") {
             return parseScriptBlock(j)
+        } else if (j.getString("name") == "expression") {
+            return parseWhenExpression(j)
         } else {
             ModelASTStep step = new ModelASTStep(j)
             step.name = j.getString("name")
@@ -377,8 +388,8 @@ class JSONParser implements Parser {
         return scriptBlock
     }
 
-    public @CheckForNull ModelASTWhen parseWhen(JSONObject j) {
-        ModelASTWhen scriptBlock = new ModelASTWhen(j)
+    public @CheckForNull ModelASTWhenExpression parseWhenExpression(JSONObject j) {
+        ModelASTWhenExpression scriptBlock = new ModelASTWhenExpression(j)
         scriptBlock.args = parseArgumentList(j.getJSONObject("arguments"))
 
         return scriptBlock

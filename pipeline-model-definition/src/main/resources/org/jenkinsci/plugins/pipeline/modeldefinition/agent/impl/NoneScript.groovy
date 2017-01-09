@@ -25,13 +25,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class NoneScript extends DeclarativeAgentScript {
+public class NoneScript extends DeclarativeAgentScript<None> {
 
-    public NoneScript(CpsScript s, DeclarativeAgent a) {
+    public NoneScript(CpsScript s, None a) {
         super(s, a)
     }
 

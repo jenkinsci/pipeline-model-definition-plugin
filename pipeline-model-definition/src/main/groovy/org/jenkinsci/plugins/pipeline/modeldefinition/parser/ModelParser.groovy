@@ -353,6 +353,17 @@ class ModelParser implements Parser {
         return stage
     }
 
+    public ModelASTWhen parseWhen(Statement statement) {
+        def stepsBlock = matchBlockStatement(statement)
+        BlockStatement block = asBlock(stepsBlock.body.code)
+        ModelASTWhen w = new ModelASTWhen(statement)
+        block.statements.each {s ->
+            w.conditions.add(parseStep(s))
+        }
+
+        return w
+    }
+
     /**
      * Parses a block of code into {@link ModelASTBranch}
      */
@@ -582,8 +593,10 @@ class ModelParser implements Parser {
         };
 
         def stepName = parseMethodName(mc);
-        if (stepName.equals("script")) {
+        if (stepName == "script") {
             return parseScriptBlock(st)
+        } else if (stepName == "expression") {
+            return parseWhenExpression(st)
         }
 
         List<Expression> args = ((TupleExpression) mc.arguments).expressions
@@ -603,8 +616,8 @@ class ModelParser implements Parser {
         return thisStep
     }
 
-    public ModelASTWhen parseWhen(Statement st) {
-        return parseCodeBlockInternal(st, new ModelASTWhen(st), "When")
+    public ModelASTWhenExpression parseWhenExpression(Statement st) {
+        return parseCodeBlockInternal(st, new ModelASTWhenExpression(st), "When")
     }
 
     /**

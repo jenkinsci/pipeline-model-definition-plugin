@@ -25,29 +25,73 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * Represents a block for when/if a {@link ModelASTStage} will be executed or not.
+ * If {@link ModelASTStage} will be executed or not.
  */
-public class ModelASTWhen extends AbstractModelASTCodeBlock {
+public class ModelASTWhen extends ModelASTElement {
+
+    private List<ModelASTStep> conditions = new ArrayList<>();
+
     public ModelASTWhen(Object sourceLocation) {
-        super(sourceLocation, "when");
+        super(sourceLocation);
+    }
+
+    public List<ModelASTStep> getConditions() {
+        return conditions;
+    }
+
+    public void setConditions(List<ModelASTStep> conditions) {
+        this.conditions = conditions;
     }
 
     @Override
-    public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        if (getArgs() != null) {
-            o.accumulate("arguments", getArgs().toJSON());
+    public Object toJSON() {
+        final JSONArray a = new JSONArray();
+        for (ModelASTStep c: conditions) {
+            a.add(c.toJSON());
         }
-        return o;
+        return new JSONObject().accumulate("conditions", a);
     }
 
     @Override
-    public void validate(ModelValidator validator) {
-        super.validate(validator);
-        validator.validateElement(this);
+    public String toGroovy() {
+        StringBuilder result = new StringBuilder("when {\n");
+        for (ModelASTStep c: conditions) {
+            result.append(c.toGroovy()).append("\n");
+        }
+        result.append("}\n");
+        return result.toString();
     }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation();
+        for (ModelASTStep c: conditions) {
+            c.removeSourceLocation();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "ModelASTWhen{" +
+                "conditions=" + conditions +
+                "}";
+    }
+
+    @Override
+    public void validate(final ModelValidator validator) {
+        validator.validateElement(this);
+        for (ModelASTStep s : conditions) {
+            validator.validateWhenCondition(s);
+        }
+    }
+
+
 }

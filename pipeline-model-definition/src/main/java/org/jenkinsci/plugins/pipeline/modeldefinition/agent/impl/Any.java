@@ -26,23 +26,18 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
 
-public class Any extends Label {
+public class Any extends DeclarativeAgent<Any> {
 
     @DataBoundConstructor
     public Any() {
-        super(null);
     }
 
     @Extension(ordinal = -900) @Symbol("any")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor {
-        public @Nonnull String getDeclarativeAgentScriptClass() {
-            return "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.LabelScript";
-        }
-
+    public static class DescriptorImpl extends DeclarativeAgentDescriptor<Any> {
     }
 }

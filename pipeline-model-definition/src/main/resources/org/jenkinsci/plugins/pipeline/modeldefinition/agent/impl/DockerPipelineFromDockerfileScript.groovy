@@ -28,19 +28,18 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
+public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript<DockerPipelineFromDockerfile> {
 
-    public DockerPipelineFromDockerfileScript(CpsScript s, DeclarativeAgent a) {
+    public DockerPipelineFromDockerfileScript(CpsScript s, DockerPipelineFromDockerfile a) {
         super(s, a)
     }
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = declarativeAgent.label
+        String targetLabel = describable.label
         if (targetLabel == null) {
             targetLabel = script.dockerLabel()?.trim()
         }
@@ -68,7 +67,7 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
             }
             if (img != null) {
                 try {
-                    img.inside(declarativeAgent.args, {
+                    img.inside(describable.args, {
                         body.call()
                     })
                 } catch (Exception e) {
@@ -84,9 +83,9 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript {
         return {
             script.checkout script.scm
             try {
-                def hash = Utils.stringToSHA1(script.readFile(declarativeAgent.getDockerfileAsString()))
+                def hash = Utils.stringToSHA1(script.readFile(describable.getDockerfileAsString()))
                 def imgName = "${hash}"
-                return script.getProperty("docker").build(imgName, "-f ${declarativeAgent.getDockerfileAsString()} .")
+                return script.getProperty("docker").build(imgName, "-f ${describable.getDockerfileAsString()} .")
             } catch (FileNotFoundException f) {
                 script.error("No Dockerfile found at root of repository - failing.")
                 return null

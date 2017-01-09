@@ -32,7 +32,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nullable;
 
-public class Label extends DeclarativeAgent {
+public class Label extends DeclarativeAgent<Label> {
     private String label;
 
     @DataBoundConstructor
@@ -46,6 +46,6 @@ public class Label extends DeclarativeAgent {
     }
 
     @Extension(ordinal = -800) @Symbol("label")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor {
+    public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
     }
 }

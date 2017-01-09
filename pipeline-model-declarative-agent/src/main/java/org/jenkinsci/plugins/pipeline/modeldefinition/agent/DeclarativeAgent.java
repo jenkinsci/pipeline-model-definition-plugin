@@ -25,41 +25,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
-import hudson.model.AbstractDescribableImpl;
-import org.jenkinsci.plugins.workflow.cps.CpsScript;
-import org.jenkinsci.plugins.workflow.cps.CpsThread;
-
-import java.io.Serializable;
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 
 /**
  * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
  *
  * @author Andrew Bayer
  */
-public abstract class DeclarativeAgent extends AbstractDescribableImpl<DeclarativeAgent> implements Serializable, ExtensionPoint {
+public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
 
-    /**
-     * ONLY TO BE RUN FROM WITHIN A CPS THREAD. Parses the script source and loads it.
-     * TODO: Decide if we want to cache the resulting objects or just *shrug* and re-parse them every time.
-     *
-     * @return The script object for this declarative agent.
-     * @throws Exception if the script source cannot be loaded or we're called from outside a CpsThread.
-     */
-    @SuppressWarnings("unchecked")
-    public DeclarativeAgentScript getScript(CpsScript cpsScript) throws Exception {
-        CpsThread c = CpsThread.current();
-        if (c == null)
-            throw new IllegalStateException("Expected to be called from CpsThread");
-
-        return (DeclarativeAgentScript) cpsScript.getClass()
-                .getClassLoader()
-                .loadClass(getDescriptor().getDeclarativeAgentScriptClass())
-                .getConstructor(CpsScript.class, DeclarativeAgent.class)
-                .newInstance(cpsScript, this);
-    }
-
-    @Override
-    public DeclarativeAgentDescriptor getDescriptor() {
-        return (DeclarativeAgentDescriptor) super.getDescriptor();
-    }
 }

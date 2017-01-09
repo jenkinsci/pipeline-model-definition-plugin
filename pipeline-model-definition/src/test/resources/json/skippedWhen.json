@@ -25,10 +25,13 @@
           }
         }]
       }],
-      "when": {"arguments":       {
-        "isLiteral": true,
-        "value": "echo \"Should I run?\"\n                return false"
-      }}
+      "when": {"conditions": [      {
+        "name": "expression",
+        "arguments":         {
+          "isLiteral": true,
+          "value": "echo \"Should I run?\"\n                    return false"
+        }
+      }]}
     }
   ],
   "agent": {"type": "any"}

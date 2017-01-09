@@ -35,8 +35,10 @@ pipeline {
         }
         stage("Two") {
             when {
-                echo "Should I run?"
-                return env.SECOND_STAGE == "RUN"
+                expression {
+                    echo "Should I run?"
+                    return env.SECOND_STAGE == "RUN"
+                }
             }
             steps {
                 script {

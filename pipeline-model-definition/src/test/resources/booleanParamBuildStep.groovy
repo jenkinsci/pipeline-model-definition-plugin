@@ -32,7 +32,9 @@ pipeline {
     stages {
         stage('promote') {
             when {
-                currentBuild.getNumber() % 2 == 1
+                expression {
+                    currentBuild.getNumber() % 2 == 1
+                }
             }
             steps {
                 build job: currentBuild.getProjectName(), parameters: [
