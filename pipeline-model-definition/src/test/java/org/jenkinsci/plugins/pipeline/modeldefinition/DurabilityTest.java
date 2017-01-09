@@ -66,7 +66,9 @@ public class DurabilityTest {
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "demo");
                 p.setDefinition(new CpsFlowDefinition(
                         "pipeline {\n" +
-                                "  agent label: 'remote'\n" +
+                                "  agent {\n" +
+                                "    label 'remote'\n" +
+                                "  }\n" +
                                 "  stages {\n" +
                                 "    stage('foo') {\n" +
                                 "      steps {\n" +
