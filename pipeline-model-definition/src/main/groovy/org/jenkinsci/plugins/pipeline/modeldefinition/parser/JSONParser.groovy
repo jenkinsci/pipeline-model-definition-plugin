@@ -458,10 +458,7 @@ class JSONParser implements Parser {
     public @CheckForNull ModelASTClosureMap parseClosureMap(JSONArray j) {
         ModelASTClosureMap map = new ModelASTClosureMap(j)
 
-        j.each { rawEntry ->
-            JSONObject entry = (JSONObject) rawEntry
-            ModelASTMethodArg arg
-
+        j.each { JSONObject entry ->
             // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
             ModelASTKey key = parseKey(entry)
 
