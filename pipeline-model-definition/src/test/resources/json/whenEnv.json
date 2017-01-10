@@ -6,10 +6,13 @@
         "name": "default",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "Hello"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Hello"
+            }
+          }]
         }]
       }]
     },
@@ -19,10 +22,13 @@
         "name": "default",
         "steps": [        {
           "name": "script",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "echo \"World\"\n                    echo \"Heal it\""
-          }
+          "arguments": [          {
+            "key": "scriptBlock",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"World\"\n                    echo \"Heal it\""
+            }
+          }]
         }]
       }],
       "when": {"conditions": [      {

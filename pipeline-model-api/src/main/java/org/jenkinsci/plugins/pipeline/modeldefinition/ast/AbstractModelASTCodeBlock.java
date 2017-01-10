@@ -54,7 +54,7 @@ public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
         if (getArgs() == null) {
             return null;
         } else if (isLiteralSingleArg()) {
-            Object v = ((ModelASTSingleArgument) getArgs()).getValue().getValue();
+            Object v = getSingleValue().getValue();
             if (v instanceof String) {
                 List<String> retList = new ArrayList<>();
                 for (String s : v.toString().split("\\r?\\n")) {
@@ -69,11 +69,22 @@ public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
         }
     }
 
+    protected ModelASTValue getSingleValue() {
+        if (getArgs() instanceof ModelASTSingleArgument) {
+            return ((ModelASTSingleArgument) getArgs()).getValue();
+        } else if (getArgs() instanceof ModelASTNamedArgumentList) {
+            ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList) getArgs();
+            if (namedArgs.getArguments().size() == 1 && namedArgs.containsKeyName("scriptBlock")) {
+                return namedArgs.valueForName("scriptBlock");
+            }
+        }
+        return null;
+    }
+
     protected boolean isLiteralSingleArg() {
         return getArgs() != null
-                && getArgs() instanceof ModelASTSingleArgument
-                && ((ModelASTSingleArgument) getArgs()).getValue()!=null
-                && ((ModelASTSingleArgument) getArgs()).getValue().isLiteral();
+                && getSingleValue() != null
+                && getSingleValue().isLiteral();
     }
 
     @Override

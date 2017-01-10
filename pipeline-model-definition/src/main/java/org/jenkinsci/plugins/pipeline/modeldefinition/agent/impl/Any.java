@@ -39,9 +39,5 @@ public class Any extends DeclarativeAgent<Any> {
 
     @Extension(ordinal = -900) @Symbol("any")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Any> {
-        @Override
-        public boolean supportsTools() {
-            return true;
-        }
     }
 }

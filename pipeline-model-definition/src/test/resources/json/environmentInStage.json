@@ -5,10 +5,13 @@
       "name": "default",
       "steps": [      {
         "name": "sh",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "echo \"FOO is $FOO\""
-        }
+        "arguments": [        {
+          "key": "script",
+          "value":           {
+            "isLiteral": true,
+            "value": "echo \"FOO is $FOO\""
+          }
+        }]
       }]
     }],
     "environment": [    {

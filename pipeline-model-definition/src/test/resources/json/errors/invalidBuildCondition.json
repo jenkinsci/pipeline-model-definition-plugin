@@ -5,10 +5,13 @@
       "name": "default",
       "steps": [      {
         "name": "echo",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "hello"
-        }
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": true,
+            "value": "hello"
+          }
+        }]
       }]
     }]
   }],
@@ -19,10 +22,13 @@
         "name": "default",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "I HAVE FINISHED"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "I HAVE FINISHED"
+            }
+          }]
         }]
       }
     },
@@ -32,10 +38,13 @@
         "name": "default",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "MOST DEFINITELY FINISHED"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "MOST DEFINITELY FINISHED"
+            }
+          }]
         }]
       }
     },
@@ -45,10 +54,13 @@
         "name": "default",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "I FAILED"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "I FAILED"
+            }
+          }]
         }]
       }
     }

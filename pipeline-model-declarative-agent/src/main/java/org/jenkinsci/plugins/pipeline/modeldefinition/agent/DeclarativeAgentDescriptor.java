@@ -42,15 +42,6 @@ import java.util.Map;
 public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> extends WithScriptDescriptor<A> {
 
     /**
-     * Whether this agent type supports tools within it.
-     *
-     * @return True if the agent type does support tools, false otherwise (and by default).
-     */
-    public boolean supportsTools() {
-        return false;
-    }
-
-    /**
      * Get all {@link DeclarativeAgentDescriptor}s.
      *
      * @return a list of all {@link DeclarativeAgentDescriptor}s registered.`

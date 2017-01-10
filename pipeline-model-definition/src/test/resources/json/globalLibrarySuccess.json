@@ -6,10 +6,13 @@
       "steps":       [
                 {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": false,
-            "value": "${'['+acmeVar.baz()+']'}"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": false,
+              "value": "${'['+acmeVar.baz()+']'}"
+            }
+          }]
         },
                 {
           "name": "acmeFuncClosure1",
@@ -19,10 +22,13 @@
           },
           "children": [          {
             "name": "echo",
-            "arguments":             {
-              "isLiteral": true,
-              "value": "running inside closure1"
-            }
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": true,
+                "value": "running inside closure1"
+              }
+            }]
           }]
         },
                 {
@@ -39,10 +45,13 @@
           ],
           "children": [          {
             "name": "echo",
-            "arguments":             {
-              "isLiteral": true,
-              "value": "running inside closure2"
-            }
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": true,
+                "value": "running inside closure2"
+              }
+            }]
           }]
         },
                 {

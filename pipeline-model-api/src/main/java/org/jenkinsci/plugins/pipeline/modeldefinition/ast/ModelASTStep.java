@@ -4,8 +4,14 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.transform.ToString;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import hudson.model.Describable;
+import hudson.model.Descriptor;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 
 /**
  * Represents an individual step within any of the various blocks that can contain steps.
@@ -60,7 +66,35 @@ public class ModelASTStep extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        return name + "(" + (args != null ? args.toGroovy() : "") + ")";
+        // Default to using whatever the original args structure is.
+        ModelASTArgumentList argList = args;
+
+        // If the args aren't null and they're a named list...
+        if (args != null && args instanceof ModelASTNamedArgumentList) {
+            ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList) args;
+            // If the named list is exactly 1 long...
+            if (namedArgs.getArguments().size() == 1) {
+                DescriptorLookupCache lookup = DescriptorLookupCache.getPublicCache();
+                Descriptor<? extends Describable> desc = lookup.lookupStepOrFunction(name);
+                DescribableModel<? extends Describable> model = lookup.modelForStepOrFunction(name);
+
+                // If we can lookup the model for this step or function...
+                if (model != null) {
+                    DescribableParameter p = model.getSoleRequiredParameter();
+                    // If it's got a sole required parameter, that parameter is the key in our named list, and it doesn't
+                    // take a closure...
+                    if (p != null && namedArgs.containsKeyName(p.getName()) && !lookup.stepTakesClosure(desc)) {
+                        ModelASTValue value = namedArgs.valueForName(p.getName());
+
+                        // Set the arg list to instead be a ModelASTSingleArgument of that value.
+                        argList = new ModelASTSingleArgument(null);
+                        ((ModelASTSingleArgument) argList).setValue(value);
+                    }
+                }
+            }
+        }
+
+        return name + "(" + (argList != null ? argList.toGroovy() : "") + ")";
     }
 
     @Override

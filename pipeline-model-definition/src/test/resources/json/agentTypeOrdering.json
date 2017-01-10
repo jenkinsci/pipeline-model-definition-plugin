@@ -9,24 +9,26 @@
           "key": "script",
           "value":           {
             "isLiteral": true,
-            "value": "mvn -version"
+            "value": "echo ONSLAVE=$ONSLAVE"
           }
         }]
       }]
     }]
   }],
-  "agent":   {
-    "type": "label",
-    "argument":     {
-      "isLiteral": true,
-      "value": "some-label"
+  "agent":   [
+        {
+      "key": "label",
+      "value":       {
+        "isLiteral": true,
+        "value": "some-label"
+      }
+    },
+        {
+      "key": "otherField",
+      "value":       {
+        "isLiteral": true,
+        "value": "banana"
+      }
     }
-  },
-  "tools": [  {
-    "key": "banana",
-    "value":     {
-      "isLiteral": true,
-      "value": "apache-maven-3.0.1"
-    }
-  }]
+  ]
 }}

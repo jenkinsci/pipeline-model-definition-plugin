@@ -39,7 +39,7 @@ public class ModelASTTreeStep extends ModelASTStep {
     @Override
     public String toGroovy() {
         StringBuilder result = new StringBuilder();
-        result.append(getName()).append('(').append(getArgs().toGroovy()).append(") {\n");
+        result.append(super.toGroovy()).append(" {\n");
         for (ModelASTStep child : children) {
             result.append(child.toGroovy()).append("\n");
         }

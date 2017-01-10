@@ -1,16 +1,22 @@
 [
   {
     "name": "echo",
-    "arguments":         {
-      "isLiteral": true,
-      "value": "Hello"
-    }
+    "arguments": [          {
+      "key": "message",
+      "value":             {
+        "isLiteral": true,
+        "value": "Hello"
+      }
+    }]
   },
   {
     "name": "echo",
-    "arguments":         {
-      "isLiteral": true,
-      "value": "World"
-    }
+    "arguments": [          {
+      "key": "message",
+      "value":             {
+        "isLiteral": true,
+        "value": "World"
+      }
+    }]
   }
 ]
