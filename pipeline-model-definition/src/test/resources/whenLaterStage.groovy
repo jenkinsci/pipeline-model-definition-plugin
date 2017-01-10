@@ -46,6 +46,11 @@ pipeline {
             }
         }
         stage("Three") {
+            when {
+                expression {
+                    return true
+                }
+            }
             steps {
                 echo "I'm running anyway"
             }
