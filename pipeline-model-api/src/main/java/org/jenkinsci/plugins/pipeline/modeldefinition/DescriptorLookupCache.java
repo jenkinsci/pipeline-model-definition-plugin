@@ -46,7 +46,7 @@ public class DescriptorLookupCache {
     private transient Map<String, DescribableModel<? extends Describable>> describableModelMap;
 
     public static DescriptorLookupCache getPublicCache() {
-        return Jenkins.getInstance().getInjector().getInstance(DescriptorLookupCache.class);
+        return Jenkins.getInstance().getExtensionList(DescriptorLookupCache.class).get(0);
     }
 
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)  // Prevents potential leakage on reload
