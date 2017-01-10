@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,17 +20,31 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig
+package org.jenkinsci.plugins.pipeline.modeldefinition.config;
 
+import hudson.ExtensionList;
+import hudson.ExtensionPoint;
+import hudson.model.Run;
 
-def f = namespace(lib.FormTagLib)
+import javax.annotation.CheckForNull;
 
-f.section(title:_("Pipeline Model Definition")) {
-    f.entry(field: "dockerLabel", title:_("Docker Label")) {
-        f.textbox()
+/**
+ * Provider of configuration options to use for {@code agent docker}.
+ */
+public abstract class DockerPropertiesProvider implements ExtensionPoint {
+
+    @CheckForNull
+    public abstract String getRegistryUrl(Run run);
+
+    @CheckForNull
+    public abstract String getRegistryCredentialsId(Run run);
+
+    @CheckForNull
+    public abstract String getLabel(Run run);
+
+    public static ExtensionList<DockerPropertiesProvider> all() {
+        return ExtensionList.lookup(DockerPropertiesProvider.class);
     }
-    f.property(field: "registry")
 }

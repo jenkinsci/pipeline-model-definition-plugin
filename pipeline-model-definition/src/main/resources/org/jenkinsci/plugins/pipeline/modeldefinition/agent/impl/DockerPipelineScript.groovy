@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 public class DockerPipelineScript extends DeclarativeAgentScript<DockerPipeline> {
@@ -40,14 +41,16 @@ public class DockerPipelineScript extends DeclarativeAgentScript<DockerPipeline>
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = describable.label
-        if (targetLabel == null) {
-            targetLabel = script.dockerLabel()?.trim()
-        }
+        String targetLabel = script.declarativeProps(property: DeclarativePropsStep.Property.LABEL,
+            defaultValue: describable.label)
         LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
         return labelScript.run {
-            if (describable.registryUrl != null) {
-                script.getProperty("docker").withRegistry(describable.registryUrl, describable.registryCredentialsId) {
+            String registryUrl = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_URL,
+                defaultValue: describable.registryUrl)
+            String registryCreds = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_CREDENTIALS,
+                defaultValue: describable.registryCredentialsId)
+            if (registryUrl != null) {
+                script.getProperty("docker").withRegistry(registryUrl, registryCreds) {
                     runImage(body).call()
                 }
             } else {

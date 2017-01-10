@@ -1,3 +1,5 @@
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
+
 /*
  * The MIT License
  *
@@ -23,14 +25,6 @@
  *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig
-
-
-def f = namespace(lib.FormTagLib)
-
-f.section(title:_("Pipeline Model Definition")) {
-    f.entry(field: "dockerLabel", title:_("Docker Label")) {
-        f.textbox()
-    }
-    f.property(field: "registry")
-}
+echo "Docker Label is: ${declarativeProps(DeclarativePropsStep.Property.LABEL)}"
+echo "Registry URL is: ${declarativeProps(DeclarativePropsStep.Property.REGISTRY_URL)}"
+echo "Registry Creds ID is: ${declarativeProps(DeclarativePropsStep.Property.REGISTRY_CREDENTIALS)}"
