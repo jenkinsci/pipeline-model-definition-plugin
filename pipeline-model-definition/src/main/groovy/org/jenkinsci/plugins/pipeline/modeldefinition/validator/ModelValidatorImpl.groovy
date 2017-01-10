@@ -517,6 +517,11 @@ class ModelValidatorImpl implements ModelValidator {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
         }
+        def branchNames = stage.branches.collect { it.name }
+        branchNames.findAll { branchNames.count(it) > 1 }.unique().each { bn ->
+            errorCollector.error(stage, Messages.ModelValidatorImpl_DuplicateParallelName(bn))
+            valid = false
+        }
 
         return valid
     }
