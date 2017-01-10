@@ -58,14 +58,14 @@ public class DescriptorLookupCache {
         invalidateAll();
     }
 
-    public void invalidateAll() {
+    public synchronized void invalidateAll() {
         this.stepMap = new LinkedHashMap<>();
         this.modelMap = new LinkedHashMap<>();
         this.describableMap = new LinkedHashMap<>();
         this.describableModelMap = new LinkedHashMap<>();
     }
 
-    public DescribableModel<? extends Step> modelForStep(String n) {
+    public synchronized DescribableModel<? extends Step> modelForStep(String n) {
         if (!modelMap.containsKey(n)) {
             final StepDescriptor descriptor = lookupStepDescriptor(n);
             Class<? extends Step> c = (descriptor == null ? null : descriptor.clazz);
@@ -76,7 +76,7 @@ public class DescriptorLookupCache {
         return modelMap.get(n);
     }
 
-    public DescribableModel<? extends Describable> modelForDescribable(String n) {
+    public synchronized DescribableModel<? extends Describable> modelForDescribable(String n) {
         if (!describableModelMap.containsKey(n)) {
             final Descriptor<? extends Describable> function = lookupFunction(n);
             Class<? extends Describable> c = (function == null ? null : function.clazz);
@@ -87,7 +87,7 @@ public class DescriptorLookupCache {
         return describableModelMap.get(n);
     }
 
-    public StepDescriptor lookupStepDescriptor(String n) {
+    public synchronized StepDescriptor lookupStepDescriptor(String n) {
         if (stepMap.isEmpty()) {
             for (StepDescriptor d : StepDescriptor.all()) {
                 stepMap.put(d.getFunctionName(), d);
@@ -96,7 +96,7 @@ public class DescriptorLookupCache {
         return stepMap.get(n);
     }
 
-    public Descriptor<? extends Describable> lookupFunction(String n) {
+    public synchronized Descriptor<? extends Describable> lookupFunction(String n) {
         if (!describableMap.containsKey(n)) {
             try {
                 Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(Describable.class, n);
@@ -111,11 +111,11 @@ public class DescriptorLookupCache {
         return describableMap.get(n);
     }
 
-    public Descriptor<? extends Describable> lookupStepOrFunction(String name) {
+    public synchronized Descriptor<? extends Describable> lookupStepOrFunction(String name) {
         return lookupStepDescriptor(name) != null ? lookupStepDescriptor(name) : lookupFunction(name);
     }
 
-    public DescribableModel<? extends Describable> modelForStepOrFunction(String name) {
+    public synchronized DescribableModel<? extends Describable> modelForStepOrFunction(String name) {
         Descriptor<? extends Describable> desc = lookupStepDescriptor(name);
         DescribableModel<? extends Describable> model = null;
 
