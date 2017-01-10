@@ -5,10 +5,13 @@
       "name": "default",
       "steps": [      {
         "name": "sh",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "echo ONSLAVE=$ONSLAVE"
-        }
+        "arguments": [        {
+          "key": "script",
+          "value":           {
+            "isLiteral": true,
+            "value": "echo ONSLAVE=$ONSLAVE"
+          }
+        }]
       }]
     }],
     "agent":     {

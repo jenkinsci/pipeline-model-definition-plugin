@@ -33,6 +33,7 @@ import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
+import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
@@ -46,7 +47,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
-import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.Nonnull
@@ -62,19 +62,15 @@ import javax.annotation.Nonnull
 class ModelValidatorImpl implements ModelValidator {
 
     private final ErrorCollector errorCollector
-    private transient Map<String,StepDescriptor> stepMap
-    private transient Map<String,DescribableModel<? extends Step>> modelMap
-    private transient Map<String,Descriptor> describableMap
-    private transient Map<String,DescribableModel<? extends Describable>> describableModelMap
+    private transient DescriptorLookupCache lookup
 
     public ModelValidatorImpl(ErrorCollector e) {
         this.errorCollector = e
-        this.stepMap = StepDescriptor.all().collectEntries { StepDescriptor d ->
-            [(d.functionName): d]
-        }
-        this.modelMap = [:]
-        this.describableMap = [:]
-        this.describableModelMap = [:]
+        this.lookup = DescriptorLookupCache.getPublicCache()
+    }
+
+    public DescriptorLookupCache getLookup() {
+        return lookup
     }
 
     public boolean validateElement(@Nonnull ModelASTPostBuild postBuild) {
@@ -215,7 +211,20 @@ class ModelValidatorImpl implements ModelValidator {
                     return;
                 }
 
-                if (!validateParameterType(v, p.erasedType, k)) {
+                ModelASTKey validateKey = k
+
+                // Check if this is the only required parameter and if so, validate it without the key.
+                if (argList.getArguments().size() == 1) {
+                    // If we can lookup the model for this step or function...
+                    if (model != null &&
+                        model.soleRequiredParameter != null &&
+                        model.soleRequiredParameter == p &&
+                        !lookup.stepTakesClosure(desc)) {
+                        validateKey = null
+                    }
+                }
+
+                if (!validateParameterType(v, p.erasedType, validateKey)) {
                     valid = false
                 }
             }
@@ -246,12 +255,12 @@ class ModelValidatorImpl implements ModelValidator {
             ModelASTSingleArgument arg = (ModelASTSingleArgument) step.args;
 
             def p = model.soleRequiredParameter;
-            if (p == null && !stepTakesClosure(desc)) {
+            if (p == null && !lookup.stepTakesClosure(desc)) {
                 errorCollector.error(step, Messages.ModelValidatorImpl_NotSingleRequiredParameter())
                 valid = false
             } else {
                 Class erasedType = p?.erasedType
-                if (stepTakesClosure(desc)) {
+                if (lookup.stepTakesClosure(desc)) {
                     erasedType = String.class
                 }
                 def v = arg.value;
@@ -276,17 +285,8 @@ class ModelValidatorImpl implements ModelValidator {
         } else {
             // We can't do step validation without a Jenkins instance, so move on.
             if (Jenkins.getInstance() != null) {
-                Descriptor desc = lookupStepDescriptor(step.name)
-                DescribableModel<? extends Describable> model
-
-                if (desc != null) {
-                    model = modelForStep(step.name)
-                } else {
-                    desc = lookupFunction(step.name)
-                    if (desc != null) {
-                        model = modelForDescribable(step.name)
-                    }
-                }
+                Descriptor desc = lookup.lookupStepOrFunction(step.name)
+                DescribableModel<? extends Describable> model = lookup.modelForStepOrFunction(step.name)
 
                 if (model != null) {
                     valid = validateStep(step, model, desc)
@@ -305,10 +305,10 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
         if (Jenkins.getInstance() != null) {
-            Descriptor desc = lookupFunction(meth.name)
+            Descriptor desc = lookup.lookupFunction(meth.name)
             DescribableModel<? extends Describable> model
             if (desc != null) {
-                model = modelForDescribable(meth.name)
+                model = lookup.modelForDescribable(meth.name)
             }
 
             if (model != null) {
@@ -474,14 +474,6 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
-    private boolean stepTakesClosure(Descriptor d) {
-        if (d instanceof StepDescriptor) {
-            return ((StepDescriptor)d).takesImplicitBlockArgument()
-        } else {
-            return false
-        }
-    }
-
     public boolean validateElement(@Nonnull ModelASTBranch branch) {
         boolean valid = true
 
@@ -590,40 +582,4 @@ class ModelValidatorImpl implements ModelValidator {
         }
         return valid
     }
-
-    private DescribableModel<? extends Step> modelForStep(String n) {
-        if (!modelMap.containsKey(n)) {
-            Class<? extends Step> c = lookupStepDescriptor(n)?.clazz
-            modelMap.put(n, c != null ? new DescribableModel<? extends Step>(c) : null)
-        }
-
-        return modelMap.get(n)
-    }
-
-    private DescribableModel<? extends Describable> modelForDescribable(String n) {
-        if (!describableModelMap.containsKey(n)) {
-            Class<? extends Describable> c = lookupFunction(n)?.clazz
-            describableModelMap.put(n, c != null ? new DescribableModel<? extends Describable>(c) : null)
-        }
-
-        return describableModelMap.get(n)
-    }
-
-    private StepDescriptor lookupStepDescriptor(String n) {
-        return stepMap.get(n)
-    }
-
-    private Descriptor lookupFunction(String n) {
-        if (!describableMap.containsKey(n)) {
-            try {
-                Descriptor d = SymbolLookup.get().findDescriptor(Describable.class, n)
-                describableMap.put(n, d)
-            } catch (NullPointerException e) {
-                describableMap.put(n, null)
-            }
-        }
-
-        return describableMap.get(n)
-    }
-
 }

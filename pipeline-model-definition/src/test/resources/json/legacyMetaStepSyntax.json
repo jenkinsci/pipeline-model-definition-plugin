@@ -25,17 +25,23 @@
         },
                 {
           "name": "step",
-          "arguments":           {
-            "isLiteral": false,
-            "value": "[$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: true]"
-          }
+          "arguments": [          {
+            "key": "delegate",
+            "value":             {
+              "isLiteral": false,
+              "value": "[$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: true]"
+            }
+          }]
         },
                 {
           "name": "sh",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "echo ONSLAVE=$ONSLAVE"
-          }
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo ONSLAVE=$ONSLAVE"
+            }
+          }]
         }
       ]
     }]

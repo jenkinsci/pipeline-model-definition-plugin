@@ -6,20 +6,26 @@
         "name": "first",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "First branch"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "First branch"
+            }
+          }]
         }]
       },
             {
         "name": "second",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "Second branch"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Second branch"
+            }
+          }]
         }]
       }
     ]

@@ -6,17 +6,23 @@
       "steps":       [
                 {
           "name": "stage",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "broken"
-          }
+          "arguments": [{
+            "key": "name",
+            "value":             {
+              "isLiteral": true,
+              "value": "broken"
+            }
+          }]
         },
                 {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "hello"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "hello"
+            }
+          }]
         }
       ]
     }]

@@ -73,10 +73,13 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
         assertThat(data, hasEntry("result", "success"));
         assertThat(data, hasEntry("json", allOf(isA(JSONArray.class), hasSize(1))));
         JSONObject json = data.getJSONArray("json").getJSONObject(0);
-        assertThat(json, allOf(
-                hasEntry("name", "echo"),
-                hasEntry("arguments", hasEntry("value", "Hello World"))
-                              ));
+        assertThat(json,
+                allOf(
+                        hasEntry("name", "echo"),
+                        hasEntry("arguments", isA(JSONArray.class))
+                ));
+        JSONArray firstArgs = json.getJSONArray("arguments");
+        assertThat(firstArgs.getJSONObject(0), hasEntry("value", hasEntry("value", "Hello World")));
     }
 
     @Test
@@ -102,13 +105,17 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
         assertThat(json.getJSONObject(0),
                    allOf(
                            hasEntry("name", "echo"),
-                           hasEntry("arguments", hasEntry("value", "Hello"))
+                           hasEntry("arguments", isA(JSONArray.class))
                    ));
+        JSONArray firstArgs = json.getJSONObject(0).getJSONArray("arguments");
+        assertThat(firstArgs.getJSONObject(0), hasEntry("value", hasEntry("value", "Hello")));
         assertThat(json.getJSONObject(1),
-                   allOf(
-                           hasEntry("name", "echo"),
-                           hasEntry("arguments", hasEntry("value", "World"))
-                   ));
+                allOf(
+                        hasEntry("name", "echo"),
+                        hasEntry("arguments", isA(JSONArray.class))
+                ));
+        JSONArray secondArgs = json.getJSONObject(1).getJSONArray("arguments");
+        assertThat(secondArgs.getJSONObject(0), hasEntry("value", hasEntry("value", "World")));
     }
 
     @Test
@@ -136,10 +143,15 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
         assertThat(data, hasEntry("json", allOf(isA(JSONArray.class), hasSize(1))));
         JSONObject json = data.getJSONArray("json").getJSONObject(0);
         assertThat(json,
-                   allOf(
-                           hasEntry("name", "script"),
-                           hasEntry("arguments", hasEntry("value", allOf(containsString("echo"), containsString("Hello Scripting World"))))
-                        ));
+                allOf(
+                        hasEntry("name", "script"),
+                        hasEntry("arguments", isA(JSONArray.class))
+                ));
+        JSONArray firstArgs = json.getJSONArray("arguments");
+        assertThat(firstArgs.getJSONObject(0),
+                hasEntry("value",
+                        hasEntry("value",
+                                allOf(containsString("echo"), containsString("Hello Scripting World")))));
     }
 
     //TODO Something more complex than echo "Hello"

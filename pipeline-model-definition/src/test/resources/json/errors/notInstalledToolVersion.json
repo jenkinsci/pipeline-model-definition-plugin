@@ -5,10 +5,13 @@
       "name": "default",
       "steps": [      {
         "name": "sh",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "mvn -version"
-        }
+        "arguments": [        {
+          "key": "script",
+          "value":           {
+            "isLiteral": true,
+            "value": "mvn -version"
+          }
+        }]
       }]
     }]
   }],

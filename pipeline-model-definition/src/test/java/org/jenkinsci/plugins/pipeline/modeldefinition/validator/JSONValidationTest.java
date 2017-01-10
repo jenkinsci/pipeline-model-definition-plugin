@@ -63,10 +63,14 @@ public class JSONValidationTest extends BaseParserLoaderTest {
         assertNotNull(scriptStep);
         assertEquals("script", scriptStep.getString("name"));
 
-        JSONObject arg = scriptStep.getJSONObject("arguments");
+        JSONArray args = scriptStep.getJSONArray("arguments");
+        assertNotNull(args);
+        JSONObject arg = args.getJSONObject(0);
         assertNotNull(arg);
-        assertTrue(arg.getBoolean("isLiteral"));
-        assertEquals("echo \"In a script step\"", arg.getString("value"));
+        JSONObject val = arg.getJSONObject("value");
+        assertNotNull(val);
+        assertTrue(val.getBoolean("isLiteral"));
+        assertEquals("echo \"In a script step\"", val.getString("value"));
 
     }
 

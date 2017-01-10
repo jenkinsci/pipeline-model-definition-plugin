@@ -6,10 +6,13 @@
         "name": "default",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "hello"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "hello"
+            }
+          }]
         }]
       }]
     },
@@ -19,10 +22,13 @@
         "name": "default",
         "steps": [        {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "goodbye"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "goodbye"
+            }
+          }]
         }]
       }]
     }

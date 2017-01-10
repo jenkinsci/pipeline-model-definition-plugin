@@ -29,12 +29,14 @@ import hudson.model.Slave;
 import jenkins.plugins.git.GitSCMSource;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -211,9 +213,17 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         ModelASTStep firstStep = firstBranch.getSteps().get(0);
         assertNull(firstStep.getSourceLocation());
         assertEquals("echo", firstStep.getName());
-        assertEquals("First branch", ((ModelASTSingleArgument) firstStep.getArgs()).getValue().getValue());
+        ModelASTValue val = null;
+        if (firstStep.getArgs() instanceof ModelASTSingleArgument) {
+            val = ((ModelASTSingleArgument) firstStep.getArgs()).getValue();
+        } else if (firstStep.getArgs() instanceof ModelASTNamedArgumentList && ((ModelASTNamedArgumentList) firstStep.getArgs()).getArguments().size() == 1) {
+            val = ((ModelASTNamedArgumentList) firstStep.getArgs()).valueForName("message");
+        }
+        assertNotNull(val);
+        assertEquals("First branch", val.getValue());
+
         assertNull(firstStep.getArgs().getSourceLocation());
-        assertNull(((ModelASTSingleArgument) firstStep.getArgs()).getValue().getSourceLocation());
+        assertNull(val.getSourceLocation());
 
         ModelASTBranch secondBranch = branchForName("second", stage.getBranches());
         assertNotNull(secondBranch);
@@ -223,7 +233,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNull(scriptStep.getSourceLocation());
         assertTrue(scriptStep instanceof ModelASTScriptBlock);
         assertNull(scriptStep.getArgs().getSourceLocation());
-        assertNull(((ModelASTSingleArgument) scriptStep.getArgs()).getValue().getSourceLocation());
+        ModelASTValue scriptVal = null;
+        if (scriptStep.getArgs() instanceof ModelASTSingleArgument) {
+            scriptVal = ((ModelASTSingleArgument) scriptStep.getArgs()).getValue();
+        } else if (scriptStep.getArgs() instanceof ModelASTNamedArgumentList && ((ModelASTNamedArgumentList) scriptStep.getArgs()).getArguments().size() == 1) {
+            scriptVal = ((ModelASTNamedArgumentList) scriptStep.getArgs()).valueForName("scriptBlock");
+        }
+        assertNull(scriptVal.getSourceLocation());
 
         ModelASTStep timeoutStep = secondBranch.getSteps().get(1);
         assertNull(timeoutStep.getSourceLocation());

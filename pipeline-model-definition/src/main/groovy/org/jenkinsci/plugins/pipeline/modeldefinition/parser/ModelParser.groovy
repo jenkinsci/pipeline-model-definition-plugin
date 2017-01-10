@@ -26,7 +26,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FirstParam
-import org.apache.commons.io.FileUtils
+import hudson.model.Describable
+import hudson.model.Descriptor
+import jenkins.model.Jenkins
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -35,6 +37,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
@@ -44,6 +47,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
+import org.jenkinsci.plugins.structs.describable.DescribableModel
+import org.jenkinsci.plugins.structs.describable.DescribableParameter
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -72,10 +77,13 @@ class ModelParser implements Parser {
 
     private final ErrorCollector errorCollector
 
+    private final DescriptorLookupCache lookup
+
     public ModelParser(SourceUnit sourceUnit) {
         this.sourceUnit = sourceUnit;
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
         this.validator = new ModelValidatorImpl(errorCollector)
+        this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
     public @CheckForNull ModelASTPipelineDef parse() {
@@ -610,10 +618,33 @@ class ModelParser implements Parser {
             thisStep.children = eachStatement(bs.body.code) { parseStep(it) }
         } else {
             thisStep.name = stepName
-            thisStep.args = parseArgumentList(args)
+            thisStep.args = populateStepArgumentList(thisStep, parseArgumentList(args))
         }
 
         return thisStep
+    }
+
+    private ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
+        if (Jenkins.getInstance() != null && origArgs instanceof ModelASTSingleArgument) {
+            ModelASTValue singleArgValue = ((ModelASTSingleArgument)origArgs).value
+            ModelASTNamedArgumentList namedArgs = new ModelASTNamedArgumentList(origArgs.sourceLocation)
+            Descriptor<? extends Describable> desc = lookup.lookupStepOrFunction(step.name)
+            DescribableModel<? extends Describable> model = lookup.modelForStepOrFunction(step.name)
+
+            if (model != null) {
+                DescribableParameter p = model.soleRequiredParameter
+
+                if (p != null && !lookup.stepTakesClosure(desc)) {
+                    ModelASTKey paramKey = new ModelASTKey(step.sourceLocation)
+                    paramKey.key = p.name
+                    namedArgs.arguments.put(paramKey, singleArgValue)
+
+                    return namedArgs
+                }
+            }
+        }
+
+        return origArgs
     }
 
     public ModelASTWhenExpression parseWhenExpression(Statement st) {
@@ -631,8 +662,10 @@ class ModelParser implements Parser {
         // TODO: Probably error out for cases with parameters?
         def bs = matchBlockStatement(st);
         if (bs != null) {
-            ModelASTSingleArgument groovyBlock = new ModelASTSingleArgument(bs.body)
-            groovyBlock.value = ModelASTValue.fromConstant(getSourceText(bs.body.code), bs.body.code)
+            ModelASTNamedArgumentList groovyBlock = new ModelASTNamedArgumentList(bs.body)
+            ModelASTKey key = new ModelASTKey(null)
+            key.key = "scriptBlock"
+            groovyBlock.arguments.put(key, ModelASTValue.fromConstant(getSourceText(bs.body.code), bs.body.code))
             scriptBlock.args = groovyBlock
         } else {
             errorCollector.error(scriptBlock, Messages.ModelParser_StepWithoutBlock(pronoun))

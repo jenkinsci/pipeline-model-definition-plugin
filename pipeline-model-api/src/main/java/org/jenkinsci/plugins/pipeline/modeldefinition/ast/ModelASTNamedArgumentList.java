@@ -53,6 +53,22 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
         return false;
     }
 
+    public ModelASTKey keyForName(@Nonnull String keyName) {
+        for (ModelASTKey key : arguments.keySet()) {
+            if (keyName.equals(key.getKey())) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    public ModelASTValue valueForName(@Nonnull String keyName) {
+        if (containsKeyName(keyName)) {
+            return arguments.get(keyForName(keyName));
+        }
+        return null;
+    }
+
     @Override
     public void validate(final ModelValidator validator) {
         for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {

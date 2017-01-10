@@ -5,10 +5,13 @@
       "name": "default",
       "steps": [      {
         "name": "script",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "echo \"In a script step\""
-        }
+        "arguments": [        {
+          "key": "scriptBlock",
+          "value":           {
+            "isLiteral": true,
+            "value": "echo \"In a script step\""
+          }
+        }]
       }]
     }]
   }],

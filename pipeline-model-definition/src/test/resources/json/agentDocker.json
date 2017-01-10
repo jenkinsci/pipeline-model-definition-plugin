@@ -6,17 +6,23 @@
       "steps":       [
                 {
           "name": "sh",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "cat /usr/local/apache2/conf/extra/httpd-userdir.conf"
-          }
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "cat /usr/local/apache2/conf/extra/httpd-userdir.conf"
+            }
+          }]
         },
                 {
           "name": "sh",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "echo \"The answer is 42\""
-          }
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"The answer is 42\""
+            }
+          }]
         }
       ]
     }]

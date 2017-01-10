@@ -47,9 +47,5 @@ public class Label extends DeclarativeAgent<Label> {
 
     @Extension(ordinal = -800) @Symbol("label")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
-        @Override
-        public boolean supportsTools() {
-            return true;
-        }
     }
 }

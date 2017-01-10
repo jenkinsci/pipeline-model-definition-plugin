@@ -6,10 +6,13 @@
       "steps":       [
                 {
           "name": "echo",
-          "arguments":           {
-            "isLiteral": true,
-            "value": "hello"
-          }
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "hello"
+            }
+          }]
         },
                 {
           "name": "parallel",
