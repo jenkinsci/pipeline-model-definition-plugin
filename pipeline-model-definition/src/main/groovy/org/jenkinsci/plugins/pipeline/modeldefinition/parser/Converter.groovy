@@ -30,6 +30,9 @@ import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule
 import com.github.fge.jsonschema.exceptions.ProcessingException
 import com.github.fge.jsonschema.main.JsonSchema
 import com.github.fge.jsonschema.report.ProcessingReport
+import com.github.fge.jsonschema.tree.JsonTree
+import com.github.fge.jsonschema.tree.SimpleJsonTree
+import com.github.fge.jsonschema.util.JsonLoader
 import net.sf.json.JSONObject
 import org.apache.commons.lang.reflect.FieldUtils
 import org.codehaus.groovy.control.CompilationFailedException
@@ -67,8 +70,10 @@ public class Converter {
      * @throws ProcessingException If an error of high enough severity is detected in processing.
      */
     public static ProcessingReport validateJSONAgainstSchema(JSONObject origJson) throws ProcessingException {
-        JsonNode jsonNode = jacksonJSONFromJSONObject(origJson);
+        return validateJSONAgainstSchema(jacksonJSONFromJSONObject(origJson))
+    }
 
+    public static ProcessingReport validateJSONAgainstSchema(JsonNode jsonNode) throws ProcessingException {
         JsonSchema schema = ASTSchema.getJSONSchema();
 
         return schema.validate(jsonNode)
@@ -85,6 +90,10 @@ public class Converter {
         mapper.registerModule(new JsonOrgModule());
 
         return mapper.valueToTree(input);
+    }
+
+    public static JsonTree jsonTreeFromJSONObject(JSONObject input) {
+        return new SimpleJsonTree(jacksonJSONFromJSONObject(input))
     }
 
     /**

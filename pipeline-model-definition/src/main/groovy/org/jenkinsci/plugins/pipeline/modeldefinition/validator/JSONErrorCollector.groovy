@@ -23,6 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator
 
+import com.github.fge.jsonschema.jsonpointer.JsonPointer
+import com.github.fge.jsonschema.tree.JsonTree
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import net.sf.json.JSONArray
+import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
 
 /**
@@ -30,8 +35,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
  *
  * @author Andrew Bayer
  */
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class JSONErrorCollector extends ErrorCollector {
-    List<String> errors = []
+    List<JSONErrorPair> errors
 
     public JSONErrorCollector() {
         errors = []
@@ -39,7 +45,11 @@ public class JSONErrorCollector extends ErrorCollector {
 
     @Override
     public void error(ModelASTElement src, String message) {
-        errors << message
+        JsonTree json = null
+        if (src.sourceLocation instanceof JsonTree) {
+            json = (JsonTree)src.sourceLocation
+        }
+        this.errors.add(new JSONErrorPair(json?.getPointer(), message))
     }
 
     @Override
@@ -49,6 +59,38 @@ public class JSONErrorCollector extends ErrorCollector {
 
     @Override
     public List<String> errorsAsStrings() {
-        return errors
+        return errors.collect { it.message }
+    }
+
+    @Override
+    public JSONArray asJson() {
+        JSONArray a = new JSONArray()
+        errors.each { a.add(it.jsonError) }
+
+        return a
+    }
+
+    public static final class JSONErrorPair {
+        final String message
+        final JsonPointer location
+
+        JSONErrorPair(JsonPointer location, String message) {
+            this.location = location
+            this.message = message
+        }
+
+        public JSONObject getJsonError() {
+            JSONObject o = new JSONObject()
+            JSONArray a = new JSONArray()
+
+            location.iterator().each { t ->
+                a.add(t.toString())
+            }
+
+            o.accumulate("location", a)
+            o.accumulate("error", message)
+
+            return o
+        }
     }
 }

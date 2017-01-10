@@ -77,7 +77,7 @@ public class ErrorsEndpointOpsTest extends AbstractModelDefTest {
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
 
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
-                foundExpectedError(resultData.getJSONArray("errors")));
+                foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));
     }
 
     @Test
@@ -148,17 +148,5 @@ public class ErrorsEndpointOpsTest extends AbstractModelDefTest {
         JSONObject resultData = result.getJSONObject("data");
         assertNotNull(resultData);
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
-    }
-
-    private boolean foundExpectedError(JSONArray errors) {
-        for (Object e : JSONArray.toCollection(errors, String.class)) {
-            if (e instanceof String) {
-                if (e.equals(expectedError)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }

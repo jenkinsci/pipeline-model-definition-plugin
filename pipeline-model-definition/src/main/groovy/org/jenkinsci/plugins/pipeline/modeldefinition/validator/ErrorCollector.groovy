@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator
 
+import net.sf.json.JSONArray
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement;
 
 /**
@@ -13,4 +14,6 @@ public abstract class ErrorCollector {
     public abstract int getErrorCount()
 
     public abstract List<String> errorsAsStrings()
+
+    public abstract JSONArray asJson()
 }

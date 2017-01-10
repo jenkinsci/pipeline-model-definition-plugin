@@ -23,15 +23,16 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.endpoints;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.tree.SimpleJsonTree;
+import com.github.fge.jsonschema.util.JsonLoader;
+import com.google.common.collect.ImmutableList;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
-import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
@@ -86,9 +87,9 @@ public class ModelConverterAction implements RootAction {
 
         if (!StringUtils.isEmpty(jsonAsString)) {
             try {
-                JSONObject json = JSONObject.fromObject(jsonAsString);
+                JsonNode json = JsonLoader.fromString(jsonAsString);
 
-                JSONParser parser = new JSONParser(json);
+                JSONParser parser = new JSONParser(new SimpleJsonTree(json));
 
                 ModelASTPipelineDef pipelineDef = parser.parse();
 
@@ -172,22 +173,21 @@ public class ModelConverterAction implements RootAction {
         String jsonAsString = req.getParameter("json");
         if (!StringUtils.isEmpty(jsonAsString)) {
             try {
-                JSON json = JSONSerializer.toJSON(jsonAsString);
+                JsonNode json = JsonLoader.fromString(jsonAsString);
 
-                JSONArray jsonSteps;
+                List<JsonNode> jsonSteps = new ArrayList<>();
                 if (json.isArray()) {
-                    jsonSteps = (JSONArray) json;
+                    jsonSteps.addAll(ImmutableList.copyOf(json.elements()));
                 } else {
-                    jsonSteps = new JSONArray();
                     jsonSteps.add(json);
                 }
                 JSONParser parser = new JSONParser(null);
                 List<ModelASTStep> astSteps = new ArrayList<>(jsonSteps.size());
-                for (Object jsonStep : jsonSteps) {
-                    if (!(jsonStep instanceof JSONObject)) {
+                for (JsonNode jsonStep : jsonSteps) {
+                    if (!jsonStep.isObject()) {
                         continue;
                     }
-                    ModelASTStep astStep = parser.parseStep((JSONObject) jsonStep);
+                    ModelASTStep astStep = parser.parseStep(new SimpleJsonTree(jsonStep));
                     if (astStep != null) {
                         astStep.validate(parser.getValidator());
                         astSteps.add(astStep);
@@ -258,9 +258,9 @@ public class ModelConverterAction implements RootAction {
         if (!StringUtils.isEmpty(jsonAsString)) {
             try {
 
-                JSONObject json = JSONObject.fromObject(jsonAsString);
+                JsonNode json = JsonLoader.fromString(jsonAsString);
 
-                JSONParser parser = new JSONParser(json);
+                JSONParser parser = new JSONParser(new SimpleJsonTree(json));
 
                 parser.parse();
 
@@ -333,10 +333,7 @@ public class ModelConverterAction implements RootAction {
      */
     private boolean collectErrors(JSONObject result, ErrorCollector errorCollector) {
         if (errorCollector.getErrorCount() > 0) {
-            JSONArray errors = new JSONArray();
-            for (String jsonError : errorCollector.errorsAsStrings()) {
-                errors.add(jsonError);
-            }
+            JSONArray errors = errorCollector.asJson();
             reportFailure(result, errors);
             return true;
         }
@@ -351,16 +348,19 @@ public class ModelConverterAction implements RootAction {
      */
     private void reportFailure(JSONObject result, Exception e) {
         JSONArray errors = new JSONArray();
+        JSONObject j = new JSONObject();
+
         if (e instanceof MultipleCompilationErrorsException) {
             MultipleCompilationErrorsException ce = (MultipleCompilationErrorsException)e;
             for (Object o : ce.getErrorCollector().getErrors()) {
                 if (o instanceof SyntaxErrorMessage) {
-                    errors.add(((SyntaxErrorMessage)o).getCause().getMessage());
+                    j.accumulate("error", ((SyntaxErrorMessage)o).getCause().getMessage());
                 }
             }
         } else {
-            errors.add(e.getMessage());
+            j.accumulate("error", e.getMessage());
         }
+        errors.add(j);
         reportFailure(result, errors);
     }
 
@@ -372,7 +372,9 @@ public class ModelConverterAction implements RootAction {
      */
     private void reportFailure(JSONObject result, String message) {
         JSONArray errors = new JSONArray();
-        errors.add(message);
+        JSONObject o = new JSONObject();
+        o.accumulate("error", message);
+        errors.add(o);
         reportFailure(result, errors);
     }
 

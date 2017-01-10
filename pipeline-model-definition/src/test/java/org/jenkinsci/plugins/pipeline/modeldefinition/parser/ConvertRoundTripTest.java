@@ -65,7 +65,7 @@ public class ConvertRoundTripTest extends BaseParserLoaderTest {
         JSONObject origJson = origRoot.toJSON();
         assertNotNull(origJson);
 
-        JSONParser jp = new JSONParser(origJson);
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
         ModelASTPipelineDef newRoot = jp.parse();
 
         assertEquals(getJSONErrorReport(jp, configName), 0, jp.getErrorCollector().getErrorCount());
@@ -94,7 +94,7 @@ public class ConvertRoundTripTest extends BaseParserLoaderTest {
         JSONObject origJson = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
         assertNotNull("Couldn't parse JSON for " + configName, origJson);
 
-        JSONParser jp = new JSONParser(origJson);
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
         ModelASTPipelineDef pipelineDef = jp.parse();
 
         assertEquals(getJSONErrorReport(jp, configName), 0, jp.getErrorCollector().getErrorCount());
@@ -108,7 +108,7 @@ public class ConvertRoundTripTest extends BaseParserLoaderTest {
         JSONObject origJson = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
         assertNotNull("Couldn't parse JSON for " + configName, origJson);
 
-        JSONParser jp = new JSONParser(origJson);
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
         ModelASTPipelineDef origRoot = jp.parse();
 
         assertEquals(getJSONErrorReport(jp, configName), 0, jp.getErrorCollector().getErrorCount());

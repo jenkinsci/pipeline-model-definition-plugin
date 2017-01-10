@@ -23,13 +23,19 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.tree.SimpleJsonTree;
+import com.github.fge.jsonschema.util.JsonLoader;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -62,6 +68,29 @@ public class JSONValidationTest extends BaseParserLoaderTest {
         assertTrue(arg.getBoolean("isLiteral"));
         assertEquals("echo \"In a script step\"", arg.getString("value"));
 
+    }
+
+    @Test
+    public void parallelPipelineDuplicateNames() throws Exception {
+        String expectedError = Messages.ModelValidatorImpl_DuplicateParallelName("first");
+        try {
+            JsonNode json = JsonLoader.fromString(fileContentsFromResources("json/errors/parallelPipelineDuplicateNames.json"));
+
+            assertNotNull("Couldn't parse JSON for parallelPipelineDuplicateNames", json);
+            assertFalse("Couldn't parse JSON for parallelPipelineDuplicateNames", json.size() == 0);
+            assertFalse("Couldn't parse JSON for parallelPipelineDuplicateNames", json.isNull());
+
+            JSONParser jp = new JSONParser(new SimpleJsonTree(json));
+            jp.parse();
+
+            assertTrue(jp.getErrorCollector().getErrorCount() > 0);
+
+            assertTrue("Didn't find expected error in " + getJSONErrorReport(jp, "parallelPipelineDuplicateNames"),
+                    foundExpectedErrorInJSON(jp.getErrorCollector().asJson(), expectedError));
+        } catch (Exception e) {
+            // If there's a straight-up parsing error, make sure it's what we expect.
+            assertTrue(e.getMessage(), e.getMessage().contains(expectedError));
+        }
     }
 
 }

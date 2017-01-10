@@ -23,7 +23,9 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
-import net.sf.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.tree.SimpleJsonTree;
+import com.github.fge.jsonschema.util.JsonLoader;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
@@ -53,19 +55,19 @@ public class ErrorsJSONParserTest extends BaseParserLoaderTest {
     @Test
     public void parseAndValidateJSONWithError() throws Exception {
         try {
-            JSONObject json = JSONObject.fromObject(fileContentsFromResources("json/errors/" + configName + ".json"));
+            JsonNode json = JsonLoader.fromString(fileContentsFromResources("json/errors/" + configName + ".json"));
 
             assertNotNull("Couldn't parse JSON for " + configName, json);
-            assertFalse("Couldn't parse JSON for " + configName, json.isEmpty());
-            assertFalse("Couldn't parse JSON for " + configName, json.isNullObject());
+            assertFalse("Couldn't parse JSON for " + configName, json.size() == 0);
+            assertFalse("Couldn't parse JSON for " + configName, json.isNull());
 
-            JSONParser jp = new JSONParser(json);
+            JSONParser jp = new JSONParser(new SimpleJsonTree(json));
             jp.parse();
 
             assertTrue(jp.getErrorCollector().getErrorCount() > 0);
 
             assertTrue("Didn't find expected error in " + getJSONErrorReport(jp, configName),
-                    jp.getErrorCollector().errorsAsStrings().contains(expectedError));
+                    foundExpectedErrorInJSON(jp.getErrorCollector().asJson(), expectedError));
         } catch (Exception e) {
             // If there's a straight-up parsing error, make sure it's what we expect.
             assertTrue(e.getMessage(), e.getMessage().contains(expectedError));

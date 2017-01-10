@@ -24,12 +24,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.github.fge.jsonschema.exceptions.JsonReferenceException
 import com.github.fge.jsonschema.exceptions.ProcessingException
+import com.github.fge.jsonschema.jsonpointer.JsonPointer
 import com.github.fge.jsonschema.report.ProcessingMessage
 import com.github.fge.jsonschema.report.ProcessingReport
+import com.github.fge.jsonschema.tree.JsonTree
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import net.sf.json.JSONArray
-import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
@@ -52,26 +53,27 @@ class JSONParser implements Parser {
 
     ModelValidator validator
 
-    JSONObject jsonObject
+    JsonTree jsonTree
 
-    public JSONParser(JSONObject j) {
-        this.jsonObject = j
+    public JSONParser(JsonTree tree) {
+        this.jsonTree = tree
         this.errorCollector = new JSONErrorCollector()
         this.validator = new ModelValidatorImpl(this.errorCollector)
     }
 
     public @CheckForNull ModelASTPipelineDef parse() {
-        return parse(jsonObject);
+        return parse(jsonTree);
     }
 
-    public @CheckForNull ModelASTPipelineDef parse(JSONObject json) {
+    public @CheckForNull ModelASTPipelineDef parse(JsonTree json) {
         ModelASTPipelineDef pipelineDef = new ModelASTPipelineDef(json)
 
         try {
-            ProcessingReport schemaReport = Converter.validateJSONAgainstSchema(json)
+            ProcessingReport schemaReport = Converter.validateJSONAgainstSchema(json.baseNode)
             if (!schemaReport.isSuccess()) {
                 schemaReport.each { pm ->
-                    errorCollector.error(pipelineDef, processingMessageToError(pm))
+                    errorCollector.error(new ModelASTPipelineDef(treeFromProcessingMessage(json, pm)),
+                        processingMessageToError(pm))
                 }
                 return pipelineDef
             }
@@ -82,130 +84,131 @@ class JSONParser implements Parser {
 
         def sectionsSeen = new HashSet()
 
-        JSONObject pipelineJson = jsonObject.getJSONObject(ModelStepLoader.STEP_NAME)
-        pipelineJson.keySet().each { sectionName ->
-            if (!sectionsSeen.add(sectionName)) {
-                errorCollector.error(pipelineDef, Messages.Parser_MultipleOfSection(sectionName))
+        JsonTree pipelineJson = json.append(JsonPointer.of(ModelStepLoader.STEP_NAME))
+        if (pipelineJson.node.isObject()) {
+            pipelineJson.node.fields().collectEntries { [(it.key): it.value] }.each { sectionName, sectionContent ->
+                if (!sectionsSeen.add(sectionName)) {
+                    errorCollector.error(pipelineDef, Messages.Parser_MultipleOfSection(sectionName))
+                }
+
+                switch (sectionName) {
+                    case 'stages':
+                        pipelineDef.stages = parseStages(pipelineJson.append(JsonPointer.of("stages")))
+                        break
+                    case 'environment':
+                        pipelineDef.environment = parseEnvironment(pipelineJson.append(JsonPointer.of("environment")))
+                        break
+                    case 'agent':
+                        pipelineDef.agent = parseAgent(pipelineJson.append(JsonPointer.of("agent")))
+                        break
+                    case 'post':
+                        pipelineDef.postBuild = parsePostBuild(pipelineJson.append(JsonPointer.of("post")))
+                        break
+                    case 'tools':
+                        pipelineDef.tools = parseTools(pipelineJson.append(JsonPointer.of("tools")))
+                        break
+                    case 'options':
+                        pipelineDef.options = parseOptions(pipelineJson.append(JsonPointer.of("options")))
+                        break
+                    case 'triggers':
+                        pipelineDef.triggers = parseTriggers(pipelineJson.append(JsonPointer.of("triggers")))
+                        break
+                    case 'parameters':
+                        pipelineDef.parameters = parseBuildParameters(pipelineJson.append(JsonPointer.of("parameters")))
+                        break
+                    default:
+                        errorCollector.error(pipelineDef, Messages.Parser_UndefinedSection(sectionName))
+                }
             }
 
-            switch (sectionName) {
-                case 'stages':
-                    pipelineDef.stages = parseStages(pipelineJson.getJSONArray("stages"))
-                    break
-                case 'environment':
-                    pipelineDef.environment = parseEnvironment(pipelineJson.getJSONArray("environment"))
-                    break
-                case 'agent':
-                    pipelineDef.agent = parseAgent(pipelineJson.getJSONObject("agent"))
-                    break
-                case 'post':
-                    pipelineDef.postBuild = parsePostBuild(pipelineJson.getJSONObject("post"))
-                    break
-                case 'tools':
-                    pipelineDef.tools = parseTools(pipelineJson.getJSONArray("tools"))
-                    break
-                case 'options':
-                    pipelineDef.options = parseOptions(pipelineJson.getJSONObject("options"))
-                    break
-                case 'triggers':
-                    pipelineDef.triggers = parseTriggers(pipelineJson.getJSONObject("triggers"))
-                    break
-                case 'parameters':
-                    pipelineDef.parameters = parseBuildParameters(pipelineJson.getJSONObject("parameters"))
-                    break
-                default:
-                    errorCollector.error(pipelineDef, Messages.Parser_UndefinedSection(sectionName))
-            }
+            pipelineDef.validate(validator)
+
+        } else {
+            errorCollector.error(pipelineDef, Messages.JSONParser_MissingPipelineRoot())
         }
 
-        pipelineDef.validate(validator)
 
         return pipelineDef
     }
 
 
-    public @CheckForNull ModelASTStages parseStages(JSONArray j) {
+    public @CheckForNull ModelASTStages parseStages(JsonTree j) {
         ModelASTStages stages = new ModelASTStages(j)
 
-        j.each { s ->
-            JSONObject o = (JSONObject)s
-            stages.stages.add(parseStage(o))
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            stages.stages.add(parseStage(j.append(JsonPointer.of(i))))
         }
 
         return stages
     }
 
-    public @CheckForNull ModelASTStage parseStage(JSONObject j) {
+    public @CheckForNull ModelASTStage parseStage(JsonTree j) {
         ModelASTStage stage = new ModelASTStage(j)
 
-        stage.name = j.getString("name")
+        stage.name = j.node.get("name").asText()
 
-        if (j.has("agent")) {
-            stage.agent = parseAgent(j.getJSONObject("agent"))
+        if (j.node.has("agent")) {
+            stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
 
-        j.getJSONArray("branches").each { b ->
-            JSONObject o = (JSONObject)b
-            stage.branches.add(parseBranch(o))
+        JsonTree branches = j.append(JsonPointer.of("branches"))
+        branches?.node?.eachWithIndex { JsonNode entry, int i ->
+            stage.branches.add(parseBranch(branches.append(JsonPointer.of(i))))
         }
 
-        if (j.has("failFast") && stage.branches.size() > 1) {
-            stage.failFast = j.getBoolean("failFast")
+        if (j.node.has("failFast") && stage.branches.size() > 1) {
+            stage.failFast = j.node.get("failFast")?.asBoolean()
         }
 
-        if (j.has("environment")) {
-            stage.environment = parseEnvironment(j.getJSONArray("environment"))
+        if (j.node.has("environment")) {
+            stage.environment = parseEnvironment(j.append(JsonPointer.of("environment")))
         }
 
-        if (j.has("tools")) {
-            stage.tools = parseTools(j.getJSONArray("tools"))
+        if (j.node.has("tools")) {
+            stage.tools = parseTools(j.append(JsonPointer.of("tools")))
         }
 
-        if (j.has("post")) {
-            def object = j.getJSONObject("post")
-            if (!object.isNullObject()) {
-                stage.post = parsePostStage(object)
-            }
+        if (j.node.hasNonNull("post")) {
+            stage.post = parsePostStage(j.append(JsonPointer.of("post")))
         }
 
-        if (j.has("when")) {
-            def object = j.getJSONObject("when")
-            if (!object.isNullObject()) {
-                stage.when = parseWhen(object)
-            }
+        if (j.node.hasNonNull("when")) {
+            stage.when = parseWhen(j.append(JsonPointer.of("when")))
         }
         return stage
 
     }
 
-    public @CheckForNull ModelASTBranch parseBranch(JSONObject j) {
+    public @CheckForNull ModelASTBranch parseBranch(JsonTree j) {
         ModelASTBranch branch = new ModelASTBranch(j)
-        branch.name = j.getString("name")
+        branch.name = j.node.get("name").asText()
 
-        j.getJSONArray("steps").each { o ->
-            JSONObject s = (JSONObject)o
-
-            branch.steps.add(parseStep(s))
+        JsonTree steps = j.append(JsonPointer.of("steps"))
+        steps.node.eachWithIndex { JsonNode entry, int i ->
+            branch.steps.add(parseStep(steps.append(JsonPointer.of(i))))
         }
 
         return branch
     }
 
-    public @CheckForNull ModelASTWhen parseWhen(JSONObject j) {
+    public @CheckForNull ModelASTWhen parseWhen(JsonTree j) {
         ModelASTWhen when = new ModelASTWhen(j)
-        j.getJSONArray("conditions").each { o ->
-            JSONObject s = (JSONObject)o
-            when.conditions.add(parseStep(s))
+        JsonTree conditionsTree = j.append(JsonPointer.of("conditions"))
+        conditionsTree.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree condTree = conditionsTree.append(JsonPointer.of(i))
+            when.conditions.add(parseStep(condTree))
         }
         return when
     }
 
-    public @CheckForNull ModelASTOptions parseOptions(JSONObject j) {
+    public @CheckForNull ModelASTOptions parseOptions(JsonTree j) {
         ModelASTOptions options = new ModelASTOptions(j)
 
-        j.getJSONArray("options").each { p ->
-            ModelASTOption opt = new ModelASTOption(p)
-            ModelASTMethodCall m = parseMethodCall(p)
+        JsonTree optionsTree = j.append(JsonPointer.of("options"))
+        optionsTree.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree optTree = optionsTree.append(JsonPointer.of(i))
+            ModelASTOption opt = new ModelASTOption(optTree)
+            ModelASTMethodCall m = parseMethodCall(optTree)
             opt.args = m.args
             opt.name = m.name
             options.options.add(opt)
@@ -214,12 +217,14 @@ class JSONParser implements Parser {
         return options
     }
 
-    public @CheckForNull ModelASTTriggers parseTriggers(JSONObject j) {
+    public @CheckForNull ModelASTTriggers parseTriggers(JsonTree j) {
         ModelASTTriggers triggers = new ModelASTTriggers(j)
 
-        j.getJSONArray("triggers").each { p ->
-            ModelASTTrigger t = new ModelASTTrigger(p)
-            ModelASTMethodCall m = parseMethodCall(p)
+        JsonTree triggersTree = j.append(JsonPointer.of("triggers"))
+        triggersTree.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree trigTree = triggersTree.append(JsonPointer.of(i))
+            ModelASTTrigger t = new ModelASTTrigger(trigTree)
+            ModelASTMethodCall m = parseMethodCall(trigTree)
             t.args = m.args
             t.name = m.name
             triggers.triggers.add(t)
@@ -228,12 +233,14 @@ class JSONParser implements Parser {
         return triggers
     }
 
-    public @CheckForNull ModelASTBuildParameters parseBuildParameters(JSONObject j) {
+    public @CheckForNull ModelASTBuildParameters parseBuildParameters(JsonTree j) {
         ModelASTBuildParameters params = new ModelASTBuildParameters(j)
 
-        j.getJSONArray("parameters").each { p ->
-            ModelASTBuildParameter b = new ModelASTBuildParameter(p)
-            ModelASTMethodCall m = parseMethodCall(p)
+        JsonTree paramsTree = j.append(JsonPointer.of("parameters"))
+        paramsTree.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree pTree = paramsTree.append(JsonPointer.of(i))
+            ModelASTBuildParameter b = new ModelASTBuildParameter(pTree)
+            ModelASTMethodCall m = parseMethodCall(pTree)
             b.args = m.args
             b.name = m.name
             params.parameters.add(b)
@@ -242,18 +249,18 @@ class JSONParser implements Parser {
         return params
     }
 
-    public @CheckForNull parseKeyValueOrMethodCallPair(JSONObject j) {
+    public @CheckForNull parseKeyValueOrMethodCallPair(JsonTree j) {
         ModelASTKeyValueOrMethodCallPair pair = new ModelASTKeyValueOrMethodCallPair(j)
 
         // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
-        pair.key = parseKey(j)
+        pair.key = parseKey(j.append(JsonPointer.of("key")))
 
-        JSONObject v = j.getJSONObject("value")
+        JsonTree v = j.append(JsonPointer.of("value"))
 
-        if (v.has("name") && v.has("arguments")) {
+        if (v.node.has("name") && v.node.has("arguments")) {
             // This is a method call
             pair.value = parseMethodCall(v)
-        } else if (v.has("isLiteral") && v.has("value")) {
+        } else if (v.node.has("isLiteral") && v.node.has("value")) {
             // This is a single argument
             pair.value = parseValue(v)
         } else {
@@ -263,25 +270,26 @@ class JSONParser implements Parser {
         return pair
     }
 
-    public @CheckForNull ModelASTMethodCall parseMethodCall(Object o) {
+    public @CheckForNull ModelASTMethodCall parseMethodCall(JsonTree o) {
         ModelASTMethodCall meth = new ModelASTMethodCall(o)
-        if (o instanceof JSONObject) {
-            meth.name = o.getString("name")
-            if (o.has("arguments") && o.get("arguments") instanceof JSONArray) {
-                JSONArray args = o.getJSONArray("arguments")
-                args.each { rawEntry ->
-                    if (rawEntry instanceof JSONObject) {
-                        JSONObject entry = (JSONObject) rawEntry
+
+        if (o.node.isObject()) {
+            meth.name = o.node.get("name").asText()
+            if (o.node.has("arguments") && o.node.get("arguments").isArray()) {
+                JsonTree args = o.append(JsonPointer.of("arguments"))
+                args.node.eachWithIndex { JsonNode entry, int i ->
+                    if (entry.isObject()) {
+                        JsonTree argTree = args.append(JsonPointer.of(i))
                         ModelASTMethodArg arg
                         if (entry.has("key") && entry.has("value")) {
                             // This is a key/value pair
-                            arg = parseKeyValueOrMethodCallPair(entry)
+                            arg = parseKeyValueOrMethodCallPair(argTree)
                         } else if (entry.has("name") && entry.has("arguments")) {
                             // This is a method call
-                            arg = parseMethodCall(entry)
+                            arg = parseMethodCall(argTree)
                         } else if (entry.has("isLiteral") && entry.has("value")) {
                             // This is a single argument
-                            arg = parseValue(entry)
+                            arg = parseValue(argTree)
                         } else {
                             errorCollector.error(meth, Messages.JSONParser_InvalidArgumentSyntax())
                         }
@@ -302,39 +310,39 @@ class JSONParser implements Parser {
         return meth
     }
 
-    public @CheckForNull ModelASTStep parseStep(JSONObject j) {
-        if (j.containsKey("children")) {
+    public @CheckForNull ModelASTStep parseStep(JsonTree j) {
+        if (j.node.has("children")) {
             return parseTreeStep(j)
-        } else if (j.getString("name") == "script") {
+        } else if (j.node.get("name")?.asText()?.equals("script")) {
             return parseScriptBlock(j)
-        } else if (j.getString("name") == "expression") {
+        } else if (j.node.get("name")?.asText()?.equals("expression")) {
             return parseWhenExpression(j)
         } else {
             ModelASTStep step = new ModelASTStep(j)
-            step.name = j.getString("name")
-            step.args = parseArgumentList(j.get("arguments"))
+            step.name = j.node.get("name").asText()
+            step.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
 
             return step
         }
     }
 
-    public @CheckForNull ModelASTArgumentList parseArgumentList(Object o) {
+    public @CheckForNull ModelASTArgumentList parseArgumentList(JsonTree o) {
         ModelASTArgumentList argList
-        if (o instanceof JSONArray) {
+        if (o.node.isArray()) {
 
-            if (o.isEmpty()) {
+            if (o.node.size() == 0) {
                 argList = new ModelASTNamedArgumentList(o)
             } else {
-                JSONObject firstElem = o.getJSONObject(0)
+                JsonNode firstElem = o.node.get(0)
                 // If this is true, then we've got named parameters.
                 if (firstElem != null && firstElem.size() == 2 && firstElem.has("key") && firstElem.has("value")) {
                     argList = new ModelASTNamedArgumentList(o)
-                    o.each { rawEntry ->
-                        JSONObject entry = (JSONObject) rawEntry
+                    o.node.eachWithIndex { JsonNode entry, int i ->
+                        JsonTree entryTree = o.append(JsonPointer.of(i))
                         // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
-                        ModelASTKey key = parseKey(entry)
+                        ModelASTKey key = parseKey(entryTree.append(JsonPointer.of("key")))
 
-                        ModelASTValue value = parseValue(entry.getJSONObject("value"))
+                        ModelASTValue value = parseValue(entryTree.append(JsonPointer.of("value")))
 
                         ((ModelASTNamedArgumentList) argList).arguments.put(key, value)
                     }
@@ -342,19 +350,19 @@ class JSONParser implements Parser {
                 // Otherwise, we've got positional parameters.
                 else {
                     argList = new ModelASTPositionalArgumentList(o)
-                    o.each { rawValue ->
-                        ModelASTValue value = parseValue((JSONObject) rawValue)
+                    o.node.eachWithIndex { JsonNode entry, int i ->
+                        ModelASTValue value = parseValue(o.append(JsonPointer.of(i)))
                         ((ModelASTPositionalArgumentList)argList).arguments.add(value)
                     }
                 }
             }
-        } else if (o instanceof JSONObject) {
+        } else if (o.node.isObject()) {
             argList = new ModelASTSingleArgument(o)
             ((ModelASTSingleArgument) argList).value = parseValue(o)
-        } else if (o instanceof String) {
+        } else if (o.node.isTextual()) {
             argList = new ModelASTSingleArgument(o)
-            ((ModelASTSingleArgument) argList).value = ModelASTValue.fromConstant(o, o)
-        } else if (o == null) {
+            ((ModelASTSingleArgument) argList).value = ModelASTValue.fromConstant(o.node.asText(), o)
+        } else if (o.node == null) {
             // No arguments.
             argList = new ModelASTNamedArgumentList(null)
         } else {
@@ -366,119 +374,128 @@ class JSONParser implements Parser {
         return argList
     }
 
-    public @CheckForNull ModelASTKey parseKey(JSONObject o) {
+    public @CheckForNull ModelASTKey parseKey(JsonTree o) {
         ModelASTKey key = new ModelASTKey(o)
 
-        key.key = o.getString("key")
+        key.key = o.node?.asText()
         return key
     }
 
-    public @CheckForNull ModelASTValue parseValue(JSONObject o) {
-        if (o.getBoolean("isLiteral")) {
-            return ModelASTValue.fromConstant(o.get("value"), o)
+    public @CheckForNull ModelASTValue parseValue(JsonTree o) {
+        if (o.node.get("isLiteral").asBoolean()) {
+            if (o.node.get("value").isBoolean()) {
+                return ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)
+            } else if (o.node.get("value").isNumber()) {
+                return ModelASTValue.fromConstant(o.node.get("value").numberValue(), o)
+            } else if (o.node.get("value").isTextual()) {
+                return ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+            } else {
+                return ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+            }
         } else {
-            return ModelASTValue.fromGString(o.getString("value"), o)
+            return ModelASTValue.fromGString(o.node.get("value").textValue(), o)
         }
     }
 
-    public @CheckForNull ModelASTScriptBlock parseScriptBlock(JSONObject j) {
+    public @CheckForNull ModelASTScriptBlock parseScriptBlock(JsonTree j) {
         ModelASTScriptBlock scriptBlock = new ModelASTScriptBlock(j)
-        scriptBlock.args = parseArgumentList(j.getJSONObject("arguments"))
+        scriptBlock.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
 
         return scriptBlock
     }
 
-    public @CheckForNull ModelASTWhenExpression parseWhenExpression(JSONObject j) {
+    public @CheckForNull ModelASTWhenExpression parseWhenExpression(JsonTree j) {
         ModelASTWhenExpression scriptBlock = new ModelASTWhenExpression(j)
-        scriptBlock.args = parseArgumentList(j.getJSONObject("arguments"))
+        scriptBlock.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
 
         return scriptBlock
     }
 
-    public @CheckForNull ModelASTTreeStep parseTreeStep(JSONObject j) {
+    public @CheckForNull ModelASTTreeStep parseTreeStep(JsonTree j) {
         ModelASTTreeStep step = new ModelASTTreeStep(j)
-        step.name = j.getString("name")
-        step.args = parseArgumentList(j.get("arguments"))
+        step.name = j.node.get("name").asText()
+        step.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
 
-        j.getJSONArray("children").each { o ->
-            JSONObject c = (JSONObject)o
-            step.children.add(parseStep(c))
+        JsonTree children = j.append(JsonPointer.of("children"))
+        children.node.eachWithIndex { JsonNode entry, int i ->
+            step.children.add(parseStep(children.append(JsonPointer.of(i))))
         }
 
         return step
     }
 
-    public @CheckForNull ModelASTBuildCondition parseBuildCondition(JSONObject j) {
+    public @CheckForNull ModelASTBuildCondition parseBuildCondition(JsonTree j) {
         ModelASTBuildCondition condition = new ModelASTBuildCondition(j)
 
-        condition.condition = j.getString("condition")
-        condition.branch = parseBranch(j.getJSONObject("branch"))
+        condition.condition = j.node.get("condition").asText()
+        condition.branch = parseBranch(j.append(JsonPointer.of("branch")))
 
         return condition
     }
 
-    public @CheckForNull ModelASTPostBuild parsePostBuild(JSONObject j) {
+    public @CheckForNull ModelASTPostBuild parsePostBuild(JsonTree j) {
         ModelASTPostBuild postBuild = new ModelASTPostBuild(j)
         return parseBuildConditionResponder(j, postBuild)
     }
 
-    public @CheckForNull ModelASTPostStage parsePostStage(JSONObject j) {
+    public @CheckForNull ModelASTPostStage parsePostStage(JsonTree j) {
         ModelASTPostStage post = new ModelASTPostStage(j)
         return parseBuildConditionResponder(j, post)
     }
 
     @Nonnull
-    public <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(JSONObject j, R responder) {
-        j.getJSONArray("conditions").each { o ->
-            JSONObject conditionBlock = (JSONObject) o
-            responder.conditions.add(parseBuildCondition(conditionBlock))
+    public <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(JsonTree j, R responder) {
+        JsonTree conds = j.append(JsonPointer.of("conditions"))
+        conds.node.eachWithIndex { JsonNode entry, int i ->
+            responder.conditions.add(parseBuildCondition(conds.append(JsonPointer.of(i))))
         }
         return responder
     }
 
-    public @CheckForNull ModelASTEnvironment parseEnvironment(JSONArray j) {
+    public @CheckForNull ModelASTEnvironment parseEnvironment(JsonTree j) {
         ModelASTEnvironment environment = new ModelASTEnvironment(j)
 
-        j.each { rawEntry ->
-            JSONObject entry = (JSONObject) rawEntry
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree entryTree = j.append(JsonPointer.of(i))
             // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
-            ModelASTKey key = parseKey(entry)
+            ModelASTKey key = parseKey(entryTree.append(JsonPointer.of("key")))
 
-            ModelASTValue value = parseValue(entry.getJSONObject("value"))
+            ModelASTValue value = parseValue(entryTree.append(JsonPointer.of("value")))
 
             environment.variables.put(key, value)
         }
         return environment
     }
 
-    public @CheckForNull ModelASTTools parseTools(JSONArray j) {
+    public @CheckForNull ModelASTTools parseTools(JsonTree j) {
         ModelASTTools tools = new ModelASTTools(j)
 
-        j.each { rawEntry ->
-            JSONObject entry = (JSONObject) rawEntry
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree entryTree = j.append(JsonPointer.of(i))
             // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
-            ModelASTKey key = parseKey(entry)
+            ModelASTKey key = parseKey(entryTree.append(JsonPointer.of("key")))
 
-            ModelASTValue value = parseValue(entry.getJSONObject("value"))
+            ModelASTValue value = parseValue(entryTree.append(JsonPointer.of("value")))
 
             tools.tools.put(key, value)
         }
         return tools
     }
 
-    public @CheckForNull ModelASTClosureMap parseClosureMap(JSONArray j) {
+    public @CheckForNull ModelASTClosureMap parseClosureMap(JsonTree j) {
         ModelASTClosureMap map = new ModelASTClosureMap(j)
 
-        j.each { JSONObject entry ->
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree entryTree = j.append(JsonPointer.of(i))
             // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
-            ModelASTKey key = parseKey(entry)
+            ModelASTKey key = parseKey(entryTree.append(JsonPointer.of("key")))
 
-            Object val = entry.get("value")
-            if (val instanceof JSONArray) {
-                map.variables[key] = parseClosureMap(val)
-            } else if (val instanceof JSONObject && val.has("isLiteral") && val.has("value")) {
+            JsonNode val = entry.get("value")
+            if (val?.isArray()) {
+                map.variables[key] = parseClosureMap(entryTree.append(JsonPointer.of("value")))
+            } else if (val?.isObject() && val.has("isLiteral") && val.has("value")) {
                 // This is a single argument
-                map.variables[key] = parseValue(val)
+                map.variables[key] = parseValue(entryTree.append(JsonPointer.of("value")))
             } else {
                 errorCollector.error(key, Messages.JSONParser_InvalidArgumentSyntax())
             }
@@ -487,20 +504,32 @@ class JSONParser implements Parser {
         return map
     }
 
-    public @CheckForNull ModelASTAgent parseAgent(JSONObject j) {
+    public @CheckForNull ModelASTAgent parseAgent(JsonTree j) {
         ModelASTAgent agent = new ModelASTAgent(j)
 
-        agent.agentType = new ModelASTKey(j.get("type"))
-        agent.agentType.key = j.getString("type")
-        if (j.has("arguments") &&
-            j.get("arguments") instanceof JSONArray &&
-            !j.getJSONArray("arguments").isEmpty()) {
-            agent.variables = parseClosureMap(j.getJSONArray("arguments"))
-        } else if (j.has("argument") && j.get("argument") instanceof JSONObject) {
-            agent.variables = parseValue(j.getJSONObject("argument"))
+        agent.agentType = new ModelASTKey(j.append(JsonPointer.of("type")))
+        agent.agentType.key = j.node.get("type").asText()
+        if (j.node.has("arguments") &&
+            j.node.get("arguments").isArray() &&
+            j.node.get("arguments").size() > 0) {
+            agent.variables = parseClosureMap(j.append(JsonPointer.of("arguments")))
+        } else if (j.node.has("argument") && j.node.get("argument").isObject()) {
+            agent.variables = parseValue(j.append(JsonPointer.of("argument")))
         }
 
         return agent
+    }
+
+    private JsonTree treeFromProcessingMessage(JsonTree json, ProcessingMessage pm) {
+        JsonNode jsonNode = pm.asJson()
+
+        String location = jsonNode.get("instance").get("pointer").asText()
+
+        try {
+            return json.append(new JsonPointer(location))
+        } catch (JsonReferenceException e) {
+            return json
+        }
     }
 
     private String processingMessageToError(ProcessingMessage pm) {
@@ -508,14 +537,14 @@ class JSONParser implements Parser {
 
         String location = jsonNode.get("instance").get("pointer").asText()
         if (jsonNode.has("keyword")) {
-            if (jsonNode.get("keyword").asText().equals("required")) {
+            if (jsonNode.get("keyword").asText() == "required") {
                 String missingProps = jsonNode.get('missing').elements().collect { "'${it.asText()}'" }.join(", ")
-                return Messages.JSONParser_MissingRequiredProperties(location, missingProps)
-            } else if (jsonNode.get("keyword").asText().equals("minItems")) {
-                return Messages.JSONParser_TooFewItems(location, jsonNode.get('found').asInt(), jsonNode.get('minItems').asInt())
+                return Messages.JSONParser_MissingRequiredProperties(missingProps)
+            } else if (jsonNode.get("keyword").asText() == "minItems") {
+                return Messages.JSONParser_TooFewItems(jsonNode.get('found').asInt(), jsonNode.get('minItems').asInt())
             }
         }
-        return Messages.JSONParser_ProcessingError(location, pm.message)
+        return pm.message
     }
 
 }

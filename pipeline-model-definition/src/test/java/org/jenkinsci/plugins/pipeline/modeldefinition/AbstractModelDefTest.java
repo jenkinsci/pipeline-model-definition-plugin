@@ -38,6 +38,8 @@ import hudson.util.StreamTaskListener;
 import hudson.util.VersionNumber;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.GitStep;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -142,24 +144,24 @@ public abstract class AbstractModelDefTest {
     public static Iterable<Object[]> configsWithErrors() {
         List<Object[]> result = new ArrayList<>();
         // First element is config name, second element is expected JSON error.
-        result.add(new Object[]{"missingStages", Messages.JSONParser_MissingRequiredProperties("/pipeline", "'stages'")});
-        result.add(new Object[]{"missingAgent", Messages.JSONParser_MissingRequiredProperties("/pipeline", "'agent'")});
+        result.add(new Object[]{"missingStages", Messages.JSONParser_MissingRequiredProperties("'stages'")});
+        result.add(new Object[]{"missingAgent", Messages.JSONParser_MissingRequiredProperties("'agent'")});
 
-        result.add(new Object[]{"emptyStages", Messages.JSONParser_TooFewItems("/pipeline/stages", 0, 1)});
-        result.add(new Object[]{"emptyEnvironment", Messages.JSONParser_TooFewItems("/pipeline/environment", 0, 1)});
-        result.add(new Object[]{"emptyPostBuild", Messages.JSONParser_TooFewItems("/pipeline/post/conditions", 0, 1)});
+        result.add(new Object[]{"emptyStages", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"emptyEnvironment", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"emptyPostBuild", Messages.JSONParser_TooFewItems(0, 1)});
 
         result.add(new Object[]{"rejectStageInSteps", Messages.ModelValidatorImpl_BlockedStep("stage", ModelASTStep.getBlockedSteps().get("stage"))});
         result.add(new Object[]{"rejectParallelMixedInSteps", Messages.ModelValidatorImpl_BlockedStep("parallel", ModelASTStep.getBlockedSteps().get("parallel"))});
 
-        result.add(new Object[]{"stageWithoutName", Messages.JSONParser_MissingRequiredProperties("/pipeline/stages/0", "'name'")});
+        result.add(new Object[]{"stageWithoutName", Messages.JSONParser_MissingRequiredProperties("'name'")});
 
         result.add(new Object[]{"emptyParallel", Messages.ModelValidatorImpl_NothingForStage("foo")});
 
-        result.add(new Object[]{"emptyJobProperties", Messages.JSONParser_TooFewItems("/pipeline/options/options", 0, 1)});
-        result.add(new Object[]{"emptyParameters", Messages.JSONParser_TooFewItems("/pipeline/parameters/parameters", 0, 1)});
-        result.add(new Object[]{"emptyTriggers", Messages.JSONParser_TooFewItems("/pipeline/triggers/triggers", 0, 1)});
-        result.add(new Object[]{"emptyWhen", Messages.JSONParser_TooFewItems("/pipeline/stages/0/when/conditions", 0, 1)});
+        result.add(new Object[]{"emptyJobProperties", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"emptyParameters", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"emptyTriggers", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"emptyWhen", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"mixedMethodArgs", Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters()});
 
         result.add(new Object[]{"rejectPropertiesStepInMethodCall",
@@ -168,10 +170,9 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"wrongParameterNameMethodCall", Messages.ModelValidatorImpl_InvalidStepParameter("namd", "name")});
         result.add(new Object[]{"invalidParameterTypeMethodCall", Messages.ModelValidatorImpl_InvalidParameterType("class java.lang.String", "name", "1234")});
 
-        result.add(new Object[]{"perStageConfigEmptySteps", Messages.JSONParser_TooFewItems("/pipeline/stages/0/branches/0/steps", 0, 1)});
-        result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("/pipeline/stages/0/branches/0",
-                "'steps'")});
-        result.add(new Object[]{"perStageConfigUnknownSection", "At /pipeline/stages/0: additional properties are not allowed"});
+        result.add(new Object[]{"perStageConfigEmptySteps", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("'steps'")});
+        result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
 
         result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]")});
         result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", "[buildDiscarder, catchError, disableConcurrentBuilds, overrideIndexTriggers, retry, script, skipDefaultCheckout, timeout, waitUntil, withContext, withEnv, ws]")});
@@ -179,29 +180,14 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]")});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField]")});
-        result.add(new Object[]{"notificationsSectionRemoved", "At /pipeline: additional properties are not allowed"});
+        result.add(new Object[]{"notificationsSectionRemoved", "additional properties are not allowed"});
         result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
                 "branch, environment, expression")});
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
 
-        result.add(new Object[]{"malformed", "Expected a ',' or '}' at character 243 of {\"pipeline\": {\n" +
-                "  \"stages\": [  {\n" +
-                "    \"name\": \"foo\",\n" +
-                "    \"branches\": [    {\n" +
-                "      \"name\": \"default\",\n" +
-                "      \"steps\": [      {\n" +
-                "        \"name\": \"echo\",\n" +
-                "        \"arguments\":         {\n" +
-                "          \"isLiteral\": true,\n" +
-                "          \"value\": \"hello\"\n" +
-                "\n" +
-                "      }]\n" +
-                "    }]\n" +
-                "  }],\n" +
-                "  \"agent\": {\"type\": \"none\"}\n" +
-                "}}"});
+        result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
 
         return result;
     }
@@ -275,6 +261,22 @@ public abstract class AbstractModelDefTest {
         return fileContents;
 
     }
+
+    protected boolean foundExpectedErrorInJSON(JSONArray errors, String expectedError) {
+        for (Object e : errors) {
+            if (e instanceof JSONObject) {
+                JSONObject o = (JSONObject) e;
+                if (o.getString("error").equals(expectedError)) {
+                    return true;
+                } else if (o.getString("error").contains(expectedError)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 
     protected void prepRepoWithJenkinsfile(String pipelineName) throws Exception {
         prepRepoWithJenkinsfileAndOtherFiles(pipelineName);
