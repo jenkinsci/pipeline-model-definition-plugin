@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Describable;
@@ -46,7 +47,7 @@ public class DescriptorLookupCache {
     private transient Map<String, DescribableModel<? extends Describable>> describableModelMap;
 
     public static DescriptorLookupCache getPublicCache() {
-        return Jenkins.getInstance().getExtensionList(DescriptorLookupCache.class).get(0);
+        return ExtensionList.lookup(DescriptorLookupCache.class).get(0);
     }
 
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)  // Prevents potential leakage on reload
