@@ -91,7 +91,7 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
         JSONObject json = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
         assertNotNull("Couldn't parse JSON for " + configName, json);
 
-        JSONParser jp = new JSONParser(json);
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(json));
         ModelASTPipelineDef origRoot = jp.parse();
 
         assertEquals(getJSONErrorReport(jp, configName), 0, jp.getErrorCollector().getErrorCount());

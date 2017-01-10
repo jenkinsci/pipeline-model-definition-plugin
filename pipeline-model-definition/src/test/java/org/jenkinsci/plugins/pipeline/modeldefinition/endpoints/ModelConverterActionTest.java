@@ -79,7 +79,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
 
         String expectedError = "No content found for '" + param + "' parameter";
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
-                foundExpectedError(expectedError, resultData.getJSONArray("errors")));
+                foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));
 
     }
 
@@ -103,7 +103,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
 
         String expectedError = "Jenkinsfile content '" + groovyAsString + "' did not contain the 'pipeline' step";
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
-                foundExpectedError(expectedError, resultData.getJSONArray("errors")));
+                foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));
 
     }
 
@@ -130,7 +130,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
 
         String expectedError = Messages.ModelValidatorImpl_InvalidBuildCondition("banana", BuildCondition.getOrderedConditionNames());
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
-                foundExpectedError(expectedError, resultData.getJSONArray("errors")));
+                foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));
     }
 
     @Test
@@ -183,7 +183,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         String expectedError = Messages.ModelValidatorImpl_InvalidSectionType("tool", "banana", Tools.getAllowedToolTypes().keySet());
 
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
-                foundExpectedError(expectedError, resultData.getJSONArray("errors")));
+                foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));
     }
 
     @Test
@@ -210,18 +210,6 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
             assertNotNull(resultData);
             assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
         }
-    }
-
-    private boolean foundExpectedError(String expectedError, JSONArray errors) {
-        for (Object e : JSONArray.toCollection(errors, String.class)) {
-            if (e instanceof String) {
-                if (e.equals(expectedError)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
 }

@@ -24,6 +24,8 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import net.sf.json.JSONArray
+import net.sf.json.JSONObject
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.control.messages.Message
@@ -42,6 +44,19 @@ public class SourceUnitErrorCollector extends ErrorCollector {
 
     public SourceUnitErrorCollector(SourceUnit u) {
         this.sourceUnit = u
+    }
+
+    @Override
+    public JSONArray asJson() {
+        JSONArray a = new JSONArray()
+
+        errorsAsStrings().each {
+            JSONObject o = new JSONObject()
+            o.accumulate("error", it)
+            a.add(o)
+        }
+
+        return a
     }
 
     @Override

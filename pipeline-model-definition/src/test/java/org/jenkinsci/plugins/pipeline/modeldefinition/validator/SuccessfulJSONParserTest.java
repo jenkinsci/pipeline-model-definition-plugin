@@ -27,6 +27,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,7 +62,7 @@ public class SuccessfulJSONParserTest extends BaseParserLoaderTest {
         JSONObject json = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
         assertNotNull("Couldn't parse JSON for " + configName, json);
 
-        JSONParser jp = new JSONParser(json);
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(json));
         ModelASTPipelineDef pipelineDef = jp.parse();
 
         assertEquals(getJSONErrorReport(jp, configName), 0, jp.getErrorCollector().getErrorCount());

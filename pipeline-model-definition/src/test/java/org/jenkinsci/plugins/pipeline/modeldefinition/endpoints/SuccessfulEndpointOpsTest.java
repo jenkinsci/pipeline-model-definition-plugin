@@ -152,7 +152,7 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
 
         assertNotNull(resultData.getString("json"));
         JSONObject rawJson = JSONObject.fromObject(resultData.getString("json"));
-        JSONParser p = new JSONParser(rawJson);
+        JSONParser p = new JSONParser(Converter.jsonTreeFromJSONObject(rawJson));
 
         ModelASTPipelineDef pipelineDef = p.parse();
 

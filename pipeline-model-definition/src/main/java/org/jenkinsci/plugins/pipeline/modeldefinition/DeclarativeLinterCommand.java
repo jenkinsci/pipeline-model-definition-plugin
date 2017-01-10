@@ -26,24 +26,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
 import hudson.cli.CLICommand;
-import hudson.cli.util.ScriptLoader;
 import jenkins.model.Jenkins;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.groovy.control.Janitor;
-import org.codehaus.groovy.control.MultipleCompilationErrorsException;
-import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
-import org.kohsuke.args4j.Argument;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
