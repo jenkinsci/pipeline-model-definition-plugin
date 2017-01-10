@@ -57,7 +57,8 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
      * For testing
      *
      * @param dockerLabel the docker label to use
-     * @param
+     * @param url The registry URL
+     * @param creds the registry credentials ID
      */
     public FolderConfig(String dockerLabel, String url, String creds) {
         this.dockerLabel = dockerLabel;
