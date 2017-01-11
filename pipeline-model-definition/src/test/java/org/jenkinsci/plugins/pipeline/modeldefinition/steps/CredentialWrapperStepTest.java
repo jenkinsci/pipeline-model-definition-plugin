@@ -113,6 +113,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
     }
 
+    /* TODO: Re-enable once https://issues.jenkins-ci.org/browse/JENKINS-41004 is resolved
     @Test
     public void mixedEnvInFolder() throws Exception {
 
@@ -123,6 +124,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("cred1.txt", mixedEnvInFolderCred1Secret)
                 .archives("cred2.txt", mixedEnvInFoldercred2U + ":" + mixedEnvInFolderCred2P).go();
     }
+    */
 
     @Test
     public void noBindingAvailable() throws Exception {

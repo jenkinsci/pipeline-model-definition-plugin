@@ -1,5 +1,3 @@
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
-
 /*
  * The MIT License
  *
@@ -24,6 +22,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
  * THE SOFTWARE.
  *
  */
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
+
 
 echo "Docker Label is: ${declarativeProps(DeclarativePropsStep.Property.LABEL)}"
 echo "Registry URL is: ${declarativeProps(DeclarativePropsStep.Property.REGISTRY_URL)}"

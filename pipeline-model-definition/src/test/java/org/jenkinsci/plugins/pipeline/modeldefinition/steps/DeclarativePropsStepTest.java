@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -103,7 +103,7 @@ public class DeclarativePropsStepTest extends AbstractModelDefTest {
         getFolderStore(folder).addCredentials(Domain.global(), folderCred);
         getFolderStore(folder).addCredentials(Domain.global(), grandParentCred);
         folder.addProperty(new FolderConfig("folder_docker", "https://folder.registry", folderCred.getId()));
-        expect("declarativePropsWithDefaults")
+        expect("declarativePropsWithOverride")
                 .inFolder(folder)
                 .runFromRepo(false)
                 .logContains("Docker Label is: other-label",

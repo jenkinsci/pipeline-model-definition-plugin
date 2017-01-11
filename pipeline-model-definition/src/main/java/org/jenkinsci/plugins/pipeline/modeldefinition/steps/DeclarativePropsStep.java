@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2016-2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,7 +71,7 @@ public class DeclarativePropsStep extends AbstractStepImpl implements Serializab
     }
 
     private Property property;
-    private String defaultValue;
+    private String override;
 
     @DataBoundConstructor
     public DeclarativePropsStep(@Nonnull Property property) {
@@ -82,13 +82,13 @@ public class DeclarativePropsStep extends AbstractStepImpl implements Serializab
         return property;
     }
 
-    public String getDefaultValue() {
-        return defaultValue;
+    public String getOverride() {
+        return override;
     }
 
     @DataBoundSetter
-    public void setDefaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
+    public void setOverride(String override) {
+        this.override = override;
     }
 
     @Extension
@@ -125,8 +125,8 @@ public class DeclarativePropsStep extends AbstractStepImpl implements Serializab
         @Override
         protected String run() throws Exception {
             String retVal = null;
-            if (!StringUtils.isBlank(step.getDefaultValue())) {
-                retVal = step.getDefaultValue();
+            if (!StringUtils.isBlank(step.getOverride())) {
+                retVal = step.getOverride();
             } else {
                 switch (step.getProperty()) {
                     case LABEL:

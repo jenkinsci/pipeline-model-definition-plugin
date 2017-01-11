@@ -32,6 +32,7 @@ import hudson.Util;
 import hudson.model.Run;
 import jenkins.model.GlobalConfiguration;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -88,7 +89,7 @@ public class GlobalConfig extends GlobalConfiguration {
 
         @Override
         public String getRegistryUrl(Run run) {
-            if (config.getRegistry() != null) {
+            if (config.getRegistry() != null && !StringUtils.isBlank(config.getRegistry().getUrl())) {
                 return config.getRegistry().getUrl();
             } else {
                 return null;
@@ -97,7 +98,7 @@ public class GlobalConfig extends GlobalConfiguration {
 
         @Override
         public String getRegistryCredentialsId(Run run) {
-            if (config.getRegistry() != null) {
+            if (config.getRegistry() != null && !StringUtils.isBlank(config.getRegistry().getCredentialsId())) {
                 return config.getRegistry().getCredentialsId();
             } else {
                 return null;

@@ -24,6 +24,6 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
 
-echo "Docker Label is: ${declarativeProps(property: DeclarativePropsStep.Property.LABEL, defaultValue: "other-label")}"
-echo "Registry URL is: ${declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_URL, defaultValue: "https://other.registry")}"
-echo "Registry Creds ID is: ${declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_CREDENTIALS, defaultValue: "grandParentCreds")}"
+echo "Docker Label is: ${declarativeProps(property: DeclarativePropsStep.Property.LABEL, override: "other-label")}"
+echo "Registry URL is: ${declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_URL, override: "https://other.registry")}"
+echo "Registry Creds ID is: ${declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_CREDENTIALS, override: "grandParentCreds")}"
