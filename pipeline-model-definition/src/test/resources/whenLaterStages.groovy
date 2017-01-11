@@ -55,5 +55,10 @@ pipeline {
                 echo "I'm running anyway"
             }
         }
+        stage("Four") {
+            steps {
+                echo "And I run last of all"
+            }
+        }
     }
 }
