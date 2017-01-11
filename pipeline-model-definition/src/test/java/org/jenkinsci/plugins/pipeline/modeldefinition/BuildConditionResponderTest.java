@@ -48,6 +48,18 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void postChecksAllConditions() throws Exception {
+        expect(Result.FAILURE, "postChecksAllConditions")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
+                        "I AM FAILING NOW",
+                        "I FAILED")
+                .logNotContains("MOST DEFINITELY FINISHED")
+                .go();
+    }
+
+    @Test
     public void postOnChanged() throws Exception {
         WorkflowRun b = getAndStartNonRepoBuild("postOnChangeFailed");
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));

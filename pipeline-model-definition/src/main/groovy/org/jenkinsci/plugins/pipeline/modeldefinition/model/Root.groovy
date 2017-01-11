@@ -117,16 +117,6 @@ public class Root implements NestedModel, Serializable {
         return m
     }
 
-    /**
-     * Returns a list of post-build closures whose conditions have been satisfied and should be run.
-     *
-     * @param runWrapperObj The {@link RunWrapper} for the build.
-     * @return a list of closures whose conditions have been satisfied.
-     */
-    List<Closure> satisfiedPostBuilds(Object runWrapperObj) {
-        return satisfiedConditionsForField(post, runWrapperObj)
-    }
-
     @Override
     public void modelFromMap(Map<String,Object> m) {
         m.each { k, v ->
@@ -135,17 +125,17 @@ public class Root implements NestedModel, Serializable {
     }
 
     /**
-     * Gets the list of satisfied build condition closures for the given responder.
+     * Returns true if at least one build condition for the given responder is satisfied currently.
      *
      * @param r an {@link AbstractBuildConditionResponder}, such as {@link PostStage} or {@link PostBuild}.
      * @param runWrapperObj The {@link RunWrapper} for the build.
-     * @return A list of closures from the responder which have had their conditions satisfied.
+     * @return True if at least one condition is satisfied, false otherwise.
      */
-    /*package*/ List<Closure> satisfiedConditionsForField(AbstractBuildConditionResponder r, Object runWrapperObj) {
+    /*package*/ boolean hasSatisfiedConditions(AbstractBuildConditionResponder r, Object runWrapperObj) {
         if (r != null) {
             return r.satisfiedConditions(runWrapperObj)
         } else {
-            return []
+            return false
         }
 
     }

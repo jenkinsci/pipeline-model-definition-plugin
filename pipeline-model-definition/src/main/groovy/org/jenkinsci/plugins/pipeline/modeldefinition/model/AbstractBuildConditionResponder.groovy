@@ -38,7 +38,6 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 public abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
     extends MappedClosure<StepsBlock,T> {
 
-
     @Override
     public void modelFromMap(Map<String,Object> inMap) {
 
@@ -52,20 +51,22 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         }
     }
 
-    public List<Closure> satisfiedConditions(Object runWrapperObj) {
-        RunWrapper runWrapper = (RunWrapper)runWrapperObj
-        WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild()
-
-        List<Closure> closures = []
-
-        Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
-
-        BuildCondition.orderedConditionNames.each { conditionName ->
-            if (getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(run)) {
-                closures.add(((StepsBlock)getMap().get(conditionName)).getClosure())
+    public Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
+        if (getMap().containsKey(conditionName)) {
+            BuildCondition condition = BuildCondition.getConditionMethods().get(conditionName)
+            if (condition != null && condition.meetsCondition(runWrapperObj)) {
+                return ((StepsBlock)getMap().get(conditionName)).getClosure()
             }
         }
 
-        return closures
+        return null
+    }
+
+    public boolean satisfiedConditions(Object runWrapperObj) {
+        Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
+
+        return BuildCondition.orderedConditionNames.any { conditionName ->
+            getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
+        }
     }
 }

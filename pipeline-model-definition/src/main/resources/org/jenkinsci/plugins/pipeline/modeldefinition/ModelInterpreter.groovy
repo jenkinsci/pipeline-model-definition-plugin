@@ -366,7 +366,7 @@ public class ModelInterpreter implements Serializable {
      * @param thisStage The stage context we're running in
      */
     def executeSingleStage(Root root, Stage thisStage) throws Throwable {
-        Throwable stageError
+        Throwable stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
                 setUpDelegate(thisStage.steps.closure)
@@ -379,22 +379,9 @@ public class ModelInterpreter implements Serializable {
             }
         } finally {
             // And finally, run the post stage steps.
-            List<Closure> postClosures = thisStage.satisfiedPostStageConditions(root, script.getProperty("currentBuild"))
-            catchRequiredContextForNode(thisStage.agent ?: root.agent) {
-                if (postClosures.size() > 0) {
-                    script.echo("Post stage")
-                    try {
-                        for (int ni = 0; ni < postClosures.size(); ni++) {
-                            setUpDelegate(postClosures.get(ni))
-                        }
-                    } catch (Exception e) {
-                        script.getProperty("currentBuild").result = Result.FAILURE
-                        Utils.markStageFailedAndContinued(thisStage.name)
-                        if (stageError == null) {
-                            stageError = e
-                        }
-                    }
-                }
+            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                script.echo("Post stage")
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: root.agent, stageError, thisStage.name)
             }
         }
 
@@ -425,27 +412,54 @@ public class ModelInterpreter implements Serializable {
      * @param root The root context we're executing in
      */
     def executePostBuild(Root root) throws Throwable {
-        Throwable stageError
-        List<Closure> postBuildClosures = root.satisfiedPostBuilds(script.getProperty("currentBuild"))
-        if (postBuildClosures.size() > 0) {
-            try {
-                script.stage(SyntheticStageNames.postBuild()) {
-                    Utils.markSyntheticStage(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().post)
-                    catchRequiredContextForNode(root.agent) {
-                        for (int i = 0; i < postBuildClosures.size(); i++) {
-                            setUpDelegate(postBuildClosures.get(i))
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                stageError = e
+        Throwable stageError = null
+        if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"))) {
+            script.stage(SyntheticStageNames.postBuild()) {
+                Utils.markSyntheticStage(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().post)
+                stageError = runPostConditions(root.post, root.agent, stageError)
             }
         }
 
         if (stageError != null) {
             throw stageError
         }
+    }
+
+    /**
+     * Actually does the execution of post actions, both post-stage and post-build.
+     * @param responder The {@link AbstractBuildConditionResponder} we're pulling conditions from.
+     * @param agentContext The {@link Agent} context we're running in.
+     * @param stageError Any existing error from earlier parts of the stage we're in, or null.
+     * @param stageName Optional - the name of the stage we're running in, so we can mark it as failed if needed.
+     * @return The stageError, which, if null when passed in and an error is hit, will be set to the first error encountered.
+     */
+    def runPostConditions(AbstractBuildConditionResponder responder,
+                          Agent agentContext,
+                          Throwable stageError,
+                          String stageName = null) {
+        List<String> orderedConditions = BuildCondition.orderedConditionNames
+        for (int i = 0; i < orderedConditions.size(); i++) {
+            try {
+                String conditionName = orderedConditions.get(i)
+
+                Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
+                if (c != null) {
+                    catchRequiredContextForNode(agentContext) {
+                        setUpDelegate(c)
+                    }
+                }
+            } catch (Exception e) {
+                script.getProperty("currentBuild").result = Result.FAILURE
+                if (stageName != null) {
+                    Utils.markStageFailedAndContinued(stageName)
+                }
+                if (stageError == null) {
+                    stageError = e
+                }
+            }
+        }
+
+        return stageError
     }
 
     /**

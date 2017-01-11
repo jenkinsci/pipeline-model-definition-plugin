@@ -119,15 +119,4 @@ public class Stage implements NestedModel, Serializable {
             this."${k}"(v)
         }
     }
-
-    /**
-     * Returns a list of notification closures whose conditions have been satisfied and should be run.
-     *
-     * @param runWrapperObj The {@link org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper} for the build.
-     * @return a list of closures whose conditions have been satisfied.
-     */
-    List<Closure> satisfiedPostStageConditions(Root root, Object runWrapperObj) {
-        return root.satisfiedConditionsForField(post, runWrapperObj)
-    }
-
 }

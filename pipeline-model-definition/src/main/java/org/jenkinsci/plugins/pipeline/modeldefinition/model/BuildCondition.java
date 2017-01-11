@@ -28,6 +28,7 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -45,6 +46,13 @@ import java.util.Set;
 public abstract class BuildCondition implements Serializable, ExtensionPoint {
 
     public abstract boolean meetsCondition(WorkflowRun r);
+
+    public boolean meetsCondition(Object runWrapperObj) {
+        RunWrapper runWrapper = (RunWrapper)runWrapperObj;
+        WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild();
+
+        return meetsCondition(run);
+    }
 
     public abstract String getDescription();
 
