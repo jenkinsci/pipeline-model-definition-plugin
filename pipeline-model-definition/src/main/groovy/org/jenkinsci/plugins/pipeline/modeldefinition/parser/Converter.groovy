@@ -32,7 +32,7 @@ import com.github.fge.jsonschema.main.JsonSchema
 import com.github.fge.jsonschema.report.ProcessingReport
 import com.github.fge.jsonschema.tree.JsonTree
 import com.github.fge.jsonschema.tree.SimpleJsonTree
-import com.github.fge.jsonschema.util.JsonLoader
+import jenkins.model.Jenkins
 import net.sf.json.JSONObject
 import org.apache.commons.lang.reflect.FieldUtils
 import org.codehaus.groovy.control.CompilationFailedException
@@ -106,10 +106,16 @@ public class Converter {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(src, new Certificate[0]),
-            new GroovyClassLoader());
+            getCompilationClassLoader());
         cu.addSource(src);
 
         return compilationUnitToPipelineDef(cu)
+    }
+
+    private static GroovyClassLoader getCompilationClassLoader() {
+        Jenkins j = Jenkins.instance
+        ClassLoader cl = j != null ? j.getPluginManager().uberClassLoader : new GroovyClassLoader()
+        return new GroovyClassLoader(cl)
     }
 
     /**
@@ -122,7 +128,7 @@ public class Converter {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
-            new GroovyClassLoader())
+            getCompilationClassLoader());
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
 
         return compilationUnitToPipelineDef(cu)
@@ -166,9 +172,9 @@ public class Converter {
 
     public static List<ModelASTStep> scriptToPlainSteps(String script) {
         CompilationUnit cu = new CompilationUnit(
-                makeCompilerConfiguration(),
-                new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
-                new GroovyClassLoader())
+            makeCompilerConfiguration(),
+            new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
+            getCompilationClassLoader());
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
 
         return compilationUnitToPlainSteps(cu)
