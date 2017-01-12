@@ -79,6 +79,23 @@ public class AgentTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void agentDockerReuseNode() throws Exception {
+        agentDocker("agentDockerReuseNode");
+    }
+
+    @Test
+    public void agentDockerDontReuseNode() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        expect(Result.FAILURE, "agentDockerDontReuseNode")
+                .logContains("The answer is 42")
+                .go();
+
+    }
+
+    @Test
     public void agentDockerWithNullDockerArgs() throws Exception {
         agentDocker("agentDockerWithNullDockerArgs");
     }

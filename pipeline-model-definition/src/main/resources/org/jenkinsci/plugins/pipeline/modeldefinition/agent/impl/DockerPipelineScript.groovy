@@ -25,10 +25,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
+import hudson.FilePath
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -41,10 +41,22 @@ public class DockerPipelineScript extends DeclarativeAgentScript<DockerPipeline>
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = script.declarativeProps(property: DeclarativePropsStep.Property.LABEL,
-            override: describable.label)
-        LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
-        return labelScript.run {
+        if (describable.reuseNode && script.getContext(FilePath.class) != null) {
+            return {
+                configureRegistry(body).call()
+            }
+        } else {
+            String targetLabel = script.declarativeProps(property: DeclarativePropsStep.Property.LABEL,
+                override: describable.label)
+            LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
+            return labelScript.run {
+                configureRegistry(body).call()
+            }
+        }
+    }
+
+    private Closure configureRegistry(Closure body) {
+        return {
             String registryUrl = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_URL,
                 override: describable.registryUrl)
             String registryCreds = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_CREDENTIALS,

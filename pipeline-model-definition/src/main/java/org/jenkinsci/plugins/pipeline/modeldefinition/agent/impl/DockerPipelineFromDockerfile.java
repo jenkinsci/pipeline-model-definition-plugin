@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -35,51 +36,11 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class DockerPipelineFromDockerfile extends DeclarativeAgent<DockerPipelineFromDockerfile> {
-    private String label;
+public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipelineFromDockerfile> {
     private String filename;
-    private String args = "";
-    private String registryUrl;
-    private String registryCredentialsId;
 
     @DataBoundConstructor
     public DockerPipelineFromDockerfile() {
-    }
-
-    public @Nullable String getRegistryUrl() {
-        return registryUrl;
-    }
-
-    @DataBoundSetter
-    public void setRegistryUrl(String registryUrl) {
-        this.registryUrl = registryUrl;
-    }
-
-    public @Nullable String getRegistryCredentialsId() {
-        return registryCredentialsId;
-    }
-
-    @DataBoundSetter
-    public void setRegistryCredentialsId(String registryCredentialsId) {
-        this.registryCredentialsId = registryCredentialsId;
-    }
-
-    public @CheckForNull String getLabel() {
-        return label;
-    }
-
-    @DataBoundSetter
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public @CheckForNull String getArgs() {
-        return args;
-    }
-
-    @DataBoundSetter
-    public void setArgs(String args) {
-        this.args = args;
     }
 
     public @Nonnull Object getFilename() {

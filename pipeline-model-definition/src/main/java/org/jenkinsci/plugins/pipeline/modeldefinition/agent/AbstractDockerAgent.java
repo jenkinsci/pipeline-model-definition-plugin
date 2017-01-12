@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,22 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
+package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 
-public class DockerPipeline extends DeclarativeAgent<DockerPipeline> {
-    private String label;
-    private String image;
-    private String args = "";
-    private String registryUrl;
-    private String registryCredentialsId;
-    private boolean reuseNode;
+public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> extends DeclarativeAgent<D> {
+    protected String label;
+    protected String args = "";
+    protected String registryUrl;
+    protected String registryCredentialsId;
+    protected boolean reuseNode;
 
-    @DataBoundConstructor
-    public DockerPipeline(@Nonnull String image) {
-        this.image = image;
-    }
-
-    public @Nullable String getRegistryUrl() {
+    public @Nullable
+    String getRegistryUrl() {
         return registryUrl;
     }
 
@@ -74,7 +64,8 @@ public class DockerPipeline extends DeclarativeAgent<DockerPipeline> {
         this.reuseNode = reuseNode;
     }
 
-    public @Nullable String getLabel() {
+    public @CheckForNull
+    String getLabel() {
         return label;
     }
 
@@ -83,20 +74,12 @@ public class DockerPipeline extends DeclarativeAgent<DockerPipeline> {
         this.label = label;
     }
 
-    public @Nullable String getArgs() {
+    public @CheckForNull String getArgs() {
         return args;
     }
 
     @DataBoundSetter
     public void setArgs(String args) {
         this.args = args;
-    }
-
-    public @Nonnull String getImage() {
-        return image;
-    }
-
-    @Extension(ordinal = 1000) @Symbol("docker")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor<DockerPipeline> {
     }
 }
