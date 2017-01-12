@@ -45,6 +45,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
 
 import java.security.CodeSource
@@ -112,10 +113,14 @@ public class Converter {
         return compilationUnitToPipelineDef(cu)
     }
 
-    private static GroovyClassLoader getCompilationClassLoader() {
-        Jenkins j = Jenkins.instance
-        ClassLoader cl = j != null ? j.getPluginManager().uberClassLoader : new GroovyClassLoader()
-        return new GroovyClassLoader(cl)
+    private static GroovyClassLoader getCompilationClassLoader(GroovyClassLoader inputLoader = null) {
+        if (inputLoader != null) {
+            return inputLoader
+        } else {
+            Jenkins j = Jenkins.instance
+            ClassLoader cl = j != null ? j.getPluginManager().uberClassLoader : new GroovyClassLoader()
+            return new GroovyClassLoader(cl)
+        }
     }
 
     /**
@@ -124,11 +129,11 @@ public class Converter {
      * @param script A string containing a Pipeline script
      * @return the converted script
      */
-    public static ModelASTPipelineDef scriptToPipelineDef(String script) {
+    public static ModelASTPipelineDef scriptToPipelineDef(String script, GroovyClassLoader classLoader = null) {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
-            getCompilationClassLoader());
+            getCompilationClassLoader(classLoader));
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
 
         return compilationUnitToPipelineDef(cu)
@@ -206,7 +211,7 @@ public class Converter {
 
         String rawScript = execution.script
 
-        return scriptToPipelineDef(rawScript)
+        return scriptToPipelineDef(rawScript, CpsThread.current()?.getExecution()?.getShell()?.classLoader)
     }
 
 }
