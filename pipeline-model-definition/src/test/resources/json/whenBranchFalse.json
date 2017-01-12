@@ -40,5 +40,12 @@
       }]}
     }
   ],
+  "environment": [  {
+    "key": "BRANCH_NAME",
+    "value":     {
+      "isLiteral": true,
+      "value": "master"
+    }
+  }],
   "agent": {"type": "any"}
 }}

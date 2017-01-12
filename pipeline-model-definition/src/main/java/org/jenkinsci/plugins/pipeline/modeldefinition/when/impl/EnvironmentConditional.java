@@ -73,25 +73,15 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
         this.ignoreCase = ignoreCase;
     }
 
-    public boolean environmentMatches() throws InterruptedException, AbortException {
-        try {
-            EnvVars vars = getContextVariable(EnvVars.class);
-            if (vars != null) {
-                String var = vars.get(name, null);
-                if (isEmpty(var) && isEmpty(value)) {
-                    return true;
-                } else if (isEmpty(var)) {
-                    return false;
-                } else if (ignoreCase) {
-                    return var.equalsIgnoreCase(value);
-                } else {
-                    return var.equals(value);
-                }
-            } else {
-                return false;
-            }
-        } catch (IOException e) {
-            throw new AbortException(e.getMessage());
+    public boolean environmentMatches(String var) {
+        if (isEmpty(var) && isEmpty(value)) {
+            return true;
+        } else if (isEmpty(var)) {
+            return false;
+        } else if (ignoreCase) {
+            return var.equalsIgnoreCase(value);
+        } else {
+            return var.equals(value);
         }
     }
 

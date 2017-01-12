@@ -309,20 +309,35 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void whenBranch() throws Exception {
-        expect("whenBranch")
+    public void whenBranchFalse() throws Exception {
+        expect("whenBranchFalse")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
     }
 
     @Test
-    public void whenEnv() throws Exception {
-        expect("whenEnv")
+    public void whenBranchTrue() throws Exception {
+        expect("whenBranchTrue")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenEnvTrue() throws Exception {
+        expect("whenEnvTrue")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenEnvFalse() throws Exception {
+        expect("whenEnvFalse")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
     }
+
     @Test
     public void syntheticStages() throws Exception {
         WorkflowRun b = expect("syntheticStages")

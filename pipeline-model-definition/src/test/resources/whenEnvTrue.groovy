@@ -22,20 +22,29 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-
-class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<EnvironmentConditional> {
-    public EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
-        super(s, c)
+pipeline {
+    agent any
+    environment {
+        FOO = "BAR"
     }
 
-    @Override
-    public boolean evaluate() {
-        return describable.environmentMatches(script.getProperty("env").getProperty(describable.getName()))
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                environment name: "FOO", value: "BAR"
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
+
+            }
+        }
     }
 }
