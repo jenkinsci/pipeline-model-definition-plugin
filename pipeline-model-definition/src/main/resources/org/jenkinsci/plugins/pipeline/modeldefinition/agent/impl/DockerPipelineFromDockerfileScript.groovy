@@ -109,7 +109,9 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript<D
 
     private Closure buildImage() {
         return {
-            script.checkout script.scm
+            if (!script.fileExists(describable.getDockerfileAsString())) {
+                script.checkout script.scm
+            }
             try {
                 def hash = Utils.stringToSHA1(script.readFile(describable.getDockerfileAsString()))
                 def imgName = "${hash}"
