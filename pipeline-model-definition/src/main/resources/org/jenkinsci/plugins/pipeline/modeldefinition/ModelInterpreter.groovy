@@ -103,12 +103,12 @@ public class ModelInterpreter implements Serializable {
                                                                 }
                                                             }
                                                         } else {
-                                                            script.echo("Stage skipped due to when conditional")
+                                                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                                             Utils.markStageSkippedForConditional(thisStage.name)
                                                         }
                                                     }
                                                 } else {
-                                                    script.echo("Stage skipped due to earlier failure(s)")
+                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
                                                     Utils.markStageSkippedForFailure(thisStage.name)
                                                 }
                                             }

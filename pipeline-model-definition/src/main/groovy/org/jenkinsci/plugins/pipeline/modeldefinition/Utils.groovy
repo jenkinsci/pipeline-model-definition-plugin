@@ -33,6 +33,7 @@ import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang.reflect.FieldUtils
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
@@ -226,6 +227,17 @@ public class Utils {
 
     public static String stringToSHA1(String s) {
         return DigestUtils.sha1Hex(s)
+    }
+
+    /**
+     * Prints a log message to the Jenkins log, bypassing the echo step.
+     * @param s The message to log
+     */
+    public static void logToTaskListener(String s) {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread.execution
+
+        execution?.getOwner()?.getListener()?.getLogger()?.println(s)
     }
 
     /**
