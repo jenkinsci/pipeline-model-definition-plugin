@@ -150,7 +150,7 @@ public class ModelInterpreter implements Serializable {
      *
      * @param c The closure to execute
      */
-    def setUpDelegate(Closure c) {
+    def delegateAndExecute(Closure c) {
         c.delegate = script
         c.resolveStrategy = Closure.DELEGATE_FIRST
         c.call()
@@ -369,7 +369,7 @@ public class ModelInterpreter implements Serializable {
         Throwable stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
-                setUpDelegate(thisStage.steps.closure)
+                delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Exception e) {
             script.getProperty("currentBuild").result = Result.FAILURE
@@ -445,7 +445,7 @@ public class ModelInterpreter implements Serializable {
                 Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
                 if (c != null) {
                     catchRequiredContextForNode(agentContext) {
-                        setUpDelegate(c)
+                        delegateAndExecute(c)
                     }
                 }
             } catch (Exception e) {
