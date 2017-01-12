@@ -35,15 +35,10 @@ pipeline {
     }
 
     stages {
-        // While there are only two stages here, you can specify as many stages as you like!
+        // While there is only one stage here, you can specify as many stages as you like!
         stage("build") {
             steps {
-                sh 'mvn clean install -DskipTests'
-            }
-        }
-        stage("test") {
-            steps {
-                sh 'mvn test -DfailIfNoTests=false -Dtest=maven.test.failure.ignore=true'
+                sh 'mvn clean install -Dtest=maven.test.failure.ignore=true'
             }
         }
     }
