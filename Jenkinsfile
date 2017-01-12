@@ -43,7 +43,7 @@ pipeline {
         }
         stage("test") {
             steps {
-                sh 'mvn test -Dtest=maven.test.failure.ignore=true'
+                sh 'mvn test -DfailIfNoTests=false -Dtest=maven.test.failure.ignore=true'
             }
         }
     }
