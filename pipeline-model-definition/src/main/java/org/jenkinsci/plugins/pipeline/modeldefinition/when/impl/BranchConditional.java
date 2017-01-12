@@ -52,28 +52,18 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
         this.compare = compare;
     }
 
-    public boolean branchMatches() throws InterruptedException, AbortException {
-        try {
-            EnvVars vars = getContextVariable(EnvVars.class);
-            if (vars != null) {
-                String name = vars.get("BRANCH_NAME", "");
-                if (isEmpty(name) && isEmpty(this.compare)) {
-                    return true;
-                } else if (isEmpty(name)) {
-                    return false;
-                }
-                // Replace the Git directory separator character (always '/')
-                // with the platform specific directory separator before
-                // invoking Ant's platform specific path matching.
-                String safeCompare = compare.replace('/', File.separatorChar);
-                String safeName = name.replace('/', File.separatorChar);
-                return SelectorUtils.matchPath(safeCompare, safeName, false);
-            } else {
-                return false;
-            }
-        } catch (IOException e) {
-            throw new AbortException(e.getMessage());
+    public boolean branchMatches(String actualBranch) {
+        if (isEmpty(actualBranch) && isEmpty(this.compare)) {
+            return true;
+        } else if (isEmpty(actualBranch)) {
+            return false;
         }
+        // Replace the Git directory separator character (always '/')
+        // with the platform specific directory separator before
+        // invoking Ant's platform specific path matching.
+        String safeCompare = compare.replace('/', File.separatorChar);
+        String safeName = actualBranch.replace('/', File.separatorChar);
+        return SelectorUtils.matchPath(safeCompare, safeName, false);
     }
 
     @Extension

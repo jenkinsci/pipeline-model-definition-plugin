@@ -25,9 +25,8 @@
 pipeline {
     agent any
     environment {
-        FOO = "BAR"
+        BRANCH_NAME = "master"
     }
-
     stages {
         stage("One") {
             steps {
@@ -36,7 +35,7 @@ pipeline {
         }
         stage("Two") {
             when {
-                environment name: "FOO", value: "SOME_OTHER_VALUE"
+                branch "SOME_OTHER_BRANCH"
             }
             steps {
                 script {

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,20 +22,28 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-
-class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<EnvironmentConditional> {
-    public EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
-        super(s, c)
+pipeline {
+    agent any
+    environment {
+        BRANCH_NAME = "master"
     }
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                branch "master"
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-    @Override
-    public boolean evaluate() {
-        return describable.environmentMatches(script.getProperty("env").getProperty(describable.getName()))
+            }
+        }
     }
 }

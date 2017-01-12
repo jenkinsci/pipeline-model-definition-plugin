@@ -135,8 +135,8 @@ public abstract class AbstractModelDefTest {
             "basicWhen",
             "skippedWhen",
             "parallelPipelineWithFailFast",
-            "whenBranch",
-            "whenEnv",
+            "whenBranchFalse",
+            "whenEnvFalse",
             "parallelPipelineWithSpaceInBranch",
             "parallelPipelineQuoteEscaping"
     );

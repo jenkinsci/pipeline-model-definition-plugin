@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,10 @@
 
 pipeline {
     agent any
+    environment {
+        FOO = "BAR"
+    }
+
     stages {
         stage("One") {
             steps {
@@ -32,7 +36,7 @@ pipeline {
         }
         stage("Two") {
             when {
-                branch "SOME_OTHER_BRANCH"
+                environment name: "FOO", value: "SOME_OTHER_VALUE"
             }
             steps {
                 script {
