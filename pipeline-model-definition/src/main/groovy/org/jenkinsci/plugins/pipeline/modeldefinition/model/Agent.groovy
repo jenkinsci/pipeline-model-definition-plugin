@@ -47,7 +47,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
      *
      * @return The instantiated declarative agent or null if not found.
      */
-    public DeclarativeAgent getDeclarativeAgent() {
+    public DeclarativeAgent getDeclarativeAgent(Object context) {
         DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
             getMap().containsKey(d.getName())
         }
@@ -61,14 +61,16 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
                 argMap.put(UninstantiatedDescribable.ANONYMOUS_KEY, val)
             }
 
-            return DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
+            DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
+            a.setContext(context)
+            return a
         } else {
             return null
         }
     }
 
     public boolean hasAgent() {
-        DeclarativeAgent a = getDeclarativeAgent()
+        DeclarativeAgent a = getDeclarativeAgent(null)
         return a != null && !None.class.isInstance(a)
     }
 

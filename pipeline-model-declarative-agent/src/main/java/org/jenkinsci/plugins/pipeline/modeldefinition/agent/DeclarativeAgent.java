@@ -33,5 +33,13 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescr
  * @author Andrew Bayer
  */
 public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
+    protected Object context;
 
+    public void setContext(Object context) {
+        this.context = context;
+    }
+
+    public Object getContext() {
+        return context;
+    }
 }

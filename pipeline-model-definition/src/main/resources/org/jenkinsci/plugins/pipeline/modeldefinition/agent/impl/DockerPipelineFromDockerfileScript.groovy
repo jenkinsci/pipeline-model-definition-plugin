@@ -75,9 +75,6 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
 
     private Closure buildImage() {
         return {
-            if (!script.fileExists(describable.getDockerfileAsString())) {
-                script.checkout script.scm
-            }
             try {
                 def hash = Utils.stringToSHA1(script.readFile(describable.getDockerfileAsString()))
                 def imgName = "${hash}"
