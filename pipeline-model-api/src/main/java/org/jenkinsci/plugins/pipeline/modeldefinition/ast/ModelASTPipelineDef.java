@@ -85,28 +85,28 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         StringBuilder result = new StringBuilder();
         result.append("pipeline {\n");
         if (agent != null) {
-            result.append(agent.toGroovy()).append('\n');
+            result.append(agent.toGroovy());
         }
         if (stages != null) {
-            result.append(stages.toGroovy()).append('\n');
+            result.append(stages.toGroovy());
         }
         if (tools != null) {
-            result.append(tools.toGroovy()).append('\n');
+            result.append(tools.toGroovy());
         }
         if (environment != null) {
-            result.append(environment.toGroovy()).append('\n');
+            result.append(environment.toGroovy());
         }
         if (postBuild != null) {
-            result.append(postBuild.toGroovy()).append('\n');
+            result.append(postBuild.toGroovy());
         }
         if (options != null && !options.getOptions().isEmpty()) {
-            result.append(options.toGroovy()).append('\n');
+            result.append(options.toGroovy());
         }
         if (parameters != null && !parameters.getParameters().isEmpty()) {
-            result.append(parameters.toGroovy()).append('\n');
+            result.append(parameters.toGroovy());
         }
         if (triggers != null && !triggers.getTriggers().isEmpty()) {
-            result.append(triggers.toGroovy()).append('\n');
+            result.append(triggers.toGroovy());
         }
 
         result.append("}\n");

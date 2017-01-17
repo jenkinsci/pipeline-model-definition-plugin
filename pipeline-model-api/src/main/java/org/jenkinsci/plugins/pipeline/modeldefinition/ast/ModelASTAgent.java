@@ -53,10 +53,10 @@ public final class ModelASTAgent extends ModelASTElement {
             argStr.append(agentType.toGroovy());
             argStr.append(" ");
             argStr.append(variables.toGroovy());
-            argStr.append("}");
+            argStr.append("\n}\n");
         }
 
-        return "agent " + argStr.toString() + "\n";
+        return "agent " + argStr.toString();
     }
 
     @Override
