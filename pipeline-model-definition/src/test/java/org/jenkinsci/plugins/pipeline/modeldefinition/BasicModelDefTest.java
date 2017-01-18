@@ -309,8 +309,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void whenBranchFalse() throws Exception {
-        expect("whenBranchFalse")
+    public void whenLaterStages() throws Exception {
+        expect("whenLaterStages")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "I'm running anyway", "And I run last of all")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+        public void whenBranchFalse() throws Exception {
+            expect("whenBranchFalse")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
