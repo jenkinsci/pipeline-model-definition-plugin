@@ -100,13 +100,16 @@ public class ModelASTStep extends ModelASTElement {
     private String withOrWithoutParens(ModelASTArgumentList argList) {
         if (argList == null) {
             return name + "()";
-        } else if (!(this instanceof ModelASTTreeStep) &&
-                argList instanceof ModelASTSingleArgument &&
-                // Special-casing for list/map args since they still need parentheses.
-                !argList.toGroovy().startsWith("[")) {
-            return name + " " + argList.toGroovy();
         } else {
-            return name + "(" + argList.toGroovy() + ")";
+            String argGroovy = argList.toGroovy();
+            if (!(this instanceof ModelASTTreeStep) &&
+                    argList instanceof ModelASTSingleArgument &&
+                    // Special-casing for list/map args since they still need parentheses.
+                    !argGroovy.startsWith("[")) {
+                return name + " " + argGroovy;
+            } else {
+                return name + "(" + argGroovy + ")";
+            }
         }
     }
 
