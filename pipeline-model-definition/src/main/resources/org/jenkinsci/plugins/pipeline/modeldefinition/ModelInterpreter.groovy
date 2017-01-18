@@ -103,10 +103,12 @@ public class ModelInterpreter implements Serializable {
                                                                 }
                                                             }
                                                         } else {
+                                                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                                             Utils.markStageSkippedForConditional(thisStage.name)
                                                         }
                                                     }
                                                 } else {
+                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
                                                     Utils.markStageSkippedForFailure(thisStage.name)
                                                 }
                                             }
@@ -380,7 +382,7 @@ public class ModelInterpreter implements Serializable {
         } finally {
             // And finally, run the post stage steps.
             if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
-                script.echo("Post stage")
+                Utils.logToTaskListener("Post stage")
                 stageError = runPostConditions(thisStage.post, thisStage.agent ?: root.agent, stageError, thisStage.name)
             }
         }
