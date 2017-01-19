@@ -29,6 +29,7 @@ import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript<DockerPipelineFromDockerfile> {
@@ -39,12 +40,26 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript<D
 
     @Override
     public Closure run(Closure body) {
-        String targetLabel = describable.label
-        if (targetLabel == null) {
-            targetLabel = script.dockerLabel()?.trim()
-        }
+        String targetLabel = script.declarativeProps(property: DeclarativePropsStep.Property.LABEL,
+            override: describable.label)
         LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
         return labelScript.run {
+            String registryUrl = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_URL,
+                override: describable.registryUrl)
+            String registryCreds = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_CREDENTIALS,
+                override: describable.registryCredentialsId)
+            if (registryUrl != null) {
+                script.getProperty("docker").withRegistry(registryUrl, registryCreds) {
+                    runImage(body).call()
+                }
+            } else {
+                runImage(body).call()
+            }
+        }
+    }
+
+    public Closure runImage(Closure body) {
+        return {
             def img = null
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {
@@ -75,7 +90,6 @@ public class DockerPipelineFromDockerfileScript extends DeclarativeAgentScript<D
                     throw e
                 }
             }
-
         }
     }
 

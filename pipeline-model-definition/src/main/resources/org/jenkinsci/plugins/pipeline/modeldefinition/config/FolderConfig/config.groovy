@@ -32,4 +32,5 @@ f.section(title:_("Pipeline Model Definition")) {
     f.entry(field: "dockerLabel", title: _("Docker Label")) {
         f.textbox()
     }
+    f.property(field: "registry")
 }

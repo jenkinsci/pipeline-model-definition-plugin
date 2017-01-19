@@ -22,8 +22,9 @@
  * THE SOFTWARE.
  *
  */
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
 
 
-
-
-echo "Docker Label is: ${dockerLabel()}"
+echo "Docker Label is: ${declarativeProps(DeclarativePropsStep.Property.LABEL)}"
+echo "Registry URL is: ${declarativeProps(DeclarativePropsStep.Property.REGISTRY_URL)}"
+echo "Registry Creds ID is: ${declarativeProps(DeclarativePropsStep.Property.REGISTRY_CREDENTIALS)}"

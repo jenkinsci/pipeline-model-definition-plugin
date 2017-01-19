@@ -35,6 +35,7 @@ import hudson.model.Job;
 import hudson.model.Run;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -46,6 +47,7 @@ import javax.annotation.Nonnull;
  */
 public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
     private String dockerLabel;
+    private DockerRegistryEndpoint registry;
 
     @DataBoundConstructor
     public FolderConfig() {
@@ -55,9 +57,12 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
      * For testing
      *
      * @param dockerLabel the docker label to use
+     * @param url The registry URL
+     * @param creds the registry credentials ID
      */
-    public FolderConfig(String dockerLabel) {
+    public FolderConfig(String dockerLabel, String url, String creds) {
         this.dockerLabel = dockerLabel;
+        this.registry = new DockerRegistryEndpoint(url, creds);
     }
 
     public String getDockerLabel() {
@@ -67,6 +72,15 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
     @DataBoundSetter
     public void setDockerLabel(String dockerLabel) {
         this.dockerLabel = dockerLabel;
+    }
+
+    public DockerRegistryEndpoint getRegistry() {
+        return registry;
+    }
+
+    @DataBoundSetter
+    public void setRegistry(DockerRegistryEndpoint registry) {
+        this.registry = registry;
     }
 
     @Extension @Symbol("pipeline-model")
@@ -80,7 +94,7 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
     }
 
     @Extension(ordinal = 10000) //First to be asked
-    public static class FolderDockerLabelProvider extends DockerLabelProvider {
+    public static class FolderDockerPropertiesProvider extends DockerPropertiesProvider {
 
         @Override
         public String getLabel(Run run) {
@@ -95,6 +109,58 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
                         String label = config.getDockerLabel();
                         if (!StringUtils.isBlank(label)) {
                             return label;
+                        }
+                    }
+                }
+
+                if (parent instanceof Item) {
+                    parent = ((Item)parent).getParent();
+                } else {
+                    parent = null;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public String getRegistryUrl(Run run) {
+            Job job = run.getParent();
+            ItemGroup parent = job.getParent();
+            while(parent != null) {
+
+                if (parent instanceof AbstractFolder) {
+                    AbstractFolder folder = (AbstractFolder)parent;
+                    FolderConfig config = (FolderConfig)folder.getProperties().get(FolderConfig.class);
+                    if (config != null) {
+                        DockerRegistryEndpoint registry = config.getRegistry();
+                        if (registry != null && !StringUtils.isBlank(registry.getUrl())) {
+                            return registry.getUrl();
+                        }
+                    }
+                }
+
+                if (parent instanceof Item) {
+                    parent = ((Item)parent).getParent();
+                } else {
+                    parent = null;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public String getRegistryCredentialsId(Run run) {
+            Job job = run.getParent();
+            ItemGroup parent = job.getParent();
+            while(parent != null) {
+
+                if (parent instanceof AbstractFolder) {
+                    AbstractFolder folder = (AbstractFolder)parent;
+                    FolderConfig config = (FolderConfig)folder.getProperties().get(FolderConfig.class);
+                    if (config != null) {
+                        DockerRegistryEndpoint registry = config.getRegistry();
+                        if (registry != null && !StringUtils.isBlank(registry.getCredentialsId())) {
+                            return registry.getCredentialsId();
                         }
                     }
                 }
