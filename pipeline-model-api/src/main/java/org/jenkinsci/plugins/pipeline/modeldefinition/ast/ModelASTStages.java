@@ -38,7 +38,7 @@ public final class ModelASTStages extends ModelASTElement {
     public String toGroovy() {
         StringBuilder result = new StringBuilder("stages {\n");
         for (ModelASTStage stage: stages) {
-            result.append(stage.toGroovy()).append("\n");
+            result.append(stage.toGroovy());
         }
         result.append("}\n");
         return result.toString();

@@ -61,7 +61,7 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
         assertThat(result, hasKey("data"));
         JSONObject data = result.getJSONObject("data");
         assertThat(data, hasEntry("result", "success"));
-        assertThat(data, hasEntry("jenkinsfile", "echo('hello')"));
+        assertThat(data, hasEntry("jenkinsfile", "echo 'hello'"));
     }
 
     @Test
@@ -89,7 +89,7 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
         assertThat(result, hasKey("data"));
         JSONObject data = result.getJSONObject("data");
         assertThat(data, hasEntry("result", "success"));
-        assertThat(data, hasEntry("jenkinsfile", "echo('Hello')\necho('World')"));
+        assertThat(data, hasEntry("jenkinsfile", "echo 'Hello'\necho 'World'"));
     }
 
     @Test
