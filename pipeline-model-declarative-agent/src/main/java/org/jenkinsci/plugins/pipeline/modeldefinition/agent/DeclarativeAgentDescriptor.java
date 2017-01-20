@@ -75,7 +75,8 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
         Map<String,DescribableModel> models = new HashMap<>();
 
         for (Map.Entry<String,DescribableModel> entry : getDescribableModels().entrySet()) {
-            if (entry.getValue().getParameters().isEmpty()) {
+            // All DeclarativeAgents will have at least one possible parameter, context.
+            if (entry.getValue().getParameters().size() == 1) {
                 models.put(entry.getKey(), entry.getValue());
             }
         }
