@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,10 +20,11 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeDockerUtils
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
 
-echo "Docker Label is: ${declarativeProps(property: DeclarativePropsStep.Property.LABEL, override: "other-label")}"
-echo "Registry URL is: ${declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_URL, override: "https://other.registry")}"
-echo "Registry Creds ID is: ${declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_CREDENTIALS, override: "grandParentCreds")}"
+echo "Docker Label is: ${DeclarativeDockerUtils.getLabel()}"
+echo "Registry URL is: ${DeclarativeDockerUtils.getRegistryUrl()}"
+echo "Registry Creds ID is: ${DeclarativeDockerUtils.getRegistryCredentialsId()}"

@@ -41,6 +41,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Provides folder level configuration.
@@ -97,78 +98,84 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
     public static class FolderDockerPropertiesProvider extends DockerPropertiesProvider {
 
         @Override
-        public String getLabel(Run run) {
-            Job job = run.getParent();
-            ItemGroup parent = job.getParent();
-            while(parent != null) {
+        public String getLabel(@Nullable Run run) {
+            if (run != null) {
+                Job job = run.getParent();
+                ItemGroup parent = job.getParent();
+                while (parent != null) {
 
-                if (parent instanceof AbstractFolder) {
-                    AbstractFolder folder = (AbstractFolder)parent;
-                    FolderConfig config = (FolderConfig)folder.getProperties().get(FolderConfig.class);
-                    if (config != null) {
-                        String label = config.getDockerLabel();
-                        if (!StringUtils.isBlank(label)) {
-                            return label;
+                    if (parent instanceof AbstractFolder) {
+                        AbstractFolder folder = (AbstractFolder) parent;
+                        FolderConfig config = (FolderConfig) folder.getProperties().get(FolderConfig.class);
+                        if (config != null) {
+                            String label = config.getDockerLabel();
+                            if (!StringUtils.isBlank(label)) {
+                                return label;
+                            }
                         }
                     }
-                }
 
-                if (parent instanceof Item) {
-                    parent = ((Item)parent).getParent();
-                } else {
-                    parent = null;
+                    if (parent instanceof Item) {
+                        parent = ((Item) parent).getParent();
+                    } else {
+                        parent = null;
+                    }
                 }
             }
             return null;
         }
 
         @Override
-        public String getRegistryUrl(Run run) {
-            Job job = run.getParent();
-            ItemGroup parent = job.getParent();
-            while(parent != null) {
+        public String getRegistryUrl(@Nullable Run run) {
+            if (run != null) {
+                Job job = run.getParent();
+                ItemGroup parent = job.getParent();
+                while (parent != null) {
 
-                if (parent instanceof AbstractFolder) {
-                    AbstractFolder folder = (AbstractFolder)parent;
-                    FolderConfig config = (FolderConfig)folder.getProperties().get(FolderConfig.class);
-                    if (config != null) {
-                        DockerRegistryEndpoint registry = config.getRegistry();
-                        if (registry != null && !StringUtils.isBlank(registry.getUrl())) {
-                            return registry.getUrl();
+                    if (parent instanceof AbstractFolder) {
+                        AbstractFolder folder = (AbstractFolder) parent;
+                        FolderConfig config = (FolderConfig) folder.getProperties().get(FolderConfig.class);
+                        if (config != null) {
+                            DockerRegistryEndpoint registry = config.getRegistry();
+                            if (registry != null && !StringUtils.isBlank(registry.getUrl())) {
+                                return registry.getUrl();
+                            }
                         }
                     }
-                }
 
-                if (parent instanceof Item) {
-                    parent = ((Item)parent).getParent();
-                } else {
-                    parent = null;
+                    if (parent instanceof Item) {
+                        parent = ((Item) parent).getParent();
+                    } else {
+                        parent = null;
+                    }
                 }
             }
             return null;
         }
 
         @Override
-        public String getRegistryCredentialsId(Run run) {
-            Job job = run.getParent();
-            ItemGroup parent = job.getParent();
-            while(parent != null) {
+        public String getRegistryCredentialsId(@Nullable Run run) {
+            if (run != null) {
+                Job job = run.getParent();
+                ItemGroup parent = job.getParent();
+                while (parent != null) {
 
-                if (parent instanceof AbstractFolder) {
-                    AbstractFolder folder = (AbstractFolder)parent;
-                    FolderConfig config = (FolderConfig)folder.getProperties().get(FolderConfig.class);
-                    if (config != null) {
-                        DockerRegistryEndpoint registry = config.getRegistry();
-                        if (registry != null && !StringUtils.isBlank(registry.getCredentialsId())) {
-                            return registry.getCredentialsId();
+                    if (parent instanceof AbstractFolder) {
+                        AbstractFolder folder = (AbstractFolder) parent;
+                        FolderConfig config = (FolderConfig) folder.getProperties().get(FolderConfig.class);
+                        if (config != null) {
+                            DockerRegistryEndpoint registry = config.getRegistry();
+                            if (registry != null && !StringUtils.isBlank(registry.getCredentialsId())) {
+                                return registry.getCredentialsId();
+                            }
                         }
                     }
-                }
 
-                if (parent instanceof Item) {
-                    parent = ((Item)parent).getParent();
-                } else {
-                    parent = null;
+                    if (parent instanceof Item) {
+                        parent = ((Item) parent).getParent();
+                    } else {
+                        parent = null;
+                    }
                 }
             }
             return null;
