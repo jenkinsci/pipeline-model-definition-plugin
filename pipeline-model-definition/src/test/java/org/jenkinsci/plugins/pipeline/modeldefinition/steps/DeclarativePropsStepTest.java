@@ -173,7 +173,6 @@ public class DeclarativePropsStepTest extends AbstractModelDefTest {
         s.setLabelString("thisone");
         env(s).put("DOCKER_INDICATOR", "CORRECT").set();
         GlobalConfig.get().setDockerLabel("thisone");
-        GlobalConfig.get().setRegistry(null);
 
         expect("agentDockerEnvTest").runFromRepo(false).logContains("Running on assumed Docker agent").go();
 
@@ -189,7 +188,6 @@ public class DeclarativePropsStepTest extends AbstractModelDefTest {
         s.setLabelString("thisone");
         env(s).put("DOCKER_INDICATOR", "CORRECT").set();
         GlobalConfig.get().setDockerLabel("thisone");
-        GlobalConfig.get().setRegistry(null);
 
         expect("agentDockerEnvSpecLabel").runFromRepo(false).logContains("Running on assumed Docker agent").go();
 
