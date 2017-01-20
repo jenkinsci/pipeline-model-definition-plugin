@@ -46,7 +46,9 @@ public abstract class AbstractDockerPipelineScript<A extends DeclarativeAgent<A>
         } else {
             String targetLabel = script.declarativeProps(property: DeclarativePropsStep.Property.LABEL,
                 override: describable.label)
-            LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: targetLabel]).getScript(script)
+            Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: targetLabel])
+            l.setContext(describable.context)
+            LabelScript labelScript = (LabelScript) l.getScript(script)
             return labelScript.run {
                 configureRegistry(body).call()
             }
