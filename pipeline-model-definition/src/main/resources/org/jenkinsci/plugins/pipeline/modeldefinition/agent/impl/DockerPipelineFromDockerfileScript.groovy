@@ -43,7 +43,6 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
             def img = null
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {
-                    Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
                     try {
                         img = buildImage().call()
                     } catch (Exception e) {

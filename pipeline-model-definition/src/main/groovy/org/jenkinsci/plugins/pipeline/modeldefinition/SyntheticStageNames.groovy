@@ -27,6 +27,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 
 public class SyntheticStageNames {
+    public static List<String> preStages() {
+        return [checkout(), agentSetup(), toolInstall()]
+    }
+
+    public static List<String> postStages() {
+        return [postBuild()]
+    }
+
     public static String checkout() {
         return "Declarative: Checkout SCM"
     }
@@ -41,9 +49,5 @@ public class SyntheticStageNames {
 
     public static String postBuild() {
         return "Declarative: Post Build Actions"
-    }
-
-    public static String notifications() {
-        return "Declarative: Notifications"
     }
 }

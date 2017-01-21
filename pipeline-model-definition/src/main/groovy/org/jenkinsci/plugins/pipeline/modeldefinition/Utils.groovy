@@ -60,7 +60,9 @@ import org.jenkinsci.plugins.workflow.support.steps.StageStep
 import javax.annotation.Nullable
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
+import java.util.logging.Level
+import java.util.logging.Logger;
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -240,6 +242,15 @@ public class Utils {
         execution?.getOwner()?.getListener()?.getLogger()?.println(s)
     }
 
+    static void attachSyntheticStageGraphListener() {
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread?.execution
+
+        if (execution != null && !execution.complete) {
+            execution.addListener(new SyntheticStageGraphListener())
+        }
+    }
+
     /**
      * Returns true if we're currently nested under a stage.
      *
@@ -293,16 +304,6 @@ public class Utils {
 
     static SyntheticStage getSyntheticStageMetadata() {
         return getTagMetadata(SyntheticStage.class)
-    }
-
-    /**
-     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
-     *
-     * @param stageName
-     * @param context
-     */
-    static void markSyntheticStage(String stageName, String context) {
-        markStageWithTag(stageName, getSyntheticStageMetadata().tagName, context)
     }
 
     static void markStageFailedAndContinued(String stageName) {

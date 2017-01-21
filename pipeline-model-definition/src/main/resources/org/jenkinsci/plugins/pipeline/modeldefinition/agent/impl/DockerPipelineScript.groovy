@@ -41,7 +41,6 @@ public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPip
         return {
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {
-                    Utils.markSyntheticStage(SyntheticStageNames.agentSetup(), Utils.getSyntheticStageMetadata().pre)
                     try {
                         script.getProperty("docker").image(describable.image).pull()
                     } catch (Exception e) {
