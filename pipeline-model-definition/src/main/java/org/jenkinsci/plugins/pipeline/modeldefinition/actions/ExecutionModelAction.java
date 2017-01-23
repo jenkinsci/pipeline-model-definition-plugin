@@ -25,9 +25,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
 import hudson.model.InvisibleAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageGraphListener;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
+import org.jenkinsci.plugins.workflow.actions.FlowNodeAction;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 
-public class ExecutionModelAction extends InvisibleAction {
+public class ExecutionModelAction extends InvisibleAction implements FlowNodeAction {
     private final ModelASTStages stages;
 
     public ExecutionModelAction(ModelASTStages s) {
@@ -36,5 +39,12 @@ public class ExecutionModelAction extends InvisibleAction {
 
     public ModelASTStages getStages() {
         return stages;
+    }
+
+    @Override
+    public void onLoad(FlowNode parent) {
+        if (!parent.getExecution().isComplete()) {
+            parent.getExecution().addListener(new SyntheticStageGraphListener());
+        }
     }
 }

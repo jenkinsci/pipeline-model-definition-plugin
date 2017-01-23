@@ -32,8 +32,13 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import java.io.IOException;
+import java.util.logging.Logger;
+
+import static java.util.logging.Level.WARNING;
 
 public final class SyntheticStageGraphListener implements GraphListener {
+    private static final Logger LOGGER = Logger.getLogger(SyntheticStageGraphListener.class.getName());
+
     @Override
     public void onNewHead(FlowNode node) {
         if (node != null && node instanceof StepStartNode &&
@@ -52,7 +57,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
     }
 
     private void attachTag(FlowNode currentNode, String syntheticContext) {
-        TagsAction tagsAction = currentNode.getAction(TagsAction.class);
+        TagsAction tagsAction = currentNode.getPersistentAction(TagsAction.class);
 
         if (tagsAction == null) {
             tagsAction = new TagsAction();
@@ -63,7 +68,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
             try {
                 currentNode.save();
             } catch (IOException e) {
-                // TODO: should probably do something here? Would prefer to be calling FlowNode.persistSafe() but it's private
+                LOGGER.log(WARNING, "failed to save actions for FlowNode id=" + currentNode.getId(), e);
             }
         }
     }

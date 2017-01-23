@@ -201,6 +201,13 @@ public class Utils {
 
         stages.removeSourceLocation()
 
+        CpsThread thread = CpsThread.current()
+        CpsFlowExecution execution = thread?.execution
+
+        if (execution != null && !execution.complete) {
+            execution.addListener(new SyntheticStageGraphListener())
+        }
+
         r.addAction(new ExecutionModelAction(stages))
     }
 
@@ -240,15 +247,6 @@ public class Utils {
         CpsFlowExecution execution = thread.execution
 
         execution?.getOwner()?.getListener()?.getLogger()?.println(s)
-    }
-
-    static void attachSyntheticStageGraphListener() {
-        CpsThread thread = CpsThread.current()
-        CpsFlowExecution execution = thread?.execution
-
-        if (execution != null && !execution.complete) {
-            execution.addListener(new SyntheticStageGraphListener())
-        }
     }
 
     /**

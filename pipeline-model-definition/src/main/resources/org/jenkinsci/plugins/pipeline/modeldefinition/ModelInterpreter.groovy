@@ -50,8 +50,6 @@ public class ModelInterpreter implements Serializable {
     }
 
     def call(CpsClosure closure) {
-        // Attach the stages model to the run for introspection etc.
-        Utils.attachExecutionModel(script)
 
         ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
 
@@ -63,7 +61,8 @@ public class ModelInterpreter implements Serializable {
         Throwable firstError
 
         if (root != null) {
-            Utils.attachSyntheticStageGraphListener()
+            // Attach the stages model to the run for introspection etc.
+            Utils.attachExecutionModel(script)
             boolean postBuildRun = false
 
             try {
