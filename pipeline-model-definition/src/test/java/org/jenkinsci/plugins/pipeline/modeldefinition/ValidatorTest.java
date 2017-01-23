@@ -566,4 +566,18 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void parallelStagesAndSteps() throws Exception {
+        expectError("parallelStagesAndSteps")
+                .logContains(Messages.ModelValidatorImpl_BothStagesAndSteps("foo"))
+                .go();
+    }
+
+    @Test
+    public void parallelStagesAgentTools() throws Exception {
+        expectError("parallelStagesAgentTools")
+                .logContains(Messages.ModelValidatorImpl_AgentInNestedStages("foo"),
+                        Messages.ModelValidatorImpl_ToolsInNestedStages("foo"))
+                .go();
+    }
 }

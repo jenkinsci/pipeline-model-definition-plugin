@@ -147,7 +147,8 @@ public abstract class AbstractModelDefTest {
             "whenOr",
             "whenAnd",
             "usernamePassword",
-            "environmentCrossReferences"
+            "environmentCrossReferences",
+            "parallelStages"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -197,7 +198,8 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
 
         result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
-
+        result.add(new Object[]{"parallelStagesAndSteps", "additional properties are not allowed"});
+        result.add(new Object[]{"parallelStagesAgentTools", "additional properties are not allowed"});
         return result;
     }
 

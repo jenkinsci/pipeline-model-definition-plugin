@@ -207,6 +207,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void parallelStages() throws Exception {
+        expect("parallelStages")
+                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .go();
+    }
+
+    @Test
     public void parallelPipelineQuoteEscaping() throws Exception {
         expect("parallelPipelineQuoteEscaping")
                 .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[\"second\"] { (Branch: \"second\")")

@@ -583,15 +583,24 @@ class ModelValidatorImpl implements ModelValidator {
         if (!stage.branches.isEmpty() && stage.stages != null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))
             valid = false
-        }
-        if (stage.branches.isEmpty() && stage.stages == null) {
+        } else if (stage.branches.isEmpty() && stage.stages == null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        }
-        def branchNames = stage.branches.collect { it.name }
-        branchNames.findAll { branchNames.count(it) > 1 }.unique().each { bn ->
-            errorCollector.error(stage, Messages.ModelValidatorImpl_DuplicateParallelName(bn))
-            valid = false
+        } else if (stage.stages != null) {
+            if (stage.agent != null) {
+                errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
+                valid = false
+            }
+            if (stage.tools != null) {
+                errorCollector.error(stage.tools, Messages.ModelValidatorImpl_ToolsInNestedStages(stage.name))
+                valid = false
+            }
+        } else {
+            def branchNames = stage.branches.collect { it.name }
+            branchNames.findAll { branchNames.count(it) > 1 }.unique().each { bn ->
+                errorCollector.error(stage, Messages.ModelValidatorImpl_DuplicateParallelName(bn))
+                valid = false
+            }
         }
 
         return valid
