@@ -198,8 +198,8 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
 
         result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
-        result.add(new Object[]{"parallelStagesAndSteps", "additional properties are not allowed"});
-        result.add(new Object[]{"parallelStagesAgentTools", "additional properties are not allowed"});
+        result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_BothStagesAndSteps("foo")});
+        result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
         return result;
     }
 
