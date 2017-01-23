@@ -26,8 +26,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 public class LabelScript extends DeclarativeAgentScript<Label> {
@@ -41,6 +45,16 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
         return {
             try {
                 script.node(describable?.label) {
+                    if (describable.context instanceof Root) {
+                        Root root = (Root)describable.context
+                        SkipDefaultCheckout skip = (SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout")
+                        if (!skip?.isSkipDefaultCheckout() && Utils.hasScmContext(script)) {
+                            script.stage(SyntheticStageNames.checkout()) {
+                                Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
+                                script.checkout script.scm
+                            }
+                        }
+                    }
                     body.call()
                 }
             } catch (Exception e) {

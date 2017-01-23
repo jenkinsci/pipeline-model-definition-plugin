@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
@@ -33,5 +34,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescr
  * @author Andrew Bayer
  */
 public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
+    protected Object context;
 
+    @DataBoundSetter
+    public void setContext(Object context) {
+        this.context = context;
+    }
+
+    public Object getContext() {
+        return context;
+    }
 }

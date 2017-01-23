@@ -566,7 +566,9 @@ class ModelValidatorImpl implements ModelValidator {
                         }
                     }
                     map.variables.each { k, v ->
-                        List<String> validParamNames = model.parameters.collect { it.name }
+                        // Make sure we don't actually include "context" in the valid param names, since, well, it's
+                        // not really one.
+                        List<String> validParamNames = model.parameters.collect { it.name }.findAll { it != "context" }
                         if (!validParamNames.contains(k.key)) {
                             errorCollector.error(k, Messages.ModelValidatorImpl_InvalidAgentParameter(k.key, typeName, validParamNames))
                             valid = false

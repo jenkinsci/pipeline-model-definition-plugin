@@ -74,19 +74,9 @@ public class ModelInterpreter implements Serializable {
                         // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                         // even if the build fails.
                         // We save the caught error, if any, for throwing at the end of the build.
-                        inDeclarativeAgent(root.agent) {
+                        inDeclarativeAgent(root, root.agent) {
                             withCredentialsBlock(root.getEnvCredentials()) {
                                 toolsBlock(root.agent, root.tools) {
-                                    // If we have an agent and script.scm isn't null, run checkout scm
-                                    if (root.agent.hasAgent()
-                                        && Utils.hasScmContext(script)
-                                        && !((SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout"))?.isSkipDefaultCheckout()) {
-                                        script.stage(SyntheticStageNames.checkout()) {
-                                            Utils.markSyntheticStage(SyntheticStageNames.checkout(), Utils.getSyntheticStageMetadata().pre)
-                                            script.checkout script.scm
-                                        }
-                                    }
-
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
                                         try {
@@ -94,7 +84,7 @@ public class ModelInterpreter implements Serializable {
                                                 if (firstError == null) {
                                                     withEnvBlock(thisStage.getEnvVars()) {
                                                         if (evaluateWhen(thisStage.when)) {
-                                                            inDeclarativeAgent(thisStage.agent) {
+                                                            inDeclarativeAgent(thisStage, thisStage.agent) {
                                                                 withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
@@ -295,17 +285,18 @@ public class ModelInterpreter implements Serializable {
     /**
      * Executes the given closure inside a declarative agent block, if appropriate.
      *
+     * @param context Either a stage or root object, the context we're running in.
      * @param agent The agent context we're running in
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def inDeclarativeAgent(Agent agent, Closure body) {
+    def inDeclarativeAgent(Object context, Agent agent, Closure body) {
         if (agent == null) {
             return {
                 body.call()
             }.call()
         } else {
-            return agent.getDeclarativeAgent().getScript(script).run {
+            return agent.getDeclarativeAgent(context).getScript(script).run {
                 body.call()
             }.call()
         }

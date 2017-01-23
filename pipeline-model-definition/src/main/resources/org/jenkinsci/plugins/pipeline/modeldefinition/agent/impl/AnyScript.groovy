@@ -25,7 +25,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
-import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -37,15 +36,10 @@ public class AnyScript extends DeclarativeAgentScript<Any> {
 
     @Override
     public Closure run(Closure body) {
-        return {
-            try {
-                script.node {
-                    body.call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
-            }
+        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null, context: describable.context])
+        LabelScript labelScript = (LabelScript) l.getScript(script)
+        return labelScript.run {
+            body.call()
         }
     }
 }
