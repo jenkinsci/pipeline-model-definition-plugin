@@ -47,6 +47,14 @@ public class MethodsToListTranslator implements MethodMissingWrapper, Serializab
         this.clazz = c
     }
 
+    def propertyMissing(String p) {
+        if (Utils.isEligibleMethodSymbol(p, clazz)) {
+            return methodMissing(p, null)
+        } else {
+            return getProperty(p)
+        }
+    }
+
     def methodMissing(String s, args) {
         def argVal
         if (args instanceof List || args instanceof Object[]) {

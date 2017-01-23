@@ -48,6 +48,14 @@ public class OptionsTranslator implements MethodMissingWrapper, Serializable {
         this.script = script
     }
 
+    def propertyMissing(String p) {
+        if (Utils.isEligibleMethodSymbol(p, Options)) {
+            return methodMissing(p, null)
+        } else {
+            return getProperty(p)
+        }
+    }
+
     def methodMissing(String s, args) {
         def argVal
         if (args instanceof List || args instanceof Object[]) {

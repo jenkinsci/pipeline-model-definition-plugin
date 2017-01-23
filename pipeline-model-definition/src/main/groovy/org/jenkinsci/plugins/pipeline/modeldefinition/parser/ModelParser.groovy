@@ -43,6 +43,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDesc
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -401,6 +404,22 @@ class ModelParser implements Parser {
         return o;
     }
 
+    private <T extends ModelASTMethodCall> T handleNullMethodCall(T element, Statement st, String sectionName,
+                                                                  String expectedError, Collection<String> possibles) {
+        if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
+            errorCollector.error(element, Messages.ModelParser_MapNotAllowed(sectionName))
+        } else if (st instanceof ExpressionStatement &&
+            st.expression instanceof VariableExpression &&
+            ((VariableExpression)st.expression).name in possibles) {
+            element.name = ((VariableExpression)st.expression).name
+        } else {
+            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+            errorCollector.error(element, expectedError);
+        }
+
+        return element
+    }
+
     /**
      * Parses a statement into a {@link ModelASTOption}
      */
@@ -408,14 +427,8 @@ class ModelParser implements Parser {
         ModelASTOption thisOpt = new ModelASTOption(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
-            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(thisProp, Messages.ModelParser_MapNotAllowed(Messages.Parser_Options()))
-                return thisOpt
-            } else {
-                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(thisOpt, Messages.ModelParser_ExpectedOption());
-                return thisOpt
-            }
+            return handleNullMethodCall(thisOpt, st, Messages.Parser_Options(), Messages.ModelParser_ExpectedOption(),
+                Options.allowedOptionTypes.keySet())
         };
 
         def bs = matchBlockStatement(st);
@@ -455,14 +468,8 @@ class ModelParser implements Parser {
         ModelASTTrigger trig = new ModelASTTrigger(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
-            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(trig, Messages.ModelParser_MapNotAllowed(Messages.Parser_Triggers()))
-                return trig
-            } else {
-                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                errorCollector.error(trig, Messages.ModelParser_ExpectedTrigger());
-                return trig
-            }
+            return handleNullMethodCall(trig, st, Messages.Parser_Triggers(),
+                Messages.ModelParser_ExpectedTrigger(), Triggers.allowedTriggerTypes.keySet())
         };
 
         def bs = matchBlockStatement(st);
@@ -502,14 +509,8 @@ class ModelParser implements Parser {
         ModelASTBuildParameter param = new ModelASTBuildParameter(st)
         def mc = matchMethodCall(st);
         if (mc == null) {
-            if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(param, Messages.ModelParser_MapNotAllowed(Messages.Parser_BuildParameters()))
-                return param
-            } else {
-                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                 errorCollector.error(param, Messages.ModelParser_ExpectedBuildParameter());
-                return param
-            }
+            return handleNullMethodCall(param, st, Messages.Parser_BuildParameters(),
+                Messages.ModelParser_ExpectedBuildParameter(), Parameters.allowedParameterTypes.keySet())
         };
 
         def bs = matchBlockStatement(st);

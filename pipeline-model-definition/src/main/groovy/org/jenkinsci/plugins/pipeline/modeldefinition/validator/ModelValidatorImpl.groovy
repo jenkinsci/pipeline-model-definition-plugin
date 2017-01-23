@@ -307,6 +307,7 @@ class ModelValidatorImpl implements ModelValidator {
         if (Jenkins.getInstance() != null) {
             Descriptor desc = lookup.lookupFunction(meth.name)
             DescribableModel<? extends Describable> model
+
             if (desc != null) {
                 model = lookup.modelForDescribable(meth.name)
             }
@@ -352,7 +353,6 @@ class ModelValidatorImpl implements ModelValidator {
                                 valid = validateElement((ModelASTMethodCall) argVal)
                             } else {
                                 if (!validateParameterType((ModelASTValue) argVal, entry.erasedType)) {
-                                    errorCollector.error((ModelASTValue)argVal, Messages.ModelValidatorImpl_WrongParameterType(entry.name))
                                     valid = false
                                 }
                             }

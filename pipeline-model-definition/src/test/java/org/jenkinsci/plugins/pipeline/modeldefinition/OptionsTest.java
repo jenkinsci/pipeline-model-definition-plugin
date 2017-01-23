@@ -128,6 +128,15 @@ public class OptionsTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void optionsBareMethodCall() throws Exception {
+        expect("optionsBareMethodCall")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] catchError",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .go();
+    }
+    @Test
     public void multipleWrappers() throws Exception {
         expect("multipleWrappers")
                 .logContains("[Pipeline] { (foo)",

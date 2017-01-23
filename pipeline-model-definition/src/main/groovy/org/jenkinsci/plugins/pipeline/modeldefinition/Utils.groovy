@@ -42,6 +42,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
@@ -394,5 +397,21 @@ public class Utils {
         wrapper.setClosure(c)
 
         return wrapper
+    }
+
+    public static boolean isEligibleMethodSymbol(String symbol, Class c) {
+        switch (c) {
+            case Triggers.class:
+                return symbol in Triggers.allowedTriggerTypes.keySet()
+                break
+            case Parameters.class:
+                return symbol in Parameters.allowedParameterTypes.keySet()
+                break
+            case Options.class:
+                return symbol in Options.allowedOptionTypes.keySet()
+                break
+            default:
+                return false
+        }
     }
 }
