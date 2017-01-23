@@ -23,6 +23,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTTools tools;
     private ModelASTEnvironment environment;
     private Boolean failFast;
+    private ModelASTStages stages;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -30,13 +31,18 @@ public final class ModelASTStage extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTBranch branch : branches) {
-            a.add(branch.toJSON());
-        }
         JSONObject o = new JSONObject();
         o.accumulate("name", name);
-        o.accumulate("branches", a);
+
+        if (branches.isEmpty() && stages != null) {
+            o.accumulate("stages", stages.toJSON());
+        } else {
+            final JSONArray a = new JSONArray();
+            for (ModelASTBranch branch : branches) {
+                a.add(branch.toJSON());
+            }
+            o.accumulate("branches", a);
+        }
         if (failFast != null) {
             o.accumulate("failFast", failFast);
         }
@@ -67,6 +73,9 @@ public final class ModelASTStage extends ModelASTElement {
         validator.validateElement(this);
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);
+        }
+        if (stages != null) {
+            stages.validate(validator);
         }
         if (agent != null) {
             agent.validate(validator);
@@ -102,31 +111,35 @@ public final class ModelASTStage extends ModelASTElement {
         if (environment != null) {
             result.append(environment.toGroovy());
         }
-        result.append("steps {\n");
-        if (branches.size() > 1) {
-            result.append("parallel(");
-            boolean first = true;
-            for (ModelASTBranch branch: branches) {
-                if (first) {
-                    first = false;
-                } else {
-                    result.append(',');
+        if (branches.isEmpty() && stages != null) {
+            result.append(stages.toGroovy());
+        } else {
+            result.append("steps {\n");
+            if (branches.size() > 1) {
+                result.append("parallel(");
+                boolean first = true;
+                for (ModelASTBranch branch : branches) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        result.append(',');
+                    }
+                    result.append('\n');
+                    result.append('"' + StringEscapeUtils.escapeJava(branch.getName()) + '"')
+                            .append(": {\n")
+                            .append(branch.toGroovy())
+                            .append("\n}");
                 }
-                result.append('\n');
-                result.append('"' + StringEscapeUtils.escapeJava(branch.getName()) + '"')
-                        .append(": {\n")
-                        .append(branch.toGroovy())
-                        .append("\n}");
+                if (failFast != null && failFast) {
+                    result.append(",\nfailFast: true");
+                }
+                result.append("\n)\n");
+            } else if (branches.size() == 1) {
+                result.append(branches.get(0).toGroovy());
             }
-            if (failFast != null && failFast) {
-                result.append(",\nfailFast: true");
-            }
-            result.append("\n)\n");
-        } else if (branches.size() == 1) {
-            result.append(branches.get(0).toGroovy());
-        }
 
-        result.append("}\n");
+            result.append("}\n");
+        }
 
         if (post != null) {
             result.append(post.toGroovy());
@@ -142,6 +155,9 @@ public final class ModelASTStage extends ModelASTElement {
         super.removeSourceLocation();
         for (ModelASTBranch branch: branches) {
             branch.removeSourceLocation();
+        }
+        if (stages != null) {
+            stages.removeSourceLocation();
         }
         if (agent != null) {
             agent.removeSourceLocation();
@@ -224,6 +240,14 @@ public final class ModelASTStage extends ModelASTElement {
         this.failFast = f;
     }
 
+    public ModelASTStages getStages() {
+        return stages;
+    }
+
+    public void setStages(ModelASTStages s) {
+        this.stages = s;
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
@@ -235,6 +259,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", tools=" + tools +
                 ", environment=" + environment +
                 ", failFast=" + failFast +
+                ", stages=" + stages +
                 "}";
     }
 
@@ -256,6 +281,9 @@ public final class ModelASTStage extends ModelASTElement {
             return false;
         }
         if (getAgent() != null ? !getAgent().equals(that.getAgent()) : that.getAgent() != null) {
+            return false;
+        }
+        if (getStages() != null ? !getStages().equals(that.getStages()) : that.getStages() != null) {
             return false;
         }
         if (getPost() != null ? !getPost().equals(that.getPost()) : that.getPost() != null) {
@@ -289,6 +317,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getFailFast() != null ? getFailFast().hashCode() : 0);
+        result = 31 * result + (getStages() != null ? getStages().hashCode() : 0);
         return result;
     }
 }

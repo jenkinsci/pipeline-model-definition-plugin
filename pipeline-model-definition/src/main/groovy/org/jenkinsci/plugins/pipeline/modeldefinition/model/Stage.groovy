@@ -55,6 +55,8 @@ public class Stage implements NestedModel, Serializable {
 
     Environment environment
 
+    Stages stages
+
     Stage name(String n) {
         this.name = n
         return this
@@ -87,6 +89,11 @@ public class Stage implements NestedModel, Serializable {
 
     Stage environment(Environment environment) {
         this.environment = environment
+        return this
+    }
+
+    Stage stages(Stages s) {
+        this.stages = s
         return this
     }
 

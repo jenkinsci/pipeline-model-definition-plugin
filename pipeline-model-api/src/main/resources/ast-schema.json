@@ -441,6 +441,17 @@
       "additionalProperties": false
     },
     "stage": {
+      "description": "A single Pipeline stage, with a name and either one or more branches or one or more nested branches",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/stageWithSteps"
+        },
+        {
+          "$ref": "#/definitions/stageWithStages"
+        }
+      ]
+    },
+    "stageWithSteps": {
       "description": "A single Pipeline stage, with a name and one or more branches",
       "type": "object",
       "properties": {
@@ -475,6 +486,32 @@
       "required": [
         "name",
         "branches"
+      ],
+      "additionalProperties": false
+    },
+    "stageWithStages": {
+      "description": "A single Pipeline stage, with a name and one or more nested stages",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "when": {
+          "$ref": "#/definitions/when"
+        },
+        "post": {
+          "$ref": "#/definitions/post"
+        },
+        "environment": {
+          "$ref": "#/definitions/environment"
+        },
+        "stages": {
+          "$ref": "#/definitions/stages"
+        }
+      },
+      "required": [
+        "name",
+        "stages"
       ],
       "additionalProperties": false
     },

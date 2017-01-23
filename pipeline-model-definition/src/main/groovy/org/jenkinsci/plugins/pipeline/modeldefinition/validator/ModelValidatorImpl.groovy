@@ -580,7 +580,11 @@ class ModelValidatorImpl implements ModelValidator {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NoStageName())
             valid = false
         }
-        if (stage.branches.isEmpty()) {
+        if (!stage.branches.isEmpty() && stage.stages != null) {
+            errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))
+            valid = false
+        }
+        if (stage.branches.isEmpty() && stage.stages == null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
         }
