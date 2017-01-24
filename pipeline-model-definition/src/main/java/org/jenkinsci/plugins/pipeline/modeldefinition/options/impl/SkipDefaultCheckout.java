@@ -29,17 +29,22 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public class SkipDefaultCheckout extends DeclarativeOption {
-    boolean skipDefaultCheckout;
+    Boolean skipDefaultCheckout;
 
     @DataBoundConstructor
-    public SkipDefaultCheckout(boolean skipDefaultCheckout) {
-        this.skipDefaultCheckout = skipDefaultCheckout;
+    public SkipDefaultCheckout() {
+    }
+
+    @DataBoundSetter
+    public void setSkipDefaultCheckout(boolean s) {
+        this.skipDefaultCheckout = s;
     }
 
     public boolean isSkipDefaultCheckout() {
-        return skipDefaultCheckout;
+        return skipDefaultCheckout == null || skipDefaultCheckout;
     }
 
     @Extension @Symbol("skipDefaultCheckout")
