@@ -30,12 +30,12 @@ import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -94,9 +94,12 @@ public final class SyntheticStageGraphListener implements GraphListener {
             }
         }
 
-        private void attachListener(@Nonnull WorkflowRun run) {
-            if (run.getExecution() != null && !run.getExecution().isComplete()) {
-                run.getExecution().addListener(new SyntheticStageGraphListener());
+        private void attachListener(WorkflowRun run) {
+            if (run != null) {
+                FlowExecution exec = run.getExecution();
+                if (exec != null && !exec.isComplete()) {
+                    exec.addListener(new SyntheticStageGraphListener());
+                }
             }
         }
     }
