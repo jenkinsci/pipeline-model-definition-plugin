@@ -68,8 +68,9 @@ public class DeclarativeDockerUtils {
         if (!StringUtils.isBlank(override)) {
             return override;
         } else {
+            Run<?,?> r = currentRun();
             for (DockerPropertiesProvider provider : DockerPropertiesProvider.all()) {
-                String label = provider.getLabel(currentRun());
+                String label = provider.getLabel(r);
                 if (!StringUtils.isBlank(label)) {
                     return label;
                 }
@@ -88,8 +89,9 @@ public class DeclarativeDockerUtils {
         if (!StringUtils.isBlank(override)) {
             return override;
         } else {
+            Run<?,?> r = currentRun();
             for (DockerPropertiesProvider provider : DockerPropertiesProvider.all()) {
-                String url = provider.getRegistryUrl(currentRun());
+                String url = provider.getRegistryUrl(r);
                 if (!StringUtils.isBlank(url)) {
                     return url;
                 }
@@ -108,8 +110,9 @@ public class DeclarativeDockerUtils {
         if (!StringUtils.isBlank(override)) {
             return override;
         } else {
+            Run<?,?> r = currentRun();
             for (DockerPropertiesProvider provider : DockerPropertiesProvider.all()) {
-                String id = provider.getRegistryCredentialsId(currentRun());
+                String id = provider.getRegistryCredentialsId(r);
                 if (!StringUtils.isBlank(id)) {
                     return id;
                 }
