@@ -35,6 +35,7 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -79,7 +80,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
     public static class GraphListenerAction extends InvisibleAction implements RunAction2 {
         @Override
         public void onLoad(Run<?, ?> r) {
-            if (r instanceof WorkflowRun) {
+            if (r != null && r instanceof WorkflowRun) {
                 WorkflowRun run = (WorkflowRun) r;
                 attachListener(run);
             }
@@ -87,14 +88,14 @@ public final class SyntheticStageGraphListener implements GraphListener {
 
         @Override
         public void onAttached(Run<?, ?> r) {
-            if (r instanceof WorkflowRun) {
+            if (r != null && r instanceof WorkflowRun) {
                 WorkflowRun run = (WorkflowRun) r;
                 attachListener(run);
             }
         }
 
-        private void attachListener(WorkflowRun run) {
-            if (run != null && run.getExecution() != null && !run.getExecution().isComplete()) {
+        private void attachListener(@Nonnull WorkflowRun run) {
+            if (run.getExecution() != null && !run.getExecution().isComplete()) {
                 run.getExecution().addListener(new SyntheticStageGraphListener());
             }
         }
