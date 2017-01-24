@@ -422,17 +422,17 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
-    private Predicate<FlowNode> syntheticStagePredicate(String stageName,
+    public static Predicate<FlowNode> syntheticStagePredicate(String stageName,
                                                         String context) {
         return stageTagPredicate(stageName, Utils.getSyntheticStageMetadata().getTagName(), context);
     }
 
-    private Predicate<FlowNode> stageStatusPredicate(String stageName,
+    public static Predicate<FlowNode> stageStatusPredicate(String stageName,
                                                      String stageStatus) {
         return stageTagPredicate(stageName, Utils.getStageStatusMetadata().getTagName(), stageStatus);
     }
 
-    private Predicate<FlowNode> stageTagPredicate(final String stageName,
+    public static Predicate<FlowNode> stageTagPredicate(final String stageName,
                                                   final String tagName,
                                                   final String tagValue) {
         return new Predicate<FlowNode>() {

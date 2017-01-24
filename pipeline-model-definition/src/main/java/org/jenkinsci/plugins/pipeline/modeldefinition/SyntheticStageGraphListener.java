@@ -24,11 +24,15 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.InvisibleAction;
+import hudson.model.Run;
+import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import java.io.IOException;
@@ -58,7 +62,6 @@ public final class SyntheticStageGraphListener implements GraphListener {
 
     private void attachTag(FlowNode currentNode, String syntheticContext) {
         TagsAction tagsAction = currentNode.getPersistentAction(TagsAction.class);
-
         if (tagsAction == null) {
             tagsAction = new TagsAction();
             tagsAction.addTag(SyntheticStage.TAG_NAME, syntheticContext);
@@ -69,6 +72,30 @@ public final class SyntheticStageGraphListener implements GraphListener {
                 currentNode.save();
             } catch (IOException e) {
                 LOGGER.log(WARNING, "failed to save actions for FlowNode id=" + currentNode.getId(), e);
+            }
+        }
+    }
+
+    public static class GraphListenerAction extends InvisibleAction implements RunAction2 {
+        @Override
+        public void onLoad(Run<?, ?> r) {
+            if (r instanceof WorkflowRun) {
+                WorkflowRun run = (WorkflowRun) r;
+                attachListener(run);
+            }
+        }
+
+        @Override
+        public void onAttached(Run<?, ?> r) {
+            if (r instanceof WorkflowRun) {
+                WorkflowRun run = (WorkflowRun) r;
+                attachListener(run);
+            }
+        }
+
+        private void attachListener(WorkflowRun run) {
+            if (run != null && run.getExecution() != null && !run.getExecution().isComplete()) {
+                run.getExecution().addListener(new SyntheticStageGraphListener());
             }
         }
     }

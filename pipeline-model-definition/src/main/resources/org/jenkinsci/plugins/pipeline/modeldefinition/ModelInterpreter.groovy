@@ -29,7 +29,6 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -62,7 +61,7 @@ public class ModelInterpreter implements Serializable {
 
         if (root != null) {
             // Attach the stages model to the run for introspection etc.
-            Utils.attachExecutionModel(script)
+            Utils.attachDeclarativeActions(script)
             boolean postBuildRun = false
 
             try {

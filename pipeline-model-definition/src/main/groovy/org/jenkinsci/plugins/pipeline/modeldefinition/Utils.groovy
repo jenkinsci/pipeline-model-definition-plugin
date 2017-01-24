@@ -33,7 +33,6 @@ import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang.reflect.FieldUtils
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
@@ -61,8 +60,6 @@ import javax.annotation.Nullable
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
-import java.util.logging.Level
-import java.util.logging.Logger;
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -193,7 +190,7 @@ public class Utils {
         }
     }
 
-    static void attachExecutionModel(CpsScript script) {
+    static void attachDeclarativeActions(CpsScript script) {
         WorkflowRun r = script.$build()
         ModelASTPipelineDef model = Converter.parseFromCpsScript(script)
 
@@ -201,13 +198,7 @@ public class Utils {
 
         stages.removeSourceLocation()
 
-        CpsThread thread = CpsThread.current()
-        CpsFlowExecution execution = thread?.execution
-
-        if (execution != null && !execution.complete) {
-            execution.addListener(new SyntheticStageGraphListener())
-        }
-
+        r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
         r.addAction(new ExecutionModelAction(stages))
     }
 
