@@ -26,12 +26,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import hudson.FilePath
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.DeclarativePropsStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeDockerUtils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public abstract class AbstractDockerPipelineScript<A extends DeclarativeAgent<A>> extends DeclarativeAgentScript<A> {
+public abstract class AbstractDockerPipelineScript<A extends AbstractDockerAgent<A>> extends DeclarativeAgentScript<A> {
 
     public AbstractDockerPipelineScript(CpsScript s, A a) {
         super(s, a)
@@ -44,8 +44,7 @@ public abstract class AbstractDockerPipelineScript<A extends DeclarativeAgent<A>
                 configureRegistry(body).call()
             }
         } else {
-            String targetLabel = script.declarativeProps(property: DeclarativePropsStep.Property.LABEL,
-                override: describable.label)
+            String targetLabel = DeclarativeDockerUtils.getLabel(describable.label)
             Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: targetLabel, context: describable.context])
             LabelScript labelScript = (LabelScript) l.getScript(script)
             return labelScript.run {
@@ -56,10 +55,8 @@ public abstract class AbstractDockerPipelineScript<A extends DeclarativeAgent<A>
 
     protected Closure configureRegistry(Closure body) {
         return {
-            String registryUrl = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_URL,
-                override: describable.registryUrl)
-            String registryCreds = script.declarativeProps(property: DeclarativePropsStep.Property.REGISTRY_CREDENTIALS,
-                override: describable.registryCredentialsId)
+            String registryUrl = DeclarativeDockerUtils.getRegistryUrl(describable.registryUrl)
+            String registryCreds = DeclarativeDockerUtils.getRegistryCredentialsId(describable.registryCredentialsId)
             if (registryUrl != null) {
                 script.getProperty("docker").withRegistry(registryUrl, registryCreds) {
                     runImage(body).call()

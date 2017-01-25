@@ -29,6 +29,7 @@ import hudson.ExtensionPoint;
 import hudson.model.Run;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 
 /**
  * Provider of configuration options to use for {@code agent docker}.
@@ -36,13 +37,13 @@ import javax.annotation.CheckForNull;
 public abstract class DockerPropertiesProvider implements ExtensionPoint {
 
     @CheckForNull
-    public abstract String getRegistryUrl(Run run);
+    public abstract String getRegistryUrl(@Nullable Run run);
 
     @CheckForNull
-    public abstract String getRegistryCredentialsId(Run run);
+    public abstract String getRegistryCredentialsId(@Nullable Run run);
 
     @CheckForNull
-    public abstract String getLabel(Run run);
+    public abstract String getLabel(@Nullable Run run);
 
     public static ExtensionList<DockerPropertiesProvider> all() {
         return ExtensionList.lookup(DockerPropertiesProvider.class);

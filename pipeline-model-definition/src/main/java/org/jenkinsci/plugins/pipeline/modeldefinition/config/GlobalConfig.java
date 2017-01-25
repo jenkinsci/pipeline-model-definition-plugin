@@ -38,6 +38,8 @@ import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nullable;
+
 /**
  * The system config.
  *
@@ -83,12 +85,12 @@ public class GlobalConfig extends GlobalConfiguration {
         GlobalConfig config;
 
         @Override
-        public String getLabel(Run run) {
+        public String getLabel(@Nullable Run run) {
             return config.getDockerLabel();
         }
 
         @Override
-        public String getRegistryUrl(Run run) {
+        public String getRegistryUrl(@Nullable Run run) {
             if (config.getRegistry() != null && !StringUtils.isBlank(config.getRegistry().getUrl())) {
                 return config.getRegistry().getUrl();
             } else {
@@ -97,7 +99,7 @@ public class GlobalConfig extends GlobalConfiguration {
         }
 
         @Override
-        public String getRegistryCredentialsId(Run run) {
+        public String getRegistryCredentialsId(@Nullable Run run) {
             if (config.getRegistry() != null && !StringUtils.isBlank(config.getRegistry().getCredentialsId())) {
                 return config.getRegistry().getCredentialsId();
             } else {
