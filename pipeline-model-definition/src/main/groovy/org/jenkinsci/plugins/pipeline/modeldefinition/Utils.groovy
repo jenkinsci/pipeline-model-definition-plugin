@@ -197,9 +197,12 @@ public class Utils {
         ModelASTStages stages = model.stages
 
         stages.removeSourceLocation()
-
-        r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
-        r.addAction(new ExecutionModelAction(stages))
+        if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
+            r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
+        }
+        if (r.getAction(ExecutionModelAction.class) == null) {
+            r.addAction(new ExecutionModelAction(stages))
+        }
     }
 
     static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
