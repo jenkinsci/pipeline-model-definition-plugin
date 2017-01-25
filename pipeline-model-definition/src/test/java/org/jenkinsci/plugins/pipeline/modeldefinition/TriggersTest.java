@@ -40,7 +40,7 @@ public class TriggersTest extends AbstractModelDefTest {
     public void simpleTriggers() throws Exception {
         WorkflowRun b = expect("simpleTriggers")
                 .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .logNotContains("[Pipeline] { (Post Actions)")
                 .go();
 
         WorkflowJob p = b.getParent();

@@ -48,6 +48,6 @@ public class SyntheticStageNames {
     }
 
     public static String postBuild() {
-        return "Declarative: Post Build Actions"
+        return "Declarative: Post Actions"
     }
 }
