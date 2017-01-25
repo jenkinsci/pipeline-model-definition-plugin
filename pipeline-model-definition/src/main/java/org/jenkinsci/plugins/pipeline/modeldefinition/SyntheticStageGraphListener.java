@@ -28,6 +28,7 @@ import hudson.model.InvisibleAction;
 import hudson.model.Run;
 import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
+import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -48,13 +49,14 @@ public final class SyntheticStageGraphListener implements GraphListener {
     public void onNewHead(FlowNode node) {
         if (node != null && node instanceof StepStartNode &&
                 ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
-            if (SyntheticStageNames.preStages().contains(node.getDisplayName()) ||
-                    SyntheticStageNames.postStages().contains(node.getDisplayName())) {
-
-                if (SyntheticStageNames.preStages().contains(node.getDisplayName())) {
+            LabelAction label = node.getPersistentAction(LabelAction.class);
+            if (label != null &&
+                    (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
+                            SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
+                if (SyntheticStageNames.preStages().contains(label.getDisplayName())) {
                     attachTag(node, SyntheticStage.getPre());
                 }
-                if (SyntheticStageNames.postStages().contains(node.getDisplayName())) {
+                if (SyntheticStageNames.postStages().contains(label.getDisplayName())) {
                     attachTag(node, SyntheticStage.getPost());
                 }
             }
