@@ -409,7 +409,7 @@ class ModelParser implements Parser {
         def mc = matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
-                errorCollector.error(thisProp, Messages.ModelParser_MapNotAllowed(Messages.Parser_Options()))
+                errorCollector.error(thisOpt, Messages.ModelParser_MapNotAllowed(Messages.Parser_Options()))
                 return thisOpt
             } else {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.

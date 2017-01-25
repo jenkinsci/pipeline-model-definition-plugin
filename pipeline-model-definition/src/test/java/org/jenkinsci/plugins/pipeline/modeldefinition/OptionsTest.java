@@ -115,8 +115,14 @@ public class OptionsTest extends AbstractModelDefTest {
         assertTrue(trigger instanceof TimerTrigger);
         TimerTrigger timer = (TimerTrigger) trigger;
         assertEquals("@daily", timer.getSpec());
+    }
 
-
+    @Test
+    public void skipCheckoutFalse() throws Exception {
+        expect("skipCheckoutFalse")
+                .logContains("[Pipeline] { (foo)",
+                        "hello")
+                .go();
     }
 
     @Test

@@ -334,7 +334,6 @@ class ModelValidatorImpl implements ModelValidator {
                             valid = validateElement((ModelASTMethodCall) kvm.value)
                         } else {
                             if (!validateParameterType((ModelASTValue) kvm.value, p.erasedType, kvm.key)) {
-                                errorCollector.error(kvm.key, Messages.ModelValidatorImpl_WrongBuildParameterType(kvm.key.key))
                                 valid = false
                             }
                         }
@@ -343,8 +342,12 @@ class ModelValidatorImpl implements ModelValidator {
                     List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
                     if (requiredParams.size() != meth.args.size()) {
-                        errorCollector.error(meth, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(meth.name, requiredParams.size(), meth.args.size()))
-                        valid = false
+                        // TODO: This is a specialized hack for allowing single-required-parameter constructors to be
+                        // called like "foo()", Groovy-style, passing null as the parameter value.
+                        if (!(requiredParams.size() == 1 && meth.args.isEmpty())) {
+                            errorCollector.error(meth, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(meth.name, requiredParams.size(), meth.args.size()))
+                            valid = false
+                        }
                     } else {
                         requiredParams.eachWithIndex { DescribableParameter entry, int i ->
                             def argVal = meth.args.get(i)
@@ -352,7 +355,6 @@ class ModelValidatorImpl implements ModelValidator {
                                 valid = validateElement((ModelASTMethodCall) argVal)
                             } else {
                                 if (!validateParameterType((ModelASTValue) argVal, entry.erasedType)) {
-                                    errorCollector.error((ModelASTValue)argVal, Messages.ModelValidatorImpl_WrongParameterType(entry.name))
                                     valid = false
                                 }
                             }
@@ -365,12 +367,19 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTOptions opts) {
+        boolean valid = true
         if (opts.options.isEmpty()) {
             errorCollector.error(opts, Messages.ModelValidatorImpl_EmptySection("options"))
-            return false
+            valid = false
+        } else {
+            def optionNames = opts.options.collect { it.name }
+            optionNames.findAll { optionNames.count(it) > 1 }.unique().each { bn ->
+                errorCollector.error(opts, Messages.ModelValidatorImpl_DuplicateOptionName(bn))
+                valid = false
+            }
         }
 
-        return true
+        return valid
     }
 
     public boolean validateElement(@Nonnull ModelASTTrigger trig) {
@@ -394,12 +403,19 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTTriggers triggers) {
+        boolean valid = true
         if (triggers.triggers.isEmpty()) {
             errorCollector.error(triggers, Messages.ModelValidatorImpl_EmptySection("triggers"))
-            return false
+            valid = false
+        } else {
+            def triggerNames = triggers.triggers.collect { it.name }
+            triggerNames.findAll { triggerNames.count(it) > 1 }.unique().each { bn ->
+                errorCollector.error(triggers, Messages.ModelValidatorImpl_DuplicateTriggerName(bn))
+                valid = false
+            }
         }
 
-        return true
+        return valid
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildParameter param) {

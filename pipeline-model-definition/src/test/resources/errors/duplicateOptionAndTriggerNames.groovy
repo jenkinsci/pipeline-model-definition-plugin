@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,30 +22,33 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
-
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.Nullable;
-
-public class SkipDefaultCheckout extends DeclarativeOption {
-    private Boolean skipDefaultCheckout;
-
-    @DataBoundConstructor
-    public SkipDefaultCheckout(@Nullable Boolean s) {
-        this.skipDefaultCheckout = s;
+pipeline {
+    agent any
+    parameters {
+        booleanParam(defaultValue: true, description: '', name: 'flag')
+        // TODO: Be prepared to change this to "stringParam" once we're on a new enough core.
+        string(defaultValue: '', description: '', name: 'SOME_STRING')
     }
-
-    public boolean isSkipDefaultCheckout() {
-        return skipDefaultCheckout == null || skipDefaultCheckout;
+    triggers {
+        // TODO: Add a second trigger. Needs to be one with a symbol, and "upstream" has issues due to Result.
+        cron('@daily')
+        cron('@daily')
     }
-
-    @Extension @Symbol("skipDefaultCheckout")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-
+    options {
+        buildDiscarder(logRotator(numToKeepStr:'1'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout()
+        skipDefaultCheckout(false)
+        timeout(time: 5, unit: 'MINUTES')
+    }
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+                sh "test -f Jenkinsfile"
+            }
+        }
     }
 }
+
+

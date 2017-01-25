@@ -487,4 +487,13 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logNotContains("Caused by: java.lang.NullPointerException")
                 .go();
     }
+
+    @Test
+    public void duplicateOptionAndTriggerNames() throws Exception {
+        expectError("duplicateOptionAndTriggerNames")
+                .logContains(Messages.ModelValidatorImpl_DuplicateOptionName("skipDefaultCheckout"),
+                        Messages.ModelValidatorImpl_DuplicateTriggerName("cron"))
+                .go();
+    }
+
 }
