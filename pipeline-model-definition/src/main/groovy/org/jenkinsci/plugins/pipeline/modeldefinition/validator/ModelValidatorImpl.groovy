@@ -342,8 +342,9 @@ class ModelValidatorImpl implements ModelValidator {
                     List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
                     if (requiredParams.size() != meth.args.size()) {
-                        // TODO: This is a specialized hack for allowing single-required-Boolean-parameter constructors
-                        // to be called like "foo()", Groovy-style, passing null as the parameter value.
+                        // NOTE: This is a specialized hack for allowing single-required-Boolean-parameter constructors
+                        // to be called like "foo()", Groovy-style, passing null as the parameter value. Added for
+                        // JENKINS-41391, may need to be revisited in the future.
                         if (!(requiredParams.size() == 1 &&
                             meth.args.isEmpty() &&
                             requiredParams.get(0).erasedType == Boolean.class)) {
