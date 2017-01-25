@@ -33,7 +33,6 @@ import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang.reflect.FieldUtils
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
@@ -60,7 +59,7 @@ import org.jenkinsci.plugins.workflow.support.steps.StageStep
 import javax.annotation.Nullable
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
@@ -191,15 +190,19 @@ public class Utils {
         }
     }
 
-    static void attachExecutionModel(CpsScript script) {
+    static void attachDeclarativeActions(CpsScript script) {
         WorkflowRun r = script.$build()
         ModelASTPipelineDef model = Converter.parseFromCpsScript(script)
 
         ModelASTStages stages = model.stages
 
         stages.removeSourceLocation()
-
-        r.addAction(new ExecutionModelAction(stages))
+        if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
+            r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
+        }
+        if (r.getAction(ExecutionModelAction.class) == null) {
+            r.addAction(new ExecutionModelAction(stages))
+        }
     }
 
     static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
@@ -293,16 +296,6 @@ public class Utils {
 
     static SyntheticStage getSyntheticStageMetadata() {
         return getTagMetadata(SyntheticStage.class)
-    }
-
-    /**
-     * Marks the containing stage with this name as a synthetic stage, with the appropriate context.
-     *
-     * @param stageName
-     * @param context
-     */
-    static void markSyntheticStage(String stageName, String context) {
-        markStageWithTag(stageName, getSyntheticStageMetadata().tagName, context)
     }
 
     static void markStageFailedAndContinued(String stageName) {

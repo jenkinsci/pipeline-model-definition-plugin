@@ -29,7 +29,6 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -50,8 +49,6 @@ public class ModelInterpreter implements Serializable {
     }
 
     def call(CpsClosure closure) {
-        // Attach the stages model to the run for introspection etc.
-        Utils.attachExecutionModel(script)
 
         ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
 
@@ -63,6 +60,8 @@ public class ModelInterpreter implements Serializable {
         Throwable firstError
 
         if (root != null) {
+            // Attach the stages model to the run for introspection etc.
+            Utils.attachDeclarativeActions(script)
             boolean postBuildRun = false
 
             try {
@@ -249,7 +248,6 @@ public class ModelInterpreter implements Serializable {
             def toolsList = tools.getToolEntries()
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.toolInstall()) {
-                    Utils.markSyntheticStage(SyntheticStageNames.toolInstall(), Utils.getSyntheticStageMetadata().pre)
                     toolEnv = actualToolsInstall(toolsList)
                 }
             } else {
@@ -408,7 +406,6 @@ public class ModelInterpreter implements Serializable {
         Throwable stageError = null
         if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"))) {
             script.stage(SyntheticStageNames.postBuild()) {
-                Utils.markSyntheticStage(SyntheticStageNames.postBuild(), Utils.getSyntheticStageMetadata().post)
                 stageError = runPostConditions(root.post, root.agent, stageError)
             }
         }
