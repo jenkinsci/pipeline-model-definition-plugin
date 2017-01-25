@@ -36,7 +36,7 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr:'1'))
         disableConcurrentBuilds()
-        skipDefaultCheckout(true)
+        skipDefaultCheckout()
         timeout(time: 5, unit: 'MINUTES')
     }
     stages {

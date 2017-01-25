@@ -74,6 +74,8 @@ public class OptionsTest extends AbstractModelDefTest {
 
         WorkflowJob p = b.getParent();
 
+        // We test for skipDefaultCheckout() in the Jenkinsfile itself by verifying that Jenkinsfile isn't in the workspace
+        
         // Job properties
         BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
         assertNotNull(bdp);
@@ -113,8 +115,14 @@ public class OptionsTest extends AbstractModelDefTest {
         assertTrue(trigger instanceof TimerTrigger);
         TimerTrigger timer = (TimerTrigger) trigger;
         assertEquals("@daily", timer.getSpec());
+    }
 
-
+    @Test
+    public void skipCheckoutFalse() throws Exception {
+        expect("skipCheckoutFalse")
+                .logContains("[Pipeline] { (foo)",
+                        "hello")
+                .go();
     }
 
     @Test
