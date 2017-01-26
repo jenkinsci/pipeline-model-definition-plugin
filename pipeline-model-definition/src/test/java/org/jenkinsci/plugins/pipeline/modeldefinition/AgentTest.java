@@ -47,13 +47,13 @@ public class AgentTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
     }
 
     @Test
     public void agentLabel() throws Exception {
         expect("agentLabel")
-                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .go();
     }
 
@@ -69,7 +69,7 @@ public class AgentTest extends AbstractModelDefTest {
     public void noCheckoutScmInWrongContext() throws Exception {
         expect("noCheckoutScmInWrongContext")
                 .runFromRepo(false)
-                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .go();
     }
 
@@ -116,21 +116,21 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentNoneWithNode() throws Exception {
         expect("agentNoneWithNode")
-                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .go();
     }
 
     @Test
     public void perStageConfigAgent() throws Exception {
         expect("perStageConfigAgent")
-                .logContains("[Pipeline] { (foo)", "ONSLAVE=true")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .go();
     }
 
     @Test
     public void multipleVariablesForAgent() throws Exception {
         expect("multipleVariablesForAgent")
-                .logContains("[Pipeline] { (foo)", "ONSLAVE=true", "Running in labelAndOtherField with otherField = banana")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true", "Running in labelAndOtherField with otherField = banana")
                 .go();
     }
 

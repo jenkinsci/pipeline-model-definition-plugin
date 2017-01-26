@@ -61,7 +61,7 @@ public class DurabilityTest {
             @Override public void evaluate() throws Throwable {
                 DumbSlave s = story.j.createOnlineSlave();
                 s.setLabelString("remote quick");
-                s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONSLAVE", "true")));
+                s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
 
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "demo");
                 p.setDefinition(new CpsFlowDefinition(
@@ -73,7 +73,7 @@ public class DurabilityTest {
                                 "    stage('foo') {\n" +
                                 "      steps {\n" +
                                 "        sh('echo before=`basename $PWD`')\n" +
-                                "        sh('echo ONSLAVE=$ONSLAVE')\n" +
+                                "        sh('echo ONAGENT=$ONAGENT')\n" +
                                 "        semaphore 'wait'\n" +
                                 "        sh('echo after=$PWD')\n" +
                                 "      }\n" +
@@ -98,7 +98,7 @@ public class DurabilityTest {
                 story.j.assertBuildStatusSuccess(story.j.waitForCompletion(b));
 
                 story.j.assertLogContains("before=demo", b);
-                story.j.assertLogContains("ONSLAVE=true", b);
+                story.j.assertLogContains("ONAGENT=true", b);
                 story.j.assertLogContains("reallyAfterFoo", b);
                 FlowGraphWalker walker = new FlowGraphWalker(b.getExecution());
                 List<WorkspaceAction> actions = new ArrayList<WorkspaceAction>();

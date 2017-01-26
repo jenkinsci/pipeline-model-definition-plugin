@@ -566,7 +566,7 @@ public abstract class AbstractModelDefTest {
         protected EnvBuilder(Slave agent) {
             this.agent = agent;
             this.env = new HashMap<>();
-            env.put("ONSLAVE", "true");
+            env.put("ONAGENT", "true");
         }
 
         public EnvBuilder put(String key, String value) {

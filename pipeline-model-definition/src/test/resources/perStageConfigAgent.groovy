@@ -30,7 +30,7 @@ pipeline {
                 label 'some-label'
             }
             steps {
-                sh('echo ONSLAVE=$ONSLAVE')
+                sh('echo ONAGENT=$ONAGENT')
             }
         }
     }

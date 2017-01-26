@@ -48,7 +48,7 @@
             "key": "script",
             "value":             {
               "isLiteral": true,
-              "value": "echo ONSLAVE=$ONSLAVE"
+              "value": "echo ONAGENT=$ONAGENT"
             }
           }]
         }

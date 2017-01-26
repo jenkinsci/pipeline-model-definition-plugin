@@ -28,7 +28,7 @@ pipeline {
         stage("foo") {
             steps {
                 node('some-label') {
-                    sh('echo ONSLAVE=$ONSLAVE')
+                    sh('echo ONAGENT=$ONAGENT')
                 }
             }
         }
