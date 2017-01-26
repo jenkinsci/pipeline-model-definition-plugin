@@ -131,7 +131,7 @@ public class OptionsTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "[Pipeline] timeout",
                         "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .logNotContains("[Pipeline] { (Post Actions)")
                 .go();
     }
 
@@ -142,7 +142,7 @@ public class OptionsTest extends AbstractModelDefTest {
                         "[Pipeline] timeout",
                         "[Pipeline] retry",
                         "hello")
-                .logNotContains("[Pipeline] { (Post Build Actions)")
+                .logNotContains("[Pipeline] { (Post Actions)")
                 .go();
     }
 
