@@ -35,6 +35,7 @@ import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
@@ -47,10 +48,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
-import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.Nonnull
-import javax.lang.model.SourceVersion
 
 /**
  * Class for validating various AST elements. Contains the error collector as well as caches for steps, models, etc.
@@ -128,7 +127,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
         env.variables.each { k, v ->
-            if (!SourceVersion.isIdentifier(k.key)) {
+            if (!Utils.validEnvIdentifier(k.key)) {
                 errorCollector.error(k, Messages.ModelValidatorImpl_InvalidIdentifierInEnv(k.key))
                 valid = false
             }

@@ -57,6 +57,7 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
 import javax.annotation.Nullable
+import javax.lang.model.SourceVersion
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
@@ -387,5 +388,14 @@ public class Utils {
         wrapper.setClosure(c)
 
         return wrapper
+    }
+
+    public static boolean validEnvIdentifier(String i) {
+        if (!SourceVersion.isIdentifier(i)) {
+            return false
+        } else if (!i.matches("[a-zA-Z_]+[a-zA-Z0-9_]*")) {
+            return false
+        }
+        return true
     }
 }

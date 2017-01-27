@@ -77,6 +77,7 @@ public class JSONValidationTest extends BaseParserLoaderTest {
     @Test
     public void invalidIdentifierInEnv() throws Exception {
         findErrorInJSON(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("F OO"), "invalidIdentifierInEnv");
+        findErrorInJSON(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("F$OO"), "invalidIdentifierInEnv");
     }
 
 }

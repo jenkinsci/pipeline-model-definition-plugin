@@ -21,7 +21,14 @@
       "isLiteral": true,
       "value": "BAR"
     }
-  }],
+  },
+    {
+      "key": "F$OO",
+      "value":     {
+        "isLiteral": true,
+        "value": "BAR"
+      }
+    }],
   "agent":   {
     "type": "label",
     "argument":     {
