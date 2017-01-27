@@ -260,9 +260,6 @@ class ModelValidatorImpl implements ModelValidator {
                 valid = false
             } else {
                 Class erasedType = p?.erasedType
-                if (lookup.stepTakesClosure(desc)) {
-                    erasedType = String.class
-                }
                 def v = arg.value;
 
                 if (!validateParameterType(v, erasedType)) {

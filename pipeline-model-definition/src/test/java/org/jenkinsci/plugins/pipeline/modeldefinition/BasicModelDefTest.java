@@ -143,6 +143,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void nestedTreeSteps() throws Exception {
+        expect("nestedTreeSteps")
+                .logContains("[Pipeline] { (foo)", "[Pipeline] timeout", "[Pipeline] retry", "hello")
+                .go();
+    }
+
+    @Test
     public void metaStepSyntax() throws Exception {
         env(s).set();
         expect("metaStepSyntax")

@@ -138,7 +138,8 @@ public abstract class AbstractModelDefTest {
             "whenBranchFalse",
             "whenEnvFalse",
             "parallelPipelineWithSpaceInBranch",
-            "parallelPipelineQuoteEscaping"
+            "parallelPipelineQuoteEscaping",
+            "nestedTreeSteps"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
