@@ -50,6 +50,7 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.Nonnull
+import javax.lang.model.SourceVersion
 
 /**
  * Class for validating various AST elements. Contains the error collector as well as caches for steps, models, etc.
@@ -125,6 +126,12 @@ class ModelValidatorImpl implements ModelValidator {
         if (env.variables.isEmpty()) {
             errorCollector.error(env, Messages.ModelValidatorImpl_NoEnvVars())
             valid = false
+        }
+        env.variables.each { k, v ->
+            if (!SourceVersion.isIdentifier(k.key)) {
+                errorCollector.error(k, Messages.ModelValidatorImpl_InvalidIdentifierInEnv(k.key))
+                valid = false
+            }
         }
 
         return valid

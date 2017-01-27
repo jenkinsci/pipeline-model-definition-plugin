@@ -23,6 +23,9 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.tree.SimpleJsonTree;
+import com.github.fge.jsonschema.util.JsonLoader;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Janitor;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
@@ -35,6 +38,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public abstract class BaseParserLoaderTest extends AbstractModelDefTest {
@@ -113,6 +119,28 @@ public abstract class BaseParserLoaderTest extends AbstractModelDefTest {
         } finally {
             janitor.cleanup();
         }
+    }
+
+    protected void findErrorInJSON(String expectedError, String jsonName) throws Exception {
+        try {
+            JsonNode json = JsonLoader.fromString(fileContentsFromResources("json/errors/" + jsonName + ".json"));
+
+            assertNotNull("Couldn't parse JSON for " + jsonName, json);
+            assertFalse("Couldn't parse JSON for " + jsonName, json.size() == 0);
+            assertFalse("Couldn't parse JSON for " + jsonName, json.isNull());
+
+            JSONParser jp = new JSONParser(new SimpleJsonTree(json));
+            jp.parse();
+
+            assertTrue(jp.getErrorCollector().getErrorCount() > 0);
+
+            assertTrue("Didn't find expected error in " + getJSONErrorReport(jp, jsonName),
+                    foundExpectedErrorInJSON(jp.getErrorCollector().asJson(), expectedError));
+        } catch (Exception e) {
+            // If there's a straight-up parsing error, make sure it's what we expect.
+            assertTrue(e.getMessage(), e.getMessage().contains(expectedError));
+        }
+
     }
 
 }
