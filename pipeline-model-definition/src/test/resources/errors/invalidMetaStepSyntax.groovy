@@ -31,7 +31,7 @@ pipeline {
             steps {
                 writeFile text: 'hello world', file: 'msg.out'
                 archiveArtifacts(someRandomField: true, artifacts: 'msg.out')
-                sh('echo ONSLAVE=$ONSLAVE')
+                sh('echo ONAGENT=$ONAGENT')
             }
         }
     }

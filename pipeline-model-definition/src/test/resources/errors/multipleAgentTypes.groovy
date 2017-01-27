@@ -30,7 +30,7 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh('echo ONSLAVE=$ONSLAVE')
+                sh('echo ONAGENT=$ONAGENT')
             }
         }
     }
