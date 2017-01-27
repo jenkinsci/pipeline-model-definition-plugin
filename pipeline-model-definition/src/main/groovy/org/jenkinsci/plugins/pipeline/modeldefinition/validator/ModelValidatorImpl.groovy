@@ -571,7 +571,7 @@ class ModelValidatorImpl implements ModelValidator {
         } else if (!(typeName in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
             DescribableModel model = possibleModels.get(typeName)
             if (model == null) {
-                errorCollector.error(agent, Messages.ModelValidatorImpl_NoAgentType(orderedNames))
+                errorCollector.error(agent.agentType, Messages.ModelValidatorImpl_InvalidAgentType(typeName, orderedNames))
                 valid = false
             } else {
                 List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
@@ -580,7 +580,7 @@ class ModelValidatorImpl implements ModelValidator {
                     ModelASTClosureMap map = (ModelASTClosureMap) agent.variables
                     requiredParams.each { p ->
                         if (!map.containsKey(p.name)) {
-                            errorCollector.error(agent, Messages.ModelValidatorImpl_MissingAgentParameter(typeName, p.name))
+                            errorCollector.error(agent.agentType, Messages.ModelValidatorImpl_MissingAgentParameter(typeName, p.name))
                             valid = false
                         }
                     }
@@ -594,7 +594,7 @@ class ModelValidatorImpl implements ModelValidator {
                         }
                     }
                 } else if (requiredParams.size() > 1) {
-                    errorCollector.error(agent,
+                    errorCollector.error(agent.agentType,
                         Messages.ModelValidatorImpl_MultipleAgentParameters(typeName,
                             requiredParams.collect { it.name }))
                     valid = false

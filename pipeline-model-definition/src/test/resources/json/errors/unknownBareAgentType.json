@@ -15,5 +15,5 @@
       }]
     }]
   }],
-  "agent": {"type": "${foo}"}
+  "agent": {"type": "foo"}
 }}
