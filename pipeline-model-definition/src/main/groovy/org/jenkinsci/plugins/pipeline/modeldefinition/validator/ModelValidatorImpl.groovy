@@ -590,10 +590,6 @@ class ModelValidatorImpl implements ModelValidator {
                     map.variables.each { k, v ->
                         // TODO: JENKINS-41746 - get rid of this hardcoding and use extensible validation instead once we can
                         if (typeName == "dockerfile") {
-                            if ((k.key == "dir" || k.key == "filename") && v.toGroovy().contains(" ")) {
-                                errorCollector.error(k, Messages.ModelValidatorImpl_SpaceInDockerfilePath(k.key))
-                                valid = false
-                            }
                             if (k.key == "filename" && (v.toGroovy().contains("/") || v.toGroovy().contains("\\"))) {
                                 errorCollector.error(k, Messages.ModelValidatorImpl_DirSeparatorInDockerfileName())
                                 valid = false

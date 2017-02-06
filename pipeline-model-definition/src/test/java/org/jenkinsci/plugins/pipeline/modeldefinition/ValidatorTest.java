@@ -486,14 +486,6 @@ public class ValidatorTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-41668")
     @Test
-    public void spaceInDockerfileDir() throws Exception {
-        expectError("spaceInDockerfileDir")
-                .logContains(Messages.ModelValidatorImpl_SpaceInDockerfilePath("dir"))
-                .go();
-    }
-
-    @Issue("JENKINS-41668")
-    @Test
     public void dirSepInDockerfileName() throws Exception {
         expectError("dirSepInDockerfileName")
                 .logContains(Messages.ModelValidatorImpl_DirSeparatorInDockerfileName())
