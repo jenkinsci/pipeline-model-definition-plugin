@@ -75,7 +75,7 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
     private Closure buildImage() {
         return {
             try {
-                def hash = Utils.stringToSHA1(script.readFile(describable.getDockerfileAsString()))
+                def hash = Utils.stringToSHA1(script.readFile("${describable.getActualDir()}/${describable.getDockerfileAsString()}"))
                 def imgName = "${hash}"
                 return script.getProperty("docker").build(imgName, "-f ${describable.getDockerfileAsString()} ${describable.getActualDir()}")
             } catch (FileNotFoundException f) {
