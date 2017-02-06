@@ -28,6 +28,7 @@ import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl.Credentials
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -68,7 +69,7 @@ public class ModelInterpreter implements Serializable {
                 executeProperties(root)
 
                 // Entire build, including notifications, runs in the withEnv.
-                withEnvBlock(root.getEnvVars()) {
+                withEnvBlock(root.getEnvVars(script)) {
                     inWrappers(root.options) {
                         // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                         // even if the build fails.
@@ -81,7 +82,7 @@ public class ModelInterpreter implements Serializable {
                                         try {
                                             script.stage(thisStage.name) {
                                                 if (firstError == null) {
-                                                    withEnvBlock(thisStage.getEnvVars()) {
+                                                    withEnvBlock(thisStage.getEnvVars(script)) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, thisStage.agent) {
                                                                 withCredentialsBlock(thisStage.getEnvCredentials()) {
@@ -203,7 +204,7 @@ public class ModelInterpreter implements Serializable {
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@Nonnull Map<String, CredentialWrapper> credentials, Closure body) {
+    def withCredentialsBlock(@Nonnull Map<String, Credentials> credentials, Closure body) {
         if (!credentials.isEmpty()) {
             List<Map<String, Object>> parameters = createWithCredentialsParameters(credentials)
             return {
@@ -225,11 +226,11 @@ public class ModelInterpreter implements Serializable {
      */
     @NonCPS
     private List<Map<String, Object>> createWithCredentialsParameters(
-            @Nonnull Map<String, CredentialWrapper> credentials) {
+            @Nonnull Map<String, Credentials> credentials) {
         List<Map<String, Object>> parameters = []
-        Set<Map.Entry<String, CredentialWrapper>> set = credentials.entrySet()
-        for (Map.Entry<String, CredentialWrapper> entry : set) {
-            entry.value.addParameters(entry.key, parameters)
+        Set<Map.Entry<String, Credentials>> set = credentials.entrySet()
+        for (Map.Entry<String, Credentials> entry : set) {
+            entry.value.getScript(script).addParameters(entry.key, parameters)
         }
         parameters
     }

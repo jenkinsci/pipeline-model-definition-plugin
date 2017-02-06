@@ -26,8 +26,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl.Credentials
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /**
@@ -101,16 +103,26 @@ public class Root implements NestedModel, Serializable {
      *
      * @return a list of "key=value" strings.
      */
-    List<String> getEnvVars() {
-        return environment.findAll{k, v -> !(v instanceof CredentialWrapper)}.collect { k, v ->
+    List<String> getEnvVars(CpsScript script) {
+        List<String> e = environment.findAll{k, v -> !(v instanceof DeclarativeEnvironmentContributor)}.collect { k, v ->
             "${k}=${v}"
         }
+
+        environment.each {k, v ->
+            if (v instanceof DeclarativeEnvironmentContributor && !(v instanceof DeclarativeEnvironmentContributor.MutedGenerator)) {
+                List<String> ee = v.generate(script, k)
+                if (ee != null) {
+                    e.addAll(ee)
+                }
+            }
+        }
+        return e
     }
 
-    Map<String, CredentialWrapper> getEnvCredentials() {
-        Map<String, CredentialWrapper> m = [:]
+    Map<String, Credentials> getEnvCredentials() {
+        Map<String, Credentials> m = [:]
         environment.each {k, v ->
-            if (v instanceof  CredentialWrapper) {
+            if (v instanceof Credentials) {
                 m["${k}"] = v;
             }
         }
