@@ -492,6 +492,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41645")
+    @Test
+    public void invalidEnvironmentIdentifiers() throws Exception {
+        expectError("invalidEnvironmentIdentifiers")
+                .logContains(Messages.ModelParser_InvalidEnvironmentIdentifier("1FOO = \"BLARGH\""))
+                .go();
+    }
+
     @Issue("JENKINS-39799")
     @Test
     public void badPostContent() throws Exception {

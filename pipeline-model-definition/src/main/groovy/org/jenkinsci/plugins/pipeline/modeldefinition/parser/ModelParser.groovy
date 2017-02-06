@@ -240,6 +240,9 @@ class ModelParser implements Parser {
                                 return
                             }
                         }
+                    } else {
+                        ModelASTKey badKey = new ModelASTKey(exp)
+                        errorCollector.error(badKey, Messages.ModelParser_InvalidEnvironmentIdentifier(getSourceText(exp)))
                     }
                 }
                 errorEncountered = true
