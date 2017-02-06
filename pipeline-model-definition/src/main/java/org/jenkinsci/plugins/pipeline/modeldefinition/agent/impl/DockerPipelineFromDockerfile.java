@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 
 public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipelineFromDockerfile> {
     private String filename;
+    private String dir;
 
     @DataBoundConstructor
     public DockerPipelineFromDockerfile() {
@@ -50,6 +51,23 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
     @DataBoundSetter
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public @Nonnull String getDir() {
+        return dir;
+    }
+
+    @DataBoundSetter
+    public void setDir(String dir) {
+        this.dir = dir;
+    }
+
+    public String getActualDir() {
+        if (dir != null) {
+            return dir;
+        } else {
+            return ".";
+        }
     }
 
     public String getDockerfileAsString() {
