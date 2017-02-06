@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
@@ -63,7 +64,7 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
     }
 
     public String getActualDir() {
-        if (dir != null) {
+        if (StringUtils.isEmpty(dir)) {
             return dir;
         } else {
             return ".";
