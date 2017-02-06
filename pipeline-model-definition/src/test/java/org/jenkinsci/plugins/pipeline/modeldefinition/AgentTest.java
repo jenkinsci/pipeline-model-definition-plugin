@@ -169,7 +169,7 @@ public class AgentTest extends AbstractModelDefTest {
 
         sampleRepo.write("subdir/Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("init");
-        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("add", "subdir/Dockerfile");
         sampleRepo.git("commit", "--message=Dockerfile");
 
         expect("fromDockerfileInOtherDir")
