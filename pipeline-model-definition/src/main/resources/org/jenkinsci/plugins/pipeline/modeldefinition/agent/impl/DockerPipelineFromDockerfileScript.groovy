@@ -79,7 +79,7 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
                 def imgName = "${hash}"
                 return script.getProperty("docker").build(imgName, "-f ${describable.getDockerfileAsString()} ${describable.getActualDir()}")
             } catch (FileNotFoundException f) {
-                script.error("No Dockerfile found at root of repository - failing.")
+                script.error("No Dockerfile found at ${describable.getActualDir()}/${describable.getDockerfileAsString()} repository - failing.")
                 return null
             }
         }
