@@ -77,7 +77,7 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
             try {
                 def hash = Utils.stringToSHA1(script.readFile("${describable.getActualDir()}/${describable.getDockerfileAsString()}"))
                 def imgName = "${hash}"
-                return script.getProperty("docker").build(imgName, "-f ${describable.getDockerfileAsString()} ${describable.getActualDir()}")
+                return script.getProperty("docker").build(imgName, "-f ${describable.getActualDir()}/${describable.getDockerfileAsString()} ${describable.getActualDir()}")
             } catch (FileNotFoundException f) {
                 script.error("No Dockerfile found at ${describable.getActualDir()}/${describable.getDockerfileAsString()} repository - failing.")
                 return null
