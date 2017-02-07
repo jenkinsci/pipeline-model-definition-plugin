@@ -438,7 +438,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void agentMissingRequiredParam() throws Exception {
         expectError("agentMissingRequiredParam")
-                .logContains(Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField, nested]"))
+                .logContains(Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]"))
                 .go();
     }
 
