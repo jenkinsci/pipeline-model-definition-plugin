@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
@@ -64,7 +65,7 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
     }
 
     public String getActualDir() {
-        if (StringUtils.isEmpty(dir)) {
+        if (!StringUtils.isEmpty(dir)) {
             return dir;
         } else {
             return ".";
@@ -72,11 +73,17 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
     }
 
     public String getDockerfileAsString() {
-        if (filename != null) {
-            return filename;
-        } else {
-            return "Dockerfile";
+        StringBuilder fullPath = new StringBuilder();
+        if (!StringUtils.isEmpty(dir)) {
+            fullPath.append(dir);
+            fullPath.append(IOUtils.DIR_SEPARATOR);
         }
+        if (filename != null) {
+            fullPath.append(filename);
+        } else {
+            fullPath.append("Dockerfile");
+        }
+        return fullPath.toString();
     }
 
     @Extension(ordinal = 999) @Symbol("dockerfile")
