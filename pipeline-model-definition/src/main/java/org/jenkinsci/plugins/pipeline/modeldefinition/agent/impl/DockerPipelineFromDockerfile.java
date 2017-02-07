@@ -72,18 +72,22 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
         }
     }
 
-    public String getDockerfileAsString() {
+    public String getDockerfilePath() {
         StringBuilder fullPath = new StringBuilder();
         if (!StringUtils.isEmpty(dir)) {
             fullPath.append(dir);
             fullPath.append(IOUtils.DIR_SEPARATOR);
         }
-        if (filename != null) {
-            fullPath.append(filename);
-        } else {
-            fullPath.append("Dockerfile");
-        }
+        fullPath.append(getDockerfileAsString());
         return fullPath.toString();
+    }
+
+    public String getDockerfileAsString() {
+        if (filename != null) {
+            return filename;
+        } else {
+            return "Dockerfile";
+        }
     }
 
     @Extension(ordinal = 999) @Symbol("dockerfile")
