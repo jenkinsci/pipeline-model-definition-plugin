@@ -110,8 +110,14 @@ public class Root implements NestedModel, Serializable {
      * @return a list of "key=value" strings.
      */
     List<String> getEnvVars(CpsScript script) {
-        return environment.resolveEnvVars(script, true).collect { k, v ->
-            "${k}=${v}"
+        if (environment != null) {
+            return environment.resolveEnvVars(script, true).findAll {
+                it.key in environment.keySet()
+            }.collect { k, v ->
+                "${k}=${v}"
+            }
+        } else {
+            return []
         }
     }
 

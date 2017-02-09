@@ -208,8 +208,13 @@ public class ModelInterpreter implements Serializable {
      */
     def withEnvBlock(List<String> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
+            List<String> evaledEnv = new ArrayList<>()
+            for (int i = 0; i < envVars.size(); i++) {
+                // Evaluate to deal with any as-of-yet unresolved expressions.
+                evaledEnv.add((String)script.evaluate('"' + envVars.get(i) + '"'))
+            }
             return {
-                script.withEnv(envVars) {
+                script.withEnv(evaledEnv) {
                     body.call()
                 }
             }.call()

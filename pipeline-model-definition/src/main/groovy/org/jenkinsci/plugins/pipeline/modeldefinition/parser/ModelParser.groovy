@@ -231,6 +231,7 @@ class ModelParser implements Parser {
             eachStatement(m.body.code) { s ->
                 if (s instanceof ExpressionStatement) {
                     def exp = s.expression;
+
                     if (exp instanceof BinaryExpression && exp.operation.type == Types.EQUAL) {
                         ModelASTKey key = parseKey(exp.leftExpression)
                         // Necessary check due to keys with identical names being equal.
@@ -238,7 +239,7 @@ class ModelParser implements Parser {
                             errorCollector.error(key, Messages.ModelParser_DuplicateEnvVar(key.key))
                             return
                         } else {
-                            r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression)
+                            r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression, true)
                             return
                         }
                     } else {
@@ -891,11 +892,19 @@ class ModelParser implements Parser {
     /**
      * Parse the given expression as an argument to step, etc.
      */
-    protected ModelASTValue parseArgument(Expression e) {
+    protected ModelASTValue parseArgument(Expression e, boolean inEnvironment = false) {
         if (e instanceof ConstantExpression) {
             return ModelASTValue.fromConstant(e.value, e)
         }
-        if (e instanceof GStringExpression || e instanceof MapExpression) {
+        if (e instanceof GStringExpression) {
+            String rawSrc = getSourceText(e)
+            if (inEnvironment) {
+                return ModelASTValue.fromConstant(rawSrc.substring(1, rawSrc.length() - 1), e)
+            } else {
+                return ModelASTValue.fromGString(rawSrc, e)
+            }
+        }
+        if (e instanceof MapExpression) {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {

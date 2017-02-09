@@ -38,6 +38,7 @@ import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
@@ -48,10 +49,13 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -228,8 +232,25 @@ public class Utils {
 
             if (root != null) {
                 root = populateWhen(root, model)
+                root = populateEnv(root, model)
             }
         }
+
+        return root
+    }
+
+    static Root populateEnv(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+        root.environment = environmentFromAST(model.environment)
+
+        List<Stage> stagesWithEnvs = []
+
+        root.stages.stages.each { s ->
+            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
+            s.environment = environmentFromAST(astStage.environment)
+            stagesWithEnvs.add(s)
+        }
+
+        root.stages.stages = stagesWithEnvs
 
         return root
     }
@@ -300,7 +321,25 @@ public class Utils {
         if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
             toEval = '"' + toEval + '"'
         }
+
         return toEval
+    }
+
+    static Environment environmentFromAST(ModelASTEnvironment inEnv) {
+        if (inEnv != null) {
+            Environment env = new Environment()
+
+            Map<String, Object> inMap = [:]
+            inEnv.variables.each { k, v ->
+                inMap.put(k.key, v.value)
+            }
+
+            env.modelFromMap(inMap)
+
+            return env
+        } else {
+            return null
+        }
     }
 
     static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {

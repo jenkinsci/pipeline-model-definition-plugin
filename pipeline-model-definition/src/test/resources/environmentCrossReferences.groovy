@@ -34,13 +34,15 @@ pipeline {
     stages {
         stage("foo") {
             environment {
-                BAZ = "\${FOO}BAZ"
+                BAZ = "${FOO}BAZ"
+                SPLODE = "${params.WUT ?: 'banana'}"
             }
 
             steps {
                 sh 'echo "FOO is $FOO"'
                 sh 'echo "BAR is $BAR"'
                 sh 'echo "BAZ is $BAZ"'
+                sh 'echo "SPLODE is $SPLODE"'
             }
         }
     }

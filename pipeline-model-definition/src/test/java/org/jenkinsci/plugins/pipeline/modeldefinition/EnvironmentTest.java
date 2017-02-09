@@ -70,7 +70,8 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "FOO is FOO",
                         "BAR is FOOBAR",
-                        "BAZ is FOOBAZ")
+                        "BAZ is FOOBAZ",
+                        "SPLODE is banana")
                 .go();
     }
 
