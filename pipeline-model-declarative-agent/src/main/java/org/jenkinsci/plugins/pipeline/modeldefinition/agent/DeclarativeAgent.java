@@ -38,7 +38,6 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
     protected Object context;
     protected boolean doCheckout;
 
-    @DataBoundSetter
     public void setContext(Object context) {
         this.context = context;
     }
@@ -47,7 +46,6 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
         return context;
     }
 
-    @DataBoundSetter
     public void setDoCheckout(boolean doCheckout) {
         this.doCheckout = doCheckout;
     }
