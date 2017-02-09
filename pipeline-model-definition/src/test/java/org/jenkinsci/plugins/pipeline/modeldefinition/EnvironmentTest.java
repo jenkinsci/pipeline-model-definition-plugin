@@ -29,6 +29,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Andrew Bayer
@@ -56,6 +57,17 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void environmentInStage() throws Exception {
         expect("environmentInStage")
                 .logContains("[Pipeline] { (foo)", "FOO is BAR")
+                .go();
+    }
+
+    @Issue("JENKINS-41748")
+    @Test
+    public void environmentCrossReferences() throws Exception {
+        expect("environmentCrossReferences")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is FOO",
+                        "BAR is FOOBAR",
+                        "BAZ is FOOBAZ")
                 .go();
     }
 

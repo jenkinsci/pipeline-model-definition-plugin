@@ -70,7 +70,7 @@ public class ModelInterpreter implements Serializable {
                 executeProperties(root)
 
                 // Entire build, including notifications, runs in the withEnv.
-                withEnvBlock(root.getEnvVars()) {
+                withEnvBlock(root.getEnvVars(script)) {
                     inWrappers(root.options) {
                         // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                         // even if the build fails.
@@ -89,7 +89,7 @@ public class ModelInterpreter implements Serializable {
                                                     Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
                                                     Utils.markStageSkippedForUnstable(thisStage.name)
                                                 } else {
-                                                    withEnvBlock(thisStage.getEnvVars()) {
+                                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                                 withCredentialsBlock(thisStage.getEnvCredentials()) {

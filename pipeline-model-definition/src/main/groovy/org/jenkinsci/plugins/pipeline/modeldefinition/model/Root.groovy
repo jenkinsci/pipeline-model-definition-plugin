@@ -28,6 +28,7 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /**
@@ -108,8 +109,8 @@ public class Root implements NestedModel, Serializable {
      *
      * @return a list of "key=value" strings.
      */
-    List<String> getEnvVars() {
-        return environment.findAll{k, v -> !(v instanceof CredentialWrapper)}.collect { k, v ->
+    List<String> getEnvVars(CpsScript script) {
+        return environment.resolveEnvVars(script, true).collect { k, v ->
             "${k}=${v}"
         }
     }
