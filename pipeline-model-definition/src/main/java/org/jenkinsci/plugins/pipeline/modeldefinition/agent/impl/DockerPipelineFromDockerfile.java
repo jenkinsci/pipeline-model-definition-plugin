@@ -46,7 +46,7 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
     public DockerPipelineFromDockerfile() {
     }
 
-    public @Nonnull Object getFilename() {
+    public Object getFilename() {
         return filename;
     }
 
@@ -55,7 +55,7 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
         this.filename = filename;
     }
 
-    public @Nonnull String getDir() {
+    public String getDir() {
         return dir;
     }
 
@@ -64,6 +64,7 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
         this.dir = dir;
     }
 
+    @Nonnull
     public String getActualDir() {
         if (!StringUtils.isEmpty(dir)) {
             return dir;
@@ -72,6 +73,7 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
         }
     }
 
+    @Nonnull
     public String getDockerfilePath() {
         StringBuilder fullPath = new StringBuilder();
         if (!StringUtils.isEmpty(dir)) {
@@ -82,6 +84,7 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
         return fullPath.toString();
     }
 
+    @Nonnull
     public String getDockerfileAsString() {
         if (filename != null) {
             return filename;
