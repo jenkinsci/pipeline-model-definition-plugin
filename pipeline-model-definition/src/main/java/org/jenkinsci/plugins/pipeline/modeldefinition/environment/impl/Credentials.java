@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnv
 import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributorDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -57,7 +58,14 @@ public class Credentials extends DeclarativeEnvironmentContributor<Credentials> 
         return credentialsId;
     }
 
-    public void prepare(RunWrapper currentBuild) throws CredentialNotFoundException {
+    @Whitelisted
+    public void addParameters(CpsScript script, String envVarName, List<Map<String, Object>> list) throws CredentialNotFoundException {
+        RunWrapper currentBuild = (RunWrapper) script.getProperty("currentBuild");
+        prepare(currentBuild);
+        list.addAll(resolveParameters(envVarName));
+    }
+
+    private void prepare(RunWrapper currentBuild) throws CredentialNotFoundException {
         CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credentialsId, currentBuild.getRawBuild());
         withCredentialsParameters = handler.getWithCredentialsParameters(credentialsId);
     }

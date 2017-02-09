@@ -25,16 +25,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributorScript
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 public class CredentialsScript extends DeclarativeEnvironmentContributorScript<Credentials> {
 
     CredentialsScript(CpsScript script, Credentials contributor) {
         super(script, contributor)
-        RunWrapper currentBuild = script.getProperty("currentBuild")
-        contributor.prepare(currentBuild)
     }
 
     @Override
@@ -42,8 +38,5 @@ public class CredentialsScript extends DeclarativeEnvironmentContributorScript<C
         return null //Not used because MutedGenerator
     }
 
-    @Whitelisted
-    public void addParameters(String envVarName, List<Map<String, Object>> list) {
-        list.addAll(describable.resolveParameters(envVarName))
-    }
+
 }

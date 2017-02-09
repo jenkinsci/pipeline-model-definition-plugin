@@ -230,7 +230,7 @@ public class ModelInterpreter implements Serializable {
         List<Map<String, Object>> parameters = []
         Set<Map.Entry<String, Credentials>> set = credentials.entrySet()
         for (Map.Entry<String, Credentials> entry : set) {
-            entry.value.getScript(script).addParameters(entry.key, parameters)
+            entry.value.addParameters(script, entry.key, parameters)
         }
         parameters
     }
