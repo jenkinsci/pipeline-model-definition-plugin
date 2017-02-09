@@ -26,9 +26,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 
@@ -63,6 +66,15 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
             a.setContext(context)
+            boolean doCheckout = false
+            if (context instanceof Root) {
+                Root root = (Root)context
+                SkipDefaultCheckout skip = (SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout")
+                if (!skip?.isSkipDefaultCheckout()) {
+                    doCheckout = true
+                }
+            }
+            a.setDoCheckout(doCheckout)
             return a
         } else {
             return null

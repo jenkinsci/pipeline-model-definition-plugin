@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
+import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
@@ -35,6 +36,7 @@ import org.kohsuke.stapler.DataBoundSetter;
  */
 public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
     protected Object context;
+    protected boolean doCheckout;
 
     @DataBoundSetter
     public void setContext(Object context) {
@@ -43,5 +45,23 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
 
     public Object getContext() {
         return context;
+    }
+
+    @DataBoundSetter
+    public void setDoCheckout(boolean doCheckout) {
+        this.doCheckout = doCheckout;
+    }
+
+    public boolean isDoCheckout() {
+        return doCheckout;
+    }
+
+    public boolean hasScmContext(CpsScript script) {
+        try {
+            script.getProperty("scm");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

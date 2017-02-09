@@ -45,13 +45,9 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
         return {
             try {
                 script.node(describable?.label) {
-                    if (describable.context instanceof Root) {
-                        Root root = (Root)describable.context
-                        SkipDefaultCheckout skip = (SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout")
-                        if (!skip?.isSkipDefaultCheckout() && Utils.hasScmContext(script)) {
-                            script.stage(SyntheticStageNames.checkout()) {
-                                script.checkout script.scm
-                            }
+                    if (describable.isDoCheckout() && describable.hasScmContext(script)) {
+                        script.stage(SyntheticStageNames.checkout()) {
+                            script.checkout script.scm
                         }
                     }
                     body.call()
