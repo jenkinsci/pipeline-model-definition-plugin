@@ -97,38 +97,6 @@ public class Root implements NestedModel, Serializable {
         return this
     }
 
-    /**
-     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
-     * suitable for use with the withEnv step.
-     *
-     * @return a list of "key=value" strings.
-     */
-    List<String> getEnvVars(CpsScript script) {
-        List<String> e = environment.findAll{k, v -> !(v instanceof DeclarativeEnvironmentContributor)}.collect { k, v ->
-            "${k}=${v}"
-        }
-
-        environment.each {k, v ->
-            if (v instanceof DeclarativeEnvironmentContributor && !(v instanceof DeclarativeEnvironmentContributor.MutedGenerator)) {
-                List<String> ee = v.generate(script, k)
-                if (ee != null) {
-                    e.addAll(ee)
-                }
-            }
-        }
-        return e
-    }
-
-    Map<String, Credentials> getEnvCredentials() {
-        Map<String, Credentials> m = [:]
-        environment.each {k, v ->
-            if (v instanceof Credentials) {
-                m["${k}"] = v;
-            }
-        }
-        return m
-    }
-
     @Override
     public void modelFromMap(Map<String,Object> m) {
         m.each { k, v ->
