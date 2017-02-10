@@ -40,7 +40,7 @@
   <dependencies>
     <!-- JSON schema stuff -->
     <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
+      <groupId>org.jenkins-ci.lib</groupId>
       <artifactId>pipeline-model-json-shaded</artifactId>
       <version>${project.version}</version>
       <exclusions>

@@ -30,6 +30,7 @@
     <version>1.0.1-SNAPSHOT</version>
   </parent>
 
+  <groupId>org.jenkins-ci.lib</groupId>
   <artifactId>pipeline-model-json-shaded</artifactId>
   <packaging>jar</packaging>
   <name>Pipeline: Model Shaded JSON Libraries</name>
