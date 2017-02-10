@@ -26,6 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl;
 
 import hudson.Extension;
+import hudson.model.Run;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException;
 import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor;
@@ -66,8 +67,13 @@ public class Credentials extends DeclarativeEnvironmentContributor<Credentials> 
     }
 
     private void prepare(RunWrapper currentBuild) throws CredentialNotFoundException {
-        CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credentialsId, currentBuild.getRawBuild());
-        withCredentialsParameters = handler.getWithCredentialsParameters(credentialsId);
+        Run<?, ?> r = currentBuild.getRawBuild();
+        if (r != null) {
+            CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credentialsId, currentBuild.getRawBuild());
+            withCredentialsParameters = handler.getWithCredentialsParameters(credentialsId);
+        } else {
+            throw new CredentialNotFoundException(credentialsId);
+        }
     }
 
     @Whitelisted
