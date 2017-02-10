@@ -23,12 +23,17 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.NestedModel
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.isOfType
 
 /**
  * Translates a closure containing one or more "foo = 'bar'" statements into a map.
@@ -37,10 +42,10 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializable {
     Map<String,Object> actualMap = [:]
     CpsScript script
-    private final boolean resolveCredentials
+    private final boolean resolveEnvironmentContributors
 
-    PropertiesToMapTranslator(CpsScript script, boolean resolveCredentials = false) {
-        this.resolveCredentials = resolveCredentials
+    PropertiesToMapTranslator(CpsScript script, boolean resolveEnvironmentContributors = false) {
+        this.resolveEnvironmentContributors = resolveEnvironmentContributors
         this.script = script
     }
 
@@ -52,16 +57,18 @@ public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializ
             argValue = args[0]
         }
 
-        if (resolveCredentials && s == "credentials") {
-            if (args.length == 1) {
-                String id = "${args[0]}"
-
-                RunWrapper currentBuild = script.getProperty("currentBuild")
-
-                CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
-                return new CredentialWrapper(id, handler.getWithCredentialsParameters(id));
+        if (resolveEnvironmentContributors) {
+            def retVal
+            if (argValue != null) {
+                retVal = script."${s}"(argValue)
             } else {
-                throw new IllegalArgumentException("credentials is expecting one parameter for the credentials id")
+                retVal = script."${s}"()
+            }
+
+            if (retVal instanceof UninstantiatedDescribable && isOfType(retVal, DeclarativeEnvironmentContributor.class)) {
+                return retVal.instantiate()
+            } else {
+                return retVal
             }
         }
 

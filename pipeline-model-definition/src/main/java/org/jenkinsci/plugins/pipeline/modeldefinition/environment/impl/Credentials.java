@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,43 +23,57 @@
  *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
+package org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl;
 
-
-
+import hudson.Extension;
+import hudson.model.Run;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException;
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributorDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.plugins.workflow.cps.CpsScript;
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Helper for simplified Credentials handling in {@code environment{}}
- * @deprecated see {@link org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl.Credentials}
+ * Provides credentials function.
  */
-@Deprecated
-public class CredentialWrapper implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class Credentials extends DeclarativeEnvironmentContributor<Credentials> implements DeclarativeEnvironmentContributor.MutedGenerator {
 
-    private final String credentialId;
-    private final List<Map<String, Object>> withCredentialsParameters;
+    private final String credentialsId;
+    private List<Map<String, Object>> withCredentialsParameters;
 
-    CredentialWrapper(String credentialId, List<Map<String, Object>> withCredentialsParameters) {
-        this.withCredentialsParameters = withCredentialsParameters;
-        this.credentialId = credentialId;
+    @DataBoundConstructor
+    public Credentials(String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
+    public String getCredentialsId() {
+        return credentialsId;
     }
 
     @Whitelisted
-    public String getCredentialId() {
-        return credentialId;
-    }
-
-    @Whitelisted
-    public void addParameters(String envVarName, List<Map<String, Object>> list) {
+    public void addParameters(CpsScript script, String envVarName, List<Map<String, Object>> list) throws CredentialNotFoundException {
+        RunWrapper currentBuild = (RunWrapper) script.getProperty("currentBuild");
+        prepare(currentBuild);
         list.addAll(resolveParameters(envVarName));
+    }
+
+    private void prepare(RunWrapper currentBuild) throws CredentialNotFoundException {
+        Run<?, ?> r = currentBuild.getRawBuild();
+        if (r != null) {
+            CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credentialsId, r);
+            withCredentialsParameters = handler.getWithCredentialsParameters(credentialsId);
+        } else {
+            throw new CredentialNotFoundException(credentialsId);
+        }
     }
 
     @Whitelisted
@@ -78,5 +92,10 @@ public class CredentialWrapper implements Serializable {
             newList.add(newP);
         }
         return newList;
+    }
+
+    @Extension @Symbol("credentials")
+    public static class DescriptorImpl extends DeclarativeEnvironmentContributorDescriptor<Credentials> {
+
     }
 }

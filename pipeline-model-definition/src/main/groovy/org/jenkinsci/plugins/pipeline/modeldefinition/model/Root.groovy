@@ -26,8 +26,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor
+import org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl.Credentials
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 /**
@@ -93,28 +95,6 @@ public class Root implements NestedModel, Serializable {
     Root parameters(Parameters p) {
         this.parameters = p
         return this
-    }
-
-    /**
-     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
-     * suitable for use with the withEnv step.
-     *
-     * @return a list of "key=value" strings.
-     */
-    List<String> getEnvVars() {
-        return environment.findAll{k, v -> !(v instanceof CredentialWrapper)}.collect { k, v ->
-            "${k}=${v}"
-        }
-    }
-
-    Map<String, CredentialWrapper> getEnvCredentials() {
-        Map<String, CredentialWrapper> m = [:]
-        environment.each {k, v ->
-            if (v instanceof  CredentialWrapper) {
-                m["${k}"] = v;
-            }
-        }
-        return m
     }
 
     @Override
