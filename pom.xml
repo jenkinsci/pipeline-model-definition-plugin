@@ -67,6 +67,7 @@
     <module>pipeline-model-api</module>
     <module>pipeline-model-declarative-agent</module>
     <module>pipeline-model-definition</module>
+    <module>pipeline-model-json-shaded</module>
   </modules>
 
   <build>

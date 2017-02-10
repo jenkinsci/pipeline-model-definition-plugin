@@ -1,7 +1,7 @@
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2016, CloudBees, Inc.
+  ~ Copyright (c) 2017, CloudBees, Inc.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -30,47 +30,53 @@
     <version>1.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.jenkinsci.plugins</groupId>
-  <artifactId>pipeline-model-api</artifactId>
-  <packaging>hpi</packaging>
-  <name>Pipeline: Model API</name>
-  <description>Model API for Declarative Pipeline</description>
+  <artifactId>pipeline-model-json-shaded</artifactId>
+  <packaging>jar</packaging>
+  <name>Pipeline: Model Shaded JSON Libraries</name>
+  <description>Library plugin for Pipeline stage tag metadata</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
-
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.0.0</version>
+        <executions>
+          <execution>
+            <id>shade</id>
+            <phase>package</phase>
+            <goals>
+            <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <artifactSet>
+            <includes>
+              <include>com.github.fge:*</include>
+              <include>com.fasterxml*:*</include>
+            </includes>
+          </artifactSet>
+          <relocations>
+            <relocation>
+              <pattern>com.fasterxml</pattern>
+              <shadedPattern>shaded.com.fasterxml</shadedPattern>
+            </relocation>
+          </relocations>
+          <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <dependencies>
-    <!-- JSON schema stuff -->
     <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
-      <artifactId>pipeline-model-json-shaded</artifactId>
-      <version>1.1-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-databind</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.github.fge</groupId>
-          <artifactId>json-schema-validator</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>com.github.fge</groupId>
+      <artifactId>json-schema-validator</artifactId>
+      <version>2.0.4</version>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-step-api</artifactId>
-      <version>2.5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>structs</artifactId>
-      <version>1.5</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>2.2.5</version>
-      <scope>test</scope>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-json-org</artifactId>
+      <version>2.2.3</version>
     </dependency>
   </dependencies>
-  
 </project>
