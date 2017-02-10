@@ -59,7 +59,7 @@
           <relocations>
             <relocation>
               <pattern>com.fasterxml</pattern>
-              <shadedPattern>shaded.com.fasterxml</shadedPattern>
+              <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml</shadedPattern>
             </relocation>
           </relocations>
           <promoteTransitiveDependencies>true</promoteTransitiveDependencies>

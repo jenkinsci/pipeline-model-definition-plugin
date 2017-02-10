@@ -24,9 +24,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
-import shaded.com.fasterxml.jackson.databind.JsonNode
-import shaded.com.fasterxml.jackson.databind.ObjectMapper
-import shaded.com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.ObjectMapper
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule
 import com.github.fge.jsonschema.exceptions.ProcessingException
 import com.github.fge.jsonschema.main.JsonSchema
 import com.github.fge.jsonschema.report.ProcessingReport
