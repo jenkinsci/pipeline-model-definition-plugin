@@ -23,6 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import net.sf.json.JSONObject;
@@ -38,6 +43,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest.getJSONErrorReport;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapperStepTest.usernamePasswordPassword;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapperStepTest.usernamePasswordUsername;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -48,10 +55,16 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
     private static DumbSlave s;
 
     @BeforeClass
-    public static void setUpAgent() throws Exception {
+    public static void setUpAgentAndCreds() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+
+        String usernamePasswordCredentialsId = "FOOcredentials";
+        UsernamePasswordCredentialsImpl usernamePassword = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, usernamePasswordCredentialsId, "sample", usernamePasswordUsername, usernamePasswordPassword);
+        store.addCredentials(Domain.global(), usernamePassword);
 
     }
 

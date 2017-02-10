@@ -56,8 +56,8 @@ import static org.hamcrest.core.StringContains.containsString;
  */
 public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
-    private static final String usernamePasswordUsername = "bobby";
-    private static final String usernamePasswordPassword = "s3cr37";
+    public static final String usernamePasswordUsername = "bobby";
+    public static final String usernamePasswordPassword = "s3cr37";
     private static final String mixedEnvCred1Id = "cred1";
     private static final String mixedEnvCred2Id = "cred2";
     private static final String mixedEnvCred1Secret = "Some secret text for 1";

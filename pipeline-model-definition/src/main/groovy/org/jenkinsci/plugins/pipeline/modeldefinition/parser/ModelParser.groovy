@@ -617,22 +617,27 @@ class ModelParser implements Parser {
         return m
     }
 
-    public ModelASTInternalFunctionCall parseInternalFunctionCall(MethodCallExpression expr) {
+    public ModelASTEnvironmentValue parseInternalFunctionCall(MethodCallExpression expr) {
         ModelASTInternalFunctionCall m = new ModelASTInternalFunctionCall(expr)
-        def methodName = parseMethodName(expr);
-        m.name = methodName
+        def methodName = matchMethodName(expr);
 
-        List<Expression> args = ((TupleExpression) expr.arguments).expressions
+        // TODO: post JENKINS-41759, switch to checking if it's a valid function name
+        if (methodName == null || methodName != "credentials") {
+            return parseArgument(expr, true)
+        } else {
+            m.name = methodName
+            List<Expression> args = ((TupleExpression) expr.arguments).expressions
 
-        args.each { a ->
-            if (!(a instanceof ConstantExpression) && !(a instanceof GStringExpression)) {
-                errorCollector(m, Messages.ModelParser_InvalidInternalFunctionArg())
-            } else {
-                m.args << parseArgument(a)
+            args.each { a ->
+                if (!(a instanceof ConstantExpression) && !(a instanceof GStringExpression)) {
+                    errorCollector.error(m, Messages.ModelParser_InvalidInternalFunctionArg())
+                } else {
+                    m.args << parseArgument(a)
+                }
             }
-        }
 
-        return m
+            return m
+        }
     }
 
     public ModelASTClosureMap parseClosureMap(ClosureExpression expression) {

@@ -34,6 +34,19 @@
       },
       "additionalProperties": false
     },
+    "environmentEntry": {
+      "description": "An entry in the environment",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/environmentValue"
+        }
+      },
+      "additionalProperties": false
+    },
     "namedArgumentList": {
       "description": "Name/value argument pairs used as named parameters",
       "type": "array",
@@ -359,7 +372,7 @@
       "description": "A block of key = value pairs, used to set environment variables for the build",
       "type": "array",
       "items": {
-        "$ref": "#/definitions/environmentValue"
+        "$ref": "#/definitions/environmentEntry"
       },
       "minItems": 1
     },
