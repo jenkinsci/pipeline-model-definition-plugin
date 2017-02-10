@@ -198,8 +198,6 @@ class ModelParser implements Parser {
             }
         }
 
-        System.err.println(r.toJSON().toString(2))
-
         r.validate(validator)
 
         return r;
