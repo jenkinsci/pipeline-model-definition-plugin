@@ -45,7 +45,7 @@ public class CredentialWrapper implements Serializable {
     private final String credentialId;
     private final List<Map<String, Object>> withCredentialsParameters;
 
-    CredentialWrapper(String credentialId, List<Map<String, Object>> withCredentialsParameters) {
+    public CredentialWrapper(String credentialId, List<Map<String, Object>> withCredentialsParameters) {
         this.withCredentialsParameters = withCredentialsParameters;
         this.credentialId = credentialId;
     }

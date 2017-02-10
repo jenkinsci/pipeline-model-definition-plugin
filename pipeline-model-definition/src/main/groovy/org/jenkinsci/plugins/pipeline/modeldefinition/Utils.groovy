@@ -37,22 +37,16 @@ import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
@@ -60,9 +54,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.structs.SymbolLookup
-import org.jenkinsci.plugins.structs.describable.DescribableModel
-import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -77,7 +70,6 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
-import org.jvnet.tiger_types.Types
 
 import javax.annotation.Nonnull
 import javax.annotation.Nullable
@@ -232,21 +224,21 @@ public class Utils {
 
             if (root != null) {
                 root = populateWhen(root, model)
-                root = populateEnv(root, model)
+                root = populateEnv(r, root, model)
             }
         }
 
         return root
     }
 
-    static Root populateEnv(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        root.environment = environmentFromAST(model.environment)
+    static Root populateEnv(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+        root.environment = environmentFromAST(r, model.environment)
 
         List<Stage> stagesWithEnvs = []
 
         root.stages.stages.each { s ->
             ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            s.environment = environmentFromAST(astStage.environment)
+            s.environment = environmentFromAST(r, astStage.environment)
             stagesWithEnvs.add(s)
         }
 
@@ -325,13 +317,24 @@ public class Utils {
         return toEval
     }
 
-    static Environment environmentFromAST(ModelASTEnvironment inEnv) {
+    static Environment environmentFromAST(WorkflowRun r, ModelASTEnvironment inEnv) {
         if (inEnv != null) {
             Environment env = new Environment()
 
             Map<String, Object> inMap = [:]
             inEnv.variables.each { k, v ->
-                inMap.put(k.key, v.value)
+                if (v.value.toString().startsWith('${credentials(')) {
+                    String credId = v.value.toString().substring(14, v.value.toString().length() - 2)
+                    if ((credId.startsWith('"') && credId.endsWith('"')) ||
+                        (credId.startsWith("'") && credId.endsWith("'"))) {
+                        credId = credId.substring(1, credId.length() - 1)
+                    }
+                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credId, r)
+                    inMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
+
+                } else {
+                    inMap.put(k.key, v.value)
+                }
             }
 
             env.modelFromMap(inMap)
