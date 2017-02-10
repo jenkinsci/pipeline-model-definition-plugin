@@ -134,6 +134,22 @@
       },
       "additionalProperties": false
     },
+    "internalFunction": {
+      "description": "An internal function call",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/singleArgument"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "valueOrMethodCall": {
       "description": "Either a value or a method call",
       "anyOf": [
@@ -163,6 +179,17 @@
         "type": "string"
       },
       "minItems": 1
+    },
+    "environmentValue": {
+      "description": "A possible value for an environment variable",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/singleArgument"
+        },
+        {
+          "$ref": "#/definitions/internalFunction"
+        }
+      ]
     },
     "options": {
       "description": "One or more options (including job properties, wrappers, and options specific to Declarative Pipelines)",
@@ -332,7 +359,7 @@
       "description": "A block of key = value pairs, used to set environment variables for the build",
       "type": "array",
       "items": {
-        "$ref": "#/definitions/argumentValue"
+        "$ref": "#/definitions/environmentValue"
       },
       "minItems": 1
     },

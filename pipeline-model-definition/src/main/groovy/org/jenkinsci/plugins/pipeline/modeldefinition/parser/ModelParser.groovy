@@ -198,6 +198,8 @@ class ModelParser implements Parser {
             }
         }
 
+        System.err.println(r.toJSON().toString(2))
+
         r.validate(validator)
 
         return r;
@@ -231,7 +233,6 @@ class ModelParser implements Parser {
             eachStatement(m.body.code) { s ->
                 if (s instanceof ExpressionStatement) {
                     def exp = s.expression;
-
                     if (exp instanceof BinaryExpression && exp.operation.type == Types.EQUAL) {
                         ModelASTKey key = parseKey(exp.leftExpression)
                         // Necessary check due to keys with identical names being equal.
@@ -239,8 +240,17 @@ class ModelParser implements Parser {
                             errorCollector.error(key, Messages.ModelParser_DuplicateEnvVar(key.key))
                             return
                         } else {
-                            r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression, true)
-                            return
+                            if (exp.rightExpression instanceof ConstantExpression ||
+                                exp.rightExpression instanceof GStringExpression) {
+                                r.variables[key] = parseArgument(exp.rightExpression, true)
+                                return
+                            } else if (exp.rightExpression instanceof MethodCallExpression) {
+                                r.variables[key] = parseInternalFunctionCall((MethodCallExpression)exp.rightExpression)
+                                return
+                            } else {
+                                errorCollector.error(key, Messages.ModelParser_InvalidEnvironmentValue())
+                                return
+                            }
                         }
                     } else {
                         ModelASTKey badKey = new ModelASTKey(exp)
@@ -601,6 +611,24 @@ class ModelParser implements Parser {
                 errorCollector.error(m, Messages.ModelParser_MethodCallWithClosure())
             } else if (a instanceof MethodCallExpression) {
                 m.args << parseMethodCall(a)
+            } else {
+                m.args << parseArgument(a)
+            }
+        }
+
+        return m
+    }
+
+    public ModelASTInternalFunctionCall parseInternalFunctionCall(MethodCallExpression expr) {
+        ModelASTInternalFunctionCall m = new ModelASTInternalFunctionCall(expr)
+        def methodName = parseMethodName(expr);
+        m.name = methodName
+
+        List<Expression> args = ((TupleExpression) expr.arguments).expressions
+
+        args.each { a ->
+            if (!(a instanceof ConstantExpression) && !(a instanceof GStringExpression)) {
+                errorCollector(m, Messages.ModelParser_InvalidInternalFunctionArg())
             } else {
                 m.args << parseArgument(a)
             }

@@ -31,7 +31,7 @@ import net.sf.json.JSONObject;
  * @author Andrew Bayer
  * @author Kohsuke Kawaguchi
  */
-public abstract class ModelASTValue extends ModelASTElement implements ModelASTMethodArg {
+public abstract class ModelASTValue extends ModelASTElement implements ModelASTMethodArg, ModelASTEnvironmentValue {
     /* package */ ModelASTValue(Object sourceLocation, Object v) {
         super(sourceLocation);
         this.value = v;

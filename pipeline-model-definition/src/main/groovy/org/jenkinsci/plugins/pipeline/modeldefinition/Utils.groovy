@@ -38,9 +38,11 @@ import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
@@ -323,17 +325,14 @@ public class Utils {
 
             Map<String, Object> inMap = [:]
             inEnv.variables.each { k, v ->
-                if (v.value.toString().startsWith('${credentials(')) {
-                    String credId = v.value.toString().substring(14, v.value.toString().length() - 2)
-                    if ((credId.startsWith('"') && credId.endsWith('"')) ||
-                        (credId.startsWith("'") && credId.endsWith("'"))) {
-                        credId = credId.substring(1, credId.length() - 1)
-                    }
+                if (v instanceof ModelASTInternalFunctionCall) {
+                    ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall)v
+                    // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
+                    String credId = func.args.first().value
                     CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credId, r)
                     inMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
-
                 } else {
-                    inMap.put(k.key, v.value)
+                    inMap.put(k.key, ((ModelASTValue)v).value)
                 }
             }
 

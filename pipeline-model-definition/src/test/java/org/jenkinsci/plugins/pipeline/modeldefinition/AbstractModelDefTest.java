@@ -145,7 +145,8 @@ public abstract class AbstractModelDefTest {
             "inCustomWorkspace",
             "whenNot",
             "whenOr",
-            "whenAnd"
+            "whenAnd",
+            "usernamePassword"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

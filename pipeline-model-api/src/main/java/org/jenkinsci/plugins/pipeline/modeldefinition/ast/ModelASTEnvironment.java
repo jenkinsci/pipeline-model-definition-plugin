@@ -12,7 +12,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Andrew Bayer
  */
 public final class ModelASTEnvironment extends ModelASTElement {
-    private Map<ModelASTKey, ModelASTValue> variables = new LinkedHashMap<ModelASTKey, ModelASTValue>();
+    private Map<ModelASTKey, ModelASTEnvironmentValue> variables = new LinkedHashMap<>();
 
     public ModelASTEnvironment(Object sourceLocation) {
         super(sourceLocation);
@@ -21,7 +21,7 @@ public final class ModelASTEnvironment extends ModelASTElement {
     @Override
     public JSONArray toJSON() {
         final JSONArray a = new JSONArray();
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry: variables.entrySet()) {
+        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry: variables.entrySet()) {
             JSONObject o = new JSONObject();
             o.accumulate("key", entry.getKey().toJSON());
             o.accumulate("value", entry.getValue().toJSON());
@@ -34,7 +34,7 @@ public final class ModelASTEnvironment extends ModelASTElement {
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : variables.entrySet()) {
+        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry : variables.entrySet()) {
             entry.getKey().validate(validator);
             entry.getValue().validate(validator);
         }
@@ -43,7 +43,7 @@ public final class ModelASTEnvironment extends ModelASTElement {
     @Override
     public String toGroovy() {
         StringBuilder result = new StringBuilder("environment {\n");
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : variables.entrySet()) {
+        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry : variables.entrySet()) {
             result.append(entry.getKey().toGroovy()).append(" = ").append(entry.getValue().toGroovy()).append('\n');
         }
         result.append("}\n");
@@ -53,17 +53,17 @@ public final class ModelASTEnvironment extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : variables.entrySet()) {
+        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry : variables.entrySet()) {
             entry.getKey().removeSourceLocation();
             entry.getValue().removeSourceLocation();
         }
     }
 
-    public Map<ModelASTKey, ModelASTValue> getVariables() {
+    public Map<ModelASTKey, ModelASTEnvironmentValue> getVariables() {
         return variables;
     }
 
-    public void setVariables(Map<ModelASTKey, ModelASTValue> variables) {
+    public void setVariables(Map<ModelASTKey, ModelASTEnvironmentValue> variables) {
         this.variables = variables;
     }
 
