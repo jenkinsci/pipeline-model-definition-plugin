@@ -23,7 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
-import com.fasterxml.jackson.databind.JsonNode
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonschema.exceptions.JsonReferenceException
 import com.github.fge.jsonschema.exceptions.ProcessingException
 import com.github.fge.jsonschema.jsonpointer.JsonPointer

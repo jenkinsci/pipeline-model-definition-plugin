@@ -33,7 +33,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-parent</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Pipeline: Model Parent POM</name>
   <description>An opinionated, declarative Pipeline</description>
@@ -67,6 +67,7 @@
     <module>pipeline-model-api</module>
     <module>pipeline-model-declarative-agent</module>
     <module>pipeline-model-definition</module>
+    <module>pipeline-model-json-shaded</module>
   </modules>
 
   <build>
