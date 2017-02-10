@@ -69,7 +69,7 @@ public class Credentials extends DeclarativeEnvironmentContributor<Credentials> 
     private void prepare(RunWrapper currentBuild) throws CredentialNotFoundException {
         Run<?, ?> r = currentBuild.getRawBuild();
         if (r != null) {
-            CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credentialsId, currentBuild.getRawBuild());
+            CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credentialsId, r);
             withCredentialsParameters = handler.getWithCredentialsParameters(credentialsId);
         } else {
             throw new CredentialNotFoundException(credentialsId);
