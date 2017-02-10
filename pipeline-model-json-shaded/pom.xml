@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>pipeline-model-json-shaded</artifactId>
@@ -54,12 +54,34 @@
             <includes>
               <include>com.github.fge:*</include>
               <include>com.fasterxml*:*</include>
+              <include>joda-time:joda-time:*</include>
+              <include>com.google.guava:guava:*</include>
+              <include>com.googlecode.libphonenumber:*</include>
+              <include>org.mozilla:rhino:*</include>
+              <include>javax.mail:mailapi:*</include>
+              <include>org.json:json:*</include>
             </includes>
           </artifactSet>
           <relocations>
             <relocation>
               <pattern>com.fasterxml</pattern>
               <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.joda</pattern>
+              <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.org.joda</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.google.common</pattern>
+              <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.google.common</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.google.i18n.phonenumbers</pattern>
+              <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.google.i18n.phonenumbers</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.json</pattern>
+              <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.org.json</shadedPattern>
             </relocation>
           </relocations>
           <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
