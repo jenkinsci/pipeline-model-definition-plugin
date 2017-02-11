@@ -124,10 +124,22 @@ public class ModelInterpreter implements Serializable {
                         }
                     }
                 }
+            } catch (Exception e) {
+                // Catch any errors that may have been thrown outside of the stages proper and make sure we set
+                // firstError accordingly.
+                if (firstError == null) {
+                    firstError = e
+                }
             } finally {
                 // If we hit an exception somewhere *before* we got to stages, we still need to do post-build tasks.
                 if (!postBuildRun) {
-                    executePostBuild(root)
+                    try {
+                        executePostBuild(root)
+                    } catch (Exception e) {
+                        if (firstError == null) {
+                            firstError = e
+                        }
+                    }
                 }
             }
             if (firstError != null) {

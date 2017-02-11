@@ -141,6 +141,19 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41950")
+    @Test
+    public void nonExistentDockerImage() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        expect(Result.FAILURE, "nonExistentDockerImage")
+                .logContains("ERROR: script returned exit code 1")
+                .go();
+    }
+
+
     @Test
     public void fromDockerfile() throws Exception {
         assumeDocker();
