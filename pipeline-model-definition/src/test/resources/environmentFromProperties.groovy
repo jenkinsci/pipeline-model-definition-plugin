@@ -26,7 +26,7 @@
 pipeline {
     environment {
         FOO = "BAZ"
-        PROP = fromPropertiesFile("marker.properties")
+        PROP = properties("marker.properties")
     }
     agent any
 
@@ -34,7 +34,7 @@ pipeline {
         stage("foo") {
             environment {
                 FOO = "BAR"
-                P_ = fromPropertiesFile("stage/marker.properties")
+                P_ = properties("stage/marker.properties")
             }
 
             steps {

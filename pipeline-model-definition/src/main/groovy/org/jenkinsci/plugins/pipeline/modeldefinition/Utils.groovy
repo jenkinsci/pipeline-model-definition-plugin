@@ -436,10 +436,12 @@ public class Utils {
 
             if (a.size()==1 && a.get(0) instanceof Map && !((Map)a.get(0)).containsKey('$class')) {
                 return (Map) a.get(0)
+            } else if (a.size() == 1 && !(a.get(0) instanceof Map)) {
+                return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, a.get(0))
             }
             throw new IllegalArgumentException("Expected named arguments but got "+a)
         } else {
-            return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args);
+            return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
         }
     }
 }

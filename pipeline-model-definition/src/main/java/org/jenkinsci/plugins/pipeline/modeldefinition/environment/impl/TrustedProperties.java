@@ -47,7 +47,7 @@ public class TrustedProperties extends DeclarativeEnvironmentContributor<Trusted
         return path;
     }
 
-    @Extension @Symbol("fromPropertiesFile")
+    @Extension @Symbol("properties")
     public static class DescriptorImpl extends DeclarativeEnvironmentContributorDescriptor<TrustedProperties> {
 
     }

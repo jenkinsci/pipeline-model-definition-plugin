@@ -62,6 +62,16 @@ public class UtilsTest {
     }
 
     @Test
+    public void getDescribableSingleArgumentArray() throws Exception {
+        //Apparently it can be passed like this as well
+        UninstantiatedDescribable d = Utils.getDescribable("credentials", DeclarativeEnvironmentContributor.class, new Object[] {"credId"});
+        assertNotNull(d);
+        Credentials instance = (Credentials) d.instantiate();
+        assertNotNull(instance);
+        assertEquals("credId", instance.getCredentialsId());
+    }
+
+    @Test
     public void getDescribableTwoMustHaveArguments() throws Exception {
         Map<String,Object> p = new HashMap<>();
         p.put("one", "First");

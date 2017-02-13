@@ -50,26 +50,18 @@ public class PropertiesToMapTranslator implements MethodMissingWrapper, Serializ
     }
 
     def methodMissing(String s, args) {
+        if (resolveEnvironmentContributors) {
+            def describable = Utils.getDescribable(s, DeclarativeEnvironmentContributor.class, args)
+            if (describable != null) {
+                return describable.instantiate()
+            }
+        }
+
         def argValue
         if (args.length > 1) {
             argValue = args
         } else if (args.length == 1) {
             argValue = args[0]
-        }
-
-        if (resolveEnvironmentContributors) {
-            def retVal
-            if (argValue != null) {
-                retVal = script."${s}"(argValue)
-            } else {
-                retVal = script."${s}"()
-            }
-
-            if (retVal instanceof UninstantiatedDescribable && isOfType(retVal, DeclarativeEnvironmentContributor.class)) {
-                return retVal.instantiate()
-            } else {
-                return retVal
-            }
         }
 
         return script."${s}"(argValue)
