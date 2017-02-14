@@ -50,6 +50,10 @@ public class GlobalConfig extends GlobalConfiguration {
     private String dockerLabel;
     private DockerRegistryEndpoint registry;
 
+    public GlobalConfig() {
+        load();
+    }
+
     public String getDockerLabel() {
         return Util.fixEmpty(dockerLabel);
     }
