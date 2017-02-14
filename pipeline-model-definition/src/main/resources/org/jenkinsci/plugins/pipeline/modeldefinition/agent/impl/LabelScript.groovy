@@ -46,7 +46,12 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
             try {
                 script.node(describable?.label) {
                     if (describable.isDoCheckout() && describable.hasScmContext(script)) {
-                        script.stage(SyntheticStageNames.checkout()) {
+                        if (describable.context instanceof Root) {
+                            script.stage(SyntheticStageNames.checkout()) {
+                                script.checkout script.scm
+                            }
+                        } else {
+                            // No stage when we're in a nested stage already
                             script.checkout script.scm
                         }
                     }

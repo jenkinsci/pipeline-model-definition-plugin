@@ -50,7 +50,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
      *
      * @return The instantiated declarative agent or null if not found.
      */
-    public DeclarativeAgent getDeclarativeAgent(Object context) {
+    public DeclarativeAgent getDeclarativeAgent(Root root, Object context) {
         DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
             getMap().containsKey(d.getName())
         }
@@ -65,16 +65,14 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
             }
 
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
-            a.setContext(context)
             boolean doCheckout = false
-            if (context instanceof Root) {
-                Root root = (Root)context
-                SkipDefaultCheckout skip = (SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout")
-                if (!skip?.isSkipDefaultCheckout()) {
-                    doCheckout = true
-                }
+            a.setContext(context)
+            SkipDefaultCheckout skip = (SkipDefaultCheckout)root?.options?.options?.get("skipDefaultCheckout")
+            if (!skip?.isSkipDefaultCheckout()) {
+                doCheckout = true
             }
             a.setDoCheckout(doCheckout)
+
             return a
         } else {
             return null
@@ -82,7 +80,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
     }
 
     public boolean hasAgent() {
-        DeclarativeAgent a = getDeclarativeAgent(null)
+        DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }
 

@@ -95,6 +95,22 @@ public class AgentTest extends AbstractModelDefTest {
 
     }
 
+    @Issue("JENKINS-41605")
+    @Test
+    public void agentInStageAutoCheckout() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        expect("agentInStageAutoCheckout")
+                .logContains("The answer is 42",
+                        "found tmp.txt in bar",
+                        "did not find tmp.txt in new docker node",
+                        "did not find tmp.txt in new label node")
+                .go();
+
+    }
+
     @Test
     public void agentDockerWithNullDockerArgs() throws Exception {
         agentDocker("agentDockerWithNullDockerArgs");
