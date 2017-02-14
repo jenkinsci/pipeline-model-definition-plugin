@@ -39,6 +39,7 @@ pipeline {
     }
     post {
         always {
+            echo "There is no image"
             deleteDir()
         }
     }

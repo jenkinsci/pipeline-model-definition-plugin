@@ -149,7 +149,8 @@ public class AgentTest extends AbstractModelDefTest {
         onAllowedOS(PossibleOS.LINUX);
 
         expect(Result.FAILURE, "nonExistentDockerImage")
-                .logContains("ERROR: script returned exit code 1")
+                .logContains("ERROR: script returned exit code 1",
+                        "There is no image")
                 .go();
     }
 
