@@ -29,6 +29,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipStagesAfterUnstable
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -80,7 +81,13 @@ public class ModelInterpreter implements Serializable {
                                         Stage thisStage = root.stages.getStages().get(i)
                                         try {
                                             script.stage(thisStage.name) {
-                                                if (firstError == null) {
+                                                if (firstError != null) {
+                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
+                                                    Utils.markStageSkippedForFailure(thisStage.name)
+                                                } else if (skipUnstable(root.options)) {
+                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
+                                                    Utils.markStageSkippedForUnstable(thisStage.name)
+                                                } else {
                                                     withEnvBlock(thisStage.getEnvVars()) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, thisStage.agent) {
@@ -96,9 +103,6 @@ public class ModelInterpreter implements Serializable {
                                                             Utils.markStageSkippedForConditional(thisStage.name)
                                                         }
                                                     }
-                                                } else {
-                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
-                                                    Utils.markStageSkippedForFailure(thisStage.name)
                                                 }
                                             }
                                         } catch (Exception e) {
@@ -173,6 +177,11 @@ public class ModelInterpreter implements Serializable {
                 }
             }
         }.call()
+    }
+
+    boolean skipUnstable(Options options) {
+        return script.getProperty("currentBuild").result == "UNSTABLE" &&
+            ((SkipStagesAfterUnstable)options?.options?.get("skipStagesAfterUnstable"))?.skipStagesAfterUnstable
     }
 
     /**

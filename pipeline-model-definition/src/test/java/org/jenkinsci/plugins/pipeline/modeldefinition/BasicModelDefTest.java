@@ -135,6 +135,25 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(shouldBeFailedNode.getError());
     }
 
+    @Issue("JENKINS-42039")
+    @Test
+    public void skipAfterUnstable() throws Exception {
+        WorkflowRun b = expect(Result.UNSTABLE, "skipAfterUnstable")
+                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)")
+                .logNotContains("goodbye")
+                .go();
+
+        FlowExecution execution = b.getExecution();
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        assertNotNull(startFoo);
+        assertTrue(startFoo instanceof StepStartNode);
+        FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((StepStartNode)startFoo));
+        assertNotNull(endFoo);
+        assertEquals(GenericStatus.UNSTABLE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+    }
+
     @Test
     public void validStepParameters() throws Exception {
         expect("validStepParameters")
