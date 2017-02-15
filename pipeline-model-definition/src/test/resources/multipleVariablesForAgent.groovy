@@ -27,6 +27,10 @@ pipeline {
         otherField {
             label "some-label"
             otherField "banana"
+            nested {
+                foo "monkey"
+                bar false
+            }
         }
     }
     stages {

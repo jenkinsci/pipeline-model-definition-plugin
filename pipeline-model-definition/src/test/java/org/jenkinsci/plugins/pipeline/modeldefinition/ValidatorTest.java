@@ -452,7 +452,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void agentUnknownParamForType() throws Exception {
         expectError("agentUnknownParamForType")
-                .logContains(Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField]"))
+                .logContains(Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]"))
                 .go();
     }
 

@@ -130,7 +130,10 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void multipleVariablesForAgent() throws Exception {
         expect("multipleVariablesForAgent")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true", "Running in labelAndOtherField with otherField = banana")
+                .logContains("[Pipeline] { (foo)",
+                        "ONAGENT=true",
+                        "Running in labelAndOtherField with otherField = banana",
+                        "And nested: foo: monkey, bar: false")
                 .go();
     }
 
