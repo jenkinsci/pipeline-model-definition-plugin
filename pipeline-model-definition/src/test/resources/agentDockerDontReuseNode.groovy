@@ -45,7 +45,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'test -f Jenkinsfile'
+                sh 'test -f tmp.txt'
             }
 
         }
