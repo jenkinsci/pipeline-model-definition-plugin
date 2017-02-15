@@ -26,13 +26,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+
+import javax.annotation.CheckForNull
 
 
 /**
@@ -45,12 +45,17 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Agent extends MappedClosure<Object,Agent> implements Serializable {
+    @Deprecated
+    public DeclarativeAgent getDeclarativeAgent(Object context) {
+        return getDeclarativeAgent(null, context)
+    }
+
     /**
      * Get the appropriate instantiated {@link DeclarativeAgent} corresponding to our arguments.
      *
      * @return The instantiated declarative agent or null if not found.
      */
-    public DeclarativeAgent getDeclarativeAgent(Root root, Object context) {
+    public DeclarativeAgent getDeclarativeAgent(@CheckForNull Root root, Object context) {
         DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
             getMap().containsKey(d.getName())
         }
@@ -67,9 +72,11 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
             boolean doCheckout = false
             a.setContext(context)
-            SkipDefaultCheckout skip = (SkipDefaultCheckout)root?.options?.options?.get("skipDefaultCheckout")
-            if (!skip?.isSkipDefaultCheckout()) {
-                doCheckout = true
+            if (root != null) {
+                SkipDefaultCheckout skip = (SkipDefaultCheckout) root?.options?.options?.get("skipDefaultCheckout")
+                if (!skip?.isSkipDefaultCheckout()) {
+                    doCheckout = true
+                }
             }
             a.setDoCheckout(doCheckout)
 
