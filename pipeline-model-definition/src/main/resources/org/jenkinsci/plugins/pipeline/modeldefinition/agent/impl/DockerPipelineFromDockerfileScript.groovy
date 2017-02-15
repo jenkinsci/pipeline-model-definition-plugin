@@ -75,11 +75,13 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
     private Closure buildImage() {
         return {
             try {
-                def hash = Utils.stringToSHA1(script.readFile(describable.getDockerfileAsString()))
+                def hash = Utils.stringToSHA1(script.readFile("${describable.getDockerfilePath()}"))
                 def imgName = "${hash}"
-                return script.getProperty("docker").build(imgName, "-f ${describable.getDockerfileAsString()} .")
+                script.sh "docker build -t ${imgName} -f \"${describable.getDockerfilePath()}\" \"${describable.getActualDir()}\""
+                script.dockerFingerprintFrom dockerfile: describable.dockerfilePath, image: imgName, toolName: script.env.DOCKER_TOOL_NAME
+                return script.getProperty("docker").image(imgName)
             } catch (FileNotFoundException f) {
-                script.error("No Dockerfile found at root of repository - failing.")
+                script.error("No Dockerfile found at ${describable.getDockerfilePath()} in repository - failing.")
                 return null
             }
         }
