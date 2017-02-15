@@ -39,7 +39,7 @@ pipeline {
         stage("bar") {
             agent {
                 docker {
-                    label "docker"
+                    label "other-docker"
                     image "httpd:2.4.12"
                     reuseNode true
                 }

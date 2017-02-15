@@ -42,12 +42,17 @@ import java.util.List;
 public class AgentTest extends AbstractModelDefTest {
 
     private static Slave s;
+    private static Slave s2;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+
+        s2 = j.createOnlineSlave();
+        s2.setLabelString("other-docker");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
     }
 
     @Test
