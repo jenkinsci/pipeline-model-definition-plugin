@@ -137,8 +137,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-42039")
     @Test
-    public void skipAfterUnstable() throws Exception {
-        WorkflowRun b = expect(Result.UNSTABLE, "skipAfterUnstable")
+    public void skipAfterUnstableWithOption() throws Exception {
+        WorkflowRun b = expect(Result.UNSTABLE, "skipAfterUnstableIfOption")
                 .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)")
                 .logNotContains("goodbye")
                 .go();
@@ -152,6 +152,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((StepStartNode)startFoo));
         assertNotNull(endFoo);
         assertEquals(GenericStatus.UNSTABLE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+    }
+
+    @Issue("JENKINS-42039")
+    @Test
+    public void dontSkipAfterUnstableByDefault() throws Exception {
+        expect(Result.UNSTABLE, "dontSkipAfterUnstableByDefault")
+                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)", "goodbye")
+                .go();
     }
 
     @Test

@@ -181,7 +181,7 @@ public class ModelInterpreter implements Serializable {
 
     boolean skipUnstable(Options options) {
         return script.getProperty("currentBuild").result == "UNSTABLE" &&
-            ((SkipStagesAfterUnstable)options?.options?.get("skipStagesAfterUnstable"))?.skipStagesAfterUnstable
+            options?.options?.get("skipStagesAfterUnstable") != null
     }
 
     /**

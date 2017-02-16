@@ -22,25 +22,24 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
-
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.Nullable;
-
-public class SkipStagesAfterUnstable extends DeclarativeOption {
-
-    @DataBoundConstructor
-    public SkipStagesAfterUnstable() {
-
-    }
-
-    @Extension @Symbol("skipStagesAfterUnstable")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+                script {
+                    currentBuild.result = "UNSTABLE"
+                }
+            }
+        }
+        stage("bar") {
+            steps {
+                echo "goodbye"
+            }
+        }
     }
 }
+
+
+
