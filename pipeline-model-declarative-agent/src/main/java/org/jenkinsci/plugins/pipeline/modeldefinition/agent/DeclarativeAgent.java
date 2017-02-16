@@ -35,15 +35,15 @@ import org.kohsuke.stapler.DataBoundSetter;
  * @author Andrew Bayer
  */
 public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
-    protected Object context;
+    protected boolean inStage;
     protected boolean doCheckout;
 
-    public void setContext(Object context) {
-        this.context = context;
+    public void setInStage(boolean inStage) {
+        this.inStage = inStage;
     }
 
-    public Object getContext() {
-        return context;
+    public boolean isInStage() {
+        return inStage;
     }
 
     public void setDoCheckout(boolean doCheckout) {
