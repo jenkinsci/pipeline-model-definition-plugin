@@ -29,7 +29,10 @@ import groovy.transform.ToString
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+
+import javax.annotation.CheckForNull
 
 
 /**
@@ -42,12 +45,17 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Agent extends MappedClosure<Object,Agent> implements Serializable {
+    @Deprecated
+    public DeclarativeAgent getDeclarativeAgent(Object context) {
+        return getDeclarativeAgent(null, context)
+    }
+
     /**
      * Get the appropriate instantiated {@link DeclarativeAgent} corresponding to our arguments.
      *
      * @return The instantiated declarative agent or null if not found.
      */
-    public DeclarativeAgent getDeclarativeAgent(Object context) {
+    public DeclarativeAgent getDeclarativeAgent(@CheckForNull Root root, Object context) {
         DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
             getMap().containsKey(d.getName())
         }
@@ -62,7 +70,16 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
             }
 
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
+            boolean doCheckout = false
             a.setContext(context)
+            if (root != null) {
+                SkipDefaultCheckout skip = (SkipDefaultCheckout) root?.options?.options?.get("skipDefaultCheckout")
+                if (!skip?.isSkipDefaultCheckout()) {
+                    doCheckout = true
+                }
+            }
+            a.setDoCheckout(doCheckout)
+
             return a
         } else {
             return null
@@ -70,7 +87,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
     }
 
     public boolean hasAgent() {
-        DeclarativeAgent a = getDeclarativeAgent(null)
+        DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }
 

@@ -73,7 +73,7 @@ public class ModelInterpreter implements Serializable {
                         // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
                         // even if the build fails.
                         // We save the caught error, if any, for throwing at the end of the build.
-                        inDeclarativeAgent(root, root.agent) {
+                        inDeclarativeAgent(root, root, root.agent) {
                             withCredentialsBlock(root.getEnvCredentials()) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
@@ -83,7 +83,7 @@ public class ModelInterpreter implements Serializable {
                                                 if (firstError == null) {
                                                     withEnvBlock(thisStage.getEnvVars()) {
                                                         if (evaluateWhen(thisStage.when)) {
-                                                            inDeclarativeAgent(thisStage, thisStage.agent) {
+                                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                                 withCredentialsBlock(thisStage.getEnvCredentials()) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
@@ -284,17 +284,18 @@ public class ModelInterpreter implements Serializable {
      * Executes the given closure inside a declarative agent block, if appropriate.
      *
      * @param context Either a stage or root object, the context we're running in.
+     * @param root The root object for this pipeline
      * @param agent The agent context we're running in
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def inDeclarativeAgent(Object context, Agent agent, Closure body) {
+    def inDeclarativeAgent(Object context, Root root, Agent agent, Closure body) {
         if (agent == null) {
             return {
                 body.call()
             }.call()
         } else {
-            return agent.getDeclarativeAgent(context).getScript(script).run {
+            return agent.getDeclarativeAgent(root, context).getScript(script).run {
                 body.call()
             }.call()
         }
