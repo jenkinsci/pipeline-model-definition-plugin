@@ -25,9 +25,15 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl;
 
+import jenkins.plugins.git.GitSCMSource;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Collections;
 
 /**
  * Tests {@link TrustedProperties}
@@ -46,7 +52,18 @@ public class TrustedPropertiesTest extends AbstractModelDefTest {
 
     @Test
     public void globalAndStage() throws Exception {
-        expect("environmentFromProperties")
+        expect("properties", "environmentFromProperties")
+                .logContains(
+                        "FOO is BAR",
+                        "PROP_NAME is Bobby",
+                        "PROP_NUM is 1",
+                        "P_NAME is Andrew",
+                        "P_NUM is 0").go();
+    }
+
+    @Test
+    public void fromScmUrl() throws Exception {
+        expect("properties", "environmentFromSCM")
                 .logContains(
                         "FOO is BAR",
                         "PROP_NAME is Bobby",
@@ -57,10 +74,56 @@ public class TrustedPropertiesTest extends AbstractModelDefTest {
 
     @Test
     public void emptyPrefixStageOverride() throws Exception {
-        expect("environmentFromPropertiesEmptyPrefix")
+        expect("properties", "environmentFromPropertiesEmptyPrefix")
                 .logContains(
                         "FOO is BAR",
                         "NAME is Andrew",
                         "NUM is 0").go();
+    }
+
+    @Test
+    public void fromMap() throws Exception {
+        expect("properties", "environmentFromCodedMap")
+                .logContains(
+                        "FOO is BAR",
+                        "PROP_NAME is Bobby",
+                        "PROP_NUM is 5").go();
+    }
+
+    @Test
+    public void fromLibrary() throws Exception {
+        initGlobalLibraryResource();
+
+        expect("properties", "environmentFromLibraryResource")
+                .logContains(
+                        "FOO is BAR",
+                        "PROP_NAME is Liam",
+                        "PROP_NUM is 10").go();
+    }
+
+    @Test
+    public void fromLibraryUrl() throws Exception {
+        initGlobalLibraryResource();
+
+        expect("properties", "environmentFromLibraryResourceUrl")
+                .logContains(
+                        "FOO is BAR",
+                        "PROP_NAME is Liam",
+                        "PROP_NUM is 10").go();
+    }
+
+    private void initGlobalLibraryResource() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/bar.groovy", "void call() { echo \"Hello\" } ");
+        otherRepo.write("resources/foo/bar.properties", "#Project build properties for ACME Inc.\n" +
+                "\n" +
+                "NAME=Liam\n" +
+                "NUM=10\n");
+        otherRepo.git("add", "vars");
+        otherRepo.git("add", "resources");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("resources-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
     }
 }

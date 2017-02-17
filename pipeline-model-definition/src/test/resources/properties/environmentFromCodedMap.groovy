@@ -23,32 +23,32 @@
  *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl;
+package properties
 
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributorDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- * Read environment from a properties file in the scm.
- */
-public class TrustedProperties extends DeclarativeEnvironmentContributor<TrustedProperties> {
-
-    private final Object data;
-
-    @DataBoundConstructor
-    public TrustedProperties(Object data) {
-        this.data = data;
+pipeline {
+    environment {
+        FOO = "BAZ"
+        PROP = properties([data: [NAME: "Bobby", NUM: 5]]) //A bit cheaty but need to workaround the argument unpacking
     }
+    agent any
 
-    public Object getData() {
-        return data;
-    }
+    stages {
+        stage("foo") {
+            environment {
+                FOO = "BAR"
+            }
 
-    @Extension @Symbol("properties")
-    public static class DescriptorImpl extends DeclarativeEnvironmentContributorDescriptor<TrustedProperties> {
-
+            steps {
+                sh '''
+echo "FOO is $FOO"
+echo "PROP_NAME is $PROP_NAME"
+echo "PROP_NUM is $PROP_NUM"
+'''
+            }
+        }
     }
 }
+
+
+

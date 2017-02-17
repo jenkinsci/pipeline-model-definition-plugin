@@ -47,18 +47,45 @@ class TrustedPropertiesScript extends DeclarativeEnvironmentContributorScript<Tr
         } else if (prefix == "_") {
             prefix = ""
         }
-        String content = script.readTrusted(describable.path)
-        return generateEnvStrings(prefix, content)
+
+        if (describable.data == null) {
+            return Collections.emptyList()
+        } else if (describable.data instanceof Map) {
+            return generateEnvStrings(prefix, (Map)describable.data)
+        } else {
+            String sData = "${describable.data}"
+            String content = null
+            if (sData.contains("=") && sData.contains("\n")) {
+                //It is the contents of a Properties file (have to have at least end with a new line)
+                content = sData
+            } else {
+                //treat it as a path
+                if (sData.startsWith("resources://")) { //TODO should be an extension
+                    content = script.libraryResource(sData.drop(12))
+                } else if (sData.startsWith("scm://")) { //TODO should be an extension
+                    content = script.readTrusted(sData.drop(6))
+                } else { //Hey, someone might have missed the switch to url?
+                    content = script.readTrusted(sData)
+                }
+            }
+            return generateEnvStrings(prefix, content)
+        }
     }
 
     @NonCPS
     List<String> generateEnvStrings(String prefix, String content) {
         Properties p = new Properties()
         p.load(new StringReader(content))
+        return generateEnvStrings(prefix, p)
+    }
+
+    @NonCPS
+    List<String> generateEnvStrings(String prefix, Map p) {
         List<String> env = []
 
         for (String suffix : p.keySet()) {
-            env.add("${prefix}${suffix.trim()}=${p.getProperty(suffix, "").trim()}")
+            String value = p[suffix]?.toString() ?: ""
+            env.add("${prefix}${suffix.trim()}=${value.trim()}")
         }
         return env
     }

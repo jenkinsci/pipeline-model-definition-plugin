@@ -23,6 +23,9 @@
  *
  */
 
+package properties
+
+
 pipeline {
     environment {
         FOO = "BAZ"
