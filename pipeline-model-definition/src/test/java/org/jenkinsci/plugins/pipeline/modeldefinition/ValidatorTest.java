@@ -495,8 +495,25 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Issue("JENKINS-41645")
     @Test
     public void invalidEnvironmentIdentifiers() throws Exception {
-        expectError("invalidEnvironmentIdentifiers")
-                .logContains(Messages.ModelParser_InvalidEnvironmentIdentifier("1FOO = \"BLARGH\""))
+        expectError("envIdentifiersCaughtInternally")
+                .runFromRepo(false)
+                .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("1BAR"),
+                        Messages.ModelValidatorImpl_InvalidIdentifierInEnv("$DOLLAR"))
+                .go();
+
+        expectError("envIdentifierString")
+                .runFromRepo(false)
+                .logContains("[heyLook] is a constant expression, but it should be a variable expression")
+                .go();
+
+        expectError("envIdentifierHyphens")
+                .runFromRepo(false)
+                .logContains("(hey - look) is a binary expression, but it should be a variable expression")
+                .go();
+
+        expectError("envIdentifierDigitsUnderscore")
+                .runFromRepo(false)
+                .logContains("expecting token in range: '0'..'9', found 'A'")
                 .go();
     }
 

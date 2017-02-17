@@ -46,7 +46,9 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Test
     public void simpleEnvironment() throws Exception {
         expect("simpleEnvironment")
-                .logContains("[Pipeline] { (foo)", "FOO is BAR")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "_UNDERSCORE is VALID")
                 .go();
     }
 

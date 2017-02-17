@@ -24,7 +24,9 @@
 
 pipeline {
     environment {
-        1FOO = "BLARGH"
+        1BAR = "BLARGH"
+        _UNDERSCORE = "WORKS"
+        $DOLLAR = "Nuh-uh"
         FOO = "BAR"
     }
 
