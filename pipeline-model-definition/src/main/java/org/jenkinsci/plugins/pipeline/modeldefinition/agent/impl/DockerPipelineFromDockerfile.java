@@ -25,6 +25,8 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
@@ -38,12 +40,13 @@ import javax.annotation.Nullable;
 
 public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipelineFromDockerfile> {
     private String filename;
+    private String dir;
 
     @DataBoundConstructor
     public DockerPipelineFromDockerfile() {
     }
 
-    public @Nonnull Object getFilename() {
+    public Object getFilename() {
         return filename;
     }
 
@@ -52,6 +55,36 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
         this.filename = filename;
     }
 
+    public String getDir() {
+        return dir;
+    }
+
+    @DataBoundSetter
+    public void setDir(String dir) {
+        this.dir = dir;
+    }
+
+    @Nonnull
+    public String getActualDir() {
+        if (!StringUtils.isEmpty(dir)) {
+            return dir;
+        } else {
+            return ".";
+        }
+    }
+
+    @Nonnull
+    public String getDockerfilePath() {
+        StringBuilder fullPath = new StringBuilder();
+        if (!StringUtils.isEmpty(dir)) {
+            fullPath.append(dir);
+            fullPath.append(IOUtils.DIR_SEPARATOR);
+        }
+        fullPath.append(getDockerfileAsString());
+        return fullPath.toString();
+    }
+
+    @Nonnull
     public String getDockerfileAsString() {
         if (filename != null) {
             return filename;

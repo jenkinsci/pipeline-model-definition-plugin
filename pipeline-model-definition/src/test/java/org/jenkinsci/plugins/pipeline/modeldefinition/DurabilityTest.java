@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig;
 import org.jenkinsci.plugins.workflow.actions.WorkspaceAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
@@ -39,6 +40,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.util.ArrayList;
@@ -54,6 +56,25 @@ public class DurabilityTest {
 
     @Rule
     public RestartableJenkinsRule story = new RestartableJenkinsRule();
+
+    @Issue("JENKINS-42027")
+    @Test
+    public void globalConfigPersists() throws Exception {
+        story.addStep(new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                GlobalConfig.get().setDockerLabel("config_docker");
+                GlobalConfig.get().save();
+            }
+        });
+
+        story.addStep(new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                assertEquals("config_docker", GlobalConfig.get().getDockerLabel());
+            }
+        });
+    }
 
     @Test
     public void survivesRestart() throws Exception {

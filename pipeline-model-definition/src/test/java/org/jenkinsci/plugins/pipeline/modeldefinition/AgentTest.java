@@ -42,12 +42,17 @@ import java.util.List;
 public class AgentTest extends AbstractModelDefTest {
 
     private static Slave s;
+    private static Slave s2;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+
+        s2 = j.createOnlineSlave();
+        s2.setLabelString("other-docker");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
     }
 
     @Test
@@ -95,6 +100,22 @@ public class AgentTest extends AbstractModelDefTest {
 
     }
 
+    @Issue("JENKINS-41605")
+    @Test
+    public void agentInStageAutoCheckout() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        expect("agentInStageAutoCheckout")
+                .logContains("The answer is 42",
+                        "found tmp.txt in bar",
+                        "did not find tmp.txt in new docker node",
+                        "did not find tmp.txt in new label node")
+                .go();
+
+    }
+
     @Test
     public void agentDockerWithNullDockerArgs() throws Exception {
         agentDocker("agentDockerWithNullDockerArgs");
@@ -130,7 +151,10 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void multipleVariablesForAgent() throws Exception {
         expect("multipleVariablesForAgent")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true", "Running in labelAndOtherField with otherField = banana")
+                .logContains("[Pipeline] { (foo)",
+                        "ONAGENT=true",
+                        "Running in labelAndOtherField with otherField = banana",
+                        "And nested: foo: monkey, bar: false")
                 .go();
     }
 
@@ -153,6 +177,26 @@ public class AgentTest extends AbstractModelDefTest {
         sampleRepo.git("commit", "--message=Dockerfile");
 
         expect("fromDockerfile")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
+                        "-v /tmp:/tmp -p 8000:8000",
+                        "HI THERE")
+                .go();
+    }
+
+    @Issue("JENKINS-41668")
+    @Test
+    public void fromDockerfileInOtherDir() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        sampleRepo.write("subdir/Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "subdir/Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        expect("fromDockerfileInOtherDir")
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
                         "-v /tmp:/tmp -p 8000:8000",

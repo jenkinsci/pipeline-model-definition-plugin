@@ -452,7 +452,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void agentUnknownParamForType() throws Exception {
         expectError("agentUnknownParamForType")
-                .logContains(Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField]"))
+                .logContains(Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]"))
                 .go();
     }
 
@@ -481,6 +481,14 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void notificationsSectionRemoved() throws Exception {
         expectError("notificationsSectionRemoved")
                 .logContains(Messages.ModelParser_RenamedNotifications())
+                .go();
+    }
+
+    @Issue("JENKINS-41668")
+    @Test
+    public void dirSepInDockerfileName() throws Exception {
+        expectError("dirSepInDockerfileName")
+                .logContains(Messages.ModelValidatorImpl_DirSeparatorInDockerfileName())
                 .go();
     }
 

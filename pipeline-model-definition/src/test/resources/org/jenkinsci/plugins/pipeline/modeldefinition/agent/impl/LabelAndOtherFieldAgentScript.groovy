@@ -37,7 +37,11 @@ public class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript<LabelA
     @Override
     public Closure run(Closure body) {
         script.echo "Running in labelAndOtherField with otherField = ${describable.getOtherField()}"
-        LabelScript labelScript = (LabelScript) Label.DescriptorImpl.instanceForName("label", [label: describable.label]).getScript(script)
+        script.echo "And nested: ${describable.getNested()}"
+        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: describable.label])
+        l.context = describable.context
+        l.doCheckout = describable.doCheckout
+        LabelScript labelScript = (LabelScript) l.getScript(script)
         return labelScript.run {
             body.call()
         }

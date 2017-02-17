@@ -45,13 +45,14 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
         return {
             try {
                 script.node(describable?.label) {
-                    if (describable.context instanceof Root) {
-                        Root root = (Root)describable.context
-                        SkipDefaultCheckout skip = (SkipDefaultCheckout)root.options?.options?.get("skipDefaultCheckout")
-                        if (!skip?.isSkipDefaultCheckout() && Utils.hasScmContext(script)) {
+                    if (describable.isDoCheckout() && describable.hasScmContext(script)) {
+                        if (describable.context instanceof Root) {
                             script.stage(SyntheticStageNames.checkout()) {
                                 script.checkout script.scm
                             }
+                        } else {
+                            // No stage when we're in a nested stage already
+                            script.checkout script.scm
                         }
                     }
                     body.call()

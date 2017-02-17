@@ -23,13 +23,11 @@
  */
 
 pipeline {
-    agent none
-
+    agent {
+        label "docker"
+    }
     stages {
         stage("foo") {
-            agent {
-                label "docker"
-            }
             steps {
                 sh 'ls -la'
                 sh 'echo "The answer is 42"'
@@ -39,15 +37,36 @@ pipeline {
         stage("bar") {
             agent {
                 docker {
-                    label "other-docker"
                     image "httpd:2.4.12"
                     reuseNode true
                 }
             }
             steps {
+                sh 'test -f Jenkinsfile'
                 sh 'test -f tmp.txt'
+                echo "found tmp.txt in bar"
             }
+        }
+        stage("new node - docker") {
+            agent {
+                docker {
+                    image "httpd:2.4.12"
+                }
+            }
+            steps {
+                sh 'test -f Jenkinsfile'
+                sh 'test ! -f tmp.txt'
+                echo "did not find tmp.txt in new docker node"
+            }
+        }
+        stage("new node - label") {
+            agent any
 
+            steps {
+                sh 'test -f Jenkinsfile'
+                sh 'test ! -f tmp.txt'
+                echo "did not find tmp.txt in new label node"
+            }
         }
     }
 }
