@@ -28,7 +28,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.environment;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 
 /**
- * Created by rsandell on 2017-02-06.
+ * Base {@code Descriptor} for types of {@link DeclarativeEnvironmentContributor}s.
  */
 public class DeclarativeEnvironmentContributorDescriptor<C extends DeclarativeEnvironmentContributor<C>> extends WithScriptDescriptor<C> {
 

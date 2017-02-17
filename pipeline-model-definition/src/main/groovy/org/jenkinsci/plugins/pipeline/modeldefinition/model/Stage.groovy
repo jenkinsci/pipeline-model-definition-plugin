@@ -26,12 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor
-import org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl.Credentials
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-import javax.annotation.Nonnull
 
 /**
  * An individual stage to be executed within the build.
