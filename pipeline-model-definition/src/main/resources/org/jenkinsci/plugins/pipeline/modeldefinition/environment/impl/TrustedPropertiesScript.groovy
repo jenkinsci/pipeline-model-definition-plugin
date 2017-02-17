@@ -44,6 +44,8 @@ class TrustedPropertiesScript extends DeclarativeEnvironmentContributorScript<Tr
         String prefix = Util.fixNull(key)
         if (!prefix.isEmpty() && !prefix.endsWith("_")) {
             prefix = prefix.trim() + "_"
+        } else if (prefix == "_") {
+            prefix = ""
         }
         String content = script.readTrusted(describable.path)
         return generateEnvStrings(prefix, content)

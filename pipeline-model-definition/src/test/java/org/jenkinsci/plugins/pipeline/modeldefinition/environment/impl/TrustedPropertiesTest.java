@@ -26,6 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -33,15 +34,18 @@ import org.junit.Test;
  */
 public class TrustedPropertiesTest extends AbstractModelDefTest {
 
-    @Test
-    public void globalAndStage() throws Exception {
+    @Before
+    public void writeMarkers() throws Exception {
         sampleRepo.write("marker.properties", "NAME=Bobby\nNUM=1\n");
         sampleRepo.write("stage/marker.properties", "NAME=Andrew\nNUM=0\n");
         sampleRepo.git("init");
         sampleRepo.git("add", "marker.properties");
         sampleRepo.git("add", "stage/marker.properties");
         sampleRepo.git("commit", "--message=Markers");
+    }
 
+    @Test
+    public void globalAndStage() throws Exception {
         expect("environmentFromProperties")
                 .logContains(
                         "FOO is BAR",
@@ -49,5 +53,14 @@ public class TrustedPropertiesTest extends AbstractModelDefTest {
                         "PROP_NUM is 1",
                         "P_NAME is Andrew",
                         "P_NUM is 0").go();
+    }
+
+    @Test
+    public void emptyPrefixStageOverride() throws Exception {
+        expect("environmentFromPropertiesEmptyPrefix")
+                .logContains(
+                        "FOO is BAR",
+                        "NAME is Andrew",
+                        "NUM is 0").go();
     }
 }
