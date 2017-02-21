@@ -70,7 +70,7 @@ public final class ValidateDeclarativePipelineStep extends AbstractStepImpl impl
         }
 
         @Override public String getDisplayName() {
-            return "Validate a string containing a Declarative Pipeline";
+            return "Validate a file containing a Declarative Pipeline";
         }
     }
 
