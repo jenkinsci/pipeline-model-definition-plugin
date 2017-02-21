@@ -228,17 +228,24 @@ class ModelParser implements Parser {
             eachStatement(m.body.code) { s ->
                 if (s instanceof ExpressionStatement) {
                     def exp = s.expression;
-                    if (exp instanceof BinaryExpression) {
-                        if (exp.operation.type == Types.EQUAL) {
-                            ModelASTKey key = parseKey(exp.leftExpression)
-                            // Necessary check due to keys with identical names being equal.
-                            if (r.variables.containsKey(key)) {
-                                errorCollector.error(key, Messages.ModelParser_DuplicateEnvVar(key.key))
-                                return
-                            } else {
-                                r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression)
-                                return
-                            }
+                    if (exp instanceof BinaryExpression && exp.operation.type == Types.EQUAL) {
+                        ModelASTKey key = parseKey(exp.leftExpression)
+                        // Necessary check due to keys with identical names being equal.
+                        if (r.variables.containsKey(key)) {
+                            errorCollector.error(key, Messages.ModelParser_DuplicateEnvVar(key.key))
+                            return
+                        } else {
+                            r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression)
+                            return
+                        }
+                    } else {
+                        ModelASTKey badKey = new ModelASTKey(exp)
+                        String srcTxt = getSourceText((ASTNode)exp)
+                        if (srcTxt.contains("=")) {
+                            String keyTxt = srcTxt.split("=").first().trim()
+                            errorCollector.error(badKey, Messages.ModelValidatorImpl_InvalidIdentifierInEnv(keyTxt))
+                        } else {
+                            errorCollector.error(badKey, Messages.ModelParser_InvalidEnvironmentIdentifier(srcTxt))
                         }
                     }
                 }
