@@ -25,5 +25,5 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <div>
-    API for declarative agents in Declarative Pipeline.
+    APIs for extension points used in Declarative Pipelines.
 </div>

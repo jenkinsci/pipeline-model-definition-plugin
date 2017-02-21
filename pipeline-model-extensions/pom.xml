@@ -31,18 +31,23 @@
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
-  <artifactId>pipeline-model-declarative-agent</artifactId>
+  <artifactId>pipeline-model-extensions</artifactId>
   <packaging>hpi</packaging>
-  <name>Pipeline: Declarative Agent API</name>
-  <description>Replaced by Pipeline: Declarative Extension Points API plugin</description>
+  <name>Pipeline: Declarative Extension Points API</name>
+  <description>APIs for extension points used in Declarative Pipelines</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
 
 
   <dependencies>
     <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
-      <artifactId>pipeline-model-extensions</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <version>2.21</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <version>2.9</version>
     </dependency>
   </dependencies>
     
