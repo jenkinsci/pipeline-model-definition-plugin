@@ -55,7 +55,7 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
     public boolean branchMatches(String actualBranch) {
         if (isEmpty(actualBranch) && isEmpty(this.compare)) {
             return true;
-        } else if (isEmpty(actualBranch)) {
+        } else if (isEmpty(actualBranch) || isEmpty(this.compare)) {
             return false;
         }
         // Replace the Git directory separator character (always '/')
