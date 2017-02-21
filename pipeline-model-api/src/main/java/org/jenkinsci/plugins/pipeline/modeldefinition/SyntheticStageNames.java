@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,33 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition
-
+import java.util.Arrays;
+import java.util.List;
 
 public class SyntheticStageNames {
     public static List<String> preStages() {
-        return [checkout(), agentSetup(), toolInstall()]
+        return Arrays.asList(checkout(), agentSetup(), toolInstall());
     }
 
     public static List<String> postStages() {
-        return [postBuild()]
+        return Arrays.asList(postBuild());
     }
 
     public static String checkout() {
-        return "Declarative: Checkout SCM"
+        return "Declarative: Checkout SCM";
     }
 
     public static String agentSetup() {
-        return "Declarative: Agent Setup"
+        return "Declarative: Agent Setup";
     }
 
     public static String toolInstall() {
-        return "Declarative: Tool Install"
+        return "Declarative: Tool Install";
     }
 
     public static String postBuild() {
-        return "Declarative: Post Actions"
+        return "Declarative: Post Actions";
     }
 }
