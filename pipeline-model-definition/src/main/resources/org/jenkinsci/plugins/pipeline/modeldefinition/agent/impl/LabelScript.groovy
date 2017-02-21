@@ -27,11 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 public class LabelScript extends DeclarativeAgentScript<Label> {
