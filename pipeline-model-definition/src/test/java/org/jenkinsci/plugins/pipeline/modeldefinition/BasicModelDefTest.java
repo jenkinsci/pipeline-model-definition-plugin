@@ -338,6 +338,15 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42226")
+    @Test
+    public void whenBranchNull() throws Exception {
+        expect("whenBranchNull")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
     @Test
     public void whenEnvTrue() throws Exception {
         expect("whenEnvTrue")
