@@ -592,4 +592,12 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (promote)", "Scheduling project")
                 .go();
     }
+
+    @Issue("JENKINS-41118")
+    @Test
+    public void inWorkspace() throws Exception {
+        expect("inWorkspace")
+                .logMatches("Workspace dir is .*some-sub-dir")
+                .go();
+    }
 }
