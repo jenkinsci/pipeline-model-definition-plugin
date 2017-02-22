@@ -76,7 +76,7 @@ public final class ValidateDeclarativePipelineStep extends AbstractStepImpl impl
 
     public static final class ValidateDeclarativePipelineStepExecution extends AbstractSynchronousNonBlockingStepExecution<Boolean> {
 
-        @Inject(optional=true)
+        @Inject
         private transient ValidateDeclarativePipelineStep step;
 
         @StepContextParameter
