@@ -1,0 +1,49 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "cat /usr/local/apache2/conf/extra/httpd-userdir.conf"
+            }
+          }]
+        },
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"The answer is 42\""
+            }
+          }]
+        }
+      ]
+    }]
+  }],
+  "agent":   {
+    "type": "docker",
+    "arguments":     [
+      {
+        "key": "image",
+        "value":         {
+          "isLiteral": true,
+          "value": "httpd:2.4.12"
+        }
+      },
+      {
+        "key": "args",
+        "value":         {
+          "isLiteral": true,
+          "value": null
+        }
+      }
+    ]
+  }
+}}

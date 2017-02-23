@@ -10,7 +10,8 @@
           "type": [
             "number",
             "string",
-            "boolean"
+            "boolean",
+            "null"
           ]
         }
       },
