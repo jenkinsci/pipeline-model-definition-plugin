@@ -595,8 +595,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-41118")
     @Test
-    public void inWorkspace() throws Exception {
-        expect("inWorkspace")
+    public void inCustomWorkspace() throws Exception {
+        expect("inCustomWorkspace")
+                .logMatches("Workspace dir is .*some-sub-dir")
+                .go();
+    }
+
+    @Issue("JENKINS-41118")
+    @Test
+    public void inCustomWorkspaceInStage() throws Exception {
+        expect("inCustomWorkspaceInStage")
                 .logMatches("Workspace dir is .*some-sub-dir")
                 .go();
     }

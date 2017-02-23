@@ -41,22 +41,34 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
         return {
             try {
                 script.node(describable?.label) {
-                    if (describable.isDoCheckout() && describable.hasScmContext(script)) {
-                        if (!describable.inStage) {
-                            script.stage(SyntheticStageNames.checkout()) {
-                                script.checkout script.scm
-                            }
-                        } else {
-                            // No stage when we're in a nested stage already
-                            script.checkout script.scm
+                    if (describable.customWorkspace != null && describable.customWorkspace != "") {
+                        script.ws(describable.customWorkspace) {
+                            checkoutAndRun(body).call()
                         }
+                    } else {
+                        checkoutAndRun(body).call()
                     }
-                    body.call()
                 }
             } catch (Exception e) {
                 script.getProperty("currentBuild").result = Result.FAILURE
                 throw e
             }
+        }
+    }
+
+    private Closure checkoutAndRun(Closure body) {
+        return {
+            if (describable.isDoCheckout() && describable.hasScmContext(script)) {
+                if (!describable.inStage) {
+                    script.stage(SyntheticStageNames.checkout()) {
+                        script.checkout script.scm
+                    }
+                } else {
+                    // No stage when we're in a nested stage already
+                    script.checkout script.scm
+                }
+            }
+            body.call()
         }
     }
 }

@@ -23,9 +23,11 @@
  */
 
 pipeline {
-    agent any
-    options {
-        workspaceDir("some-sub-dir")
+    agent {
+        label {
+            label ""
+            customWorkspace "some-sub-dir"
+        }
     }
     stages {
         stage("foo") {

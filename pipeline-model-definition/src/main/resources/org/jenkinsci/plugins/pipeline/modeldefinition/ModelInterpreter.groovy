@@ -29,8 +29,6 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipStagesAfterUnstable
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.WorkspaceDir
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -320,36 +318,9 @@ public class ModelInterpreter implements Serializable {
             }.call()
         } else {
             return agent.getDeclarativeAgent(root, context).getScript(script).run {
-                inWorkspace(context) {
-                    body.call()
-                }
+                body.call()
             }.call()
         }
-    }
-
-    /**
-     * Allocates a new workspace if the {@link WorkspaceDir} option is set.
-     *
-     * @param context Either a stage or root object, the context we're running in.
-     * @param body The closure to execute
-     * @return The return of the resulting executed closure
-     */
-    def inWorkspace(Object context, Closure body) {
-        // This may change later to allow per-stage workspace dir configuration.
-        if (context instanceof Root) {
-            WorkspaceDir dirOpt = (WorkspaceDir)((Root)context).options?.options?.get("workspaceDir")
-            if (dirOpt != null) {
-                return {
-                    script.ws(dirOpt.dir) {
-                        body.call()
-                    }
-                }.call()
-            }
-        }
-
-        return {
-            body.call()
-        }.call()
     }
 
     /**

@@ -22,30 +22,22 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
-
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.Nullable;
-
-public class WorkspaceDir extends DeclarativeOption {
-    private String dir;
-
-    @DataBoundConstructor
-    public WorkspaceDir(String dir) {
-        this.dir = dir;
-    }
-
-    public String getDir() {
-        return dir;
-    }
-
-    @Extension @Symbol("workspaceDir")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            agent {
+                label {
+                    label ""
+                    customWorkspace "some-sub-dir"
+                }
+            }
+            steps {
+                echo "Workspace dir is ${pwd()}"
+            }
+        }
     }
 }
+
+
+
