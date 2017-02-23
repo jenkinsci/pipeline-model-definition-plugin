@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,30 +20,32 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
+pipeline {
+    agent any
+    environment {
+        BRANCH_NAME = "master"
+    }
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                not {
+                    branch "SOME_OTHER_BRANCH"
+                }
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
-
-/**
- * The {@link Stage#when} block.
- */
-@ToString
-@EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
-
-    public List<DeclarativeStageConditional> conditions = []
-
-    public StageConditionals(List<UninstantiatedDescribable> input) {
-        input.each { i ->
-            conditions.add((DeclarativeStageConditional<? extends DeclarativeStageConditional>) i.instantiate())
+            }
         }
     }
 }

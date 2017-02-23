@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,30 +20,32 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
+
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-/**
- * The {@link Stage#when} block.
- */
-@ToString
-@EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
 
-    public List<DeclarativeStageConditional> conditions = []
+class OrConditionalScript extends DeclarativeStageConditionalScript<OrConditional> {
+    public OrConditionalScript(CpsScript s, OrConditional c) {
+        super(s, c)
+    }
 
-    public StageConditionals(List<UninstantiatedDescribable> input) {
-        input.each { i ->
-            conditions.add((DeclarativeStageConditional<? extends DeclarativeStageConditional>) i.instantiate())
+    @Override
+    public boolean evaluate() {
+        List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested = describable.nested
+        for (int i = 0; i < nested.size(); i++) {
+            DeclarativeStageConditional n = nested.get(i)
+            DeclarativeStageConditionalScript s = (DeclarativeStageConditionalScript)n?.getScript(script)
+            if (s != null && s.evaluate()) {
+                return true
+            }
         }
+
+        return false
     }
 }

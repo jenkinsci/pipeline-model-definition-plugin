@@ -30,7 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 /**
  * Code expression {@link ModelASTStage} will be executed or not.
  */
-public class ModelASTWhenExpression extends AbstractModelASTCodeBlock {
+public class ModelASTWhenExpression extends AbstractModelASTCodeBlock implements ModelASTWhenContent {
     public ModelASTWhenExpression(Object sourceLocation) {
         super(sourceLocation, "expression");
     }
