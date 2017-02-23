@@ -25,7 +25,7 @@
 pipeline {
     agent {
         dockerfile {
-            filename "Dockerfile/alternate"
+            filename "subdir/Dockerfile"
             args "-v /tmp:/tmp -p 8000:8000"
         }
     }
