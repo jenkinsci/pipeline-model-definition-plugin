@@ -90,7 +90,7 @@ public class ModelInterpreter implements Serializable {
                                                     Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
                                                     Utils.markStageSkippedForUnstable(thisStage.name)
                                                 } else {
-                                                    withEnvBlock(thisStage.environment) {
+                                                    withEnvBlock(getEnvVars(thisStage.environment)) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                                 withCredentialsBlock(getEnvCredentials(thisStage.environment)) {
