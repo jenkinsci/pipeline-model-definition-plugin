@@ -31,6 +31,7 @@ import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl.Credentials
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipStagesAfterUnstable
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -82,8 +83,14 @@ public class ModelInterpreter implements Serializable {
                                         Stage thisStage = root.stages.getStages().get(i)
                                         try {
                                             script.stage(thisStage.name) {
-                                                if (firstError == null) {
-                                                    withEnvBlock(getEnvVars(thisStage.environment)) {
+                                                if (firstError != null) {
+                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
+                                                    Utils.markStageSkippedForFailure(thisStage.name)
+                                                } else if (skipUnstable(root.options)) {
+                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
+                                                    Utils.markStageSkippedForUnstable(thisStage.name)
+                                                } else {
+                                                    withEnvBlock(thisStage.environment) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                                 withCredentialsBlock(getEnvCredentials(thisStage.environment)) {
@@ -98,9 +105,6 @@ public class ModelInterpreter implements Serializable {
                                                             Utils.markStageSkippedForConditional(thisStage.name)
                                                         }
                                                     }
-                                                } else {
-                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
-                                                    Utils.markStageSkippedForFailure(thisStage.name)
                                                 }
                                             }
                                         } catch (Exception e) {
@@ -126,10 +130,22 @@ public class ModelInterpreter implements Serializable {
                         }
                     }
                 }
+            } catch (Exception e) {
+                // Catch any errors that may have been thrown outside of the stages proper and make sure we set
+                // firstError accordingly.
+                if (firstError == null) {
+                    firstError = e
+                }
             } finally {
                 // If we hit an exception somewhere *before* we got to stages, we still need to do post-build tasks.
                 if (!postBuildRun) {
-                    executePostBuild(root)
+                    try {
+                        executePostBuild(root)
+                    } catch (Exception e) {
+                        if (firstError == null) {
+                            firstError = e
+                        }
+                    }
                 }
             }
             if (firstError != null) {
@@ -175,6 +191,11 @@ public class ModelInterpreter implements Serializable {
                 }
             }
         }.call()
+    }
+
+    boolean skipUnstable(Options options) {
+        return script.getProperty("currentBuild").result == "UNSTABLE" &&
+            options?.options?.get("skipStagesAfterUnstable") != null
     }
 
     /**

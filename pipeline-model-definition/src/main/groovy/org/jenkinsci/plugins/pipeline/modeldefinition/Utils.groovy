@@ -307,6 +307,10 @@ public class Utils {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
+    static void markStageSkippedForUnstable(String stageName) {
+        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
+    }
+
     static void markStageSkippedForConditional(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
     }

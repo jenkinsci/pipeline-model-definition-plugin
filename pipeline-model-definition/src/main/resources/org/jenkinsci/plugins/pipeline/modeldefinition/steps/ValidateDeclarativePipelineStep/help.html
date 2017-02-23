@@ -1,7 +1,7 @@
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2016, CloudBees, Inc.
+  ~ Copyright (c) 2017, CloudBees, Inc.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,7 @@
   ~ THE SOFTWARE.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.jenkinsci.plugins</groupId>
-    <artifactId>pipeline-model-parent</artifactId>
-    <version>1.1-SNAPSHOT</version>
-  </parent>
-
-  <groupId>org.jenkinsci.plugins</groupId>
-  <artifactId>pipeline-model-declarative-agent</artifactId>
-  <packaging>hpi</packaging>
-  <name>Pipeline: Declarative Agent API</name>
-  <description>Replaced by Pipeline: Declarative Extension Points API plugin</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
-
-
-  <dependencies>
-    <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
-      <artifactId>pipeline-model-extensions</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-  </dependencies>
-    
-</project>
+<div>
+    Checks if the given file (as relative path to current directory) contains a valid Declarative Pipeline.
+    Returns <code>true | false</code>.
+</div>

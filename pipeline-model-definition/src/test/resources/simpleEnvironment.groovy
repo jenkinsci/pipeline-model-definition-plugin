@@ -25,6 +25,7 @@
 pipeline {
     environment {
         FOO = "BAR"
+        _UNDERSCORE = "VALID"
     }
 
     agent {
@@ -35,6 +36,7 @@ pipeline {
         stage("foo") {
             steps {
                 sh 'echo "FOO is $FOO"'
+                sh 'echo "_UNDERSCORE is $_UNDERSCORE"'
             }
         }
     }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,26 +22,26 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-public class AnyScript extends DeclarativeAgentScript<Any> {
-
-    public AnyScript(CpsScript s, Any a) {
-        super(s, a)
+pipeline {
+    environment {
+        1BAR = "BLARGH"
+        _UNDERSCORE = "WORKS"
+        $DOLLAR = "Nuh-uh"
+        FOO = "BAR"
     }
 
-    @Override
-    public Closure run(Closure body) {
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
+    agent {
+        label "some-label"
+    }
+
+    stages {
+        stage("foo") {
+            steps {
+                sh 'echo "FOO is $FOO"'
+            }
         }
     }
 }
+
+
+

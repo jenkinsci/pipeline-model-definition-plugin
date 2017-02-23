@@ -71,7 +71,11 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
             boolean doCheckout = false
-            a.setContext(context)
+            if (context instanceof Root) {
+                a.setInStage(false)
+            } else {
+                a.setInStage(true)
+            }
             if (root != null) {
                 SkipDefaultCheckout skip = (SkipDefaultCheckout) root?.options?.options?.get("skipDefaultCheckout")
                 if (!skip?.isSkipDefaultCheckout()) {

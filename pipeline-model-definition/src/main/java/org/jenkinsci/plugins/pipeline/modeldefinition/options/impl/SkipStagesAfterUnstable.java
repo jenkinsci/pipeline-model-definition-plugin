@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,25 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nullable;
 
-public class SyntheticStageNames {
-    public static List<String> preStages() {
-        return [checkout(), agentSetup(), toolInstall()]
+public class SkipStagesAfterUnstable extends DeclarativeOption {
+
+    @DataBoundConstructor
+    public SkipStagesAfterUnstable() {
+
     }
 
-    public static List<String> postStages() {
-        return [postBuild()]
-    }
+    @Extension @Symbol("skipStagesAfterUnstable")
+    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
 
-    public static String checkout() {
-        return "Declarative: Checkout SCM"
-    }
-
-    public static String agentSetup() {
-        return "Declarative: Agent Setup"
-    }
-
-    public static String toolInstall() {
-        return "Declarative: Tool Install"
-    }
-
-    public static String postBuild() {
-        return "Declarative: Post Actions"
     }
 }

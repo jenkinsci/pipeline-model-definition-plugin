@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
+import com.github.fge.jsonschema.util.JsonLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.ObjectMapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule
@@ -87,10 +88,7 @@ public class Converter {
      * @return The converted {@link JsonNode}
      */
     public static JsonNode jacksonJSONFromJSONObject(JSONObject input) {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JsonOrgModule());
-
-        return mapper.valueToTree(input);
+        return JsonLoader.fromString(input.toString())
     }
 
     public static JsonTree jsonTreeFromJSONObject(JSONObject input) {

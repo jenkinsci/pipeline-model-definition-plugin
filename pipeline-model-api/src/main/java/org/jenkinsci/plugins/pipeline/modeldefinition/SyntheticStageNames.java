@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,26 +22,33 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import java.util.Arrays;
+import java.util.List;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-public class AnyScript extends DeclarativeAgentScript<Any> {
-
-    public AnyScript(CpsScript s, Any a) {
-        super(s, a)
+public class SyntheticStageNames {
+    public static List<String> preStages() {
+        return Arrays.asList(checkout(), agentSetup(), toolInstall());
     }
 
-    @Override
-    public Closure run(Closure body) {
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
-        }
+    public static List<String> postStages() {
+        return Arrays.asList(postBuild());
+    }
+
+    public static String checkout() {
+        return "Declarative: Checkout SCM";
+    }
+
+    public static String agentSetup() {
+        return "Declarative: Agent Setup";
+    }
+
+    public static String toolInstall() {
+        return "Declarative: Tool Install";
+    }
+
+    public static String postBuild() {
+        return "Declarative: Post Actions";
     }
 }

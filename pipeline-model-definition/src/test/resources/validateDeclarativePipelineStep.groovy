@@ -22,26 +22,9 @@
  * THE SOFTWARE.
  */
 
+node {
+    checkout scm
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-public class AnyScript extends DeclarativeAgentScript<Any> {
-
-    public AnyScript(CpsScript s, Any a) {
-        super(s, a)
-    }
-
-    @Override
-    public Closure run(Closure body) {
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
-        }
-    }
+    def valid = validateDeclarativePipeline("testFile.groovy")
+    echo "validation result - ${valid}"
 }

@@ -135,6 +135,33 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(shouldBeFailedNode.getError());
     }
 
+    @Issue("JENKINS-42039")
+    @Test
+    public void skipAfterUnstableWithOption() throws Exception {
+        WorkflowRun b = expect(Result.UNSTABLE, "skipAfterUnstableIfOption")
+                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)")
+                .logNotContains("goodbye")
+                .go();
+
+        FlowExecution execution = b.getExecution();
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        assertNotNull(startFoo);
+        assertTrue(startFoo instanceof StepStartNode);
+        FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((StepStartNode)startFoo));
+        assertNotNull(endFoo);
+        assertEquals(GenericStatus.UNSTABLE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+    }
+
+    @Issue("JENKINS-42039")
+    @Test
+    public void dontSkipAfterUnstableByDefault() throws Exception {
+        expect(Result.UNSTABLE, "dontSkipAfterUnstableByDefault")
+                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)", "goodbye")
+                .go();
+    }
+
     @Test
     public void validStepParameters() throws Exception {
         expect("validStepParameters")
@@ -335,6 +362,15 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void whenBranchTrue() throws Exception {
         expect("whenBranchTrue")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Issue("JENKINS-42226")
+    @Test
+    public void whenBranchNull() throws Exception {
+        expect("whenBranchNull")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
                 .go();
     }
 

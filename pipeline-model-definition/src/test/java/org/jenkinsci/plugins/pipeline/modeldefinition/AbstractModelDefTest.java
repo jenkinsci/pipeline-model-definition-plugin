@@ -139,7 +139,8 @@ public abstract class AbstractModelDefTest {
             "whenEnvFalse",
             "parallelPipelineWithSpaceInBranch",
             "parallelPipelineQuoteEscaping",
-            "nestedTreeSteps"
+            "nestedTreeSteps",
+            "jsonSchemaNull"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -176,7 +177,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
 
         result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]")});
-        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", "[buildDiscarder, catchError, disableConcurrentBuilds, overrideIndexTriggers, retry, script, skipDefaultCheckout, timeout, waitUntil, withContext, withEnv, ws]")});
+        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", "[buildDiscarder, catchError, disableConcurrentBuilds, overrideIndexTriggers, retry, script, skipDefaultCheckout, skipStagesAfterUnstable, timeout, waitUntil, withContext, withEnv, ws]")});
 
         result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]")});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
@@ -288,16 +289,24 @@ public abstract class AbstractModelDefTest {
     }
 
     protected void prepRepoWithJenkinsfileAndOtherFiles(String pipelineName, String... otherFiles) throws Exception {
+        Map<String,String> otherMap = new HashMap<>();
+        for (String otherFile : otherFiles) {
+            otherMap.put(otherFile, otherFile);
+        }
+        prepRepoWithJenkinsfileAndOtherFiles(pipelineName, otherMap);
+    }
+
+    protected void prepRepoWithJenkinsfileAndOtherFiles(String pipelineName, Map<String,String> otherFiles) throws Exception {
         sampleRepo.init();
         sampleRepo.write("Jenkinsfile",
                 pipelineSourceFromResources(pipelineName));
         sampleRepo.git("add", "Jenkinsfile");
 
 
-        for (String otherFile : otherFiles) {
+        for (Map.Entry<String,String> otherFile : otherFiles.entrySet()) {
             if (otherFile != null) {
-                sampleRepo.write(otherFile, fileContentsFromResources(otherFile));
-                sampleRepo.git("add", otherFile);
+                sampleRepo.write(otherFile.getValue(), fileContentsFromResources(otherFile.getKey()));
+                sampleRepo.git("add", otherFile.getValue());
             }
         }
 
@@ -429,6 +438,7 @@ public abstract class AbstractModelDefTest {
         private Result result = Result.SUCCESS;
         private final String resourceParent;
         private String resource;
+        private Map<String,String> otherResources;
         private List<String> logContains;
         private List<String> logNotContains;
         private WorkflowRun run;
@@ -447,6 +457,12 @@ public abstract class AbstractModelDefTest {
             this.resourceParent = resourceParent;
             this.resource = resource;
             buildMatchers = new ArrayList<>();
+            otherResources = new HashMap<>();
+        }
+
+        public ExpectationsBuilder otherResource(String resource, String filename) {
+            this.otherResources.put(resource, filename);
+            return this;
         }
 
         public ExpectationsBuilder inLogInOrder(String... msgsInOrder) {
@@ -516,7 +532,11 @@ public abstract class AbstractModelDefTest {
 
             if (run == null) {
                 if (runFromRepo) {
-                    prepRepoWithJenkinsfile(resourceFullName);
+                    if (otherResources.isEmpty()) {
+                        prepRepoWithJenkinsfile(resourceFullName);
+                    } else {
+                        prepRepoWithJenkinsfileAndOtherFiles(resourceFullName, otherResources);
+                    }
                     run = getAndStartBuild(folder);
                 } else {
                     run = getAndStartNonRepoBuild(folder, resourceFullName);

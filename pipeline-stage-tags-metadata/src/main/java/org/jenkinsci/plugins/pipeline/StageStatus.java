@@ -63,6 +63,10 @@ public class StageStatus extends StageTagsMetadata {
         return "SKIPPED_FOR_FAILURE";
     }
 
+    public static String getSkippedForUnstable() {
+        return "SKIPPED_FOR_UNSTABLE";
+    }
+
     public static String getSkippedForConditional() {
         return "SKIPPED_FOR_CONDITIONAL";
     }
