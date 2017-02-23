@@ -199,7 +199,7 @@ class JSONParser implements Parser {
         JsonTree conditionsTree = j.append(JsonPointer.of("conditions"))
         conditionsTree.node.eachWithIndex { JsonNode entry, int i ->
             JsonTree condTree = conditionsTree.append(JsonPointer.of(i))
-            when.conditions.add(parseStep(condTree))
+            when.conditions.add(parseWhenContent(condTree))
         }
         return when
     }
@@ -338,6 +338,29 @@ class JSONParser implements Parser {
             step.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
 
             return step
+        }
+    }
+
+    public @CheckForNull ModelASTWhenContent parseWhenContent(JsonTree j) {
+        if (j.node.has("children")) {
+            ModelASTWhenCondition condition = new ModelASTWhenCondition(j)
+            condition.name = j.node.get("name").asText()
+            if (j.node.has("arguments")) {
+                condition.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
+            }
+            JsonTree children = j.append(JsonPointer.of("children"))
+            children.node.eachWithIndex { JsonNode entry, int i ->
+                condition.children.add(parseWhenContent(children.append(JsonPointer.of(i))))
+            }
+            return condition
+        } else if (j.node.get("name")?.asText()?.equals("expression")) {
+            return parseWhenExpression(j)
+        } else {
+            ModelASTWhenCondition condition = new ModelASTWhenCondition(j)
+            condition.name = j.node.get("name").asText()
+            condition.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
+
+            return condition
         }
     }
 

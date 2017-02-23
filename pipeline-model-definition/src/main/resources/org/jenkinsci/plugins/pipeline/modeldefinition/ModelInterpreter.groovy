@@ -411,13 +411,14 @@ public class ModelInterpreter implements Serializable {
         if (when == null) {
             return true
         } else {
+            boolean ret = true
             for (int i = 0; i < when.conditions.size(); i++) {
                 DeclarativeStageConditional c = when.conditions.get(i)
                 if (!c.getScript(script).evaluate()) {
-                    return false
+                    ret = false
                 }
             }
-            return true
+            return ret
         }
     }
 

@@ -42,7 +42,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.structs.describable.DescribableModel
+import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -57,6 +61,7 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
+import org.jvnet.tiger_types.Types
 
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
@@ -412,5 +417,31 @@ public class Utils {
         }
         FlowExecution exec = owner.getOrNull()
         return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null
+    }
+
+    public static boolean whenConditionDescriptorFound(String name) {
+        Descriptor d = DescriptorLookupCache.publicCache.lookupFunction(name)
+        return d != null && d instanceof DeclarativeStageConditionalDescriptor
+    }
+
+    public static boolean nestedWhenCondition(String name) {
+        Descriptor d = DescriptorLookupCache.publicCache.lookupFunction(name)
+        if (d != null && d instanceof DeclarativeStageConditionalDescriptor) {
+            return ((DeclarativeStageConditionalDescriptor)d).containsNested()
+        }
+        return false
+    }
+
+    public static boolean takesWhenConditionList(String name) {
+        DescribableModel<? extends Describable> model = DescriptorLookupCache.publicCache.modelForStepOrFunction(name)
+
+        if (model != null && Types.isSubClassOf(model.type, DeclarativeStageConditional.class)) {
+            DescribableParameter p = model.soleRequiredParameter
+            if (p != null) {
+                return Types.isSubClassOf(p.getRawType(), Collection.class)
+            }
+        }
+
+        return false
     }
 }

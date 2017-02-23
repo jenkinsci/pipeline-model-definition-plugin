@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
 
 
 public interface ModelValidator {
@@ -93,5 +94,5 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTLibraries libraries);
 
-    boolean validateWhenCondition(ModelASTStep condition);
+    boolean validateElement(ModelASTWhenCondition condition);
 }
