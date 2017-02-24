@@ -36,6 +36,7 @@ behavior of the `ws(...)` step (though not exactly, since
 relative to the workspace root on the agent).
 
 #### Where the Option is Specified
+
 The easiest place to add this option so that it would be
 available for use anywhere an `agent` could be specified would
 be in the `agent` itself, as an additional option on relevant
@@ -51,6 +52,14 @@ option and so would create the first case of specifying `label`
 with a block. However, the block form of `label` actually works 
 currently - `label 'something'` is in fact just a shortcut for 
 `label { label 'something' }` behind the scenes.
+
+#### Alternatives
+
+Perhaps the best alternative to `agent` configuration would be 
+to have the custom workspace specified as a top-level and 
+per-stage option. This would require adding an `options` 
+section for `stage`, since we don't have anywhere for options 
+to be configured per-stage currently. 
 
 #### Examples
 
