@@ -215,22 +215,22 @@ public abstract class AbstractModelDefTest {
     }
 
     protected void onAllowedOS(PossibleOS... osList) throws Exception {
-        boolean passed = true;
+        boolean passed = false;
         for (PossibleOS os : osList) {
             switch (os) {
                 case LINUX:
-                    if (!SystemUtils.IS_OS_LINUX) {
-                        passed = false;
+                    if (SystemUtils.IS_OS_LINUX) {
+                        passed = true;
                     }
                     break;
                 case WINDOWS:
-                    if (!SystemUtils.IS_OS_WINDOWS) {
-                        passed = false;
+                    if (SystemUtils.IS_OS_WINDOWS) {
+                        passed = true;
                     }
                     break;
                 case MAC:
-                    if (!SystemUtils.IS_OS_MAC) {
-                        passed = false;
+                    if (SystemUtils.IS_OS_MAC) {
+                        passed = true;
                     }
                     break;
                 default:
