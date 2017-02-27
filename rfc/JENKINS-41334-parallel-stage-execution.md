@@ -84,3 +84,18 @@ stage status metadata.
 Given the benefits to the nested stages over parallel branches in
 terms of implementation and metadata, it seems preferrable to go with
 the nested stages implementation.
+
+### Visualization
+
+Note that this section is at least partially speculative. We will
+defer to the Blue Ocean team for the final decision on visualization
+of parallel stages.
+
+At least initially, we would recommend only visualizing the first
+level of parallel stages, in the same manner that parallel branches
+are visualized in Blue Ocean currently. This would mean flattening
+anything below the first `parallel` invocation's `stage`s. Another
+possibility would be flattening the visualization at each level -
+i.e., initially just displaying the first level of nesting, but
+allowing drilling down into an individual parallel branch/`stage` and
+displaying the next level of nesting, and so on.
