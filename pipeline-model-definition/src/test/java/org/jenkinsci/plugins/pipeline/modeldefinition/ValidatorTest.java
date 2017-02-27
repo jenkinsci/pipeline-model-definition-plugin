@@ -484,14 +484,6 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Issue("JENKINS-41668")
-    @Test
-    public void dirSepInDockerfileName() throws Exception {
-        expectError("dirSepInDockerfileName")
-                .logContains(Messages.ModelValidatorImpl_DirSeparatorInDockerfileName())
-                .go();
-    }
-
     @Issue("JENKINS-41645")
     @Test
     public void invalidEnvironmentIdentifiers() throws Exception {

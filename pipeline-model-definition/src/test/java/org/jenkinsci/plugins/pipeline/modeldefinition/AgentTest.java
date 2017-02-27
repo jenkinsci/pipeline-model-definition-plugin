@@ -218,6 +218,26 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42286")
+    @Test
+    public void dirSepInDockerfileName() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        sampleRepo.write("subdir/Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "subdir/Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        expect("fromDockerfileInOtherDir")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
+                        "-v /tmp:/tmp -p 8000:8000",
+                        "HI THERE")
+                .go();
+    }
+
     @Test
     public void fromDockerfileNoArgs() throws Exception {
         assumeDocker();
