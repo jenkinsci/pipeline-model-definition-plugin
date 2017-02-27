@@ -51,8 +51,8 @@ public class OrConditional extends DeclarativeStageConditional<OrConditional> {
     @Symbol("or")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<OrConditional> {
         @Override
-        public boolean containsNested() {
-            return true;
+        public int allowedNested() {
+            return -1;
         }
     }
 }

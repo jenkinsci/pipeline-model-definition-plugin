@@ -51,8 +51,8 @@ public class AndConditional extends DeclarativeStageConditional<AndConditional> 
     @Symbol("and")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AndConditional> {
         @Override
-        public boolean containsNested() {
-            return true;
+        public int allowedNested() {
+            return -1;
         }
     }
 }

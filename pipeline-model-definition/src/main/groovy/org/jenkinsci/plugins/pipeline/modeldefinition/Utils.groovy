@@ -427,7 +427,7 @@ public class Utils {
     public static boolean nestedWhenCondition(String name) {
         Descriptor d = DescriptorLookupCache.publicCache.lookupFunction(name)
         if (d != null && d instanceof DeclarativeStageConditionalDescriptor) {
-            return ((DeclarativeStageConditionalDescriptor)d).containsNested()
+            return ((DeclarativeStageConditionalDescriptor)d).allowedNested() != 0
         }
         return false
     }

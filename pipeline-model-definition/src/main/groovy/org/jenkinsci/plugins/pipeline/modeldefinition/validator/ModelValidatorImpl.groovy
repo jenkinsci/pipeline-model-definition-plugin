@@ -206,10 +206,20 @@ class ModelValidatorImpl implements ModelValidator {
 
             DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(condition.name)
 
-            if (desc.containsNested() && condition.args != null) {
-                errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenNoArgs(condition.name))
-                valid = false
-            } else if (!desc.containsNested()) {
+            if (desc.allowedNested() != 0) {
+                if (condition.args != null) {
+                    errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenNoArgs(condition.name))
+                    valid = false
+                } else if (desc.allowedNested() == -1) {
+                    if (condition.children.isEmpty()) {
+                        errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWithoutChildren(condition.name))
+                        valid = false
+                    }
+                } else if (condition.children.size() != desc.allowedNested()) {
+                    errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWrongChildrenCount(condition.name, desc.allowedNested()))
+                    valid = false
+                }
+            } else {
                 if (!condition.children.isEmpty()) {
                     errorCollector.error(condition, Messages.ModelValidatorImpl_NoNestedWhenAllowed(condition.name))
                     valid = false

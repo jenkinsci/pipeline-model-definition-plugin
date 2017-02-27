@@ -402,6 +402,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenAndOrSingle() throws Exception {
+        expect("whenAndOrSingle")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
     public void whenNestedCombinations() throws Exception {
         expect("whenNestedCombinations")
                 .logContains("First stage has no condition",

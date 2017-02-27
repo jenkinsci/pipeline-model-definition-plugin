@@ -43,10 +43,11 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         extends WithScriptDescriptor<S> {
 
     /**
-     * Returns true if this condition can contain further conditions nested within it.
+     * How many nested conditions are allowed. -1 for unlimited, 0 for none, anything greater than 0 for
+     * requiring exactly that many nested conditions.
      */
-    public boolean containsNested() {
-        return false;
+    public int allowedNested() {
+        return 0;
     }
 
     /**
