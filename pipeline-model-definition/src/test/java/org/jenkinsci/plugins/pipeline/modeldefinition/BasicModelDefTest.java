@@ -402,6 +402,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenNestedCombinations() throws Exception {
+        expect("whenNestedCombinations")
+                .logContains("First stage has no condition",
+                        "Second stage meets condition",
+                        "Fourth stage meets condition")
+                .logNotContains("Third stage meets condition")
+                .go();
+    }
+
+    @Test
     public void whenEnvTrue() throws Exception {
         expect("whenEnvTrue")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
