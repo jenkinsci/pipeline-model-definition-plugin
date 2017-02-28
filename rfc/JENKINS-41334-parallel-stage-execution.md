@@ -45,6 +45,11 @@ stage('foo') {
 * `agent`, `environment`, and `tools` specified on the "parent"
     `stage` will apply to child `stage`s in the same way that top-level
     configuration applies to `stage`s currently.
+* Arbitrarily deep nesting of parallel `stage`s would not be
+    allowed. Only `stage`s that themselves are not within a `parallel`
+    would be able to contain further `parallel` `stage`s.
+* `stage`s within a `parallel` would not allow use of the `parallel`
+    step either, so as to prevent visualization confusion.
 * Naming of `parallel` is up for debate.
 
 ### Runtime Implementation
@@ -69,8 +74,6 @@ tends to lead to a con in the other option.
     the code would be simpler than for parallel branches.
 * Blue Ocean supports visualization of parallel branches already, so
     less work would be needed there than for nested stages.
-* Neither approach will visualize deeper levels of parallelization in
-    Blue Ocean as currently designed/implemented.
 
 #### Proposed Approach
 
@@ -89,13 +92,7 @@ the nested stages implementation.
 
 Note that this section is at least partially speculative. We will
 defer to the Blue Ocean team for the final decision on visualization
-of parallel stages.
-
-At least initially, we would recommend only visualizing the first
-level of parallel stages, in the same manner that parallel branches
-are visualized in Blue Ocean currently. This would mean flattening
-anything below the first `parallel` invocation's `stage`s. Another
-possibility would be flattening the visualization at each level -
-i.e., initially just displaying the first level of nesting, but
-allowing drilling down into an individual parallel branch/`stage` and
-displaying the next level of nesting, and so on.
+of parallel stages. We would recommend visualizing the parallel stages
+in the same manner that parallel branches are visualized in Blue Ocean
+currently, but using the `stage` name, status and metadata rather than
+the parallel branch.
