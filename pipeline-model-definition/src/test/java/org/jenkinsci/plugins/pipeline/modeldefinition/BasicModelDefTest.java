@@ -605,6 +605,15 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-41118")
     @Test
+    public void inRelativeCustomWorkspace() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        expect("inRelativeCustomWorkspace")
+                .logMatches("Workspace dir is .*relative/custom2/workspace3")
+                .go();
+    }
+
+    @Issue("JENKINS-41118")
+    @Test
     public void inAbsoluteCustomWorkspace() throws Exception {
         // Since we're using a Unix path, only run on a Unix environment
         onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
