@@ -410,7 +410,7 @@ public class ValidatorTest extends AbstractModelDefTest {
         // Test the case of calling a method on an object, i.e., foo.bar(1). This will fail.
         expectError("globalLibraryObjectMethodCall")
                 .logContains("MultipleCompilationErrorsException: startup failed:",
-                        Messages.ModelParser_ExpectedSymbol())
+                        Messages.ModelParser_ObjectMethodCall())
                 .go();
     }
 

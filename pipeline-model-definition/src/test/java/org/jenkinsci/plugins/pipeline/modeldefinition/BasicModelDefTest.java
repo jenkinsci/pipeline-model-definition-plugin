@@ -534,7 +534,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-40657")
     @Test
-    public void libraryObjectOutsideScript() throws Exception {
+    public void libraryObjectDefinedOutsidePipeline() throws Exception {
         otherRepo.init();
         otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
                 "\n" +
@@ -553,7 +553,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 new LibraryConfiguration("zot-stuff",
                         new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
 
-        expect("libraryObjectOutsideScript")
+        expect("libraryObjectDefinedOutsidePipeline")
                 .logContains("hello");
     }
 
