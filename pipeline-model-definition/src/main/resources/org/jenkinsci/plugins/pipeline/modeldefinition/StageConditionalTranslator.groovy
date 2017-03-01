@@ -51,6 +51,10 @@ public class StageConditionalTranslator implements MethodMissingWrapper, Seriali
         def argVal
         def retVal
 
+        if (!Utils.whenConditionDescriptorFound(s)) {
+            throw new NoSuchMethodError(Messages.ModelValidatorImpl_UnknownWhenConditional(s, DeclarativeStageConditionalDescriptor.allNames().join(", ")))
+        }
+
         if (args instanceof List || args instanceof Object[]) {
             if (args.size() > 0) {
                 argVal = args[0]
@@ -76,16 +80,10 @@ public class StageConditionalTranslator implements MethodMissingWrapper, Seriali
             } else {
                 argVal = createStepsBlock(argVal)
             }
-        }
 
-        if (!Utils.whenConditionDescriptorFound(s)) {
-            throw new NoSuchMethodError(Messages.ModelValidatorImpl_UnknownWhenConditional(s, DeclarativeStageConditionalDescriptor.allNames().join(", ")))
-        }
-
-        if (argVal != null) {
-            retVal = script."${s}"(argVal)
+            retVal = Utils.getDescribable(s, DeclarativeStageConditional.class, argVal)
         } else {
-            retVal = script."${s}"()
+            retVal = Utils.getDescribable(s, DeclarativeStageConditional.class, args)
         }
 
         if (isOfType((UninstantiatedDescribable) retVal, DeclarativeStageConditional.class)) {

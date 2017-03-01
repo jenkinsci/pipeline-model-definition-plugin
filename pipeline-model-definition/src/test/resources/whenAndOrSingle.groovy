@@ -30,7 +30,7 @@ pipeline {
     stages {
         stage("One") {
             when {
-                any {
+                anyOf {
                     expression { true }
                 }
             }
@@ -40,7 +40,7 @@ pipeline {
         }
         stage("Two") {
             when {
-                all {
+                allOf {
                     expression { false }
                 }
             }

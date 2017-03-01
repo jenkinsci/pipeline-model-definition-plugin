@@ -139,7 +139,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void whenNestedChildrenInvalid() throws Exception {
         expectError("whenNestedChildrenInvalid")
-                .logContains(Messages.ModelValidatorImpl_NestedWhenWithoutChildren("and"),
+                .logContains(Messages.ModelValidatorImpl_NestedWhenWithoutChildren("allOf"),
                         Messages.ModelValidatorImpl_NestedWhenWrongChildrenCount("not", 1))
                 .go();
     }

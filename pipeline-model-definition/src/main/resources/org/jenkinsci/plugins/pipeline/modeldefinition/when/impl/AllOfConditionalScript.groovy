@@ -30,8 +30,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
-class AllConditionalScript extends DeclarativeStageConditionalScript<AllConditional> {
-    public AllConditionalScript(CpsScript s, AllConditional c) {
+class AllOfConditionalScript extends DeclarativeStageConditionalScript<AllOfConditional> {
+    public AllOfConditionalScript(CpsScript s, AllOfConditional c) {
         super(s, c)
     }
 

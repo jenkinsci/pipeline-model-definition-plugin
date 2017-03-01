@@ -420,20 +420,19 @@ public class Utils {
     }
 
     public static boolean whenConditionDescriptorFound(String name) {
-        Descriptor d = DescriptorLookupCache.publicCache.lookupFunction(name)
-        return d != null && d instanceof DeclarativeStageConditionalDescriptor
+        return DeclarativeStageConditionalDescriptor.byName(name) != null
     }
 
     public static boolean nestedWhenCondition(String name) {
-        Descriptor d = DescriptorLookupCache.publicCache.lookupFunction(name)
-        if (d != null && d instanceof DeclarativeStageConditionalDescriptor) {
-            return ((DeclarativeStageConditionalDescriptor)d).allowedNested() != 0
+        DeclarativeStageConditionalDescriptor d = DeclarativeStageConditionalDescriptor.byName(name)
+        if (d != null) {
+            return d.allowedNested() != 0
         }
         return false
     }
 
     public static boolean takesWhenConditionList(String name) {
-        DescribableModel<? extends Describable> model = DescriptorLookupCache.publicCache.modelForStepOrFunction(name)
+        DescribableModel<? extends Describable> model = DeclarativeStageConditionalDescriptor.describableModels.get(name)
 
         if (model != null && Types.isSubClassOf(model.type, DeclarativeStageConditional.class)) {
             DescribableParameter p = model.soleRequiredParameter
@@ -443,5 +442,51 @@ public class Utils {
         }
 
         return false
+    }
+
+    /**
+     * Find and create an {@link UninstantiatedDescribable} from a symbol name and arguments.
+     * The arguments are assumed to be packaged as Groovy does to {@code invokeMethod} et.al.
+     * And to be either a single argument or named arguments, and not taking a closure.
+     *
+     * @param symbol the {@code @Symbol} name
+     * @param baseClazz the base class the describable is supposed to inherit
+     * @param _args the arguments packaged as described above
+     * @return an UninstantiatedDescribable ready to be instantiated or {@code null} if the descriptor could not be found
+     */
+    public static UninstantiatedDescribable getDescribable(String symbol, Class<? extends Describable> baseClazz, Object _args) {
+        def descriptor = SymbolLookup.get().findDescriptor(baseClazz, symbol)
+        if (descriptor != null) {
+            //Lots copied from org.jenkinsci.plugins.workflow.cps.DSL.invokeDescribable
+
+            Map<String, ?> args = unPackageArgs(_args)
+            return new UninstantiatedDescribable(symbol, descriptor.clazz.name, args)
+        }
+        return null
+    }
+
+    /**
+     * Unpacks the arguments for {@link  #getDescribable(java.lang.String, java.lang.Class, java.lang.Object)}.
+     *
+     * @param _args the arguments
+     * @return the unpacked version suitable to give to an {@link UninstantiatedDescribable}.
+     * @see #getDescribable(java.lang.String, java.lang.Class, java.lang.Object)
+     */
+    static Map<String, ?> unPackageArgs(Object _args) {
+        if(_args instanceof Object[]) {
+            List a = Arrays.asList((Object[])_args);
+            if (a.size()==0) {
+                return Collections.emptyMap()
+            }
+
+            if (a.size()==1 && a.get(0) instanceof Map && !((Map)a.get(0)).containsKey('$class')) {
+                return (Map) a.get(0)
+            } else if (a.size() == 1 && !(a.get(0) instanceof Map)) {
+                return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, a.get(0))
+            }
+            throw new IllegalArgumentException("Expected named arguments but got "+a)
+        } else {
+            return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
+        }
     }
 }

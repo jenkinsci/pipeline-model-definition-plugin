@@ -35,8 +35,8 @@ pipeline {
         }
         stage("Two") {
             when {
-                all {
-                    all {
+                allOf {
+                    allOf {
 
                     }
                     not {

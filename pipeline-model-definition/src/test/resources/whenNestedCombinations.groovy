@@ -35,7 +35,7 @@ pipeline {
         }
         stage("Two") {
             when {
-                all {
+                allOf {
                     branch "master"
                 }
             }
@@ -45,7 +45,7 @@ pipeline {
         }
         stage("Three") {
             when {
-                all {
+                allOf {
                     branch "master"
                     expression { "a" == "a" }
                     expression { false }
@@ -57,8 +57,8 @@ pipeline {
         }
         stage("Four") {
             when {
-                any {
-                    all {
+                anyOf {
+                    allOf {
                         not {
                             expression { false }
                         }

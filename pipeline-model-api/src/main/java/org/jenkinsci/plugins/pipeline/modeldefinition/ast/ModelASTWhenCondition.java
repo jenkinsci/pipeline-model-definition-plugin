@@ -105,6 +105,9 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
         if (args != null) {
             args.removeSourceLocation();
         }
+        for (ModelASTWhenContent child : children) {
+            child.removeSourceLocation();
+        }
     }
 
     public String getName() {

@@ -35,7 +35,7 @@ pipeline {
         }
         stage("Two") {
             when {
-                any {
+                anyOf {
                     branch "master"
                     expression {
                         "foo" == "bar"

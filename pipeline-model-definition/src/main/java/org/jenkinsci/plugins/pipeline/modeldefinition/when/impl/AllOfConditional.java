@@ -35,11 +35,11 @@ import java.util.List;
 /**
  * Match all of a list of stage conditions
  */
-public class AllConditional extends DeclarativeStageConditional<AllConditional> {
+public class AllOfConditional extends DeclarativeStageConditional<AllOfConditional> {
     private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested;
 
     @DataBoundConstructor
-    public AllConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested) {
+    public AllOfConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested) {
         this.nested = nested;
     }
 
@@ -48,8 +48,8 @@ public class AllConditional extends DeclarativeStageConditional<AllConditional> 
     }
 
     @Extension
-    @Symbol("all")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AllConditional> {
+    @Symbol("allOf")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AllOfConditional> {
         @Override
         public int allowedNested() {
             return -1;
