@@ -528,4 +528,22 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-38110")
+    @Test
+    public void emptyLibrariesDirective() throws Exception {
+        expectError("emptyLibrariesDirective")
+                .logContains(Messages.ModelValidatorImpl_EmptySection("libraries"))
+                .go();
+    }
+
+    @Issue("JENKINS-38110")
+    @Test
+    public void invalidLibrariesDirectiveContent() throws Exception {
+        expectError("invalidLibrariesDirectiveContent")
+                .logContains(Messages.ModelValidatorImpl_EmptySection("libraries"),
+                        Messages.ModelParser_ExpectedLibrary("\"oh hi there\""),
+                        Messages.ModelParser_ExpectedLibrary("foo('bar')"),
+                        Messages.ModelParser_ExpectedLibrary("1 + 2"))
+                .go();
+    }
 }

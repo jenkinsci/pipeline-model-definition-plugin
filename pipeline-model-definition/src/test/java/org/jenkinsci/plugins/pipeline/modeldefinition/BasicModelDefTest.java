@@ -506,6 +506,24 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-38110")
+    @Test
+    public void librariesDirective() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
+        otherRepo.write("vars/myecho.txt", "Says something very special!");
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("echo-utils",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("librariesDirective")
+                // TODO: Actually check for the echo once library step is in
+                .logContains("LOADING LIBRARY echo-utils")
+                .go();
+    }
+
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectInScript() throws Exception {
