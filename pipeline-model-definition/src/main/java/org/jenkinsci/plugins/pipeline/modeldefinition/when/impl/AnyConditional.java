@@ -22,30 +22,37 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import java.util.List;
 
+/**
+ * Match any of a list of stage conditions
+ */
+public class AnyConditional extends DeclarativeStageConditional<AnyConditional> {
+    private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested;
 
-class OrConditionalScript extends DeclarativeStageConditionalScript<OrConditional> {
-    public OrConditionalScript(CpsScript s, OrConditional c) {
-        super(s, c)
+    @DataBoundConstructor
+    public AnyConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested) {
+        this.nested = nested;
     }
 
-    @Override
-    public boolean evaluate() {
-        List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested = describable.nested
-        for (int i = 0; i < nested.size(); i++) {
-            DeclarativeStageConditional n = nested.get(i)
-            DeclarativeStageConditionalScript s = (DeclarativeStageConditionalScript)n?.getScript(script)
-            if (s != null && s.evaluate()) {
-                return true
-            }
-        }
+    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getNested() {
+        return nested;
+    }
 
-        return false
+    @Extension
+    @Symbol("any")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AnyConditional> {
+        @Override
+        public int allowedNested() {
+            return -1;
+        }
     }
 }

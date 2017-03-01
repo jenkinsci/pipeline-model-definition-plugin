@@ -22,37 +22,30 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import java.util.List;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-/**
- * Match all of a list of stage conditions
- */
-public class AndConditional extends DeclarativeStageConditional<AndConditional> {
-    private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested;
 
-    @DataBoundConstructor
-    public AndConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested) {
-        this.nested = nested;
+class AnyConditionalScript extends DeclarativeStageConditionalScript<AnyConditional> {
+    public AnyConditionalScript(CpsScript s, AnyConditional c) {
+        super(s, c)
     }
 
-    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getNested() {
-        return nested;
-    }
-
-    @Extension
-    @Symbol("and")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AndConditional> {
-        @Override
-        public int allowedNested() {
-            return -1;
+    @Override
+    public boolean evaluate() {
+        List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested = describable.nested
+        for (int i = 0; i < nested.size(); i++) {
+            DeclarativeStageConditional n = nested.get(i)
+            DeclarativeStageConditionalScript s = (DeclarativeStageConditionalScript)n?.getScript(script)
+            if (s != null && s.evaluate()) {
+                return true
+            }
         }
+
+        return false
     }
 }

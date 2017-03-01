@@ -33,13 +33,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.util.List;
 
 /**
- * Match any of a list of stage conditions
+ * Match all of a list of stage conditions
  */
-public class OrConditional extends DeclarativeStageConditional<OrConditional> {
+public class AllConditional extends DeclarativeStageConditional<AllConditional> {
     private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested;
 
     @DataBoundConstructor
-    public OrConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested) {
+    public AllConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested) {
         this.nested = nested;
     }
 
@@ -48,8 +48,8 @@ public class OrConditional extends DeclarativeStageConditional<OrConditional> {
     }
 
     @Extension
-    @Symbol("or")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<OrConditional> {
+    @Symbol("all")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AllConditional> {
         @Override
         public int allowedNested() {
             return -1;

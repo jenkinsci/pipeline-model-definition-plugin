@@ -32,7 +32,7 @@
         }]
       }],
       "when": {"conditions": [      {
-        "name": "or",
+        "name": "any",
         "children":         [
           {
             "name": "branch",
