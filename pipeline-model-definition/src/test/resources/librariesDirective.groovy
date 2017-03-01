@@ -25,14 +25,14 @@
 pipeline {
     agent none
     libraries {
-        lib("echo-utils")
+        lib("echo-utils@master")
+        lib("whereFrom")
     }
     stages {
         stage("foo") {
             steps {
-                // TODO: Actually use the function instead once library step is in.
-                // myecho()
-                echo "Moving on"
+                myecho()
+                whereFrom()
             }
         }
     }

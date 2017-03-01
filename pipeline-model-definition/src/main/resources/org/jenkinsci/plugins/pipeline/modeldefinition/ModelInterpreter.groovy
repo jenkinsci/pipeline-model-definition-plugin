@@ -485,9 +485,7 @@ public class ModelInterpreter implements Serializable {
         if (root.libraries != null) {
             for (int i = 0; i < root.libraries.libs.size(); i++) {
                 String lib = root.libraries.libs.get(i)
-                // TODO: Actually *do* this. Gotta wait for workflow-cps-global-lib-plugin release.
-                // script.library(lib)
-                script.echo("LOADING LIBRARY ${lib}")
+                script.library(lib)
             }
         }
     }

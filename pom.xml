@@ -148,7 +148,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps-global-lib</artifactId>
-        <version>2.5</version>
+        <version>2.7-20170301.201004-1</version> <!-- TODO: Update to 2.7 once released -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
