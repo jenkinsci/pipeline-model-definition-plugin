@@ -882,7 +882,12 @@ class ModelParser implements Parser {
     protected String parseMethodName(MethodCallExpression exp) {
         def s = matchMethodName(exp)
         if (s==null) {
-            errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
+            if (exp.objectExpression instanceof VariableExpression &&
+                !((VariableExpression)exp.objectExpression).isThisExpression()) {
+                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ObjectMethodCall())
+            } else {
+                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
+            }
             s = "error";
         }
         return s;
