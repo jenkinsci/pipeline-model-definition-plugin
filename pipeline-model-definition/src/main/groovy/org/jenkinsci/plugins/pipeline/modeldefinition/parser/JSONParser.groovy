@@ -116,6 +116,9 @@ class JSONParser implements Parser {
                     case 'parameters':
                         pipelineDef.parameters = parseBuildParameters(pipelineJson.append(JsonPointer.of("parameters")))
                         break
+                    case 'libraries':
+                        pipelineDef.libraries = parseLibraries(pipelineJson.append(JsonPointer.of("libraries")))
+                        break
                     default:
                         errorCollector.error(pipelineDef, Messages.Parser_UndefinedSection(sectionName))
                 }
@@ -199,6 +202,18 @@ class JSONParser implements Parser {
             when.conditions.add(parseStep(condTree))
         }
         return when
+    }
+
+    public @CheckForNull ModelASTLibraries parseLibraries(JsonTree j) {
+        ModelASTLibraries l = new ModelASTLibraries(j)
+
+        JsonTree libsTree = j.append(JsonPointer.of("libraries"))
+        libsTree.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree thisNode = libsTree.append(JsonPointer.of(i))
+            l.libs.add(ModelASTValue.fromConstant(thisNode.node.asText(), thisNode))
+        }
+
+        return l
     }
 
     public @CheckForNull ModelASTOptions parseOptions(JsonTree j) {
