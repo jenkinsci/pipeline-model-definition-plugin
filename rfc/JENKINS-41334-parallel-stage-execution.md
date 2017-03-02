@@ -3,6 +3,7 @@
 * Author: Andrew Bayer
 * Created Date: February 27, 2017
 * Approved Date: n/a
+* Target Release: 1.2
 * JIRA: [JENKINS-41334](https://issues.jenkins-ci.org/browse/JENKINS-41334)
 * Status: Draft
 
