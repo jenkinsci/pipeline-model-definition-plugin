@@ -24,7 +24,7 @@
 
 pipeline {
     agent {
-        label {
+        node {
             label ""
             customWorkspace "/tmp/some-sub-dir"
         }

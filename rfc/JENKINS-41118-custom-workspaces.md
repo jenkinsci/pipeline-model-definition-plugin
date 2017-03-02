@@ -53,6 +53,16 @@ with a block. However, the block form of `label` actually works
 currently - `label 'something'` is in fact just a shortcut for 
 `label { label 'something' }` behind the scenes.
 
+In order to address the ugliness of `label { label 'something'; customWorkspace 'some/path' }`,
+we will add an additional `@Symbol` to the `label` agent type,
+`node`. It'll be fully compatible with `label` - either can be
+used interchangeably. But the JSON and Groovy parsers will 
+automatically switch from `label` to `node` if it's used with
+multiple options, i.e., in the block form. This will result in 
+it not mattering at all what symbol the editor is using, because
+it will serialize out as `node` when it's got a block no matter
+what.
+
 #### Alternatives
 
 Perhaps the best alternative to `agent` configuration would be 
@@ -65,7 +75,7 @@ to be configured per-stage currently.
 
 ```groovy
 agent {
-    label {
+    node {
         label "some-label" // This could be changed to something other than "label"
         customWorkspace "some/path"
     }

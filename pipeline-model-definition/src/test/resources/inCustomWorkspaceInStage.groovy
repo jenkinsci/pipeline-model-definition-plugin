@@ -27,7 +27,7 @@ pipeline {
     stages {
         stage("foo") {
             agent {
-                label {
+                node {
                     label ""
                     customWorkspace "some-sub-dir"
                 }

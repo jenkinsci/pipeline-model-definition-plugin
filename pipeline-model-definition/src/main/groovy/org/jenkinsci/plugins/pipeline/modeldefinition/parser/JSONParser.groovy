@@ -528,6 +528,10 @@ class JSONParser implements Parser {
             j.node.get("arguments").isArray() &&
             j.node.get("arguments").size() > 0) {
             agent.variables = parseClosureMap(j.append(JsonPointer.of("arguments")))
+            // HACK FOR JENKINS-41118 to switch to "node" rather than "label" when multiple variable are set.
+            if (agent.agentType.key == "label") {
+                agent.agentType.key = "node"
+            }
         } else if (j.node.has("argument") && j.node.get("argument").isObject()) {
             agent.variables = parseValue(j.append(JsonPointer.of("argument")))
         }

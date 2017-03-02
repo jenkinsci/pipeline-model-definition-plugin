@@ -58,7 +58,7 @@ public class Label extends DeclarativeAgent<Label> {
         this.customWorkspace = customWorkspace;
     }
 
-    @Extension(ordinal = -800) @Symbol("label")
+    @Extension(ordinal = -800) @Symbol({"label","node"})
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
     }
 }
