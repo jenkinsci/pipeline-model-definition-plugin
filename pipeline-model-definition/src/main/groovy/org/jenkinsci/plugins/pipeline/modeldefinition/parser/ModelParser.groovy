@@ -857,10 +857,7 @@ class ModelParser implements Parser {
         if (e instanceof ConstantExpression) {
             return ModelASTValue.fromConstant(e.value, e)
         }
-        if (e instanceof GStringExpression) {
-            return ModelASTValue.fromGString(e.text, e)
-        }
-        if (e instanceof MapExpression) {
+        if (e instanceof GStringExpression || e instanceof MapExpression) {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {
