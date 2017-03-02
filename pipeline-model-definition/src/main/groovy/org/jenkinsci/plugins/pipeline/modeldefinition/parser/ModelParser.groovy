@@ -373,7 +373,7 @@ class ModelParser implements Parser {
         BlockStatement block = asBlock(stepsBlock.body.code)
         ModelASTWhen w = new ModelASTWhen(statement)
         block.statements.each {s ->
-            w.conditions.add(parseStep(s))
+            w.conditions.add(parseWhenContent(s))
         }
 
         return w
@@ -630,6 +630,41 @@ class ModelParser implements Parser {
 
         return thisStep
     }
+
+    /**
+     * Parses a statement into a {@link ModelASTWhenContent}
+     */
+    public ModelASTWhenContent parseWhenContent(Statement st) {
+        ModelASTWhenCondition condition = new ModelASTWhenCondition(st)
+        def mc = matchMethodCall(st);
+        if (mc == null) {
+            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+            errorCollector.error(condition, Messages.ModelParser_ExpectedStep());
+            return condition
+        };
+
+        def stepName = parseMethodName(mc);
+        if (stepName == "expression") {
+            return parseWhenExpression(st)
+        }
+
+        List<Expression> args = ((TupleExpression) mc.arguments).expressions
+
+        def bs = matchBlockStatement(st);
+        condition.name = stepName
+        if (bs != null) {
+            args = args.subList(0, args.size() - 1)    // cut out the closure argument
+            if (!args.isEmpty()) {
+                condition.args = parseArgumentList(args)
+            }
+            condition.children = eachStatement(bs.body.code) { parseWhenContent(it) }
+        } else {
+            condition.args = parseArgumentList(args)
+        }
+
+        return condition
+    }
+
 
     private ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
         if (Jenkins.getInstance() != null && origArgs instanceof ModelASTSingleArgument) {

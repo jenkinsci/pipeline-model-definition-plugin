@@ -1,0 +1,54 @@
+{"pipeline": {
+  "stages":   [
+    {
+      "name": "One",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Hello"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Two",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "script",
+          "arguments": [          {
+            "key": "scriptBlock",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"World\"\n          echo \"Heal it\""
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "not",
+        "children": [        {
+          "name": "branch",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "SOME_OTHER_BRANCH"
+          }
+        }]
+      }]}
+    }
+  ],
+  "environment": [  {
+    "key": "BRANCH_NAME",
+    "value":     {
+      "isLiteral": true,
+      "value": "master"
+    }
+  }],
+  "agent": {"type": "any"}
+}}

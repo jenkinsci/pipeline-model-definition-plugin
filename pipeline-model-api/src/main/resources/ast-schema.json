@@ -247,6 +247,34 @@
       ],
       "additionalProperties": false
     },
+    "nestedWhenCondition": {
+      "description": "A when condition holding one or more other when conditions",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/step"
+              },
+              {
+                "$ref": "#/definitions/nestedWhenCondition"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "children"
+      ],
+      "additionalProperties": false
+    },
     "branch": {
       "description": "A block of steps, generally one of: the contents of a stage, the contents of a build condition block, or one branch of a parallel invocation",
       "type": "object",
@@ -340,7 +368,7 @@
                 "$ref": "#/definitions/step"
               },
               {
-                "$ref": "#/definitions/treeStep"
+                "$ref": "#/definitions/nestedWhenCondition"
               }
             ]
           }
