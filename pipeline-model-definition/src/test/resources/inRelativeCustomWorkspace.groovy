@@ -24,6 +24,7 @@
 
 pipeline {
     agent {
+        // This is still deliberately 'label' here for testing label->node conversion in ModelParserTest#labelWithOptionsBecomesNode
         label {
             label ""
             customWorkspace "./relative/custom/workspace/../../custom2/workspace2/./../workspace3"

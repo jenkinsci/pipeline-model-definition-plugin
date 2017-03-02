@@ -1,0 +1,37 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": false,
+            "value": "\"Workspace dir is ${pwd()}\""
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent":   {
+    "type": "node",
+    "arguments":     [
+      {
+        "key": "label",
+        "value":         {
+          "isLiteral": true,
+          "value": ""
+        }
+      },
+      {
+        "key": "customWorkspace",
+        "value":         {
+          "isLiteral": true,
+          "value": "./relative/custom/workspace/../../custom2/workspace2/./../workspace3"
+        }
+      }
+    ]
+  }
+}}
