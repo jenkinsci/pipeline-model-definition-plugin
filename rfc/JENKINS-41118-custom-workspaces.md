@@ -2,9 +2,10 @@
 
 * Author: Andrew Bayer
 * Created Date: February 23, 2017
-* Approved Date: n/a
+* Approved Date: March 2, 2017
+* Target Release: 1.1
 * JIRA: [JENKINS-41118](https://issues.jenkins-ci.org/browse/JENKINS-41118)
-* Status: Draft
+* Status: Approved
 
 ### Problem Statement
 
