@@ -146,7 +146,8 @@ public abstract class AbstractModelDefTest {
             "whenNot",
             "whenOr",
             "whenAnd",
-            "usernamePassword"
+            "usernamePassword",
+            "environmentCrossReferences"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
