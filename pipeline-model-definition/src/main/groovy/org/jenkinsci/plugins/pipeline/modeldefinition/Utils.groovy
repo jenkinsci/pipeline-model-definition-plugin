@@ -48,6 +48,8 @@ import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
+import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner
 import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
@@ -193,7 +195,7 @@ public class Utils {
 
     static void attachDeclarativeActions(CpsScript script) {
         WorkflowRun r = script.$build()
-        ModelASTPipelineDef model = Converter.parseFromCpsScript(script)
+        ModelASTPipelineDef model = Converter.parseFromWorkflowRun(r)
 
         ModelASTStages stages = model.stages
 
@@ -401,5 +403,14 @@ public class Utils {
             return false
         }
         return true
+    }
+
+    static CpsFlowExecution getExecutionForRun(WorkflowRun run) {
+        FlowExecutionOwner owner = ((FlowExecutionOwner.Executable) run).asFlowExecutionOwner()
+        if (owner == null) {
+            return null
+        }
+        FlowExecution exec = owner.getOrNull()
+        return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null
     }
 }
