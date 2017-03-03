@@ -157,7 +157,9 @@ public class Converter {
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
-                model[0] = new ModelParser(source).parse();
+                if (PIPELINE_SCRIPT_NAME == source.name) {
+                    model[0] = new ModelParser(source).parse();
+                }
             }
         }, CANONICALIZATION);
 
