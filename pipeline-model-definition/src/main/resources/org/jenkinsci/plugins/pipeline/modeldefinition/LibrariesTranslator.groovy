@@ -29,7 +29,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
- * Translates a closure containing a sequence of "library('string')" calls into an instance of {@link Libraries}.
+ * Translates a closure containing a sequence of "lib('string')" calls into an instance of {@link Libraries}.
  *
  * @author Andrew Bayer
  */
