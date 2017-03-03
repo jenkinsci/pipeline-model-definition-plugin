@@ -542,14 +542,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         otherRepo.git("checkout", "-b", "test");
         otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
                 "\n" +
-                "class Zot implements Serializable {\n" +
-                "  def steps\n" +
-                "  Zot(steps){\n" +
-                "    this.steps = steps\n" +
-                "  }\n" +
-                "  def echo(msg) {\n" +
-                "    steps.sh \"echo ${msg}\"\n" +
-                "  }\n" +
+                "def echo(msg) {\n" +
+                "  echo \"-> ${msg}\"\n" +
                 "}\n");
         otherRepo.git("add", "src");
         otherRepo.git("commit", "--message=init");
@@ -560,7 +554,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun firstRun = expect("folderLibraryParsing")
                 .inFolder(folder)
-                .logContains("hello")
+                .logContains("Hello world")
                 .go();
 
         WorkflowRun secondRun = firstRun.getParent().scheduleBuild2(0).waitForStart();

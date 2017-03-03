@@ -26,14 +26,11 @@
 import org.foo.Zot
 
 pipeline {
-    agent any
+    agent none
     stages {
         stage("foo") {
             steps {
-                script {
-                    def z = new Zot(steps)
-                    z.echo("hello")
-                }
+                echo "Hello world"
             }
         }
     }
