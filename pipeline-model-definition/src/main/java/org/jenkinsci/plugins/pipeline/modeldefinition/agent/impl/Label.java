@@ -29,11 +29,14 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 
 public class Label extends DeclarativeAgent<Label> {
     private String label;
+    private String customWorkspace;
 
     @DataBoundConstructor
     public Label(String label) {
@@ -45,7 +48,17 @@ public class Label extends DeclarativeAgent<Label> {
         return label;
     }
 
-    @Extension(ordinal = -800) @Symbol("label")
+    public @CheckForNull
+    String getCustomWorkspace() {
+        return customWorkspace;
+    }
+
+    @DataBoundSetter
+    public void setCustomWorkspace(String customWorkspace) {
+        this.customWorkspace = customWorkspace;
+    }
+
+    @Extension(ordinal = -800) @Symbol({"label","node"})
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
     }
 }

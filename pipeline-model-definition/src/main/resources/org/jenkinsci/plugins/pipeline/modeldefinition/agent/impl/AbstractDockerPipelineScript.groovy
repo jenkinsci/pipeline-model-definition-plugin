@@ -48,6 +48,7 @@ public abstract class AbstractDockerPipelineScript<A extends AbstractDockerAgent
             Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: targetLabel])
             l.inStage = describable.inStage
             l.doCheckout = describable.doCheckout
+            l.customWorkspace = describable.customWorkspace
             LabelScript labelScript = (LabelScript) l.getScript(script)
             return labelScript.run {
                 configureRegistry(body).call()

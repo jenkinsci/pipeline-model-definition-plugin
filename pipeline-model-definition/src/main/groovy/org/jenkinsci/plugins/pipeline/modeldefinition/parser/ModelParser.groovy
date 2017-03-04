@@ -759,6 +759,11 @@ class ModelParser implements Parser {
                     agent.agentType = parseKey(typeMeth.method)
                     ModelASTClosureMap parsed = parseClosureMap(m.body)
                     agent.variables = parsed.variables.get(agent.agentType)
+
+                    // HACK FOR JENKINS-41118 to switch to "node" rather than "label" when multiple variable are set.
+                    if (agent.agentType.key == "label" && agent.variables instanceof ModelASTClosureMap) {
+                        agent.agentType.key = "node"
+                    }
                 }
             }
         }
@@ -852,10 +857,7 @@ class ModelParser implements Parser {
         if (e instanceof ConstantExpression) {
             return ModelASTValue.fromConstant(e.value, e)
         }
-        if (e instanceof GStringExpression) {
-            return ModelASTValue.fromGString(e.text, e)
-        }
-        if (e instanceof MapExpression) {
+        if (e instanceof GStringExpression || e instanceof MapExpression) {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {

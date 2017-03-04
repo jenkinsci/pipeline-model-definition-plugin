@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,21 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
-
-import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-public class LabelScript extends DeclarativeAgentScript<Label> {
-
-    public LabelScript(CpsScript s, Label a) {
-        super(s, a)
+pipeline {
+    agent {
+        node {
+            label ""
+            customWorkspace "some-sub-dir"
+        }
     }
-
-    @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(describable?.label) {
-                    CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
+    stages {
+        stage("foo") {
+            steps {
+                echo "Workspace dir is ${pwd()}"
             }
         }
     }
 }
+
+
+

@@ -34,6 +34,7 @@ public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> exte
     protected String args = "";
     protected String registryUrl;
     protected String registryCredentialsId;
+    protected String customWorkspace;
     protected boolean reuseNode;
 
     public @Nullable
@@ -72,6 +73,15 @@ public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> exte
     @DataBoundSetter
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public @CheckForNull String getCustomWorkspace() {
+        return customWorkspace;
+    }
+
+    @DataBoundSetter
+    public void setCustomWorkspace(String customWorkspace) {
+        this.customWorkspace = customWorkspace;
     }
 
     public @CheckForNull String getArgs() {
