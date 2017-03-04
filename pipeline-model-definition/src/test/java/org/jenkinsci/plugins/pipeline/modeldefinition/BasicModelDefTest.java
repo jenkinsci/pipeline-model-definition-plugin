@@ -52,6 +52,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -503,6 +504,32 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         expect("libraryAnnotation")
                 .logContains("something special")
+                .go();
+    }
+
+    @Issue("JENKINS-38110")
+    @Test
+    public void librariesDirective() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
+        otherRepo.write("vars/myecho.txt", "Says something very special!");
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("echo-utils",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        thirdRepo.init();
+        thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
+        thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
+        thirdRepo.git("add", "vars");
+        thirdRepo.git("commit", "--message=init");
+        LibraryConfiguration secondLib = new LibraryConfiguration("whereFrom",
+                new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
+        secondLib.setDefaultVersion("master");
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
+
+        expect("librariesDirective")
+                .logContains("something special", "from another library")
                 .go();
     }
 

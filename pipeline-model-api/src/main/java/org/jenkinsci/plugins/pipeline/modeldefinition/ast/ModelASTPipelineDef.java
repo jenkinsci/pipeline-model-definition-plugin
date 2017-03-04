@@ -19,6 +19,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTOptions options;
     private ModelASTBuildParameters parameters;
     private ModelASTTriggers triggers;
+    private ModelASTLibraries libraries;
 
     public ModelASTPipelineDef(Object sourceLocation) {
         super(sourceLocation);
@@ -46,6 +47,11 @@ public final class ModelASTPipelineDef extends ModelASTElement {
             a.put("triggers", triggers.toJSON());
         } else {
             a.put("triggers", null);
+        }
+        if (libraries != null && !libraries.getLibs().isEmpty()) {
+            a.put("libraries", libraries.toJSON());
+        } else {
+            a.put("libraries", null);
         }
         return new JSONObject().accumulate("pipeline", a);
     }
@@ -78,6 +84,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (triggers != null) {
             triggers.validate(validator);
         }
+        if (libraries != null) {
+            libraries.validate(validator);
+        }
     }
 
     @Override
@@ -86,6 +95,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result.append("pipeline {\n");
         if (agent != null) {
             result.append(agent.toGroovy());
+        }
+        if (libraries != null) {
+            result.append(libraries.toGroovy());
         }
         if (stages != null) {
             result.append(stages.toGroovy());
@@ -161,6 +173,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (stages != null) {
             stages.removeSourceLocation();
         }
+        if (libraries != null) {
+            libraries.removeSourceLocation();
+        }
         if (postBuild != null) {
             postBuild.removeSourceLocation();
         }
@@ -191,6 +206,14 @@ public final class ModelASTPipelineDef extends ModelASTElement {
 
     public void setStages(ModelASTStages stages) {
         this.stages = stages;
+    }
+
+    public ModelASTLibraries getLibraries() {
+        return libraries;
+    }
+
+    public void setLibraries(ModelASTLibraries libraries) {
+        this.libraries = libraries;
     }
 
     public ModelASTPostBuild getPostBuild() {
@@ -261,6 +284,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 ", options=" + options +
                 ", parameters=" + parameters +
                 ", triggers=" + triggers +
+                ", libraries=" + libraries +
                 "}";
     }
 
@@ -303,6 +327,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (getParameters() != null ? !getParameters().equals(that.getParameters()) : that.getParameters() != null) {
             return false;
         }
+        if (getLibraries() != null ? !getLibraries().equals(that.getLibraries()) : that.getLibraries() != null) {
+            return false;
+        }
         return getTriggers() != null ? getTriggers().equals(that.getTriggers()) : that.getTriggers() == null;
 
     }
@@ -318,6 +345,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getTriggers() != null ? getTriggers().hashCode() : 0);
+        result = 31 * result + (getLibraries() != null ? getLibraries().hashCode() : 0);
         return result;
     }
 }

@@ -178,6 +178,21 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
+    public boolean validateElement(ModelASTLibraries libraries) {
+        boolean valid = true
+
+        if (libraries.libs.isEmpty()) {
+            errorCollector.error(libraries, Messages.ModelValidatorImpl_EmptySection("libraries"))
+            valid = false
+        } else {
+            libraries.libs.each { l ->
+                // TODO: Decide what validation, if any, we want to do for library identifiers.
+            }
+        }
+
+        return valid
+    }
+
     public boolean validateWhenCondition(ModelASTStep condition) {
         def allNames = DeclarativeStageConditionalDescriptor.allNames()
 

@@ -93,6 +93,7 @@ public abstract class AbstractModelDefTest {
     public static JenkinsRule j = new JenkinsRule();
     @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
+    @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
     @Inject
     WorkflowLibRepository globalLibRepo;
