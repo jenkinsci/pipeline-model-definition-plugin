@@ -38,6 +38,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 
 import static org.jenkinsci.plugins.pipeline.modeldefinition.util.IsJsonObjectContaining.hasEntry;
@@ -86,7 +87,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void toJson() throws IOException {
         final String rawJenkinsfile = fileContentsFromResources("when/simpleWhen.groovy", true);
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"), HttpMethod.POST);
 
         assertNotNull(rawJenkinsfile);
 
@@ -101,7 +102,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         assertThat(result, hasEntry("status", "ok"));
         assertThat(result, hasEntry("data", hasEntry("result", "success")));
 
-        req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
+        req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
         pair = new NameValuePair("json", result.getJSONObject("data").getJSONObject("json").toString());
         req.setRequestParameters(Collections.singletonList(pair));
 
