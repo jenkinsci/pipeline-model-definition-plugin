@@ -104,7 +104,7 @@ public class Converter {
             makeCompilerConfiguration(),
             new CodeSource(src, new Certificate[0]),
             getCompilationClassLoader());
-        cu.addSource(src);
+        cu.addSource(src)
 
         return compilationUnitToPipelineDef(cu)
     }
@@ -157,7 +157,7 @@ public class Converter {
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
-                if (PIPELINE_SCRIPT_NAME == source.name) {
+                if (model[0] == null) {
                     model[0] = new ModelParser(source).parse();
                 }
             }
@@ -184,7 +184,7 @@ public class Converter {
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
-                if (PIPELINE_SCRIPT_NAME == source.name) {
+                if (model[0] == null) {
                     model[0] = new ModelParser(source).parsePlainSteps(source.AST);
                 }
             }
