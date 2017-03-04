@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.endpoints;
 
+import hudson.security.csrf.CrumbExclusion;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.tree.SimpleJsonTree;
 import com.github.fge.jsonschema.util.JsonLoader;
@@ -45,12 +46,15 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-
-import static hudson.security.Permission.READ;
 
 /**
  * Endpoint for converting to/from JSON/Groovy and validating both.
@@ -79,7 +83,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doToJenkinsfile(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.getInstance().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -110,7 +114,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doToJson(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.getInstance().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -138,7 +142,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doStepsToJson(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.getInstance().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -166,7 +170,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doStepsToJenkinsfile(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.getInstance().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -222,7 +226,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doValidateJenkinsfile(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.getInstance().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -250,7 +254,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doValidateJson(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.getInstance().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -281,7 +285,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doValidate(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.getInstance().checkPermission(Jenkins.READ);
 
         List<String> output = new ArrayList<>();
 
@@ -387,5 +391,21 @@ public class ModelConverterAction implements RootAction {
     private void reportFailure(JSONObject result, JSONArray errors) {
         result.accumulate("result", "failure");
         result.accumulate("errors", errors);
+    }
+
+    @Extension
+    public static class ModelConverterActionCrumbExclusion extends CrumbExclusion {
+        @Override
+        public boolean process(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
+                throws IOException, ServletException {
+            String pathInfo = req.getPathInfo();
+
+            if (pathInfo != null && pathInfo.startsWith("/" + PIPELINE_CONVERTER_URL + "/")) {
+                chain.doFilter(req, resp);
+                return true;
+            }
+
+            return false;
+        }
     }
 }

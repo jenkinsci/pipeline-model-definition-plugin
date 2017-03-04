@@ -110,13 +110,12 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
     </dependency>
-
-    <!-- TEST deps -->
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps-global-lib</artifactId>
-      <scope>test</scope>
     </dependency>
+
+    <!-- TEST deps -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
@@ -150,6 +149,11 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>jackson2-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.jcabi</groupId>
+      <artifactId>jcabi-matchers</artifactId>
       <scope>test</scope>
     </dependency>
     

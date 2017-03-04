@@ -75,6 +75,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.jcabi.matchers.RegexMatchers.containsPattern;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertNotNull;
@@ -93,6 +94,7 @@ public abstract class AbstractModelDefTest {
     public static JenkinsRule j = new JenkinsRule();
     @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
+    @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
     @Inject
     WorkflowLibRepository globalLibRepo;
@@ -140,7 +142,8 @@ public abstract class AbstractModelDefTest {
             "parallelPipelineWithSpaceInBranch",
             "parallelPipelineQuoteEscaping",
             "nestedTreeSteps",
-            "jsonSchemaNull"
+            "jsonSchemaNull",
+            "inCustomWorkspace"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -213,22 +216,22 @@ public abstract class AbstractModelDefTest {
     }
 
     protected void onAllowedOS(PossibleOS... osList) throws Exception {
-        boolean passed = true;
+        boolean passed = false;
         for (PossibleOS os : osList) {
             switch (os) {
                 case LINUX:
-                    if (!SystemUtils.IS_OS_LINUX) {
-                        passed = false;
+                    if (SystemUtils.IS_OS_LINUX) {
+                        passed = true;
                     }
                     break;
                 case WINDOWS:
-                    if (!SystemUtils.IS_OS_WINDOWS) {
-                        passed = false;
+                    if (SystemUtils.IS_OS_WINDOWS) {
+                        passed = true;
                     }
                     break;
                 case MAC:
-                    if (!SystemUtils.IS_OS_MAC) {
-                        passed = false;
+                    if (SystemUtils.IS_OS_MAC) {
+                        passed = true;
                     }
                     break;
                 default:
@@ -441,6 +444,7 @@ public abstract class AbstractModelDefTest {
         private Map<String,String> otherResources;
         private List<String> logContains;
         private List<String> logNotContains;
+        private List<String> logMatches;
         private WorkflowRun run;
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
@@ -485,6 +489,15 @@ public abstract class AbstractModelDefTest {
                 logContains.addAll(Arrays.asList(logEntries));
             } else {
                 this.logContains = new ArrayList<>(Arrays.asList(logEntries));
+            }
+            return this;
+        }
+
+        public ExpectationsBuilder logMatches(String... logPatterns) {
+            if (this.logMatches != null) {
+                logMatches.addAll(Arrays.asList(logPatterns));
+            } else {
+                this.logMatches = new ArrayList<>(Arrays.asList(logPatterns));
             }
             return this;
         }
@@ -554,6 +567,12 @@ public abstract class AbstractModelDefTest {
             if (logNotContains != null) {
                 for (String logNotContain : logNotContains) {
                     j.assertLogNotContains(logNotContain, run);
+                }
+            }
+            if (logMatches != null) {
+                String log = JenkinsRule.getLog(run);
+                for (String pattern : logMatches) {
+                    assertThat(log, containsPattern(pattern));
                 }
             }
             if (hasFailureCause) {

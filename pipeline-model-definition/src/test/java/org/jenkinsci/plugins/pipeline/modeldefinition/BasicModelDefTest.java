@@ -27,6 +27,7 @@ import com.google.common.base.Predicate;
 import hudson.model.Result;
 import hudson.model.Slave;
 import jenkins.plugins.git.GitSCMSource;
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
@@ -52,6 +53,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import java.util.Arrays;
+import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -506,6 +509,32 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-38110")
+    @Test
+    public void librariesDirective() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
+        otherRepo.write("vars/myecho.txt", "Says something very special!");
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("echo-utils",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        thirdRepo.init();
+        thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
+        thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
+        thirdRepo.git("add", "vars");
+        thirdRepo.git("commit", "--message=init");
+        LibraryConfiguration secondLib = new LibraryConfiguration("whereFrom",
+                new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
+        secondLib.setDefaultVersion("master");
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
+
+        expect("librariesDirective")
+                .logContains("something special", "from another library")
+                .go();
+    }
+
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectInScript() throws Exception {
@@ -534,7 +563,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-40657")
     @Test
-    public void libraryObjectOutsideScript() throws Exception {
+    public void libraryObjectDefinedOutsidePipeline() throws Exception {
         otherRepo.init();
         otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
                 "\n" +
@@ -553,7 +582,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 new LibraryConfiguration("zot-stuff",
                         new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
 
-        expect("libraryObjectOutsideScript")
+        expect("libraryObjectDefinedOutsidePipeline")
                 .logContains("hello");
     }
 
@@ -563,6 +592,45 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         env(s).set();
         expect("booleanParamBuildStep")
                 .logContains("[Pipeline] { (promote)", "Scheduling project")
+                .go();
+    }
+
+    @Issue("JENKINS-41118")
+    @Test
+    public void inCustomWorkspace() throws Exception {
+        expect("inCustomWorkspace")
+                .logMatches("Workspace dir is .*some-sub-dir")
+                .go();
+    }
+
+    @Issue("JENKINS-41118")
+    @Test
+    public void inRelativeCustomWorkspace() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        expect("inRelativeCustomWorkspace")
+                .logMatches("Workspace dir is .*relative/custom2/workspace3")
+                .go();
+    }
+
+    @Issue("JENKINS-41118")
+    @Test
+    public void inAbsoluteCustomWorkspace() throws Exception {
+        // Since we're using a Unix path, only run on a Unix environment
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        try {
+            expect("inAbsoluteCustomWorkspace")
+                    .logContains("Workspace dir is /tmp/some-sub-dir")
+                    .go();
+        } finally {
+            FileUtils.deleteDirectory(new File("/tmp/some-sub-dir"));
+        }
+    }
+
+    @Issue("JENKINS-41118")
+    @Test
+    public void inCustomWorkspaceInStage() throws Exception {
+        expect("inCustomWorkspaceInStage")
+                .logMatches("Workspace dir is .*some-sub-dir")
                 .go();
     }
 }

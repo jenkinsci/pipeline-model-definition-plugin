@@ -156,6 +156,14 @@
         }
       ]
     },
+    "libraries": {
+      "description": "One or more shared library identifiers to load",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
     "options": {
       "description": "One or more options (including job properties, wrappers, and options specific to Declarative Pipelines)",
       "type": "object",
@@ -440,6 +448,9 @@
         },
         "parameters": {
           "$ref": "#/definitions/parameters"
+        },
+        "libraries": {
+          "$ref": "#/definitions/libraries"
         }
       },
       "required": [

@@ -31,7 +31,6 @@ import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.environment.DeclarativeEnvironmentContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.environment.impl.Credentials
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipStagesAfterUnstable
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -68,6 +67,8 @@ public class ModelInterpreter implements Serializable {
             boolean postBuildRun = false
 
             try {
+                loadLibraries(root)
+
                 executeProperties(root)
 
                 // Entire build, including notifications, runs in the withEnv.
@@ -474,6 +475,20 @@ public class ModelInterpreter implements Serializable {
         }
 
         return stageError
+    }
+
+    /**
+     * Load specified libraries.
+     *
+     * @param root The root context we're running in
+     */
+    def loadLibraries(Root root) {
+        if (root.libraries != null) {
+            for (int i = 0; i < root.libraries.libs.size(); i++) {
+                String lib = root.libraries.libs.get(i)
+                script.library(lib)
+            }
+        }
     }
 
     /**

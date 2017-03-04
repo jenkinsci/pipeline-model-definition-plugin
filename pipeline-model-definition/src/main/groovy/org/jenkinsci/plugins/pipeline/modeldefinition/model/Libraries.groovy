@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package org.jenkinsci.plugins.pipeline.modeldefinition.model
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
 
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+/**
+ * A container for one or more library identifiers, within the build, in the order they're declared.
+ *
+ * @author Andrew Bayer
+ */
+@ToString
+@EqualsAndHashCode
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+public class Libraries implements Serializable {
+    List<String> libs = []
 
-import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-public class LabelScript extends DeclarativeAgentScript<Label> {
-
-    public LabelScript(CpsScript s, Label a) {
-        super(s, a)
+    Libraries libs(List<String> s) {
+        this.libs = s
+        return this
     }
 
-    @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(describable?.label) {
-                    CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
-            }
-        }
+    List<String> getLibs() {
+        return libs
     }
 }

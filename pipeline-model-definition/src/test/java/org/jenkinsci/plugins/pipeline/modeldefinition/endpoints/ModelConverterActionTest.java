@@ -35,6 +35,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.net.URL;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +67,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
 
     private void getExpectedErrorNoParam(String param, String endpoint) throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/" + endpoint), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/" + endpoint), HttpMethod.POST);
         String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
         assertNotNull(rawResult);
 
@@ -86,7 +87,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
     @Test
     public void errorOnNoPipeline() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
         String groovyAsString = "echo 'nothing to see here'";
         NameValuePair pair = new NameValuePair("jenkinsfile", groovyAsString);
         req.setRequestParameters(Collections.singletonList(pair));
@@ -110,7 +111,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
     @Test
     public void testFailedValidateJsonInvalidBuildCondition() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);
         String simpleJson = fileContentsFromResources("json/errors/invalidBuildCondition.json");
 
         assertNotNull(simpleJson);
@@ -140,7 +141,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         if (rawJenkinsfile != null) {
 
             JenkinsRule.WebClient wc = j.createWebClient();
-            WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
+            WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
 
             assertNotNull(rawJenkinsfile);
 
@@ -162,7 +163,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
     @Test
     public void testFailedValidateJsonUnlistedToolType() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);
         String simpleJson = fileContentsFromResources("json/errors/unlistedToolType.json");
 
         assertNotNull(simpleJson);
@@ -193,7 +194,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         if (rawJenkinsfile != null) {
 
             JenkinsRule.WebClient wc = j.createWebClient();
-            WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
+            WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
 
             assertNotNull(rawJenkinsfile);
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,30 +23,30 @@
  */
 
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class LabelScript extends DeclarativeAgentScript<Label> {
+/**
+ * Translates a closure containing a sequence of "lib('string')" calls into an instance of {@link Libraries}.
+ *
+ * @author Andrew Bayer
+ */
+public class LibrariesTranslator implements Serializable {
+    List<String> actualList = []
+    CpsScript script
 
-    public LabelScript(CpsScript s, Label a) {
-        super(s, a)
+    LibrariesTranslator(CpsScript script) {
+        this.script = script
     }
 
-    @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(describable?.label) {
-                    CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                throw e
-            }
-        }
+    def lib(String l) {
+        actualList.add(l)
+    }
+
+    Libraries toListModel() {
+        Libraries l = new Libraries()
+        l.libs(actualList)
     }
 }

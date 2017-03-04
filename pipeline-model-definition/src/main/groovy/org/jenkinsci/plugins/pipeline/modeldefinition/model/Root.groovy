@@ -57,6 +57,8 @@ public class Root implements NestedModel, Serializable {
 
     Parameters parameters
 
+    Libraries libraries
+
     Root stages(Stages s) {
         this.stages = s
         return this
@@ -94,6 +96,11 @@ public class Root implements NestedModel, Serializable {
 
     Root parameters(Parameters p) {
         this.parameters = p
+        return this
+    }
+
+    Root libraries(Libraries l) {
+        this.libraries = l
         return this
     }
 

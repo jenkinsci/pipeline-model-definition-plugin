@@ -410,7 +410,7 @@ public class ValidatorTest extends AbstractModelDefTest {
         // Test the case of calling a method on an object, i.e., foo.bar(1). This will fail.
         expectError("globalLibraryObjectMethodCall")
                 .logContains("MultipleCompilationErrorsException: startup failed:",
-                        Messages.ModelParser_ExpectedSymbol())
+                        Messages.ModelParser_ObjectMethodCall())
                 .go();
     }
 
@@ -484,14 +484,6 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Issue("JENKINS-41668")
-    @Test
-    public void dirSepInDockerfileName() throws Exception {
-        expectError("dirSepInDockerfileName")
-                .logContains(Messages.ModelValidatorImpl_DirSeparatorInDockerfileName())
-                .go();
-    }
-
     @Issue("JENKINS-41645")
     @Test
     public void invalidEnvironmentIdentifiers() throws Exception {
@@ -536,4 +528,22 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-38110")
+    @Test
+    public void emptyLibrariesDirective() throws Exception {
+        expectError("emptyLibrariesDirective")
+                .logContains(Messages.ModelValidatorImpl_EmptySection("libraries"))
+                .go();
+    }
+
+    @Issue("JENKINS-38110")
+    @Test
+    public void invalidLibrariesDirectiveContent() throws Exception {
+        expectError("invalidLibrariesDirectiveContent")
+                .logContains(Messages.ModelValidatorImpl_EmptySection("libraries"),
+                        Messages.ModelParser_ExpectedLibrary("\"oh hi there\""),
+                        Messages.ModelParser_ExpectedLibrary("foo('bar')"),
+                        Messages.ModelParser_ExpectedLibrary("1 + 2"))
+                .go();
+    }
 }

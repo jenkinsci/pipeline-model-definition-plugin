@@ -173,6 +173,9 @@ class ModelParser implements Parser {
                     case 'triggers':
                         r.triggers = parseTriggers(stmt)
                         break
+                    case 'libraries':
+                        r.libraries = parseLibraries(stmt)
+                        break
                     case 'properties':
                         errorCollector.error(r, Messages.ModelParser_RenamedProperties())
                         break
@@ -253,6 +256,41 @@ class ModelParser implements Parser {
             }
             if (errorEncountered) {
                 errorCollector.error(r, Messages.ModelParser_ExpectedNVPairs())
+            }
+        }
+        return r;
+    }
+
+    public @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
+        def r = new ModelASTLibraries(stmt);
+
+        def m = matchBlockStatement(stmt);
+        if (m==null) {
+            // Should be able to get this validation later.
+            return r
+        } else {
+            eachStatement(m.body.code) {
+                ModelASTMethodCall methCall = new ModelASTMethodCall(it)
+                def mc = matchMethodCall(it);
+                if (mc == null || mc.methodAsString != "lib") {
+                    errorCollector.error(r,Messages.ModelParser_ExpectedLibrary(getSourceText(it)));
+                } else if (matchBlockStatement(it) != null) {
+                    errorCollector.error(methCall, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Libraries()))
+                } else {
+                    methCall = parseMethodCall(mc)
+                    if (methCall.args.isEmpty()) {
+                        errorCollector.error(methCall, Messages.ModelParser_ExpectedLibrary(getSourceText(mc)))
+                    } else if (methCall.args.size() > 1 || !(methCall.args.first() instanceof ModelASTValue)) {
+                        // TODO: Decide whether we're going to support LibraryRetrievers. If so, the above changes.
+                        // It's this way explicitly to just handle 'lib("foo@1.2.3")' syntax. Well, more accurately,
+                        // it's this way so that we just handle 'lib("foo@1.2.3")' for now but can easily add support
+                        // for something like 'lib(identifier:"foo@1.2.3", retriever:[$class:...])' in the future without
+                        // breaking backwards compatibility.
+                        errorCollector.error(methCall, Messages.ModelParser_ExpectedLibrary(getSourceText(mc)))
+                    } else {
+                        r.libs.add((ModelASTValue)methCall.args.first())
+                    }
+                }
             }
         }
         return r;
@@ -721,6 +759,11 @@ class ModelParser implements Parser {
                     agent.agentType = parseKey(typeMeth.method)
                     ModelASTClosureMap parsed = parseClosureMap(m.body)
                     agent.variables = parsed.variables.get(agent.agentType)
+
+                    // HACK FOR JENKINS-41118 to switch to "node" rather than "label" when multiple variable are set.
+                    if (agent.agentType.key == "label" && agent.variables instanceof ModelASTClosureMap) {
+                        agent.agentType.key = "node"
+                    }
                 }
             }
         }
@@ -814,10 +857,7 @@ class ModelParser implements Parser {
         if (e instanceof ConstantExpression) {
             return ModelASTValue.fromConstant(e.value, e)
         }
-        if (e instanceof GStringExpression) {
-            return ModelASTValue.fromGString(e.text, e)
-        }
-        if (e instanceof MapExpression) {
+        if (e instanceof GStringExpression || e instanceof MapExpression) {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {
@@ -882,7 +922,12 @@ class ModelParser implements Parser {
     protected String parseMethodName(MethodCallExpression exp) {
         def s = matchMethodName(exp)
         if (s==null) {
-            errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
+            if (exp.objectExpression instanceof VariableExpression &&
+                !((VariableExpression)exp.objectExpression).isThisExpression()) {
+                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ObjectMethodCall())
+            } else {
+                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
+            }
             s = "error";
         }
         return s;

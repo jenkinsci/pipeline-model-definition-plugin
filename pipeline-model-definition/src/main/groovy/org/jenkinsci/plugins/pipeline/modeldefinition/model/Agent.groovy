@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
+import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 import javax.annotation.CheckForNull
@@ -56,12 +57,10 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
      * @return The instantiated declarative agent or null if not found.
      */
     public DeclarativeAgent getDeclarativeAgent(@CheckForNull Root root, Object context) {
-        DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.all().find { d ->
-            getMap().containsKey(d.getName())
-        }
-
-        if (foundDescriptor != null) {
-            def val = getMap().get(foundDescriptor.getName())
+        String foundSymbol = findSymbol()
+        if (foundSymbol != null) {
+            DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.byName(foundSymbol)
+            def val = getMap().get(foundSymbol)
             def argMap = [:]
             if (val instanceof Map) {
                 argMap.putAll(val)
@@ -70,6 +69,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
             }
 
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
+
             boolean doCheckout = false
             if (context instanceof Root) {
                 a.setInStage(false)
@@ -88,6 +88,23 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
         } else {
             return null
         }
+    }
+
+    /**
+     * Needed to handle the combination of describable ordinals *and* Descriptor lookup.
+     * @return The first symbol (in descriptor-ordinal-order searching) found in the map.
+     */
+    private String findSymbol() {
+        String sym = null
+        DeclarativeAgentDescriptor.all().each { d ->
+            SymbolLookup.getSymbolValue(d)?.each { s ->
+                if (getMap().containsKey(s) && sym == null) {
+                    sym = s
+                }
+            }
+        }
+
+        return sym
     }
 
     public boolean hasAgent() {

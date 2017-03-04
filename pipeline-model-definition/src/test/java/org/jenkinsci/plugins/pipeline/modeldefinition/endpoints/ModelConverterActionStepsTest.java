@@ -34,6 +34,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -158,7 +159,7 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
 
     private JSONObject callStepToJenkinsFile(String jsonFileName) throws IOException {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/stepsToJenkinsfile"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/stepsToJenkinsfile"), HttpMethod.POST);
         String simpleJson = fileContentsFromResources(jsonFileName);
 
         assertNotNull(simpleJson);
@@ -174,7 +175,7 @@ public class ModelConverterActionStepsTest extends AbstractModelDefTest {
 
     private JSONObject callStepsToJson(String jenkinsFileContent) throws IOException {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/stepsToJson"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/stepsToJson"), HttpMethod.POST);
 
         assertNotNull(jenkinsFileContent);
 

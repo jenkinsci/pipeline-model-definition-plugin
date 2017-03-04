@@ -37,6 +37,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +66,7 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
     @Test
     public void testSuccessfulValidateJson() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);
         String simpleJson = fileContentsFromResources("json/" + configName + ".json");
 
         assertNotNull(simpleJson);
@@ -86,7 +87,7 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
     @Test
     public void testSuccessfulValidateJenkinsfile() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
         String rawJenkinsfile = fileContentsFromResources(configName + ".groovy");
 
         assertNotNull(rawJenkinsfile);
@@ -107,7 +108,7 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
     @Test
     public void testSuccessfulToJenkinsfile() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
         String simpleJson = fileContentsFromResources("json/" + configName + ".json");
 
         assertNotNull(simpleJson);
@@ -133,7 +134,7 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
     @Test
     public void testSuccessfulToJson() throws Exception {
         JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(wc.createCrumbedUrl(ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"), HttpMethod.POST);
         String initialGroovy = fileContentsFromResources(configName + ".groovy");
 
         assertNotNull(initialGroovy);

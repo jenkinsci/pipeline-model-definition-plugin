@@ -178,6 +178,21 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
+    public boolean validateElement(ModelASTLibraries libraries) {
+        boolean valid = true
+
+        if (libraries.libs.isEmpty()) {
+            errorCollector.error(libraries, Messages.ModelValidatorImpl_EmptySection("libraries"))
+            valid = false
+        } else {
+            libraries.libs.each { l ->
+                // TODO: Decide what validation, if any, we want to do for library identifiers.
+            }
+        }
+
+        return valid
+    }
+
     public boolean validateWhenCondition(ModelASTStep condition) {
         def allNames = DeclarativeStageConditionalDescriptor.allNames()
 
@@ -588,13 +603,6 @@ class ModelValidatorImpl implements ModelValidator {
                         }
                     }
                     map.variables.each { k, v ->
-                        // TODO: JENKINS-41746 - get rid of this hardcoding and use extensible validation instead once we can
-                        if (typeName == "dockerfile") {
-                            if (k.key == "filename" && (v.toGroovy().contains("/") || v.toGroovy().contains("\\"))) {
-                                errorCollector.error(k, Messages.ModelValidatorImpl_DirSeparatorInDockerfileName())
-                                valid = false
-                            }
-                        }
                         // Make sure we don't actually include "context" in the valid param names, since, well, it's
                         // not really one.
                         List<String> validParamNames = model.parameters.collect { it.name }

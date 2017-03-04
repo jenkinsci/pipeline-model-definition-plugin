@@ -23,17 +23,17 @@
  */
 
 pipeline {
-    agent {
-        dockerfile {
-            filename "Dockerfile/alternate"
-            args "-v /tmp:/tmp -p 8000:8000"
-        }
-    }
+    agent none
     stages {
         stage("foo") {
+            agent {
+                node {
+                    label ""
+                    customWorkspace "some-sub-dir"
+                }
+            }
             steps {
-                sh 'cat /hi-there'
-                sh 'echo "The answer is 42"'
+                echo "Workspace dir is ${pwd()}"
             }
         }
     }
