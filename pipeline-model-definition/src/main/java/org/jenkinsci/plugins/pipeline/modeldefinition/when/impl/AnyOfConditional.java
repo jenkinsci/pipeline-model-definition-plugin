@@ -51,7 +51,7 @@ public class AnyOfConditional extends DeclarativeStageConditional<AnyOfCondition
     @Symbol("anyOf")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AnyOfConditional> {
         @Override
-        public int allowedNested() {
+        public int getAllowedNestedCount() {
             return -1;
         }
     }

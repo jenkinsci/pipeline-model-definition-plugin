@@ -49,7 +49,7 @@ public class NotConditional extends DeclarativeStageConditional<NotConditional> 
     @Symbol("not")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<NotConditional> {
         @Override
-        public int allowedNested() {
+        public int getAllowedNestedCount() {
             return 1;
         }
     }

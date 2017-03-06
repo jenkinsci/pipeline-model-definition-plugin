@@ -25,26 +25,17 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import groovy.transform.ToString;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-import org.jenkinsci.plugins.structs.describable.DescribableModel;
-import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Andrew Bayer
  */
-@ToString(includeSuper = true, includeSuperProperties = true)
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWhenContent {
     private String name;

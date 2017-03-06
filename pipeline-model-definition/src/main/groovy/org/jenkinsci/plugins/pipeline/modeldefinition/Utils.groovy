@@ -40,6 +40,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelActi
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -63,6 +64,7 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 import org.jvnet.tiger_types.Types
 
+import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.lang.reflect.ParameterizedType
@@ -419,29 +421,31 @@ public class Utils {
         return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null
     }
 
+    /**
+     * Shortcut for determining whether we've got a {@link DeclarativeStageConditionalDescriptor} for a given name.
+     * @param name
+     * @return True if found, false otherwise
+     */
     public static boolean whenConditionDescriptorFound(String name) {
         return DeclarativeStageConditionalDescriptor.byName(name) != null
     }
 
+    /**
+     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes nested conditions.
+     * @param name
+     * @return True if there is a descriptor with that name and it takes nested conditions.
+     */
     public static boolean nestedWhenCondition(String name) {
-        DeclarativeStageConditionalDescriptor d = DeclarativeStageConditionalDescriptor.byName(name)
-        if (d != null) {
-            return d.allowedNested() != 0
-        }
-        return false
+        return StageConditionals.nestedConditionals.containsKey(name)
     }
 
+    /**
+     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes multiple nested conditions
+     * @param name
+     * @return True if there is a descriptor with that name and it takes multiple nested conditions.
+     */
     public static boolean takesWhenConditionList(String name) {
-        DescribableModel<? extends Describable> model = DeclarativeStageConditionalDescriptor.describableModels.get(name)
-
-        if (model != null && Types.isSubClassOf(model.type, DeclarativeStageConditional.class)) {
-            DescribableParameter p = model.soleRequiredParameter
-            if (p != null) {
-                return Types.isSubClassOf(p.getRawType(), Collection.class)
-            }
-        }
-
-        return false
+        return StageConditionals.multipleNestedConditionals.containsKey(name)
     }
 
     /**

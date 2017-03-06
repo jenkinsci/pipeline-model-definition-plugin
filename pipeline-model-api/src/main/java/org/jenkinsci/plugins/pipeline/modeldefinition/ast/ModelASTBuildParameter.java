@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import groovy.transform.EqualsAndHashCode;
-import groovy.transform.ToString;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**

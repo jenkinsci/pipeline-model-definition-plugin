@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import groovy.transform.ToString;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,7 +18,6 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-@ToString(includeSuper = true, includeSuperProperties = true)
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class ModelASTStep extends ModelASTElement {
     private String name;

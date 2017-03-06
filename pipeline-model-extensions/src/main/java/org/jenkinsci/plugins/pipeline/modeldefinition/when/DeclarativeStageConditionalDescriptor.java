@@ -46,7 +46,7 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
      * How many nested conditions are allowed. -1 for unlimited, 0 for none, anything greater than 0 for
      * requiring exactly that many nested conditions.
      */
-    public int allowedNested() {
+    public int getAllowedNestedCount() {
         return 0;
     }
 

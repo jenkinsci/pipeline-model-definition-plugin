@@ -1,15 +1,11 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import groovy.lang.Closure;
-import groovy.transform.EqualsAndHashCode;
-import groovy.transform.ToString;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
@@ -18,8 +14,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-@ToString(includeSuper = true, includeSuperProperties = true)
-@EqualsAndHashCode(callSuper = true)
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     private Map<ModelASTKey, ModelASTValue> arguments = new LinkedHashMap<ModelASTKey, ModelASTValue>();
