@@ -68,9 +68,7 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
 
     public List<DeclarativeStageConditional> conditions = []
 
-    public StageConditionals(List<UninstantiatedDescribable> input) {
-        input.each { i ->
-            conditions.add((DeclarativeStageConditional<? extends DeclarativeStageConditional>) i.instantiate())
-        }
+    public StageConditionals(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> inList) {
+        conditions.addAll(inList)
     }
 }

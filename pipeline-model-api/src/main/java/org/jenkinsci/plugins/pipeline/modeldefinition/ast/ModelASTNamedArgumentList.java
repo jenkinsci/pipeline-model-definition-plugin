@@ -104,6 +104,17 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     }
 
     @Override
+    public Map<String,?> argListToMap() {
+        Map<String,Object> m = new LinkedHashMap<>();
+
+        for (Map.Entry<ModelASTKey,ModelASTValue> entry : arguments.entrySet()) {
+            m.put(entry.getKey().getKey(), entry.getValue().getValue());
+        }
+
+        return m;
+    }
+
+    @Override
     public String toString() {
         return "ModelASTNamedArgumentList{" +
                 "arguments=" + arguments +

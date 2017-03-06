@@ -186,6 +186,14 @@ public class SerializationTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void serializationWhenEnvGString() throws Exception {
+        expect("serializationWhenEnvGString")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+
     @TestExtension
     public static class XStreamPickleFactory extends SingleTypedPickleFactory<Describable<?>> {
 

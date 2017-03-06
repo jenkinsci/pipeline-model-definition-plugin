@@ -118,7 +118,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
             def actualType = Utils.actualFieldType(actualClass, methodName)
 
             // We care about the field name actually being a thing.
-            if (actualFieldName != null) {
+            if (actualFieldName != null && actualType != StageConditionals.class) {
                 // Due to Stage taking an argument, not just a closure, we need to handle it differently.
                 if (Utils.assignableFromWrapper(Stage.class, actualType)) {
                     Object[] origArgs = args

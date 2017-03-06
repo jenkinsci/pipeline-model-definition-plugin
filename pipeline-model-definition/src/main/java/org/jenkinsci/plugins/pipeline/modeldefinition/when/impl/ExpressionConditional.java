@@ -36,14 +36,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
 public class ExpressionConditional extends DeclarativeStageConditional<ExpressionConditional> {
-    private final StepsBlock block;
+    private final String block;
 
     @DataBoundConstructor
-    public ExpressionConditional(StepsBlock block) {
+    public ExpressionConditional(String block) {
         this.block = block;
     }
 
-    public StepsBlock getBlock() {
+    public String getBlock() {
         return block;
     }
 

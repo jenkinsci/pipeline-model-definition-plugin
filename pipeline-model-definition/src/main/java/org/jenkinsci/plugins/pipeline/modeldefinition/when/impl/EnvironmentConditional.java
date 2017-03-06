@@ -73,15 +73,15 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
         this.ignoreCase = ignoreCase;
     }
 
-    public boolean environmentMatches(String var) {
-        if (isEmpty(var) && isEmpty(value)) {
+    public boolean environmentMatches(String v, String var) {
+        if (isEmpty(var) && isEmpty(v)) {
             return true;
         } else if (isEmpty(var)) {
             return false;
         } else if (ignoreCase) {
-            return var.equalsIgnoreCase(value);
+            return var.equalsIgnoreCase(v);
         } else {
-            return var.equals(value);
+            return var.equals(v);
         }
     }
 
