@@ -72,8 +72,9 @@ public class OptionsTranslator implements MethodMissingWrapper, Serializable {
             retVal = script."${s}"()
         }
 
-        if (isOfType(retVal, DeclarativeOption.class)
-            || isOfType(retVal, JobProperty.class)) {
+        if (retVal instanceof UninstantiatedDescribable &&
+            (isOfType(retVal, DeclarativeOption.class)
+                || isOfType(retVal, JobProperty.class))) {
             actualList << retVal
         }
 
