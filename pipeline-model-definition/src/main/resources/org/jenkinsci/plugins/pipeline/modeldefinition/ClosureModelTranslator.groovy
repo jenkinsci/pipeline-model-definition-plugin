@@ -46,6 +46,8 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.createStepsBl
  * @author Andrew Bayer
  */
 public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
+    private static final List<Class> UNTRANSLATED_CLASSES = [StageConditionals.class]
+
     Map<String,Object> actualMap = [:]
     Class<NestedModel> actualClass
     CpsScript script
@@ -118,7 +120,7 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
             def actualType = Utils.actualFieldType(actualClass, methodName)
 
             // We care about the field name actually being a thing.
-            if (actualFieldName != null && actualType != StageConditionals.class) {
+            if (actualFieldName != null && !(UNTRANSLATED_CLASSES.contains(actualType))) {
                 // Due to Stage taking an argument, not just a closure, we need to handle it differently.
                 if (Utils.assignableFromWrapper(Stage.class, actualType)) {
                     Object[] origArgs = args
@@ -143,12 +145,6 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                         def ot = new OptionsTranslator(script)
                         resolveClosure(argValue, ot)
                         resultValue = ot.toOptions()
-                    }
-                    //StageConditionals needs some special lookups
-                    else if (Utils.assignableFromWrapper(StageConditionals.class, actualType)) {
-                        def st = new StageConditionalTranslator(script)
-                        resolveClosure(argValue, st)
-                        resultValue = st.toWhen()
                     }
                     // if it's a PropertiesToMap, we use PropertiesToMapTranslator to translate it into the right form.
                     else if (Utils.assignableFromWrapper(PropertiesToMap.class, actualType)) {
