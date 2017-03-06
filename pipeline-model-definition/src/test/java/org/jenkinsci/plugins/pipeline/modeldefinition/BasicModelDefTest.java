@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.base.Predicate;
 import hudson.model.Result;
 import hudson.model.Slave;
@@ -44,6 +45,7 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
@@ -533,6 +535,37 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("librariesDirective")
                 .logContains("something special", "from another library")
                 .go();
+    }
+
+    @Issue("JENKINS-42473")
+    @Test
+    public void folderLibraryParsing() throws Exception {
+        otherRepo.init();
+        otherRepo.git("checkout", "-b", "test");
+        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
+                "\n" +
+                "def echo(msg) {\n" +
+                "  echo \"-> ${msg}\"\n" +
+                "}\n");
+        otherRepo.git("add", "src");
+        otherRepo.git("commit", "--message=init");
+        Folder folder = j.jenkins.createProject(Folder.class, "testFolder");
+        LibraryConfiguration echoLib = new LibraryConfiguration("zot-stuff",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+        folder.getProperties().add(new FolderLibraries(Collections.singletonList(echoLib)));
+
+        WorkflowRun firstRun = expect("folderLibraryParsing")
+                .inFolder(folder)
+                .logContains("Hello world")
+                .go();
+
+        WorkflowRun secondRun = firstRun.getParent().scheduleBuild2(0).waitForStart();
+        j.assertBuildStatusSuccess(j.waitForCompletion(secondRun));
+        ExecutionModelAction action = secondRun.getAction(ExecutionModelAction.class);
+        assertNotNull(action);
+        ModelASTStages stages = action.getStages();
+        assertNull(stages.getSourceLocation());
+        assertNotNull(stages);
     }
 
     @Issue("JENKINS-40657")

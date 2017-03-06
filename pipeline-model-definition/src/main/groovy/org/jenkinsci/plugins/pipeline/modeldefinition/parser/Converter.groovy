@@ -26,8 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 import com.cloudbees.groovy.cps.NonCPS
 import com.github.fge.jsonschema.util.JsonLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.ObjectMapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.github.fge.jsonschema.exceptions.ProcessingException
 import com.github.fge.jsonschema.main.JsonSchema
 import com.github.fge.jsonschema.report.ProcessingReport
@@ -35,7 +34,6 @@ import com.github.fge.jsonschema.tree.JsonTree
 import com.github.fge.jsonschema.tree.SimpleJsonTree
 import jenkins.model.Jenkins
 import net.sf.json.JSONObject
-import org.apache.commons.lang.reflect.FieldUtils
 import org.codehaus.groovy.control.CompilationFailedException
 import org.codehaus.groovy.control.CompilationUnit
 import org.codehaus.groovy.control.CompilerConfiguration
@@ -45,9 +43,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ASTSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
-import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import java.security.CodeSource
 import java.security.cert.Certificate
@@ -106,7 +104,7 @@ public class Converter {
             makeCompilerConfiguration(),
             new CodeSource(src, new Certificate[0]),
             getCompilationClassLoader());
-        cu.addSource(src);
+        cu.addSource(src)
 
         return compilationUnitToPipelineDef(cu)
     }
@@ -159,7 +157,9 @@ public class Converter {
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
-                model[0] = new ModelParser(source).parse();
+                if (model[0] == null) {
+                    model[0] = new ModelParser(source).parse();
+                }
             }
         }, CANONICALIZATION);
 
@@ -184,7 +184,9 @@ public class Converter {
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
-                model[0] = new ModelParser(source).parsePlainSteps(source.AST);
+                if (model[0] == null) {
+                    model[0] = new ModelParser(source).parsePlainSteps(source.AST);
+                }
             }
         }, CANONICALIZATION);
 
@@ -194,13 +196,13 @@ public class Converter {
     }
 
     /**
-     * Converts the raw script from a {@link CpsScript} into {@link ModelASTPipelineDef}
+     * Converts the raw script from a {@link WorkflowRun} into {@link ModelASTPipelineDef}
      *
-     * @param cpsScript The {@link CpsScript} to pull from.
+     * @param run The {@link WorkflowRun} to pull from.
      * @return A parsed and validated {@link ModelASTPipelineDef}
      */
-    public static ModelASTPipelineDef parseFromCpsScript(CpsScript cpsScript) {
-        CpsFlowExecution execution = (CpsFlowExecution) FieldUtils.readField(cpsScript, "execution", true)
+    public static ModelASTPipelineDef parseFromWorkflowRun(WorkflowRun run) {
+        CpsFlowExecution execution = Utils.getExecutionForRun(run)
 
         String rawScript = execution.script
 
