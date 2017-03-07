@@ -55,45 +55,22 @@ stage('foo') {
 
 ### Runtime Implementation
 
-There are two options for runtime. Which one we go with depends on
-Blue Ocean visualization decisions. The first option is to simply nest
-stage executions, while the second option is to not actually use the
-`stage` step for the nested `stage`s and instead utilize the `stage`
-names as the names of parallel branches.
+Based on input from the Blue Ocean team regarding the two possible runtime
+implementations (actually nesting stages within the `parallel` branches vs 
+simply utilizing the `parallel` branches), we have decided to just use the
+`parallel` branches themselves. This should hopefully require little to no
+changes in Blue Ocean visualization or Bismuth in order to work, meaning only
+changes to the editor will be needed outside of Declarative itself.
 
-These two options each have their pros and cons. A pro in one option
-tends to lead to a con in the other option.
-
-#### Pro/Con
-
-* Stage status/metadata (i.e., skipped due to failure/`when`) would
-    not work in the parallel branches approach, since that relies on
-    adding metadata to the stage representation in the flow graph. This
-    could cause issues in visualization.
-* Nested stages would allow for identical code paths for execution of
-    a stage regardless of whether the stage is a nested stage or not, so
-    the code would be simpler than for parallel branches.
-* Blue Ocean supports visualization of parallel branches already, so
-    less work would be needed there than for nested stages.
-
-#### Proposed Approach
-
-Nested stages is a superior approach, even though it requires design
-and implementation work in Blue Ocean for proper visualization. Given
-that the nested stages will still be executed in named parallel
-branches, Blue Ocean as it is now will continue to visualize nested
-stages as if they were just parallel branches, albeit without the
-stage status metadata.
-
-Given the benefits to the nested stages over parallel branches in
-terms of implementation and metadata, it seems preferrable to go with
-the nested stages implementation.
+Each `parallel` branch will be given the `stage` name specified, with `agent`,
+`environment`, etc configured before running the `steps` for the `stage` inside
+the `parallel` branch, followed by any `post` actions. This will require some
+changes in Declarative's runtime logic to properly attach the supplementary 
+metadata we attach to `stage`s (i.e., "Failed but continued", "Skipped due to
+earlier failure", etc) to branches, but that won't be difficult. Everything 
+else will just function properly right out of the box.
 
 ### Visualization
 
-Note that this section is at least partially speculative. We will
-defer to the Blue Ocean team for the final decision on visualization
-of parallel stages. We would recommend visualizing the parallel stages
-in the same manner that parallel branches are visualized in Blue Ocean
-currently, but using the `stage` name, status and metadata rather than
-the parallel branch.
+No changes should be needed in Blue Ocean visualization, since we will simply
+be using `parallel` branches with no nested `StageStep` executions.
