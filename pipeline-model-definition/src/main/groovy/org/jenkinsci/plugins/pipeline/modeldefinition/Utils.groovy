@@ -300,7 +300,7 @@ public class Utils {
      * prepended/appended with double quotes.
      */
     public static String prepareForEvalToString(String s) {
-        String toEval = s
+        String toEval = s ?: ""
         if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
             toEval = '"' + toEval + '"'
         }
