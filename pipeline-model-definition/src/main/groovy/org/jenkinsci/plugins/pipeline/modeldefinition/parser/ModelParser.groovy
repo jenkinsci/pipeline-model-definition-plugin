@@ -121,7 +121,7 @@ class ModelParser implements Parser {
         }
 
         if (pst==null) {
-            // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
+            // Check if there's a 'pipeline' step somewhere children within the other statements and error out if that's the case.
             src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
             return null; // no 'pipeline', so this doesn't apply
         }
@@ -410,8 +410,11 @@ class ModelParser implements Parser {
         def stepsBlock = matchBlockStatement(statement)
         BlockStatement block = asBlock(stepsBlock.body.code)
         ModelASTWhen w = new ModelASTWhen(statement)
-        block.statements.each {s ->
-            w.conditions.add(parseWhenContent(s))
+        if (block.statements.size() != 1) {
+            errorCollector.error(w, Messages.ModelParser_WrongWhenCount())
+            return w
+        } else {
+            w.condition = parseWhenContent(block.statements.first())
         }
 
         return w

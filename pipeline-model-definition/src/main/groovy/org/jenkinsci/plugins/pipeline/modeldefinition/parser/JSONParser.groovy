@@ -196,11 +196,10 @@ class JSONParser implements Parser {
 
     public @CheckForNull ModelASTWhen parseWhen(JsonTree j) {
         ModelASTWhen when = new ModelASTWhen(j)
-        JsonTree conditionsTree = j.append(JsonPointer.of("conditions"))
-        conditionsTree.node.eachWithIndex { JsonNode entry, int i ->
-            JsonTree condTree = conditionsTree.append(JsonPointer.of(i))
-            when.conditions.add(parseWhenContent(condTree))
-        }
+
+        JsonTree conditionTree = j.append(JsonPointer.of("condition"))
+        when.condition = parseWhenContent(conditionTree)
+
         return when
     }
 

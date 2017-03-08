@@ -24,29 +24,21 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-import hudson.Extension;
-import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.List;
 
 /**
- * Match any of a list of stage conditions
+ * Match all of a list of stage conditions
  */
-public class AnyOfConditional extends AbstractConditionalWithChildren<AnyOfConditional> {
-    @DataBoundConstructor
-    public AnyOfConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
-        super(children);
+public abstract class AbstractConditionalWithChildren<C extends AbstractConditionalWithChildren<C>> extends DeclarativeStageConditional<C> {
+    private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children;
+
+    public AbstractConditionalWithChildren(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
+        this.children = children;
     }
 
-    @Extension
-    @Symbol("anyOf")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AnyOfConditional> {
-        @Override
-        public int getAllowedChildrenCount() {
-            return -1;
-        }
+    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
+        return children;
     }
 }

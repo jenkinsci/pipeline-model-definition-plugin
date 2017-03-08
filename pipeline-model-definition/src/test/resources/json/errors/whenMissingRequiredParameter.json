@@ -25,16 +25,18 @@
           }
         }]
       }],
-      "when": {"conditions": [      {
+      "when": {"condition": {
         "name": "environment",
-        "arguments": [        {
-          "key": "name",
-          "value":           {
-            "isLiteral": true,
-            "value": "FOO"
+        "arguments": [
+          {
+            "key": "name",
+            "value": {
+              "isLiteral": true,
+              "value": "FOO"
+            }
           }
-        }]
-      }]}
+        ]
+      }}
     }
   ],
   "environment": [  {

@@ -37,8 +37,8 @@ class NotConditionalScript extends DeclarativeStageConditionalScript<NotConditio
 
     @Override
     public boolean evaluate() {
-        DeclarativeStageConditional nested = describable.nested
-        DeclarativeStageConditionalScript nestedScript = (DeclarativeStageConditionalScript)nested?.getScript(script)
+        DeclarativeStageConditional child = describable.child
+        DeclarativeStageConditionalScript nestedScript = (DeclarativeStageConditionalScript)child?.getScript(script)
 
         return !nestedScript.evaluate()
     }

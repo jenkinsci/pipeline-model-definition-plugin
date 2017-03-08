@@ -11,7 +11,7 @@
         }
       }]
     }],
-    "when": {"conditions": []}
+    "when": {"condition": null}
   }],
   "agent": {"type": "none"}
 }}

@@ -37,9 +37,9 @@ class AllOfConditionalScript extends DeclarativeStageConditionalScript<AllOfCond
 
     @Override
     public boolean evaluate() {
-        List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> nested = describable.nested
-        for (int i = 0; i < nested.size(); i++) {
-            DeclarativeStageConditional n = nested.get(i)
+        List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children = describable.children
+        for (int i = 0; i < children.size(); i++) {
+            DeclarativeStageConditional n = children.get(i)
             DeclarativeStageConditionalScript s = (DeclarativeStageConditionalScript)n?.getScript(script)
             if (s == null || !s.evaluate()) {
                 return false

@@ -47,14 +47,14 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
     private static final LoadingCache<Object,Map<String,String>> nestedTypeCache =
         Utils.generateTypeCache(DeclarativeStageConditionalDescriptor.class, false, [],
             { DeclarativeStageConditionalDescriptor s ->
-                return s.getAllowedNestedCount() != 0
+                return s.getAllowedChildrenCount() != 0
             }
         )
 
     private static final LoadingCache<Object,Map<String,String>> multipleNestedTypeCache =
         Utils.generateTypeCache(DeclarativeStageConditionalDescriptor.class, false, [],
             { DeclarativeStageConditionalDescriptor s ->
-                return s.getAllowedNestedCount() < 0
+                return s.getAllowedChildrenCount() < 0
             }
         )
 

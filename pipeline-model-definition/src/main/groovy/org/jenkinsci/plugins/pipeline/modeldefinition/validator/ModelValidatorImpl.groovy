@@ -170,7 +170,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(ModelASTWhen when) {
         boolean valid = true
-        if (when.conditions.isEmpty()) {
+        if (when.condition == null) {
             errorCollector.error(when, Messages.ModelValidatorImpl_EmptyWhen())
             valid = false
         }
@@ -206,17 +206,17 @@ class ModelValidatorImpl implements ModelValidator {
 
             DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(condition.name)
 
-            if (desc.getAllowedNestedCount() != 0) {
+            if (desc.getAllowedChildrenCount() != 0) {
                 if (condition.args != null) {
                     errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenNoArgs(condition.name))
                     valid = false
-                } else if (desc.getAllowedNestedCount() < 0) {
+                } else if (desc.getAllowedChildrenCount() < 0) {
                     if (condition.children.isEmpty()) {
                         errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWithoutChildren(condition.name))
                         valid = false
                     }
-                } else if (condition.children.size() != desc.getAllowedNestedCount()) {
-                    errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWrongChildrenCount(condition.name, desc.getAllowedNestedCount()))
+                } else if (condition.children.size() != desc.getAllowedChildrenCount()) {
+                    errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWrongChildrenCount(condition.name, desc.getAllowedChildrenCount()))
                     valid = false
                 }
             } else {

@@ -31,28 +31,30 @@
           }]
         }]
       }],
-      "when": {"conditions": [      {
+      "when": {"condition": {
         "name": "allOf",
-        "children":         [
+        "children": [
           {
             "name": "branch",
-            "arguments":             {
+            "arguments": {
               "isLiteral": true,
               "value": "master"
             }
           },
           {
             "name": "expression",
-            "arguments": [            {
-              "key": "scriptBlock",
-              "value":               {
-                "isLiteral": true,
-                "value": "\"foo\" == \"bar\""
+            "arguments": [
+              {
+                "key": "scriptBlock",
+                "value": {
+                  "isLiteral": true,
+                  "value": "\"foo\" == \"bar\""
+                }
               }
-            }]
+            ]
           }
         ]
-      }]}
+      }}
     }
   ],
   "environment": [  {

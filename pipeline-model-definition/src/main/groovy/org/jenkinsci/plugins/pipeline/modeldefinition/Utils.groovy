@@ -254,7 +254,7 @@ public class Utils {
     }
 
     /**
-     * Returns true if we're currently nested under a stage.
+     * Returns true if we're currently children under a stage.
      *
      * @return true if we're in a stage and false otherwise
      */
@@ -431,18 +431,18 @@ public class Utils {
     }
 
     /**
-     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes nested conditions.
+     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes children conditions.
      * @param name
-     * @return True if there is a descriptor with that name and it takes nested conditions.
+     * @return True if there is a descriptor with that name and it takes children conditions.
      */
     public static boolean nestedWhenCondition(String name) {
         return StageConditionals.nestedConditionals.containsKey(name)
     }
 
     /**
-     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes multiple nested conditions
+     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes multiple children conditions
      * @param name
-     * @return True if there is a descriptor with that name and it takes multiple nested conditions.
+     * @return True if there is a descriptor with that name and it takes multiple children conditions.
      */
     public static boolean takesWhenConditionList(String name) {
         return StageConditionals.multipleNestedConditionals.containsKey(name)

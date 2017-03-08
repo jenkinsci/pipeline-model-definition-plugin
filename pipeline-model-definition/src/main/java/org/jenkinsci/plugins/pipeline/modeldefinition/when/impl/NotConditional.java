@@ -34,22 +34,22 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * Inverted match of a stage condition
  */
 public class NotConditional extends DeclarativeStageConditional<NotConditional> {
-    private final DeclarativeStageConditional<? extends DeclarativeStageConditional> nested;
+    private DeclarativeStageConditional<? extends DeclarativeStageConditional> child;
 
     @DataBoundConstructor
-    public NotConditional(DeclarativeStageConditional<? extends DeclarativeStageConditional> nested) {
-        this.nested = nested;
+    public NotConditional(DeclarativeStageConditional<? extends DeclarativeStageConditional> child) {
+        this.child = child;
     }
 
-    public DeclarativeStageConditional<? extends DeclarativeStageConditional> getNested() {
-        return nested;
+    public DeclarativeStageConditional<? extends DeclarativeStageConditional> getChild() {
+        return child;
     }
 
     @Extension
     @Symbol("not")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<NotConditional> {
         @Override
-        public int getAllowedNestedCount() {
+        public int getAllowedChildrenCount() {
             return 1;
         }
     }

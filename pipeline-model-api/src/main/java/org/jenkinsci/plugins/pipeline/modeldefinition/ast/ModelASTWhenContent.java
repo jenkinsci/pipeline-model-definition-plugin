@@ -24,18 +24,9 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 /**
  *
  * @author Andrew Bayer
  */
-public interface ModelASTWhenContent {
-    String toGroovy();
-
-    Object toJSON();
-
-    void validate(ModelValidator validator);
-
-    void removeSourceLocation();
+public interface ModelASTWhenContent extends ModelASTMarkerInterface {
 }

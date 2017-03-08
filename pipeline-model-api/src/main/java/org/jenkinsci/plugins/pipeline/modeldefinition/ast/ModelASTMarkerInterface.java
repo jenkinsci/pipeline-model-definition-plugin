@@ -22,31 +22,20 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
+package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.util.List;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
- * Match any of a list of stage conditions
+ *
+ * @author Andrew Bayer
  */
-public class AnyOfConditional extends AbstractConditionalWithChildren<AnyOfConditional> {
-    @DataBoundConstructor
-    public AnyOfConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
-        super(children);
-    }
+public interface ModelASTMarkerInterface {
+    String toGroovy();
 
-    @Extension
-    @Symbol("anyOf")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AnyOfConditional> {
-        @Override
-        public int getAllowedChildrenCount() {
-            return -1;
-        }
-    }
+    Object toJSON();
+
+    void validate(ModelValidator validator);
+
+    void removeSourceLocation();
 }
