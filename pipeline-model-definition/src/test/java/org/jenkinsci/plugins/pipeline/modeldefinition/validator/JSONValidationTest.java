@@ -86,4 +86,10 @@ public class JSONValidationTest extends BaseParserLoaderTest {
     public void jsonParameterTypeCoercion() throws Exception {
         findErrorInJSON(Messages.ModelValidatorImpl_InvalidParameterType(int.class, "time", "5", String.class), "jsonParameterTypeCoercion");
     }
+
+    @Issue("JENKINS-42551")
+    @Test
+    public void jsonMismatchedQuotes() throws Exception {
+        findErrorInJSON(Messages.JSONParser_MismatchedQuotes(), "jsonMismatchedQuotes");
+    }
 }

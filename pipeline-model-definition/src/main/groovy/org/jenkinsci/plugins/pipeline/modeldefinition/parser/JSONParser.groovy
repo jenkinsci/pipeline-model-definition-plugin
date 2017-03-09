@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
+import org.apache.commons.lang.StringEscapeUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonschema.exceptions.JsonReferenceException
 import com.github.fge.jsonschema.exceptions.ProcessingException
@@ -419,19 +420,26 @@ class JSONParser implements Parser {
     }
 
     public @CheckForNull ModelASTValue parseValue(JsonTree o) {
+        ModelASTValue val = null
         if (o.node.get("isLiteral").asBoolean()) {
             if (o.node.get("value").isBoolean()) {
-                return ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)
+                val = ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)
             } else if (o.node.get("value").isNumber()) {
-                return ModelASTValue.fromConstant(o.node.get("value").numberValue(), o)
+                val =  ModelASTValue.fromConstant(o.node.get("value").numberValue(), o)
             } else if (o.node.get("value").isTextual()) {
-                return ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+                val = ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
             } else {
-                return ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+                val = ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
             }
         } else {
-            return ModelASTValue.fromGString(o.node.get("value").textValue(), o)
+            val = ModelASTValue.fromGString(o.node.get("value").textValue(), o)
         }
+
+        String valGroovy = val?.toGroovy()
+        if (valGroovy != null && valGroovy != StringEscapeUtils.escapeJava(valGroovy)) {
+            errorCollector.error(val, Messages.JSONParser_MismatchedQuotes())
+        }
+        return val;
     }
 
     public @CheckForNull ModelASTScriptBlock parseScriptBlock(JsonTree j) {

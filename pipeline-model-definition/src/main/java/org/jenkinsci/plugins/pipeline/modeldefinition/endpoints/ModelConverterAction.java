@@ -266,9 +266,21 @@ public class ModelConverterAction implements RootAction {
 
                 JSONParser parser = new JSONParser(new SimpleJsonTree(json));
 
-                parser.parse();
+                ModelASTPipelineDef pipelineDef = parser.parse();
 
-                if (!collectErrors(result, parser.getErrorCollector())) {
+                if (pipelineDef != null) {
+                    try {
+                        Converter.scriptToPipelineDef(pipelineDef.toPrettyGroovy());
+                    } catch (Exception e) {
+                        JSONObject jfErrors = new JSONObject();
+                        reportFailure(jfErrors, e);
+                        JSONArray errors = new JSONArray();
+                        errors.add(new JSONObject().accumulate("jenkinsfileErrors", jfErrors));
+                        reportFailure(result, errors);
+                    }
+                }
+
+                if (!collectErrors(result, parser.getErrorCollector()) && result.isEmpty()) {
                     result.accumulate("result", "success");
                 }
             } catch (Exception je) {
