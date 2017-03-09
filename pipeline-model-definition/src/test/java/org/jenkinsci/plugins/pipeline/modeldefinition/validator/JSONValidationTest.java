@@ -29,6 +29,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -80,4 +81,9 @@ public class JSONValidationTest extends BaseParserLoaderTest {
         findErrorInJSON(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("F$OO"), "invalidIdentifierInEnv");
     }
 
+    @Issue("JENKINS-42640")
+    @Test
+    public void jsonParameterTypeCoercion() throws Exception {
+        findErrorInJSON(Messages.ModelValidatorImpl_InvalidParameterType(int.class, "time", "5", String.class), "jsonParameterTypeCoercion");
+    }
 }
