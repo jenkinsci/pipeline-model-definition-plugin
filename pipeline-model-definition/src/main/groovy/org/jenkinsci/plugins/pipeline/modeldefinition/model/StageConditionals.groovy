@@ -25,10 +25,13 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
+import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 /**
@@ -38,6 +41,31 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
+    private static final Object NESTED_CACHE_KEY = new Object()
+    private static final Object MULTIPLE_NESTED_CACHE_KEY = new Object()
+
+    private static final LoadingCache<Object,Map<String,String>> nestedTypeCache =
+        Utils.generateTypeCache(DeclarativeStageConditionalDescriptor.class, false, [],
+            { DeclarativeStageConditionalDescriptor s ->
+                return s.getAllowedChildrenCount() != 0
+            }
+        )
+
+    private static final LoadingCache<Object,Map<String,String>> multipleNestedTypeCache =
+        Utils.generateTypeCache(DeclarativeStageConditionalDescriptor.class, false, [],
+            { DeclarativeStageConditionalDescriptor s ->
+                return s.getAllowedChildrenCount() < 0
+            }
+        )
+
+    public static Map<String,String> getNestedConditionals() {
+        return nestedTypeCache.get(NESTED_CACHE_KEY)
+    }
+
+    public static Map<String,String> getMultipleNestedConditionals() {
+        return multipleNestedTypeCache.get(MULTIPLE_NESTED_CACHE_KEY)
+    }
+
     public List<DeclarativeStageConditional> conditions = []
 
     public StageConditionals(List<UninstantiatedDescribable> input) {

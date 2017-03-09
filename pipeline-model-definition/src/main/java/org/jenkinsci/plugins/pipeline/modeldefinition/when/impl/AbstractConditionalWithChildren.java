@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,23 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import java.util.List;
 
-public class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript<LabelAndOtherFieldAgent> {
+/**
+ * Match all of a list of stage conditions
+ */
+public abstract class AbstractConditionalWithChildren<C extends AbstractConditionalWithChildren<C>> extends DeclarativeStageConditional<C> {
+    private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children;
 
-    public LabelAndOtherFieldAgentScript(CpsScript s, LabelAndOtherFieldAgent a) {
-        super(s, a)
+    public AbstractConditionalWithChildren(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
+        this.children = children;
     }
 
-    @Override
-    public Closure run(Closure body) {
-        script.echo "Running in labelAndOtherField with otherField = ${describable.getOtherField()}"
-        script.echo "And children: ${describable.getNested()}"
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: describable.label])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
-        }
+    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
+        return children;
     }
 }

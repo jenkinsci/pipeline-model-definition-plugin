@@ -32,31 +32,36 @@
         }]
       }],
       "when": {"condition": {
-        "name": "environment",
-        "arguments": [
+        "name": "anyOf",
+        "children": [
           {
-            "key": "name",
-            "value": {
+            "name": "branch",
+            "arguments": {
               "isLiteral": true,
-              "value": "FOO"
+              "value": "master"
             }
           },
           {
-            "key": "value",
-            "value": {
-              "isLiteral": true,
-              "value": "SOME_OTHER_VALUE"
-            }
+            "name": "expression",
+            "arguments": [
+              {
+                "key": "scriptBlock",
+                "value": {
+                  "isLiteral": true,
+                  "value": "\"foo\" == \"bar\""
+                }
+              }
+            ]
           }
         ]
       }}
     }
   ],
   "environment": [  {
-    "key": "FOO",
+    "key": "BRANCH_NAME",
     "value":     {
       "isLiteral": true,
-      "value": "BAR"
+      "value": "master"
     }
   }],
   "agent": {"type": "any"}

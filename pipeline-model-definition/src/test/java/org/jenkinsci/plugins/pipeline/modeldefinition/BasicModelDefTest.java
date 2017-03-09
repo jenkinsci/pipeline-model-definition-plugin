@@ -356,8 +356,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-        public void whenBranchFalse() throws Exception {
-            expect("whenBranchFalse")
+    public void whenBranchFalse() throws Exception {
+        expect("whenBranchFalse")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
@@ -376,6 +376,46 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("whenBranchNull")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenNot() throws Exception {
+        expect("whenNot")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenOr() throws Exception {
+        expect("whenOr")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenAnd() throws Exception {
+        expect("whenAnd")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenAndOrSingle() throws Exception {
+        expect("whenAndOrSingle")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenNestedCombinations() throws Exception {
+        expect("whenNestedCombinations")
+                .logContains("First stage has no condition",
+                        "Second stage meets condition",
+                        "Fourth stage meets condition")
+                .logNotContains("Third stage meets condition")
                 .go();
     }
 

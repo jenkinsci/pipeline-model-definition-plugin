@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,35 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+/**
+ * Inverted match of a stage condition
+ */
+public class NotConditional extends DeclarativeStageConditional<NotConditional> {
+    private DeclarativeStageConditional<? extends DeclarativeStageConditional> child;
 
-public class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript<LabelAndOtherFieldAgent> {
-
-    public LabelAndOtherFieldAgentScript(CpsScript s, LabelAndOtherFieldAgent a) {
-        super(s, a)
+    @DataBoundConstructor
+    public NotConditional(DeclarativeStageConditional<? extends DeclarativeStageConditional> child) {
+        this.child = child;
     }
 
-    @Override
-    public Closure run(Closure body) {
-        script.echo "Running in labelAndOtherField with otherField = ${describable.getOtherField()}"
-        script.echo "And children: ${describable.getNested()}"
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: describable.label])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
+    public DeclarativeStageConditional<? extends DeclarativeStageConditional> getChild() {
+        return child;
+    }
+
+    @Extension
+    @Symbol("not")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<NotConditional> {
+        @Override
+        public int getAllowedChildrenCount() {
+            return 1;
         }
     }
 }

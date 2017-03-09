@@ -43,6 +43,14 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         extends WithScriptDescriptor<S> {
 
     /**
+     * How many nested conditions are allowed. -1 for unlimited, 0 for none, anything greater than 0 for
+     * requiring exactly that many nested conditions.
+     */
+    public int getAllowedChildrenCount() {
+        return 0;
+    }
+
+    /**
      * Get all {@link DeclarativeStageConditionalDescriptor}s.
      *
      * @return a list of all {@link DeclarativeStageConditionalDescriptor}s registered.`

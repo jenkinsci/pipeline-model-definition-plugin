@@ -170,7 +170,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(ModelASTWhen when) {
         boolean valid = true
-        if (when.conditions.isEmpty()) {
+        if (when.condition == null) {
             errorCollector.error(when, Messages.ModelValidatorImpl_EmptyWhen())
             valid = false
         }
@@ -193,32 +193,53 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
-    public boolean validateWhenCondition(ModelASTStep condition) {
+    public boolean validateElement(ModelASTWhenCondition condition) {
+        boolean valid = true
         def allNames = DeclarativeStageConditionalDescriptor.allNames()
 
         if (!(condition.name in allNames)) {
             errorCollector.error(condition, Messages.ModelValidatorImpl_UnknownWhenConditional(condition.name, allNames.join(", ")))
-            return false
+            valid = false
         } else {
             DescribableModel<? extends DeclarativeStageConditional> model =
                 DeclarativeStageConditionalDescriptor.describableModels.get(condition.name)
 
-            Descriptor desc = DeclarativeStageConditionalDescriptor.byName(condition.name)
+            DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(condition.name)
 
-            return validateStep(condition, model, desc)
+            if (desc.getAllowedChildrenCount() != 0) {
+                if (condition.args != null) {
+                    errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenNoArgs(condition.name))
+                    valid = false
+                } else if (desc.getAllowedChildrenCount() < 0) {
+                    if (condition.children.isEmpty()) {
+                        errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWithoutChildren(condition.name))
+                        valid = false
+                    }
+                } else if (condition.children.size() != desc.getAllowedChildrenCount()) {
+                    errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWrongChildrenCount(condition.name, desc.getAllowedChildrenCount()))
+                    valid = false
+                }
+            } else {
+                if (!condition.children.isEmpty()) {
+                    errorCollector.error(condition, Messages.ModelValidatorImpl_NoNestedWhenAllowed(condition.name))
+                    valid = false
+                } else {
+                    valid = validateDescribable(condition, condition.name, condition.args, model, desc, false)
+                }
+            }
         }
+
+        return valid
     }
 
-    private boolean validateStep(ModelASTStep step, DescribableModel<? extends Describable> model, Descriptor desc) {
+    private boolean validateDescribable(ModelASTElement element, String name,
+                                        ModelASTArgumentList args,
+                                        DescribableModel<? extends Describable> model,
+                                        Descriptor desc, boolean takesClosure = false) {
         boolean valid = true
 
-        if (step instanceof AbstractModelASTCodeBlock) {
-            // No validation needed for code blocks like expression and script
-            return true
-        }
-
-        if (step.args instanceof ModelASTNamedArgumentList) {
-            ModelASTNamedArgumentList argList = (ModelASTNamedArgumentList) step.args
+        if (args instanceof ModelASTNamedArgumentList) {
+            ModelASTNamedArgumentList argList = (ModelASTNamedArgumentList) args
 
             argList.arguments.each { k, v ->
 
@@ -240,7 +261,7 @@ class ModelValidatorImpl implements ModelValidator {
                     if (model != null &&
                         model.soleRequiredParameter != null &&
                         model.soleRequiredParameter == p &&
-                        !lookup.stepTakesClosure(desc)) {
+                        !takesClosure) {
                         validateKey = null
                     }
                 }
@@ -251,17 +272,17 @@ class ModelValidatorImpl implements ModelValidator {
             }
             model.parameters.each { p ->
                 if (p.isRequired() && !argList.containsKeyName(p.name)) {
-                    errorCollector.error(step, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
+                    errorCollector.error(element, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
                     valid = false
                 }
             }
-        } else if (step.args instanceof ModelASTPositionalArgumentList) {
-            ModelASTPositionalArgumentList argList = (ModelASTPositionalArgumentList) step.args
+        } else if (args instanceof ModelASTPositionalArgumentList) {
+            ModelASTPositionalArgumentList argList = (ModelASTPositionalArgumentList) args
 
             List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
             if (requiredParams.size() != argList.arguments.size()) {
-                errorCollector.error(step, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(step.name, requiredParams.size(), argList.arguments.size()))
+                errorCollector.error(element, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(name, requiredParams.size(), argList.arguments.size()))
                 valid = false
             } else {
                 requiredParams.eachWithIndex { DescribableParameter entry, int i ->
@@ -272,12 +293,12 @@ class ModelValidatorImpl implements ModelValidator {
                 }
             }
         } else {
-            assert step.args instanceof ModelASTSingleArgument;
-            ModelASTSingleArgument arg = (ModelASTSingleArgument) step.args;
+            assert args instanceof ModelASTSingleArgument;
+            ModelASTSingleArgument arg = (ModelASTSingleArgument) args;
 
             def p = model.soleRequiredParameter;
-            if (p == null && !lookup.stepTakesClosure(desc)) {
-                errorCollector.error(step, Messages.ModelValidatorImpl_NotSingleRequiredParameter())
+            if (p == null && !takesClosure) {
+                errorCollector.error(element, Messages.ModelValidatorImpl_NotSingleRequiredParameter())
                 valid = false
             } else {
                 Class erasedType = p?.erasedType
@@ -291,6 +312,16 @@ class ModelValidatorImpl implements ModelValidator {
         }
 
         return valid
+    }
+
+    private boolean validateStep(ModelASTStep step, DescribableModel<? extends Describable> model, Descriptor desc) {
+
+        if (step instanceof AbstractModelASTCodeBlock) {
+            // No validation needed for code blocks like expression and script
+            return true
+        } else {
+            return validateDescribable(step, step.name, step.args, model, desc, lookup.stepTakesClosure(desc))
+        }
     }
 
     public boolean validateElement(@Nonnull ModelASTStep step) {

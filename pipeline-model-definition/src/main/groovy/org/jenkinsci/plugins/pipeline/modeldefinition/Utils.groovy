@@ -40,9 +40,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelActi
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.structs.describable.DescribableModel
+import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -57,7 +62,9 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
+import org.jvnet.tiger_types.Types
 
+import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.lang.reflect.ParameterizedType
@@ -247,7 +254,7 @@ public class Utils {
     }
 
     /**
-     * Returns true if we're currently nested under a stage.
+     * Returns true if we're currently children under a stage.
      *
      * @return true if we're in a stage and false otherwise
      */
@@ -412,5 +419,78 @@ public class Utils {
         }
         FlowExecution exec = owner.getOrNull()
         return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null
+    }
+
+    /**
+     * Shortcut for determining whether we've got a {@link DeclarativeStageConditionalDescriptor} for a given name.
+     * @param name
+     * @return True if found, false otherwise
+     */
+    public static boolean whenConditionDescriptorFound(String name) {
+        return DeclarativeStageConditionalDescriptor.byName(name) != null
+    }
+
+    /**
+     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes children conditions.
+     * @param name
+     * @return True if there is a descriptor with that name and it takes children conditions.
+     */
+    public static boolean nestedWhenCondition(String name) {
+        return StageConditionals.nestedConditionals.containsKey(name)
+    }
+
+    /**
+     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes multiple children conditions
+     * @param name
+     * @return True if there is a descriptor with that name and it takes multiple children conditions.
+     */
+    public static boolean takesWhenConditionList(String name) {
+        return StageConditionals.multipleNestedConditionals.containsKey(name)
+    }
+
+    /**
+     * Find and create an {@link UninstantiatedDescribable} from a symbol name and arguments.
+     * The arguments are assumed to be packaged as Groovy does to {@code invokeMethod} et.al.
+     * And to be either a single argument or named arguments, and not taking a closure.
+     *
+     * @param symbol the {@code @Symbol} name
+     * @param baseClazz the base class the describable is supposed to inherit
+     * @param _args the arguments packaged as described above
+     * @return an UninstantiatedDescribable ready to be instantiated or {@code null} if the descriptor could not be found
+     */
+    public static UninstantiatedDescribable getDescribable(String symbol, Class<? extends Describable> baseClazz, Object _args) {
+        def descriptor = SymbolLookup.get().findDescriptor(baseClazz, symbol)
+        if (descriptor != null) {
+            //Lots copied from org.jenkinsci.plugins.workflow.cps.DSL.invokeDescribable
+
+            Map<String, ?> args = unPackageArgs(_args)
+            return new UninstantiatedDescribable(symbol, descriptor.clazz.name, args)
+        }
+        return null
+    }
+
+    /**
+     * Unpacks the arguments for {@link  #getDescribable(java.lang.String, java.lang.Class, java.lang.Object)}.
+     *
+     * @param _args the arguments
+     * @return the unpacked version suitable to give to an {@link UninstantiatedDescribable}.
+     * @see #getDescribable(java.lang.String, java.lang.Class, java.lang.Object)
+     */
+    static Map<String, ?> unPackageArgs(Object _args) {
+        if(_args instanceof Object[]) {
+            List a = Arrays.asList((Object[])_args);
+            if (a.size()==0) {
+                return Collections.emptyMap()
+            }
+
+            if (a.size()==1 && a.get(0) instanceof Map && !((Map)a.get(0)).containsKey('$class')) {
+                return (Map) a.get(0)
+            } else if (a.size() == 1 && !(a.get(0) instanceof Map)) {
+                return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, a.get(0))
+            }
+            throw new IllegalArgumentException("Expected named arguments but got "+a)
+        } else {
+            return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
+        }
     }
 }

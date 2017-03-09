@@ -121,7 +121,7 @@ class ModelParser implements Parser {
         }
 
         if (pst==null) {
-            // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
+            // Check if there's a 'pipeline' step somewhere children within the other statements and error out if that's the case.
             src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
             return null; // no 'pipeline', so this doesn't apply
         }
@@ -410,8 +410,11 @@ class ModelParser implements Parser {
         def stepsBlock = matchBlockStatement(statement)
         BlockStatement block = asBlock(stepsBlock.body.code)
         ModelASTWhen w = new ModelASTWhen(statement)
-        block.statements.each {s ->
-            w.conditions.add(parseStep(s))
+        if (block.statements.size() != 1) {
+            errorCollector.error(w, Messages.ModelParser_WrongWhenCount())
+            return w
+        } else {
+            w.condition = parseWhenContent(block.statements.first())
         }
 
         return w
@@ -668,6 +671,41 @@ class ModelParser implements Parser {
 
         return thisStep
     }
+
+    /**
+     * Parses a statement into a {@link ModelASTWhenContent}
+     */
+    public ModelASTWhenContent parseWhenContent(Statement st) {
+        ModelASTWhenCondition condition = new ModelASTWhenCondition(st)
+        def mc = matchMethodCall(st);
+        if (mc == null) {
+            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+            errorCollector.error(condition, Messages.ModelParser_ExpectedStep());
+            return condition
+        };
+
+        def stepName = parseMethodName(mc);
+        if (stepName == "expression") {
+            return parseWhenExpression(st)
+        }
+
+        List<Expression> args = ((TupleExpression) mc.arguments).expressions
+
+        def bs = matchBlockStatement(st);
+        condition.name = stepName
+        if (bs != null) {
+            args = args.subList(0, args.size() - 1)    // cut out the closure argument
+            if (!args.isEmpty()) {
+                condition.args = parseArgumentList(args)
+            }
+            condition.children = eachStatement(bs.body.code) { parseWhenContent(it) }
+        } else {
+            condition.args = parseArgumentList(args)
+        }
+
+        return condition
+    }
+
 
     private ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
         if (Jenkins.getInstance() != null && origArgs instanceof ModelASTSingleArgument) {

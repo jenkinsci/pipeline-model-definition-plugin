@@ -51,6 +51,10 @@ public class StageConditionalTranslator implements MethodMissingWrapper, Seriali
         def argVal
         def retVal
 
+        if (!Utils.whenConditionDescriptorFound(s)) {
+            throw new NoSuchMethodError(Messages.ModelValidatorImpl_UnknownWhenConditional(s, DeclarativeStageConditionalDescriptor.allNames().join(", ")))
+        }
+
         if (args instanceof List || args instanceof Object[]) {
             if (args.size() > 0) {
                 argVal = args[0]
@@ -62,18 +66,24 @@ public class StageConditionalTranslator implements MethodMissingWrapper, Seriali
         }
 
         if (Utils.instanceOfWrapper(Closure.class, argVal)) {
-            argVal = createStepsBlock(argVal)
-        }
+            if (Utils.nestedWhenCondition(s)) {
+                def st = new StageConditionalTranslator(script)
+                resolveClosure(argVal, st)
+                List<DeclarativeStageConditional> conds = st.toWhen()?.conditions
+                if (Utils.takesWhenConditionList(s)) {
+                    argVal = conds
+                } else if (!conds.isEmpty()) {
+                    argVal = conds[0]
+                } else {
+                    argVal = null
+                }
+            } else {
+                argVal = createStepsBlock(argVal)
+            }
 
-        DeclarativeStageConditionalDescriptor descriptor = DeclarativeStageConditionalDescriptor.byName(s)
-        if (descriptor == null) {
-            throw new NoSuchMethodError(Messages.ModelValidator_ModelASTWhen_unknown(s, DeclarativeStageConditionalDescriptor.allNames().join(", ")))
-        }
-
-        if (argVal != null) {
-            retVal = script."${s}"(argVal)
+            retVal = Utils.getDescribable(s, DeclarativeStageConditional.class, argVal)
         } else {
-            retVal = script."${s}"()
+            retVal = Utils.getDescribable(s, DeclarativeStageConditional.class, args)
         }
 
         if (isOfType((UninstantiatedDescribable) retVal, DeclarativeStageConditional.class)) {
@@ -87,4 +97,12 @@ public class StageConditionalTranslator implements MethodMissingWrapper, Seriali
     public StageConditionals toWhen() {
         return new StageConditionals(actualList)
     }
+
+    private void resolveClosure(Object closureObj, Object translator) {
+        Closure argClosure = closureObj
+        argClosure.delegate = translator
+        argClosure.resolveStrategy = Closure.DELEGATE_FIRST
+        argClosure.call()
+    }
+
 }

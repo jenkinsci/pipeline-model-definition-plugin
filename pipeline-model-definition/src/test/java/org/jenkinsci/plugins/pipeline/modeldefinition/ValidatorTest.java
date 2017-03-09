@@ -135,6 +135,15 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41185")
+    @Test
+    public void whenNestedChildrenInvalid() throws Exception {
+        expectError("whenNestedChildrenInvalid")
+                .logContains(Messages.ModelValidatorImpl_NestedWhenWithoutChildren("allOf"),
+                        Messages.ModelValidatorImpl_NestedWhenWrongChildrenCount("not", 1))
+                .go();
+    }
+
     @Test
     public void blockInJobProperties() throws Exception {
         expectError("blockInJobProperties")

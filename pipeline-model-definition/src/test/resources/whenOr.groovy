@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,33 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-public class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript<LabelAndOtherFieldAgent> {
-
-    public LabelAndOtherFieldAgentScript(CpsScript s, LabelAndOtherFieldAgent a) {
-        super(s, a)
+pipeline {
+    agent any
+    environment {
+        BRANCH_NAME = "master"
     }
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                anyOf {
+                    branch "master"
+                    expression {
+                        "foo" == "bar"
+                    }
+                }
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-    @Override
-    public Closure run(Closure body) {
-        script.echo "Running in labelAndOtherField with otherField = ${describable.getOtherField()}"
-        script.echo "And children: ${describable.getNested()}"
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: describable.label])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
+            }
         }
     }
 }

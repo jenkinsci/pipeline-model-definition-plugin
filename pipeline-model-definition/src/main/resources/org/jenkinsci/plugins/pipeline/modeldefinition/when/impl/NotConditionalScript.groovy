@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,27 +23,23 @@
  */
 
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript<LabelAndOtherFieldAgent> {
 
-    public LabelAndOtherFieldAgentScript(CpsScript s, LabelAndOtherFieldAgent a) {
-        super(s, a)
+class NotConditionalScript extends DeclarativeStageConditionalScript<NotConditional> {
+    public NotConditionalScript(CpsScript s, NotConditional c) {
+        super(s, c)
     }
 
     @Override
-    public Closure run(Closure body) {
-        script.echo "Running in labelAndOtherField with otherField = ${describable.getOtherField()}"
-        script.echo "And children: ${describable.getNested()}"
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: describable.label])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
-        }
+    public boolean evaluate() {
+        DeclarativeStageConditional child = describable.child
+        DeclarativeStageConditionalScript nestedScript = (DeclarativeStageConditionalScript)child?.getScript(script)
+
+        return !nestedScript.evaluate()
     }
 }

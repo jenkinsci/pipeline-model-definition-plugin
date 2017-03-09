@@ -31,13 +31,13 @@
           }]
         }]
       }],
-      "when": {"conditions": [      {
+      "when": {"condition": {
         "name": "branch",
-        "arguments":         {
+        "arguments": {
           "isLiteral": true,
           "value": "SOME_OTHER_BRANCH"
         }
-      }]}
+      }}
     }
   ],
   "environment": [  {
