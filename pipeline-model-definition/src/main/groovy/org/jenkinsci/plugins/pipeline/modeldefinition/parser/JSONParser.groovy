@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
-import org.apache.commons.lang.StringEscapeUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
 import com.github.fge.jsonschema.exceptions.JsonReferenceException
 import com.github.fge.jsonschema.exceptions.ProcessingException
@@ -56,10 +55,13 @@ class JSONParser implements Parser {
 
     JsonTree jsonTree
 
+    private GroovyShell testShell
+
     public JSONParser(JsonTree tree) {
         this.jsonTree = tree
         this.errorCollector = new JSONErrorCollector()
         this.validator = new ModelValidatorImpl(this.errorCollector)
+        this.testShell = new GroovyShell()
     }
 
     public @CheckForNull ModelASTPipelineDef parse() {
@@ -426,19 +428,20 @@ class JSONParser implements Parser {
                 val = ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)
             } else if (o.node.get("value").isNumber()) {
                 val =  ModelASTValue.fromConstant(o.node.get("value").numberValue(), o)
-            } else if (o.node.get("value").isTextual()) {
-                val = ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
             } else {
                 val = ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+                if (val.getValue() != null) {
+                    try {
+                        testShell.parse(val.toGroovy())
+                    } catch (_) {
+                        errorCollector.error(val, Messages.JSONParser_InvalidGroovyString(val.getValue()))
+                    }
+                }
             }
         } else {
             val = ModelASTValue.fromGString(o.node.get("value").textValue(), o)
         }
 
-        String valGroovy = val?.toGroovy()
-        if (valGroovy != null && valGroovy != StringEscapeUtils.escapeJava(valGroovy)) {
-            errorCollector.error(val, Messages.JSONParser_MismatchedQuotes())
-        }
         return val;
     }
 
