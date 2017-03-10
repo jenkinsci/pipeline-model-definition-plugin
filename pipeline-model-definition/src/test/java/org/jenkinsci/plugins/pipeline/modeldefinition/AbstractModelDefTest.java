@@ -169,7 +169,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"emptyJobProperties", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"emptyParameters", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"emptyTriggers", Messages.JSONParser_TooFewItems(0, 1)});
-        result.add(new Object[]{"emptyWhen", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"emptyWhen", "instance failed to match at least one schema"});
         result.add(new Object[]{"mixedMethodArgs", Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters()});
 
         result.add(new Object[]{"rejectPropertiesStepInMethodCall",
@@ -561,6 +561,8 @@ public abstract class AbstractModelDefTest {
                 run = run.getParent().scheduleBuild2(0).waitForStart();
             }
             j.assertBuildStatus(result, j.waitForCompletion(run));
+            // To deal with some erratic failures due to error logs not showing up until after "completion"
+            Thread.sleep(100);
 
             if (logContains != null) {
                 for (String entry : logContains) {

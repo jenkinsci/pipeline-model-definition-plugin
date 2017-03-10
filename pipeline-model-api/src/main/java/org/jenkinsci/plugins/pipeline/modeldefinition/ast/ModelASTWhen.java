@@ -80,8 +80,8 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        condition.validate(validator);
+        if (condition != null) {
+            condition.validate(validator);
+        }
     }
-
-
 }
