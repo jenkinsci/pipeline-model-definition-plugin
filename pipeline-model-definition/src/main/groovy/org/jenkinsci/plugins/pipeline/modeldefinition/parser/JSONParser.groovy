@@ -87,8 +87,10 @@ class JSONParser implements Parser {
         JsonTree pipelineJson = json.append(JsonPointer.of(ModelStepLoader.STEP_NAME))
         if (pipelineJson.node.isObject()) {
             pipelineJson.node.fields().collectEntries { [(it.key): it.value] }.each { sectionName, sectionContent ->
+                ModelASTKey placeholderForErrors = new ModelASTKey(pipelineJson.append(JsonPointer.of(sectionName)))
+
                 if (!sectionsSeen.add(sectionName)) {
-                    errorCollector.error(pipelineDef, Messages.Parser_MultipleOfSection(sectionName))
+                    errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(sectionName))
                 }
 
                 switch (sectionName) {
@@ -120,7 +122,7 @@ class JSONParser implements Parser {
                         pipelineDef.libraries = parseLibraries(pipelineJson.append(JsonPointer.of("libraries")))
                         break
                     default:
-                        errorCollector.error(pipelineDef, Messages.Parser_UndefinedSection(sectionName))
+                        errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(sectionName))
                 }
             }
 

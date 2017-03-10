@@ -555,4 +555,15 @@ public class ValidatorTest extends AbstractModelDefTest {
                         Messages.ModelParser_ExpectedLibrary("1 + 2"))
                 .go();
     }
+
+    @Issue("JENKINS-42550")
+    @Test
+    public void undefinedSectionReferencesCorrectly() throws Exception {
+        expectError("undefinedSectionReferencesCorrectly")
+                .logContains(Messages.Parser_UndefinedSection("node"),
+                        "node {")
+                .logNotContains("pipeline {")
+                .go();
+    }
+
 }
