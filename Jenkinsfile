@@ -12,6 +12,12 @@ pipeline {
         label "java"
     }
 
+    // Set log rotation and timestamps in the console
+    options {
+        buildDiscarder(logRotator(numToKeepStr:'20'))
+        timestamps()
+    }
+
     // Make sure we have GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL set due to machine weirdness.
     environment {
         GIT_COMMITTER_NAME = "jenkins"
