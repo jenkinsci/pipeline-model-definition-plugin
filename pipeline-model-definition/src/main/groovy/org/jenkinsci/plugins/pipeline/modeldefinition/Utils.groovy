@@ -246,12 +246,8 @@ public class Utils {
 
         root.stages.stages.each { s ->
             ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            List<DeclarativeStageConditional> conditions = []
             if (astStage.when != null) {
-                astStage.when?.conditions?.each { c ->
-                    conditions.add(stageConditionalFromAST(c))
-                }
-                s.when(new StageConditionals(conditions))
+                s.when(new StageConditionals(stageConditionalFromAST(astStage.when.condition)))
             }
             stagesWithWhen.add(s)
         }
@@ -272,11 +268,11 @@ public class Utils {
         DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
 
         if (w instanceof ModelASTWhenCondition) {
-            if (desc.allowedNestedCount == 0) {
+            if (desc.allowedChildrenCount == 0) {
                 Object[] arg = new Object[1]
                 arg[0] = w.args?.argListToMap()
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
-            } else if (desc.allowedNestedCount == 1) {
+            } else if (desc.allowedChildrenCount == 1) {
                 DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
             } else {
