@@ -86,7 +86,8 @@ public class StageConditionalTranslator implements MethodMissingWrapper, Seriali
             retVal = Utils.getDescribable(s, DeclarativeStageConditional.class, args)
         }
 
-        if (isOfType((UninstantiatedDescribable) retVal, DeclarativeStageConditional.class)) {
+        if (retVal instanceof UninstantiatedDescribable &&
+            isOfType((UninstantiatedDescribable) retVal, DeclarativeStageConditional.class)) {
             actualList << (UninstantiatedDescribable) retVal
         }
 

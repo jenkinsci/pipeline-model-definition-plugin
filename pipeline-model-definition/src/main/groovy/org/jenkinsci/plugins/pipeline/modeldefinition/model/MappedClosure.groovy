@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.SerializableGString
 
 
 /**
@@ -67,6 +68,10 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
             argValue = args[0]
         }
 
+        if (argValue != null && argValue instanceof GString) {
+            argValue = SerializableGString.dehydrate(argValue)
+        }
+
         this."${methodName}" = argValue
 
         this
@@ -74,12 +79,28 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
 
     @Override
     public void modelFromMap(Map<String,Object> inMap) {
-        this.resultMap.putAll(inMap)
+        def newMap = new TreeMap<String,Object>()
+        inMap.each { k, v ->
+            if (v instanceof GString) {
+                newMap.put(k, SerializableGString.dehydrate(v))
+            } else {
+                newMap.put(k, v)
+            }
+        }
+        this.resultMap.putAll(newMap)
     }
 
     public Map<String, Object> getMap() {
         def mapCopy = [:]
-        mapCopy.putAll(resultMap)
+        resultMap.each { k, v ->
+            if (v instanceof SerializableGString) {
+                mapCopy.put(k, v.rehydrate())
+            } else if (v instanceof MappedClosure) {
+                mapCopy.put(k, v.getMap())
+            } else {
+                mapCopy.put(k, v)
+            }
+        }
         return mapCopy
     }
 

@@ -67,7 +67,8 @@ public class MethodsToListTranslator implements MethodMissingWrapper, Serializab
             retVal = script."${s}"()
         }
 
-        if (isOfType((UninstantiatedDescribable)retVal, Utils.getMethodsToListType(clazz))) {
+        if (retVal instanceof UninstantiatedDescribable &&
+            isOfType((UninstantiatedDescribable)retVal, Utils.getMethodsToListType(clazz))) {
             actualList << retVal
         }
 

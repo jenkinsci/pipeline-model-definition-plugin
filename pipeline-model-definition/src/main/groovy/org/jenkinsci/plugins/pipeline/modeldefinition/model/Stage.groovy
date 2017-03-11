@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.SerializableGString
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 
 import javax.annotation.Nonnull
@@ -96,17 +97,23 @@ public class Stage implements NestedModel, Serializable {
      * @return a list of "key=value" strings.
      */
     List<String> getEnvVars() {
-        return environment.findAll{k, v -> !(v instanceof CredentialWrapper)}.collect { k, v ->
-            "${k}=${v}"
+        if (environment == null) {
+            return []
+        } else {
+            return environment.findAll { k, v -> !(v instanceof CredentialWrapper) }.collect { k, v ->
+                "${k}=${v}"
+            }
         }
     }
 
     @Nonnull
     Map<String, CredentialWrapper> getEnvCredentials() {
         Map<String, CredentialWrapper> m = [:]
-        environment.each {k, v ->
-            if (v instanceof  CredentialWrapper) {
-                m["${k}"] = v;
+        if (environment != null) {
+            environment.each { k, v ->
+                if (v instanceof CredentialWrapper) {
+                    m["${k}"] = v;
+                }
             }
         }
         return m
