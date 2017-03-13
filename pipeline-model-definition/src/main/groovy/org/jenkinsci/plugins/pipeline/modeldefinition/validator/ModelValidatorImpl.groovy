@@ -218,6 +218,12 @@ class ModelValidatorImpl implements ModelValidator {
                 } else if (condition.children.size() != desc.getAllowedChildrenCount()) {
                     errorCollector.error(condition, Messages.ModelValidatorImpl_NestedWhenWrongChildrenCount(condition.name, desc.getAllowedChildrenCount()))
                     valid = false
+                } else {
+                    condition.children.each { c ->
+                        if (!c.validate(this)) {
+                            valid = false
+                        }
+                    }
                 }
             } else {
                 if (!condition.children.isEmpty()) {

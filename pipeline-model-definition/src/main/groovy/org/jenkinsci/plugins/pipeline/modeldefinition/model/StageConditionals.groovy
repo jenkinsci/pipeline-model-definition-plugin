@@ -40,7 +40,7 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
+class StageConditionals implements Serializable {
     private static final Object NESTED_CACHE_KEY = new Object()
     private static final Object MULTIPLE_NESTED_CACHE_KEY = new Object()
 
@@ -66,11 +66,10 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
         return multipleNestedTypeCache.get(MULTIPLE_NESTED_CACHE_KEY)
     }
 
-    public List<DeclarativeStageConditional> conditions = []
+    public DeclarativeStageConditional condition
 
-    public StageConditionals(List<UninstantiatedDescribable> input) {
-        input.each { i ->
-            conditions.add((DeclarativeStageConditional<? extends DeclarativeStageConditional>) i.instantiate())
-        }
+    public StageConditionals(DeclarativeStageConditional<? extends DeclarativeStageConditional> c) {
+        this.condition = c
     }
+
 }

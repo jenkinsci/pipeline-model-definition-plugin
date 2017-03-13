@@ -50,7 +50,7 @@ public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
         return result.toString();
     }
 
-    protected String codeBlockAsString() {
+    public String codeBlockAsString() {
         if (getArgs() == null) {
             return null;
         } else if (isLiteralSingleArg()) {

@@ -29,4 +29,5 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
  * @author Andrew Bayer
  */
 public interface ModelASTWhenContent extends ModelASTMarkerInterface {
+    String getName();
 }

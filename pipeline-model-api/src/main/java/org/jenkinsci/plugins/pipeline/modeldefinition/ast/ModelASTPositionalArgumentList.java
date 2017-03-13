@@ -1,9 +1,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
 /**
  * Represents the positional parameters for a step in a list of {@link ModelASTValue}s.
@@ -64,6 +68,16 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
 
     public void setArguments(List<ModelASTValue> arguments) {
         this.arguments = arguments;
+    }
+
+    @Override
+    public Map<String,?> argListToMap() {
+        List<Object> argList = new ArrayList<>();
+        for (ModelASTValue v : arguments) {
+            argList.add(v.getValue());
+        }
+
+        return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, argList);
     }
 
     @Override

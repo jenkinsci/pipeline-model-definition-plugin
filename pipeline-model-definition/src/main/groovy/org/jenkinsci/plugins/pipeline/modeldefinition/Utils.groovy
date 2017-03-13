@@ -37,9 +37,20 @@ import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
@@ -200,19 +211,96 @@ public class Utils {
         }
     }
 
-    static void attachDeclarativeActions(CpsScript script) {
+    static Root attachDeclarativeActions(@Nonnull Root root, CpsScript script) {
         WorkflowRun r = script.$build()
         ModelASTPipelineDef model = Converter.parseFromWorkflowRun(r)
 
-        ModelASTStages stages = model.stages
+        if (model != null) {
+            ModelASTStages stages = model.stages
 
-        stages.removeSourceLocation()
-        if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
-            r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
+            stages.removeSourceLocation()
+            if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
+                r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
+            }
+            if (r.getAction(ExecutionModelAction.class) == null) {
+                r.addAction(new ExecutionModelAction(stages))
+            }
+
+            if (root != null) {
+                root = populateWhen(root, model)
+            }
         }
-        if (r.getAction(ExecutionModelAction.class) == null) {
-            r.addAction(new ExecutionModelAction(stages))
+
+        return root
+    }
+
+    /**
+     * Attaches the {@link StageConditionals} to the appropriate {@link Stage}s, pulling from the AST model.
+     *
+     * @param root
+     * @param model
+     * @return an updated {@link Root}
+     */
+    static Root populateWhen(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+        List<Stage> stagesWithWhen = []
+
+        root.stages.stages.each { s ->
+            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
+            if (astStage.when != null) {
+                s.when(new StageConditionals(stageConditionalFromAST(astStage.when.condition)))
+            }
+            stagesWithWhen.add(s)
         }
+
+        root.stages.stages = stagesWithWhen
+
+        return root
+    }
+
+    /**
+     * Translates the {@link ModelASTWhenContent} into a {@link DeclarativeStageConditional}.
+     *
+     * @param w
+     * @return A populated {@link DeclarativeStageConditional}
+     */
+    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
+        DeclarativeStageConditional c = null
+        DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
+
+        if (w instanceof ModelASTWhenCondition) {
+            if (desc.allowedChildrenCount == 0) {
+                Object[] arg = new Object[1]
+                arg[0] = w.args?.argListToMap()
+                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
+            } else if (desc.allowedChildrenCount == 1) {
+                DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
+                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
+            } else {
+                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(it) }
+                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, nested).instantiate()
+            }
+        } else if (w instanceof ModelASTWhenExpression) {
+            ModelASTWhenExpression expr = (ModelASTWhenExpression)w
+
+            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
+        }
+
+        return c
+    }
+
+    /**
+     * Takes a string and makes sure it starts/ends with double quotes so that it can be evaluated correctly.
+     *
+     * @param s The original string
+     * @return Either the original string, if it already starts/ends with double quotes, or the original string
+     * prepended/appended with double quotes.
+     */
+    public static String prepareForEvalToString(String s) {
+        String toEval = s ?: ""
+        if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
+            toEval = '"' + toEval + '"'
+        }
+        return toEval
     }
 
     static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {

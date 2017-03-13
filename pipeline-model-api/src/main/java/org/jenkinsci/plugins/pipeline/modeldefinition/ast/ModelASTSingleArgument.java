@@ -1,6 +1,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
+
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Represents a single unnamed argument.
@@ -47,6 +51,12 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
 
     public void setValue(ModelASTValue value) {
         this.value = value;
+    }
+
+    @Override
+    public Map<String,?> argListToMap() {
+        return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY,
+                getValue().getValue());
     }
 
     @Override

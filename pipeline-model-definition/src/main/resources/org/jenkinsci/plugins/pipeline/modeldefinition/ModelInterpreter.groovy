@@ -61,7 +61,7 @@ public class ModelInterpreter implements Serializable {
 
         if (root != null) {
             // Attach the stages model to the run for introspection etc.
-            Utils.attachDeclarativeActions(script)
+            root = Utils.attachDeclarativeActions(root, script)
             boolean postBuildRun = false
 
             try {
@@ -408,17 +408,13 @@ public class ModelInterpreter implements Serializable {
      *
      */
     def evaluateWhen(StageConditionals when) {
-        if (when == null) {
-            return true
-        } else {
-            for (int i = 0; i < when.conditions.size(); i++) {
-                DeclarativeStageConditional c = when.conditions.get(i)
-                if (!c.getScript(script).evaluate()) {
-                    return false
-                }
+        if (when != null) {
+            DeclarativeStageConditional c = when.condition
+            if (!c.getScript(script).evaluate()) {
+                return false
             }
-            return true
         }
+        return true
     }
 
     /**
