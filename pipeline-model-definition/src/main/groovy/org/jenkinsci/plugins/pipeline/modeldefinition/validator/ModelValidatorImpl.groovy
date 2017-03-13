@@ -520,7 +520,7 @@ class ModelValidatorImpl implements ModelValidator {
             try {
                 // Converting amongst boolean, string and int at runtime doesn't work, but does pass castToType. So.
                 if ((erasedType.equals(String.class) && (v.value instanceof Integer || v.value instanceof Boolean)) ||
-                    (erasedType.equals(Integer.class) && (v.value instanceof String || v.value instanceof Boolean))) {
+                    (erasedType.equals(int.class) && (v.value instanceof String || v.value instanceof Boolean))) {
                     throw new RuntimeException("Ignore")
                 }
                 ScriptBytecodeAdapter.castToType(v.value, erasedType);
