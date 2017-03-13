@@ -24,15 +24,13 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
@@ -40,15 +38,16 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import java.util.concurrent.TimeUnit;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Restricted(NoExternalUse.class)
 @Extension
 public class DescriptorLookupCache {
-    private transient LoadingCache<String, StepDescriptor> stepMap;
-    private transient LoadingCache<String, DescribableModel<? extends Step>> modelMap;
-    private transient LoadingCache<String, Descriptor<? extends Describable>> describableMap;
-    private transient LoadingCache<String, DescribableModel<? extends Describable>> describableModelMap;
+    private transient Map<String, StepDescriptor> stepMap;
+    private transient Map<String, DescribableModel<? extends Step>> modelMap;
+    private transient Map<String, Descriptor<? extends Describable>> describableMap;
+    private transient Map<String, DescribableModel<? extends Describable>> describableModelMap;
 
     public static DescriptorLookupCache getPublicCache() {
         return ExtensionList.lookup(DescriptorLookupCache.class).get(0);
@@ -64,71 +63,56 @@ public class DescriptorLookupCache {
     }
 
     public synchronized void invalidateAll() {
-        this.stepMap = CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .build(new CacheLoader<String, StepDescriptor>() {
-                    @Override
-                    public StepDescriptor load(String key) throws Exception {
-                        for (StepDescriptor d : StepDescriptor.all()) {
-                            if (key.equals(d.getFunctionName())) {
-                                return d;
-                            }
-                        }
-
-                        return null;
-                    }
-                });
-
-        this.modelMap = CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .build(new CacheLoader<String, DescribableModel<? extends Step>>() {
-                    @Override
-                    public DescribableModel<? extends Step> load(String key) throws Exception {
-                        StepDescriptor descriptor = lookupStepDescriptor(key);
-                        Class<? extends Step> c = (descriptor == null ? null : descriptor.clazz);
-                        return c != null ? new DescribableModel<>(c) : null;
-                    }
-                });
-
-        this.describableMap = CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .build(new CacheLoader<String, Descriptor<? extends Describable>>() {
-                    @Override
-                    public Descriptor<? extends Describable> load(String key) throws Exception {
-                        try {
-                            return SymbolLookup.get().findDescriptor(Describable.class, key);
-                        } catch (NullPointerException e) {
-                            return null;
-                        }
-                    }
-                });
-
-        this.describableModelMap = CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .build(new CacheLoader<String, DescribableModel<? extends Describable>>() {
-                    @Override
-                    public DescribableModel<? extends Describable> load(String key) throws Exception {
-                        final Descriptor<? extends Describable> function = lookupFunction(key);
-                        Class<? extends Describable> c = (function == null ? null : function.clazz);
-                        return c != null ? new DescribableModel<>(c) : null;
-                    }
-                });
+        this.stepMap = new LinkedHashMap<>();
+        this.modelMap = new LinkedHashMap<>();
+        this.describableMap = new LinkedHashMap<>();
+        this.describableModelMap = new LinkedHashMap<>();
     }
 
     public synchronized DescribableModel<? extends Step> modelForStep(String n) {
-        return modelMap.asMap().get(n);
+        if (!modelMap.containsKey(n)) {
+            final StepDescriptor descriptor = lookupStepDescriptor(n);
+            Class<? extends Step> c = (descriptor == null ? null : descriptor.clazz);
+            modelMap.put(n, c != null ? new DescribableModel<>(c) : null);
+        }
+
+
+        return modelMap.get(n);
     }
 
     public synchronized DescribableModel<? extends Describable> modelForDescribable(String n) {
-        return describableModelMap.asMap().get(n);
+        if (!describableModelMap.containsKey(n)) {
+            final Descriptor<? extends Describable> function = lookupFunction(n);
+            Class<? extends Describable> c = (function == null ? null : function.clazz);
+            describableModelMap.put(n, c != null ? new DescribableModel<>(c) : null);
+        }
+
+
+        return describableModelMap.get(n);
     }
 
     public synchronized StepDescriptor lookupStepDescriptor(String n) {
-        return stepMap.asMap().get(n);
+        if (stepMap.isEmpty()) {
+            for (StepDescriptor d : StepDescriptor.all()) {
+                stepMap.put(d.getFunctionName(), d);
+            }
+        }
+        return stepMap.get(n);
     }
 
     public synchronized Descriptor<? extends Describable> lookupFunction(String n) {
-        return describableMap.asMap().get(n);
+        if (!describableMap.containsKey(n)) {
+            try {
+                Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(Describable.class, n);
+                describableMap.put(n, d);
+            } catch (NullPointerException e) {
+                describableMap.put(n, null);
+            }
+
+        }
+
+
+        return describableMap.get(n);
     }
 
     public synchronized Descriptor<? extends Describable> lookupStepFirstThenFunction(String name) {
