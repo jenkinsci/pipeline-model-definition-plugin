@@ -73,8 +73,8 @@ public class ModelASTStep extends ModelASTElement {
             // If the named list is exactly 1 long...
             if (namedArgs.getArguments().size() == 1) {
                 DescriptorLookupCache lookup = DescriptorLookupCache.getPublicCache();
-                Descriptor<? extends Describable> desc = lookup.lookupStepOrFunction(name);
-                DescribableModel<? extends Describable> model = lookup.modelForStepOrFunction(name);
+                Descriptor<? extends Describable> desc = lookup.lookupStepFirstThenFunction(name);
+                DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(name);
 
                 // If we can lookup the model for this step or function...
                 if (model != null) {

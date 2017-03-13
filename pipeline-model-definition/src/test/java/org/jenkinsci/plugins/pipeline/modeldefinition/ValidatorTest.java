@@ -102,7 +102,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void whenInvalidParameterType() throws Exception {
         expectError("whenInvalidParameterType")
-                .logContains(Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4))
+                .logContains(Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class))
                 .go();
     }
 
@@ -196,7 +196,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void invalidParameterTypeMethodCall() throws Exception {
         expectError("invalidParameterTypeMethodCall")
-                .logContains(Messages.ModelValidatorImpl_InvalidParameterType("class java.lang.String", "name", "1234"))
+                .logContains(Messages.ModelValidatorImpl_InvalidParameterType("class java.lang.String", "name", "1234", Integer.class))
                 .go();
     }
 
@@ -259,7 +259,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void invalidStepParameterType() throws Exception {
         expectError("invalidStepParameterType")
-                .logContains(Messages.ModelValidatorImpl_InvalidParameterType("int", "time", "someTime"))
+                .logContains(Messages.ModelValidatorImpl_InvalidParameterType("int", "time", "someTime", String.class))
                 .go();
     }
 

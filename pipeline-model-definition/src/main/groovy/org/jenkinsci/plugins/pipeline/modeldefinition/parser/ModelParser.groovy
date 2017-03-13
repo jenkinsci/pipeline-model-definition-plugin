@@ -711,8 +711,8 @@ class ModelParser implements Parser {
         if (Jenkins.getInstance() != null && origArgs instanceof ModelASTSingleArgument) {
             ModelASTValue singleArgValue = ((ModelASTSingleArgument)origArgs).value
             ModelASTNamedArgumentList namedArgs = new ModelASTNamedArgumentList(origArgs.sourceLocation)
-            Descriptor<? extends Describable> desc = lookup.lookupStepOrFunction(step.name)
-            DescribableModel<? extends Describable> model = lookup.modelForStepOrFunction(step.name)
+            Descriptor<? extends Describable> desc = lookup.lookupStepFirstThenFunction(step.name)
+            DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
             if (model != null) {
                 DescribableParameter p = model.soleRequiredParameter

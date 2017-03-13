@@ -340,8 +340,8 @@ class ModelValidatorImpl implements ModelValidator {
         } else {
             // We can't do step validation without a Jenkins instance, so move on.
             if (Jenkins.getInstance() != null) {
-                Descriptor desc = lookup.lookupStepOrFunction(step.name)
-                DescribableModel<? extends Describable> model = lookup.modelForStepOrFunction(step.name)
+                Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
+                DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
                 if (model != null) {
                     valid = validateStep(step, model, desc)
@@ -360,10 +360,10 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
         if (Jenkins.getInstance() != null) {
-            Descriptor desc = lookup.lookupFunction(meth.name)
+            Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
             DescribableModel<? extends Describable> model
             if (desc != null) {
-                model = lookup.modelForDescribable(meth.name)
+                model = lookup.modelForFunctionFirstThenStep(meth.name)
             }
 
             if (model != null) {
@@ -454,8 +454,6 @@ class ModelValidatorImpl implements ModelValidator {
             && !trig.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
             errorCollector.error(trig, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
-        } else {
-            valid = validateElement((ModelASTMethodCall)trig)
         }
         return valid
     }
@@ -491,8 +489,6 @@ class ModelValidatorImpl implements ModelValidator {
             && !param.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
             errorCollector.error(param, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
-        } else {
-            valid = validateElement((ModelASTMethodCall)param)
         }
         return valid
     }
@@ -521,8 +517,6 @@ class ModelValidatorImpl implements ModelValidator {
             && !opt.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
             errorCollector.error(opt, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
-        } else {
-            valid = validateElement((ModelASTMethodCall)opt)
         }
         return valid
     }
@@ -530,17 +524,19 @@ class ModelValidatorImpl implements ModelValidator {
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
         if (v.isLiteral()) {
             try {
-                // Converting from boolean or int to string at runtime doesn't work, but does pass castToType. So.
-                if (erasedType.equals(String.class)
-                    && (v.value instanceof Integer || v.value instanceof Boolean)) {
+                // Converting amongst boolean, string and int at runtime doesn't work, but does pass castToType. So.
+                if ((erasedType.equals(String.class) && (v.value instanceof Integer || v.value instanceof Boolean)) ||
+                    (erasedType.equals(int.class) && (v.value instanceof String || v.value instanceof Boolean))) {
                     throw new RuntimeException("Ignore")
                 }
                 ScriptBytecodeAdapter.castToType(v.value, erasedType);
             } catch (Exception e) {
                 if (k != null) {
-                    errorCollector.error(v, Messages.ModelValidatorImpl_InvalidParameterType(erasedType, k.key, v.value.toString()))
+                    errorCollector.error(v, Messages.ModelValidatorImpl_InvalidParameterType(erasedType, k.key, v.value.toString(),
+                        v.value.getClass()))
                 } else {
-                    errorCollector.error(v, Messages.ModelValidatorImpl_InvalidUnnamedParameterType(erasedType, v.value.toString()))
+                    errorCollector.error(v, Messages.ModelValidatorImpl_InvalidUnnamedParameterType(erasedType, v.value.toString(),
+                    v.value.getClass()))
                 }
                 return false
             }

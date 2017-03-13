@@ -12,10 +12,11 @@ pipeline {
         label "java"
     }
 
-    // Set log rotation and timestamps in the console
+    // Set log rotation, timeout and timestamps in the console
     options {
         buildDiscarder(logRotator(numToKeepStr:'20'))
         timestamps()
+        timeout(time: 90, unit: 'MINUTES')
     }
 
     // Make sure we have GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL set due to machine weirdness.

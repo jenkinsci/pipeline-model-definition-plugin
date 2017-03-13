@@ -55,10 +55,13 @@ class JSONParser implements Parser {
 
     JsonTree jsonTree
 
+    private GroovyShell testShell
+
     public JSONParser(JsonTree tree) {
         this.jsonTree = tree
         this.errorCollector = new JSONErrorCollector()
         this.validator = new ModelValidatorImpl(this.errorCollector)
+        this.testShell = new GroovyShell()
     }
 
     public @CheckForNull ModelASTPipelineDef parse() {
@@ -419,19 +422,27 @@ class JSONParser implements Parser {
     }
 
     public @CheckForNull ModelASTValue parseValue(JsonTree o) {
+        ModelASTValue val = null
         if (o.node.get("isLiteral").asBoolean()) {
             if (o.node.get("value").isBoolean()) {
-                return ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)
+                val = ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)
             } else if (o.node.get("value").isNumber()) {
-                return ModelASTValue.fromConstant(o.node.get("value").numberValue(), o)
-            } else if (o.node.get("value").isTextual()) {
-                return ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+                val =  ModelASTValue.fromConstant(o.node.get("value").numberValue(), o)
             } else {
-                return ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+                val = ModelASTValue.fromConstant(o.node.get("value").textValue(), o)
+                if (val.getValue() != null) {
+                    try {
+                        testShell.parse(val.toGroovy())
+                    } catch (_) {
+                        errorCollector.error(val, Messages.JSONParser_InvalidGroovyString(val.getValue()))
+                    }
+                }
             }
         } else {
-            return ModelASTValue.fromGString(o.node.get("value").textValue(), o)
+            val = ModelASTValue.fromGString(o.node.get("value").textValue(), o)
         }
+
+        return val;
     }
 
     public @CheckForNull ModelASTScriptBlock parseScriptBlock(JsonTree j) {

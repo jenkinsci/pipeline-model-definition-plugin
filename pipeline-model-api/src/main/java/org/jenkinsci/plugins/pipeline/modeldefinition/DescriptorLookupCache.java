@@ -35,10 +35,13 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Restricted(NoExternalUse.class)
 @Extension
 public class DescriptorLookupCache {
     private transient Map<String, StepDescriptor> stepMap;
@@ -112,11 +115,15 @@ public class DescriptorLookupCache {
         return describableMap.get(n);
     }
 
-    public synchronized Descriptor<? extends Describable> lookupStepOrFunction(String name) {
+    public synchronized Descriptor<? extends Describable> lookupStepFirstThenFunction(String name) {
         return lookupStepDescriptor(name) != null ? lookupStepDescriptor(name) : lookupFunction(name);
     }
 
-    public synchronized DescribableModel<? extends Describable> modelForStepOrFunction(String name) {
+    public synchronized Descriptor<? extends Describable> lookupFunctionFirstThenStep(String name) {
+        return lookupFunction(name) != null ? lookupFunction(name) : lookupStepDescriptor(name);
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForStepFirstThenFunction(String name) {
         Descriptor<? extends Describable> desc = lookupStepDescriptor(name);
         DescribableModel<? extends Describable> model = null;
 
@@ -126,6 +133,22 @@ public class DescriptorLookupCache {
             desc = lookupFunction(name);
             if (desc != null) {
                 model = modelForDescribable(name);
+            }
+        }
+
+        return model;
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForFunctionFirstThenStep(String name) {
+        Descriptor<? extends Describable> desc = lookupFunction(name);
+        DescribableModel<? extends Describable> model = null;
+
+        if (desc != null) {
+            model = modelForDescribable(name);
+        } else {
+            desc = lookupStepDescriptor(name);
+            if (desc != null) {
+                model = modelForStep(name);
             }
         }
 
