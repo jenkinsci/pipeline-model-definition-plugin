@@ -24,6 +24,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import hudson.EnvVars
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 
 /**
  * Special wrapper for environment to deal with mapped closure problems with property declarations.
@@ -32,4 +36,30 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Environment extends MappedClosure<String,Environment> implements PropertiesToMap {
+
+    public EnvVars resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
+        EnvVars newEnv
+
+        if (withContext) {
+            EnvVars contextEnv = ((EnvActionImpl)script.getProperty("env")).getEnvironment()
+            newEnv = new EnvVars(contextEnv)
+        } else {
+            newEnv = new EnvVars()
+        }
+
+        if (parent != null) {
+            newEnv.overrideExpandingAll(parent.resolveEnvVars(script, false))
+        }
+
+        Map<String,String> overrides = getMap().findAll {
+            !(it.value instanceof CredentialWrapper)
+        }.collectEntries { k, v ->
+            [(k): v.toString()]
+        }
+
+        newEnv.overrideExpandingAll(overrides)
+
+        return newEnv
+    }
+
 }

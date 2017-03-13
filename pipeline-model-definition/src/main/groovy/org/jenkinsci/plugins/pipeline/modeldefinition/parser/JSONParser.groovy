@@ -329,6 +329,40 @@ class JSONParser implements Parser {
         return meth
     }
 
+    public @CheckForNull ModelASTInternalFunctionCall parseInternalFunctionCall(JsonTree o) {
+        ModelASTInternalFunctionCall func = new ModelASTInternalFunctionCall(o)
+
+        if (o.node.isObject()) {
+            func.name = o.node.get("name").asText()
+            if (o.node.has("arguments") && o.node.get("arguments").isArray()) {
+                JsonTree args = o.append(JsonPointer.of("arguments"))
+                args.node.eachWithIndex { JsonNode entry, int i ->
+                    if (entry.isObject()) {
+                        JsonTree argTree = args.append(JsonPointer.of(i))
+                        ModelASTMethodArg arg
+                        if (entry.has("isLiteral") && entry.has("value")) {
+                            // This is a single argument
+                            arg = parseValue(argTree)
+                        } else {
+                            errorCollector.error(func, Messages.JSONParser_InvalidArgumentSyntax())
+                        }
+                        if (arg != null) {
+                            func.args << arg
+                        }
+                    } else {
+                        errorCollector.error(func, Messages.JSONParser_MethArgsMustBeObj())
+                    }
+                }
+            } else {
+                errorCollector.error(func, Messages.JSONParser_MethArgsMissing())
+            }
+        } else {
+            errorCollector.error(func, Messages.JSONParser_MethCallMustBeObj())
+        }
+
+        return func
+    }
+
     public @CheckForNull ModelASTStep parseStep(JsonTree j) {
         if (j.node.has("children")) {
             return parseTreeStep(j)
@@ -510,9 +544,18 @@ class JSONParser implements Parser {
             // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
             ModelASTKey key = parseKey(entryTree.append(JsonPointer.of("key")))
 
-            ModelASTValue value = parseValue(entryTree.append(JsonPointer.of("value")))
-
-            environment.variables.put(key, value)
+            JsonTree valTree = entryTree.append(JsonPointer.of("value"))
+            if (valTree.node.isObject()) {
+                if (valTree.node.has("name") && valTree.node.has("arguments")) {
+                    // This is an internal function call
+                    environment.variables.put(key, parseInternalFunctionCall(valTree))
+                } else if (valTree.node.has("isLiteral") && valTree.node.has("value")) {
+                    // This is a single argument
+                    environment.variables.put(key, parseValue(valTree))
+                } else {
+                    errorCollector.error(key, Messages.JSONParser_InvalidValueType())
+                }
+            }
         }
         return environment
     }

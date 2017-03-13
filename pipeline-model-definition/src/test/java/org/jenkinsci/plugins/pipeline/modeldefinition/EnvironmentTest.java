@@ -29,6 +29,10 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+
+import java.io.File;
+import java.util.regex.Pattern;
 
 /**
  * @author Andrew Bayer
@@ -56,6 +60,29 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void environmentInStage() throws Exception {
         expect("environmentInStage")
                 .logContains("[Pipeline] { (foo)", "FOO is BAR")
+                .go();
+    }
+
+    @Issue("JENKINS-41748")
+    @Test
+    public void environmentCrossReferences() throws Exception {
+        expect("environmentCrossReferences")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is FOO",
+                        "BAR is FOOBAR",
+                        "BAZ is FOOBAZ",
+                        "SPLODE is banana")
+                .go();
+    }
+
+    @Issue("JENKINS-41890")
+    @Test
+    public void environmentWithWorkspace() throws Exception {
+        expect("environmentWithWorkspace")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is FOO",
+                        "BAZ is FOOBAZ")
+                .logMatches("BAR is .*?workspace" + Pattern.quote(File.separator) + "test\\d+BAR")
                 .go();
     }
 

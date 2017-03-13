@@ -56,8 +56,8 @@ import static org.hamcrest.core.StringContains.containsString;
  */
 public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
-    private static final String usernamePasswordUsername = "bobby";
-    private static final String usernamePasswordPassword = "s3cr37";
+    public static final String usernamePasswordUsername = "bobby";
+    public static final String usernamePasswordPassword = "s3cr37";
     private static final String mixedEnvCred1Id = "cred1";
     private static final String mixedEnvCred2Id = "cred2";
     private static final String mixedEnvCred1Secret = "Some secret text for 1";
@@ -96,7 +96,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void usernamePassword() throws Exception {
-        expect("credentials", "usernamePassword").runFromRepo(false)
+        expect("usernamePassword").runFromRepo(false)
                 .logNotContains(usernamePasswordPassword, "FOO_USR is " + usernamePasswordUsername)
                 .logContains("FOO_USR is *")
                 .archives("combined/foo.txt", allOf(containsString(usernamePasswordUsername), containsString(usernamePasswordPassword)))
@@ -105,7 +105,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void mixedEnv() throws Exception {
-        expect("credentials", "mixedEnv")
+        expect("mixedEnv")
                 .logContains("SOME_VAR is SOME VALUE",
                              "INBETWEEN is Something in between",
                              "OTHER_VAR is OTHER VALUE")
@@ -128,7 +128,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void noBindingAvailable() throws Exception {
-        expect(Result.FAILURE, "credentials", "noBinding").runFromRepo(false)
+        expect(Result.FAILURE, "noBinding").runFromRepo(false)
                 .logNotContains("Hello")
                 .logContains("No suitable binding handler could be found for type com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey")
                 .go();

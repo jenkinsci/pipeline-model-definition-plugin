@@ -239,8 +239,17 @@ class ModelParser implements Parser {
                             errorCollector.error(key, Messages.ModelParser_DuplicateEnvVar(key.key))
                             return
                         } else {
-                            r.variables[parseKey(exp.leftExpression)] = parseArgument(exp.rightExpression)
-                            return
+                            if (exp.rightExpression instanceof ConstantExpression ||
+                                exp.rightExpression instanceof GStringExpression) {
+                                r.variables[key] = parseArgument(exp.rightExpression, true)
+                                return
+                            } else if (exp.rightExpression instanceof MethodCallExpression) {
+                                r.variables[key] = parseInternalFunctionCall((MethodCallExpression)exp.rightExpression)
+                                return
+                            } else {
+                                errorCollector.error(key, Messages.ModelParser_InvalidEnvironmentValue())
+                                return
+                            }
                         }
                     } else {
                         ModelASTKey badKey = new ModelASTKey(exp)
@@ -609,6 +618,29 @@ class ModelParser implements Parser {
         return m
     }
 
+    public ModelASTEnvironmentValue parseInternalFunctionCall(MethodCallExpression expr) {
+        ModelASTInternalFunctionCall m = new ModelASTInternalFunctionCall(expr)
+        def methodName = matchMethodName(expr);
+
+        // TODO: post JENKINS-41759, switch to checking if it's a valid function name
+        if (methodName == null || methodName != "credentials") {
+            return parseArgument(expr, true)
+        } else {
+            m.name = methodName
+            List<Expression> args = ((TupleExpression) expr.arguments).expressions
+
+            args.each { a ->
+                if (!(a instanceof ConstantExpression) && !(a instanceof GStringExpression)) {
+                    errorCollector.error(m, Messages.ModelParser_InvalidInternalFunctionArg())
+                } else {
+                    m.args << parseArgument(a)
+                }
+            }
+
+            return m
+        }
+    }
+
     public ModelASTClosureMap parseClosureMap(ClosureExpression expression) {
         ModelASTClosureMap map = new ModelASTClosureMap(expression)
 
@@ -892,11 +924,19 @@ class ModelParser implements Parser {
     /**
      * Parse the given expression as an argument to step, etc.
      */
-    protected ModelASTValue parseArgument(Expression e) {
+    protected ModelASTValue parseArgument(Expression e, boolean inEnvironment = false) {
         if (e instanceof ConstantExpression) {
             return ModelASTValue.fromConstant(e.value, e)
         }
-        if (e instanceof GStringExpression || e instanceof MapExpression) {
+        if (e instanceof GStringExpression) {
+            String rawSrc = getSourceText(e)
+            if (inEnvironment) {
+                return ModelASTValue.fromConstant(rawSrc.substring(1, rawSrc.length() - 1), e)
+            } else {
+                return ModelASTValue.fromGString(rawSrc, e)
+            }
+        }
+        if (e instanceof MapExpression) {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {

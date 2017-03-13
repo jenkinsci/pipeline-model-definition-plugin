@@ -1,0 +1,89 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"FOO is $FOO\""
+            }
+          }]
+        },
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"BAR is $BAR\""
+            }
+          }]
+        },
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"BAZ is $BAZ\""
+            }
+          }]
+        },
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"SPLODE is $SPLODE\""
+            }
+          }]
+        }
+      ]
+    }],
+    "environment":     [
+      {
+        "key": "BAZ",
+        "value":         {
+          "isLiteral": true,
+          "value": "${FOO}BAZ"
+        }
+      },
+      {
+        "key": "SPLODE",
+        "value":         {
+          "isLiteral": true,
+          "value": "${params.WUT ?: 'banana'}"
+        }
+      }
+    ]
+  }],
+  "environment":   [
+    {
+      "key": "FOO",
+      "value":       {
+        "isLiteral": true,
+        "value": "FOO"
+      }
+    },
+    {
+      "key": "BAR",
+      "value":       {
+        "isLiteral": true,
+        "value": "${FOO}BAR"
+      }
+    }
+  ],
+  "agent":   {
+    "type": "label",
+    "argument":     {
+      "isLiteral": true,
+      "value": "some-label"
+    }
+  }
+}}

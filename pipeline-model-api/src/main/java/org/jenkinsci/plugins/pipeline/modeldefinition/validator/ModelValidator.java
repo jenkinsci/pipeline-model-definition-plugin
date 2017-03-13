@@ -35,6 +35,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTClosureMap;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
@@ -95,4 +96,6 @@ public interface ModelValidator {
     boolean validateElement(ModelASTLibraries libraries);
 
     boolean validateElement(ModelASTWhenCondition condition);
+
+    boolean validateElement(ModelASTInternalFunctionCall call);
 }

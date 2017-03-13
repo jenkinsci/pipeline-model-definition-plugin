@@ -136,6 +136,11 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
+    public boolean validateElement(@Nonnull ModelASTInternalFunctionCall call) {
+        // TODO: Make this real validation when JENKINS-41759 lands
+        return true
+    }
+
     public boolean validateElement(@Nonnull ModelASTTools t) {
         boolean valid = true
 

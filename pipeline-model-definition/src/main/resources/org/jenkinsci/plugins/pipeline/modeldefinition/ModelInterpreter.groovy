@@ -69,13 +69,10 @@ public class ModelInterpreter implements Serializable {
 
                 executeProperties(root)
 
-                // Entire build, including notifications, runs in the withEnv.
-                withEnvBlock(root.getEnvVars()) {
-                    inWrappers(root.options) {
-                        // Stage execution and post-build actions run in try/catch blocks, so we still run post-build actions
-                        // even if the build fails.
-                        // We save the caught error, if any, for throwing at the end of the build.
-                        inDeclarativeAgent(root, root, root.agent) {
+                // Entire build, including notifications, runs in the agent.
+                inDeclarativeAgent(root, root, root.agent) {
+                    withEnvBlock(root.getEnvVars(script)) {
+                        inWrappers(root.options) {
                             withCredentialsBlock(root.getEnvCredentials()) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
@@ -89,7 +86,12 @@ public class ModelInterpreter implements Serializable {
                                                     Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
                                                     Utils.markStageSkippedForUnstable(thisStage.name)
                                                 } else {
-                                                    withEnvBlock(thisStage.getEnvVars()) {
+                                                    // While we run the top-level environment block after the top-level
+                                                    // agent, we do the reverse per-stage. Why? So that the per-stage
+                                                    // environment is populated before we evaluate any when condition,
+                                                    // and so that we don't go into a per-stage agent if the when condition
+                                                    // isn't satisfied.
+                                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                                 withCredentialsBlock(thisStage.getEnvCredentials()) {
@@ -206,8 +208,13 @@ public class ModelInterpreter implements Serializable {
      */
     def withEnvBlock(List<String> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
+            List<String> evaledEnv = new ArrayList<>()
+            for (int i = 0; i < envVars.size(); i++) {
+                // Evaluate to deal with any as-of-yet unresolved expressions.
+                evaledEnv.add((String)script.evaluate('"' + envVars.get(i) + '"'))
+            }
             return {
-                script.withEnv(envVars) {
+                script.withEnv(evaledEnv) {
                     body.call()
                 }
             }.call()

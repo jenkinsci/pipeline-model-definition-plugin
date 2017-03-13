@@ -46,7 +46,7 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.createStepsBl
  * @author Andrew Bayer
  */
 public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
-    private static final List<Class> UNTRANSLATED_CLASSES = [StageConditionals.class]
+    private static final List<Class> UNTRANSLATED_CLASSES = [StageConditionals.class, Environment.class]
 
     Map<String,Object> actualMap = [:]
     Class<NestedModel> actualClass
