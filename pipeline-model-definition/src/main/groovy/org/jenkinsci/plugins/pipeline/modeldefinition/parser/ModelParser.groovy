@@ -137,15 +137,16 @@ class ModelParser implements Parser {
 
         def sectionsSeen = new HashSet();
         eachStatement(pipelineBlock.body.code) { stmt ->
+            ModelASTKey placeholderForErrors = new ModelASTKey(stmt)
             def mc = matchMethodCall(stmt);
             if (mc == null) {
-                errorCollector.error(r, Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
+                errorCollector.error(placeholderForErrors, Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
             } else {
                 def name = parseMethodName(mc);
                 // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
                 if (!sectionsSeen.add(name)) {
                     // Also an error that we couldn't actually detect at model evaluation time.
-                    errorCollector.error(r, Messages.Parser_MultipleOfSection(name))
+                    errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(name))
                 }
 
                 switch (name) {
@@ -177,23 +178,23 @@ class ModelParser implements Parser {
                         r.libraries = parseLibraries(stmt)
                         break
                     case 'properties':
-                        errorCollector.error(r, Messages.ModelParser_RenamedProperties())
+                        errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedProperties())
                         break
                     case 'wrappers':
-                        errorCollector.error(r, "The 'wrappers' section has been removed as of version 0.8. Use 'options' instead.")
+                        errorCollector.error(placeholderForErrors, "The 'wrappers' section has been removed as of version 0.8. Use 'options' instead.")
                         break
                     case 'jobProperties':
-                        errorCollector.error(r, Messages.ModelParser_RenamedJobProperties())
+                        errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedJobProperties())
                         break
                     case 'notifications':
-                        errorCollector.error(r, Messages.ModelParser_RenamedNotifications())
+                        errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedNotifications())
                         break
                     case 'postBuild':
-                        errorCollector.error(r, Messages.ModelParser_RenamedPostBuild())
+                        errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedPostBuild())
                         break
                     default:
                         // We need to check for unknowns here.
-                        errorCollector.error(r, Messages.Parser_UndefinedSection(name))
+                        errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
                 }
             }
         }
