@@ -29,6 +29,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ public class CredentialWrapper implements Serializable {
     private final String credentialId;
     private final List<Map<String, Object>> withCredentialsParameters;
 
+    @Restricted(NoExternalUse.class)
     public CredentialWrapper(String credentialId, List<Map<String, Object>> withCredentialsParameters) {
         this.withCredentialsParameters = withCredentialsParameters;
         this.credentialId = credentialId;

@@ -24,19 +24,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 /**
  * A marker for classes that can serve as the value for an environment variable.
  *
  * @author Andrew Bayer
  */
-public interface ModelASTEnvironmentValue {
-    String toGroovy();
-
-    Object toJSON();
-
-    void validate(ModelValidator validator);
-
-    void removeSourceLocation();
+public interface ModelASTEnvironmentValue extends ModelASTMarkerInterface {
 }
