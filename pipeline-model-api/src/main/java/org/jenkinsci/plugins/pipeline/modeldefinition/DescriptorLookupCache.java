@@ -35,10 +35,13 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Restricted(NoExternalUse.class)
 @Extension
 public class DescriptorLookupCache {
     private transient Map<String, StepDescriptor> stepMap;
