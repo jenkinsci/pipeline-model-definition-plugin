@@ -198,6 +198,26 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void additionalDockerBuildArgs() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nARG someArg=thisArgHere\n\nRUN echo $someArg > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        expect("fromDockerfile")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
+                        "-v /tmp:/tmp -p 8000:8000",
+                        "thisOtherArg")
+                .logNotContains("thisArgHere")
+                .go();
+    }
+
     @Issue("JENKINS-41668")
     @Test
     public void fromDockerfileInOtherDir() throws Exception {

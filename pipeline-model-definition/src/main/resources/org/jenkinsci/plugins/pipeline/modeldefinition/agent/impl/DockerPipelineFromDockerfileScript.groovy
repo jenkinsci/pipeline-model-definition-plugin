@@ -77,7 +77,8 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
             try {
                 def hash = Utils.stringToSHA1(script.readFile("${describable.getDockerfilePath()}"))
                 def imgName = "${hash}"
-                script.sh "docker build -t ${imgName} -f \"${describable.getDockerfilePath()}\" \"${describable.getActualDir()}\""
+                def additionalBuildArgs = describable.getAdditionalBuildArgs() ? " ${describable.additionalBuildArgs}" : ""
+                script.sh "docker build -t ${imgName}${additionalBuildArgs} -f \"${describable.getDockerfilePath()}\" \"${describable.getActualDir()}\""
                 script.dockerFingerprintFrom dockerfile: describable.dockerfilePath, image: imgName, toolName: script.env.DOCKER_TOOL_NAME
                 return script.getProperty("docker").image(imgName)
             } catch (FileNotFoundException f) {
