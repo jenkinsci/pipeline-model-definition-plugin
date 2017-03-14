@@ -204,7 +204,7 @@ public class AgentTest extends AbstractModelDefTest {
         // Bind mounting /var on OS X doesn't work at the moment
         onAllowedOS(PossibleOS.LINUX);
 
-        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nARG someArg=thisArgHere\n\nRUN echo $someArg > /hi-there\n\n");
+        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nARG someArg=thisArgHere\n\nRUN echo \"hi there, $someArg\" > /hi-there\n\n");
         sampleRepo.git("init");
         sampleRepo.git("add", "Dockerfile");
         sampleRepo.git("commit", "--message=Dockerfile");
@@ -213,8 +213,8 @@ public class AgentTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
                         "-v /tmp:/tmp -p 8000:8000",
-                        "thisOtherArg")
-                .logNotContains("thisArgHere")
+                        "hi there, thisOtherArg")
+                .logNotContains("hi there, thisArgHere")
                 .go();
     }
 
