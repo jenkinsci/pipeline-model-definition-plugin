@@ -25,32 +25,32 @@
           }
         }]
       }],
-      "when": {"condition": {
+      "when": {"conditions": [      {
         "name": "environment",
-        "arguments": [
+        "arguments":         [
           {
             "key": "name",
-            "value": {
+            "value":             {
               "isLiteral": true,
               "value": "FOO"
             }
           },
           {
             "key": "value",
-            "value": {
+            "value":             {
               "isLiteral": true,
               "value": "SOME_OTHER_VALUE"
             }
           },
           {
             "key": "banana",
-            "value": {
+            "value":             {
               "isLiteral": true,
               "value": "monkey"
             }
           }
         ]
-      }}
+      }]}
     }
   ],
   "environment": [  {
