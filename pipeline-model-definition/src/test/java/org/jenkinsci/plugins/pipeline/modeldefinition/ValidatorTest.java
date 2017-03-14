@@ -566,4 +566,13 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42771")
+    @Test
+    public void invalidMultiExpressionEnvironment() throws Exception {
+        expectError("invalidMultiExpressionEnvironment")
+                .logContains(Messages.ModelParser_InvalidEnvironmentOperation(),
+                        Messages.ModelParser_InvalidEnvironmentConcatValue())
+                .go();
+    }
+
 }

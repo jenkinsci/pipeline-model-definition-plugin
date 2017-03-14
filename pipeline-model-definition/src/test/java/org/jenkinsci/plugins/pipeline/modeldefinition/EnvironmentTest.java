@@ -56,6 +56,16 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42771")
+    @Test
+    public void multiExpressionEnvironment() throws Exception {
+        expect("multiExpressionEnvironment")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "_UNDERSCORE is VALID")
+                .go();
+    }
+
     @Test
     public void environmentInStage() throws Exception {
         expect("environmentInStage")
