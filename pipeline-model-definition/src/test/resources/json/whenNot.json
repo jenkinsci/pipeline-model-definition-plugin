@@ -31,18 +31,16 @@
           }]
         }]
       }],
-      "when": {"condition": {
+      "when": {"conditions": [      {
         "name": "not",
-        "children": [
-          {
-            "name": "branch",
-            "arguments": {
-              "isLiteral": true,
-              "value": "SOME_OTHER_BRANCH"
-            }
+        "children": [        {
+          "name": "branch",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "SOME_OTHER_BRANCH"
           }
-        ]
-      }}
+        }]
+      }]}
     }
   ],
   "environment": [  {

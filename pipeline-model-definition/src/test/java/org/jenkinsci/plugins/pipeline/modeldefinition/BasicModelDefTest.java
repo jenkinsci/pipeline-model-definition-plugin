@@ -401,6 +401,15 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42762")
+    @Test
+    public void whenMultiple() throws Exception {
+        expect("whenMultiple")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
     @Test
     public void whenAndOrSingle() throws Exception {
         expect("whenAndOrSingle")

@@ -175,7 +175,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(ModelASTWhen when) {
         boolean valid = true
-        if (when.condition == null) {
+        if (when.conditions.isEmpty()) {
             errorCollector.error(when, Messages.ModelValidatorImpl_EmptyWhen())
             valid = false
         }

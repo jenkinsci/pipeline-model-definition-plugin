@@ -170,7 +170,7 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"emptyJobProperties", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"emptyParameters", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"emptyTriggers", Messages.JSONParser_TooFewItems(0, 1)});
-        result.add(new Object[]{"emptyWhen", "instance failed to match at least one schema"});
+        result.add(new Object[]{"emptyWhen", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"mixedMethodArgs", Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters()});
 
         result.add(new Object[]{"rejectPropertiesStepInMethodCall",

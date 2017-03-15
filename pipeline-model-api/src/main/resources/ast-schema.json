@@ -407,19 +407,23 @@
       "description": "Conditions to evaluate whether the stage should run or not",
       "type": "object",
       "properties": {
-        "condition": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/step"
-            },
-            {
-              "$ref": "#/definitions/nestedWhenCondition"
-            }
-          ]
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/step"
+              },
+              {
+                "$ref": "#/definitions/nestedWhenCondition"
+              }
+            ]
+          }
         }
       },
       "required": [
-        "condition"
+        "conditions"
       ],
       "additionalProperties": false
     },

@@ -25,13 +25,13 @@
           }
         }]
       }],
-      "when": {"condition": {
+      "when": {"conditions": [      {
         "name": "branch",
-        "arguments": {
+        "arguments":         {
           "isLiteral": true,
           "value": 4
         }
-      }}
+      }]}
     }
   ],
   "agent": {"type": "any"}

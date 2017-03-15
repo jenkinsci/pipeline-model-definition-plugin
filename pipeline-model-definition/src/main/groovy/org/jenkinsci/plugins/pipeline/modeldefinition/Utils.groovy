@@ -262,7 +262,12 @@ public class Utils {
         root.stages.stages.each { s ->
             ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
             if (astStage.when != null) {
-                s.when(new StageConditionals(stageConditionalFromAST(astStage.when.condition)))
+                List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
+                    astStage.when.conditions.collect { c ->
+                        stageConditionalFromAST(c)
+                    }
+
+                s.when(new StageConditionals(processedConditions))
             }
             stagesWithWhen.add(s)
         }
