@@ -219,18 +219,20 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.gmaven</groupId>
-        <artifactId>gmaven-plugin</artifactId>
-        <configuration>
-          <providerSelection>1.8</providerSelection>
-        </configuration>
+        <groupId>org.codehaus.gmavenplus</groupId>
+        <artifactId>gmavenplus-plugin</artifactId>
+        <version>1.5</version>
         <executions>
           <execution>
             <goals>
+              <goal>addSources</goal>
+              <goal>addTestSources</goal>
               <goal>generateStubs</goal>
               <goal>compile</goal>
-              <goal>generateTestStubs</goal>
+              <goal>testGenerateStubs</goal>
               <goal>testCompile</goal>
+              <goal>removeStubs</goal>
+              <goal>removeTestStubs</goal>
             </goals>
           </execution>
         </executions>

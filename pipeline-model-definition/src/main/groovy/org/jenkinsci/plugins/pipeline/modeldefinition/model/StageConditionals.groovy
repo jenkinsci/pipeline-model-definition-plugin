@@ -30,9 +30,16 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+
+import javax.annotation.CheckForNull
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.getDescribable
 
 /**
  * The {@link Stage#when} block.
@@ -40,7 +47,7 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
+class StageConditionals implements Serializable {
     private static final Object NESTED_CACHE_KEY = new Object()
     private static final Object MULTIPLE_NESTED_CACHE_KEY = new Object()
 
@@ -71,4 +78,49 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
     public StageConditionals(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> inList) {
         conditions.addAll(inList)
     }
+
+    @CheckForNull
+    public static StageConditionals fromAST(ModelASTWhen ast) {
+        if (ast != null) {
+            List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> conditionals = ast.conditions.collect { c ->
+                stageConditionalFromAST(c)
+            }
+
+            return new StageConditionals(conditionals)
+        } else {
+            return null
+        }
+    }
+
+    /**
+     * Translates the {@link org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent} into a {@link DeclarativeStageConditional}.
+     *
+     * @param w
+     * @return A populated {@link DeclarativeStageConditional}
+     */
+    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
+        DeclarativeStageConditional c = null
+        DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
+
+        if (w instanceof ModelASTWhenCondition) {
+            if (desc.allowedChildrenCount == 0) {
+                Object[] arg = new Object[1]
+                arg[0] = w.args?.argListToMap()
+                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
+            } else if (desc.allowedChildrenCount == 1) {
+                DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
+                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
+            } else {
+                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(it) }
+                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, nested).instantiate()
+            }
+        } else if (w instanceof ModelASTWhenExpression) {
+            ModelASTWhenExpression expr = (ModelASTWhenExpression)w
+
+            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
+        }
+
+        return c
+    }
+
 }

@@ -103,6 +103,20 @@ public final class ModelASTStage extends ModelASTElement {
             result.append(environment.toGroovy());
         }
         result.append("steps {\n");
+        result.append(getStepsAsString());
+        result.append("}\n");
+
+        if (post != null) {
+            result.append(post.toGroovy());
+        }
+
+        result.append("}\n");
+
+        return result.toString();
+    }
+
+    public String getStepsAsString() {
+        StringBuilder result = new StringBuilder();
         if (branches.size() > 1) {
             result.append("parallel(");
             boolean first = true;
@@ -125,14 +139,6 @@ public final class ModelASTStage extends ModelASTElement {
         } else if (branches.size() == 1) {
             result.append(branches.get(0).toGroovy());
         }
-
-        result.append("}\n");
-
-        if (post != null) {
-            result.append(post.toGroovy());
-        }
-
-        result.append("}\n");
 
         return result.toString();
     }

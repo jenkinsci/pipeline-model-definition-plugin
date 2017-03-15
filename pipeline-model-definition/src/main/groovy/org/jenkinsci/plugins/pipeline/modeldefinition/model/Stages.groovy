@@ -26,6 +26,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
+
+import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
 
 
 /**
@@ -36,23 +41,23 @@ import groovy.transform.ToString
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stages implements NestedModel, Serializable {
+public class Stages implements Serializable {
     List<Stage> stages = []
-
-    Stages stages(List<Stage> s) {
-        this.stages = s
-        return this
-    }
 
     List<Stage> getStages() {
         return stages
     }
 
-    @Override
-    public void modelFromMap(Map<String,Object> m) {
-        m.each { k, v ->
-            this."${k}"(v)
+    @CheckForNull
+    public static Stages fromAST(@Nonnull WorkflowRun r, @CheckForNull ModelASTStages ast) {
+        if (ast != null) {
+            Stages s = new Stages();
+            ast.stages.each { stage ->
+                s.stages.add(Stage.fromAST(r, stage))
+            }
+            return s
+        } else {
+            return null
         }
     }
-
 }

@@ -40,7 +40,7 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
     public Closure run(Closure body) {
         return {
             try {
-                script.node(describable?.label) {
+                script.node(evalStr(describable?.label)) {
                     CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
                 }
             } catch (Exception e) {
@@ -49,4 +49,9 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
             }
         }
     }
+
+    protected String evalStr(String s) {
+        return (String)script.evaluate(prepareForEvalToString(s));
+    }
+
 }

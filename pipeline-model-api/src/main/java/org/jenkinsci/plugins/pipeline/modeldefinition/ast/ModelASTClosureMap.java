@@ -102,6 +102,17 @@ public final class ModelASTClosureMap extends ModelASTElement implements ModelAS
     }
 
     @Override
+    public Object toRuntime() {
+        Map<String,Object> m = new LinkedHashMap<>();
+
+        for (Map.Entry<ModelASTKey,ModelASTMethodArg> entry : variables.entrySet()) {
+            m.put(entry.getKey().getKey(), entry.getValue().toRuntime());
+        }
+
+        return m;
+    }
+
+    @Override
     public String toString() {
         return "ModelASTClosureMap{" +
                 "variables=" + variables +

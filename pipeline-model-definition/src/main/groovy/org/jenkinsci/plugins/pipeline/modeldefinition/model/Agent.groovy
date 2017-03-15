@@ -29,11 +29,14 @@ import groovy.transform.ToString
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTClosureMap
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
-import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
 
 
 /**
@@ -45,7 +48,24 @@ import javax.annotation.CheckForNull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Agent extends MappedClosure<Object,Agent> implements Serializable {
+public class Agent implements Serializable {
+    private String agentType
+    private Map<String,Object> config = new TreeMap<>()
+
+    public void setAgentType(@Nonnull String agentType) {
+        this.agentType = agentType
+    }
+
+    @Nonnull
+    public String getAgentType() {
+        return agentType
+    }
+
+    @Nonnull
+    public Map<String,Object> getConfig() {
+        return config
+    }
+
     @Deprecated
     public DeclarativeAgent getDeclarativeAgent(Object context) {
         return getDeclarativeAgent(null, context)
@@ -57,18 +77,9 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
      * @return The instantiated declarative agent or null if not found.
      */
     public DeclarativeAgent getDeclarativeAgent(@CheckForNull Root root, Object context) {
-        String foundSymbol = findSymbol()
-        if (foundSymbol != null) {
-            DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.byName(foundSymbol)
-            def val = getMap().get(foundSymbol)
-            def argMap = [:]
-            if (val instanceof Map) {
-                argMap.putAll(val)
-            } else {
-                argMap.put(UninstantiatedDescribable.ANONYMOUS_KEY, val)
-            }
-
-            DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
+        DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.byName(getAgentType())
+        if (foundDescriptor != null) {
+            DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, getConfig())
 
             boolean doCheckout = false
             if (context instanceof Root) {
@@ -90,35 +101,50 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
         }
     }
 
-    /**
-     * Needed to handle the combination of describable ordinals *and* Descriptor lookup.
-     * @return The first symbol (in descriptor-ordinal-order searching) found in the map.
-     */
-    private String findSymbol() {
-        String sym = null
-        DeclarativeAgentDescriptor.all().each { d ->
-            SymbolLookup.getSymbolValue(d)?.each { s ->
-                if (getMap().containsKey(s) && sym == null) {
-                    sym = s
-                }
-            }
-        }
-
-        return sym
-    }
-
     public boolean hasAgent() {
         DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }
 
-    public Agent convertZeroArgs() {
-        Map<String,Object> inMap = getMap()
-        DeclarativeAgentDescriptor.zeroArgModels().keySet().each { k ->
-            if (inMap.keySet().contains("${k}Key".toString())) {
-                inMap.put(k, inMap.remove("${k}Key".toString()))
+    @CheckForNull
+    public static Agent fromAST(@CheckForNull ModelASTAgent ast) {
+        if (ast != null) {
+            Agent agent = new Agent()
+            agent.setAgentType(ast.agentType.key)
+
+            if (!(agent.agentType in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
+                if (ast.variables instanceof ModelASTClosureMap) {
+                    agent.config.putAll(getNestedAgentMap((ModelASTClosureMap) ast.variables))
+                } else if (ast.variables instanceof ModelASTValue) {
+                    agent.config.put(UninstantiatedDescribable.ANONYMOUS_KEY,
+                        ((ModelASTValue) ast.variables).getValue().toString())
+                } else {
+                    throw new IllegalArgumentException("Error configuring agent - " + ast.variables + " did not parse correctly?")
+                }
+            }
+            return agent
+        } else {
+            return null
+        }
+    }
+
+    @Nonnull
+    private static Map<String,Object> getNestedAgentMap(@Nonnull ModelASTClosureMap ast) {
+        Map<String, Object> inMap = new TreeMap<>()
+        if (ast != null) {
+            ast.variables.each { k, v ->
+                def inVal = null
+                if (v instanceof ModelASTClosureMap) {
+                    inVal = getNestedAgentMap(v)
+                } else if (v instanceof ModelASTValue) {
+                    inVal = v.getValue()
+                } else {
+                    throw new IllegalArgumentException("Error configuring agent - " + v + " did not parse correctly?")
+                }
+                inMap.put(k.key, inVal)
             }
         }
-        return new Agent(inMap)
+
+        return inMap
     }
 }

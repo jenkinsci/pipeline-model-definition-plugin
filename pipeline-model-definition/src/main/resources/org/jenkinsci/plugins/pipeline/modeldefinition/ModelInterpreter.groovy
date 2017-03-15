@@ -29,8 +29,10 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 
@@ -50,18 +52,10 @@ public class ModelInterpreter implements Serializable {
 
     def call(CpsClosure closure) {
 
-        ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
-
-        closure.delegate = m
-        closure.resolveStrategy = Closure.DELEGATE_FIRST
-        closure.call()
-
-        Root root = m.toNestedModel()
+        Root root = Utils.attachDeclarativeActions(script)
         Throwable firstError
 
         if (root != null) {
-            // Attach the stages model to the run for introspection etc.
-            root = Utils.attachDeclarativeActions(root, script)
             boolean postBuildRun = false
 
             try {
@@ -153,17 +147,6 @@ public class ModelInterpreter implements Serializable {
                 throw firstError
             }
         }
-    }
-
-    /**
-     * Actually execute a closure for a stage, conditional or post action.
-     *
-     * @param c The closure to execute
-     */
-    def delegateAndExecute(Closure c) {
-        c.delegate = script
-        c.resolveStrategy = Closure.DELEGATE_FIRST
-        c.call()
     }
 
     /**
@@ -366,7 +349,7 @@ public class ModelInterpreter implements Serializable {
             def wrapperArgs = wrappers.get(thisWrapper)
             if (wrapperArgs != null) {
                 return {
-                    script."${thisWrapper}"(wrapperArgs) {
+                    script."${thisWrapper}"(evaluateNestedArgs(wrapperArgs)) {
                         recursiveWrappers(wrapperNames, wrappers, body)
                     }
                 }.call()
@@ -380,6 +363,35 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    def evaluateNestedArgs(Object args) {
+        if (args == null) {
+            return args
+        } else if (args instanceof Map) {
+            List<List<Object>> oldArgs = Utils.mapToTupleList((Map<String,Object>)args)
+            Map<String,Object> newArgs = new TreeMap<>()
+
+            for (int i = 0; i < oldArgs.size(); i++) {
+                List<Object> tuple = oldArgs.get(i)
+                String k = tuple.get(0)
+                newArgs.put(k, evaluateNestedArgs(tuple.get(1)))
+            }
+
+            return newArgs
+        } else if (args instanceof List) {
+            List<Object> oldArgs = (List<Object>)args
+            List<Object> newArgs = new ArrayList<>()
+
+            for (int i = 0; i < oldArgs.size(); i++) {
+                newArgs.add(evaluateNestedArgs(oldArgs.get(i)))
+            }
+            return newArgs
+        } else if (args instanceof String || args instanceof GString) {
+            return (String)script.evaluate(Utils.prepareForEvalToString(args.toString()))
+        } else {
+            return args
+        }
+    }
+
     /**
      * Executes a single stage and post-stage actions, and returns any error it may have generated.
      *
@@ -390,7 +402,7 @@ public class ModelInterpreter implements Serializable {
         Throwable stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
-                delegateAndExecute(thisStage.steps.closure)
+                script.evaluate(thisStage.steps)
             }
         } catch (Exception e) {
             script.getProperty("currentBuild").result = Result.FAILURE
@@ -462,10 +474,10 @@ public class ModelInterpreter implements Serializable {
             try {
                 String conditionName = orderedConditions.get(i)
 
-                Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
+                String c = responder.stepsForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
                 if (c != null) {
                     catchRequiredContextForNode(agentContext) {
-                        delegateAndExecute(c)
+                        script.evaluate(c)
                     }
                 }
             } catch (Exception e) {
@@ -491,7 +503,7 @@ public class ModelInterpreter implements Serializable {
         if (root.libraries != null) {
             for (int i = 0; i < root.libraries.libs.size(); i++) {
                 String lib = root.libraries.libs.get(i)
-                script.library(lib)
+                script.library((String)script.evaluate(Utils.prepareForEvalToString(lib)))
             }
         }
     }
@@ -504,17 +516,37 @@ public class ModelInterpreter implements Serializable {
     def executeProperties(Root root) {
         def jobProps = []
 
-        if (root.options != null) {
-            jobProps.addAll(root.options.properties)
+        if (root.options?.optionsToEval != null) {
+            List<List<Object>> tupleList = Utils.mapToTupleList(root.options.optionsToEval)
+            for (int i = 0; i < tupleList.size(); i++) {
+                def tuple = tupleList.get(i)
+                root.options.options.put((String)tuple.get(0),
+                    (DeclarativeOption)transformStringToUD((String)tuple.get(1)).instantiate())
+            }
+        }
+        if (root.options?.jobProperties != null) {
+            jobProps.addAll(transformListOfStringsToUD(root.options.jobProperties))
         }
         if (root.triggers != null) {
-            jobProps.add(script.pipelineTriggers(root.triggers.triggers))
+            jobProps.add(script.pipelineTriggers(transformListOfStringsToUD(root.triggers.triggers)))
         }
         if (root.parameters != null) {
-            jobProps.add(script.parameters(root.parameters.parameters))
+            jobProps.add(script.parameters(transformListOfStringsToUD(root.parameters.parameters)))
         }
         if (!jobProps.isEmpty()) {
             script.properties(jobProps)
         }
+    }
+
+    List<UninstantiatedDescribable> transformListOfStringsToUD(List<String> inStrings) {
+        List<UninstantiatedDescribable> transformed = new ArrayList<>()
+        for (int i = 0; i < inStrings.size(); i++) {
+            transformed.add(transformStringToUD(inStrings.get(i)))
+        }
+        return transformed
+    }
+
+    UninstantiatedDescribable transformStringToUD(String inString) {
+        return (UninstantiatedDescribable)script.evaluate(inString)
     }
 }

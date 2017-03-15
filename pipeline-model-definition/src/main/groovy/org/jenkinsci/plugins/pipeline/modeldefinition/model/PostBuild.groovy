@@ -24,6 +24,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
+
+import javax.annotation.CheckForNull
 
 /**
  * Conditions and step blocks to be run after the stages but before the notifications, depending on build status.
@@ -32,5 +35,16 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class PostBuild extends AbstractBuildConditionResponder<PostBuild> {
-
+    @CheckForNull
+    public static PostBuild fromAST(@CheckForNull ModelASTPostBuild ast) {
+        if (ast != null) {
+            PostBuild result = new PostBuild()
+            ast.conditions.each { c ->
+                result.conditionMap.put(c.condition, c.branch.toGroovy())
+            }
+            return result
+        } else {
+            return null
+        }
+    }
 }

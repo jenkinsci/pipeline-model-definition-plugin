@@ -36,4 +36,21 @@ public abstract class WithScriptScript<T extends WithScriptDescribable<T>> imple
         this.script = s;
         this.describable = d;
     }
+
+    /**
+     * Takes a string and makes sure it starts/ends with double quotes so that it can be evaluated correctly.
+     *
+     * @param s The original string
+     * @return Either the original string, if it already starts/ends with double quotes, or the original string
+     * prepended/appended with double quotes.
+     */
+    public static String prepareForEvalToString(String s) {
+        String toEval = s != null ? s : "";
+        if (!toEval.startsWith("\"") || !toEval.endsWith("\"")) {
+            toEval = '"' + toEval + '"';
+        }
+
+        return toEval;
+    }
+
 }

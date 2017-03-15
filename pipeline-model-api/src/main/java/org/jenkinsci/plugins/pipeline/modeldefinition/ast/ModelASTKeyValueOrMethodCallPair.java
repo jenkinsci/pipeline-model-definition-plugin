@@ -3,6 +3,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * An individual pair of a {@link ModelASTKey} and a {@link ModelASTMethodArg}
  *
@@ -53,6 +56,13 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
 
     public void setValue(ModelASTMethodArg value) {
         this.value = value;
+    }
+
+    @Override
+    public Object toRuntime() {
+        Map<String,Object> m = new LinkedHashMap<>();
+        m.put(getKey().getKey(), getValue().toRuntime());
+        return m;
     }
 
     @Override

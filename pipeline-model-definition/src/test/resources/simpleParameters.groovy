@@ -30,7 +30,7 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                echo "hello"
+                echo "hello, ${params.flag}"
             }
         }
     }

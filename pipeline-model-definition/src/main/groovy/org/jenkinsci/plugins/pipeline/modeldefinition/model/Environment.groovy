@@ -25,9 +25,16 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.EnvVars
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
+
+import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
 
 /**
  * Special wrapper for environment to deal with mapped closure problems with property declarations.
@@ -35,7 +42,40 @@ import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Environment extends MappedClosure<String,Environment> implements PropertiesToMap {
+public class Environment implements Serializable {
+    @Delegate Map<String,Object> envMap = new TreeMap<>()
+
+    public Map<String,Object> getMap() {
+        def mapCopy = new TreeMap()
+        mapCopy.putAll(envMap)
+        return mapCopy
+    }
+
+    @CheckForNull
+    public static Environment fromAST(@Nonnull WorkflowRun r, @CheckForNull ModelASTEnvironment ast) {
+        if (ast != null) {
+            Environment env = new Environment()
+
+            Map<String, Object> inMap = new TreeMap<>()
+            ast.variables.each { k, v ->
+                if (v instanceof ModelASTInternalFunctionCall) {
+                    ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall) v
+                    // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
+                    String credId = func.args.first().value
+                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credId, r)
+                    inMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
+                } else {
+                    inMap.put(k.key, ((ModelASTValue) v).value)
+                }
+            }
+
+            env.putAll(inMap)
+
+            return env
+        } else {
+            return null
+        }
+    }
 
     public EnvVars resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
         EnvVars newEnv
