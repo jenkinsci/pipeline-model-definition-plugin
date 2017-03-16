@@ -30,6 +30,7 @@ import hudson.model.Describable
 import hudson.model.Descriptor
 import jenkins.model.Jenkins
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ImportNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -127,6 +128,22 @@ class ModelParser implements Parser {
         }
 
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst);
+        List<ImportNode> additionalImports = []
+        src.imports.each { i ->
+            additionalImports.add(i)
+        }
+        src.starImports.each { i ->
+            additionalImports.add(i)
+        }
+        src.staticImports.each { k, v ->
+            additionalImports.add(v)
+        }
+        src.staticStarImports.each { k, v ->
+            additionalImports.add(v)
+        }
+        if (!additionalImports.isEmpty()) {
+            r.setAdditionalImports(additionalImports.collect { it.text })
+        }
 
         def pipelineBlock = matchBlockStatement(pst);
         if (pipelineBlock==null) {

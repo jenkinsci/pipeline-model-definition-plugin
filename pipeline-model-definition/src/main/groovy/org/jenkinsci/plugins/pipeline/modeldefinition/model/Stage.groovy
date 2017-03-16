@@ -89,17 +89,17 @@ public class Stage implements Serializable {
     }
 
     @CheckForNull
-    public static Stage fromAST(@Nonnull WorkflowRun r, @CheckForNull ModelASTStage ast) {
+    public static Stage fromAST(@Nonnull WorkflowRun r, @CheckForNull ModelASTStage ast, @CheckForNull Root root) {
         if (ast != null) {
             Stage s = new Stage()
             s.name = ast.name
 
             s.environment = Environment.fromAST(r, ast.environment)
-            s.when = StageConditionals.fromAST(ast.when)
+            s.when = StageConditionals.fromAST(ast.when, root)
             s.agent = Agent.fromAST(ast.agent)
             s.tools = Tools.fromAST(ast.tools)
             s.post = PostStage.fromAST(ast.post)
-            s.steps = ast.getStepsAsString()
+            s.steps = root?.appendImports(ast.getStepsAsString()) ?: ast.getStepsAsString()
 
             return s
         } else {

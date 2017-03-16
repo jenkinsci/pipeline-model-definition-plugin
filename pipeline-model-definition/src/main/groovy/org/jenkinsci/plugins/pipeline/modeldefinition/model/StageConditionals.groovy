@@ -38,6 +38,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 
 import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
 
 import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.getDescribable
 
@@ -80,10 +81,10 @@ class StageConditionals implements Serializable {
     }
 
     @CheckForNull
-    public static StageConditionals fromAST(ModelASTWhen ast) {
+    public static StageConditionals fromAST(@CheckForNull ModelASTWhen ast, Root root) {
         if (ast != null) {
             List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> conditionals = ast.conditions.collect { c ->
-                stageConditionalFromAST(c)
+                stageConditionalFromAST(c, root)
             }
 
             return new StageConditionals(conditionals)
@@ -98,7 +99,7 @@ class StageConditionals implements Serializable {
      * @param w
      * @return A populated {@link DeclarativeStageConditional}
      */
-    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
+    private static DeclarativeStageConditional stageConditionalFromAST(@Nonnull ModelASTWhenContent w, Root root) {
         DeclarativeStageConditional c = null
         DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
 
@@ -116,8 +117,9 @@ class StageConditionals implements Serializable {
             }
         } else if (w instanceof ModelASTWhenExpression) {
             ModelASTWhenExpression expr = (ModelASTWhenExpression)w
+            String codeBlock = root?.appendImports(expr.codeBlockAsString()) ?: expr.codeBlockAsString()
 
-            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
+            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, codeBlock).instantiate()
         }
 
         return c

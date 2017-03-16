@@ -49,11 +49,11 @@ public class Stages implements Serializable {
     }
 
     @CheckForNull
-    public static Stages fromAST(@Nonnull WorkflowRun r, @CheckForNull ModelASTStages ast) {
+    public static Stages fromAST(@Nonnull WorkflowRun r, @CheckForNull ModelASTStages ast, Root root) {
         if (ast != null) {
             Stages s = new Stages();
             ast.stages.each { stage ->
-                s.stages.add(Stage.fromAST(r, stage))
+                s.stages.add(Stage.fromAST(r, stage, root))
             }
             return s
         } else {
