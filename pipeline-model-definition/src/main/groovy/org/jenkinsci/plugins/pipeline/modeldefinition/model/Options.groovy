@@ -25,23 +25,15 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import hudson.ExtensionList
-import hudson.FilePath
-import hudson.Launcher
-import hudson.model.JobProperty
-import hudson.model.JobPropertyDescriptor
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.TypeLookupCache
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
-import org.jenkinsci.plugins.workflow.steps.StepDescriptor
+import org.jenkinsci.plugins.workflow.steps.Step
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -55,47 +47,15 @@ import javax.annotation.Nonnull
 public class Options implements Serializable {
     // Transient since JobProperty isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
     // anyway.
-    transient List<JobProperty> properties = []
-    transient Map<String, DeclarativeOption> options = [:]
-    transient Map<String, Object> wrappers = [:]
+    transient List<String> jobProperties = []
+    transient Map<String, DeclarativeOption> options = new TreeMap<>()
+    transient Map<String, String> optionsToEval = new TreeMap<>()
+    transient Map<String, Object> wrappers = new TreeMap<>()
 
-    public Options(List<Object> input) {
-        input.each { i ->
-            if (i instanceof UninstantiatedDescribable) {
-                def o = i.instantiate()
-                if (o instanceof JobProperty) {
-                    properties << o
-                } else if (o instanceof DeclarativeOption) {
-                    options[o.descriptor.name] = o
-                }
-            } else if (i instanceof List && i.size() == 2 && i[0] instanceof String) {
-                wrappers[(String)i[0]] = i[1]
-            }
-        }
-    }
-
-    private static final Object OPTION_CACHE_KEY = new Object()
-    private static final Object CACHE_KEY = new Object()
-    private static final Object WRAPPER_STEPS_KEY = new Object()
-
-    private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
-        Utils.generateTypeCache(JobPropertyDescriptor.class, false, ["pipelineTriggers", "parameters"])
-
-    private static final LoadingCache<Object,Map<String,String>> optionTypeCache =
-        Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [])
-
-    private static final LoadingCache<Object,Map<String,String>> wrapperStepsTypeCache  =
-        Utils.generateTypeCache(StepDescriptor.class, false, [],
-            { StepDescriptor s ->
-                return s.takesImplicitBlockArgument() &&
-                    !(s.getFunctionName() in ModelASTMethodCall.blockedSteps.keySet()) &&
-                    !(Launcher.class in s.getRequiredContext()) &&
-                    !(FilePath.class in s.getRequiredContext())
-            }
-        )
+    public Options() {}
 
     public static Map<String,String> getEligibleWrapperStepClasses() {
-        return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
+        return TypeLookupCache.publicCache.getWrapperTypes()
     }
 
     public static List<String> getEligibleWrapperSteps() {
@@ -104,7 +64,7 @@ public class Options implements Serializable {
 
     protected Object readResolve() throws IOException {
         // Need to make sure options is initialized on deserialization, even if it's going to be empty.
-        this.properties = []
+        this.jobProperties = []
         this.options = [:]
         this.wrappers = [:]
         return this;
@@ -117,9 +77,11 @@ public class Options implements Serializable {
      * @return A map of valid option type keys to their actual type IDs.
      */
     public static Map<String,String> getAllowedOptionTypes() {
-        Map<String,String> c = propertyTypeCache.get(CACHE_KEY)
-        c.putAll(optionTypeCache.get(OPTION_CACHE_KEY))
-        c.putAll(getEligibleWrapperStepClasses())
+        TypeLookupCache lookup = TypeLookupCache.publicCache
+        Map<String,String> c = new TreeMap<>()
+        c.putAll(lookup.getPropertyTypes())
+        c.putAll(lookup.getOptionTypes())
+        c.putAll(lookup.getWrapperTypes())
         return c.sort()
     }
 
@@ -131,5 +93,30 @@ public class Options implements Serializable {
      */
     public static String typeForKey(@Nonnull String key) {
         return getAllowedOptionTypes().get(key)
+    }
+
+    @CheckForNull
+    public static Options fromAST(@CheckForNull ModelASTOptions ast) {
+        if (ast != null) {
+            Options o = new Options()
+            TypeLookupCache lookup = TypeLookupCache.publicCache
+            Map<String,String> propCache = lookup.getPropertyTypes()
+            Map<String,String> optsCache = lookup.getOptionTypes()
+            ast.options.each { opt ->
+                if (propCache.containsKey(opt.name)) {
+                    o.jobProperties.add(opt.toGroovy())
+                }
+                // TODO: When we have a DeclarativeOption that actually can take a string, make sure we test it'll
+                // be evaluated. No point while the only ones take booleans or nothing, though.
+                else if (optsCache.containsKey(opt.name)) {
+                    o.optionsToEval.put(opt.name, opt.toGroovy())
+                } else {
+                    o.wrappers.put(opt.name, opt.argsAsObject(Step.class, false))
+                }
+            }
+            return o
+        } else {
+            return null
+        }
     }
 }

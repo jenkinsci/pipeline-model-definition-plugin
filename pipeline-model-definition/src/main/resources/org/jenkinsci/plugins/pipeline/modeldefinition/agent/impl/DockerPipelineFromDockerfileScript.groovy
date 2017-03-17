@@ -61,7 +61,7 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
             }
             if (img != null) {
                 try {
-                    img.inside(describable.args, {
+                    img.inside(evalStr(describable.args), {
                         body.call()
                     })
                 } catch (Exception e) {
@@ -75,13 +75,13 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
     private Closure buildImage() {
         return {
             try {
-                def hash = Utils.stringToSHA1(script.readFile("${describable.getDockerfilePath()}"))
+                def hash = Utils.stringToSHA1(script.readFile(evalStr(describable.getDockerfilePath())))
                 def imgName = "${hash}"
-                script.sh "docker build -t ${imgName} -f \"${describable.getDockerfilePath()}\" \"${describable.getActualDir()}\""
-                script.dockerFingerprintFrom dockerfile: describable.dockerfilePath, image: imgName, toolName: script.env.DOCKER_TOOL_NAME
+                script.sh "docker build -t ${imgName} -f \"${evalStr(describable.getDockerfilePath())}\" \"${evalStr(describable.getActualDir())}\""
+                script.dockerFingerprintFrom dockerfile: evalStr(describable.dockerfilePath), image: imgName, toolName: script.env.DOCKER_TOOL_NAME
                 return script.getProperty("docker").image(imgName)
             } catch (FileNotFoundException f) {
-                script.error("No Dockerfile found at ${describable.getDockerfilePath()} in repository - failing.")
+                script.error("No Dockerfile found at ${evalStr(describable.getDockerfilePath())} in repository - failing.")
                 return null
             }
         }

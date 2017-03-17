@@ -30,7 +30,6 @@ import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
@@ -46,8 +45,8 @@ import java.util.Map;
 public class DescriptorLookupCache {
     private transient Map<String, StepDescriptor> stepMap;
     private transient Map<String, DescribableModel<? extends Step>> modelMap;
-    private transient Map<String, Descriptor<? extends Describable>> describableMap;
-    private transient Map<String, DescribableModel<? extends Describable>> describableModelMap;
+    private transient Map<Class<? extends Describable>, Map<String, Descriptor<? extends Describable>>> describableMap;
+    private transient Map<Class<? extends Describable>, Map<String, DescribableModel<? extends Describable>>> describableModelMap;
 
     public static DescriptorLookupCache getPublicCache() {
         return ExtensionList.lookup(DescriptorLookupCache.class).get(0);
@@ -81,14 +80,22 @@ public class DescriptorLookupCache {
     }
 
     public synchronized DescribableModel<? extends Describable> modelForDescribable(String n) {
-        if (!describableModelMap.containsKey(n)) {
-            final Descriptor<? extends Describable> function = lookupFunction(n);
+        return modelForDescribable(Describable.class, n);
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForDescribable(Class<? extends Describable> base, String n) {
+        Map<String,DescribableModel<? extends Describable>> forBase = new LinkedHashMap<>();
+        if (describableModelMap.containsKey(base)) {
+            forBase.putAll(describableModelMap.get(base));
+        }
+        if (!forBase.containsKey(n)) {
+            final Descriptor<? extends Describable> function = lookupFunction(base, n);
             Class<? extends Describable> c = (function == null ? null : function.clazz);
-            describableModelMap.put(n, c != null ? new DescribableModel<>(c) : null);
+            forBase.put(n, c != null ? new DescribableModel<>(c) : null);
+            describableModelMap.put(base, forBase);
         }
 
-
-        return describableModelMap.get(n);
+        return forBase.get(n);
     }
 
     public synchronized StepDescriptor lookupStepDescriptor(String n) {
@@ -100,39 +107,61 @@ public class DescriptorLookupCache {
         return stepMap.get(n);
     }
 
-    public synchronized Descriptor<? extends Describable> lookupFunction(String n) {
-        if (!describableMap.containsKey(n)) {
-            try {
-                Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(Describable.class, n);
-                describableMap.put(n, d);
-            } catch (NullPointerException e) {
-                describableMap.put(n, null);
-            }
+    public Descriptor<? extends Describable> lookupFunction(String n) {
+        return lookupFunction(Describable.class, n);
+    }
 
+    public synchronized Descriptor<? extends Describable> lookupFunction(Class<? extends Describable> base, String n) {
+        Map<String, Descriptor<? extends Describable>> forBase = new LinkedHashMap<>();
+
+        if (describableMap.containsKey(base)) {
+            forBase.putAll(describableMap.get(base));
         }
 
+        if (!forBase.containsKey(n)) {
+            try {
+                Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(base, n);
+                forBase.put(n, d);
+                describableMap.put(base, forBase);
+            } catch (NullPointerException e) {
+                forBase.put(n, null);
+                describableMap.put(base, forBase);
+            }
+        }
 
-        return describableMap.get(n);
+        return forBase.get(n);
     }
 
     public synchronized Descriptor<? extends Describable> lookupStepFirstThenFunction(String name) {
-        return lookupStepDescriptor(name) != null ? lookupStepDescriptor(name) : lookupFunction(name);
+        return lookupStepFirstThenFunction(Describable.class, name);
+    }
+
+    public synchronized Descriptor<? extends Describable> lookupStepFirstThenFunction(Class<? extends Describable> base, String name) {
+        return lookupStepDescriptor(name) != null ? lookupStepDescriptor(name) : lookupFunction(base, name);
     }
 
     public synchronized Descriptor<? extends Describable> lookupFunctionFirstThenStep(String name) {
-        return lookupFunction(name) != null ? lookupFunction(name) : lookupStepDescriptor(name);
+        return lookupFunctionFirstThenStep(Describable.class, name);
+    }
+
+    public synchronized Descriptor<? extends Describable> lookupFunctionFirstThenStep(Class<? extends Describable> base, String name) {
+        return lookupFunction(base, name) != null ? lookupFunction(base, name) : lookupStepDescriptor(name);
     }
 
     public synchronized DescribableModel<? extends Describable> modelForStepFirstThenFunction(String name) {
+        return modelForStepFirstThenFunction(Describable.class, name);
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForStepFirstThenFunction(Class<? extends Describable> base, String name) {
         Descriptor<? extends Describable> desc = lookupStepDescriptor(name);
         DescribableModel<? extends Describable> model = null;
 
         if (desc != null) {
             model = modelForStep(name);
         } else {
-            desc = lookupFunction(name);
+            desc = lookupFunction(base, name);
             if (desc != null) {
-                model = modelForDescribable(name);
+                model = modelForDescribable(base, name);
             }
         }
 
@@ -140,11 +169,16 @@ public class DescriptorLookupCache {
     }
 
     public synchronized DescribableModel<? extends Describable> modelForFunctionFirstThenStep(String name) {
-        Descriptor<? extends Describable> desc = lookupFunction(name);
+        return modelForFunctionFirstThenStep(Describable.class, name);
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForFunctionFirstThenStep(Class<? extends Describable> base,
+                                                                                              String name) {
+        Descriptor<? extends Describable> desc = lookupFunction(base, name);
         DescribableModel<? extends Describable> model = null;
 
         if (desc != null) {
-            model = modelForDescribable(name);
+            model = modelForDescribable(base, name);
         } else {
             desc = lookupStepDescriptor(name);
             if (desc != null) {

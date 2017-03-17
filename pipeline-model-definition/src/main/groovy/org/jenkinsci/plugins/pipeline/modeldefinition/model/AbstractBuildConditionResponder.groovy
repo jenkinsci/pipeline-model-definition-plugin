@@ -24,9 +24,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
 
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
+import javax.annotation.CheckForNull
 
 
 /**
@@ -36,26 +36,22 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
-    extends MappedClosure<StepsBlock,T> {
+    implements Serializable {
+    private Map<String,String> conditionMap = new TreeMap<>()
 
-    @Override
-    public void modelFromMap(Map<String,Object> inMap) {
-
-        inMap.each { conditionName, conditionClosure ->
-            if (conditionName in BuildCondition.getConditionMethods().keySet()) {
-
-                if (StepsBlock.class.isInstance(conditionClosure)) {
-                    put(conditionName, (StepsBlock)conditionClosure)
-                }
-            }
-        }
+    public Map<String,String> getConditionMap() {
+        return conditionMap
     }
 
-    public Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
-        if (getMap().containsKey(conditionName)) {
+    public void addCondition(String conditionName, String conditionString) {
+        conditionMap.put(conditionName, conditionString)
+    }
+
+    public String stepsForSatisfiedCondition(String conditionName, Object runWrapperObj) {
+        if (conditionMap.containsKey(conditionName)) {
             BuildCondition condition = BuildCondition.getConditionMethods().get(conditionName)
             if (condition != null && condition.meetsCondition(runWrapperObj)) {
-                return ((StepsBlock)getMap().get(conditionName)).getClosure()
+                return conditionMap.get(conditionName)
             }
         }
 
@@ -66,7 +62,7 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
 
         return BuildCondition.orderedConditionNames.any { conditionName ->
-            getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
+            conditionMap.containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
         }
     }
 }

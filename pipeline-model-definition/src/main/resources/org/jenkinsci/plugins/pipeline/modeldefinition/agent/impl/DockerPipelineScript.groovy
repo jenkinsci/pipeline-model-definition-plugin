@@ -42,7 +42,7 @@ public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPip
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     try {
-                        script.getProperty("docker").image(describable.image).pull()
+                        script.getProperty("docker").image(evalStr(describable.image)).pull()
                     } catch (Exception e) {
                         script.getProperty("currentBuild").result = Result.FAILURE
                         Utils.markStageFailedAndContinued(SyntheticStageNames.agentSetup())
@@ -51,7 +51,7 @@ public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPip
                 }
             }
             try {
-                script.getProperty("docker").image(describable.image).inside(describable.args, {
+                script.getProperty("docker").image(evalStr(describable.image)).inside(evalStr(describable.args), {
                     body.call()
                 })
             } catch (Exception e) {

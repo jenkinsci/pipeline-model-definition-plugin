@@ -4,6 +4,10 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents the parsed pipeline definition for visual pipeline editor. Corresponds to {@code Root}.
  *
@@ -21,8 +25,19 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTTriggers triggers;
     private ModelASTLibraries libraries;
 
+    private transient List<String> additionalImports = new ArrayList<>();
+
     public ModelASTPipelineDef(Object sourceLocation) {
         super(sourceLocation);
+    }
+
+    public void setAdditionalImports(@Nonnull List<String> l) {
+        additionalImports.addAll(l);
+    }
+
+    @Nonnull
+    public List<String> getAdditionalImports() {
+        return additionalImports;
     }
 
     @Override

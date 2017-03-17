@@ -24,11 +24,26 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
+
+import javax.annotation.CheckForNull
 
 /**
  *
  * @author Robert Sandell &lt;rsandell@cloudbees.com&gt;.
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class PostStage  extends AbstractBuildConditionResponder<PostStage> {
+public class PostStage extends AbstractBuildConditionResponder<PostStage> {
+    @CheckForNull
+    public static PostStage fromAST(@CheckForNull ModelASTPostStage ast) {
+        if (ast != null) {
+            PostStage result = new PostStage()
+            ast.conditions.each { c ->
+                result.conditionMap.put(c.condition, c.branch.toGroovy())
+            }
+            return result
+        } else {
+            return null
+        }
+    }
 }

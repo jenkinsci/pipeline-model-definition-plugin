@@ -26,9 +26,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -39,11 +43,11 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stage implements NestedModel, Serializable {
+public class Stage implements Serializable {
 
     String name
 
-    StepsBlock steps
+    String steps
 
     Agent agent
 
@@ -54,41 +58,6 @@ public class Stage implements NestedModel, Serializable {
     Tools tools
 
     Environment environment
-
-    Stage name(String n) {
-        this.name = n
-        return this
-    }
-
-    Stage agent(Agent a) {
-        this.agent = a?.convertZeroArgs()
-        return this
-    }
-
-    Stage steps(StepsBlock s) {
-        this.steps = s
-        return this
-    }
-
-    Stage post(PostStage post) {
-        this.post = post
-        return this
-    }
-
-    Stage when(StageConditionals when) {
-        this.when = when
-        return this
-    }
-
-    Stage tools(Tools tools) {
-        this.tools = tools
-        return this
-    }
-
-    Stage environment(Environment environment) {
-        this.environment = environment
-        return this
-    }
 
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
@@ -119,11 +88,22 @@ public class Stage implements NestedModel, Serializable {
         return m
     }
 
+    @CheckForNull
+    public static Stage fromAST(@Nonnull WorkflowRun r, @CheckForNull ModelASTStage ast) {
+        if (ast != null) {
+            Stage s = new Stage()
+            s.name = ast.name
 
-    @Override
-    public void modelFromMap(Map<String,Object> m) {
-        m.each { k, v ->
-            this."${k}"(v)
+            s.environment = Environment.fromAST(r, ast.environment)
+            s.when = StageConditionals.fromAST(ast.when)
+            s.agent = Agent.fromAST(ast.agent)
+            s.tools = Tools.fromAST(ast.tools)
+            s.post = PostStage.fromAST(ast.post)
+            s.steps = ast.getStepsAsString()
+
+            return s
+        } else {
+            return null
         }
     }
 }

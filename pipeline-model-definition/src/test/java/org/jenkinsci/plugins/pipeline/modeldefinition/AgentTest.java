@@ -29,6 +29,7 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -58,6 +59,14 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentLabel() throws Exception {
         expect("agentLabel")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
+                .go();
+    }
+
+    @Issue("JENKINS-42753")
+    @Test
+    public void agentLabelFromParam() throws Exception {
+        expect("agentLabelFromParam")
                 .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .go();
     }

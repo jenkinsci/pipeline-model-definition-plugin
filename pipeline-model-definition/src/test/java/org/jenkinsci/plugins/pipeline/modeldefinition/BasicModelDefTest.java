@@ -55,6 +55,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.io.File;
 import java.util.Collection;
@@ -339,6 +340,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42829")
+    @Test
+    public void whenExpressionExternalMethod() throws Exception {
+        expect("whenExpressionExternalMethod")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
     @Test
     public void skippedWhen() throws Exception {
         expect("skippedWhen")
@@ -558,6 +567,29 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("libraryAnnotation")
                 .logContains("something special")
                 .go();
+    }
+
+    @Issue("JENKINS-42777")
+    @Test
+    public void mozillaSocorroExample() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/myecho.groovy", "def call(m) {echo 'something special'; echo \"m is ${m}\"}");
+        otherRepo.write("vars/myecho.txt", "Says something very special!");
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("echo-utils",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+        WorkflowRun b = expect("mozillaSocorroExample")
+                .logContains("something special",
+                        "m is [browserName:Firefox, version:47.0, platform:Windows 10]")
+                .go();
+        StringWriter writer = new StringWriter();
+        b.getLogText().writeHtmlTo(0L, writer);
+        String html = writer.toString();
+        assertTrue("Failed to match color attribute in following HTML log output:\n" + html,
+                html.matches("(?s).*<span style=\"color: #CD0000;\">red</span>.*"));
+
     }
 
     @Issue("JENKINS-38110")

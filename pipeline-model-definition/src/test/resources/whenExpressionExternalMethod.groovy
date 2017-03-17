@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,24 +22,35 @@
  * THE SOFTWARE.
  */
 
+pipeline {
+    agent any
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                expression {
+                    echo "Should I run?"
+                    return shouldIRun()
+                }
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
-
-import hudson.model.Describable
-
-/**
- * Used to mark model classes that are composed of lists of {@link Describable} classes extending a specific type
- * for proper parsing and translating.
- *
- * <p>
- * For example:
- * <pre>
- * triggers {
- *     cron('@daily')
- * }
- * </pre>
- *
- * @author Andrew Bayer
- */
-public interface MethodsToList<T extends Describable> {
+            }
+        }
+    }
 }
+
+def shouldIRun() {
+    return true
+}
+
+
+

@@ -74,6 +74,11 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
     }
 
     @Override
+    public Object toRuntime() {
+        return getValue();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

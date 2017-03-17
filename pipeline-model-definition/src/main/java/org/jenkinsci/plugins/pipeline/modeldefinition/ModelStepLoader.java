@@ -52,11 +52,6 @@ public class ModelStepLoader extends GlobalVariable {
         if (c == null)
             throw new IllegalStateException("Expected to be called from CpsThread");
 
-        // Make sure we've already loaded ClosureModelTranslator or load it now.
-        script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ClosureModelTranslator");
-        script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.PropertiesToMapTranslator");
-        script.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.MethodsToListTranslator");
-
         return script.getClass()
                 .getClassLoader()
                 .loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter")

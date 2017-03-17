@@ -22,31 +22,36 @@
  * THE SOFTWARE.
  */
 
+// This specifically covers library use, passing an externally defined variable to a library step,
+// and ansiColor plugin usage.
+@Library('echo-utils@master') _
 
-package org.jenkinsci.plugins.pipeline.modeldefinition
+/** Desired capabilities */
+def capabilities = [
+    browserName: 'Firefox',
+    version: '47.0',
+    platform: 'Windows 10'
+]
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-/**
- * Translates a closure containing a sequence of "lib('string')" calls into an instance of {@link Libraries}.
- *
- * @author Andrew Bayer
- */
-public class LibrariesTranslator implements Serializable {
-    List<String> actualList = []
-    CpsScript script
-
-    LibrariesTranslator(CpsScript script) {
-        this.script = script
+pipeline {
+    agent any
+    options {
+        ansiColor('xterm')
+        timeout(time: 1, unit: 'HOURS')
     }
-
-    def lib(String l) {
-        actualList.add(l)
+    environment {
+        // TODO: Update this to be multiline with + when JENKINS-42771 lands
+        PYTEST_ADDOPTS = "-n=10 --color=yes --tb=short --driver=SauceLabs --variables=capabilities.json"
     }
-
-    Libraries toListModel() {
-        Libraries l = new Libraries()
-        l.libs(actualList)
+    stages {
+        stage('Test') {
+            steps {
+                echo 'The following word is supposed to be \\u001B[31mred\\u001B[0m'
+                myecho(capabilities)
+            }
+        }
     }
 }
+
+
+

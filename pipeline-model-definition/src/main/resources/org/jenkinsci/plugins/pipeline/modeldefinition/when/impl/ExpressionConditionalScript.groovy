@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -40,7 +41,7 @@ class ExpressionConditionalScript extends DeclarativeStageConditionalScript<Expr
         String block = describable.block
 
         if (block != null) {
-            retVal = script.evaluate(block)
+            retVal = script.evaluate(Utils.getCombinedScriptText(block, script))
         }
 
         return retVal ? true : false

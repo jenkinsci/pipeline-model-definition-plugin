@@ -38,7 +38,7 @@ public class ParametersTest extends AbstractModelDefTest {
     @Test
     public void simpleParameters() throws Exception {
         WorkflowRun b = expect("simpleParameters")
-                .logContains("[Pipeline] { (foo)", "hello")
+                .logContains("[Pipeline] { (foo)", "hello, true")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();
 

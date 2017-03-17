@@ -193,6 +193,16 @@ public class SerializationTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void serializationWrapperGString() throws Exception {
+        expect("serializationWrapperGString")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Actions)")
+                .go();
+    }
+
 
     @TestExtension
     public static class XStreamPickleFactory extends SingleTypedPickleFactory<Describable<?>> {

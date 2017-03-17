@@ -28,7 +28,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.tools.ToolDescriptor
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -38,7 +40,14 @@ import javax.annotation.Nonnull
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Tools extends MappedClosure<String,Tools> implements Serializable {
+public class Tools implements Serializable {
+    @Delegate Map<String,Object> toolsMap = new TreeMap<>()
+
+    public Map<String,Object> getMap() {
+        def mapCopy = new TreeMap()
+        mapCopy.putAll(toolsMap)
+        return mapCopy
+    }
 
     private static final Object CACHE_KEY = new Object()
 
@@ -74,5 +83,20 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
      */
     public static String typeForKey(@Nonnull String key) {
         return getAllowedToolTypes().get(key)
+    }
+
+    @CheckForNull
+    public static Tools fromAST(@CheckForNull ModelASTTools ast) {
+        if (ast != null) {
+            Tools t = new Tools()
+            Map<String,String> inMap = new TreeMap<>()
+            ast.tools.each { k, v ->
+                inMap.put(k.key, v.value.toString())
+            }
+            t.putAll(inMap)
+            return t
+        } else {
+            return null
+        }
     }
 }

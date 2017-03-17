@@ -26,6 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 public class CheckoutScript implements Serializable {
@@ -57,5 +58,4 @@ public class CheckoutScript implements Serializable {
             body.call()
         }
     }
-    
 }

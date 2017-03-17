@@ -26,10 +26,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
+
+import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
 
 /**
  * Root-level configuration object for the entire model.
@@ -39,7 +43,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Root implements NestedModel, Serializable {
+public class Root implements Serializable {
     Agent agent
 
     Stages stages
@@ -57,51 +61,6 @@ public class Root implements NestedModel, Serializable {
     Parameters parameters
 
     Libraries libraries
-
-    Root stages(Stages s) {
-        this.stages = s
-        return this
-    }
-
-    Root post(PostBuild p) {
-        this.post = p
-        return this
-    }
-
-    Root agent(Agent a) {
-        this.agent = a.convertZeroArgs()
-        return this
-    }
-
-    Root environment(Environment m) {
-        this.environment = m
-        return this
-    }
-
-    Root tools(Tools t) {
-        this.tools = t
-        return this
-    }
-
-    Root options(Options p) {
-        this.options = p
-        return this
-    }
-
-    Root triggers(Triggers t) {
-        this.triggers = t
-        return this
-    }
-
-    Root parameters(Parameters p) {
-        this.parameters = p
-        return this
-    }
-
-    Root libraries(Libraries l) {
-        this.libraries = l
-        return this
-    }
 
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
@@ -131,13 +90,6 @@ public class Root implements NestedModel, Serializable {
         return m
     }
 
-    @Override
-    public void modelFromMap(Map<String,Object> m) {
-        m.each { k, v ->
-            this."${k}"(v)
-        }
-    }
-
     /**
      * Returns true if at least one build condition for the given responder is satisfied currently.
      *
@@ -152,5 +104,25 @@ public class Root implements NestedModel, Serializable {
             return false
         }
 
+    }
+
+    @CheckForNull
+    public static Root fromAST(@Nonnull WorkflowRun run, @CheckForNull ModelASTPipelineDef ast) {
+        if (ast != null) {
+            Root r = new Root()
+            r.agent = Agent.fromAST(ast.agent)
+            r.stages = Stages.fromAST(run, ast.stages)
+            r.environment = Environment.fromAST(run, ast.environment)
+            r.libraries = Libraries.fromAST(ast.libraries)
+            r.tools = Tools.fromAST(ast.tools)
+            r.options = Options.fromAST(ast.options)
+            r.triggers = Triggers.fromAST(ast.triggers)
+            r.parameters = Parameters.fromAST(ast.parameters)
+            r.post = PostBuild.fromAST(ast.postBuild)
+
+            return r
+        } else {
+            return null
+        }
     }
 }

@@ -26,6 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import hudson.FilePath
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeDockerUtils
@@ -61,13 +62,17 @@ public abstract class AbstractDockerPipelineScript<A extends AbstractDockerAgent
             String registryUrl = DeclarativeDockerUtils.getRegistryUrl(describable.registryUrl)
             String registryCreds = DeclarativeDockerUtils.getRegistryCredentialsId(describable.registryCredentialsId)
             if (registryUrl != null) {
-                script.getProperty("docker").withRegistry(registryUrl, registryCreds) {
+                script.getProperty("docker").withRegistry(evalStr(registryUrl), evalStr(registryCreds)) {
                     runImage(body).call()
                 }
             } else {
                 runImage(body).call()
             }
         }
+    }
+
+    protected String evalStr(String s) {
+        return (String)script.evaluate(Utils.getCombinedScriptText(prepareForEvalToString(s), script));
     }
 
     protected abstract Closure runImage(Closure body)

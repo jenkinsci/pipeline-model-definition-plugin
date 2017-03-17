@@ -29,12 +29,24 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 
 public class ExecutionModelAction extends InvisibleAction {
     private final ModelASTStages stages;
+    private final String prePipelineText;
+    private final String postPipelineText;
 
-    public ExecutionModelAction(ModelASTStages s) {
+    public ExecutionModelAction(ModelASTStages s, String prePipelineText, String postPipelineText) {
         this.stages = s;
+        this.prePipelineText = prePipelineText;
+        this.postPipelineText = postPipelineText;
     }
 
     public ModelASTStages getStages() {
         return stages;
+    }
+
+    public String getPrePipelineText() {
+        return prePipelineText;
+    }
+
+    public String getPostPipelineText() {
+        return postPipelineText;
     }
 }

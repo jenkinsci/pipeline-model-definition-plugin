@@ -26,6 +26,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries
+
+import javax.annotation.CheckForNull
 
 
 /**
@@ -46,5 +49,17 @@ public class Libraries implements Serializable {
 
     List<String> getLibs() {
         return libs
+    }
+
+    @CheckForNull
+    public static Libraries fromAST(@CheckForNull ModelASTLibraries ast) {
+        if (ast != null) {
+            Libraries l = new Libraries()
+            l.libs(ast.libs.collect { it.value.toString() })
+
+            return l
+        }
+
+        return null
     }
 }

@@ -37,26 +37,13 @@ import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
@@ -73,11 +60,9 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
-import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
@@ -88,6 +73,8 @@ import java.util.concurrent.TimeUnit
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Utils {
+    public static final String PRE_PIPELINE_SCRIPT_TEXT = "prePipelineBlock"
+    public static final String POST_PIPELINE_SCRIPT_TEXT = "postPipelineBlock"
 
     /**
      * Workaround for not having to whitelist isAssignableFrom, metaClass etc to determine whether a field on
@@ -156,27 +143,6 @@ public class Utils {
     }
 
     /**
-     * Finds the parameterized type argument for a {@link MethodsToList} class and returns it.
-     *
-     * @param c A class.
-     * @return The parameterized type argument for the class, if it's a {@link MethodsToList} class. Null otherwise.
-     */
-    public static Class<Describable> getMethodsToListType(Class c) {
-        Class retClass
-        c.genericInterfaces.each { Type t ->
-            if (t instanceof ParameterizedType) {
-                if (t.getRawType() instanceof Class
-                    && MethodsToList.class.isAssignableFrom((Class)t.getRawType())
-                    && t.getActualTypeArguments().first() instanceof Class) {
-                    retClass = (Class)t.actualTypeArguments.first()
-                }
-            }
-        }
-
-        return retClass
-    }
-
-    /**
      * Simple wrapper for isInstance to avoid whitelisting issues.
      *
      * @param c The class to check against
@@ -209,103 +175,85 @@ public class Utils {
         }
     }
 
-    static Root attachDeclarativeActions(@Nonnull Root root, CpsScript script) {
+    static Root attachDeclarativeActions(CpsScript script) {
         WorkflowRun r = script.$build()
-        ModelASTPipelineDef model = Converter.parseFromWorkflowRun(r)
+        String origScript = Converter.getDeclarativeScript(r)
+        ModelASTPipelineDef model = Converter.scriptToPipelineDef(origScript)
 
         if (model != null) {
             ModelASTStages stages = model.stages
+            List<String> prePostStrings = removePipelineBlockFromScript(origScript)
+            final String prePipelineText = prePostStrings.get(0)
+            final String postPipelineText = prePostStrings.get(1)
 
             stages.removeSourceLocation()
             if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
                 r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
             }
             if (r.getAction(ExecutionModelAction.class) == null) {
-                r.addAction(new ExecutionModelAction(stages))
+                r.addAction(new ExecutionModelAction(stages, prePipelineText, postPipelineText))
             }
+            script.binding.setVariable(PRE_PIPELINE_SCRIPT_TEXT, prePostStrings.get(0))
+            script.binding.setVariable(POST_PIPELINE_SCRIPT_TEXT, prePostStrings.get(1))
 
-            if (root != null) {
-                root = populateWhen(root, model)
-                root = populateEnv(r, root, model)
-            }
+            return Root.fromAST(r, model)
         }
 
-        return root
+        return null
     }
 
-    static Root populateEnv(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        root.environment = environmentFromAST(r, model.environment)
-
-        List<Stage> stagesWithEnvs = []
-
-        root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            s.environment = environmentFromAST(r, astStage.environment)
-            stagesWithEnvs.add(s)
+    public static String getPrePipelineText(CpsScript script) {
+        String fromBinding = script.binding.getVariable(PRE_PIPELINE_SCRIPT_TEXT)
+        if (fromBinding != null) {
+            return fromBinding
+        } else {
+            String text = script.$build()?.getAction(ExecutionModelAction.class)?.prePipelineText
+            script.binding.setVariable(PRE_PIPELINE_SCRIPT_TEXT, text)
+            return text
         }
-
-        root.stages.stages = stagesWithEnvs
-
-        return root
     }
 
-    /**
-     * Attaches the {@link StageConditionals} to the appropriate {@link Stage}s, pulling from the AST model.
-     *
-     * @param root
-     * @param model
-     * @return an updated {@link Root}
-     */
-    static Root populateWhen(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        List<Stage> stagesWithWhen = []
-
-        root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            if (astStage.when != null) {
-                List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
-                    astStage.when.conditions.collect { c ->
-                        stageConditionalFromAST(c)
-                    }
-
-                s.when(new StageConditionals(processedConditions))
-            }
-            stagesWithWhen.add(s)
+    public static String getPostPipelineText(CpsScript script) {
+        String fromBinding = script.binding.getVariable(POST_PIPELINE_SCRIPT_TEXT)
+        if (fromBinding != null) {
+            return fromBinding
+        } else {
+            String text = script.$build()?.getAction(ExecutionModelAction.class)?.postPipelineText
+            script.binding.setVariable(POST_PIPELINE_SCRIPT_TEXT, text)
+            return text
         }
-
-        root.stages.stages = stagesWithWhen
-
-        return root
     }
 
-    /**
-     * Translates the {@link ModelASTWhenContent} into a {@link DeclarativeStageConditional}.
-     *
-     * @param w
-     * @return A populated {@link DeclarativeStageConditional}
-     */
-    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
-        DeclarativeStageConditional c = null
-        DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
+    public static String getCombinedScriptText(String origScript, CpsScript script) {
+        return getPrePipelineText(script) + "\n" + getPostPipelineText(script) + "\n" + origScript
+    }
 
-        if (w instanceof ModelASTWhenCondition) {
-            if (desc.allowedChildrenCount == 0) {
-                Object[] arg = new Object[1]
-                arg[0] = w.args?.argListToMap()
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
-            } else if (desc.allowedChildrenCount == 1) {
-                DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
-            } else {
-                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(it) }
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, nested).instantiate()
+    private static int findClosingCurly(String value, int startIndex) {
+        int openParenCount = 0
+        for (int i = startIndex; i < value.length(); i++) {
+            char ch = value.charAt(i)
+            if (ch == '}' as char) {
+                openParenCount--
+                if (openParenCount == 0) {
+                    return i
+                }
+            } else if (ch == '{' as char) {
+                openParenCount++
             }
-        } else if (w instanceof ModelASTWhenExpression) {
-            ModelASTWhenExpression expr = (ModelASTWhenExpression)w
-
-            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
         }
+        return -1
+    }
 
-        return c
+    static List<String> removePipelineBlockFromScript(String origScript) {
+        int pipelineIdx = origScript.indexOf('pipeline {')
+        if (pipelineIdx > -1) {
+            int endIdx = findClosingCurly(origScript, pipelineIdx)
+            if (endIdx > -1) {
+                return [origScript.substring(0, pipelineIdx),
+                        origScript.substring(endIdx + 1, origScript.length())]
+            }
+        }
+        return ["", ""]
     }
 
     /**
@@ -322,31 +270,6 @@ public class Utils {
         }
 
         return toEval
-    }
-
-    static Environment environmentFromAST(WorkflowRun r, ModelASTEnvironment inEnv) {
-        if (inEnv != null) {
-            Environment env = new Environment()
-
-            Map<String, Object> inMap = [:]
-            inEnv.variables.each { k, v ->
-                if (v instanceof ModelASTInternalFunctionCall) {
-                    ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall)v
-                    // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
-                    String credId = func.args.first().value
-                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credId, r)
-                    inMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
-                } else {
-                    inMap.put(k.key, ((ModelASTValue)v).value)
-                }
-            }
-
-            env.modelFromMap(inMap)
-
-            return env
-        } else {
-            return null
-        }
     }
 
     static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
@@ -479,13 +402,14 @@ public class Utils {
     }
 
     /**
-     * Actually populates the type cache.
+     * Actually populates the type cache.Ω
      *
      * @param type The {@link Descriptor} class whose extensions we want to find.
      * @param includeClassNames Optionally include class names as keys. Defaults to false.
      * @param excludedSymbols Optional list of symbol names to exclude from the cache.
      * @return A map of symbols or class names to class names.
      */
+    @SuppressFBWarnings(value="UPM_UNCALLED_PRIVATE_METHOD")
     private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type,
                                                         boolean includeClassNames = false,
                                                         List<String> excludedSymbols = [],
@@ -524,17 +448,6 @@ public class Utils {
     public static boolean isOfType(UninstantiatedDescribable ud, Class<?> base) {
         Descriptor d = SymbolLookup.get().findDescriptor(base, ud.symbol)
         return d != null
-    }
-
-    /**
-     * @param c The closure to wrap.
-     */
-    public static StepsBlock createStepsBlock(Closure c) {
-        // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
-        StepsBlock wrapper = new StepsBlock()
-        wrapper.setClosure(c)
-
-        return wrapper
     }
 
     public static boolean validEnvIdentifier(String i) {
@@ -625,6 +538,12 @@ public class Utils {
             throw new IllegalArgumentException("Expected named arguments but got "+a)
         } else {
             return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
+        }
+    }
+
+    static List<List<Object>> mapToTupleList(Map<String,Object> inMap) {
+        return inMap.collect { k, v ->
+            [k, v]
         }
     }
 }

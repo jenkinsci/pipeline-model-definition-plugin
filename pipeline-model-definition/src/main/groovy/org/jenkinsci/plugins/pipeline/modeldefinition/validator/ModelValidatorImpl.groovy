@@ -235,7 +235,7 @@ class ModelValidatorImpl implements ModelValidator {
                     errorCollector.error(condition, Messages.ModelValidatorImpl_NoNestedWhenAllowed(condition.name))
                     valid = false
                 } else {
-                    valid = validateDescribable(condition, condition.name, condition.args, model, desc, false)
+                    valid = validateDescribable(condition, condition.name, condition.args, model, false)
                 }
             }
         }
@@ -246,7 +246,7 @@ class ModelValidatorImpl implements ModelValidator {
     private boolean validateDescribable(ModelASTElement element, String name,
                                         ModelASTArgumentList args,
                                         DescribableModel<? extends Describable> model,
-                                        Descriptor desc, boolean takesClosure = false) {
+                                        boolean takesClosure) {
         boolean valid = true
 
         if (args instanceof ModelASTNamedArgumentList) {
@@ -358,6 +358,10 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
+        return validateElement(Describable.class, meth)
+    }
+
+    public boolean validateElement(@Nonnull Class<? extends Describable> base, @Nonnull ModelASTMethodCall meth) {
         boolean valid = true
         if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
             errorCollector.error(meth,
@@ -365,10 +369,10 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
         if (Jenkins.getInstance() != null) {
-            Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
+            Descriptor desc = lookup.lookupFunctionFirstThenStep(base, meth.name)
             DescribableModel<? extends Describable> model
             if (desc != null) {
-                model = lookup.modelForFunctionFirstThenStep(meth.name)
+                model = lookup.modelForFunctionFirstThenStep(base, meth.name)
             }
 
             if (model != null) {
@@ -391,7 +395,7 @@ class ModelValidatorImpl implements ModelValidator {
                         }
 
                         if (kvm.value instanceof ModelASTMethodCall) {
-                            valid = validateElement((ModelASTMethodCall) kvm.value)
+                            valid = validateElement((Class<? extends Describable>)p.erasedType, (ModelASTMethodCall) kvm.value)
                         } else {
                             if (!validateParameterType((ModelASTValue) kvm.value, p.erasedType, kvm.key)) {
                                 valid = false
@@ -415,7 +419,8 @@ class ModelValidatorImpl implements ModelValidator {
                         requiredParams.eachWithIndex { DescribableParameter entry, int i ->
                             def argVal = meth.args.get(i)
                             if (argVal instanceof ModelASTMethodCall) {
-                                valid = validateElement((ModelASTMethodCall) argVal)
+                                valid = validateElement((Class<? extends Describable>)entry.erasedType,
+                                    (ModelASTMethodCall) argVal)
                             } else {
                                 if (!validateParameterType((ModelASTValue) argVal, entry.erasedType)) {
                                     valid = false
@@ -526,6 +531,8 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
+    // Because Findbugs doesn't like Gmavenplus's method signatures...
+    @SuppressFBWarnings(value="UPM_UNCALLED_PRIVATE_METHOD")
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
         if (v.isLiteral()) {
             try {

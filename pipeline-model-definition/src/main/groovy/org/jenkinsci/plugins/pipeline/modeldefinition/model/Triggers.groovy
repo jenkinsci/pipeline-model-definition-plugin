@@ -29,10 +29,13 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import hudson.model.Describable
 import hudson.triggers.Trigger
 import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -43,18 +46,14 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Triggers implements Serializable, MethodsToList<Trigger> {
+public class Triggers implements Serializable {
     private static final Object CACHE_KEY = new Object()
     private static final LoadingCache<Object,Map<String,String>> triggerTypeCache =
         Utils.generateTypeCache(TriggerDescriptor.class)
 
-    // Transient since Trigger isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
-    // anyway.
-    transient List<Trigger> triggers = []
+    transient List<String> triggers = []
 
-    public Triggers(List<Trigger> t) {
-        this.triggers = t
-    }
+    public Triggers() {}
 
     protected Object readResolve() throws IOException {
         // Need to make sure triggers is initialized on deserialization, even if it's going to be empty.
@@ -80,5 +79,18 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
      */
     public static String typeForKey(@Nonnull String key) {
         return getAllowedTriggerTypes().get(key)
+    }
+
+    @CheckForNull
+    public static Triggers fromAST(@CheckForNull ModelASTTriggers ast) {
+        if (ast != null) {
+            Triggers t = new Triggers()
+            ast.triggers.each { trig ->
+                t.triggers.add(trig.toGroovy())
+            }
+            return t
+        } else {
+            return null
+        }
     }
 }

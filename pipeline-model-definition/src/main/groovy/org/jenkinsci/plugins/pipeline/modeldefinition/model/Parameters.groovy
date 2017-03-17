@@ -29,9 +29,14 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import hudson.model.Describable
 import hudson.model.ParameterDefinition
+import hudson.triggers.Trigger
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -42,16 +47,14 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Parameters implements Serializable, MethodsToList<ParameterDefinition> {
+public class Parameters implements Serializable {
     private static final Object CACHE_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> parameterTypeCache =
         Utils.generateTypeCache(ParameterDefinition.ParameterDescriptor.class)
+    List<String> parameters = []
 
-    List<ParameterDefinition> parameters = []
-
-    public Parameters(List<ParameterDefinition> params) {
-        this.parameters = params
+    public Parameters() {
     }
 
     /**
@@ -73,4 +76,18 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
     public static String typeForKey(@Nonnull String key) {
         return getAllowedParameterTypes().get(key)
     }
+
+    @CheckForNull
+    public static Parameters fromAST(@CheckForNull ModelASTBuildParameters ast) {
+        if (ast != null) {
+            Parameters p = new Parameters()
+            ast.parameters.each { param ->
+                p.parameters.add(param.toGroovy())
+            }
+            return p
+        } else {
+            return null
+        }
+    }
+
 }
