@@ -34,7 +34,7 @@ public class CheckoutScript implements Serializable {
     public static Closure doCheckout(CpsScript script, DeclarativeAgent agent, String customWorkspace = null, Closure body) {
         return {
             if (customWorkspace) {
-                script.ws((String)script.evaluate(WithScriptScript.prepareForEvalToString(customWorkspace))) {
+                script.ws(customWorkspace) {
                     checkoutAndRun(script, agent, body).call()
                 }
             } else {

@@ -37,7 +37,8 @@ class BranchConditionalScript extends DeclarativeStageConditionalScript<BranchCo
 
     @Override
     public boolean evaluate() {
-        return describable.branchMatches((String)script.evaluate(Utils.prepareForEvalToString(describable.compare)),
+        return describable.branchMatches(
+            (String)script.evaluate(Utils.getCombinedScriptText(Utils.prepareForEvalToString(describable.compare), script)),
             (String)script.getProperty("env").getProperty("BRANCH_NAME"))
     }
 }

@@ -26,6 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -41,7 +42,11 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
         return {
             try {
                 script.node(evalStr(describable?.label)) {
-                    CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
+                    String ws = describable.customWorkspace
+                    if (ws != null) {
+                        ws = evalStr(ws)
+                    }
+                    CheckoutScript.doCheckout(script, describable, ws, body).call()
                 }
             } catch (Exception e) {
                 script.getProperty("currentBuild").result = Result.FAILURE
@@ -51,7 +56,7 @@ public class LabelScript extends DeclarativeAgentScript<Label> {
     }
 
     protected String evalStr(String s) {
-        return (String)script.evaluate(prepareForEvalToString(s));
+        return (String)script.evaluate(Utils.getCombinedScriptText(prepareForEvalToString(s), script));
     }
 
 }

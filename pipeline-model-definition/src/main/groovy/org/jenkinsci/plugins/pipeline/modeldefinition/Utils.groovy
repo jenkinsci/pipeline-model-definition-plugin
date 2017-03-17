@@ -73,6 +73,8 @@ import java.util.concurrent.TimeUnit
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Utils {
+    public static final String PRE_PIPELINE_SCRIPT_TEXT = "prePipelineBlock"
+    public static final String POST_PIPELINE_SCRIPT_TEXT = "postPipelineBlock"
 
     /**
      * Workaround for not having to whitelist isAssignableFrom, metaClass etc to determine whether a field on
@@ -175,23 +177,83 @@ public class Utils {
 
     static Root attachDeclarativeActions(CpsScript script) {
         WorkflowRun r = script.$build()
-        ModelASTPipelineDef model = Converter.parseFromWorkflowRun(r)
+        String origScript = Converter.getDeclarativeScript(r)
+        ModelASTPipelineDef model = Converter.scriptToPipelineDef(origScript)
 
         if (model != null) {
             ModelASTStages stages = model.stages
+            List<String> prePostStrings = removePipelineBlockFromScript(origScript)
+            final String prePipelineText = prePostStrings.get(0)
+            final String postPipelineText = prePostStrings.get(1)
 
             stages.removeSourceLocation()
             if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
                 r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
             }
             if (r.getAction(ExecutionModelAction.class) == null) {
-                r.addAction(new ExecutionModelAction(stages))
+                r.addAction(new ExecutionModelAction(stages, prePipelineText, postPipelineText))
             }
+            script.binding.setVariable(PRE_PIPELINE_SCRIPT_TEXT, prePostStrings.get(0))
+            script.binding.setVariable(POST_PIPELINE_SCRIPT_TEXT, prePostStrings.get(1))
 
             return Root.fromAST(r, model)
         }
 
         return null
+    }
+
+    public static String getPrePipelineText(CpsScript script) {
+        String fromBinding = script.binding.getVariable(PRE_PIPELINE_SCRIPT_TEXT)
+        if (fromBinding != null) {
+            return fromBinding
+        } else {
+            String text = script.$build()?.getAction(ExecutionModelAction.class)?.prePipelineText
+            script.binding.setVariable(PRE_PIPELINE_SCRIPT_TEXT, text)
+            return text
+        }
+    }
+
+    public static String getPostPipelineText(CpsScript script) {
+        String fromBinding = script.binding.getVariable(POST_PIPELINE_SCRIPT_TEXT)
+        if (fromBinding != null) {
+            return fromBinding
+        } else {
+            String text = script.$build()?.getAction(ExecutionModelAction.class)?.postPipelineText
+            script.binding.setVariable(POST_PIPELINE_SCRIPT_TEXT, text)
+            return text
+        }
+    }
+
+    public static String getCombinedScriptText(String origScript, CpsScript script) {
+        return getPrePipelineText(script) + "\n" + getPostPipelineText(script) + "\n" + origScript
+    }
+
+    private static int findClosingCurly(String value, int startIndex) {
+        int openParenCount = 0
+        for (int i = startIndex; i < value.length(); i++) {
+            char ch = value.charAt(i)
+            if (ch == '}' as char) {
+                openParenCount--
+                if (openParenCount == 0) {
+                    return i
+                }
+            } else if (ch == '{' as char) {
+                openParenCount++
+            }
+        }
+        return -1
+    }
+
+    static List<String> removePipelineBlockFromScript(String origScript) {
+        int pipelineIdx = origScript.indexOf('pipeline {')
+        if (pipelineIdx > -1) {
+            int endIdx = findClosingCurly(origScript, pipelineIdx)
+            if (endIdx > -1) {
+                return [origScript.substring(0, pipelineIdx),
+                        origScript.substring(endIdx + 1, origScript.length())]
+            }
+        }
+        return ["", ""]
     }
 
     /**

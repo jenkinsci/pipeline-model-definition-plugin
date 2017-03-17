@@ -72,7 +72,7 @@ public abstract class AbstractDockerPipelineScript<A extends AbstractDockerAgent
     }
 
     protected String evalStr(String s) {
-        return (String)script.evaluate(prepareForEvalToString(s));
+        return (String)script.evaluate(Utils.getCombinedScriptText(prepareForEvalToString(s), script));
     }
 
     protected abstract Closure runImage(Closure body)

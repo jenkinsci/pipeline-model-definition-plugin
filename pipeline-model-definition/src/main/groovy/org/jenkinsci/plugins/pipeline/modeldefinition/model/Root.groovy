@@ -62,16 +62,6 @@ public class Root implements Serializable {
 
     Libraries libraries
 
-    List<String> additionalImports = new ArrayList<>()
-
-    public String appendImports(@Nonnull String input) {
-        if (!additionalImports.isEmpty()) {
-            return additionalImports.join("\n") + "\n" + input
-        } else {
-            return input
-        }
-    }
-
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
@@ -120,10 +110,8 @@ public class Root implements Serializable {
     public static Root fromAST(@Nonnull WorkflowRun run, @CheckForNull ModelASTPipelineDef ast) {
         if (ast != null) {
             Root r = new Root()
-            r.additionalImports.addAll(ast.additionalImports)
-
             r.agent = Agent.fromAST(ast.agent)
-            r.stages = Stages.fromAST(run, ast.stages, r)
+            r.stages = Stages.fromAST(run, ast.stages)
             r.environment = Environment.fromAST(run, ast.environment)
             r.libraries = Libraries.fromAST(ast.libraries)
             r.tools = Tools.fromAST(ast.tools)

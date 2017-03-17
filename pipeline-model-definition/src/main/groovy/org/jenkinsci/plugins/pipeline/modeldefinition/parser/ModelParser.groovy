@@ -128,22 +128,6 @@ class ModelParser implements Parser {
         }
 
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst);
-        List<ImportNode> additionalImports = []
-        src.imports.each { i ->
-            additionalImports.add(i)
-        }
-        src.starImports.each { i ->
-            additionalImports.add(i)
-        }
-        src.staticImports.each { k, v ->
-            additionalImports.add(v)
-        }
-        src.staticStarImports.each { k, v ->
-            additionalImports.add(v)
-        }
-        if (!additionalImports.isEmpty()) {
-            r.setAdditionalImports(additionalImports.collect { it.text })
-        }
 
         def pipelineBlock = matchBlockStatement(pst);
         if (pipelineBlock==null) {

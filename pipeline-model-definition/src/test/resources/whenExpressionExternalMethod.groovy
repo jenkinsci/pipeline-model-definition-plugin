@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,35 @@
  * THE SOFTWARE.
  */
 
+pipeline {
+    agent any
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                expression {
+                    echo "Should I run?"
+                    return shouldIRun()
+                }
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-
-class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<EnvironmentConditional> {
-    public EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
-        super(s, c)
-    }
-
-    @Override
-    public boolean evaluate() {
-        String n = (String)script.evaluate(Utils.getCombinedScriptText(Utils.prepareForEvalToString(describable.getName()), script))
-        String v = (String)script.evaluate(Utils.getCombinedScriptText(Utils.prepareForEvalToString(describable.getValue()), script))
-        return describable.environmentMatches(v, (String)script.getProperty("env").getProperty(n))
+            }
+        }
     }
 }
+
+def shouldIRun() {
+    return true
+}
+
+
+

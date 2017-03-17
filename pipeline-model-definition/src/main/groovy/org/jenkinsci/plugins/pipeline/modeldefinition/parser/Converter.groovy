@@ -47,6 +47,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
+import javax.annotation.CheckForNull
 import java.security.CodeSource
 import java.security.cert.Certificate
 
@@ -202,11 +203,14 @@ public class Converter {
      * @return A parsed and validated {@link ModelASTPipelineDef}
      */
     public static ModelASTPipelineDef parseFromWorkflowRun(WorkflowRun run) {
-        CpsFlowExecution execution = Utils.getExecutionForRun(run)
-
-        String rawScript = execution.script
+        String rawScript = getDeclarativeScript(run)
 
         return scriptToPipelineDef(rawScript)
+    }
+
+    public static String getDeclarativeScript(WorkflowRun run) {
+        CpsFlowExecution execution = Utils.getExecutionForRun(run)
+        return execution?.script
     }
 
 }

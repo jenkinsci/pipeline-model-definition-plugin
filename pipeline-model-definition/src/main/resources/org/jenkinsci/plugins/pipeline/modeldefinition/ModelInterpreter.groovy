@@ -194,7 +194,7 @@ public class ModelInterpreter implements Serializable {
             List<String> evaledEnv = new ArrayList<>()
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
-                evaledEnv.add((String)script.evaluate('"' + envVars.get(i) + '"'))
+                evaledEnv.add((String)script.evaluate(Utils.getCombinedScriptText('"' + envVars.get(i) + '"', script)))
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -386,7 +386,7 @@ public class ModelInterpreter implements Serializable {
             }
             return newArgs
         } else if (args instanceof String || args instanceof GString) {
-            return (String)script.evaluate(Utils.prepareForEvalToString(args.toString()))
+            return (String)script.evaluate(Utils.getCombinedScriptText(Utils.prepareForEvalToString(args.toString()), script))
         } else {
             return args
         }
@@ -402,7 +402,7 @@ public class ModelInterpreter implements Serializable {
         Throwable stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
-                script.evaluate(thisStage.steps)
+                script.evaluate(Utils.getCombinedScriptText(thisStage.steps, script))
             }
         } catch (Exception e) {
             script.getProperty("currentBuild").result = Result.FAILURE
@@ -477,7 +477,7 @@ public class ModelInterpreter implements Serializable {
                 String c = responder.stepsForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
                 if (c != null) {
                     catchRequiredContextForNode(agentContext) {
-                        script.evaluate(c)
+                        script.evaluate(Utils.getCombinedScriptText(c, script))
                     }
                 }
             } catch (Exception e) {
@@ -503,7 +503,7 @@ public class ModelInterpreter implements Serializable {
         if (root.libraries != null) {
             for (int i = 0; i < root.libraries.libs.size(); i++) {
                 String lib = root.libraries.libs.get(i)
-                script.library((String)script.evaluate(Utils.prepareForEvalToString(lib)))
+                script.library((String)script.evaluate(Utils.getCombinedScriptText(Utils.prepareForEvalToString(lib), script)))
             }
         }
     }
@@ -547,6 +547,6 @@ public class ModelInterpreter implements Serializable {
     }
 
     UninstantiatedDescribable transformStringToUD(String inString) {
-        return (UninstantiatedDescribable)script.evaluate(inString)
+        return (UninstantiatedDescribable)script.evaluate(Utils.getCombinedScriptText(inString, script))
     }
 }

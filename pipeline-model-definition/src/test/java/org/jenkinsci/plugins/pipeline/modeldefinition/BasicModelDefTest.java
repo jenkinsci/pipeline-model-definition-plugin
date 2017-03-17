@@ -339,6 +339,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42829")
+    @Test
+    public void whenExpressionExternalMethod() throws Exception {
+        expect("whenExpressionExternalMethod")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
     @Test
     public void skippedWhen() throws Exception {
         expect("skippedWhen")

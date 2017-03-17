@@ -81,10 +81,10 @@ class StageConditionals implements Serializable {
     }
 
     @CheckForNull
-    public static StageConditionals fromAST(@CheckForNull ModelASTWhen ast, Root root) {
+    public static StageConditionals fromAST(@CheckForNull ModelASTWhen ast) {
         if (ast != null) {
             List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> conditionals = ast.conditions.collect { c ->
-                stageConditionalFromAST(c, root)
+                stageConditionalFromAST(c)
             }
 
             return new StageConditionals(conditionals)
@@ -99,7 +99,7 @@ class StageConditionals implements Serializable {
      * @param w
      * @return A populated {@link DeclarativeStageConditional}
      */
-    private static DeclarativeStageConditional stageConditionalFromAST(@Nonnull ModelASTWhenContent w, Root root) {
+    private static DeclarativeStageConditional stageConditionalFromAST(@Nonnull ModelASTWhenContent w) {
         DeclarativeStageConditional c = null
         DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
 
@@ -117,9 +117,8 @@ class StageConditionals implements Serializable {
             }
         } else if (w instanceof ModelASTWhenExpression) {
             ModelASTWhenExpression expr = (ModelASTWhenExpression)w
-            String codeBlock = root?.appendImports(expr.codeBlockAsString()) ?: expr.codeBlockAsString()
 
-            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, codeBlock).instantiate()
+            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
         }
 
         return c
