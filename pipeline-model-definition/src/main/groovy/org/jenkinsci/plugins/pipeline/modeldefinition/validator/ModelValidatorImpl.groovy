@@ -235,7 +235,7 @@ class ModelValidatorImpl implements ModelValidator {
                     errorCollector.error(condition, Messages.ModelValidatorImpl_NoNestedWhenAllowed(condition.name))
                     valid = false
                 } else {
-                    valid = validateDescribable(condition, condition.name, condition.args, model, desc, false)
+                    valid = validateDescribable(condition, condition.name, condition.args, model, false)
                 }
             }
         }
@@ -246,7 +246,7 @@ class ModelValidatorImpl implements ModelValidator {
     private boolean validateDescribable(ModelASTElement element, String name,
                                         ModelASTArgumentList args,
                                         DescribableModel<? extends Describable> model,
-                                        Descriptor desc, boolean takesClosure = false) {
+                                        boolean takesClosure) {
         boolean valid = true
 
         if (args instanceof ModelASTNamedArgumentList) {
@@ -531,6 +531,8 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
+    // Because Findbugs doesn't like Gmavenplus's method signatures...
+    @SuppressFBWarnings(value="UPM_UNCALLED_PRIVATE_METHOD")
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
         if (v.isLiteral()) {
             try {

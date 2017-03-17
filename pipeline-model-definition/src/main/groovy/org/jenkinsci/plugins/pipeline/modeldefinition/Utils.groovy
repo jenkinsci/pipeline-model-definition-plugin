@@ -402,13 +402,14 @@ public class Utils {
     }
 
     /**
-     * Actually populates the type cache.
+     * Actually populates the type cache.Ω
      *
      * @param type The {@link Descriptor} class whose extensions we want to find.
      * @param includeClassNames Optionally include class names as keys. Defaults to false.
      * @param excludedSymbols Optional list of symbol names to exclude from the cache.
      * @return A map of symbols or class names to class names.
      */
+    @SuppressFBWarnings(value="UPM_UNCALLED_PRIVATE_METHOD")
     private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type,
                                                         boolean includeClassNames = false,
                                                         List<String> excludedSymbols = [],

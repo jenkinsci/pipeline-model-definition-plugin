@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import com.google.common.cache.LoadingCache
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.Extension
 import hudson.ExtensionList
 import hudson.FilePath
@@ -40,6 +41,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse
 
 @Restricted(NoExternalUse.class)
 @Extension
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class TypeLookupCache {
     private LoadingCache<Object,Map<String,String>> propertyTypeCache
 
