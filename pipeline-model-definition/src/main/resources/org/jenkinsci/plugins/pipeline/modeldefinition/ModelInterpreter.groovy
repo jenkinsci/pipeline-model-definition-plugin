@@ -71,9 +71,9 @@ public class ModelInterpreter implements Serializable {
 
                 // Entire build, including notifications, runs in the agent.
                 inDeclarativeAgent(root, root, root.agent) {
-                    withEnvBlock(root.getEnvVars(script)) {
-                        inWrappers(root.options) {
-                            withCredentialsBlock(root.getEnvCredentials()) {
+                    withCredentialsBlock(root.getEnvCredentials()) {
+                        withEnvBlock(root.getEnvVars(script)) {
+                            inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
@@ -91,19 +91,19 @@ public class ModelInterpreter implements Serializable {
                                                     // environment is populated before we evaluate any when condition,
                                                     // and so that we don't go into a per-stage agent if the when condition
                                                     // isn't satisfied.
-                                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
-                                                        if (evaluateWhen(thisStage.when)) {
-                                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                                withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                    withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                        withEnvBlock(thisStage.getEnvVars(root, script)) {
+                                                            if (evaluateWhen(thisStage.when)) {
+                                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)
                                                                     }
                                                                 }
+                                                            } else {
+                                                                Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                                                Utils.markStageSkippedForConditional(thisStage.name)
                                                             }
-                                                        } else {
-                                                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                                            Utils.markStageSkippedForConditional(thisStage.name)
                                                         }
                                                     }
                                                 }
