@@ -114,6 +114,13 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps-global-lib</artifactId>
     </dependency>
+    <!-- Dependency on tombstoned declarative agent plugin to make sure we don't end up with a
+    bad old version installed -->
+    <dependency>
+      <groupId>org.jenkinsci.plugins</groupId>
+      <artifactId>pipeline-model-declarative-agent</artifactId>
+      <version>1.1.1</version>
+    </dependency>
 
     <!-- TEST deps -->
     <dependency>
