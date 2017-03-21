@@ -29,18 +29,16 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipelineFromDockerfile> {
     private String filename;
     private String dir;
+    private String additionalBuildArgs;
 
     @DataBoundConstructor
     public DockerPipelineFromDockerfile() {
@@ -62,6 +60,15 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
     @DataBoundSetter
     public void setDir(String dir) {
         this.dir = dir;
+    }
+
+    public String getAdditionalBuildArgs() {
+        return additionalBuildArgs;
+    }
+
+    @DataBoundSetter
+    public void setAdditionalBuildArgs(String additionalBuildArgs) {
+        this.additionalBuildArgs = additionalBuildArgs;
     }
 
     @Nonnull
