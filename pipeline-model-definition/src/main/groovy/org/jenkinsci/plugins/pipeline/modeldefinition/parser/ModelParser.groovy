@@ -244,10 +244,22 @@ class ModelParser implements Parser {
                                 r.variables[key] = parseArgument(exp.rightExpression, true)
                                 return
                             } else if (exp.rightExpression instanceof MethodCallExpression) {
-                                r.variables[key] = parseInternalFunctionCall((MethodCallExpression)exp.rightExpression)
+                                r.variables[key] = parseInternalFunctionCall((MethodCallExpression) exp.rightExpression)
                                 return
+                            } else if (exp.rightExpression instanceof BinaryExpression) {
+                                if (((BinaryExpression)exp.rightExpression).operation.type  == Types.PLUS) {
+                                    // This is to support JENKINS-42771, allowing `FOO = "b" + "a" + "r"` sorts of syntax.
+                                    String envValue = envValueForStringConcat((BinaryExpression) exp.rightExpression)
+                                    if (envValue != null) {
+                                        r.variables[key] = ModelASTValue.fromConstant(envValue, exp.rightExpression)
+                                    }
+                                    return
+                                } else {
+                                    errorCollector.error(new ModelASTKey(exp.rightExpression), Messages.ModelParser_InvalidEnvironmentOperation())
+                                    return
+                                }
                             } else {
-                                errorCollector.error(key, Messages.ModelParser_InvalidEnvironmentValue())
+                                errorCollector.error(new ModelASTKey(exp.rightExpression), Messages.ModelParser_InvalidEnvironmentValue())
                                 return
                             }
                         }
@@ -269,6 +281,71 @@ class ModelParser implements Parser {
             }
         }
         return r;
+    }
+
+    /**
+     * This works functionally equivalent to the string used in {@link #parseArgument}, but without returning a
+     * {@link ModelASTValue}, returning just a string instead, and without handling {@link MapExpression} or
+     * {@link VariableExpression}, which is exclusively used for the `agent any` and `agent none` shortcuts regardless.
+     *
+     * @param e A non-null expression. If the expression is anything but a constant or a GString, an error will be thrown.
+     * @return The string value for that expression - in the case of {@link GStringExpression}, we explicitly remove the
+     * quotes from around it so that it's suitable for string concatenation. Returns null if an error was encountered.
+     */
+    @CheckForNull
+    private String envStringFromArbitraryExpression(@Nonnull Expression e) {
+        StringBuilder builder = new StringBuilder()
+        if (e instanceof ConstantExpression) {
+            builder.append(e.value)
+        } else if (e instanceof GStringExpression) {
+            String rawSrc = getSourceText(e)
+            builder.append(rawSrc.substring(1, rawSrc.length() - 1))
+        } else {
+            errorCollector.error(new ModelASTKey(e), Messages.ModelParser_InvalidEnvironmentConcatValue())
+            return null
+        }
+        return builder.toString()
+    }
+
+    /**
+     * Traverses a {@link BinaryExpression} known to be a {@link Types#PLUS}, to concatenate its various subexpressions
+     * together as string values.
+     * @param exp A non-null binary expression
+     * @return The concatenated string equivalent of that binary expression, assuming no errors were encountered on the
+     * various subexpressions, in which case it will return null.
+     */
+    @CheckForNull
+    private String envValueForStringConcat(@Nonnull BinaryExpression exp) {
+        StringBuilder builder = new StringBuilder()
+
+        if (exp.leftExpression instanceof BinaryExpression) {
+            if (((BinaryExpression)exp.leftExpression).operation.type  == Types.PLUS) {
+                String nestedString = envValueForStringConcat((BinaryExpression) exp.leftExpression)
+                if (nestedString == null) {
+                    return null
+                } else {
+                    builder.append(nestedString)
+                }
+            } else {
+                errorCollector.error(new ModelASTKey(exp), Messages.ModelParser_InvalidEnvironmentOperation())
+                return
+            }
+        } else {
+            String leftExpString = envStringFromArbitraryExpression(exp.leftExpression)
+            if (leftExpString == null) {
+                return null
+            } else {
+                builder.append(leftExpString)
+            }
+        }
+        String thisString = envStringFromArbitraryExpression(exp.rightExpression)
+        if (thisString == null) {
+            return null
+        } else {
+            builder.append(thisString)
+        }
+
+        return builder.toString()
     }
 
     public @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
