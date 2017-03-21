@@ -78,36 +78,7 @@ public class ModelInterpreter implements Serializable {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
                                         try {
-                                            script.stage(thisStage.name) {
-                                                if (firstError != null) {
-                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
-                                                    Utils.markStageSkippedForFailure(thisStage.name)
-                                                } else if (skipUnstable(root.options)) {
-                                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
-                                                    Utils.markStageSkippedForUnstable(thisStage.name)
-                                                } else {
-                                                    // While we run the top-level environment block after the top-level
-                                                    // agent, we do the reverse per-stage. Why? So that the per-stage
-                                                    // environment is populated before we evaluate any when condition,
-                                                    // and so that we don't go into a per-stage agent if the when condition
-                                                    // isn't satisfied.
-                                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
-                                                        if (evaluateWhen(thisStage.when)) {
-                                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                                withCredentialsBlock(thisStage.getEnvCredentials()) {
-                                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
-                                                                        // Execute the actual stage and potential post-stage actions
-                                                                        executeSingleStage(root, thisStage)
-                                                                    }
-                                                                }
-                                                            }
-                                                        } else {
-                                                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                                            Utils.markStageSkippedForConditional(thisStage.name)
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError).call()
                                         } catch (Exception e) {
                                             script.getProperty("currentBuild").result = Result.FAILURE
                                             Utils.markStageFailedAndContinued(thisStage.name)
@@ -380,16 +351,69 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError) {
+        return {
+            try {
+                script.stage(thisStage.name) {
+                    if (firstError != null) {
+                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
+                        Utils.markStageSkippedForFailure(thisStage.name)
+                    } else if (skipUnstable(root.options)) {
+                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
+                        Utils.markStageSkippedForUnstable(thisStage.name)
+                    } else {
+                        withEnvBlock(thisStage.getEnvVars()) {
+                            if (evaluateWhen(thisStage.when)) {
+                                if (thisStage.stages != null) {
+                                    def parallelStages = [:]
+                                    for (int i = 0; i < thisStage.stages.stages.size(); i++) {
+                                        Stage parallelStage = thisStage.stages.stages.get(i)
+                                        parallelStages.put(parallelStage.name,
+                                            evaluateStage(root, thisStage.agent ?: parentAgent, parallelStage, firstError))
+                                    }
+                                    script.parallel(parallelStages)
+                                } else {
+                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                        withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                            toolsBlock(thisStage.agent ?: parentAgent, thisStage.tools) {
+                                                // Execute the actual stage and potential post-stage actions
+                                                executeSingleStage(root, thisStage, parentAgent)
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                Utils.markStageSkippedForConditional(thisStage.name)
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                script.getProperty("currentBuild").result = Result.FAILURE
+                Utils.markStageFailedAndContinued(thisStage.name)
+                if (firstError == null) {
+                    firstError = e
+                }
+            }
+
+            if (firstError != null) {
+                throw firstError
+            }
+        }
+    }
+
     /**
      * Executes a single stage and post-stage actions, and returns any error it may have generated.
      *
      * @param root The root context we're running in
      * @param thisStage The stage context we're running in
+     * @param parentAgent the possible parent agent we may be running in.
      */
-    def executeSingleStage(Root root, Stage thisStage) throws Throwable {
+    def executeSingleStage(Root root, Stage thisStage, Agent parentAgent) throws Throwable {
         Throwable stageError = null
         try {
-            catchRequiredContextForNode(thisStage.agent ?: root.agent) {
+            catchRequiredContextForNode(thisStage.agent ?: parentAgent) {
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Exception e) {
@@ -402,7 +426,7 @@ public class ModelInterpreter implements Serializable {
             // And finally, run the post stage steps.
             if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
                 Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: root.agent, stageError, thisStage.name)
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
             }
         }
 

@@ -110,14 +110,6 @@
         }
       ]
     },
-    "argumentMap": {
-      "description": "A map value that may contain further maps",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/"
-        }
-      ]
-    },
     "keyAndValueOrMethodCall": {
       "description": "A key/value pair that can either have a value or method call",
       "type": "object",
@@ -445,7 +437,7 @@
       "additionalProperties": false
     },
     "stage": {
-      "description": "A single Pipeline stage, with a name and one or more branches",
+      "description": "A single Pipeline stage, with a name and one or more branches or one or more nested branches",
       "type": "object",
       "properties": {
         "name": {
@@ -474,11 +466,13 @@
           "items": {
             "$ref": "#/definitions/branch"
           }
+        },
+        "stages": {
+          "$ref": "#/definitions/stages"
         }
       },
       "required": [
-        "name",
-        "branches"
+        "name"
       ],
       "additionalProperties": false
     },

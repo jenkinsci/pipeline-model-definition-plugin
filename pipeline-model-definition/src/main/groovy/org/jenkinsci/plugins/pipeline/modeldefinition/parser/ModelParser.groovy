@@ -376,6 +376,9 @@ class ModelParser implements Parser {
                         case 'when':
                             stage.when = parseWhen(s)
                             break
+                        case 'stages':
+                            stage.stages = parseStages(s)
+                            break
                         case 'steps':
                             def stepsBlock = matchBlockStatement(s);
                             BlockStatement block = asBlock(stepsBlock.body.code)
