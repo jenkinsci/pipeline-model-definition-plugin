@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
-
-import java.util.List;
 import java.util.Map;
 
 /**

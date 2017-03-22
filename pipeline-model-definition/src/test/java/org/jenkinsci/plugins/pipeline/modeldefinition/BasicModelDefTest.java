@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.base.Predicate;
+import htmlpublisher.HtmlPublisherTarget;
 import hudson.model.Result;
 import hudson.model.Slave;
 import jenkins.plugins.git.GitSCMSource;
@@ -225,6 +226,18 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("parallelPipelineWithFailFast")
                 .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
                 .go();
+    }
+
+    @Issue("JENKINS-41456")
+    @Test
+    public void htmlPublisher() throws Exception {
+        WorkflowRun b = expect("htmlPublisher")
+                .logContains("[Pipeline] { (foo)")
+                .go();
+
+        HtmlPublisherTarget.HTMLBuildAction buildReport = b.getAction(HtmlPublisherTarget.HTMLBuildAction.class);
+        assertNotNull(buildReport);
+        assertEquals("Test Report", buildReport.getHTMLTarget().getReportName());
     }
 
     @Test

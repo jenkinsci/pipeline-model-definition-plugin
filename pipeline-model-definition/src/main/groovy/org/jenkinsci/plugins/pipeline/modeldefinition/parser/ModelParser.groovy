@@ -271,6 +271,7 @@ class ModelParser implements Parser {
                             errorCollector.error(badKey, Messages.ModelValidatorImpl_InvalidIdentifierInEnv(keyTxt))
                         } else {
                             errorCollector.error(badKey, Messages.ModelParser_InvalidEnvironmentIdentifier(srcTxt))
+
                         }
                     }
                 }
