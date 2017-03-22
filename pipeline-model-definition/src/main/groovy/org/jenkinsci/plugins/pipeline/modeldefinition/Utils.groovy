@@ -225,6 +225,7 @@ public class Utils {
             }
 
             if (root != null) {
+                root.additionalImports.addAll(model.additionalImports)
                 root = populateWhen(root, model)
                 root = populateEnv(r, root, model)
             }
@@ -264,7 +265,7 @@ public class Utils {
             if (astStage.when != null) {
                 List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
                     astStage.when.conditions.collect { c ->
-                        stageConditionalFromAST(c)
+                        stageConditionalFromAST(root, c)
                     }
 
                 s.when(new StageConditionals(processedConditions))
@@ -283,7 +284,7 @@ public class Utils {
      * @param w
      * @return A populated {@link DeclarativeStageConditional}
      */
-    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
+    private static DeclarativeStageConditional stageConditionalFromAST(Root r, ModelASTWhenContent w) {
         DeclarativeStageConditional c = null
         DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
 
@@ -293,16 +294,16 @@ public class Utils {
                 arg[0] = w.args?.argListToMap()
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
             } else if (desc.allowedChildrenCount == 1) {
-                DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
+                DeclarativeStageConditional single = stageConditionalFromAST(r, w.children.first())
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
             } else {
-                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(it) }
+                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(r, it) }
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, nested).instantiate()
             }
         } else if (w instanceof ModelASTWhenExpression) {
             ModelASTWhenExpression expr = (ModelASTWhenExpression)w
-
-            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
+            String codeBlock = r?.appendImports(expr.codeBlockAsString()) ?: expr.codeBlockAsString()
+            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, codeBlock).instantiate()
         }
 
         return c

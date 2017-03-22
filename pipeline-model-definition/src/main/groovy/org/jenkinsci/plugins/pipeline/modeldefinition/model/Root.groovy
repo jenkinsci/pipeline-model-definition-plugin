@@ -31,6 +31,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
+import javax.annotation.Nonnull
+
 /**
  * Root-level configuration object for the entire model.
  *
@@ -57,6 +59,16 @@ public class Root implements NestedModel, Serializable {
     Parameters parameters
 
     Libraries libraries
+
+    List<String> additionalImports = new ArrayList<>()
+
+    public String appendImports(@Nonnull String input) {
+        if (!additionalImports.isEmpty()) {
+            return additionalImports.join("\n") + "\n" + input
+        } else {
+            return input
+        }
+    }
 
     Root stages(Stages s) {
         this.stages = s
