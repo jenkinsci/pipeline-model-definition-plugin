@@ -278,11 +278,13 @@ class ModelValidatorImpl implements ModelValidator {
                     soleDescribableMap = true
                     valid = validateDescribable(element, model.soleRequiredParameter.name, argList,
                         new DescribableModel<>(model.soleRequiredParameter.erasedType))
+                    // Note - this return is to break out of the .each loop only
                     return
                 }
 
                 if (!isValidStepParameter(model, k.key, k)) {
                     valid = false
+                    // Note - this return is to break out of the .each loop only
                     return
                 }
 
