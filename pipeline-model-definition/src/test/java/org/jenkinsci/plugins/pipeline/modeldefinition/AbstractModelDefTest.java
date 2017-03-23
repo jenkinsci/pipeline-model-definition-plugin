@@ -36,6 +36,7 @@ import hudson.slaves.NodePropertyDescriptor;
 import hudson.util.DescribableList;
 import hudson.util.StreamTaskListener;
 import hudson.util.VersionNumber;
+import jenkins.plugins.git.GitSCMSource;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.GitStep;
 import net.sf.json.JSONArray;
@@ -55,8 +56,12 @@ import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
 import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.jvnet.hudson.test.BuildWatcher;
@@ -70,6 +75,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +97,9 @@ public abstract class AbstractModelDefTest {
     public static BuildWatcher buildWatcher = new BuildWatcher();
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
+    @ClassRule
+    public static GitSampleRepoRule zotRepo = new GitSampleRepoRule();
+
     @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
@@ -150,11 +159,15 @@ public abstract class AbstractModelDefTest {
             "environmentCrossReferences"
     );
 
+    public static List<String> SHOULD_PASS_WITH_LIBRARY_CONFIGS = ImmutableList.of(
+            "librariesDirective",
+            "libraryDirectiveObjectInScript"
+    );
+
     public static List<String> convertableConfigs() {
         List<String> configs = new ArrayList<>();
         configs.addAll(SHOULD_PASS_CONFIGS);
-        configs.add("librariesDirective");
-        configs.add("libraryDirectiveObjectInScript");
+        configs.addAll(SHOULD_PASS_WITH_LIBRARY_CONFIGS);
 
         return configs;
     }
@@ -293,6 +306,61 @@ public abstract class AbstractModelDefTest {
         }
 
         return false;
+    }
+
+    @BeforeClass
+    public static void prepLibraryObjectRepo() throws Exception {
+        zotRepo.init();
+        zotRepo.write("src/org/foo/bar/Apple.groovy", "package org.foo.bar;\n" +
+                "class Apple implements Serializable {\n" +
+                "  def getColor() {\n" +
+                "    return 'red'\n" +
+                "  }\n" +
+                "}\n");
+        zotRepo.write("src/org/foo/bar/Banana.groovy", "package org.foo.bar;\n" +
+                "class Banana implements Serializable {\n" +
+                "  def getColor() {\n" +
+                "    return 'yellow'\n" +
+                "  }\n" +
+                "}\n");
+        zotRepo.write("src/org/foo/OneStatic.groovy", "package org.foo;\n" +
+                "class OneStatic implements Serializable {\n" +
+                "  public static String ONE_STATIC = 'one static'\n" +
+                "}\n");
+
+        zotRepo.write("src/org/foo/MultipleStatic.groovy", "package org.foo;\n" +
+                "class MultipleStatic implements Serializable {\n" +
+                "  public static String TWO_STATIC = 'two static'\n" +
+                "  public static String THREE_STATIC = 'three static'\n" +
+                "}\n");
+
+        zotRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
+                "\n" +
+                "class Zot implements Serializable {\n" +
+                "  def steps\n" +
+                "  Zot(steps){\n" +
+                "    this.steps = steps\n" +
+                "  }\n" +
+                "  def echo(msg) {\n" +
+                "    steps.sh \"echo ${msg}\"\n" +
+                "  }\n" +
+                "}\n");
+
+        zotRepo.write("src/org/foo/Trueish.groovy", "package org.foo;\n" +
+                "\n" +
+                "class Trueish implements Serializable {\n" +
+                "  Trueish(){\n" +
+                "  }\n" +
+                "  def returnTrue() {\n" +
+                "    return true\n" +
+                "  }\n" +
+                "}\n");
+        zotRepo.git("add", "src");
+        zotRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("zot-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, zotRepo.toString(), "", "*", "", true)))));
+
     }
 
 

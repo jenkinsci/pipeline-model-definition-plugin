@@ -75,7 +75,7 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
     @Parameterized.Parameters(name="Name: {0}")
     public static Iterable<Object[]> generateParameters() {
         List<Object[]> result = new ArrayList<>();
-        for (String c : AbstractModelDefTest.SHOULD_PASS_CONFIGS) {
+        for (String c : AbstractModelDefTest.convertableConfigs()) {
             // Temporary hack to skip Docker and globalLibrary
             if (!c.equals("agentDocker") && !c.contains("globalLibrary") && !c.contains("jsonSchemaNull")) {
                 result.add(new Object[]{c});
@@ -101,6 +101,9 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
 
     @Test
     public void testJSONToASTToGroovyExecution() throws Exception {
+        if (SHOULD_PASS_WITH_LIBRARY_CONFIGS.contains(configName)) {
+            prepLibraryObjectRepo();
+        }
         JSONObject json = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
         assertNotNull("Couldn't parse JSON for " + configName, json);
 

@@ -47,7 +47,9 @@ public final class ModelASTLibrary extends ModelASTElement {
     @Override
     public JSONObject toJSON() {
         JSONObject o = new JSONObject();
-        o.accumulate("library", library.toJSON());
+        if (library != null) {
+            o.accumulate("library", library.toJSON());
+        }
 
         final JSONArray a = new JSONArray();
         for (ModelASTValue v : imports) {
@@ -60,7 +62,9 @@ public final class ModelASTLibrary extends ModelASTElement {
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        library.validate(validator);
+        if (library != null) {
+            library.validate(validator);
+        }
         for (ModelASTValue v : imports) {
             v.validate(validator);
         }
@@ -71,7 +75,9 @@ public final class ModelASTLibrary extends ModelASTElement {
         StringBuilder result = new StringBuilder("lib(");
         if (!imports.isEmpty()) {
             result.append("library: ");
-            result.append(library.toGroovy());
+            if (library != null) {
+                result.append(library.toGroovy());
+            }
             result.append(", imports: ");
             result.append(valueListToString(imports));
         } else {
@@ -84,7 +90,9 @@ public final class ModelASTLibrary extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        library.removeSourceLocation();
+        if (library != null) {
+            library.removeSourceLocation();
+        }
         for (ModelASTValue v : imports) {
             v.removeSourceLocation();
         }
