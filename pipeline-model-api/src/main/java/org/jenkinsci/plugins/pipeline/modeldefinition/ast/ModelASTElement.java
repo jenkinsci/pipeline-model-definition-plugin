@@ -29,6 +29,10 @@ import net.sf.json.JSONObject;
 import org.codehaus.groovy.ast.ASTNode;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class ModelASTElement {
     /**
      * The sourceLocation is a reference to whatever section of the original source we're parsed from corresponds to this
@@ -77,6 +81,32 @@ public abstract class ModelASTElement {
      */
     public void removeSourceLocation() {
         sourceLocation = null;
+    }
+
+    protected String valueListToString(List<ModelASTValue> l) {
+        StringBuilder builder = new StringBuilder();
+
+        boolean first = true;
+        for (ModelASTValue v : l) {
+            if (first) {
+                first = false;
+            } else {
+                builder.append(", ");
+            }
+            builder.append(v.toGroovy());
+        }
+
+        return builder.toString();
+    }
+
+    public static List<String> fieldNames(Class<? extends ModelASTElement> c) {
+        List<String> fieldNames = new ArrayList<>();
+
+        for (Field f : c.getDeclaredFields()) {
+            fieldNames.add(f.getName());
+        }
+
+        return fieldNames;
     }
 
     /**

@@ -22,36 +22,34 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Library
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-/**
- * Translates a closure containing a sequence of "lib('string')" calls into an instance of {@link Libraries}.
- *
- * @author Andrew Bayer
- */
-public class LibrariesTranslator implements Serializable {
-    List<Library> actualList = []
-    CpsScript script
-
-    LibrariesTranslator(CpsScript script) {
-        this.script = script
+pipeline {
+    agent any
+    libraries {
+        lib(library: 'zot-stuff@master', imports: [
+            'org.foo.Zot',
+            'org.foo.Trueish',
+            'org.foo.bar.*',
+            'static org.foo.OneStatic.ONE_STATIC',
+            'static org.foo.MultipleStatic.*'])
     }
-
-    def lib(String library) {
-        actualList.add(new Library(lib: library))
-    }
-
-    def lib(Map attrs) {
-        actualList.add(new Library(lib: attrs.library, imports: attrs.imports))
-    }
-
-    Libraries toListModel() {
-        Libraries l = new Libraries()
-        l.libs(actualList)
+    stages {
+        stage ('prepare') {
+            when {
+                expression {
+                    def z = new Zot(steps)
+                    z.echo "apple: ${new Apple().getColor()}"
+                    z.echo "banana: ${new Banana().getColor()}"
+                    z.echo "${ONE_STATIC}"
+                    z.echo "${TWO_STATIC}"
+                    z.echo "${THREE_STATIC}"
+                    def t = new Trueish()
+                    return t.returnTrue()
+                }
+            }
+            steps {
+                echo "hello"
+            }
+        }
     }
 }
+

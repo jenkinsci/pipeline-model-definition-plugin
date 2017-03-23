@@ -150,6 +150,15 @@ public abstract class AbstractModelDefTest {
             "environmentCrossReferences"
     );
 
+    public static List<String> convertableConfigs() {
+        List<String> configs = new ArrayList<>();
+        configs.addAll(SHOULD_PASS_CONFIGS);
+        configs.add("librariesDirective");
+        configs.add("libraryDirectiveObjectInScript");
+
+        return configs;
+    }
+
     public static Iterable<Object[]> configsWithErrors() {
         List<Object[]> result = new ArrayList<>();
         // First element is config name, second element is expected JSON error.

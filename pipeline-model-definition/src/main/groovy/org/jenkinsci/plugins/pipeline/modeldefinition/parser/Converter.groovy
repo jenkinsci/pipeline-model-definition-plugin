@@ -141,6 +141,7 @@ public class Converter {
         }
 
         cc.addCompilationCustomizers(ic);
+        cc.addCompilationCustomizers(GroovyShellDecoratorImpl.addLibsAndImports())
 
         return cc;
     }

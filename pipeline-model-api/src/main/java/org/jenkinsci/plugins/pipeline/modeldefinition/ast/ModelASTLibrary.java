@@ -29,79 +29,88 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
- * An internal function call, most notably for use with {@link ModelASTEnvironment}
+ * A single library with possible additional information
  *
  * @author Andrew Bayer
  */
-public class ModelASTInternalFunctionCall extends ModelASTElement implements ModelASTEnvironmentValue {
-    private String name;
-    private List<ModelASTValue> args = new ArrayList<>();
+public final class ModelASTLibrary extends ModelASTElement {
+    private ModelASTValue library;
+    private List<ModelASTValue> imports = new ArrayList<>();
 
-
-    public ModelASTInternalFunctionCall(Object sourceLocation) {
+    public ModelASTLibrary(Object sourceLocation) {
         super(sourceLocation);
     }
 
     @Override
     public JSONObject toJSON() {
+        JSONObject o = new JSONObject();
+        o.accumulate("library", library.toJSON());
+
         final JSONArray a = new JSONArray();
-        for (ModelASTValue arg: args) {
-            a.add(arg.toJSON());
+        for (ModelASTValue v : imports) {
+            a.add(v.toJSON());
         }
-        return new JSONObject().accumulate("name", name).accumulate("arguments", a);
+        o.accumulate("imports", a);
+        return o;
     }
 
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTMethodArg arg : args) {
-            arg.validate(validator);
+        library.validate(validator);
+        for (ModelASTValue v : imports) {
+            v.validate(validator);
         }
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder(name);
-        result.append('(');
-        result.append(valueListToString(args));
-        result.append(')');
+        StringBuilder result = new StringBuilder("lib(");
+        if (!imports.isEmpty()) {
+            result.append("library: ");
+            result.append(library.toGroovy());
+            result.append(", imports: ");
+            result.append(valueListToString(imports));
+        } else {
+            result.append(library.toGroovy());
+        }
+        result.append(")\n");
         return result.toString();
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTValue arg : args) {
-            arg.removeSourceLocation();
+        library.removeSourceLocation();
+        for (ModelASTValue v : imports) {
+            v.removeSourceLocation();
         }
     }
 
-    public String getName() {
-        return name;
+    public ModelASTValue getLibrary() {
+        return library;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLibrary(ModelASTValue library) {
+        this.library = library;
     }
 
-    public List<ModelASTValue> getArgs() {
-        return args;
+    public List<ModelASTValue> getImports() {
+        return imports;
     }
 
-    public void setArgs(List<ModelASTValue> args) {
-        this.args = args;
+    public void setImports(List<ModelASTValue> imports) {
+        this.imports = imports;
     }
 
     @Override
     public String toString() {
-        return "ModelASTInternalFunctionCall{" +
-                "name='" + name + '\'' +
-                ", args=" + args +
+        return "ModelASTLibrary{" +
+                "library=" + library +
+                ", imports=" + imports +
                 "}";
     }
 
@@ -117,20 +126,21 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
             return false;
         }
 
-        ModelASTInternalFunctionCall that = (ModelASTInternalFunctionCall) o;
+        ModelASTLibrary that = (ModelASTLibrary) o;
 
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
+        if (getLibrary() != null ? !getLibrary().equals(that.getLibrary()) : that.getLibrary() != null) {
             return false;
         }
-        return getArgs() != null ? getArgs().equals(that.getArgs()) : that.getArgs() == null;
+
+        return getImports() != null ? getImports().equals(that.getImports()) : that.getImports() == null;
 
     }
 
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getArgs() != null ? getArgs().hashCode() : 0);
+        result = 31 * result + (getLibrary() != null ? getLibrary().hashCode() : 0);
+        result = 31 * result + (getImports() != null ? getImports().hashCode() : 0);
         return result;
     }
 }

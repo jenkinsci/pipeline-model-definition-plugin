@@ -41,17 +41,7 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-        for (ModelASTValue argument : arguments) {
-            if (first) {
-                first = false;
-            } else {
-                result.append(", ");
-            }
-            result.append(argument.toGroovy());
-        }
-        return result.toString();
+        return valueListToString(arguments);
     }
 
     @Override

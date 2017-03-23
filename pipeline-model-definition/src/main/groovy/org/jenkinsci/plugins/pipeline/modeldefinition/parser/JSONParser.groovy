@@ -214,10 +214,26 @@ class JSONParser implements Parser {
     public @CheckForNull ModelASTLibraries parseLibraries(JsonTree j) {
         ModelASTLibraries l = new ModelASTLibraries(j)
 
-        JsonTree libsTree = j.append(JsonPointer.of("libraries"))
-        libsTree.node.eachWithIndex { JsonNode entry, int i ->
-            JsonTree thisNode = libsTree.append(JsonPointer.of(i))
-            l.libs.add(ModelASTValue.fromConstant(thisNode.node.asText(), thisNode))
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree thisNode = j.append(JsonPointer.of(i))
+            l.libs.add(parseLibrary(thisNode))
+        }
+
+        return l
+    }
+
+    public @CheckForNull ModelASTLibrary parseLibrary(JsonTree j) {
+        ModelASTLibrary l = new ModelASTLibrary(j)
+
+        JsonTree lib = j.append(JsonPointer.of("library"))
+        l.library = parseValue(lib)
+
+        if (j.node.has("imports")) {
+            JsonTree imports = j.append(JsonPointer.of("imports"))
+            imports.node.eachWithIndex { JsonNode entry, int i ->
+                JsonTree thisImport = imports.append(JsonPointer.of(i))
+                l.imports.add(parseValue(thisImport))
+            }
         }
 
         return l

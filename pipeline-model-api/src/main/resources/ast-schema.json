@@ -189,9 +189,28 @@
       "description": "One or more shared library identifiers to load",
       "type": "array",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/library"
       },
       "minItems": 1
+    },
+    "library": {
+      "description": "An individual shared library",
+      "type": "object",
+      "properties": {
+        "library": {
+          "$ref": "#/definitions/rawArgument"
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rawArgument"
+          }
+        }
+      },
+      "required": [
+        "library"
+      ],
+      "additionalProperties": false
     },
     "environmentValue": {
       "description": "A possible value for an environment variable",

@@ -65,8 +65,6 @@ public class ModelInterpreter implements Serializable {
             boolean postBuildRun = false
 
             try {
-                loadLibraries(root)
-
                 executeProperties(root)
 
                 // Entire build, including notifications, runs in the agent.
@@ -480,20 +478,6 @@ public class ModelInterpreter implements Serializable {
         }
 
         return stageError
-    }
-
-    /**
-     * Load specified libraries.
-     *
-     * @param root The root context we're running in
-     */
-    def loadLibraries(Root root) {
-        if (root.libraries != null) {
-            for (int i = 0; i < root.libraries.libs.size(); i++) {
-                String lib = root.libraries.libs.get(i)
-                script.library(lib)
-            }
-        }
     }
 
     /**

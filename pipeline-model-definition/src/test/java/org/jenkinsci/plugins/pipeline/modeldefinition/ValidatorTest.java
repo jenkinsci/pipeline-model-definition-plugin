@@ -545,6 +545,22 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43035")
+    @Test
+    public void invalidImportsInLibrariesDirective() throws Exception {
+        expectError("invalidImportsInLibrariesDirective")
+                .logContains(Messages.ModelValidatorImpl_InvalidLibraryImportFormat())
+                .go();
+    }
+
+    @Issue("JENKINS-43035")
+    @Test
+    public void invalidLibrariesDirectiveParameter() throws Exception {
+        expectError("invalidLibrariesDirectiveParameter")
+                .logContains(Messages.ModelParser_InvalidLibraryParameter("banana", "library"))
+                .go();
+    }
+
     @Issue("JENKINS-38110")
     @Test
     public void invalidLibrariesDirectiveContent() throws Exception {

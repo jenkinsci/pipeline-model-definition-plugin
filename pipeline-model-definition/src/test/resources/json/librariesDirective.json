@@ -1,0 +1,35 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "myecho",
+          "arguments": []
+        },
+        {
+          "name": "whereFrom",
+          "arguments": []
+        }
+      ]
+    }]
+  }],
+  "agent": {"type": "none"},
+  "libraries": [
+    {
+      "library":       {
+        "isLiteral": true,
+        "value": "echo-utils@master"
+      },
+      "imports": []
+    },
+    {
+      "library":       {
+        "isLiteral": true,
+        "value": "whereFrom"
+      },
+      "imports": []
+    }
+  ]
+}}

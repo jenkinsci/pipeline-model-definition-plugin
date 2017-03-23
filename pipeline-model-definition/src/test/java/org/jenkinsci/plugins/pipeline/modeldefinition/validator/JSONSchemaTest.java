@@ -51,7 +51,7 @@ public class JSONSchemaTest extends AbstractModelDefTest {
     @Parameterized.Parameters(name="Name: {0}")
     public static Iterable<Object[]> generateParameters() {
         List<Object[]> result = new ArrayList<>();
-        for (String c : AbstractModelDefTest.SHOULD_PASS_CONFIGS) {
+        for (String c : AbstractModelDefTest.convertableConfigs()) {
             result.add(new Object[] { c });
         }
 

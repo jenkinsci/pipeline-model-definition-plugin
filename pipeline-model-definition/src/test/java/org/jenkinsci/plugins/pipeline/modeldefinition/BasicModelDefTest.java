@@ -620,20 +620,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectInScript() throws Exception {
-        otherRepo.init();
-        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
-                "\n" +
-                "class Zot implements Serializable {\n" +
-                "  def steps\n" +
-                "  Zot(steps){\n" +
-                "    this.steps = steps\n" +
-                "  }\n" +
-                "  def echo(msg) {\n" +
-                "    steps.sh \"echo ${msg}\"\n" +
-                "  }\n" +
-                "}\n");
-        otherRepo.git("add", "src");
-        otherRepo.git("commit", "--message=init");
+        prepLibraryObjectRepo();
         GlobalLibraries.get().setLibraries(Collections.singletonList(
                 new LibraryConfiguration("zot-stuff",
                         new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
@@ -646,7 +633,40 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectDefinedOutsidePipeline() throws Exception {
+        prepLibraryObjectRepo();
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("zot-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("libraryObjectDefinedOutsidePipeline")
+                .logContains("hello");
+    }
+
+    private void prepLibraryObjectRepo() throws Exception {
         otherRepo.init();
+        otherRepo.write("src/org/foo/bar/Apple.groovy", "package org.foo.bar;\n" +
+                "class Apple implements Serializable {\n" +
+                "  def getColor() {\n" +
+                "    return 'red'\n" +
+                "  }\n" +
+                "}\n");
+        otherRepo.write("src/org/foo/bar/Banana.groovy", "package org.foo.bar;\n" +
+                "class Banana implements Serializable {\n" +
+                "  def getColor() {\n" +
+                "    return 'yellow'\n" +
+                "  }\n" +
+                "}\n");
+        otherRepo.write("src/org/foo/OneStatic.groovy", "package org.foo;\n" +
+                "class OneStatic implements Serializable {\n" +
+                "  public static String ONE_STATIC = 'one static'\n" +
+                "}\n");
+
+        otherRepo.write("src/org/foo/MultipleStatic.groovy", "package org.foo;\n" +
+                "class MultipleStatic implements Serializable {\n" +
+                "  public static String TWO_STATIC = 'two static'\n" +
+                "  public static String THREE_STATIC = 'three static'\n" +
+                "}\n");
+
         otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
                 "\n" +
                 "class Zot implements Serializable {\n" +
@@ -658,14 +678,54 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 "    steps.sh \"echo ${msg}\"\n" +
                 "  }\n" +
                 "}\n");
+
+        otherRepo.write("src/org/foo/Trueish.groovy", "package org.foo;\n" +
+                "\n" +
+                "class Trueish implements Serializable {\n" +
+                "  Trueish(){\n" +
+                "  }\n" +
+                "  def returnTrue() {\n" +
+                "    return true\n" +
+                "  }\n" +
+                "}\n");
         otherRepo.git("add", "src");
         otherRepo.git("commit", "--message=init");
+    }
+
+    @Issue("JENKINS-43035")
+    @Test
+    public void libraryDirectiveObjectInWhenExpression() throws Exception {
+        prepLibraryObjectRepo();
         GlobalLibraries.get().setLibraries(Collections.singletonList(
                 new LibraryConfiguration("zot-stuff",
                         new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
 
-        expect("libraryObjectDefinedOutsidePipeline")
-                .logContains("hello");
+        expect("libraryDirectiveObjectInWhenExpression")
+                .logContains("hello",
+                        "apple: red",
+                        "banana: yellow",
+                        "one static",
+                        "two static",
+                        "three static")
+                .go();
+    }
+
+    @Issue("JENKINS-43035")
+    @Test
+    public void libraryDirectiveObjectInScript() throws Exception {
+        prepLibraryObjectRepo();
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("zot-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("libraryDirectiveObjectInScript")
+                .logContains("hello",
+                        "apple: red",
+                        "banana: yellow",
+                        "one static",
+                        "two static",
+                        "three static")
+                .go();
     }
 
     @Issue("JENKINS-40188")
