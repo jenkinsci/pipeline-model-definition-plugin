@@ -36,7 +36,7 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
         this.customizeImports(context, ic);
         cc.addCompilationCustomizers(ic);
 
-        cc.addCompilationCustomizers(addLibsAndImports());
+        cc.addCompilationCustomizers(addLibsAndImports(true));
 
         cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.CANONICALIZATION) {
             @Override
@@ -61,12 +61,12 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
      *
      * @return the {@link CompilationCustomizer}
      */
-    public static CompilationCustomizer addLibsAndImports() {
+    public static CompilationCustomizer addLibsAndImports(final boolean fromCps) {
         return new CompilationCustomizer(CompilePhase.CONVERSION) {
             @Override
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 if (classNode.getNameWithoutPackage().equals(Converter.PIPELINE_SCRIPT_NAME)) {
-                    new ModelParser(source).addImportsToAST();
+                    new ModelParser(source).addImportsToAST(fromCps);
                 }
             }
         };

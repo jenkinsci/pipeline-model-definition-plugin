@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.github.fge.jsonschema.util.JsonLoader
+import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import com.github.fge.jsonschema.exceptions.ProcessingException
@@ -99,9 +100,9 @@ public class Converter {
      * @param src A URL pointing to a Pipeline script
      * @return the converted script
      */
-    public static ModelASTPipelineDef urlToPipelineDef(URL src) {
+    public static ModelASTPipelineDef urlToPipelineDef(URL src, boolean fromCps = false) {
         CompilationUnit cu = new CompilationUnit(
-            makeCompilerConfiguration(),
+            makeCompilerConfiguration(fromCps),
             new CodeSource(src, new Certificate[0]),
             getCompilationClassLoader());
         cu.addSource(src)
@@ -120,9 +121,9 @@ public class Converter {
      * @param script A string containing a Pipeline script
      * @return the converted script
      */
-    public static ModelASTPipelineDef scriptToPipelineDef(String script) {
+    public static ModelASTPipelineDef scriptToPipelineDef(String script, boolean fromCps = false) {
         CompilationUnit cu = new CompilationUnit(
-            makeCompilerConfiguration(),
+            makeCompilerConfiguration(fromCps),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
             getCompilationClassLoader());
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
@@ -130,7 +131,7 @@ public class Converter {
         return compilationUnitToPipelineDef(cu)
     }
 
-    private static CompilerConfiguration makeCompilerConfiguration() {
+    private static CompilerConfiguration makeCompilerConfiguration(boolean fromCps = false) {
         CompilerConfiguration cc = new CompilerConfiguration();
 
         ImportCustomizer ic = new ImportCustomizer();
@@ -141,8 +142,11 @@ public class Converter {
         }
 
         cc.addCompilationCustomizers(ic);
-        cc.addCompilationCustomizers(GroovyShellDecoratorImpl.addLibsAndImports())
+        cc.addCompilationCustomizers(GroovyShellDecoratorImpl.addLibsAndImports(false))
 
+        if (!fromCps) {
+            cc.addCompilationCustomizers(new ASTTransformationCustomizer(new NotInCpsThreadConstructorTransformer()))
+        }
         return cc;
     }
     /**
@@ -152,7 +156,7 @@ public class Converter {
      * @param cu {@link CompilationUnit} assembled by another method.
      * @return The converted script
      */
-    private static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu) {
+    private static ModelASTPipelineDef compilationUnitToPipelineDef(final CompilationUnit cu) {
         final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1];
 
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
@@ -169,9 +173,9 @@ public class Converter {
         return model[0];
     }
 
-    public static List<ModelASTStep> scriptToPlainSteps(String script) {
+    public static List<ModelASTStep> scriptToPlainSteps(String script, boolean fromCps = false) {
         CompilationUnit cu = new CompilationUnit(
-            makeCompilerConfiguration(),
+            makeCompilerConfiguration(fromCps),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
             getCompilationClassLoader());
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
@@ -207,7 +211,7 @@ public class Converter {
 
         String rawScript = execution.script
 
-        return scriptToPipelineDef(rawScript)
+        return scriptToPipelineDef(rawScript, true)
     }
 
 }

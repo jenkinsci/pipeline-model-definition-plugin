@@ -91,7 +91,7 @@ class ModelParser implements Parser {
         this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
-    public void addImportsToAST() {
+    public void addImportsToAST(boolean fromCps = false) {
         ModuleNode src = sourceUnit.AST
         def pst = findPipelineStep(src)
         if (pst != null) {
@@ -125,7 +125,7 @@ class ModelParser implements Parser {
 
                     src.scriptClassDummy.addAnnotation(libAnnotation)
 
-                    if (!imports.isEmpty()) {
+                    if (!imports.isEmpty() && fromCps) {
                         imports.unique().each { i ->
                             boolean isStatic = i.startsWith("static ")
                             String className = i.replaceFirst(/^static /, "")
