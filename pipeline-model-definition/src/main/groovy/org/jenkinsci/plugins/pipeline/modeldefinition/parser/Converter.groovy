@@ -60,6 +60,7 @@ import static org.codehaus.groovy.control.Phases.CANONICALIZATION
  *
  * @author Andrew Bayer
  */
+@SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
 public class Converter {
 
     public static final String PIPELINE_SCRIPT_NAME = "WorkflowScript"
@@ -132,7 +133,6 @@ public class Converter {
         return compilationUnitToPipelineDef(cu)
     }
 
-    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private static CompilerConfiguration makeCompilerConfiguration(boolean fromCps = false) {
         CompilerConfiguration cc = new CompilerConfiguration();
 
