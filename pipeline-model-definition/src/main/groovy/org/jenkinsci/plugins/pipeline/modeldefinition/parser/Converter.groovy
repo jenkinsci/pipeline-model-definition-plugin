@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.github.fge.jsonschema.util.JsonLoader
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -131,6 +132,7 @@ public class Converter {
         return compilationUnitToPipelineDef(cu)
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private static CompilerConfiguration makeCompilerConfiguration(boolean fromCps = false) {
         CompilerConfiguration cc = new CompilerConfiguration();
 
