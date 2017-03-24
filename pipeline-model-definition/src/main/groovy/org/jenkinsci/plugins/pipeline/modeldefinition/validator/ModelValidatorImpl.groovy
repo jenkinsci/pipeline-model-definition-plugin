@@ -311,9 +311,16 @@ class ModelValidatorImpl implements ModelValidator {
             // a sole describable map
             if (valid && !soleDescribableMap) {
                 model.parameters.each { p ->
-                    if (p.isRequired() && !argList.containsKeyName(p.name)) {
-                        errorCollector.error(element, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
-                        valid = false
+                    if (p.isRequired() &&
+                        !argList.containsKeyName(p.name)) {
+                        // Only error out if any of the following are false:
+                        // - there's only a single parameter (which we already know is required)
+                        // - There are arguments specified
+                        if (model.parameters.size() != 1 ||
+                            !argList.arguments.isEmpty()) {
+                            errorCollector.error(element, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
+                            valid = false
+                        }
                     }
                 }
             }
