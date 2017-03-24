@@ -550,7 +550,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         otherRepo.git("add", "vars");
         otherRepo.git("commit", "--message=init");
         LibraryConfiguration lib = libraryConf("echo-utils", otherRepo.toString(), null);
-        updateLibraries(lib);
+        prepLibraryObjectRepo(zotRepo, lib);
 
         expect("libraryAnnotation")
                 .logContains("something special")
@@ -574,7 +574,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         thirdRepo.git("commit", "--message=init");
         LibraryConfiguration secondLib = libraryConf("whereFrom", thirdRepo.toString(), "master");
 
-        updateLibraries(firstLib, secondLib);
+        prepLibraryObjectRepo(zotRepo, firstLib, secondLib);
 
         expect("librariesDirective")
                 .logContains("something special", "from another library")
@@ -615,6 +615,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectInScript() throws Exception {
+        prepLibraryObjectRepo(zotRepo);
         expect("libraryObjectInScript")
                 .logContains("hello")
                 .go();
@@ -630,6 +631,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-43035")
     @Test
     public void libraryDirectiveObjectInWhenExpression() throws Exception {
+        prepLibraryObjectRepo(zotRepo);
         expect("libraryDirectiveObjectInWhenExpression")
                 .logContains("hello",
                         "apple: red",
@@ -643,6 +645,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-43035")
     @Test
     public void libraryDirectiveObjectInScript() throws Exception {
+        prepLibraryObjectRepo(zotRepo);
         expect("libraryDirectiveObjectInScript")
                 .logContains("hello",
                         "apple: red",

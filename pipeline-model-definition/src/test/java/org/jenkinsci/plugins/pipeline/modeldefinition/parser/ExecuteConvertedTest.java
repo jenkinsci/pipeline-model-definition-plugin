@@ -34,6 +34,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,6 +85,11 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
         }
 
         return result;
+    }
+
+    @Before
+    public void setLibs() throws Exception {
+        prepLibraryObjectRepo(zotRepo);
     }
 
     @Test
