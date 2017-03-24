@@ -17,27 +17,26 @@
   }],
   "agent": {"type": "any"},
   "libraries": [  {
-    "library":     {
+    "isLiteral": true,
+    "value": "zot-stuff@master"
+    }
+  ],
+  "imports": [
+    {
       "isLiteral": true,
-      "value": "zot-stuff@master"
+      "value": "org.foo.Zot"
     },
-    "imports":     [
-      {
-        "isLiteral": true,
-        "value": "org.foo.Zot"
-      },
-      {
-        "isLiteral": true,
-        "value": "org.foo.bar.*"
-      },
-      {
-        "isLiteral": true,
-        "value": "static org.foo.OneStatic.ONE_STATIC"
-      },
-      {
-        "isLiteral": true,
-        "value": "static org.foo.MultipleStatic.*"
-      }
-    ]
-  }]
+    {
+      "isLiteral": true,
+      "value": "org.foo.bar.*"
+    },
+    {
+      "isLiteral": true,
+      "value": "static org.foo.OneStatic.ONE_STATIC"
+    },
+    {
+      "isLiteral": true,
+      "value": "static org.foo.MultipleStatic.*"
+    }
+  ]
 }}

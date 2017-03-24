@@ -25,12 +25,14 @@
 pipeline {
     agent any
     libraries {
-        lib(library: 'zot-stuff@master', imports: [
-            'org.foo.Zot',
-            'org.foo.Trueish',
-            'org.foo.bar.*',
-            'static org.foo.OneStatic.ONE_STATIC',
-            'static org.foo.MultipleStatic.*'])
+        'zot-stuff@master'
+    }
+    imports {
+        'org.foo.Zot'
+        'org.foo.bar.*'
+        'static org.foo.OneStatic.ONE_STATIC'
+        'static org.foo.MultipleStatic.*'
+        'org.foo.Trueish'
     }
     stages {
         stage ('prepare') {

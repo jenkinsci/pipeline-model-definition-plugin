@@ -135,26 +135,6 @@ public class SerializationTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void serializationLibrariesGString() throws Exception {
-        thirdRepo.init();
-        thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
-        thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
-        thirdRepo.git("add", "vars");
-        thirdRepo.git("commit", "--message=init");
-        LibraryConfiguration secondLib = new LibraryConfiguration("test",
-                new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
-        secondLib.setDefaultVersion("master");
-        List<LibraryConfiguration> origLibs = new ArrayList<>();
-        origLibs.addAll(GlobalLibraries.get().getLibraries());
-        origLibs.add(secondLib);
-        GlobalLibraries.get().setLibraries(origLibs);
-
-        expect("serializationLibrariesGString")
-                .logContains("something special", "from another library")
-                .go();
-    }
-
-    @Test
     public void serializationWhenBranchGString() throws Exception {
         expect("serializationWhenBranchGString")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")

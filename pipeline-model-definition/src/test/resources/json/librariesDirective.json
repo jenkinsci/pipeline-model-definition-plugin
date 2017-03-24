@@ -18,18 +18,12 @@
   "agent": {"type": "none"},
   "libraries": [
     {
-      "library":       {
-        "isLiteral": true,
-        "value": "echo-utils@master"
-      },
-      "imports": []
+      "isLiteral": true,
+      "value": "echo-utils@master"
     },
     {
-      "library":       {
-        "isLiteral": true,
-        "value": "whereFrom"
-      },
-      "imports": []
+      "isLiteral": true,
+      "value": "whereFrom"
     }
   ]
 }}

@@ -60,6 +60,8 @@ public class Root implements NestedModel, Serializable {
 
     Libraries libraries
 
+    Imports imports
+
     Root stages(Stages s) {
         this.stages = s
         return this
@@ -102,6 +104,11 @@ public class Root implements NestedModel, Serializable {
 
     Root libraries(Libraries l) {
         this.libraries = l
+        return this
+    }
+
+    Root imports(Imports i) {
+        this.imports = i
         return this
     }
 
@@ -160,11 +167,11 @@ public class Root implements NestedModel, Serializable {
      * Adds the {@code @Library(...)} annotations and {@code import ...} statements to a string that will be evaluated.
      * @param input A non-null string of Groovy code we'll be evaluating
      * @return That string, prepended with the {@code @Library(...)} annotations and {@code import ...} statements
-     *   appropriate, if any {@link Library}s are defined.
+     *   appropriate, if {@link Libraries} or {@link Imports} are defined
      */
     public String prependLibrariesAndImports(@Nonnull String input) {
-        String prepend = libraries?.toLibrariesAndImports() ?: ""
-
-        return prepend + input
+        String prependLibrary = libraries?.toLibraryAnnotations() ?: ""
+        String prependImports = imports?.toImportStatements() ?: ""
+        return prependLibrary + prependImports + input
     }
 }

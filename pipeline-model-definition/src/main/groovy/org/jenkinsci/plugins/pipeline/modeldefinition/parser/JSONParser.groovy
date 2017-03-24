@@ -124,6 +124,9 @@ class JSONParser implements Parser {
                     case 'libraries':
                         pipelineDef.libraries = parseLibraries(pipelineJson.append(JsonPointer.of("libraries")))
                         break
+                    case 'imports':
+                        pipelineDef.imports = parseImports(pipelineJson.append(JsonPointer.of("imports")))
+                        break
                     default:
                         errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(sectionName))
                 }
@@ -216,27 +219,21 @@ class JSONParser implements Parser {
 
         j.node.eachWithIndex { JsonNode entry, int i ->
             JsonTree thisNode = j.append(JsonPointer.of(i))
-            l.libs.add(parseLibrary(thisNode))
+            l.libs.add(parseValue(thisNode))
         }
 
         return l
     }
 
-    public @CheckForNull ModelASTLibrary parseLibrary(JsonTree j) {
-        ModelASTLibrary l = new ModelASTLibrary(j)
+    public @CheckForNull ModelASTImports parseImports(JsonTree j) {
+        ModelASTImports imports = new ModelASTImports(j)
 
-        JsonTree lib = j.append(JsonPointer.of("library"))
-        l.library = parseValue(lib)
-
-        if (j.node.has("imports")) {
-            JsonTree imports = j.append(JsonPointer.of("imports"))
-            imports.node.eachWithIndex { JsonNode entry, int i ->
-                JsonTree thisImport = imports.append(JsonPointer.of(i))
-                l.imports.add(parseValue(thisImport))
-            }
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree thisNode = j.append(JsonPointer.of(i))
+            imports.imports.add(parseValue(thisNode))
         }
 
-        return l
+        return imports
     }
 
     public @CheckForNull ModelASTOptions parseOptions(JsonTree j) {

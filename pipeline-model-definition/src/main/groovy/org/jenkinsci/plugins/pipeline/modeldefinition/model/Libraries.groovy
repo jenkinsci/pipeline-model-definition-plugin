@@ -39,23 +39,23 @@ import javax.annotation.Nonnull
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Libraries implements Serializable {
-    List<Library> libs = []
+    List<String> libs = []
 
-    Libraries libs(List<Library> l) {
+    Libraries libs(List<String> l) {
         this.libs.addAll(l)
         return this
     }
 
-    List<Library> getLibs() {
+    List<String> getLibs() {
         return libs
     }
 
     @Nonnull
-    public String toLibrariesAndImports() {
+    public String toLibraryAnnotations() {
         if (libs.isEmpty()) {
             return ""
         } else {
-            return "@Library(${libsAnnotationValue()}) _\n${importsAsString()}"
+            return "@Library(${libsAnnotationValue()}) _\n"
         }
     }
 
@@ -65,22 +65,10 @@ public class Libraries implements Serializable {
             return ""
         } else {
             if (libs.size() == 1) {
-                return "'${libs.get(0).lib}'"
+                return "'${libs.get(0)}'"
             } else {
-                return "[" + libs.collect { "'${it.lib}'" }.join(",") + "]"
+                return "[" + libs.collect { "'${it}'" }.join(",") + "]"
             }
         }
-    }
-
-    @Nonnull
-    private String importsAsString() {
-        List<String> imports = []
-        libs.each { l ->
-            l.imports.each { i ->
-                imports.add("import ${i}\n")
-            }
-        }
-
-        return imports.join("")
     }
 }

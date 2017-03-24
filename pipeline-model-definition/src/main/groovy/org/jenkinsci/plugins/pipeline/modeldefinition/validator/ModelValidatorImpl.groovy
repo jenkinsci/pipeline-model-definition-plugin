@@ -190,20 +190,26 @@ class ModelValidatorImpl implements ModelValidator {
             errorCollector.error(libraries, Messages.ModelValidatorImpl_EmptySection("libraries"))
             valid = false
         }
+        // TODO: Decide what validation, if any, we want to do for library identifiers.
+
         return valid
     }
 
-    public boolean validateElement(ModelASTLibrary library) {
+    public boolean validateElement(ModelASTImports imports) {
         boolean valid = true
 
-        library.imports.each { i ->
+        if (imports.imports.isEmpty()) {
+            errorCollector.error(imports, Messages.ModelValidatorImpl_EmptySection("imports"))
+            valid = false
+        }
+
+        imports.imports.each { i ->
             String withoutStatic = i.getValue().toString().replaceFirst(/^static /, "")
             if (withoutStatic.find(/\s/) != null) {
-                errorCollector.error(i, Messages.ModelValidatorImpl_InvalidLibraryImportFormat())
+                errorCollector.error(i, Messages.ModelValidatorImpl_InvalidImportFormat())
                 valid = false
             }
         }
-        // TODO: Decide what validation, if any, we want to do for library identifiers.
         return valid
     }
 

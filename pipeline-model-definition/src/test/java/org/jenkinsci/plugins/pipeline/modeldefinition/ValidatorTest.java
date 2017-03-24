@@ -547,9 +547,9 @@ public class ValidatorTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-43035")
     @Test
-    public void invalidImportsInLibrariesDirective() throws Exception {
-        expectError("invalidImportsInLibrariesDirective")
-                .logContains(Messages.ModelValidatorImpl_InvalidLibraryImportFormat())
+    public void invalidImports() throws Exception {
+        expectError("invalidImports")
+                .logContains(Messages.ModelValidatorImpl_InvalidImportFormat())
                 .go();
     }
 
@@ -557,7 +557,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void invalidLibrariesDirectiveParameter() throws Exception {
         expectError("invalidLibrariesDirectiveParameter")
-                .logContains(Messages.ModelParser_InvalidLibraryParameter("banana", "library"))
+                .logContains(Messages.ModelParser_LiteralStringExpected("lib"))
                 .go();
     }
 
@@ -573,10 +573,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void invalidLibrariesDirectiveContent() throws Exception {
         expectError("invalidLibrariesDirectiveContent")
-                .logContains(Messages.ModelValidatorImpl_EmptySection("libraries"),
-                        Messages.ModelParser_ExpectedLibrary("\"oh hi there\""),
-                        Messages.ModelParser_ExpectedLibrary("foo('bar')"),
-                        Messages.ModelParser_ExpectedLibrary("1 + 2"))
+                .logContains(Messages.ModelParser_ExpectedLibrary("foo('bar')"),
+                        Messages.ModelParser_LiteralStringExpected("libraries"))
                 .go();
     }
 

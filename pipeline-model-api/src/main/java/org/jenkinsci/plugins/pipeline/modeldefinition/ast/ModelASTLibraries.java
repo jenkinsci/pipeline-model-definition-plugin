@@ -37,7 +37,7 @@ import java.util.List;
  * @author Andrew Bayer
  */
 public final class ModelASTLibraries extends ModelASTElement {
-    private List<ModelASTLibrary> libs = new ArrayList<>();
+    private List<ModelASTValue> libs = new ArrayList<>();
 
     public ModelASTLibraries(Object sourceLocation) {
         super(sourceLocation);
@@ -46,7 +46,7 @@ public final class ModelASTLibraries extends ModelASTElement {
     @Override
     public JSONArray toJSON() {
         final JSONArray a = new JSONArray();
-        for (ModelASTLibrary v : libs) {
+        for (ModelASTValue v : libs) {
             a.add(v.toJSON());
         }
         return a;
@@ -55,16 +55,13 @@ public final class ModelASTLibraries extends ModelASTElement {
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTLibrary v : libs) {
-            v.validate(validator);
-        }
     }
 
     @Override
     public String toGroovy() {
         StringBuilder result = new StringBuilder("libraries {\n");
-        for (ModelASTLibrary v : libs) {
-            result.append(v.toGroovy());
+        for (ModelASTValue v : libs) {
+            result.append(v.toGroovy()).append("\n");
         }
         result.append("}\n");
         return result.toString();
@@ -73,16 +70,16 @@ public final class ModelASTLibraries extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTLibrary v : libs) {
+        for (ModelASTValue v : libs) {
             v.removeSourceLocation();
         }
     }
 
-    public List<ModelASTLibrary> getLibs() {
+    public List<ModelASTValue> getLibs() {
         return libs;
     }
 
-    public void setLibs(List<ModelASTLibrary> libs) {
+    public void setLibs(List<ModelASTValue> libs) {
         this.libs = libs;
     }
 

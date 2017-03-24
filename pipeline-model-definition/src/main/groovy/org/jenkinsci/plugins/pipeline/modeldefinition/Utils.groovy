@@ -48,6 +48,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Imports
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
@@ -225,9 +227,30 @@ public class Utils {
             }
 
             if (root != null) {
+                root = populateImports(root, model)
+                root = populateLibraries(root, model)
                 root = populateWhen(root, model)
                 root = populateEnv(r, root, model)
             }
+        }
+
+        return root
+    }
+
+    static Root populateLibraries(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+        List<String> libs = model.libraries?.libs?.collect { it.value.toString() }
+
+        if (libs != null && !libs.isEmpty()) {
+            root.libraries = new Libraries().libs(libs)
+        }
+        return root
+    }
+
+    static Root populateImports(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+        List<String> imports = model.imports?.imports?.collect { it.value.toString() }
+
+        if (imports != null && !imports.isEmpty()) {
+            root.imports = new Imports().imports(imports)
         }
 
         return root

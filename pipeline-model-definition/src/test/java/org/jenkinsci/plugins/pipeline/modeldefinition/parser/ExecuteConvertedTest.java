@@ -77,7 +77,8 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
         List<Object[]> result = new ArrayList<>();
         for (String c : AbstractModelDefTest.convertableConfigs()) {
             // Temporary hack to skip Docker and globalLibrary
-            if (!c.equals("agentDocker") && !c.contains("globalLibrary") && !c.contains("jsonSchemaNull")) {
+            if (!c.equals("agentDocker") && !c.contains("globalLibrary") && !c.contains("jsonSchemaNull")
+                    && !c.equals("librariesDirective")) {
                 result.add(new Object[]{c});
             }
         }

@@ -22,19 +22,52 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent none
-    libraries {
-        lib(library: "something@master", imports: ["oh hey there"])
+
+package org.jenkinsci.plugins.pipeline.modeldefinition.model
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+
+import javax.annotation.Nonnull
+
+
+/**
+ * A container for one or more import identifiers.
+ *
+ * @author Andrew Bayer
+ */
+@ToString
+@EqualsAndHashCode
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+public class Imports implements Serializable {
+    List<String> imports = []
+
+    Imports imports(List<String> i) {
+        this.imports.addAll(i)
+        return this
     }
-    stages {
-        stage("foo") {
-            steps {
-                echo "Moving on"
-            }
+
+    List<String> getImports() {
+        return imports
+    }
+
+    @Nonnull
+    public String toImportStatements() {
+        if (imports.isEmpty()) {
+            return ""
+        } else {
+            return importsAsString()
         }
     }
+
+    @Nonnull
+    private String importsAsString() {
+        List<String> strs = []
+        imports.each { l ->
+            strs.add("import ${l}\n")
+        }
+
+        return imports.collect { "import ${it}\n" }.join("") + "\n"
+    }
 }
-
-
-

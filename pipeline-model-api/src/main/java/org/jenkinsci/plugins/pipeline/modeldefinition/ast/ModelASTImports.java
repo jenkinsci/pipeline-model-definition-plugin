@@ -25,85 +25,53 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A single library with possible additional information
+ * A container for one or more import strings
  *
  * @author Andrew Bayer
  */
-public final class ModelASTLibrary extends ModelASTElement {
-    private ModelASTValue library;
+public final class ModelASTImports extends ModelASTElement {
     private List<ModelASTValue> imports = new ArrayList<>();
 
-    public ModelASTLibrary(Object sourceLocation) {
+    public ModelASTImports(Object sourceLocation) {
         super(sourceLocation);
     }
 
     @Override
-    public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        if (library != null) {
-            o.accumulate("library", library.toJSON());
-        }
-
+    public JSONArray toJSON() {
         final JSONArray a = new JSONArray();
         for (ModelASTValue v : imports) {
             a.add(v.toJSON());
         }
-        o.accumulate("imports", a);
-        return o;
+        return a;
     }
 
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
-        if (library != null) {
-            library.validate(validator);
-        }
-        for (ModelASTValue v : imports) {
-            v.validate(validator);
-        }
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("lib(");
-        if (!imports.isEmpty()) {
-            result.append("library: ");
-            if (library != null) {
-                result.append(library.toGroovy());
-            }
-            result.append(", imports: ");
-            result.append(valueListToString(imports));
-        } else {
-            result.append(library.toGroovy());
+        StringBuilder result = new StringBuilder("imports {\n");
+        for (ModelASTValue v : imports) {
+            result.append(v.toGroovy()).append("\n");
         }
-        result.append(")\n");
+        result.append("}\n");
         return result.toString();
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        if (library != null) {
-            library.removeSourceLocation();
-        }
         for (ModelASTValue v : imports) {
             v.removeSourceLocation();
         }
-    }
-
-    public ModelASTValue getLibrary() {
-        return library;
-    }
-
-    public void setLibrary(ModelASTValue library) {
-        this.library = library;
     }
 
     public List<ModelASTValue> getImports() {
@@ -116,9 +84,8 @@ public final class ModelASTLibrary extends ModelASTElement {
 
     @Override
     public String toString() {
-        return "ModelASTLibrary{" +
-                "library=" + library +
-                ", imports=" + imports +
+        return "ModelASTImports{" +
+                "imports=" + imports +
                 "}";
     }
 
@@ -134,11 +101,7 @@ public final class ModelASTLibrary extends ModelASTElement {
             return false;
         }
 
-        ModelASTLibrary that = (ModelASTLibrary) o;
-
-        if (getLibrary() != null ? !getLibrary().equals(that.getLibrary()) : that.getLibrary() != null) {
-            return false;
-        }
+        ModelASTImports that = (ModelASTImports) o;
 
         return getImports() != null ? getImports().equals(that.getImports()) : that.getImports() == null;
 
@@ -147,7 +110,6 @@ public final class ModelASTLibrary extends ModelASTElement {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (getLibrary() != null ? getLibrary().hashCode() : 0);
         result = 31 * result + (getImports() != null ? getImports().hashCode() : 0);
         return result;
     }
