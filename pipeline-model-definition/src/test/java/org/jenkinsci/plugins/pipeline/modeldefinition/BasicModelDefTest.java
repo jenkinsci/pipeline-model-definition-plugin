@@ -620,7 +620,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectInScript() throws Exception {
-        prepLibraryObjectRepo();
         expect("libraryObjectInScript")
                 .logContains("hello")
                 .go();
@@ -629,7 +628,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectDefinedOutsidePipeline() throws Exception {
-        prepLibraryObjectRepo();
         expect("libraryObjectDefinedOutsidePipeline")
                 .logContains("hello");
     }
@@ -637,7 +635,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-43035")
     @Test
     public void libraryDirectiveObjectInWhenExpression() throws Exception {
-        prepLibraryObjectRepo();
         expect("libraryDirectiveObjectInWhenExpression")
                 .logContains("hello",
                         "apple: red",
@@ -651,7 +648,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-43035")
     @Test
     public void libraryDirectiveObjectInScript() throws Exception {
-        prepLibraryObjectRepo();
         expect("libraryDirectiveObjectInScript")
                 .logContains("hello",
                         "apple: red",

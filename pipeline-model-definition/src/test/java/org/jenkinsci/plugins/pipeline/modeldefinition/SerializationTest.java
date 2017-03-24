@@ -49,7 +49,9 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -134,14 +136,6 @@ public class SerializationTest extends AbstractModelDefTest {
 
     @Test
     public void serializationLibrariesGString() throws Exception {
-        otherRepo.init();
-        otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
-        otherRepo.write("vars/myecho.txt", "Says something very special!");
-        otherRepo.git("add", "vars");
-        otherRepo.git("commit", "--message=init");
-        LibraryConfiguration firstLib = new LibraryConfiguration("echo-utils",
-                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
-
         thirdRepo.init();
         thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
         thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
@@ -150,33 +144,14 @@ public class SerializationTest extends AbstractModelDefTest {
         LibraryConfiguration secondLib = new LibraryConfiguration("test",
                 new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
         secondLib.setDefaultVersion("master");
-        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
+        List<LibraryConfiguration> origLibs = new ArrayList<>();
+        origLibs.addAll(GlobalLibraries.get().getLibraries());
+        origLibs.add(secondLib);
+        GlobalLibraries.get().setLibraries(origLibs);
 
         expect("serializationLibrariesGString")
                 .logContains("something special", "from another library")
                 .go();
-    }
-
-    @Test
-    public void serializationTriggersGString() throws Exception {
-        WorkflowRun b = expect("serializationTriggersGString")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Actions)")
-                .go();
-
-        WorkflowJob p = b.getParent();
-
-        PipelineTriggersJobProperty triggersJobProperty = p.getTriggersJobProperty();
-        assertNotNull(triggersJobProperty);
-        assertEquals(1, triggersJobProperty.getTriggers().size());
-        TimerTrigger.DescriptorImpl timerDesc = j.jenkins.getDescriptorByType(TimerTrigger.DescriptorImpl.class);
-
-        Trigger trigger = triggersJobProperty.getTriggerForDescriptor(timerDesc);
-        assertNotNull(trigger);
-
-        assertTrue(trigger instanceof TimerTrigger);
-        TimerTrigger timer = (TimerTrigger) trigger;
-        assertEquals("@daily", timer.getSpec());
     }
 
     @Test

@@ -475,31 +475,35 @@ class ModelParser implements Parser {
                             String possible = EditDistance.findNearest(keyPair.key.key, libraryFields)
                             errorCollector.error(keyPair, Messages.ModelParser_InvalidLibraryParameter(keyPair.key.key, possible))
                         } else if (keyPair.key.key == "library") {
-                            m.library = parseArgument(e.valueExpression)
+                            m.library = parseLiteralStringArgument(e.valueExpression, keyPair.key.key, false)
                         } else if (keyPair.key.key == "imports") {
                             if (e.valueExpression instanceof ConstantExpression) {
-                                m.imports.add(parseLiteralStringArgument(e.valueExpression, keyPair.key.key))
+                                m.imports.add(parseLiteralStringArgument(e.valueExpression, keyPair.key.key, true))
                             } else if (e.valueExpression instanceof ListExpression) {
                                 ((ListExpression)e.valueExpression).expressions.each { i ->
-                                    m.imports.add(parseLiteralStringArgument(i, keyPair.key.key))
+                                    m.imports.add(parseLiteralStringArgument(i, keyPair.key.key, true))
                                 }
                             }
                         }
                     }
-                } else if (a instanceof ConstantExpression && ((ConstantExpression)a).value instanceof String) {
-                    m.library = parseLiteralStringArgument(a, "lib")
+                } else {
+                    m.library = parseLiteralStringArgument(a, "lib", false)
                 }
             }
         }
         return m
     }
 
-    private @Nonnull ModelASTValue parseLiteralStringArgument(Expression expr, String fieldName) {
+    private @Nonnull ModelASTValue parseLiteralStringArgument(Expression expr, String fieldName, boolean isList) {
         if (expr instanceof ConstantExpression && expr.value instanceof String) {
             return parseArgument(expr)
         } else {
             ModelASTValue errorValue = ModelASTValue.fromConstant(null, expr)
-            errorCollector.error(errorValue, Messages.ModelParser_ListOrLiteralStringExpected(fieldName))
+            if (isList) {
+                errorCollector.error(errorValue, Messages.ModelParser_ListOrLiteralStringExpected(fieldName))
+            } else {
+                errorCollector.error(errorValue, Messages.ModelParser_LiteralStringExpected(fieldName))
+            }
             return errorValue
         }
     }

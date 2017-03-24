@@ -142,7 +142,7 @@ public class Converter {
         }
 
         cc.addCompilationCustomizers(ic);
-        cc.addCompilationCustomizers(GroovyShellDecoratorImpl.addLibsAndImports(false))
+        cc.addCompilationCustomizers(GroovyShellDecoratorImpl.addLibsAndImports(fromCps))
 
         if (!fromCps) {
             cc.addCompilationCustomizers(new ASTTransformationCustomizer(new NotInCpsThreadConstructorTransformer()))

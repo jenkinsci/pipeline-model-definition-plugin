@@ -101,9 +101,6 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
 
     @Test
     public void testJSONToASTToGroovyExecution() throws Exception {
-        if (SHOULD_PASS_WITH_LIBRARY_CONFIGS.contains(configName)) {
-            prepLibraryObjectRepo();
-        }
         JSONObject json = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
         assertNotNull("Couldn't parse JSON for " + configName, json);
 

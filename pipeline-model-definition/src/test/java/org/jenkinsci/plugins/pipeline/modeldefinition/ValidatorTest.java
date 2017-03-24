@@ -561,6 +561,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43035")
+    @Test
+    public void invalidLibrarySpecifier() throws Exception {
+        expectError("invalidLibrarySpecifier")
+                .logContains(Messages.ModelParser_LiteralStringExpected("lib"))
+                .go();
+    }
+
     @Issue("JENKINS-38110")
     @Test
     public void invalidLibrariesDirectiveContent() throws Exception {
