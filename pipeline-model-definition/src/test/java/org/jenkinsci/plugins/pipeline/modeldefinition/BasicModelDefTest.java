@@ -46,7 +46,6 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
-import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
@@ -55,7 +54,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
-import java.util.Arrays;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -551,9 +549,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         otherRepo.write("vars/myecho.txt", "Says something very special!");
         otherRepo.git("add", "vars");
         otherRepo.git("commit", "--message=init");
-        GlobalLibraries.get().setLibraries(Collections.singletonList(
-                new LibraryConfiguration("echo-utils",
-                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+        LibraryConfiguration lib = libraryConf("echo-utils", otherRepo.toString(), null);
+        updateLibraries(lib);
 
         expect("libraryAnnotation")
                 .logContains("something special")
@@ -568,18 +565,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         otherRepo.write("vars/myecho.txt", "Says something very special!");
         otherRepo.git("add", "vars");
         otherRepo.git("commit", "--message=init");
-        LibraryConfiguration firstLib = new LibraryConfiguration("echo-utils",
-                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+        LibraryConfiguration firstLib = libraryConf("echo-utils", otherRepo.toString(), null);
 
         thirdRepo.init();
         thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
         thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
         thirdRepo.git("add", "vars");
         thirdRepo.git("commit", "--message=init");
-        LibraryConfiguration secondLib = new LibraryConfiguration("whereFrom",
-                new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
-        secondLib.setDefaultVersion("master");
-        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
+        LibraryConfiguration secondLib = libraryConf("whereFrom", thirdRepo.toString(), "master");
+
+        updateLibraries(firstLib, secondLib);
 
         expect("librariesDirective")
                 .logContains("something special", "from another library")

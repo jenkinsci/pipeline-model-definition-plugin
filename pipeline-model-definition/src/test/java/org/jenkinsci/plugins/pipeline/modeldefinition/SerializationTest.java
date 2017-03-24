@@ -30,17 +30,10 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.LogRotator;
-import hudson.triggers.TimerTrigger;
-import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
-import jenkins.plugins.git.GitSCMSource;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
-import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
-import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
-import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pickles.Pickle;
 import org.jenkinsci.plugins.workflow.support.pickles.SingleTypedPickleFactory;
 import org.jenkinsci.plugins.workflow.support.pickles.XStreamPickle;
@@ -48,10 +41,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

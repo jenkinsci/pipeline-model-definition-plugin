@@ -104,6 +104,8 @@ public abstract class AbstractModelDefTest {
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
+    public static List<LibraryConfiguration> baseLibraries = new ArrayList<>();
+
     @Inject
     WorkflowLibRepository globalLibRepo;
 
@@ -357,12 +359,27 @@ public abstract class AbstractModelDefTest {
                 "}\n");
         zotRepo.git("add", "src");
         zotRepo.git("commit", "--message=init");
-        GlobalLibraries.get().setLibraries(Collections.singletonList(
-                new LibraryConfiguration("zot-stuff",
-                        new SCMSourceRetriever(new GitSCMSource(null, zotRepo.toString(), "", "*", "", true)))));
-
+        baseLibraries.add(new LibraryConfiguration("zot-stuff",
+                new SCMSourceRetriever(new GitSCMSource(null, zotRepo.toString(), "", "*",
+                        "", true))));
+        GlobalLibraries.get().setLibraries(baseLibraries);
     }
 
+    protected LibraryConfiguration libraryConf(String libraryName, String libraryRepo, String defaultVersion) {
+        LibraryConfiguration newLib = new LibraryConfiguration(libraryName,
+                new SCMSourceRetriever(new GitSCMSource(null, libraryRepo, "", "*", "", true)));
+        if (defaultVersion != null) {
+            newLib.setDefaultVersion(defaultVersion);
+        }
+        return newLib;
+    }
+
+    protected void updateLibraries(LibraryConfiguration... libs) {
+        List<LibraryConfiguration> origLibs = new ArrayList<>();
+        origLibs.addAll(baseLibraries);
+        origLibs.addAll(Arrays.asList(libs));
+        GlobalLibraries.get().setLibraries(origLibs);
+    }
 
     protected void prepRepoWithJenkinsfile(String pipelineName) throws Exception {
         prepRepoWithJenkinsfileAndOtherFiles(pipelineName);

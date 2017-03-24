@@ -134,7 +134,6 @@ class ModelParser implements Parser {
                     }
                     libAnnotation.addMember("value", new ListExpression(libExprs))
                 }
-
                 src.scriptClassDummy.addAnnotation(libAnnotation)
             }
             if (!importNames.isEmpty() && fromCps) {
@@ -310,11 +309,52 @@ class ModelParser implements Parser {
             }
         }
 
+        // Append any libraries as well.
+        List<String> literalLibraries = []
+        literalLibraries.addAll(actualLibraries(src.scriptClassDummy.getAnnotations()))
+        if (!literalLibraries.isEmpty()) {
+            List<String> libsToAdd = []
+            if (r.libraries != null) {
+                libsToAdd.addAll(literalLibraries.findAll { l ->
+                    return !(r.libraries.libs.any { it.value.toString() == l})
+                })
+            } else {
+                libsToAdd.addAll(literalLibraries)
+                r.libraries = new ModelASTLibraries(r.sourceLocation)
+            }
+
+            libsToAdd.each { l ->
+                r.libraries.libs.add(ModelASTValue.fromConstant(l, r.libraries.sourceLocation))
+            }
+        }
         return r;
     }
 
     private List<String> actualImports(Collection<ImportNode> nodes) {
         return nodes.findAll { it.getLineNumber() > -1 && it.getColumnNumber() > -1 }.collect { it.getText().substring(7) }
+    }
+
+    private List<String> actualLibraries(Collection<AnnotationNode> nodes) {
+        Collection<AnnotationNode> libNodes = nodes.findAll {
+            return it.getLineNumber() > -1 &&
+                it.getColumnNumber() > -1 &&
+                (it.getClassNode()?.getName() == Library.class.getCanonicalName() ||
+                    it.getClassNode()?.getName() == Library.class.getSimpleName())
+        }
+        List<String> libNames = []
+        libNodes.each { l ->
+            Expression expr = l.getMember("value")
+            if (expr instanceof ConstantExpression && expr.value instanceof String) {
+                libNames.add(expr.value.toString())
+            } else if (expr instanceof ListExpression) {
+                expr.expressions.each { e ->
+                    if (e instanceof ConstantExpression && e.value instanceof String) {
+                        libNames.add(e.value.toString())
+                    }
+                }
+            }
+        }
+        return libNames
     }
 
     public @Nonnull ModelASTStages parseStages(Statement stmt) {
