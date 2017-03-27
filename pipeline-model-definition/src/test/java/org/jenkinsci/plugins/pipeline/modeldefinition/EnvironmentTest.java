@@ -56,6 +56,16 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43137")
+    @Test
+    public void multilineEnvironment() throws Exception {
+        expect("multilineEnvironment")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "MULTILINE is VALID\n\"SO THERE\"")
+                .go();
+    }
+
     @Issue("JENKINS-42771")
     @Test
     public void multiExpressionEnvironment() throws Exception {

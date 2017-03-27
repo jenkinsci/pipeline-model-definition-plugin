@@ -211,7 +211,14 @@ public class ModelInterpreter implements Serializable {
             List<String> evaledEnv = new ArrayList<>()
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
-                evaledEnv.add((String)script.evaluate('"' + envVars.get(i) + '"'))
+                String toEval = envVars.get(i)
+                if (toEval.indexOf('\n') == -1) {
+                    toEval = '"' + (toEval.replace('"', '\\"')) + '"';
+                } else {
+                    toEval = '"""' + (toEval.replace('"""', '\\"\\"\\"')) + '"""';
+                }
+
+                evaledEnv.add((String)script.evaluate(toEval))
             }
             return {
                 script.withEnv(evaledEnv) {
