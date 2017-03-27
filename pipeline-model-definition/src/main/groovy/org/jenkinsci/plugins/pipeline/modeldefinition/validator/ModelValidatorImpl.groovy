@@ -235,7 +235,7 @@ class ModelValidatorImpl implements ModelValidator {
                     errorCollector.error(condition, Messages.ModelValidatorImpl_NoNestedWhenAllowed(condition.name))
                     valid = false
                 } else {
-                    valid = validateDescribable(condition, condition.name, condition.args, model, desc, false)
+                    valid = validateDescribable(condition, condition.name, condition.args, model, false)
                 }
             }
         }
@@ -243,26 +243,52 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
+    private boolean isValidStepParameter(DescribableModel<? extends Describable> model,
+                                         String key,
+                                         ModelASTElement keyElement) {
+        def p = model?.getParameter(key);
+        if (p == null) {
+            String possible = EditDistance.findNearest(key, model.getParameters().collect {
+                it.name
+            })
+            errorCollector.error(keyElement, Messages.ModelValidatorImpl_InvalidStepParameter(key, possible))
+            return false
+        }
+        return true
+    }
+
     private boolean validateDescribable(ModelASTElement element, String name,
                                         ModelASTArgumentList args,
                                         DescribableModel<? extends Describable> model,
-                                        Descriptor desc, boolean takesClosure = false) {
+                                        boolean takesClosure = false) {
         boolean valid = true
 
         if (args instanceof ModelASTNamedArgumentList) {
             ModelASTNamedArgumentList argList = (ModelASTNamedArgumentList) args
 
+            boolean soleDescribableMap = false
+
             argList.arguments.each { k, v ->
+                // Check if there is a sole required parameter and it's describable
+                if (model.getParameter(k.key) == null &&
+                    model?.soleRequiredParameter != null &&
+                    Describable.class.isAssignableFrom(model.soleRequiredParameter.erasedType)) {
+                    // Check if the argument list validates as that describable. If it does, note that so
+                    // we can proceed.
+                    soleDescribableMap = true
+                    valid = validateDescribable(element, model.soleRequiredParameter.name, argList,
+                        new DescribableModel<>(model.soleRequiredParameter.erasedType))
+                    // Note - this return is to break out of the .each loop only
+                    return
+                }
+
+                if (!isValidStepParameter(model, k.key, k)) {
+                    valid = false
+                    // Note - this return is to break out of the .each loop only
+                    return
+                }
 
                 def p = model.getParameter(k.key);
-                if (p == null) {
-                    String possible = EditDistance.findNearest(k.key, model.getParameters().collect {
-                        it.name
-                    })
-                    errorCollector.error(k, Messages.ModelValidatorImpl_InvalidStepParameter(k.key, possible))
-                    valid = false
-                    return;
-                }
 
                 ModelASTKey validateKey = k
 
@@ -281,10 +307,14 @@ class ModelValidatorImpl implements ModelValidator {
                     valid = false
                 }
             }
-            model.parameters.each { p ->
-                if (p.isRequired() && !argList.containsKeyName(p.name)) {
-                    errorCollector.error(element, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
-                    valid = false
+            // Only check for required parameters if we're valid up to this point and we haven't already processed
+            // a sole describable map
+            if (valid && !soleDescribableMap) {
+                model.parameters.each { p ->
+                    if (p.isRequired() && !argList.containsKeyName(p.name)) {
+                        errorCollector.error(element, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
+                        valid = false
+                    }
                 }
             }
         } else if (args instanceof ModelASTPositionalArgumentList) {
@@ -331,7 +361,7 @@ class ModelValidatorImpl implements ModelValidator {
             // No validation needed for code blocks like expression and script
             return true
         } else {
-            return validateDescribable(step, step.name, step.args, model, desc, lookup.stepTakesClosure(desc))
+            return validateDescribable(step, step.name, step.args, model, lookup.stepTakesClosure(desc))
         }
     }
 
@@ -380,15 +410,12 @@ class ModelValidatorImpl implements ModelValidator {
                         }
                         ModelASTKeyValueOrMethodCallPair kvm = (ModelASTKeyValueOrMethodCallPair) a
 
-                        def p = model.getParameter(kvm.key.key);
-                        if (p == null) {
-                            String possible = EditDistance.findNearest(kvm.key.key, model.getParameters().collect {
-                                it.name
-                            })
-                            errorCollector.error(kvm.key, Messages.ModelValidatorImpl_InvalidStepParameter(kvm.key.key, possible))
+                        if (!isValidStepParameter(model, kvm.key.key, kvm.key)) {
                             valid = false
-                            return;
+                            return
                         }
+
+                        def p = model.getParameter(kvm.key.key);
 
                         if (kvm.value instanceof ModelASTMethodCall) {
                             valid = validateElement((ModelASTMethodCall) kvm.value)
