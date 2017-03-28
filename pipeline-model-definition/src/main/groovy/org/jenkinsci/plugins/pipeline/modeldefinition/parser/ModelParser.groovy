@@ -245,6 +245,7 @@ class ModelParser implements Parser {
                                 r.variables[key] = parseArgument(exp.rightExpression)
                                 return
                             } else if (exp.rightExpression instanceof MethodCallExpression) {
+                                // This is special casing exclusively for credentials and will ideally be eliminated.
                                 r.variables[key] = parseInternalFunctionCall((MethodCallExpression) exp.rightExpression)
                                 return
                             } else if (exp.rightExpression instanceof BinaryExpression) {
@@ -311,7 +312,7 @@ class ModelParser implements Parser {
                     return null
                 }
             } else {
-                errorCollector.error(new ModelASTKey(exp), Messages.ModelParser_InvalidEnvironmentOperation())
+                errorCollector.error(new ModelASTKey(exp.leftExpression), Messages.ModelParser_InvalidEnvironmentOperation())
                 return null
             }
         } else {
