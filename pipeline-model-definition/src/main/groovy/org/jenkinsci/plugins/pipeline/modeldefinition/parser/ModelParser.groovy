@@ -302,11 +302,8 @@ class ModelParser implements Parser {
             if (((BinaryExpression)exp.leftExpression).operation.type  == Types.PLUS) {
                 ModelASTValue nestedString = envValueForStringConcat((BinaryExpression) exp.leftExpression)
                 if (nestedString != null) {
-                    if (!nestedString.isLiteral()) {
+                    if (!appendAndIsLiteral(nestedString, builder)) {
                         isLiteral = false
-                        builder.append(Utils.trimQuotes(nestedString.value.toString()))
-                    } else {
-                        builder.append(nestedString.value)
                     }
                 } else {
                     return null
@@ -316,20 +313,12 @@ class ModelParser implements Parser {
                 return null
             }
         } else {
-            ModelASTValue leftExpString = parseArgument(exp.leftExpression)
-            if (!leftExpString.isLiteral()) {
+            if (!envValueFromArbitraryExpression(exp.leftExpression, builder)) {
                 isLiteral = false
-                builder.append(Utils.trimQuotes(leftExpString.value.toString()))
-            } else {
-                builder.append(leftExpString.value)
             }
         }
-        ModelASTValue thisString = parseArgument(exp.rightExpression)
-        if (!thisString.isLiteral()) {
+        if (!envValueFromArbitraryExpression(exp.rightExpression, builder)) {
             isLiteral = false
-            builder.append(Utils.trimQuotes(thisString.value.toString()))
-        } else {
-            builder.append(thisString.value)
         }
 
         String valString = builder.toString()
@@ -339,6 +328,28 @@ class ModelParser implements Parser {
         } else {
             return ModelASTValue.fromGString(valString, exp)
         }
+    }
+
+    private boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
+        if (e instanceof ConstantExpression || e instanceof GStringExpression) {
+            ModelASTValue val = parseArgument(e)
+            return appendAndIsLiteral(val, builder)
+        } else {
+            errorCollector.error(new ModelASTKey(e), Messages.ModelParser_InvalidEnvironmentConcatValue())
+            return true
+        }
+    }
+
+    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
+        if (val == null) {
+            return true
+        } else if (!val.isLiteral()) {
+            builder.append(Utils.trimQuotes(val.value.toString()))
+        } else {
+            builder.append(val.value)
+        }
+        return val.isLiteral()
+
     }
 
     public @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
