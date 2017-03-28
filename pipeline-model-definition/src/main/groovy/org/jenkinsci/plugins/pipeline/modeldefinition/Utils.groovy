@@ -337,8 +337,9 @@ public class Utils {
         }
         return credsTuples
     }
-
-
+    
+    // Note that we're not using StringUtils.strip(s, "'\"") here because we want to make sure we only get rid of
+    // matched pairs of quotes/double-quotes.
     static String trimQuotes(String s) {
         if ((s.startsWith('"') && s.endsWith('"')) ||
             (s.startsWith("'") && s.endsWith("'"))) {
