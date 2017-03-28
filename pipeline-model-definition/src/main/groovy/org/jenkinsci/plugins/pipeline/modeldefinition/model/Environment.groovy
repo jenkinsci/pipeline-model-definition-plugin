@@ -60,20 +60,18 @@ public class Environment implements Serializable {
     public EnvVars resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
         EnvVars newEnv
 
+        EnvVars contextEnv = new EnvVars((Map<String,String>)script.getProperty("params"))
         if (withContext) {
-            EnvVars contextEnv = ((EnvActionImpl)script.getProperty("env")).getEnvironment()
-            newEnv = new EnvVars(contextEnv)
-        } else {
-            newEnv = new EnvVars()
+            contextEnv.overrideExpandingAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
         }
+
+        newEnv = new EnvVars(contextEnv)
 
         if (parent != null) {
             newEnv.overrideExpandingAll(parent.resolveEnvVars(script, false))
         }
 
-        Map<String,String> overrides = getMap().findAll {
-            !(it.value.value instanceof CredentialWrapper)
-        }.collectEntries { k, v ->
+        Map<String,String> overrides = getMap().collectEntries { k, v ->
             if (v.isLiteral || (v.value.toString().startsWith('$'))) {
                 [(k): v.value.toString()]
             } else {
