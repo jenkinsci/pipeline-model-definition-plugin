@@ -35,6 +35,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAc
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
@@ -112,4 +113,13 @@ public class WhenStageTest extends AbstractModelDefTest {
         assertThat(result, hasEntry("status", "ok"));
         assertThat(result, hasEntry("data", hasEntry("result", "success")));
     }
+
+    @Issue("JENKINS-43143")
+    @Test
+    public void paramsInWhenExpression() throws Exception {
+        expect("paramsInWhenExpression")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
 }
