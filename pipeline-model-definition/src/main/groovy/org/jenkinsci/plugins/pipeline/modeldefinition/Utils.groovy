@@ -318,11 +318,26 @@ public class Utils {
     public static String prepareForEvalToString(String s) {
         String toEval = s ?: ""
         if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
-            toEval = '"' + toEval + '"'
+            if (toEval.indexOf('\n') == -1) {
+                toEval = '"' + toEval + '"';
+            } else {
+                toEval = '"""' + toEval + '"""';
+            }
         }
 
         return toEval
     }
+
+    static List<List<String>> getEnvCredentials(Environment environment, CpsScript script) {
+        List<List<String>> credsTuples = new ArrayList<>()
+        if (environment != null) {
+            credsTuples.addAll(environment?.getCredsMap(script)?.collect { k, v ->
+                [k, v]
+            })
+        }
+        return credsTuples
+    }
+
 
     static String trimQuotes(String s) {
         if ((s.startsWith('"') && s.endsWith('"')) ||
@@ -338,14 +353,14 @@ public class Utils {
             Environment env = new Environment()
 
             Map<String, Environment.EnvValue> inMap = [:]
-            Map<String, CredentialWrapper> credMap = [:]
+            Map<String, Environment.EnvValue> credMap = [:]
             inEnv.variables.each { k, v ->
                 if (v instanceof ModelASTInternalFunctionCall) {
                     ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall)v
                     // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
-                    String credId = func.args.first().value
-                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credId, r)
-                    credMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
+                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: func.args.first().isLiteral(),
+                        value: func.args.first().value)
+                    credMap.put(k.key, envVal)
                 } else {
                     ModelASTValue val = (ModelASTValue)v
                     Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: val.isLiteral(), value: val.value)

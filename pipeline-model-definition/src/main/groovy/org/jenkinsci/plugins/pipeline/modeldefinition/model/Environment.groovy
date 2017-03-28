@@ -39,13 +39,13 @@ import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 public class Environment implements Serializable {
     Map<String,EnvValue> valueMap = new TreeMap<>()
     // TODO: Actually do stuff with creds again
-    Map<String,CredentialWrapper> credsMap = new TreeMap<>()
+    Map<String,EnvValue> credsMap = new TreeMap<>()
 
     public void setValueMap(Map<String,EnvValue> inMap) {
         this.valueMap.putAll(inMap)
     }
 
-    public void setCredsMap(Map<String,CredentialWrapper> inMap) {
+    public void setCredsMap(Map<String,EnvValue> inMap) {
         this.credsMap.putAll(inMap)
     }
 
@@ -53,8 +53,16 @@ public class Environment implements Serializable {
         return valueMap
     }
 
-    public Map<String,CredentialWrapper> getCredsMap() {
-        return credsMap
+    public Map<String,String> getCredsMap(CpsScript script) {
+        Map<String,String> resolvedMap = new TreeMap<>()
+        EnvVars contextEnv = new EnvVars((Map<String,String>)script.getProperty("params"))
+        contextEnv.overrideExpandingAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
+
+        credsMap.each { k, v ->
+            resolvedMap.put(k, Utils.trimQuotes(contextEnv.expand(v.value)))
+        }
+
+        return resolvedMap
     }
 
     public EnvVars resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {

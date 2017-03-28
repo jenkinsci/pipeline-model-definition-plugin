@@ -121,16 +121,6 @@ public class Root implements NestedModel, Serializable {
         }
     }
 
-    Map<String, CredentialWrapper> getEnvCredentials() {
-        Map<String, CredentialWrapper> m = [:]
-        environment?.credsMap?.each {k, v ->
-            if (v instanceof  CredentialWrapper) {
-                m["${k}"] = v;
-            }
-        }
-        return m
-    }
-
     @Override
     public void modelFromMap(Map<String,Object> m) {
         m.each { k, v ->
