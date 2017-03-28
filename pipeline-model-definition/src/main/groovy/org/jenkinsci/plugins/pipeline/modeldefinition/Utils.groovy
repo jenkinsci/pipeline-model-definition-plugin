@@ -324,25 +324,37 @@ public class Utils {
         return toEval
     }
 
+    static String trimQuotes(String s) {
+        if ((s.startsWith('"') && s.endsWith('"')) ||
+            (s.startsWith("'") && s.endsWith("'"))) {
+            return trimQuotes(s.substring(1, s.length() - 1))
+        } else {
+            return s
+        }
+    }
+
     static Environment environmentFromAST(WorkflowRun r, ModelASTEnvironment inEnv) {
         if (inEnv != null) {
             Environment env = new Environment()
 
-            Map<String, Object> inMap = [:]
+            Map<String, Environment.EnvValue> inMap = [:]
+            Map<String, CredentialWrapper> credMap = [:]
             inEnv.variables.each { k, v ->
                 if (v instanceof ModelASTInternalFunctionCall) {
                     ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall)v
                     // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
                     String credId = func.args.first().value
                     CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credId, r)
-                    inMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
+                    credMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
                 } else {
-                    inMap.put(k.key, ((ModelASTValue)v).value)
+                    ModelASTValue val = (ModelASTValue)v
+                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: val.isLiteral(), value: val.value)
+                    inMap.put(k.key, envVal)
                 }
             }
 
-            env.modelFromMap(inMap)
-
+            env.setValueMap(inMap)
+            env.setCredsMap(credMap)
             return env
         } else {
             return null

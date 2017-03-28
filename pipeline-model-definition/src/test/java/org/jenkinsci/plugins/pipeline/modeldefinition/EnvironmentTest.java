@@ -56,6 +56,16 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43143")
+    @Test
+    public void paramsInEnvironment() throws Exception {
+        expect("paramsInEnvironment")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "_UNDERSCORE is VALIDAValue")
+                .go();
+    }
+
     @Issue("JENKINS-43137")
     @Test
     public void multilineEnvironment() throws Exception {

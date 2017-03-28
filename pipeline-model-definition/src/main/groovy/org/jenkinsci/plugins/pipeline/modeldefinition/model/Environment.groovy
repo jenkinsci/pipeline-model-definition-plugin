@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.EnvVars
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
@@ -35,7 +36,26 @@ import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Environment extends MappedClosure<String,Environment> implements PropertiesToMap {
+public class Environment implements Serializable {
+    Map<String,EnvValue> valueMap = new TreeMap<>()
+    // TODO: Actually do stuff with creds again
+    Map<String,CredentialWrapper> credsMap = new TreeMap<>()
+
+    public void setValueMap(Map<String,EnvValue> inMap) {
+        this.valueMap.putAll(inMap)
+    }
+
+    public void setCredsMap(Map<String,CredentialWrapper> inMap) {
+        this.credsMap.putAll(inMap)
+    }
+
+    public Map<String,EnvValue> getMap() {
+        return valueMap
+    }
+
+    public Map<String,CredentialWrapper> getCredsMap() {
+        return credsMap
+    }
 
     public EnvVars resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
         EnvVars newEnv
@@ -52,9 +72,13 @@ public class Environment extends MappedClosure<String,Environment> implements Pr
         }
 
         Map<String,String> overrides = getMap().findAll {
-            !(it.value instanceof CredentialWrapper)
+            !(it.value.value instanceof CredentialWrapper)
         }.collectEntries { k, v ->
-            [(k): v.toString()]
+            if (v.isLiteral || (v.value.toString().startsWith('$'))) {
+                [(k): v.value.toString()]
+            } else {
+                [(k): Utils.trimQuotes(v.value.toString())]
+            }
         }
 
         newEnv.overrideExpandingAll(overrides)
@@ -62,4 +86,8 @@ public class Environment extends MappedClosure<String,Environment> implements Pr
         return newEnv
     }
 
+    public static class EnvValue implements Serializable {
+        public boolean isLiteral
+        public Object value
+    }
 }

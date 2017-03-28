@@ -99,7 +99,7 @@ public class Stage implements NestedModel, Serializable {
     List<String> getEnvVars(Root root, CpsScript script) {
         if (environment != null) {
             return environment.resolveEnvVars(script, true, root.environment).findAll {
-                it.key in environment.keySet()
+                it.key in environment.getMap().keySet()
             }.collect { k, v ->
                 "${k}=${v}"
             }
@@ -108,17 +108,15 @@ public class Stage implements NestedModel, Serializable {
         }
     }
 
-    @Nonnull
     Map<String, CredentialWrapper> getEnvCredentials() {
         Map<String, CredentialWrapper> m = [:]
-        environment.each {k, v ->
+        environment?.credsMap?.each {k, v ->
             if (v instanceof  CredentialWrapper) {
                 m["${k}"] = v;
             }
         }
         return m
     }
-
 
     @Override
     public void modelFromMap(Map<String,Object> m) {

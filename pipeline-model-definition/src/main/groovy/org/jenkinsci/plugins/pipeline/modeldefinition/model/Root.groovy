@@ -112,7 +112,7 @@ public class Root implements NestedModel, Serializable {
     List<String> getEnvVars(CpsScript script) {
         if (environment != null) {
             return environment.resolveEnvVars(script, true).findAll {
-                it.key in environment.keySet()
+                it.key in environment.getMap().keySet()
             }.collect { k, v ->
                 "${k}=${v}"
             }
@@ -123,7 +123,7 @@ public class Root implements NestedModel, Serializable {
 
     Map<String, CredentialWrapper> getEnvCredentials() {
         Map<String, CredentialWrapper> m = [:]
-        environment.each {k, v ->
+        environment?.credsMap?.each {k, v ->
             if (v instanceof  CredentialWrapper) {
                 m["${k}"] = v;
             }

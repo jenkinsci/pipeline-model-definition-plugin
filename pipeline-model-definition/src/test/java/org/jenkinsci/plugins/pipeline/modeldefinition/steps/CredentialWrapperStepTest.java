@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -99,6 +100,18 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         expect("usernamePassword").runFromRepo(false)
                 .logNotContains(usernamePasswordPassword, "FOO_USR is " + usernamePasswordUsername)
                 .logContains("FOO_USR is *")
+                .archives("combined/foo.txt", allOf(containsString(usernamePasswordUsername), containsString(usernamePasswordPassword)))
+                .archives("foo_usr.txt", usernamePasswordUsername).archives("foo_psw.txt", usernamePasswordPassword).go();
+    }
+
+
+    @Issue("JENKINS-43143")
+    @Test
+    public void paramsInCreds() throws Exception {
+        expect("paramsInCreds").runFromRepo(false)
+                .logNotContains(usernamePasswordPassword, "FOO_USR is " + usernamePasswordUsername)
+                .logContains("FOO_USR is *")
+                .logContains("CONTAINS_CREDS is FOOcredentials")
                 .archives("combined/foo.txt", allOf(containsString(usernamePasswordUsername), containsString(usernamePasswordPassword)))
                 .archives("foo_usr.txt", usernamePasswordUsername).archives("foo_psw.txt", usernamePasswordPassword).go();
     }
