@@ -213,7 +213,6 @@ public class ModelInterpreter implements Serializable {
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
                 String toEval = Utils.prepareForEvalToString(envVars.get(i))
-
                 evaledEnv.add((String)script.evaluate(toEval))
             }
             return {

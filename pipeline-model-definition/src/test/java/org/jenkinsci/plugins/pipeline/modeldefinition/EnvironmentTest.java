@@ -105,6 +105,17 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void envDotCrossRef() throws Exception {
+        expect("envDotCrossRef")
+                .logContains("[Pipeline] { (foo)",
+                        "MICROSERVICE_NAME is directory",
+                        "IMAGE_NAME is quay.io/svc/directory",
+                        "IMAGE_ID is quay.io/svc/directory:master_1",
+                        "TAG_NAME is master_1")
+                .go();
+    }
+
     @Issue("JENKINS-41890")
     @Test
     public void environmentWithWorkspace() throws Exception {

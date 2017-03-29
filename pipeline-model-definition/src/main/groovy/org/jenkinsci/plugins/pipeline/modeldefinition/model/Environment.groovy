@@ -25,9 +25,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.EnvVars
+import org.apache.commons.lang.StringUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 
 /**
@@ -38,7 +39,6 @@ import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Environment implements Serializable {
     Map<String,EnvValue> valueMap = new TreeMap<>()
-    // TODO: Actually do stuff with creds again
     Map<String,EnvValue> credsMap = new TreeMap<>()
 
     public void setValueMap(Map<String,EnvValue> inMap) {
@@ -65,31 +65,86 @@ public class Environment implements Serializable {
         return resolvedMap
     }
 
-    public EnvVars resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
-        EnvVars newEnv
-
-        EnvVars contextEnv = new EnvVars((Map<String,String>)script.getProperty("params"))
-        if (withContext) {
-            contextEnv.overrideExpandingAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
-        }
-
-        newEnv = new EnvVars(contextEnv)
-
-        if (parent != null) {
-            newEnv.overrideExpandingAll(parent.resolveEnvVars(script, false))
-        }
-
+    public Map<String,String> resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
         Map<String,String> overrides = getMap().collectEntries { k, v ->
+            String val = v.value.toString()
+            if (!v.isLiteral) {
+                val = replaceEnvDotInCurlies(val)
+            }
             if (v.isLiteral || (v.value.toString().startsWith('$'))) {
-                [(k): v.value.toString()]
+                [(k): val]
             } else {
-                [(k): Utils.trimQuotes(v.value.toString())]
+                [(k): Utils.trimQuotes(val)]
             }
         }
 
-        newEnv.overrideExpandingAll(overrides)
+        Map<String,String> alreadySet = new TreeMap<>()
+        alreadySet.putAll(CpsThread.current()?.getExecution()?.getShell()?.getContext()?.variables?.findAll { k, v ->
+            k instanceof String && v instanceof String
+        })
+        if (withContext) {
+            alreadySet.putAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
+        }
+        alreadySet.putAll((Map<String,String>)script.getProperty("params"))
+        if (parent != null) {
+            alreadySet.putAll(parent.resolveEnvVars(script, false))
+        }
 
-        return newEnv
+        List<String> unsetKeys = []
+        unsetKeys.addAll(overrides.keySet())
+
+        GroovyShell shell = new GroovyShell(new Binding(alreadySet))
+        shell.setProperty("params", (Map<String,String>)script.getProperty("params"))
+
+        int unsuccessfulCount = 0
+        while (!unsetKeys.isEmpty() && unsuccessfulCount <= overrides.size()) {
+            String nextKey = unsetKeys.first()
+
+            unsetKeys.remove(nextKey)
+            try {
+                String resolved = overrides.get(nextKey)
+                // Only do the eval here if the string actually contains another environment variable we know about.
+                // This is to defer evaluation of things like ${WORKSPACE} or currentBuild.getNumber() until later.
+                if (containsVariable(resolved, overrides.keySet()) ||
+                    containsVariable(resolved, alreadySet.keySet())) {
+                    resolved = shell.evaluate(Utils.prepareForEvalToString(resolved))
+                }
+
+                alreadySet.put(nextKey, resolved)
+                shell.setVariable(nextKey, resolved)
+                unsuccessfulCount = 0
+            } catch (_) {
+                unsuccessfulCount++
+                unsetKeys.add(nextKey)
+            }
+        }
+
+        return alreadySet
+    }
+
+    private boolean containsVariable(String var, Set<String> keys) {
+        def group = (var =~ /(\$\{.*?\})/)
+        return group.any { m ->
+            keys.any { k ->
+                String curlies = m[1]
+                return curlies.contains(k)
+            }
+        }
+    }
+
+    private String replaceEnvDotInCurlies(String inString) {
+        def group = (inString =~ /(\$\{.*?\})/)
+        def outString = inString
+
+        group.each { m ->
+            String toReplace = m[1]
+            String replaced = toReplace.replaceAll(/env\.([a-zA-Z_][a-zA-Z0-9_]*?)/,
+                { full, part -> "${part}" })
+
+            outString = StringUtils.replace(outString, toReplace, replaced)
+        }
+
+        return outString
     }
 
     public static class EnvValue implements Serializable {
