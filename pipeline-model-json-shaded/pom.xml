@@ -84,6 +84,10 @@
               <pattern>org.json</pattern>
               <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.org.json</shadedPattern>
             </relocation>
+            <relocation>
+              <pattern>com.github.fge</pattern>
+              <shadedPattern>org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge</shadedPattern>
+            </relocation>
           </relocations>
           <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
         </configuration>
