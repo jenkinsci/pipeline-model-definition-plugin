@@ -5,7 +5,7 @@
 * Approved Date: March 21, 2017
 * Target Release: 1.3
 * JIRA: [JENKINS-41334](https://issues.jenkins-ci.org/browse/JENKINS-41334)
-* Status: Aprpoved
+* Status: Approved
 
 ### Problem Statement
 
