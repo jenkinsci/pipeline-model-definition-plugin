@@ -34,6 +34,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,14 +76,20 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
     @Parameterized.Parameters(name="Name: {0}")
     public static Iterable<Object[]> generateParameters() {
         List<Object[]> result = new ArrayList<>();
-        for (String c : AbstractModelDefTest.SHOULD_PASS_CONFIGS) {
+        for (String c : AbstractModelDefTest.convertableConfigs()) {
             // Temporary hack to skip Docker and globalLibrary
-            if (!c.equals("agentDocker") && !c.contains("globalLibrary") && !c.contains("jsonSchemaNull")) {
+            if (!c.equals("agentDocker") && !c.contains("globalLibrary") && !c.contains("jsonSchemaNull")
+                    && !c.equals("librariesDirective")) {
                 result.add(new Object[]{c});
             }
         }
 
         return result;
+    }
+
+    @Before
+    public void setLibs() throws Exception {
+        prepLibraryObjectRepo(zotRepo);
     }
 
     @Test

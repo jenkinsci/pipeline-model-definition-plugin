@@ -185,11 +185,19 @@
         }
       ]
     },
+    "imports": {
+      "description": "One or more import identifiers to load",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/rawArgument"
+      },
+      "minItems": 1
+    },
     "libraries": {
       "description": "One or more shared library identifiers to load",
       "type": "array",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/rawArgument"
       },
       "minItems": 1
     },
@@ -519,6 +527,9 @@
         },
         "libraries": {
           "$ref": "#/definitions/libraries"
+        },
+        "imports": {
+          "$ref": "#/definitions/imports"
         }
       },
       "required": [

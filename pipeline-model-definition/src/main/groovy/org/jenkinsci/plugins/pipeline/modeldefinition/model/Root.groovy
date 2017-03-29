@@ -31,6 +31,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
+import javax.annotation.Nonnull
+
 /**
  * Root-level configuration object for the entire model.
  *
@@ -57,6 +59,8 @@ public class Root implements NestedModel, Serializable {
     Parameters parameters
 
     Libraries libraries
+
+    Imports imports
 
     Root stages(Stages s) {
         this.stages = s
@@ -100,6 +104,11 @@ public class Root implements NestedModel, Serializable {
 
     Root libraries(Libraries l) {
         this.libraries = l
+        return this
+    }
+
+    Root imports(Imports i) {
+        this.imports = i
         return this
     }
 
@@ -152,5 +161,17 @@ public class Root implements NestedModel, Serializable {
             return false
         }
 
+    }
+
+    /**
+     * Adds the {@code @Library(...)} annotations and {@code import ...} statements to a string that will be evaluated.
+     * @param input A non-null string of Groovy code we'll be evaluating
+     * @return That string, prepended with the {@code @Library(...)} annotations and {@code import ...} statements
+     *   appropriate, if {@link Libraries} or {@link Imports} are defined
+     */
+    public String prependLibrariesAndImports(@Nonnull String input) {
+        String prependLibrary = libraries?.toLibraryAnnotations() ?: ""
+        String prependImports = imports?.toImportStatements() ?: ""
+        return prependLibrary + prependImports + input
     }
 }

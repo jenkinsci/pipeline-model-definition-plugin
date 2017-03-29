@@ -21,6 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
@@ -31,44 +33,41 @@ import javax.annotation.Nonnull
 
 
 /**
- * A container for one or more library identifiers, within the build, in the order they're declared.
+ * A container for one or more import identifiers.
  *
  * @author Andrew Bayer
  */
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Libraries implements Serializable {
-    List<String> libs = []
+public class Imports implements Serializable {
+    List<String> imports = []
 
-    Libraries libs(List<String> l) {
-        this.libs.addAll(l)
+    Imports imports(List<String> i) {
+        this.imports.addAll(i)
         return this
     }
 
-    List<String> getLibs() {
-        return libs
+    List<String> getImports() {
+        return imports
     }
 
     @Nonnull
-    public String toLibraryAnnotations() {
-        if (libs.isEmpty()) {
+    public String toImportStatements() {
+        if (imports.isEmpty()) {
             return ""
         } else {
-            return "@Library(${libsAnnotationValue()}) _\n"
+            return importsAsString()
         }
     }
 
     @Nonnull
-    private String libsAnnotationValue() {
-        if (libs.isEmpty()) {
-            return ""
-        } else {
-            if (libs.size() == 1) {
-                return "'${libs.get(0)}'"
-            } else {
-                return "[" + libs.collect { "'${it}'" }.join(",") + "]"
-            }
+    private String importsAsString() {
+        List<String> strs = []
+        imports.each { l ->
+            strs.add("import ${l}\n")
         }
+
+        return imports.collect { "import ${it}\n" }.join("") + "\n"
     }
 }

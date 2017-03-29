@@ -124,6 +124,9 @@ class JSONParser implements Parser {
                     case 'libraries':
                         pipelineDef.libraries = parseLibraries(pipelineJson.append(JsonPointer.of("libraries")))
                         break
+                    case 'imports':
+                        pipelineDef.imports = parseImports(pipelineJson.append(JsonPointer.of("imports")))
+                        break
                     default:
                         errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(sectionName))
                 }
@@ -214,13 +217,23 @@ class JSONParser implements Parser {
     public @CheckForNull ModelASTLibraries parseLibraries(JsonTree j) {
         ModelASTLibraries l = new ModelASTLibraries(j)
 
-        JsonTree libsTree = j.append(JsonPointer.of("libraries"))
-        libsTree.node.eachWithIndex { JsonNode entry, int i ->
-            JsonTree thisNode = libsTree.append(JsonPointer.of(i))
-            l.libs.add(ModelASTValue.fromConstant(thisNode.node.asText(), thisNode))
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree thisNode = j.append(JsonPointer.of(i))
+            l.libs.add(parseValue(thisNode))
         }
 
         return l
+    }
+
+    public @CheckForNull ModelASTImports parseImports(JsonTree j) {
+        ModelASTImports imports = new ModelASTImports(j)
+
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            JsonTree thisNode = j.append(JsonPointer.of(i))
+            imports.imports.add(parseValue(thisNode))
+        }
+
+        return imports
     }
 
     public @CheckForNull ModelASTOptions parseOptions(JsonTree j) {

@@ -47,7 +47,6 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
-import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
@@ -56,7 +55,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
-import java.util.Arrays;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -564,9 +562,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         otherRepo.write("vars/myecho.txt", "Says something very special!");
         otherRepo.git("add", "vars");
         otherRepo.git("commit", "--message=init");
-        GlobalLibraries.get().setLibraries(Collections.singletonList(
-                new LibraryConfiguration("echo-utils",
-                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+        LibraryConfiguration lib = libraryConf("echo-utils", otherRepo.toString(), null);
+        prepLibraryObjectRepo(zotRepo, lib);
 
         expect("libraryAnnotation")
                 .logContains("something special")
@@ -581,18 +578,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         otherRepo.write("vars/myecho.txt", "Says something very special!");
         otherRepo.git("add", "vars");
         otherRepo.git("commit", "--message=init");
-        LibraryConfiguration firstLib = new LibraryConfiguration("echo-utils",
-                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+        LibraryConfiguration firstLib = libraryConf("echo-utils", otherRepo.toString(), null);
 
         thirdRepo.init();
         thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
         thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
         thirdRepo.git("add", "vars");
         thirdRepo.git("commit", "--message=init");
-        LibraryConfiguration secondLib = new LibraryConfiguration("whereFrom",
-                new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
-        secondLib.setDefaultVersion("master");
-        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
+        LibraryConfiguration secondLib = libraryConf("whereFrom", thirdRepo.toString(), "master");
+
+        prepLibraryObjectRepo(zotRepo, firstLib, secondLib);
 
         expect("librariesDirective")
                 .logContains("something special", "from another library")
@@ -633,24 +628,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectInScript() throws Exception {
-        otherRepo.init();
-        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
-                "\n" +
-                "class Zot implements Serializable {\n" +
-                "  def steps\n" +
-                "  Zot(steps){\n" +
-                "    this.steps = steps\n" +
-                "  }\n" +
-                "  def echo(msg) {\n" +
-                "    steps.sh \"echo ${msg}\"\n" +
-                "  }\n" +
-                "}\n");
-        otherRepo.git("add", "src");
-        otherRepo.git("commit", "--message=init");
-        GlobalLibraries.get().setLibraries(Collections.singletonList(
-                new LibraryConfiguration("zot-stuff",
-                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
-
+        prepLibraryObjectRepo(zotRepo);
         expect("libraryObjectInScript")
                 .logContains("hello")
                 .go();
@@ -659,26 +637,36 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectDefinedOutsidePipeline() throws Exception {
-        otherRepo.init();
-        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
-                "\n" +
-                "class Zot implements Serializable {\n" +
-                "  def steps\n" +
-                "  Zot(steps){\n" +
-                "    this.steps = steps\n" +
-                "  }\n" +
-                "  def echo(msg) {\n" +
-                "    steps.sh \"echo ${msg}\"\n" +
-                "  }\n" +
-                "}\n");
-        otherRepo.git("add", "src");
-        otherRepo.git("commit", "--message=init");
-        GlobalLibraries.get().setLibraries(Collections.singletonList(
-                new LibraryConfiguration("zot-stuff",
-                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
-
         expect("libraryObjectDefinedOutsidePipeline")
                 .logContains("hello");
+    }
+
+    @Issue("JENKINS-43035")
+    @Test
+    public void libraryDirectiveObjectInWhenExpression() throws Exception {
+        prepLibraryObjectRepo(zotRepo);
+        expect("libraryDirectiveObjectInWhenExpression")
+                .logContains("hello",
+                        "apple: red",
+                        "banana: yellow",
+                        "one static",
+                        "two static",
+                        "three static")
+                .go();
+    }
+
+    @Issue("JENKINS-43035")
+    @Test
+    public void libraryDirectiveObjectInScript() throws Exception {
+        prepLibraryObjectRepo(zotRepo);
+        expect("libraryDirectiveObjectInScript")
+                .logContains("hello",
+                        "apple: red",
+                        "banana: yellow",
+                        "one static",
+                        "two static",
+                        "three static")
+                .go();
     }
 
     @Issue("JENKINS-40188")

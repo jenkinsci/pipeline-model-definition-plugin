@@ -30,6 +30,10 @@ import hudson.model.Describable
 import hudson.model.Descriptor
 import jenkins.model.Jenkins
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.ImportNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -49,6 +53,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorIm
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.libs.Library
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -86,6 +91,78 @@ class ModelParser implements Parser {
         this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
+    public void addImportsToAST(boolean fromCps = false) {
+        ModuleNode src = sourceUnit.AST
+        def pst = findPipelineStep(src)
+        if (pst != null) {
+            def pipelineBlock = matchBlockStatement(pst);
+            Statement libStmt = asBlock(pipelineBlock.body.code).statements.find { Statement s ->
+                matchMethodCall(s)?.methodAsString == "libraries"
+            }
+            Statement importStmt = asBlock(pipelineBlock.body.code).statements.find { Statement s ->
+                matchMethodCall(s)?.methodAsString == "imports"
+            }
+            List<String> libNames = []
+            List<String> importNames = []
+            ModelASTLibraries libraries = null
+            ModelASTImports imports = null
+            if (libStmt != null) {
+                libraries = parseLibraries(libStmt)
+                libraries.validate(validator)
+            }
+            if (importStmt != null) {
+                imports = parseImports(importStmt)
+                imports.validate(validator)
+            }
+
+            if (errorCollector.errorCount == 0) {
+                libraries?.libs?.each { l ->
+                    libNames.add(l.value.toString())
+                }
+                imports?.imports?.each { i ->
+                    importNames.add(i.value.toString())
+                }
+            }
+
+            if (!libNames.isEmpty()) {
+                AnnotationNode libAnnotation = new AnnotationNode(ClassHelper.make(Library.class))
+                if (libNames.size() == 1) {
+                    libAnnotation.addMember("value", new ConstantExpression(libNames[0]))
+                } else {
+                    List<Expression> libExprs = libNames.collect {
+                        new ConstantExpression(it)
+                    }
+                    libAnnotation.addMember("value", new ListExpression(libExprs))
+                }
+                src.scriptClassDummy.addAnnotation(libAnnotation)
+            }
+            if (!importNames.isEmpty() && fromCps) {
+                importNames.unique().each { i ->
+                    boolean isStatic = i.startsWith("static ")
+                    String className = i.replaceFirst(/^static /, "")
+                    if (className.endsWith(".*")) {
+                        className = className.substring(0, className.length() - 2)
+                        if (isStatic) {
+                            src.addStaticStarImport(className, ClassHelper.make(className))
+                        } else {
+                            src.addStarImport(className + ".")
+                        }
+                    } else {
+                        if (isStatic) {
+                            int lastPeriod = className.lastIndexOf(".")
+                            String fieldName = className.substring(lastPeriod + 1)
+                            className = className.substring(0, lastPeriod)
+                            src.addStaticImport(ClassHelper.make(className), fieldName, fieldName)
+                        } else {
+                            ClassNode n = ClassHelper.make(className)
+                            src.addImport(n.nameWithoutPackage, n)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public @CheckForNull ModelASTPipelineDef parse() {
         return parse(sourceUnit.AST);
     }
@@ -109,6 +186,12 @@ class ModelParser implements Parser {
         }
     }
 
+    private Statement findPipelineStep(ModuleNode src) {
+        return src.statementBlock.statements.find {
+            matchMethodCall(it)?.methodAsString == ModelStepLoader.STEP_NAME
+        }
+    }
+
     /**
      * Given a Groovy AST that represents a parsed source code, parses
      * that into {@link ModelASTPipelineDef}
@@ -116,11 +199,8 @@ class ModelParser implements Parser {
     public @CheckForNull ModelASTPipelineDef parse(ModuleNode src) {
         // first, quickly ascertain if this module should be parsed at all
         // TODO: 'use script' escape hatch
-        def pst = src.statementBlock.statements.find {
-            matchMethodCall(it)?.methodAsString == ModelStepLoader.STEP_NAME
-        }
-
-        if (pst==null) {
+        def pst = findPipelineStep(src)
+        if (pst == null) {
             // Check if there's a 'pipeline' step somewhere nexted within the other statements and error out if that's the case.
             src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
             return null; // no 'pipeline', so this doesn't apply
@@ -177,6 +257,9 @@ class ModelParser implements Parser {
                     case 'libraries':
                         r.libraries = parseLibraries(stmt)
                         break
+                    case 'imports':
+                        r.imports = parseImports(stmt)
+                        break
                     case 'properties':
                         errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedProperties())
                         break
@@ -201,7 +284,77 @@ class ModelParser implements Parser {
 
         r.validate(validator)
 
+        // Append any literal import statements as well. Remove the leading "import " from them.
+        // Note that we're doing this *post* validation. Why? Because we can trust that existing import statements
+        // will result in valid import directive entries.
+        List<String> literalImports = []
+        literalImports.addAll(actualImports(src.imports))
+        literalImports.addAll(actualImports(src.starImports))
+        literalImports.addAll(actualImports(src.staticImports.values()))
+        literalImports.addAll(actualImports(src.staticStarImports.values()))
+
+        if (!literalImports.isEmpty()) {
+            List<String> importsToAdd = []
+            if (r.imports != null) {
+                importsToAdd.addAll(literalImports.findAll { i ->
+                    return !(r.imports.imports.any { it.value.toString() == i })
+                })
+            } else {
+                importsToAdd.addAll(literalImports)
+                r.imports = new ModelASTImports(r.sourceLocation)
+            }
+
+            importsToAdd.each { i ->
+                r.imports.imports.add(ModelASTValue.fromConstant(i, r.imports.sourceLocation))
+            }
+        }
+
+        // Append any libraries as well.
+        List<String> literalLibraries = []
+        literalLibraries.addAll(actualLibraries(src.scriptClassDummy.getAnnotations()))
+        if (!literalLibraries.isEmpty()) {
+            List<String> libsToAdd = []
+            if (r.libraries != null) {
+                libsToAdd.addAll(literalLibraries.findAll { l ->
+                    return !(r.libraries.libs.any { it.value.toString() == l})
+                })
+            } else {
+                libsToAdd.addAll(literalLibraries)
+                r.libraries = new ModelASTLibraries(r.sourceLocation)
+            }
+
+            libsToAdd.each { l ->
+                r.libraries.libs.add(ModelASTValue.fromConstant(l, r.libraries.sourceLocation))
+            }
+        }
         return r;
+    }
+
+    private List<String> actualImports(Collection<ImportNode> nodes) {
+        return nodes.findAll { it.getLineNumber() > -1 && it.getColumnNumber() > -1 }.collect { it.getText().substring(7) }
+    }
+
+    private List<String> actualLibraries(Collection<AnnotationNode> nodes) {
+        Collection<AnnotationNode> libNodes = nodes.findAll {
+            return it.getLineNumber() > -1 &&
+                it.getColumnNumber() > -1 &&
+                (it.getClassNode()?.getName() == Library.class.getCanonicalName() ||
+                    it.getClassNode()?.getName() == Library.class.getSimpleName())
+        }
+        List<String> libNames = []
+        libNodes.each { l ->
+            Expression expr = l.getMember("value")
+            if (expr instanceof ConstantExpression && expr.value instanceof String) {
+                libNames.add(expr.value.toString())
+            } else if (expr instanceof ListExpression) {
+                expr.expressions.each { e ->
+                    if (e instanceof ConstantExpression && e.value instanceof String) {
+                        libNames.add(e.value.toString())
+                    }
+                }
+            }
+        }
+        return libNames
     }
 
     public @Nonnull ModelASTStages parseStages(Statement stmt) {
@@ -349,6 +502,12 @@ class ModelParser implements Parser {
         return builder.toString()
     }
 
+    /**
+     * Parse the libraries directive
+     * @param stmt The libraries directive
+     * @param skipErrors Whether we should report errors - skip if we're being called for import handling
+     * @return The created {@link ModelASTLibraries} instance.
+     */
     public @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
         def r = new ModelASTLibraries(stmt);
 
@@ -358,30 +517,78 @@ class ModelParser implements Parser {
             return r
         } else {
             eachStatement(m.body.code) {
-                ModelASTMethodCall methCall = new ModelASTMethodCall(it)
-                def mc = matchMethodCall(it);
-                if (mc == null || mc.methodAsString != "lib") {
-                    errorCollector.error(r,Messages.ModelParser_ExpectedLibrary(getSourceText(it)));
-                } else if (matchBlockStatement(it) != null) {
-                    errorCollector.error(methCall, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Libraries()))
-                } else {
-                    methCall = parseMethodCall(mc)
-                    if (methCall.args.isEmpty()) {
-                        errorCollector.error(methCall, Messages.ModelParser_ExpectedLibrary(getSourceText(mc)))
-                    } else if (methCall.args.size() > 1 || !(methCall.args.first() instanceof ModelASTValue)) {
-                        // TODO: Decide whether we're going to support LibraryRetrievers. If so, the above changes.
-                        // It's this way explicitly to just handle 'lib("foo@1.2.3")' syntax. Well, more accurately,
-                        // it's this way so that we just handle 'lib("foo@1.2.3")' for now but can easily add support
-                        // for something like 'lib(identifier:"foo@1.2.3", retriever:[$class:...])' in the future without
-                        // breaking backwards compatibility.
-                        errorCollector.error(methCall, Messages.ModelParser_ExpectedLibrary(getSourceText(mc)))
+                if (it instanceof ExpressionStatement) {
+                    Expression expr = ((ExpressionStatement) it).expression
+                    ModelASTValue errorPlaceholder = ModelASTValue.fromConstant(null, expr)
+                    if (expr instanceof MethodCallExpression) {
+                        def mc = matchMethodCall(it);
+                        if (mc == null || mc.methodAsString != "lib") {
+                            errorCollector.error(errorPlaceholder, Messages.ModelParser_ExpectedLibrary(getSourceText(expr)));
+                        } else if (matchBlockStatement(it) != null) {
+                            errorCollector.error(errorPlaceholder, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Libraries()))
+                        } else {
+                            List<Expression> args = ((TupleExpression) expr.arguments).expressions
+                            if (args.isEmpty()) {
+                                errorCollector.error(errorPlaceholder, Messages.ModelParser_ExpectedLibrary(getSourceText(expr)))
+                            } else if (args.size() > 1) {
+                                // TODO: Decide whether we're going to support LibraryRetrievers. If so, the above changes.
+                                // It's this way explicitly to just handle 'lib("foo@1.2.3")' syntax. Well, more accurately,
+                                // it's this way so that we just handle 'lib("foo@1.2.3")' for now but can easily add support
+                                // for something like 'lib(identifier:"foo@1.2.3", retriever:[$class:...])' in the future without
+                                // breaking backwards compatibility.
+                                errorCollector.error(errorPlaceholder, Messages.ModelParser_ExpectedLibrary(getSourceText(expr)))
+                            } else {
+                                r.libs.add(parseLiteralStringArgument(args.get(0), "lib"))
+                            }
+                        }
                     } else {
-                        r.libs.add((ModelASTValue)methCall.args.first())
+                        r.libs.add(parseLiteralStringArgument(expr, "libraries"))
                     }
+                } else {
+                    errorCollector.error(ModelASTValue.fromConstant(null, it),
+                        Messages.ModelParser_LiteralStringExpected("libraries"))
                 }
             }
         }
         return r;
+    }
+
+    /**
+     * Parse the imports directive
+     * @param stmt The imports directive
+     * @param skipErrors Whether we should report errors - skip if we're being called for import handling
+     * @return The created {@link ModelASTImports} instance.
+     */
+    public @Nonnull ModelASTImports parseImports(Statement stmt) {
+        def r = new ModelASTImports(stmt);
+
+        def m = matchBlockStatement(stmt);
+        if (m==null) {
+            // Should be able to get this validation later.
+            return r
+        } else {
+            eachStatement(m.body.code) {
+                if (it instanceof ExpressionStatement) {
+                    Expression expr = ((ExpressionStatement)it).expression
+                    r.imports.add(parseLiteralStringArgument(expr, "imports"))
+                } else {
+                    errorCollector.error(ModelASTValue.fromConstant(null, it),
+                        Messages.ModelParser_LiteralStringExpected("imports"))
+                }
+            }
+        }
+        return r;
+    }
+
+    private @Nonnull ModelASTValue parseLiteralStringArgument(Expression expr, String directiveName) {
+        if (expr instanceof ConstantExpression && expr.value instanceof String) {
+            return parseArgument(expr)
+        } else {
+            ModelASTValue errorValue = ModelASTValue.fromConstant(null, expr)
+            errorCollector.error(errorValue, Messages.ModelParser_LiteralStringExpected(directiveName))
+
+            return errorValue
+        }
     }
 
     public @Nonnull ModelASTTools parseTools(Statement stmt) {

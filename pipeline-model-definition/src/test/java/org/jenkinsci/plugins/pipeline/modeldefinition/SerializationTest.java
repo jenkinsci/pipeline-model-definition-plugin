@@ -30,17 +30,10 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.LogRotator;
-import hudson.triggers.TimerTrigger;
-import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
-import jenkins.plugins.git.GitSCMSource;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
-import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
-import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
-import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pickles.Pickle;
 import org.jenkinsci.plugins.workflow.support.pickles.SingleTypedPickleFactory;
 import org.jenkinsci.plugins.workflow.support.pickles.XStreamPickle;
@@ -48,8 +41,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
-
-import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -130,53 +121,6 @@ public class SerializationTest extends AbstractModelDefTest {
         assertEquals(LogRotator.class, strategy.getClass());
         LogRotator lr = (LogRotator) strategy;
         assertEquals(Integer.parseInt(p.getDisplayName().substring(4)), lr.getNumToKeep());
-    }
-
-    @Test
-    public void serializationLibrariesGString() throws Exception {
-        otherRepo.init();
-        otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
-        otherRepo.write("vars/myecho.txt", "Says something very special!");
-        otherRepo.git("add", "vars");
-        otherRepo.git("commit", "--message=init");
-        LibraryConfiguration firstLib = new LibraryConfiguration("echo-utils",
-                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
-
-        thirdRepo.init();
-        thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
-        thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
-        thirdRepo.git("add", "vars");
-        thirdRepo.git("commit", "--message=init");
-        LibraryConfiguration secondLib = new LibraryConfiguration("test",
-                new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
-        secondLib.setDefaultVersion("master");
-        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
-
-        expect("serializationLibrariesGString")
-                .logContains("something special", "from another library")
-                .go();
-    }
-
-    @Test
-    public void serializationTriggersGString() throws Exception {
-        WorkflowRun b = expect("serializationTriggersGString")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Actions)")
-                .go();
-
-        WorkflowJob p = b.getParent();
-
-        PipelineTriggersJobProperty triggersJobProperty = p.getTriggersJobProperty();
-        assertNotNull(triggersJobProperty);
-        assertEquals(1, triggersJobProperty.getTriggers().size());
-        TimerTrigger.DescriptorImpl timerDesc = j.jenkins.getDescriptorByType(TimerTrigger.DescriptorImpl.class);
-
-        Trigger trigger = triggersJobProperty.getTriggerForDescriptor(timerDesc);
-        assertNotNull(trigger);
-
-        assertTrue(trigger instanceof TimerTrigger);
-        TimerTrigger timer = (TimerTrigger) trigger;
-        assertEquals("@daily", timer.getSpec());
     }
 
     @Test

@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.ClosureContentsChecker
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Imports
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodMissingWrapper
@@ -46,7 +47,10 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.createStepsBl
  * @author Andrew Bayer
  */
 public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
-    private static final List<Class> UNTRANSLATED_CLASSES = [StageConditionals.class, Environment.class]
+    private static final List<Class> UNTRANSLATED_CLASSES = [StageConditionals.class,
+                                                             Environment.class,
+                                                             Libraries.class,
+                                                             Imports.class]
 
     Map<String,Object> actualMap = [:]
     Class<NestedModel> actualClass
@@ -155,11 +159,6 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                         def mtl = new MethodsToListTranslator(script, actualType)
                         resolveClosure(argValue, mtl)
                         resultValue = mtl.toListModel(actualType)
-                    }
-                    else if (Utils.assignableFromWrapper(Libraries.class, actualType)) {
-                        def lt = new LibrariesTranslator(script)
-                        resolveClosure(argValue, lt)
-                        resultValue = lt.toListModel()
                     }
                     // And lastly, recurse - this must be another container block.
                     else {

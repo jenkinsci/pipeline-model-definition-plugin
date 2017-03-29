@@ -21,54 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-
-import javax.annotation.Nonnull
-
-
-/**
- * A container for one or more library identifiers, within the build, in the order they're declared.
- *
- * @author Andrew Bayer
- */
-@ToString
-@EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Libraries implements Serializable {
-    List<String> libs = []
-
-    Libraries libs(List<String> l) {
-        this.libs.addAll(l)
-        return this
+pipeline {
+    agent none
+    libraries {
+        "something@master"
     }
-
-    List<String> getLibs() {
-        return libs
+    imports {
+        "oh hey there"
     }
-
-    @Nonnull
-    public String toLibraryAnnotations() {
-        if (libs.isEmpty()) {
-            return ""
-        } else {
-            return "@Library(${libsAnnotationValue()}) _\n"
-        }
-    }
-
-    @Nonnull
-    private String libsAnnotationValue() {
-        if (libs.isEmpty()) {
-            return ""
-        } else {
-            if (libs.size() == 1) {
-                return "'${libs.get(0)}'"
-            } else {
-                return "[" + libs.collect { "'${it}'" }.join(",") + "]"
+    stages {
+        stage("foo") {
+            steps {
+                echo "Moving on"
             }
         }
     }
 }
+
+
+

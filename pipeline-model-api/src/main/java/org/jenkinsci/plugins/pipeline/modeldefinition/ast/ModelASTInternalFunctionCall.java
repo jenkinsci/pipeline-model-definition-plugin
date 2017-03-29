@@ -68,15 +68,7 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     public String toGroovy() {
         StringBuilder result = new StringBuilder(name);
         result.append('(');
-        boolean first = true;
-        for (ModelASTValue arg : args) {
-            if (first) {
-                first = false;
-            } else {
-                result.append(", ");
-            }
-            result.append(arg.toGroovy());
-        }
+        result.append(valueListToString(args));
         result.append(')');
         return result.toString();
     }

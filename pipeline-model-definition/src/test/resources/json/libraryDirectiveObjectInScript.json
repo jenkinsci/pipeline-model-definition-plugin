@@ -1,0 +1,42 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "prepare",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "script",
+        "arguments": [        {
+          "key": "scriptBlock",
+          "value":           {
+            "isLiteral": true,
+            "value": "def z = new Zot(steps)\n                    z.echo(\"hello\")\n                    echo \"apple: ${new Apple().getColor()}\"\n                    echo \"banana: ${new Banana().getColor()}\"\n                    echo \"${ONE_STATIC}\"\n                    echo \"${TWO_STATIC}\"\n                    echo \"${THREE_STATIC}\""
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent": {"type": "any"},
+  "libraries": [  {
+    "isLiteral": true,
+    "value": "zot-stuff@master"
+    }
+  ],
+  "imports": [
+    {
+      "isLiteral": true,
+      "value": "org.foo.Zot"
+    },
+    {
+      "isLiteral": true,
+      "value": "org.foo.bar.*"
+    },
+    {
+      "isLiteral": true,
+      "value": "static org.foo.OneStatic.ONE_STATIC"
+    },
+    {
+      "isLiteral": true,
+      "value": "static org.foo.MultipleStatic.*"
+    }
+  ]
+}}

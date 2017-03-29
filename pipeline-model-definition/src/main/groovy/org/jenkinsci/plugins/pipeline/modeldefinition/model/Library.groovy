@@ -23,30 +23,32 @@
  */
 
 
-package org.jenkinsci.plugins.pipeline.modeldefinition
+package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+
 
 /**
- * Translates a closure containing a sequence of "lib('string')" calls into an instance of {@link Libraries}.
+ * A container for one library identifier, with optional imports.
  *
  * @author Andrew Bayer
  */
-public class LibrariesTranslator implements Serializable {
-    List<String> actualList = []
-    CpsScript script
+@ToString
+@EqualsAndHashCode
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+public class Library implements Serializable {
+    String lib
+    List<String> imports = []
 
-    LibrariesTranslator(CpsScript script) {
-        this.script = script
+    Library lib(String l) {
+        this.lib = l
+        return this
     }
 
-    def lib(String l) {
-        actualList.add(l)
-    }
-
-    Libraries toListModel() {
-        Libraries l = new Libraries()
-        l.libs(actualList)
+    Library imports(List<String> i) {
+        this.imports.addAll(i)
+        this
     }
 }

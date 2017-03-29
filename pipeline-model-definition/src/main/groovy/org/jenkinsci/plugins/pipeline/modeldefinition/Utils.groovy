@@ -48,6 +48,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Imports
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
@@ -225,9 +227,30 @@ public class Utils {
             }
 
             if (root != null) {
+                root = populateImports(root, model)
+                root = populateLibraries(root, model)
                 root = populateWhen(root, model)
                 root = populateEnv(r, root, model)
             }
+        }
+
+        return root
+    }
+
+    static Root populateLibraries(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+        List<String> libs = model.libraries?.libs?.collect { it.value.toString() }
+
+        if (libs != null && !libs.isEmpty()) {
+            root.libraries = new Libraries().libs(libs)
+        }
+        return root
+    }
+
+    static Root populateImports(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+        List<String> imports = model.imports?.imports?.collect { it.value.toString() }
+
+        if (imports != null && !imports.isEmpty()) {
+            root.imports = new Imports().imports(imports)
         }
 
         return root
@@ -264,7 +287,7 @@ public class Utils {
             if (astStage.when != null) {
                 List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
                     astStage.when.conditions.collect { c ->
-                        stageConditionalFromAST(c)
+                        stageConditionalFromAST(root, c)
                     }
 
                 s.when(new StageConditionals(processedConditions))
@@ -283,7 +306,7 @@ public class Utils {
      * @param w
      * @return A populated {@link DeclarativeStageConditional}
      */
-    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
+    private static DeclarativeStageConditional stageConditionalFromAST(Root r, ModelASTWhenContent w) {
         DeclarativeStageConditional c = null
         DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
 
@@ -293,16 +316,16 @@ public class Utils {
                 arg[0] = w.args?.argListToMap()
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
             } else if (desc.allowedChildrenCount == 1) {
-                DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
+                DeclarativeStageConditional single = stageConditionalFromAST(r, w.children.first())
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
             } else {
-                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(it) }
+                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(r, it) }
                 c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, nested).instantiate()
             }
         } else if (w instanceof ModelASTWhenExpression) {
             ModelASTWhenExpression expr = (ModelASTWhenExpression)w
-
-            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
+            String codeBlock = r?.prependLibrariesAndImports(expr.codeBlockAsString())
+            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, codeBlock).instantiate()
         }
 
         return c

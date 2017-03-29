@@ -25,15 +25,14 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTClosureMap;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTImports;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
@@ -94,6 +93,8 @@ public interface ModelValidator {
     boolean validateElement(ModelASTStages stages);
 
     boolean validateElement(ModelASTLibraries libraries);
+
+    boolean validateElement(ModelASTImports imports);
 
     boolean validateElement(ModelASTWhenCondition condition);
 
