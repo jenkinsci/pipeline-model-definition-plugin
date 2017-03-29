@@ -35,6 +35,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -230,13 +231,28 @@ public class ModelInterpreter implements Serializable {
     /**
      * Execute a given closure within a "withCredentials" block.
      *
-     * @param credentials A list of key/credentials ID tuples
+     * @param environment The environment we're processing from
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@Nonnull List<List<String>> credentials, Closure body) {
-        if (!credentials.isEmpty()) {
-            List<Map<String, Object>> parameters = createWithCredentialsParameters(processCredentials(credentials))
+    def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
+        Map<String,CredentialWrapper> creds = new TreeMap<>()
+
+
+        if (environment != null) {
+            try {
+                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script)
+                if (!credStrings.isEmpty()) {
+                    creds.putAll(processCredentials(credStrings))
+                }
+            } catch (MissingMethodException e) {
+                // This will only happen in a running upgrade situation, so check the legacy approach as well.
+                creds.putAll(Utils.getLegacyEnvCredentials(environment))
+            }
+        }
+
+        if (!creds.isEmpty()) {
+            List<Map<String, Object>> parameters = createWithCredentialsParameters(creds)
             return {
                 script.withCredentials(parameters) {
                     body.call()

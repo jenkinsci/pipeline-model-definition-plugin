@@ -53,6 +53,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -335,7 +336,25 @@ public class Utils {
         }
         return credsTuples
     }
-    
+
+    /**
+     * This exists for pre-1.1.2 -> later upgrades of running builds only.
+     *
+     * @param environment The environment to pull credentials from
+     * @return A non-null but possibly empty map of strings to {@link CredentialWrapper}s
+     */
+    @Nonnull
+    static Map<String, CredentialWrapper> getLegacyEnvCredentials(@Nonnull Environment environment) {
+        Map<String, CredentialWrapper> m = [:]
+        environment.each {k, v ->
+            if (v instanceof  CredentialWrapper) {
+                m["${k}"] = v;
+            }
+        }
+        return m
+    }
+
+
     // Note that we're not using StringUtils.strip(s, "'\"") here because we want to make sure we only get rid of
     // matched pairs of quotes/double-quotes.
     static String trimQuotes(String s) {
