@@ -46,7 +46,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
@@ -56,7 +55,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
@@ -331,7 +329,7 @@ public class Utils {
     static List<List<String>> getEnvCredentials(Environment environment, CpsScript script) {
         List<List<String>> credsTuples = new ArrayList<>()
         if (environment != null) {
-            credsTuples.addAll(environment?.getCredsMap(script)?.collect { k, v ->
+            credsTuples.addAll(environment.getCredsMap(script)?.collect { k, v ->
                 [k, v]
             })
         }
@@ -343,7 +341,7 @@ public class Utils {
     static String trimQuotes(String s) {
         if ((s.startsWith('"') && s.endsWith('"')) ||
             (s.startsWith("'") && s.endsWith("'"))) {
-            return trimQuotes(s.substring(1, s.length() - 1))
+            return trimQuotes(s[1..-2])
         } else {
             return s
         }
