@@ -36,6 +36,7 @@ import hudson.model.Run;
 import org.apache.commons.jexl.context.HashMapContext;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException;
 import org.jenkinsci.plugins.credentialsbinding.impl.FileBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.StringBinding;
@@ -47,6 +48,7 @@ import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,7 +60,7 @@ import java.util.Set;
 /**
  * Simplified {@link org.jenkinsci.plugins.credentialsbinding.Binding} handler for use in {@code environment {} }
  */
-public abstract class CredentialsBindingHandler implements ExtensionPoint {
+public abstract class CredentialsBindingHandler<C extends StandardCredentials> implements ExtensionPoint {
 
     public boolean handles(Class<? extends StandardCredentials> c) {
         return type().isAssignableFrom(c);
@@ -67,6 +69,9 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
     public boolean handles(StandardCredentials c) {
         return handles(c.getClass());
     }
+
+    @Nonnull
+    public abstract List<MultiBinding<C>> toBindings(String varName, String credentialsId);
 
     @Nonnull
     public abstract Class<? extends StandardCredentials> type();
@@ -149,8 +154,19 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
     }
 
     @Extension
-    public static class UsernamePasswordHandler extends CredentialsBindingHandler {
+    public static class UsernamePasswordHandler extends CredentialsBindingHandler<StandardUsernamePasswordCredentials> {
+        @Nonnull
+        @Override
+        public List<MultiBinding<StandardUsernamePasswordCredentials>> toBindings(String varName, String credentialsId) {
+            List<MultiBinding<StandardUsernamePasswordCredentials>> bindings = new ArrayList<>();
+            bindings.add(new UsernamePasswordBinding(varName, credentialsId));
+            bindings.add(new UsernamePasswordMultiBinding(varName + "_USR",
+                    varName + "_PSW",
+                    credentialsId));
+            return bindings;
+        }
 
+        @Nonnull
         @Override
         public Class<? extends StandardCredentials> type() {
             return StandardUsernamePasswordCredentials.class;
@@ -174,7 +190,13 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
     }
 
     @Extension
-    public static class FileCredentialsHandler extends CredentialsBindingHandler {
+    public static class FileCredentialsHandler extends CredentialsBindingHandler<FileCredentials> {
+
+        @Nonnull
+        @Override
+        public List<MultiBinding<FileCredentials>> toBindings(String varName, String credentialsId) {
+            return Collections.<MultiBinding<FileCredentials>>singletonList(new FileBinding(varName, credentialsId));
+        }
 
         @Nonnull
         @Override
@@ -194,7 +216,13 @@ public abstract class CredentialsBindingHandler implements ExtensionPoint {
     }
 
     @Extension
-    public static class StringCredentialsHandler extends CredentialsBindingHandler {
+    public static class StringCredentialsHandler extends CredentialsBindingHandler<StringCredentials> {
+
+        @Nonnull
+        @Override
+        public List<MultiBinding<StringCredentials>> toBindings(String varName, String credentialsId) {
+            return Collections.<MultiBinding<StringCredentials>>singletonList(new StringBinding(varName, credentialsId));
+        }
 
         @Nonnull
         @Override

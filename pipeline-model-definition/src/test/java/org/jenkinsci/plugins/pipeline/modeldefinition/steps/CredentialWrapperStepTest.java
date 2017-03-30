@@ -146,4 +146,17 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .logContains("No suitable binding handler could be found for type com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey")
                 .go();
     }
+
+    @Issue("JENKINS-42858")
+    @Test
+    public void credentialsEnvCrossReference() throws Exception {
+        expect("credentialsEnvCrossReference")
+                .logContains("SOME_VAR is SOME VALUE",
+                        "INBETWEEN is Something **** between",
+                        "OTHER_VAR is OTHER VALUE")
+                .archives("inbetween.txt", "Something " + mixedEnvCred1Secret + " between")
+                .archives("cred1.txt", mixedEnvCred1Secret)
+                .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
+    }
+
 }

@@ -25,7 +25,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.EnvVars
+import hudson.model.Run
+import hudson.model.TaskListener
 import org.apache.commons.lang.StringUtils
+import org.jenkinsci.plugins.credentialsbinding.MultiBinding
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
@@ -59,14 +62,14 @@ public class Environment implements Serializable {
         contextEnv.overrideExpandingAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
 
         credsMap.each { k, v ->
-            resolvedMap.put(k, Utils.trimQuotes(contextEnv.expand(v.value)))
+            resolvedMap.put(k, Utils.trimQuotes(contextEnv.expand(v.value.toString())))
         }
 
         return resolvedMap
     }
 
     public Map<String,String> resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
-        Map<String,String> overrides = getMap().collectEntries { k, v ->
+        Map<String, String> overrides = getMap().collectEntries { k, v ->
             String val = v.value.toString()
             if (!v.isLiteral) {
                 val = replaceEnvDotInCurlies(val)
@@ -78,14 +81,14 @@ public class Environment implements Serializable {
             }
         }
 
-        Map<String,String> alreadySet = new TreeMap<>()
+        Map<String, String> alreadySet = new TreeMap<>()
         alreadySet.putAll(CpsThread.current()?.getExecution()?.getShell()?.getContext()?.variables?.findAll { k, v ->
             k instanceof String && v instanceof String
         })
         if (withContext) {
-            alreadySet.putAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
+            alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
         }
-        alreadySet.putAll((Map<String,String>)script.getProperty("params"))
+        alreadySet.putAll((Map<String, String>) script.getProperty("params"))
         if (parent != null) {
             alreadySet.putAll(parent.resolveEnvVars(script, false))
         }
@@ -94,19 +97,69 @@ public class Environment implements Serializable {
         unsetKeys.addAll(overrides.keySet())
 
         GroovyShell shell = new GroovyShell(new Binding(alreadySet))
-        shell.setProperty("params", (Map<String,String>)script.getProperty("params"))
+        shell.setProperty("params", (Map<String, String>) script.getProperty("params"))
+
+        Map<String, String> preCreds = roundRobin(shell, alreadySet, overrides, unsetKeys)
+
+        Run<?, ?> r = script.$build()
+
+        List<String> credKeys = []
+
+        // Resolve credentials that don't require a workspace so we can insert them into the environment variables as needed.
+        // Note that we'll discard these values for now and recreate them later in the actual withCredentials block.
+        credsMap.each { k, v ->
+            try {
+                String resolvedCredId = (String) shell.evaluate(Utils.prepareForEvalToString(v.value.toString()))
+                CredentialsBindingHandler handler = CredentialsBindingHandler.forId(resolvedCredId, r)
+
+                if (handler != null) {
+                    handler.toBindings(k, resolvedCredId).each { b ->
+                        if (!b.descriptor.requiresWorkspace()) {
+                            // We don't actually bother resolving anything that needs a workspace at this point.
+                            MultiBinding.MultiEnvironment bindingEnv = b.bind(r, null, null, TaskListener.NULL)
+                            bindingEnv.values.each { cKey, cVal ->
+                                credKeys.add(cKey)
+                                shell.setVariable(cKey, cVal)
+                            }
+                        }
+                    }
+                }
+            } catch (_) {
+                // Something went wrong? Don't care! We'll be processing this for real later anyway.
+            }
+        }
+
+        // Only bother with any of this if there are resolved credentials.
+        if (!credKeys.isEmpty()) {
+            List<String> keysWithCreds = overrides.findAll { k, v -> containsVariable(v, credKeys) }.collect { it.key }
+
+            // Only actually evaluate anything if there are env keys with unresolved cred references.
+            if (!keysWithCreds.isEmpty()) {
+                Map<String, String> postCreds = roundRobin(shell, preCreds, overrides, keysWithCreds, credKeys)
+
+                return postCreds
+            }
+        }
+        return alreadySet
+    }
+
+    private Map<String,String> roundRobin(GroovyShell shell, Map<String,String> preSet, Map<String,String> toSet,
+                                          List<String> unsetKeys, List<String> otherKeysToAllow = []) {
+        Map<String,String> alreadySet = new TreeMap<>()
+        alreadySet.putAll(preSet)
 
         int unsuccessfulCount = 0
-        while (!unsetKeys.isEmpty() && unsuccessfulCount <= overrides.size()) {
+        while (!unsetKeys.isEmpty() && unsuccessfulCount <= toSet.size()) {
             String nextKey = unsetKeys.first()
 
             unsetKeys.remove(nextKey)
             try {
-                String resolved = overrides.get(nextKey)
+                String resolved = toSet.get(nextKey)
                 // Only do the eval here if the string actually contains another environment variable we know about.
                 // This is to defer evaluation of things like ${WORKSPACE} or currentBuild.getNumber() until later.
-                if (containsVariable(resolved, overrides.keySet()) ||
-                    containsVariable(resolved, alreadySet.keySet())) {
+                if (containsVariable(resolved, toSet.keySet()) ||
+                    containsVariable(resolved, alreadySet.keySet()) ||
+                    containsVariable(resolved, otherKeysToAllow)) {
                     resolved = shell.evaluate(Utils.prepareForEvalToString(resolved))
                 }
 
@@ -122,7 +175,7 @@ public class Environment implements Serializable {
         return alreadySet
     }
 
-    private boolean containsVariable(String var, Set<String> keys) {
+    private boolean containsVariable(String var, Collection<String> keys) {
         def group = (var =~ /(\$\{.*?\})/)
         return group.any { m ->
             keys.any { k ->
