@@ -25,7 +25,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.collect.ImmutableList;
+import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.Descriptor;
+import hudson.model.JobPropertyDescriptor;
 import hudson.model.ParameterDefinition;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -45,9 +48,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.hamcrest.Matcher;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
@@ -55,8 +61,10 @@ import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
 import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.jvnet.hudson.test.BuildWatcher;
@@ -70,6 +78,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,11 +104,63 @@ public abstract class AbstractModelDefTest {
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
+    protected static String legalOptionTypes = "";
+    protected static String legalAgentTypes = "";
+
     @Inject
     WorkflowLibRepository globalLibRepo;
 
     @Inject
     UserDefinedGlobalVariableList uvl;
+
+    @BeforeClass
+    public static void setUpPreClass() throws Exception {
+        List<String> agentTypes = new ArrayList<>();
+
+        for (DeclarativeAgentDescriptor d : j.jenkins.getExtensionList(DeclarativeAgentDescriptor.class)) {
+            String symbol = symbolFromDescriptor(d);
+            if (symbol != null) {
+                agentTypes.add(symbol);
+            }
+        }
+        legalAgentTypes = "[" + StringUtils.join(agentTypes, ", ") + "]";
+
+        List<String> optionTypes = new ArrayList<>();
+
+        for (JobPropertyDescriptor d : j.jenkins.getExtensionList(JobPropertyDescriptor.class)) {
+            String symbol = symbolFromDescriptor(d);
+            if (symbol != null && !symbol.equals("pipelineTriggers") && !symbol.equals("properties")) {
+                optionTypes.add(symbol);
+            }
+        }
+
+        for (DeclarativeOptionDescriptor d : j.jenkins.getExtensionList(DeclarativeOptionDescriptor.class)) {
+            String symbol = symbolFromDescriptor(d);
+            if (symbol != null) {
+                optionTypes.add(symbol);
+            }
+        }
+
+        for (StepDescriptor d : j.jenkins.getExtensionList(StepDescriptor.class)) {
+            if (d.takesImplicitBlockArgument() &&
+                    !(ModelASTStep.getBlockedSteps().containsKey(d.getFunctionName())) &&
+                    !(d.getRequiredContext().contains(FilePath.class)) &&
+                    !(d.getRequiredContext().contains(Launcher.class))) {
+                optionTypes.add(d.getFunctionName());
+            }
+        }
+        Collections.sort(optionTypes);
+
+        legalOptionTypes = "[" + StringUtils.join(optionTypes, ", ") + "]";
+    }
+
+    private static String symbolFromDescriptor(Descriptor d) {
+        Symbol s = d.getClass().getAnnotation(Symbol.class);
+        if (s != null) {
+            return s.value()[0];
+        }
+        return null;
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -184,9 +245,10 @@ public abstract class AbstractModelDefTest {
         result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
 
         result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]")});
-        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", "[buildDiscarder, catchError, disableConcurrentBuilds, overrideIndexTriggers, retry, script, skipDefaultCheckout, skipStagesAfterUnstable, timeout, waitUntil, withEnv, ws]")});
 
-        result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]")});
+        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", legalOptionTypes)});
+
+        result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes)});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]")});
         result.add(new Object[]{"notificationsSectionRemoved", "additional properties are not allowed"});

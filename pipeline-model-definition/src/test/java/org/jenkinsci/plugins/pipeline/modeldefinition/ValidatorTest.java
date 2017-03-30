@@ -426,14 +426,14 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void unknownAgentType() throws Exception {
         expectError("unknownAgentType")
-                .logContains(Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]"))
+                .logContains(Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes))
                 .go();
     }
 
     @Test
     public void missingAgentType() throws Exception {
         expectError("missingAgentType")
-                .logContains(Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]"))
+                .logContains(Messages.ModelValidatorImpl_NoAgentType(legalAgentTypes))
                 .go();
     }
 
