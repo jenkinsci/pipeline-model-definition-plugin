@@ -23,8 +23,8 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
-import com.github.fge.jsonschema.report.ProcessingMessage;
-import com.github.fge.jsonschema.report.ProcessingReport;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingMessage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingReport;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
