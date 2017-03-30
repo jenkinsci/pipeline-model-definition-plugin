@@ -75,7 +75,7 @@ public class ModelInterpreter implements Serializable {
                 inDeclarativeAgent(root, root, root.agent) {
                     withEnvBlock(root.getEnvVars(script)) {
                         inWrappers(root.options) {
-                            withCredentialsBlock(Utils.getEnvCredentials(root.environment, script)) {
+                            withCredentialsBlock(root.environment) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
@@ -96,7 +96,7 @@ public class ModelInterpreter implements Serializable {
                                                     withEnvBlock(thisStage.getEnvVars(root, script)) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                                withCredentialsBlock(Utils.getEnvCredentials(thisStage.environment, script)) {
+                                                                withCredentialsBlock(thisStage.environment) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)
@@ -237,8 +237,7 @@ public class ModelInterpreter implements Serializable {
      */
     def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
         Map<String,CredentialWrapper> creds = new TreeMap<>()
-
-
+        
         if (environment != null) {
             try {
                 List<List<String>> credStrings = Utils.getEnvCredentials(environment, script)
