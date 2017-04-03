@@ -71,7 +71,9 @@ public abstract class CredentialsBindingHandler<C extends StandardCredentials> i
     }
 
     @Nonnull
-    public abstract List<MultiBinding<C>> toBindings(String varName, String credentialsId);
+    public List<MultiBinding<C>> toBindings(String varName, String credentialsId) {
+        return Collections.emptyList();
+    }
 
     @Nonnull
     public abstract Class<? extends StandardCredentials> type();
