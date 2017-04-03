@@ -53,6 +53,8 @@ import javax.annotation.Nonnull
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Options implements Serializable {
+    public final static List<String> BLOCKED_PROPERTIES = ["pipelineTriggers", "parameters"]
+
     // Transient since JobProperty isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
     // anyway.
     transient List<JobProperty> properties = []
@@ -79,7 +81,7 @@ public class Options implements Serializable {
     private static final Object WRAPPER_STEPS_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
-        Utils.generateTypeCache(JobPropertyDescriptor.class, false, ["pipelineTriggers", "parameters"])
+        Utils.generateTypeCache(JobPropertyDescriptor.class, false, BLOCKED_PROPERTIES)
 
     private static final LoadingCache<Object,Map<String,String>> optionTypeCache =
         Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [])

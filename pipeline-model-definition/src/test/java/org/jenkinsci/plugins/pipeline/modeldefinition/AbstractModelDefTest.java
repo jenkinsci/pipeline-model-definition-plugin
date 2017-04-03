@@ -54,6 +54,7 @@ import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -130,7 +131,7 @@ public abstract class AbstractModelDefTest {
 
         for (JobPropertyDescriptor d : j.jenkins.getExtensionList(JobPropertyDescriptor.class)) {
             String symbol = symbolFromDescriptor(d);
-            if (symbol != null && !symbol.equals("pipelineTriggers") && !symbol.equals("properties")) {
+            if (symbol != null && !Options.BLOCKED_PROPERTIES.contains(symbol)) {
                 optionTypes.add(symbol);
             }
         }
