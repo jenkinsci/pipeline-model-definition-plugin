@@ -52,6 +52,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
 import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
@@ -143,7 +144,7 @@ public abstract class AbstractModelDefTest {
 
         for (StepDescriptor d : j.jenkins.getExtensionList(StepDescriptor.class)) {
             if (d.takesImplicitBlockArgument() &&
-                    !(ModelASTStep.getBlockedSteps().containsKey(d.getFunctionName())) &&
+                    !(ModelASTMethodCall.getBlockedSteps().containsKey(d.getFunctionName())) &&
                     !(d.getRequiredContext().contains(FilePath.class)) &&
                     !(d.getRequiredContext().contains(Launcher.class))) {
                 optionTypes.add(d.getFunctionName());
