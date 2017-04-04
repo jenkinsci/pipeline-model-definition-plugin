@@ -23,22 +23,18 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import com.cloudbees.groovy.cps.CpsTransformer
-import com.cloudbees.groovy.cps.SandboxCpsTransformer
-import com.cloudbees.groovy.cps.TransformerConfiguration
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.EnvVars
 import hudson.model.Run
 import hudson.model.TaskListener
 import org.apache.commons.lang.StringUtils
-import org.codehaus.groovy.control.CompilerConfiguration
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.workflow.cps.CpsClosure2
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SecureGroovyScript
+import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
-import org.jenkinsci.plugins.workflow.cps.Safepoint
 
 /**
  * Special wrapper for environment to deal with mapped closure problems with property declarations.
@@ -113,23 +109,14 @@ public class Environment implements Serializable {
         // directive.
         unsetKeys.addAll(overrides.keySet())
 
-        // Make sure the shell we use is sandboxed.
-        CompilerConfiguration cc = new CompilerConfiguration()
-        CpsTransformer t = new SandboxCpsTransformer()
-        t.setConfiguration(new TransformerConfiguration()
-            .withClosureType(CpsClosure2.class)
-            .withSafepoint(Safepoint.class,"safepoint"))
-        cc.addCompilationCustomizers(t)
+        Binding binding = new Binding(alreadySet)
 
-        // Create the shell we'll use for resolving and populate it with the already-set variables.
-        GroovyShell shell = new GroovyShell(new Binding(alreadySet), cc)
-        
         // Also add the params global variable to deal with any references to params.FOO.
-        shell.setProperty("params", (Map<String, String>) script.getProperty("params"))
+        binding.setProperty("params", (Map<String, String>) script.getProperty("params"))
 
         // Do a first round of resolution before we proceed onward to credentials - if no credentials are defined, we
         // don't need to do anything more.
-        Map<String, String> preCreds = roundRobin(shell, alreadySet, overrides, unsetKeys)
+        Map<String, String> preCreds = roundRobin(binding, alreadySet, overrides, unsetKeys)
 
         if (!credsMap.isEmpty()) {
             // Get the current build for use in credentials processing.
@@ -144,7 +131,8 @@ public class Environment implements Serializable {
                 try {
                     // Resolve the string passed to credentials(...) in case it contains an environment variable defined
                     // in the environment directive.
-                    String resolvedCredId = (String) shell.evaluate(Utils.prepareForEvalToString(v.value.toString()))
+
+                    String resolvedCredId = resolveAsScript(binding, v.value.toString())
                     CredentialsBindingHandler handler = CredentialsBindingHandler.forId(resolvedCredId, r)
 
                     if (handler != null) {
@@ -159,7 +147,7 @@ public class Environment implements Serializable {
                                 // entries, and record that we've processed that environment variable.
                                 bindingEnv.values.each { cKey, cVal ->
                                     credKeys.add(cKey)
-                                    shell.setVariable(cKey, cVal)
+                                    binding.setVariable(cKey, cVal)
                                 }
                             }
                         }
@@ -181,7 +169,7 @@ public class Environment implements Serializable {
                 // Only actually evaluate anything if there are env keys with unresolved cred references.
                 if (!keysWithCreds.isEmpty()) {
                     // Round-robin resolve the environment one more time, with the credentials included.
-                    Map<String, String> postCreds = roundRobin(shell, preCreds, overrides, keysWithCreds, credKeys)
+                    Map<String, String> postCreds = roundRobin(binding, preCreds, overrides, keysWithCreds, credKeys)
 
                     return postCreds
                 }
@@ -194,8 +182,7 @@ public class Environment implements Serializable {
      * Loop over environment entries and try to resolve them. To prevent infinite looping for unresolvable variables,
      * stop looping once we've hit as many unresolvable entries in a row as the total size of possible variables.
      *
-     * @param shell The {@link GroovyShell} we'll resolve in, which already has some variables defined (such as
-     *          parameters, run environment variables, and possibly credentials)
+     * @param binding The {@link Binding} containing already-set variables.
      * @param preSet A map of environment variables we know have already been set.
      * @param toSet A map of environment variables that are defined in the environment directive we're processing.
      * @param unsetKeys A list of environment variable keys we know aren't yet set.
@@ -203,7 +190,7 @@ public class Environment implements Serializable {
      *          in the environment directive, such as credentials.
      * @return A map of environment variables after we've resolved as many as we can.
      */
-    private Map<String,String> roundRobin(GroovyShell shell, Map<String,String> preSet, Map<String,String> toSet,
+    private Map<String,String> roundRobin(Binding binding, Map<String,String> preSet, Map<String,String> toSet,
                                           List<String> unsetKeys, List<String> otherKeysToAllow = []) {
         Map<String,String> alreadySet = new TreeMap<>()
         alreadySet.putAll(preSet)
@@ -222,11 +209,11 @@ public class Environment implements Serializable {
                 if (containsVariable(resolved, toSet.keySet()) ||
                     containsVariable(resolved, alreadySet.keySet()) ||
                     containsVariable(resolved, otherKeysToAllow)) {
-                    resolved = shell.evaluate(Utils.prepareForEvalToString(resolved))
+                    resolved = resolveAsScript(binding, resolved)
                 }
 
                 alreadySet.put(nextKey, resolved)
-                shell.setVariable(nextKey, resolved)
+                binding.setVariable(nextKey, resolved)
                 unsuccessfulCount = 0
             } catch (_) {
                 unsuccessfulCount++
@@ -265,5 +252,12 @@ public class Environment implements Serializable {
     public static class EnvValue implements Serializable {
         public boolean isLiteral
         public Object value
+    }
+
+    private String resolveAsScript(Binding binding, String script) {
+        String toRun = Utils.prepareForEvalToString(script)
+        SecureGroovyScript toExec = new SecureGroovyScript(toRun, true)
+            .configuring(ApprovalContext.create().withCurrentUser().withKey(Utils.getCurrentJobName()))
+        return toExec.evaluate(this.class.getClassLoader(), binding)
     }
 }

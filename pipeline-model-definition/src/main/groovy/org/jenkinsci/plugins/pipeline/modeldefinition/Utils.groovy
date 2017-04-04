@@ -68,6 +68,7 @@ import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
@@ -671,5 +672,9 @@ public class Utils {
         } else {
             return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
         }
+    }
+
+    static String getCurrentJobName() {
+        return CpsThread.current()?.execution?.owner?.getExecutable()?.getParent()?.getDisplayName() ?: "unknown"
     }
 }

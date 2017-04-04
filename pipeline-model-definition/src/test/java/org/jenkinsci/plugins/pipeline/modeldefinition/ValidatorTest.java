@@ -575,4 +575,12 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42858")
+    @Test
+    public void scriptSecurityRejectionInEnvironment() throws Exception {
+        expectError("scriptSecurityRejectionInEnvironment")
+                .logContains("org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException: Scripts not permitted to use staticField java.lang.System err")
+                .go();
+    }
+
 }
