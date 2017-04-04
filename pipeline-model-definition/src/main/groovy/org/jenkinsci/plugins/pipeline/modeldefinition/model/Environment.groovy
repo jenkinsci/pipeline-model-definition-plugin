@@ -23,16 +23,22 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
+import com.cloudbees.groovy.cps.CpsTransformer
+import com.cloudbees.groovy.cps.SandboxCpsTransformer
+import com.cloudbees.groovy.cps.TransformerConfiguration
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.EnvVars
 import hudson.model.Run
 import hudson.model.TaskListener
 import org.apache.commons.lang.StringUtils
+import org.codehaus.groovy.control.CompilerConfiguration
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.workflow.cps.CpsClosure2
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
+import org.jenkinsci.plugins.workflow.cps.Safepoint
 
 /**
  * Special wrapper for environment to deal with mapped closure problems with property declarations.
@@ -107,8 +113,17 @@ public class Environment implements Serializable {
         // directive.
         unsetKeys.addAll(overrides.keySet())
 
+        // Make sure the shell we use is sandboxed.
+        CompilerConfiguration cc = new CompilerConfiguration()
+        CpsTransformer t = new SandboxCpsTransformer()
+        t.setConfiguration(new TransformerConfiguration()
+            .withClosureType(CpsClosure2.class)
+            .withSafepoint(Safepoint.class,"safepoint"))
+        cc.addCompilationCustomizers(t)
+
         // Create the shell we'll use for resolving and populate it with the already-set variables.
-        GroovyShell shell = new GroovyShell(new Binding(alreadySet))
+        GroovyShell shell = new GroovyShell(new Binding(alreadySet), cc)
+        
         // Also add the params global variable to deal with any references to params.FOO.
         shell.setProperty("params", (Map<String, String>) script.getProperty("params"))
 
