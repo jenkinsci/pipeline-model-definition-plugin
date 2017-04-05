@@ -673,8 +673,4 @@ public class Utils {
             return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
         }
     }
-
-    static String getCurrentJobName() {
-        return CpsThread.current()?.execution?.owner?.getExecutable()?.getParent()?.getDisplayName() ?: "unknown"
-    }
 }
