@@ -257,7 +257,7 @@ public class Environment implements Serializable {
     private String resolveAsScript(Binding binding, String script) {
         String toRun = Utils.prepareForEvalToString(script)
         SecureGroovyScript toExec = new SecureGroovyScript(toRun, true)
-            .configuring(ApprovalContext.create().withCurrentUser().withKey(Utils.getCurrentJobName()))
+            .configuring(ApprovalContext.create().withCurrentUser()))
         return toExec.evaluate(this.class.getClassLoader(), binding)
     }
 }
