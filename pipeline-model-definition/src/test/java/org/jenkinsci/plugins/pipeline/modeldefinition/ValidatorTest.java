@@ -426,14 +426,14 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void unknownAgentType() throws Exception {
         expectError("unknownAgentType")
-                .logContains(Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]"))
+                .logContains(Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes))
                 .go();
     }
 
     @Test
     public void missingAgentType() throws Exception {
         expectError("missingAgentType")
-                .logContains(Messages.ModelValidatorImpl_NoAgentType("[otherField, docker, dockerfile, label, any, none]"))
+                .logContains(Messages.ModelValidatorImpl_NoAgentType(legalAgentTypes))
                 .go();
     }
 
@@ -572,6 +572,14 @@ public class ValidatorTest extends AbstractModelDefTest {
         expectError("invalidMultiExpressionEnvironment")
                 .logContains(Messages.ModelParser_InvalidEnvironmentOperation(),
                         Messages.ModelParser_InvalidEnvironmentConcatValue())
+                .go();
+    }
+
+    @Issue("JENKINS-42858")
+    @Test
+    public void scriptSecurityRejectionInEnvironment() throws Exception {
+        expectError("scriptSecurityRejectionInEnvironment")
+                .logContains("org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException: Scripts not permitted to use staticField java.lang.System err")
                 .go();
     }
 

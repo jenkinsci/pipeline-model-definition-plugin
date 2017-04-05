@@ -46,7 +46,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
@@ -54,9 +53,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
+import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
@@ -69,6 +68,7 @@ import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
@@ -318,31 +318,77 @@ public class Utils {
     public static String prepareForEvalToString(String s) {
         String toEval = s ?: ""
         if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
-            toEval = '"' + toEval + '"'
+            if (toEval.indexOf('\n') == -1) {
+                toEval = '"' + toEval + '"';
+            } else {
+                toEval = '"""' + toEval + '"""';
+            }
         }
 
         return toEval
+    }
+
+    static List<List<String>> getEnvCredentials(Environment environment, CpsScript script) {
+        List<List<String>> credsTuples = new ArrayList<>()
+        if (environment != null) {
+            credsTuples.addAll(environment.getCredsMap(script)?.collect { k, v ->
+                [k, v]
+            })
+        }
+        return credsTuples
+    }
+
+    /**
+     * This exists for pre-1.1.2 -> later upgrades of running builds only.
+     *
+     * @param environment The environment to pull credentials from
+     * @return A non-null but possibly empty map of strings to {@link CredentialWrapper}s
+     */
+    @Nonnull
+    static Map<String, CredentialWrapper> getLegacyEnvCredentials(@Nonnull Environment environment) {
+        Map<String, CredentialWrapper> m = [:]
+        environment.each {k, v ->
+            if (v instanceof  CredentialWrapper) {
+                m["${k}"] = v;
+            }
+        }
+        return m
+    }
+
+
+    // Note that we're not using StringUtils.strip(s, "'\"") here because we want to make sure we only get rid of
+    // matched pairs of quotes/double-quotes.
+    static String trimQuotes(String s) {
+        if ((s.startsWith('"') && s.endsWith('"')) ||
+            (s.startsWith("'") && s.endsWith("'"))) {
+            return trimQuotes(s[1..-2])
+        } else {
+            return s
+        }
     }
 
     static Environment environmentFromAST(WorkflowRun r, ModelASTEnvironment inEnv) {
         if (inEnv != null) {
             Environment env = new Environment()
 
-            Map<String, Object> inMap = [:]
+            Map<String, Environment.EnvValue> inMap = [:]
+            Map<String, Environment.EnvValue> credMap = [:]
             inEnv.variables.each { k, v ->
                 if (v instanceof ModelASTInternalFunctionCall) {
                     ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall)v
                     // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
-                    String credId = func.args.first().value
-                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(credId, r)
-                    inMap.put(k.key, new CredentialWrapper(credId, handler.getWithCredentialsParameters(credId)))
+                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: func.args.first().isLiteral(),
+                        value: func.args.first().value)
+                    credMap.put(k.key, envVal)
                 } else {
-                    inMap.put(k.key, ((ModelASTValue)v).value)
+                    ModelASTValue val = (ModelASTValue)v
+                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: val.isLiteral(), value: val.value)
+                    inMap.put(k.key, envVal)
                 }
             }
 
-            env.modelFromMap(inMap)
-
+            env.setValueMap(inMap)
+            env.setCredsMap(credMap)
             return env
         } else {
             return null

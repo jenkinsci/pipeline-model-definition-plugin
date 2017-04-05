@@ -52,7 +52,7 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
     public TemporaryFolder tmp = new TemporaryFolder();
 
     @Before
-    public void setUp() {
+    public void setUpPerTest() {
         command = new CLICommandInvoker(j, "declarative-linter");
     }
 

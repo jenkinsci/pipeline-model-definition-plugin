@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -103,6 +104,18 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("foo_usr.txt", usernamePasswordUsername).archives("foo_psw.txt", usernamePasswordPassword).go();
     }
 
+
+    @Issue("JENKINS-43143")
+    @Test
+    public void paramsInCreds() throws Exception {
+        expect("paramsInCreds").runFromRepo(false)
+                .logNotContains(usernamePasswordPassword, "FOO_USR is " + usernamePasswordUsername)
+                .logContains("FOO_USR is *")
+                .logContains("CONTAINS_CREDS is FOOcredentials")
+                .archives("combined/foo.txt", allOf(containsString(usernamePasswordUsername), containsString(usernamePasswordPassword)))
+                .archives("foo_usr.txt", usernamePasswordUsername).archives("foo_psw.txt", usernamePasswordPassword).go();
+    }
+
     @Test
     public void mixedEnv() throws Exception {
         expect("mixedEnv")
@@ -133,4 +146,17 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .logContains("No suitable binding handler could be found for type com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey")
                 .go();
     }
+
+    @Issue("JENKINS-42858")
+    @Test
+    public void credentialsEnvCrossReference() throws Exception {
+        expect("credentialsEnvCrossReference")
+                .logContains("SOME_VAR is SOME VALUE",
+                        "INBETWEEN is Something **** between",
+                        "OTHER_VAR is OTHER VALUE")
+                .archives("inbetween.txt", "Something " + mixedEnvCred1Secret + " between")
+                .archives("cred1.txt", mixedEnvCred1Secret)
+                .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
+    }
+
 }

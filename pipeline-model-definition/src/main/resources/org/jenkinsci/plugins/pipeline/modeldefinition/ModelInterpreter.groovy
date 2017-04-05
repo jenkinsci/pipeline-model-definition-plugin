@@ -33,7 +33,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -73,7 +75,7 @@ public class ModelInterpreter implements Serializable {
                 inDeclarativeAgent(root, root, root.agent) {
                     withEnvBlock(root.getEnvVars(script)) {
                         inWrappers(root.options) {
-                            withCredentialsBlock(root.getEnvCredentials()) {
+                            withCredentialsBlock(root.environment) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
@@ -94,7 +96,7 @@ public class ModelInterpreter implements Serializable {
                                                     withEnvBlock(thisStage.getEnvVars(root, script)) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                                withCredentialsBlock(thisStage.getEnvCredentials()) {
+                                                                withCredentialsBlock(thisStage.environment) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)
@@ -211,7 +213,8 @@ public class ModelInterpreter implements Serializable {
             List<String> evaledEnv = new ArrayList<>()
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
-                evaledEnv.add((String)script.evaluate('"' + envVars.get(i) + '"'))
+                String toEval = Utils.prepareForEvalToString(envVars.get(i))
+                evaledEnv.add((String)script.evaluate(toEval))
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -228,13 +231,27 @@ public class ModelInterpreter implements Serializable {
     /**
      * Execute a given closure within a "withCredentials" block.
      *
-     * @param credentials A map of strings to {@link CredentialWrapper}s
+     * @param environment The environment we're processing from
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@Nonnull Map<String, CredentialWrapper> credentials, Closure body) {
-        if (!credentials.isEmpty()) {
-            List<Map<String, Object>> parameters = createWithCredentialsParameters(credentials)
+    def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
+        Map<String,CredentialWrapper> creds = new TreeMap<>()
+        
+        if (environment != null) {
+            try {
+                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script)
+                if (!credStrings.isEmpty()) {
+                    creds.putAll(processCredentials(credStrings))
+                }
+            } catch (MissingMethodException e) {
+                // This will only happen in a running upgrade situation, so check the legacy approach as well.
+                creds.putAll(Utils.getLegacyEnvCredentials(environment))
+            }
+        }
+
+        if (!creds.isEmpty()) {
+            List<Map<String, Object>> parameters = createWithCredentialsParameters(creds)
             return {
                 script.withCredentials(parameters) {
                     body.call()
@@ -247,9 +264,26 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    private Map<String,CredentialWrapper> processCredentials(@Nonnull List<List<String>> varsAndIds) {
+        Map<String,CredentialWrapper> creds = new TreeMap<>()
+        RunWrapper currentBuild = script.getProperty("currentBuild")
+
+        for (int i = 0; i < varsAndIds.size(); i++) {
+            String key = varsAndIds.get(i)?.get(0)
+            if (key != null) {
+                String id = (String)script.evaluate(Utils.prepareForEvalToString(varsAndIds.get(i)?.get(1)))
+
+                CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
+                creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
+            }
+        }
+
+        return creds
+    }
+
     /**
-     * Takes a map of credential wrappers and generates the proper output for the "withCredentials" block argument.
-     * @param credentials A map of strings to {@link CredentialWrapper}s
+     * Takes a map of keys to {@link CredentialWrapper}s and generates the proper output for the "withCredentials" block argument.
+     * @param credentials A map of keys to {@link CredentialWrapper}s
      * @return A list of string->object maps suitable for passing to "withCredentials"
      */
     @NonCPS

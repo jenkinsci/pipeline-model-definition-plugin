@@ -56,6 +56,26 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43143")
+    @Test
+    public void paramsInEnvironment() throws Exception {
+        expect("paramsInEnvironment")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "_UNDERSCORE is VALIDAValue")
+                .go();
+    }
+
+    @Issue("JENKINS-43137")
+    @Test
+    public void multilineEnvironment() throws Exception {
+        expect("multilineEnvironment")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "MULTILINE is VALID\n\"SO THERE\"")
+                .go();
+    }
+
     @Issue("JENKINS-42771")
     @Test
     public void multiExpressionEnvironment() throws Exception {
@@ -82,6 +102,17 @@ public class EnvironmentTest extends AbstractModelDefTest {
                         "BAR is FOOBAR",
                         "BAZ is FOOBAZ",
                         "SPLODE is banana")
+                .go();
+    }
+
+    @Test
+    public void envDotCrossRef() throws Exception {
+        expect("envDotCrossRef")
+                .logContains("[Pipeline] { (foo)",
+                        "MICROSERVICE_NAME is directory",
+                        "IMAGE_NAME is quay.io/svc/directory",
+                        "IMAGE_ID is quay.io/svc/directory:master_1",
+                        "TAG_NAME is master_1")
                 .go();
     }
 

@@ -39,6 +39,7 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
@@ -241,17 +242,18 @@ class ModelParser implements Parser {
                         } else {
                             if (exp.rightExpression instanceof ConstantExpression ||
                                 exp.rightExpression instanceof GStringExpression) {
-                                r.variables[key] = parseArgument(exp.rightExpression, true)
+                                r.variables[key] = parseArgument(exp.rightExpression)
                                 return
                             } else if (exp.rightExpression instanceof MethodCallExpression) {
+                                // This is special casing exclusively for credentials and will ideally be eliminated.
                                 r.variables[key] = parseInternalFunctionCall((MethodCallExpression) exp.rightExpression)
                                 return
                             } else if (exp.rightExpression instanceof BinaryExpression) {
                                 if (((BinaryExpression)exp.rightExpression).operation.type  == Types.PLUS) {
                                     // This is to support JENKINS-42771, allowing `FOO = "b" + "a" + "r"` sorts of syntax.
-                                    String envValue = envValueForStringConcat((BinaryExpression) exp.rightExpression)
+                                    ModelASTValue envValue = envValueForStringConcat((BinaryExpression) exp.rightExpression)
                                     if (envValue != null) {
-                                        r.variables[key] = ModelASTValue.fromConstant(envValue, exp.rightExpression)
+                                        r.variables[key] = envValue
                                     }
                                     return
                                 } else {
@@ -285,68 +287,69 @@ class ModelParser implements Parser {
     }
 
     /**
-     * This works functionally equivalent to the string used in {@link #parseArgument}, but without returning a
-     * {@link ModelASTValue}, returning just a string instead, and without handling {@link MapExpression} or
-     * {@link VariableExpression}, which is exclusively used for the `agent any` and `agent none` shortcuts regardless.
-     *
-     * @param e A non-null expression. If the expression is anything but a constant or a GString, an error will be thrown.
-     * @return The string value for that expression - in the case of {@link GStringExpression}, we explicitly remove the
-     * quotes from around it so that it's suitable for string concatenation. Returns null if an error was encountered.
-     */
-    @CheckForNull
-    private String envStringFromArbitraryExpression(@Nonnull Expression e) {
-        StringBuilder builder = new StringBuilder()
-        if (e instanceof ConstantExpression) {
-            builder.append(e.value)
-        } else if (e instanceof GStringExpression) {
-            String rawSrc = getSourceText(e)
-            builder.append(rawSrc.substring(1, rawSrc.length() - 1))
-        } else {
-            errorCollector.error(new ModelASTKey(e), Messages.ModelParser_InvalidEnvironmentConcatValue())
-            return null
-        }
-        return builder.toString()
-    }
-
-    /**
      * Traverses a {@link BinaryExpression} known to be a {@link Types#PLUS}, to concatenate its various subexpressions
      * together as string values.
      * @param exp A non-null binary expression
-     * @return The concatenated string equivalent of that binary expression, assuming no errors were encountered on the
-     * various subexpressions, in which case it will return null.
+     * @return The concatenated string equivalent of that binary expression, wrapped in an appropriate {@link ModelASTValue},
+     * assuming no errors were encountered on the various subexpressions, in which case it will return null.
      */
     @CheckForNull
-    private String envValueForStringConcat(@Nonnull BinaryExpression exp) {
+    private ModelASTValue envValueForStringConcat(@Nonnull BinaryExpression exp) {
         StringBuilder builder = new StringBuilder()
+        boolean isLiteral = true
 
         if (exp.leftExpression instanceof BinaryExpression) {
             if (((BinaryExpression)exp.leftExpression).operation.type  == Types.PLUS) {
-                String nestedString = envValueForStringConcat((BinaryExpression) exp.leftExpression)
-                if (nestedString == null) {
-                    return null
+                ModelASTValue nestedString = envValueForStringConcat((BinaryExpression) exp.leftExpression)
+                if (nestedString != null) {
+                    if (!appendAndIsLiteral(nestedString, builder)) {
+                        isLiteral = false
+                    }
                 } else {
-                    builder.append(nestedString)
+                    return null
                 }
             } else {
-                errorCollector.error(new ModelASTKey(exp), Messages.ModelParser_InvalidEnvironmentOperation())
-                return
+                errorCollector.error(new ModelASTKey(exp.leftExpression), Messages.ModelParser_InvalidEnvironmentOperation())
+                return null
             }
         } else {
-            String leftExpString = envStringFromArbitraryExpression(exp.leftExpression)
-            if (leftExpString == null) {
-                return null
-            } else {
-                builder.append(leftExpString)
+            if (!envValueFromArbitraryExpression(exp.leftExpression, builder)) {
+                isLiteral = false
             }
         }
-        String thisString = envStringFromArbitraryExpression(exp.rightExpression)
-        if (thisString == null) {
-            return null
-        } else {
-            builder.append(thisString)
+        if (!envValueFromArbitraryExpression(exp.rightExpression, builder)) {
+            isLiteral = false
         }
 
-        return builder.toString()
+        String valString = builder.toString()
+
+        if (isLiteral) {
+            return ModelASTValue.fromConstant(valString, exp)
+        } else {
+            return ModelASTValue.fromGString(valString, exp)
+        }
+    }
+
+    private boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
+        if (e instanceof ConstantExpression || e instanceof GStringExpression) {
+            ModelASTValue val = parseArgument(e)
+            return appendAndIsLiteral(val, builder)
+        } else {
+            errorCollector.error(new ModelASTKey(e), Messages.ModelParser_InvalidEnvironmentConcatValue())
+            return true
+        }
+    }
+
+    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
+        if (val == null) {
+            return true
+        } else if (!val.isLiteral()) {
+            builder.append(Utils.trimQuotes(val.value.toString()))
+        } else {
+            builder.append(val.value)
+        }
+        return val.isLiteral()
+
     }
 
     public @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
@@ -699,7 +702,7 @@ class ModelParser implements Parser {
 
         // TODO: post JENKINS-41759, switch to checking if it's a valid function name
         if (methodName == null || methodName != "credentials") {
-            return parseArgument(expr, true)
+            return parseArgument(expr)
         } else {
             m.name = methodName
             List<Expression> args = ((TupleExpression) expr.arguments).expressions
@@ -999,17 +1002,13 @@ class ModelParser implements Parser {
     /**
      * Parse the given expression as an argument to step, etc.
      */
-    protected ModelASTValue parseArgument(Expression e, boolean inEnvironment = false) {
+    protected ModelASTValue parseArgument(Expression e) {
         if (e instanceof ConstantExpression) {
             return ModelASTValue.fromConstant(e.value, e)
         }
         if (e instanceof GStringExpression) {
             String rawSrc = getSourceText(e)
-            if (inEnvironment) {
-                return ModelASTValue.fromConstant(rawSrc.substring(1, rawSrc.length() - 1), e)
-            } else {
-                return ModelASTValue.fromGString(rawSrc, e)
-            }
+            return ModelASTValue.fromGString(rawSrc, e)
         }
         if (e instanceof MapExpression) {
             return ModelASTValue.fromGString(getSourceText(e), e)
