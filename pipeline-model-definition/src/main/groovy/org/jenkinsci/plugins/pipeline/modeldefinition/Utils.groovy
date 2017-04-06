@@ -29,6 +29,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import groovy.json.StringEscapeUtils
 import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
@@ -68,7 +69,6 @@ import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
@@ -319,9 +319,9 @@ public class Utils {
         String toEval = s ?: ""
         if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
             if (toEval.indexOf('\n') == -1) {
-                toEval = '"' + toEval + '"';
+                toEval = '"' + StringEscapeUtils.escapeJava(toEval) + '"';
             } else {
-                toEval = '"""' + toEval + '"""';
+                toEval = '"""' + StringEscapeUtils.escapeJava(toEval) + '"""';
             }
         }
 

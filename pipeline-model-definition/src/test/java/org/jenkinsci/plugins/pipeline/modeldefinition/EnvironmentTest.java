@@ -116,6 +116,15 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43404")
+    @Test
+    public void envQuotesInQuotes() throws Exception {
+        expect("envQuotesInQuotes")
+                .logContains("[Pipeline] { (foo)",
+                        "GRADLE_OPTIONS is --no-daemon --rerun-tasks -PBUILD_NUMBER=1 -PBRANCH=\"master\"")
+                .go();
+    }
+
     @Issue("JENKINS-41890")
     @Test
     public void environmentWithWorkspace() throws Exception {

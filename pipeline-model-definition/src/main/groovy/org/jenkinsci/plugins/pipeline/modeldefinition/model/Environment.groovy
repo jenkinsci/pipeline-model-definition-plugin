@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import groovy.json.StringEscapeUtils
 import hudson.EnvVars
 import hudson.model.Run
 import hudson.model.TaskListener
@@ -258,6 +259,6 @@ public class Environment implements Serializable {
         String toRun = Utils.prepareForEvalToString(script)
         SecureGroovyScript toExec = new SecureGroovyScript(toRun, true)
             .configuring(ApprovalContext.create().withCurrentUser())
-        return toExec.evaluate(this.class.getClassLoader(), binding)
+        return StringEscapeUtils.unescapeJava((String)toExec.evaluate(this.class.getClassLoader(), binding))
     }
 }

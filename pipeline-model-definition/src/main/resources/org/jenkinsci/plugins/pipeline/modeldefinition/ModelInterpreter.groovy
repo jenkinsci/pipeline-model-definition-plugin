@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
+import groovy.json.StringEscapeUtils
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
@@ -214,7 +215,7 @@ public class ModelInterpreter implements Serializable {
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
                 String toEval = Utils.prepareForEvalToString(envVars.get(i))
-                evaledEnv.add((String)script.evaluate(toEval))
+                evaledEnv.add(StringEscapeUtils.unescapeJava((String)script.evaluate(toEval)))
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -271,7 +272,7 @@ public class ModelInterpreter implements Serializable {
         for (int i = 0; i < varsAndIds.size(); i++) {
             String key = varsAndIds.get(i)?.get(0)
             if (key != null) {
-                String id = (String)script.evaluate(Utils.prepareForEvalToString(varsAndIds.get(i)?.get(1)))
+                String id = StringEscapeUtils.unescapeJava((String)script.evaluate(Utils.prepareForEvalToString(varsAndIds.get(i)?.get(1))))
 
                 CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
                 creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
