@@ -25,7 +25,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import groovy.json.StringEscapeUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -38,8 +37,8 @@ class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<Env
 
     @Override
     public boolean evaluate() {
-        String n = StringEscapeUtils.unescapeJava((String)script.evaluate(Utils.prepareForEvalToString(describable.getName())))
-        String v = StringEscapeUtils.unescapeJava((String)script.evaluate(Utils.prepareForEvalToString(describable.getValue())))
+        String n = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getName())))
+        String v = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getValue())))
         return describable.environmentMatches(v, (String)script.getProperty("env").getProperty(n))
     }
 }
