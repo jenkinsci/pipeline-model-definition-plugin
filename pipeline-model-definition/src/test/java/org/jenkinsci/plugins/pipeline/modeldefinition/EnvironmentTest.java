@@ -125,6 +125,18 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42748")
+    @Test
+    public void envBackslashes() throws Exception {
+        expect("envBackslashes")
+                .logContains("[Pipeline] { (foo)",
+                        "SIMPLE_BACKSLASH is C:\\hey",
+                        "NESTED_BACKSLASH is C:\\hey\\there",
+                        "HAS_TAB is oh\they",
+                        "NESTED_HAS_TAB is oh\they\tthere")
+                .go();
+    }
+
     @Issue("JENKINS-41890")
     @Test
     public void environmentWithWorkspace() throws Exception {

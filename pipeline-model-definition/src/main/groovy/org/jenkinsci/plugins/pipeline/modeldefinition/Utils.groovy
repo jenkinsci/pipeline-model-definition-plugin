@@ -330,7 +330,9 @@ public class Utils {
     }
 
     static String escapeForEval(String s) {
+        s = StringUtils.replace(s, '\\\\', '\\\\')
         s = StringEscapeUtils.escapeJava(s)
+
         s.eachMatch(/\$\{.*?\}/) { m ->
             s = StringUtils.replaceOnce(s, m, StringEscapeUtils.unescapeJava(m))
         }
