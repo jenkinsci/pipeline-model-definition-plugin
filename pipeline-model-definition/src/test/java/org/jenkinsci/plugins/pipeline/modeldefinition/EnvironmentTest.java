@@ -141,4 +141,12 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43486")
+    @Test
+    public void booleanParamAndEnv() throws Exception {
+        expect("booleanParamAndEnv")
+                .logContains("hello")
+                .go();
+    }
+
 }

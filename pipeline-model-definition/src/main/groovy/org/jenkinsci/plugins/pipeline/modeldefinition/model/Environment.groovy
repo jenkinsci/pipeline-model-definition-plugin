@@ -60,7 +60,11 @@ public class Environment implements Serializable {
 
     public Map<String,String> getCredsMap(CpsScript script) {
         Map<String,String> resolvedMap = new TreeMap<>()
-        EnvVars contextEnv = new EnvVars((Map<String,String>)script.getProperty("params"))
+        EnvVars contextEnv = new EnvVars()
+        ((Map<String,Object>)script.getProperty("params")).each { k, v ->
+            contextEnv.put(k, v.toString())
+        }
+
         contextEnv.overrideExpandingAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
 
         credsMap.each { k, v ->
@@ -112,7 +116,7 @@ public class Environment implements Serializable {
         Binding binding = new Binding(alreadySet)
 
         // Also add the params global variable to deal with any references to params.FOO.
-        binding.setProperty("params", (Map<String, String>) script.getProperty("params"))
+        binding.setProperty("params", (Map<String, Object>) script.getProperty("params"))
 
         // Do a first round of resolution before we proceed onward to credentials - if no credentials are defined, we
         // don't need to do anything more.
