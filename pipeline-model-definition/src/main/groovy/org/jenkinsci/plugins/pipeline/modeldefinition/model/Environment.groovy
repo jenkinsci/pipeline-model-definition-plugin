@@ -61,8 +61,12 @@ public class Environment implements Serializable {
     public Map<String,String> getCredsMap(CpsScript script) {
         Map<String,String> resolvedMap = new TreeMap<>()
         EnvVars contextEnv = new EnvVars()
-        ((Map<String,Object>)script.getProperty("params")).each { k, v ->
-            contextEnv.put(k, v.toString())
+        try {
+            ((Map<String,Object>)script.getProperty("params")).each { k, v ->
+                contextEnv.put(k, v?.toString() ?: "")
+            }
+        } catch (NullPointerException e) {
+            // Continue - once JENKINS-43511 is dealt with we can be more specific here.
         }
 
         contextEnv.overrideExpandingAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
@@ -101,7 +105,13 @@ public class Environment implements Serializable {
             alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
         }
         // Add parameters.
-        alreadySet.putAll((Map<String, String>) script.getProperty("params"))
+        try {
+            ((Map<String, Object>) script.getProperty("params")).each { k, v ->
+                alreadySet.put(k, v?.toString() ?: "")
+            }
+        } catch (NullPointerException e) {
+            // Continue - once JENKINS-43511 is dealt with we can be more specific here.
+        }
 
         // If we're being called for a stage, add any root level environment variables after resolving them.
         if (parent != null) {
@@ -116,7 +126,11 @@ public class Environment implements Serializable {
         Binding binding = new Binding(alreadySet)
 
         // Also add the params global variable to deal with any references to params.FOO.
-        binding.setProperty("params", (Map<String, Object>) script.getProperty("params"))
+        try {
+            binding.setProperty("params", (Map<String, Object>) script.getProperty("params"))
+        } catch (NullPointerException e) {
+            // Continue - once JENKINS-43511 is dealt with we can be more specific here.
+        }
 
         // Do a first round of resolution before we proceed onward to credentials - if no credentials are defined, we
         // don't need to do anything more.

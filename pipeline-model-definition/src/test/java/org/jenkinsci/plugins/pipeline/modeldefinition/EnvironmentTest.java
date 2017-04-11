@@ -149,4 +149,11 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43486")
+    @Test
+    public void nullParamAndEnv() throws Exception {
+        expect("nullParamAndEnv")
+                .logContains("hello")
+                .go();
+    }
 }
