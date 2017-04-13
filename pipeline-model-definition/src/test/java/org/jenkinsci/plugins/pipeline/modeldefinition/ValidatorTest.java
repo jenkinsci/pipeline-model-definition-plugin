@@ -583,4 +583,28 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41334")
+    @Test
+    public void parallelStagesAgentTools() throws Exception {
+        expectError("parallelStagesAgentTools")
+                .logContains(Messages.ModelValidatorImpl_AgentInNestedStages("foo"),
+                        Messages.ModelValidatorImpl_ToolsInNestedStages("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void parallelStagesAndSteps() throws Exception {
+        expectError("parallelStagesAndSteps")
+                .logContains(Messages.ModelValidatorImpl_BothStagesAndSteps("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void parallelStagesDeepNesting() throws Exception {
+        expectError("parallelStagesDeepNesting")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+                .go();
+    }
 }
