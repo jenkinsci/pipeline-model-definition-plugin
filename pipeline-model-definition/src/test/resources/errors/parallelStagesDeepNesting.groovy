@@ -26,9 +26,6 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            steps {
-                echo "This will never happen"
-            }
             parallelStages {
                 stage("first") {
                     parallelStages {
