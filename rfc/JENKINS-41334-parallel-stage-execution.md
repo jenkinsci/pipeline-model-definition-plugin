@@ -3,7 +3,8 @@
 * Author: Andrew Bayer
 * Created Date: February 27, 2017
 * Approved Date: March 21, 2017
-* Target Release: 1.3
+* Revised Date: April 13, 2017
+* Target Release: 1.2
 * JIRA: [JENKINS-41334](https://issues.jenkins-ci.org/browse/JENKINS-41334)
 * Status: Approved
 
@@ -21,7 +22,7 @@ i.e., `agent`, `post`, `when`, etc.
 
 ```groovy
 stage('foo') {
-    parallel {
+    parallelStages {
         stage('first') {
             steps {
                 echo "First branch"
@@ -39,19 +40,18 @@ stage('foo') {
 #### Details
 
 * A `stage` has to contain one and only one of `steps` or
-    `parallel`. They cannot be combined in the same `stage`.
+    `parallelStages`. They cannot be combined in the same `stage`.
 * `stage` configuration can be done on both a `stage` containing
-    `parallel`, or `stage`s within `parallel`, i.e., `agent`, `when`,
+    `parallelStages`, or `stage`s within `parallelStages`, i.e., `agent`, `when`,
     `post`, etc.
 * `agent`, `environment`, and `tools` specified on the "parent"
     `stage` will apply to child `stage`s in the same way that top-level
     configuration applies to `stage`s currently.
 * Arbitrarily deep nesting of parallel `stage`s would not be
-    allowed. Only `stage`s that themselves are not within a `parallel`
-    would be able to contain further `parallel` `stage`s.
-* `stage`s within a `parallel` would not allow use of the `parallel`
+    allowed. Only `stage`s that themselves are not within a `parallelStages`
+    would be able to contain further `parallelStages` `stage`s.
+* `stage`s within a `parallelStages` would not allow use of the `parallelStages`
     step either, so as to prevent visualization confusion.
-* Naming of `parallel` is up for debate.
 
 ### Runtime Implementation
 
@@ -74,3 +74,7 @@ else will just function properly right out of the box.
 
 No changes should be needed in Blue Ocean visualization, since we will simply
 be using `parallel` branches with no nested `StageStep` executions.
+
+#### Revisions
+* Apr 13, 2017 - switched name in the syntax to `parallelStages` to prevent 
+confusion with the existing `parallel` step, switched target release to 1.2.
