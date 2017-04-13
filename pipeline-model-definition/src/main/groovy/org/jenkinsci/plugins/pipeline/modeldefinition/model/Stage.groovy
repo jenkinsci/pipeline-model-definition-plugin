@@ -55,6 +55,8 @@ public class Stage implements NestedModel, Serializable {
 
     Environment environment
 
+    Stages parallelStages
+
     Stage name(String n) {
         this.name = n
         return this
@@ -90,15 +92,19 @@ public class Stage implements NestedModel, Serializable {
         return this
     }
 
+    Stage parallelStages(Stages stages) {
+        this.parallelStages = stages
+        return this
+    }
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
      *
      * @return a list of "key=value" strings.
      */
-    List<String> getEnvVars(Root root, CpsScript script) {
+    List<String> getEnvVars(Root root, CpsScript script, Stage parentStage = null) {
         if (environment != null) {
-            return environment.resolveEnvVars(script, true, root.environment).findAll {
+            return environment.resolveEnvVars(script, true, root.environment, parentStage).findAll {
                 it.key in environment.getMap().keySet()
             }.collect { k, v ->
                 "${k}=${v}"

@@ -28,9 +28,13 @@ public final class ModelASTStages extends ModelASTElement {
 
     @Override
     public void validate(final ModelValidator validator) {
+        validate(validator, false);
+    }
+
+    public void validate(final ModelValidator validator, boolean isNested) {
         validator.validateElement(this);
         for (ModelASTStage stage : stages) {
-            stage.validate(validator);
+            stage.validate(validator, isNested);
         }
     }
 
