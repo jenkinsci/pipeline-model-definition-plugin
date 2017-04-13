@@ -40,11 +40,10 @@ public final class ModelASTStages extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("stages {\n");
+        StringBuilder result = new StringBuilder();
         for (ModelASTStage stage: stages) {
             result.append(stage.toGroovy());
         }
-        result.append("}\n");
         return result.toString();
     }
 
