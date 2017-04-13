@@ -100,7 +100,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
             result.append(libraries.toGroovy());
         }
         if (stages != null) {
+            result.append("stages {\n");
             result.append(stages.toGroovy());
+            result.append("}\n");
         }
         if (tools != null) {
             result.append(tools.toGroovy());

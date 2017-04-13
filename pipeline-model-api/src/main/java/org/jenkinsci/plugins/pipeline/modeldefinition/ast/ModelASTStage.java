@@ -117,7 +117,9 @@ public final class ModelASTStage extends ModelASTElement {
             result.append(environment.toGroovy());
         }
         if (branches.isEmpty() && parallelStages != null) {
+            result.append("parallelStages {\n");
             result.append(parallelStages.toGroovy());
+            result.append("}\n");
         } else {
             result.append("steps {\n");
             if (branches.size() > 1) {
