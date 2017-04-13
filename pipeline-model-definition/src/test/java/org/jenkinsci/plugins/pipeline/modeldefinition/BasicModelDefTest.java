@@ -748,4 +748,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41334")
+    @Test
+    public void nestedParallelStages() throws Exception {
+        expect("nestedParallelStages")
+                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .go();
+    }
 }
