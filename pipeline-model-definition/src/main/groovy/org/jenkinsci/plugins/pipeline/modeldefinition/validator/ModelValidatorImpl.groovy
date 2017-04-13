@@ -607,7 +607,13 @@ class ModelValidatorImpl implements ModelValidator {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NoStageName())
             valid = false
         } else if (isNested && (stage.branches.size() > 1 || stage.parallelStages != null)) {
-            errorCollector.error(stage, Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+            ModelASTElement errorElement
+            if (stage.parallelStages != null) {
+                errorElement = stage.parallelStages
+            } else {
+                errorElement = stage.branches.first()
+            }
+            errorCollector.error(errorElement, Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
             valid = false
         } else if (!stage.branches.isEmpty() && stage.parallelStages != null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))

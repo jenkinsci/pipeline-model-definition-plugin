@@ -210,7 +210,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "whenAnd",
             "usernamePassword",
             "environmentCrossReferences",
-            "parallelStages"
+            "nestedParallelStages"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
