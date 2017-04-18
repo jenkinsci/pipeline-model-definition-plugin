@@ -30,12 +30,23 @@ pipeline {
         BRANCH_NAME = "master"
 
         GRADLE_OPTIONS = "--no-daemon --rerun-tasks -PBUILD_NUMBER=${env.BUILD_NUMBER} -PBRANCH=\"${env.BRANCH_NAME}\""
+
+        MULTILINE_SINGLE = '''
+Look at me 'here'
+'''
+
+        MULTILINE_DOUBLE = """
+The branch name is "${env.BRANCH_NAME}"
+"""
+
     }
 
     stages {
         stage("foo") {
             steps {
                 echo "GRADLE_OPTIONS is ${env.GRADLE_OPTIONS}"
+                echo "MULTILINE_SINGLE is ${env.MULTILINE_SINGLE}"
+                echo "MULTILINE_DOUBLE is ${env.MULTILINE_DOUBLE}"
             }
         }
     }
