@@ -42,7 +42,7 @@ pipeline {
                 sh 'echo "shell SIMPLE_BACKSLASH is ${SIMPLE_BACKSLASH}"'
                 sh 'echo "shell NESTED_BACKSLASH is ${NESTED_BACKSLASH}"'
                 sh 'echo "shell HAS_TAB is ${HAS_TAB}"'
-                sh 'echo "shell NESTED_HAS_TAB is ${NESTED_HAS_TAB}"'
+                sh 'echo "shell NESTED_HAS_TAB is $NESTED_HAS_TAB"'
             }
         }
     }
