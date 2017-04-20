@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,35 @@
  * THE SOFTWARE.
  */
 
+pipeline {
+    agent any
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
+    environment {
+        // Regrettably needed since GitSampleRepoRule doesn't set BRANCH_NAME.
+        BRANCH_NAME = "master"
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+        GRADLE_OPTIONS = "--no-daemon --rerun-tasks -PBUILD_NUMBER=${env.BUILD_NUMBER} -PBRANCH=\"${env.BRANCH_NAME}\""
 
+        MULTILINE_SINGLE = '''
+Look at me 'here'
+'''
 
-class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<EnvironmentConditional> {
-    public EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
-        super(s, c)
+        MULTILINE_DOUBLE = """
+The branch name is "${env.BRANCH_NAME}"
+"""
+
     }
 
-    @Override
-    public boolean evaluate() {
-        String n = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getName())))
-        String v = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getValue())))
-        return describable.environmentMatches(v, (String)script.getProperty("env").getProperty(n))
+    stages {
+        stage("foo") {
+            steps {
+                echo "GRADLE_OPTIONS is ${env.GRADLE_OPTIONS}"
+                echo "MULTILINE_SINGLE is ${env.MULTILINE_SINGLE}"
+                echo "MULTILINE_DOUBLE is ${env.MULTILINE_DOUBLE}"
+            }
+        }
     }
 }
+
+
+

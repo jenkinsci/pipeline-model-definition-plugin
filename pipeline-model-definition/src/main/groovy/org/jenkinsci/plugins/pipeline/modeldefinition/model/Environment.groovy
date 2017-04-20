@@ -210,6 +210,7 @@ public class Environment implements Serializable {
             unsetKeys.remove(nextKey)
             try {
                 String resolved = toSet.get(nextKey)
+
                 // Only do the eval here if the string actually contains another environment variable we know about.
                 // This is to defer evaluation of things like ${WORKSPACE} or currentBuild.getNumber() until later.
                 if (containsVariable(resolved, toSet.keySet()) ||
@@ -217,9 +218,11 @@ public class Environment implements Serializable {
                     containsVariable(resolved, otherKeysToAllow)) {
                     resolved = resolveAsScript(binding, resolved)
                 }
-
+                // Make sure we escape backslashes - they'll only show up at this point if they were '\\' in the original.
+                resolved = StringUtils.replace(resolved, '\\', '\\\\')
                 alreadySet.put(nextKey, resolved)
                 binding.setVariable(nextKey, resolved)
+
                 unsuccessfulCount = 0
             } catch (_) {
                 unsuccessfulCount++
@@ -264,6 +267,6 @@ public class Environment implements Serializable {
         String toRun = Utils.prepareForEvalToString(script)
         SecureGroovyScript toExec = new SecureGroovyScript(toRun, true)
             .configuring(ApprovalContext.create().withCurrentUser())
-        return toExec.evaluate(this.class.getClassLoader(), binding)
+        return Utils.unescapeFromEval((String)toExec.evaluate(this.class.getClassLoader(), binding))
     }
 }

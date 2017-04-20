@@ -29,10 +29,12 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import groovy.json.StringEscapeUtils
 import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang.StringUtils
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
@@ -68,7 +70,6 @@ import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
@@ -319,13 +320,28 @@ public class Utils {
         String toEval = s ?: ""
         if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
             if (toEval.indexOf('\n') == -1) {
-                toEval = '"' + toEval + '"';
+                toEval = '"' + escapeForEval(toEval) + '"';
             } else {
-                toEval = '"""' + toEval + '"""';
+                toEval = '"""' + escapeForEval(toEval) + '"""';
             }
         }
 
         return toEval
+    }
+
+    static String escapeForEval(String s) {
+        s = StringUtils.replace(s, '\\\\', '\\\\')
+        s = StringEscapeUtils.escapeJava(s)
+
+        s.eachMatch(/\$\{.*?\}/) { m ->
+            s = StringUtils.replaceOnce(s, m, StringEscapeUtils.unescapeJava(m))
+        }
+
+        return s
+    }
+
+    static String unescapeFromEval(String s) {
+        return StringEscapeUtils.unescapeJava(s)
     }
 
     static List<List<String>> getEnvCredentials(Environment environment, CpsScript script) {

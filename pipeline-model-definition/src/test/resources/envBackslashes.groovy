@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,31 @@
  * THE SOFTWARE.
  */
 
+pipeline {
+    agent any
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-
-class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<EnvironmentConditional> {
-    public EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
-        super(s, c)
+    environment {
+        SIMPLE_BACKSLASH = 'C:\\hey'
+        NESTED_BACKSLASH = "${SIMPLE_BACKSLASH}\\there"
+        HAS_TAB = 'oh\they'
+        NESTED_HAS_TAB = "${HAS_TAB}\tthere"
     }
 
-    @Override
-    public boolean evaluate() {
-        String n = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getName())))
-        String v = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getValue())))
-        return describable.environmentMatches(v, (String)script.getProperty("env").getProperty(n))
+    stages {
+        stage("foo") {
+            steps {
+                echo "echo SIMPLE_BACKSLASH is ${SIMPLE_BACKSLASH}"
+                echo "echo NESTED_BACKSLASH is ${NESTED_BACKSLASH}"
+                echo "echo HAS_TAB is ${HAS_TAB}"
+                echo "echo NESTED_HAS_TAB is ${NESTED_HAS_TAB}"
+                sh 'echo "shell SIMPLE_BACKSLASH is ${SIMPLE_BACKSLASH}"'
+                sh 'echo "shell NESTED_BACKSLASH is ${NESTED_BACKSLASH}"'
+                sh 'echo "shell HAS_TAB is ${HAS_TAB}"'
+                sh 'echo "shell NESTED_HAS_TAB is $NESTED_HAS_TAB"'
+            }
+        }
     }
 }
+
+
+

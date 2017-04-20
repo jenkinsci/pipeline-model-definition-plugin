@@ -214,7 +214,7 @@ public class ModelInterpreter implements Serializable {
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
                 String toEval = Utils.prepareForEvalToString(envVars.get(i))
-                evaledEnv.add((String)script.evaluate(toEval))
+                evaledEnv.add(Utils.unescapeFromEval((String)script.evaluate(toEval)))
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -271,7 +271,7 @@ public class ModelInterpreter implements Serializable {
         for (int i = 0; i < varsAndIds.size(); i++) {
             String key = varsAndIds.get(i)?.get(0)
             if (key != null) {
-                String id = (String)script.evaluate(Utils.prepareForEvalToString(varsAndIds.get(i)?.get(1)))
+                String id = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(varsAndIds.get(i)?.get(1))))
 
                 CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
                 creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))

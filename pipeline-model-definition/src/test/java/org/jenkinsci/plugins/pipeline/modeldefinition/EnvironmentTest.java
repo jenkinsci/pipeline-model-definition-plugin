@@ -116,6 +116,33 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43404")
+    @Test
+    public void envQuotesInQuotes() throws Exception {
+        expect("envQuotesInQuotes")
+                .logContains("[Pipeline] { (foo)",
+                        "GRADLE_OPTIONS is --no-daemon --rerun-tasks -PBUILD_NUMBER=1 -PBRANCH=\"master\"",
+                        "MULTILINE_SINGLE is \nLook at me 'here'",
+                        "MULTILINE_DOUBLE is \nThe branch name is \"master\"")
+                .go();
+    }
+
+    @Issue("JENKINS-42748")
+    @Test
+    public void envBackslashes() throws Exception {
+        expect("envBackslashes")
+                .logContains("[Pipeline] { (foo)",
+                        "echo SIMPLE_BACKSLASH is C:\\hey",
+                        "echo NESTED_BACKSLASH is C:\\hey\\there",
+                        "echo HAS_TAB is oh\they",
+                        "echo NESTED_HAS_TAB is oh\they\tthere",
+                        "shell SIMPLE_BACKSLASH is C:\\hey",
+                        "shell NESTED_BACKSLASH is C:\\hey\\there",
+                        "shell HAS_TAB is oh\they",
+                        "shell NESTED_HAS_TAB is oh\they\tthere")
+                .go();
+    }
+
     @Issue("JENKINS-41890")
     @Test
     public void environmentWithWorkspace() throws Exception {
