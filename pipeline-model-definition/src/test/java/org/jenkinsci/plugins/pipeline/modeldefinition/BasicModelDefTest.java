@@ -24,13 +24,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.google.common.base.Predicate;
 import htmlpublisher.HtmlPublisherTarget;
 import hudson.model.Result;
 import hudson.model.Slave;
-import hudson.model.queue.QueueTaskFuture;
-import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
@@ -44,13 +41,10 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
@@ -58,14 +52,9 @@ import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
-import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
-import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
-import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import java.util.Arrays;
 import java.io.File;
@@ -738,90 +727,5 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("inCustomWorkspaceInStage")
                 .logMatches("Workspace dir is .*some-sub-dir")
                 .go();
-    }
-
-    @Issue("JENKINS-43339")
-    @Test
-    public void notBuiltFlowInterruptedException() throws Exception {
-        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "milestone-flow-interrupted");
-        job.setDefinition(new CpsFlowDefinition("" +
-                "pipeline {\n" +
-                "  agent none\n" +
-                "  stages {\n" +
-                "    stage('milestones') {\n" +
-                "      steps {\n" +
-                "        milestone(1)\n" +
-                "        semaphore 'wait'\n" +
-                "        milestone(2)\n" +
-                "      }\n" +
-                "      post {\n" +
-                "        notBuilt {\n" +
-                "          echo 'Job not built due to milestone'\n" +
-                "        }\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n", true));
-
-        WorkflowRun run1 = job.scheduleBuild2(0).waitForStart();
-        SemaphoreStep.waitForStart("wait/1", run1);
-        WorkflowRun run2 = job.scheduleBuild2(0).waitForStart();
-        SemaphoreStep.waitForStart("wait/2", run2);
-
-        SemaphoreStep.success("wait/2", null);
-
-        j.waitForCompletion(run2);
-
-        j.assertBuildStatus(Result.NOT_BUILT, j.waitForCompletion(run1));
-
-        j.assertLogContains("Job not built due to milestone", run1);
-    }
-
-    @Issue("JENKINS-43339")
-    @Test
-    public void abortedFlowInterruptedException() throws Exception {
-        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
-        j.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy().grant(Jenkins.ADMINISTER).everywhere().to("ops"));
-        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "input-flow-interrupted");
-        job.setDefinition(new CpsFlowDefinition("" +
-                "pipeline {\n" +
-                "  agent none\n" +
-                "  stages {\n" +
-                "    stage('input') {\n" +
-                "      steps {\n" +
-                "        input(id: 'InputX', message: 'OK?', ok: 'Yes', submitter: 'ops')\n" +
-                "      }\n" +
-                "      post {\n" +
-                "        aborted {\n" +
-                "          echo 'Job aborted due to input'\n" +
-                "        }\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n", true));
-
-        QueueTaskFuture<WorkflowRun> queueTaskFuture = job.scheduleBuild2(0);
-        WorkflowRun run = queueTaskFuture.getStartCondition().get();
-        CpsFlowExecution execution = (CpsFlowExecution) run.getExecutionPromise().get();
-
-        while (run.getAction(InputAction.class) == null) {
-            execution.waitForSuspension();
-        }
-
-        JenkinsRule.WebClient webClient = j.createWebClient();
-
-        webClient.login("ops");
-
-        InputAction inputAction = run.getAction(InputAction.class);
-        InputStepExecution is = inputAction.getExecution("InputX");
-        HtmlPage p = webClient.getPage(run, inputAction.getUrlName());
-
-        j.submit(p.getFormByName(is.getId()), "abort");
-        assertEquals(0, inputAction.getExecutions().size());
-        queueTaskFuture.get();
-
-        j.assertBuildStatus(Result.ABORTED, j.waitForCompletion(run));
-
-        j.assertLogContains("Job aborted due to input", run);
     }
 }
