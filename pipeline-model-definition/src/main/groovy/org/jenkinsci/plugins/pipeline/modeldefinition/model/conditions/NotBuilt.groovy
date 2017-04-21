@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,33 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
-
+import hudson.Extension
 import hudson.model.Result
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.Symbol
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
-public class LabelScript extends DeclarativeAgentScript<Label> {
-
-    public LabelScript(CpsScript s, Label a) {
-        super(s, a)
+/**
+ * A {@link BuildCondition} for matching unbuilt builds, such as those stopped by milestones.
+ *
+ * @author Andrew Bayer
+ */
+@Extension(ordinal=400d) @Symbol("notBuilt")
+public class NotBuilt extends BuildCondition {
+    @Override
+    public boolean meetsCondition(WorkflowRun r) {
+        return r.getResult() != null && r.getResult().equals(Result.NOT_BUILT)
     }
 
     @Override
-    public Closure run(Closure body) {
-        return {
-            try {
-                script.node(describable?.label) {
-                    CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
-                throw e
-            }
-        }
+    public String getDescription() {
+        return Messages.NotBuilt_Description()
     }
+
+    public static final long serialVersionUID = 1L
 }

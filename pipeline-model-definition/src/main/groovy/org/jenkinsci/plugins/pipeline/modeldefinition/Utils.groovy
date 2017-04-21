@@ -33,6 +33,7 @@ import groovy.json.StringEscapeUtils
 import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.Result
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
 import org.jenkinsci.plugins.pipeline.StageStatus
@@ -71,6 +72,7 @@ import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
@@ -689,4 +691,20 @@ public class Utils {
             return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
         }
     }
+
+    /**
+     * Get the appropriate result given an exception. If it's a {@link FlowInterruptedException}, return the result
+     * on the exception, otherwise return {@link Result#FAILURE}.
+     *
+     * @param e The exception.
+     * @return The result.
+     */
+    static Result getResultFromException(Exception e) {
+        if (e instanceof FlowInterruptedException) {
+            return ((FlowInterruptedException)e).result
+        } else {
+            return Result.FAILURE
+        }
+    }
+
 }
