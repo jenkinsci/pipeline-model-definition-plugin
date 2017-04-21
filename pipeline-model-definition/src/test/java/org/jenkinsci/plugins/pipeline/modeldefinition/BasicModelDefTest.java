@@ -28,6 +28,7 @@ import com.google.common.base.Predicate;
 import htmlpublisher.HtmlPublisherTarget;
 import hudson.model.Result;
 import hudson.model.Slave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.StageStatus;
@@ -799,5 +800,37 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("nestedParallelStages")
                 .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
                 .go();
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void parallelStagesAgentEnvWhen() throws Exception {
+        Slave s = j.createOnlineSlave();
+        s.setLabelString("first-agent");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
+
+        Slave s2 = j.createOnlineSlave();
+        s2.setLabelString("second-agent");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
+
+        expect("parallelStagesAgentEnvWhen")
+                .logContains("[Pipeline] { (foo)",
+                        "[first] { (Branch: first)",
+                        "[second] { (Branch: second)",
+                        "First stage, first agent",
+                        "First stage, do not override",
+                        "First stage, overrode once and done",
+                        "First stage, overrode twice, in first branch",
+                        "First stage, overrode per nested, in first branch",
+                        "First stage, declared per nested, in first branch",
+                        "Second stage, second agent",
+                        "Second stage, do not override",
+                        "Second stage, overrode once and done",
+                        "Second stage, overrode twice, in second branch",
+                        "Second stage, overrode per nested, in second branch",
+                        "Second stage, declared per nested, in second branch")
+                .go();
+
+
     }
 }

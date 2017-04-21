@@ -256,23 +256,20 @@ public class Utils {
             }
 
             if (root != null) {
-                root = populateWhen(root, model)
-                root = populateEnv(r, root, model)
+                root = populateFromModel(r, root, model)
             }
         }
 
         return root
     }
 
-    static Root populateEnv(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+    static Root populateFromModel(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
         root.environment = environmentFromAST(r, model.environment)
 
         List<Stage> stagesWithEnvs = []
 
         root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            s.environment = environmentFromAST(r, astStage.environment)
-            stagesWithEnvs.add(s)
+            stagesWithEnvs.add(populateSingleStageFromModel(r, model.stages, s))
         }
 
         root.stages.stages = stagesWithEnvs
@@ -280,32 +277,29 @@ public class Utils {
         return root
     }
 
-    /**
-     * Attaches the {@link StageConditionals} to the appropriate {@link Stage}s, pulling from the AST model.
-     *
-     * @param root
-     * @param model
-     * @return an updated {@link Root}
-     */
-    static Root populateWhen(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        List<Stage> stagesWithWhen = []
+    private static Stage populateSingleStageFromModel(@Nonnull WorkflowRun r, @Nonnull ModelASTStages allStages,
+                                                      @Nonnull Stage stage) {
+        ModelASTStage astStage = allStages.stages.find { it.name == stage.name }
+        stage.environment = environmentFromAST(r, astStage.environment)
 
-        root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            if (astStage.when != null) {
-                List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
-                    astStage.when.conditions.collect { c ->
-                        stageConditionalFromAST(c)
-                    }
+        if (astStage.when != null) {
+            List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
+                astStage.when.conditions.collect { c ->
+                    stageConditionalFromAST(c)
+                }
 
-                s.when(new StageConditionals(processedConditions))
-            }
-            stagesWithWhen.add(s)
+            stage.when(new StageConditionals(processedConditions))
         }
 
-        root.stages.stages = stagesWithWhen
+        if (stage.parallelStages != null && !stage.parallelStages.stages.isEmpty()) {
+            List<Stage> nestedStages = []
+            stage.parallelStages.stages.each { s ->
+                nestedStages.add(populateSingleStageFromModel(r, astStage.parallelStages, s))
+            }
+            stage.parallelStages.stages = nestedStages
+        }
 
-        return root
+        return stage
     }
 
     /**
