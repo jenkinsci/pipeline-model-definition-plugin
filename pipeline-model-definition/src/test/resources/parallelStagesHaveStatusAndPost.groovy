@@ -31,16 +31,32 @@ pipeline {
                     steps {
                         error "First branch"
                     }
+                    post {
+                        failure {
+                            echo "FIRST BRANCH FAILED"
+                        }
+                    }
                 }
                 stage("second") {
                     steps {
                         echo "Second branch"
                     }
+                    post {
+                        always {
+                            echo "SECOND BRANCH POST"
+                        }
+                    }
+                }
+            }
+            post {
+                failure {
+                    echo "FOO STAGE FAILED"
                 }
             }
         }
     }
 }
+
 
 
 

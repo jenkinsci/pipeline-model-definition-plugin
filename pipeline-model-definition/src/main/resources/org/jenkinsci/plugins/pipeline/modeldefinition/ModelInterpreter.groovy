@@ -204,6 +204,12 @@ public class ModelInterpreter implements Serializable {
                 if (firstError == null) {
                     firstError = e
                 }
+            } finally {
+                // And finally, run the post stage steps.
+                if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                    Utils.logToTaskListener("Post stage")
+                    firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
+                }
             }
 
             if (firstError != null) {
@@ -476,12 +482,6 @@ public class ModelInterpreter implements Serializable {
             Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
                 stageError = e
-            }
-        } finally {
-            // And finally, run the post stage steps.
-            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
-                Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
             }
         }
 
