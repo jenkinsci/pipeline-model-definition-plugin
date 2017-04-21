@@ -73,6 +73,16 @@ pipeline {
                         sh 'echo "Second stage, ${DECLARED_PER_NESTED}"'
                     }
                 }
+                stage("third") {
+                    when {
+                        expression {
+                            return false
+                        }
+                    }
+                    steps {
+                        echo "WE SHOULD NEVER GET HERE"
+                    }
+                }
             }
         }
     }
