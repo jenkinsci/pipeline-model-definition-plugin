@@ -30,6 +30,7 @@ import hudson.model.Result;
 import hudson.model.Slave;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
@@ -154,11 +155,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-41334")
     @Test
-    public void parallelStagesHaveStatus() throws Exception {
-        WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatus")
+    public void parallelStagesHaveStatusAndPost() throws Exception {
+        WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatusAndPost")
                 .logContains("[Pipeline] { (foo)",
                         "[first] { (Branch: first)",
-                        "[second] { (Branch: second)")
+                        "[second] { (Branch: second)",
+                        "FIRST BRANCH FAILED",
+                        "SECOND BRANCH POST",
+                        "FOO STAGE FAILED")
                 .hasFailureCase()
                 .go();
 
@@ -186,7 +190,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(nestedTags.getTags());
         assertFalse(nestedTags.getTags().isEmpty());
         assertTrue(nestedTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
-        assertEquals(Utils.getStageStatusMetadata().getFailedAndContinued(),
+        assertEquals(StageStatus.getFailedAndContinued(),
                 nestedTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
 
         TagsAction parentTags = startFoo.getAction(TagsAction.class);
@@ -194,12 +198,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(parentTags.getTags());
         assertFalse(parentTags.getTags().isEmpty());
         assertTrue(parentTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
-        assertEquals(Utils.getStageStatusMetadata().getFailedAndContinued(),
+        assertEquals(StageStatus.getFailedAndContinued(),
                 parentTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
 
-        FlowNode shouldBeFailedNode = execution.getNode("" + (Integer.valueOf(endFirst.getId()) - 1));
-        assertNotNull(shouldBeFailedNode);
-        assertNotNull(shouldBeFailedNode.getError());
+        // Was originally testing to see if the last-but-one node in the failed block was the failure but that's
+        // actually a bogus test, particularly when running post stuff.
     }
 
     @Issue("JENKINS-42039")
