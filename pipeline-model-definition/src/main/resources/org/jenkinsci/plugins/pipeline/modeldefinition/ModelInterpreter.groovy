@@ -156,6 +156,7 @@ public class ModelInterpreter implements Serializable {
                 } else {
                     if (thisStage.parallelStages != null) {
                         if (evaluateWhen(thisStage.when)) {
+<<<<<<< HEAD
                             withCredentialsBlock(thisStage.environment, root.environment) {
                                 withEnvBlock(thisStage.getEnvVars(root, script)) {
                                     def parallelStages = [:]
@@ -165,6 +166,14 @@ public class ModelInterpreter implements Serializable {
                                             evaluateStage(root, thisStage.agent ?: parentAgent, parallelStage, firstError, thisStage))
                                     }
                                     script.parallel(parallelStages)
+=======
+                            if (thisStage.parallelStages != null) {
+                                def parallelStages = [:]
+                                for (int i = 0; i < thisStage.parallelStages.stages.size(); i++) {
+                                    Stage parallelStage = thisStage.parallelStages.getStages().get(i)
+                                    parallelStages.put(parallelStage.name,
+                                        evaluateStage(root, thisStage.agent ?: parentAgent, parallelStage, firstError, thisStage))
+>>>>>>> Fix an unclear indentation
                                 }
                             }
                         } else {
