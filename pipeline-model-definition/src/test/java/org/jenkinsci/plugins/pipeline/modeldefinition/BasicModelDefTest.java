@@ -829,6 +829,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "Second stage, overrode twice, in second branch",
                         "Second stage, overrode per nested, in second branch",
                         "Second stage, declared per nested, in second branch")
+                .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
 
 
