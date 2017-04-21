@@ -130,13 +130,26 @@ public class Environment implements Serializable {
                 k instanceof String && v instanceof String
             })
 
+            // If we're being called directly and not to pull in root-level environment variables into a stage, add anything
+            // in the current env global variable.
+            if (withContext) {
+                alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
+            }
+
+            // Add parameters.
+            alreadySet.putAll((Map<String, String>) script.getProperty("params"))
+
             // If we're being called for a stage, add any root level environment variables after resolving them.
             if (parent != null) {
+                Map<String,String> parentVars = new TreeMap<>()
                 if (parentStage != null && parentStage.environment != null) {
-                    alreadySet.putAll(parentStage.environment.resolveEnvVars(script, false, parent))
+                    parentVars.putAll(parentStage.environment.resolveEnvVars(script, false, parent))
                 } else {
-                    alreadySet.putAll(parent.resolveEnvVars(script, false))
+                    parentVars.putAll(parent.resolveEnvVars(script, false))
                 }
+
+                // Don't overwrite variables we explicitly defined in this stage.
+                alreadySet.putAll(parentVars)
             }
 
             // If we're being called directly and not to pull in root-level environment variables into a stage, add anything
