@@ -59,6 +59,9 @@ pipeline {
                     agent {
                         label "second-agent"
                     }
+                    tools {
+                        maven "apache-maven-3.0.1"
+                    }
                     environment {
                         OVERRIDE_TWICE = "overrode twice, in second branch"
                         OVERRIDE_PER_NESTED = "overrode per nested, in second branch"
@@ -71,6 +74,7 @@ pipeline {
                         sh 'echo "Second stage, ${OVERRIDE_TWICE}"'
                         sh 'echo "Second stage, ${OVERRIDE_PER_NESTED}"'
                         sh 'echo "Second stage, ${DECLARED_PER_NESTED}"'
+                        sh 'mvn --version'
                     }
                 }
                 stage("third") {
