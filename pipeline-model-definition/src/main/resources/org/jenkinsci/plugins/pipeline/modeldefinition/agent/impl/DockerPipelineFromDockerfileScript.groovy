@@ -46,7 +46,7 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
                     try {
                         img = buildImage().call()
                     } catch (Exception e) {
-                        script.getProperty("currentBuild").result = Result.FAILURE
+                        script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                         Utils.markStageFailedAndContinued(SyntheticStageNames.agentSetup())
                         throw e
                     }
@@ -55,7 +55,7 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
                 try {
                     img = buildImage().call()
                 } catch (Exception e) {
-                    script.getProperty("currentBuild").result = Result.FAILURE
+                    script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                     throw e
                 }
             }
@@ -65,7 +65,7 @@ public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineSc
                         body.call()
                     })
                 } catch (Exception e) {
-                    script.getProperty("currentBuild").result = Result.FAILURE
+                    script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                     throw e
                 }
             }

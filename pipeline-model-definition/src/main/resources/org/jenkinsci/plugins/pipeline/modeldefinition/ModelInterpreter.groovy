@@ -27,7 +27,6 @@ import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
-import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -111,7 +110,7 @@ public class ModelInterpreter implements Serializable {
                                                 }
                                             }
                                         } catch (Exception e) {
-                                            script.getProperty("currentBuild").result = Result.FAILURE
+                                            script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                                             Utils.markStageFailedAndContinued(thisStage.name)
                                             if (firstError == null) {
                                                 firstError = e
@@ -427,7 +426,7 @@ public class ModelInterpreter implements Serializable {
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Exception e) {
-            script.getProperty("currentBuild").result = Result.FAILURE
+            script.getProperty("currentBuild").result = Utils.getResultFromException(e)
             Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
                 stageError = e
@@ -503,7 +502,7 @@ public class ModelInterpreter implements Serializable {
                     }
                 }
             } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
+                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                 if (stageName != null) {
                     Utils.markStageFailedAndContinued(stageName)
                 }
