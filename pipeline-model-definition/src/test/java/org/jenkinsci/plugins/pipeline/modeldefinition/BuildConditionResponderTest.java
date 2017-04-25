@@ -146,6 +146,9 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.NOT_BUILT, j.waitForCompletion(run1));
 
         j.assertLogContains("Job not built due to milestone", run1);
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(run2));
+        j.assertLogNotContains("Job not built due to milestone", run2);
     }
 
     @Issue("JENKINS-43339")
