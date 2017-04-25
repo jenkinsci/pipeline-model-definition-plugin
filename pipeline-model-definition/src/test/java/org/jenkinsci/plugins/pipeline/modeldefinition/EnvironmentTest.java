@@ -164,7 +164,8 @@ public class EnvironmentTest extends AbstractModelDefTest {
                         "BUILD_NUM_ENV is 1",
                         "ANOTHER_ENV is 1",
                         "INHERITED_ENV is 1 is inherited",
-                        "ACME_FUNC is banana tada")
+                        "ACME_FUNC is banana tada",
+                        "JUST_A_CONSTANT is 3")
                 .go();
     }
 
