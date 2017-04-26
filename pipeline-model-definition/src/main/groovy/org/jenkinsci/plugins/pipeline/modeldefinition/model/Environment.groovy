@@ -43,6 +43,8 @@ import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Environment implements Serializable {
+    public static final String DOLLAR_PLACEHOLDER = "___DOLLAR_SIGN___"
+
     Map<String,EnvValue> valueMap = new TreeMap<>()
     Map<String,EnvValue> credsMap = new TreeMap<>()
 
@@ -77,7 +79,10 @@ public class Environment implements Serializable {
     public Map<String,String> resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
         Map<String, String> overrides = getMap().collectEntries { k, v ->
             String val = v.value.toString()
-            if (!v.isLiteral) {
+            if (v.isLiteral) {
+                // Escape dollar-signs.
+                val = StringUtils.replace(val, '$', DOLLAR_PLACEHOLDER)
+            } else {
                 // Switch out env.FOO for FOO, since the env global variable isn't available in the shell we're processing.
                 val = replaceEnvDotInCurlies(val)
             }
@@ -100,6 +105,7 @@ public class Environment implements Serializable {
         if (withContext) {
             alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
         }
+
         // Add parameters.
         ((Map<String, Object>) script.getProperty("params")).each { k, v ->
             alreadySet.put(k, v?.toString() ?: "")
@@ -153,12 +159,12 @@ public class Environment implements Serializable {
                                 // entries, and record that we've processed that environment variable.
                                 bindingEnv.values.each { cKey, cVal ->
                                     credKeys.add(cKey)
-                                    binding.setVariable(cKey, cVal)
+                                    binding.setVariable(cKey, StringUtils.replace(cVal, '$', DOLLAR_PLACEHOLDER))
                                 }
                             }
                         }
                     }
-                } catch (_) {
+                } catch (Exception e) {
                     // Something went wrong? Don't care! We'll be processing this for real later anyway.
                 }
             }
@@ -222,7 +228,6 @@ public class Environment implements Serializable {
                 resolved = StringUtils.replace(resolved, '\\', '\\\\')
                 alreadySet.put(nextKey, resolved)
                 binding.setVariable(nextKey, resolved)
-
                 unsuccessfulCount = 0
             } catch (_) {
                 unsuccessfulCount++
@@ -235,12 +240,22 @@ public class Environment implements Serializable {
 
     private boolean containsVariable(String var, Collection<String> keys) {
         def group = (var =~ /(\$\{.*?\})/)
-        return group.any { m ->
+        def found = group.any { m ->
             keys.any { k ->
                 String curlies = m[1]
-                return curlies.contains(k)
+                return curlies.matches(/.*\W${k}\W.*/)
             }
         }
+        if (!found) {
+            def explicit = (var =~ /(\$.*?)\W/)
+            found = explicit.any { m ->
+                keys.any { k ->
+                    String single = m[1]
+                    return single == '$' + k
+                }
+            }
+        }
+        return found
     }
 
     private String replaceEnvDotInCurlies(String inString) {

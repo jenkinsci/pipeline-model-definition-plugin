@@ -61,7 +61,9 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     public static final String usernamePasswordPassword = "s3cr37";
     private static final String mixedEnvCred1Id = "cred1";
     private static final String mixedEnvCred2Id = "cred2";
+    private static final String mixedEnvCred3Id = "cred3";
     private static final String mixedEnvCred1Secret = "Some secret text for 1";
+    private static final String mixedEnvCred3Secret = "Some $secret text for 3";
     private static final String mixedEnvCred2U = "bobby";
     private static final String mixedEnvCred2P = "supersecretpassword+mydogsname";
     private static Folder folder;
@@ -81,6 +83,8 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         store.addCredentials(Domain.global(), mixedEnvCred1);
         UsernamePasswordCredentialsImpl mixedEnvCred2 = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvCred2U, mixedEnvCred2P);
         store.addCredentials(Domain.global(), mixedEnvCred2);
+        StringCredentialsImpl mixedEnvCred3 = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred3Id, "test", Secret.fromString(mixedEnvCred3Secret));
+        store.addCredentials(Domain.global(), mixedEnvCred3);
 
         folder = j.jenkins.createProject(Folder.class, "testFolder");
         folder.addProperty(new FolderCredentialsProvider.FolderCredentialsProperty(new DomainCredentials[0]));
@@ -159,4 +163,15 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
     }
 
+    @Issue("JENKINS-43872")
+    @Test
+    public void credentialsDollarQuotes() throws Exception {
+        expect("credentialsDollarQuotes")
+                .logContains("SOME_VAR is SOME VALUE",
+                        "INBETWEEN is Something **** between",
+                        "OTHER_VAR is OTHER VALUE")
+                .archives("inbetween.txt", "Something " + mixedEnvCred3Secret + " between")
+                .archives("cred3.txt", mixedEnvCred3Secret)
+                .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
+    }
 }

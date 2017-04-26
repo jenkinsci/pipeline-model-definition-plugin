@@ -346,6 +346,10 @@ public class Utils {
         return StringEscapeUtils.unescapeJava(s)
     }
 
+    static String unescapeDollars(String s) {
+        return StringUtils.replace(s, Environment.DOLLAR_PLACEHOLDER, '$')
+    }
+
     static List<List<String>> getEnvCredentials(Environment environment, CpsScript script) {
         List<List<String>> credsTuples = new ArrayList<>()
         if (environment != null) {
