@@ -48,9 +48,9 @@ public class Environment implements Serializable {
     Map<String,EnvValue> valueMap = new TreeMap<>()
     Map<String,EnvValue> credsMap = new TreeMap<>()
 
+    // Caching for resolved environment variables and credentials so we don't process them twice if we don't need to.
     private transient Map<String,String> interimResolved = new TreeMap<>()
     private transient Map<String,String> interimResolvedCreds = new TreeMap<>()
-    private transient boolean needsAgent = false
 
     public void setValueMap(Map<String,EnvValue> inMap) {
         this.valueMap.putAll(inMap)
@@ -67,7 +67,7 @@ public class Environment implements Serializable {
     public Map<String,String> getCredsMap(CpsScript script, Environment parent = null) {
         Map<String,String> resolvedMap = new TreeMap<>()
         if (!credsMap.isEmpty()) {
-            if (interimResolvedCreds.isEmpty() || needsAgent) {
+            if (interimResolvedCreds.isEmpty()) {
                 EnvVars contextEnv = new EnvVars()
                 resolveEnvVars(script, true, parent).each { k, v ->
                     if (v instanceof String) {
@@ -91,7 +91,7 @@ public class Environment implements Serializable {
         Map<String, String> alreadySet = new TreeMap<>()
         if (getMap().isEmpty()) {
             return alreadySet
-        } else if (!interimResolved.isEmpty() && !needsAgent) {
+        } else if (!interimResolved.isEmpty()) {
             alreadySet.putAll(interimResolved)
             return alreadySet
         } else {
