@@ -72,9 +72,9 @@ public class ModelInterpreter implements Serializable {
 
                 // Entire build, including notifications, runs in the agent.
                 inDeclarativeAgent(root, root, root.agent) {
-                    withEnvBlock(root.getEnvVars(script)) {
+                    withCredentialsBlock(root.environment) {
                         inWrappers(root.options) {
-                            withCredentialsBlock(root.environment) {
+                            withEnvBlock(root.getEnvVars(script)) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
@@ -95,7 +95,7 @@ public class ModelInterpreter implements Serializable {
                                                     withEnvBlock(thisStage.getEnvVars(root, script)) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                                withCredentialsBlock(thisStage.environment) {
+                                                                withCredentialsBlock(thisStage.environment, root.environment) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)
@@ -231,15 +231,16 @@ public class ModelInterpreter implements Serializable {
      * Execute a given closure within a "withCredentials" block.
      *
      * @param environment The environment we're processing from
+     * @param parent Optional parent environment
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
+    def withCredentialsBlock(@CheckForNull Environment environment, Environment parent = null, Closure body) {
         Map<String,CredentialWrapper> creds = new TreeMap<>()
         
         if (environment != null) {
             try {
-                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script)
+                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script, parent)
                 if (!credStrings.isEmpty()) {
                     creds.putAll(processCredentials(credStrings))
                 }

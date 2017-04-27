@@ -33,6 +33,7 @@ import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.SecretBytes;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainCredentials;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
@@ -40,6 +41,7 @@ import hudson.model.ModelObject;
 import hudson.model.Result;
 import hudson.util.Secret;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -66,6 +68,9 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     private static final String mixedEnvCred3Secret = "Some $secret text for 3";
     private static final String mixedEnvCred2U = "bobby";
     private static final String mixedEnvCred2P = "supersecretpassword+mydogsname";
+    private static final String fileCredId = "fileCred";
+    private static final String fileCredName = "credFile.txt";
+    private static final String fileCredContent = "file-cred-content-is-here";
     private static Folder folder;
     private static final String mixedEnvInFolderCred1Secret = "Some secret text for 1 folder";
     private static final String mixedEnvInFoldercred2U = "bobby-in-folder";
@@ -85,6 +90,8 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         store.addCredentials(Domain.global(), mixedEnvCred2);
         StringCredentialsImpl mixedEnvCred3 = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred3Id, "test", Secret.fromString(mixedEnvCred3Secret));
         store.addCredentials(Domain.global(), mixedEnvCred3);
+        FileCredentialsImpl fileCred = new FileCredentialsImpl(CredentialsScope.GLOBAL, fileCredId, "test", fileCredName, SecretBytes.fromBytes(fileCredContent.getBytes()));
+        store.addCredentials(Domain.global(), fileCred);
 
         folder = j.jenkins.createProject(Folder.class, "testFolder");
         folder.addProperty(new FolderCredentialsProvider.FolderCredentialsProperty(new DomainCredentials[0]));
@@ -173,5 +180,15 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("inbetween.txt", "Something " + mixedEnvCred3Secret + " between")
                 .archives("cred3.txt", mixedEnvCred3Secret)
                 .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
+    }
+
+    @Issue("JENKINS-43910")
+    @Test
+    public void fileCredentialsInEnv() throws Exception {
+        expect("fileCredentialsInEnv")
+                .logContains("FILECRED is ****",
+                        "INBETWEEN is Something **** between")
+                .archives("cred1.txt", mixedEnvCred1Secret)
+                .go();
     }
 }

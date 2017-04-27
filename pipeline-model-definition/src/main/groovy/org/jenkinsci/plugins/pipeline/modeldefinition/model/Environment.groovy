@@ -48,6 +48,10 @@ public class Environment implements Serializable {
     Map<String,EnvValue> valueMap = new TreeMap<>()
     Map<String,EnvValue> credsMap = new TreeMap<>()
 
+    private transient Map<String,String> interimResolved = new TreeMap<>()
+    private transient Map<String,String> interimResolvedCreds = new TreeMap<>()
+    private transient boolean needsAgent = false
+
     public void setValueMap(Map<String,EnvValue> inMap) {
         this.valueMap.putAll(inMap)
     }
@@ -60,134 +64,159 @@ public class Environment implements Serializable {
         return valueMap
     }
 
-    public Map<String,String> getCredsMap(CpsScript script) {
+    public Map<String,String> getCredsMap(CpsScript script, Environment parent = null) {
         Map<String,String> resolvedMap = new TreeMap<>()
-        EnvVars contextEnv = new EnvVars()
-        ((Map<String,Object>)script.getProperty("params")).each { k, v ->
-            contextEnv.put(k, v?.toString() ?: "")
-        }
+        if (!credsMap.isEmpty()) {
+            if (interimResolvedCreds.isEmpty() || needsAgent) {
+                EnvVars contextEnv = new EnvVars()
+                resolveEnvVars(script, true, parent).each { k, v ->
+                    if (v instanceof String) {
+                        contextEnv.put(k, v)
+                    }
+                }
 
-        contextEnv.overrideExpandingAll(((EnvActionImpl)script.getProperty("env")).getEnvironment())
-
-        credsMap.each { k, v ->
-            resolvedMap.put(k, Utils.trimQuotes(contextEnv.expand(v.value.toString())))
+                credsMap.each { k, v ->
+                    resolvedMap.put(k, Utils.trimQuotes(contextEnv.expand(v.value.toString())))
+                }
+                interimResolvedCreds.putAll(resolvedMap)
+            }
+        } else {
+            interimResolvedCreds.putAll(resolvedMap)
         }
 
         return resolvedMap
     }
 
     public Map<String,String> resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
-        Map<String, String> overrides = getMap().collectEntries { k, v ->
-            String val = v.value.toString()
-            if (v.isLiteral) {
-                // Escape dollar-signs.
-                val = StringUtils.replace(val, '$', DOLLAR_PLACEHOLDER)
-            } else {
-                // Switch out env.FOO for FOO, since the env global variable isn't available in the shell we're processing.
-                val = replaceEnvDotInCurlies(val)
-            }
-            // Remove quotes from any GStrings that may have them.
-            if (v.isLiteral || (v.value.toString().startsWith('$'))) {
-                [(k): val]
-            } else {
-                [(k): Utils.trimQuotes(val)]
-            }
-        }
-
         Map<String, String> alreadySet = new TreeMap<>()
-        // Add any already-set environment variables for the run to the map of already-set variables.
-        alreadySet.putAll(CpsThread.current()?.getExecution()?.getShell()?.getContext()?.variables?.findAll { k, v ->
-            k instanceof String && v instanceof String
-        })
+        if (getMap().isEmpty()) {
+            return alreadySet
+        } else if (!interimResolved.isEmpty() && !needsAgent) {
+            alreadySet.putAll(interimResolved)
+            return alreadySet
+        } else {
+            Map<String, String> overrides = getMap().collectEntries { k, v ->
+                String val = v.value.toString()
+                if (v.isLiteral) {
+                    // Escape dollar-signs.
+                    val = StringUtils.replace(val, '$', DOLLAR_PLACEHOLDER)
+                } else {
+                    // Switch out env.FOO for FOO, since the env global variable isn't available in the shell we're processing.
+                    val = replaceEnvDotInCurlies(val)
+                }
+                // Remove quotes from any GStrings that may have them.
+                if (v.isLiteral || (v.value.toString().startsWith('$'))) {
+                    [(k): val]
+                } else {
+                    [(k): Utils.trimQuotes(val)]
+                }
+            }
 
-        // If we're being called directly and not to pull in root-level environment variables into a stage, add anything
-        // in the current env global variable.
-        if (withContext) {
-            alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
-        }
+            // Add any already-set environment variables for the run to the map of already-set variables.
+            alreadySet.putAll(CpsThread.current()?.getExecution()?.getShell()?.getContext()?.variables?.findAll { k, v ->
+                k instanceof String && v instanceof String
+            })
 
-        // Add parameters.
-        ((Map<String, Object>) script.getProperty("params")).each { k, v ->
-            alreadySet.put(k, v?.toString() ?: "")
-        }
+            // If we're being called directly and not to pull in root-level environment variables into a stage, add anything
+            // in the current env global variable.
+            if (withContext) {
+                alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
+            }
 
-        // If we're being called for a stage, add any root level environment variables after resolving them.
-        if (parent != null) {
-            alreadySet.putAll(parent.resolveEnvVars(script, false))
-        }
+            // Add parameters.
+            ((Map<String, Object>) script.getProperty("params")).each { k, v ->
+                alreadySet.put(k, v?.toString() ?: "")
+            }
 
-        List<String> unsetKeys = []
-        // Initially define the list of unset environment variable keys to the full list of keys for this environment
-        // directive.
-        unsetKeys.addAll(overrides.keySet())
+            // If we're being called for a stage, add any root level environment variables after resolving them.
+            if (parent != null) {
+                alreadySet.putAll(parent.resolveEnvVars(script, false))
+            }
 
-        Binding binding = new Binding(alreadySet)
+            List<String> unsetKeys = []
+            // Initially define the list of unset environment variable keys to the full list of keys for this environment
+            // directive.
+            unsetKeys.addAll(overrides.keySet())
 
-        // Also add the params global variable to deal with any references to params.FOO.
-        binding.setProperty("params", (Map<String, Object>) script.getProperty("params"))
+            Binding binding = new Binding(alreadySet)
 
-        // Do a first round of resolution before we proceed onward to credentials - if no credentials are defined, we
-        // don't need to do anything more.
-        Map<String, String> preCreds = roundRobin(binding, alreadySet, overrides, unsetKeys)
+            // Also add the params global variable to deal with any references to params.FOO.
+            binding.setProperty("params", (Map<String, Object>) script.getProperty("params"))
 
-        if (!credsMap.isEmpty()) {
-            // Get the current build for use in credentials processing.
-            Run<?, ?> r = script.$build()
+            // Do a first round of resolution before we proceed onward to credentials - if no credentials are defined, we
+            // don't need to do anything more.
+            Map<String, String> preCreds = roundRobin(binding, alreadySet, overrides, unsetKeys)
 
-            // Keep a list of resolved credentials environment variables.
-            List<String> credKeys = []
+            if (!credsMap.isEmpty()) {
+                // Get the current build for use in credentials processing.
+                Run<?, ?> r = script.$build()
 
-            // Resolve credentials that don't require a workspace so we can insert them into the environment variables as needed.
-            // Note that we'll discard these values for now and recreate them later in the actual withCredentials block.
-            credsMap.each { k, v ->
-                try {
-                    // Resolve the string passed to credentials(...) in case it contains an environment variable defined
-                    // in the environment directive.
+                // Keep a list of resolved credentials environment variables.
+                List<String> credKeys = []
 
-                    String resolvedCredId = resolveAsScript(binding, v.value.toString())
-                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(resolvedCredId, r)
+                // Resolve credentials that don't require a workspace so we can insert them into the environment variables as needed.
+                // Note that we'll discard these values for now and recreate them later in the actual withCredentials block.
+                credsMap.each { k, v ->
+                    try {
+                        // Resolve the string passed to credentials(...) in case it contains an environment variable defined
+                        // in the environment directive.
 
-                    if (handler != null) {
-                        // Iterate over the bindings corresponding to the credential the ID represents.
-                        handler.toBindings(k, resolvedCredId).each { b ->
-                            // We don't actually bother resolving anything that needs a workspace at this point. So a file
-                            // credential, for example, will not be resolved in time for insertion into the environment.
-                            if (!b.descriptor.requiresWorkspace()) {
-                                // Get the actual environment variables that would be produced by the binding.
-                                MultiBinding.MultiEnvironment bindingEnv = b.bind(r, null, null, TaskListener.NULL)
-                                // Add those environment variables to the shell we're using for resolving the environment
-                                // entries, and record that we've processed that environment variable.
-                                bindingEnv.values.each { cKey, cVal ->
-                                    credKeys.add(cKey)
-                                    binding.setVariable(cKey, StringUtils.replace(cVal, '$', DOLLAR_PLACEHOLDER))
+                        String resolvedCredId = resolveAsScript(binding, v.value.toString())
+                        CredentialsBindingHandler handler = CredentialsBindingHandler.forId(resolvedCredId, r)
+
+                        if (handler != null) {
+                            // Iterate over the bindings corresponding to the credential the ID represents.
+                            handler.toBindings(k, resolvedCredId).each { b ->
+                                // We don't actually bother resolving anything that needs a workspace at this point. So a file
+                                // credential, for example, will not be resolved in time for insertion into the environment.
+                                if (!b.descriptor.requiresWorkspace()) {
+                                    // Get the actual environment variables that would be produced by the binding.
+                                    MultiBinding.MultiEnvironment bindingEnv = b.bind(r, null, null, TaskListener.NULL)
+                                    // Add those environment variables to the shell we're using for resolving the environment
+                                    // entries, and record that we've processed that environment variable.
+                                    bindingEnv.values.each { cKey, cVal ->
+                                        credKeys.add(cKey)
+                                        binding.setVariable(cKey, StringUtils.replace(cVal, '$', DOLLAR_PLACEHOLDER))
+                                    }
+                                } else if (withContext) {
+                                    // Note that we need to reprocess this once we have an agent context.
+                                    needsAgent = true
                                 }
                             }
                         }
+                    } catch (Exception e) {
+                        // Something went wrong? Don't care! We'll be processing this for real later anyway.
                     }
-                } catch (Exception e) {
-                    // Something went wrong? Don't care! We'll be processing this for real later anyway.
+                }
+
+                // Only bother with any of this if there are resolved credentials.
+                if (!credKeys.isEmpty()) {
+                    // Find all environment variable keys that have a value containing one or more of the now-resolved
+                    // credentials environment variables. Ideally, we'd do this before resolving the credentials themselves,
+                    // but we can't know what those variables may be until we've actually resolved them.
+                    List<String> keysWithCreds = overrides.findAll { k, v -> containsVariable(v, credKeys) }.collect {
+                        it.key
+                    }
+
+                    // Only actually evaluate anything if there are env keys with unresolved cred references.
+                    if (!keysWithCreds.isEmpty()) {
+                        // Round-robin resolve the environment one more time, with the credentials included.
+                        Map<String, String> postCreds = roundRobin(binding, preCreds, overrides, keysWithCreds, credKeys)
+
+                        // Stash aside the resolved vars for use elsewhere, but only if we're not a nested call.
+                        if (withContext) {
+                            interimResolved.putAll(postCreds)
+                        }
+                        return postCreds
+                    }
                 }
             }
-
-            // Only bother with any of this if there are resolved credentials.
-            if (!credKeys.isEmpty()) {
-                // Find all environment variable keys that have a value containing one or more of the now-resolved
-                // credentials environment variables. Ideally, we'd do this before resolving the credentials themselves,
-                // but we can't know what those variables may be until we've actually resolved them.
-                List<String> keysWithCreds = overrides.findAll { k, v -> containsVariable(v, credKeys) }.collect {
-                    it.key
-                }
-
-                // Only actually evaluate anything if there are env keys with unresolved cred references.
-                if (!keysWithCreds.isEmpty()) {
-                    // Round-robin resolve the environment one more time, with the credentials included.
-                    Map<String, String> postCreds = roundRobin(binding, preCreds, overrides, keysWithCreds, credKeys)
-
-                    return postCreds
-                }
+            // Stash aside the resolved vars for use elsewhere, but only if we're not a nested call.
+            if (withContext) {
+                interimResolved.putAll(alreadySet)
             }
+            return alreadySet
         }
-        return alreadySet
     }
 
     /**
