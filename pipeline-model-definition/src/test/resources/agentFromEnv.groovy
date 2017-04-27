@@ -23,36 +23,31 @@
  */
 
 pipeline {
-    environment {
-        FILECRED = credentials("fileCred")
-        INBETWEEN = "Something ${FILECRED} between"
-        CRED_NAME = "cred1"
-        CRED1 = credentials("${CRED_NAME}")
+    agent {
+        label "${FIRST_LABEL}"
     }
-
-    agent any
-
+    environment {
+        FIRST_LABEL = "docker"
+    }
     stages {
         stage("foo") {
             steps {
-                sh 'echo "FILECRED is $FILECRED"'
-                sh 'echo "INBETWEEN is $INBETWEEN"'
-                sh 'echo $CRED1 > cred1.txt'
+                sh('echo WHICH_AGENT=$WHICH_AGENT')
             }
         }
         stage("bar") {
+            agent {
+                label "${SECOND_LABEL}"
+            }
             environment {
-                OTHERCRED = credentials("otherFileCred")
-                OTHER_INBETWEEN = "THIS ${OTHERCRED} THAT"
-                SECOND_CRED = "cred2"
-                CRED2 = credentials("${SECOND_CRED}")
+                SECOND_LABEL = "other-docker"
             }
             steps {
-                sh 'echo "OTHERCRED is $OTHERCRED"'
-                sh 'echo "OTHER_INBETWEEN is $OTHER_INBETWEEN"'
-                sh 'echo $CRED2 > cred2.txt'
-                archive "**/*.txt"
+                sh('echo WHICH_AGENT=$WHICH_AGENT')
             }
         }
     }
 }
+
+
+

@@ -92,10 +92,10 @@ public class ModelInterpreter implements Serializable {
                                                     // environment is populated before we evaluate any when condition,
                                                     // and so that we don't go into a per-stage agent if the when condition
                                                     // isn't satisfied.
-                                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
+                                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                         if (evaluateWhen(thisStage.when)) {
-                                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                                withCredentialsBlock(thisStage.environment, root.environment) {
+                                                            withCredentialsBlock(thisStage.environment, root.environment) {
+                                                                withEnvBlock(thisStage.getEnvVars(root, script)) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)

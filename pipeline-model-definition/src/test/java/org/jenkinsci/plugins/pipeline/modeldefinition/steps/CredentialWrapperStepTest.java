@@ -71,6 +71,9 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     private static final String fileCredId = "fileCred";
     private static final String fileCredName = "credFile.txt";
     private static final String fileCredContent = "file-cred-content-is-here";
+    private static final String otherFileCredId = "otherFileCred";
+    private static final String otherFileCredName = "otherCredFile.txt";
+    private static final String otherFileCredContent = "other-file-cred-content-is-here";
     private static Folder folder;
     private static final String mixedEnvInFolderCred1Secret = "Some secret text for 1 folder";
     private static final String mixedEnvInFoldercred2U = "bobby-in-folder";
@@ -92,6 +95,8 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         store.addCredentials(Domain.global(), mixedEnvCred3);
         FileCredentialsImpl fileCred = new FileCredentialsImpl(CredentialsScope.GLOBAL, fileCredId, "test", fileCredName, SecretBytes.fromBytes(fileCredContent.getBytes()));
         store.addCredentials(Domain.global(), fileCred);
+        FileCredentialsImpl otherFileCred = new FileCredentialsImpl(CredentialsScope.GLOBAL, otherFileCredId, "test", otherFileCredName, SecretBytes.fromBytes(otherFileCredContent.getBytes()));
+        store.addCredentials(Domain.global(), otherFileCred);
 
         folder = j.jenkins.createProject(Folder.class, "testFolder");
         folder.addProperty(new FolderCredentialsProvider.FolderCredentialsProperty(new DomainCredentials[0]));
@@ -187,8 +192,11 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     public void fileCredentialsInEnv() throws Exception {
         expect("fileCredentialsInEnv")
                 .logContains("FILECRED is ****",
-                        "INBETWEEN is Something **** between")
+                        "INBETWEEN is Something **** between",
+                        "OTHERCRED is ****",
+                        "OTHER_INBETWEEN is THIS **** THAT")
                 .archives("cred1.txt", mixedEnvCred1Secret)
+                .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P)
                 .go();
     }
 }
