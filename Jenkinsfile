@@ -6,6 +6,11 @@ pipeline {
         maven "mvn"
         jdk "jdk8"
     }
+    
+    environment {
+        GIT_COMMITTER_NAME = "jenkins"
+        GIT_COMMITTER_EMAIL = "jenkins@example.com"
+    }
 
     // Run on executors with the "docker" label, because it's either that or Windows here.
     agent {
