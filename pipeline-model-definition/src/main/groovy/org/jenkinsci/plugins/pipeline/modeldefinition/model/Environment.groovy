@@ -25,10 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.EnvVars
-import hudson.model.Run
-import hudson.model.TaskListener
 import org.apache.commons.lang.StringUtils
-import org.jenkinsci.plugins.credentialsbinding.MultiBinding
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SecureGroovyScript
 import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext
@@ -49,8 +46,8 @@ public class Environment implements Serializable {
     Map<String,EnvValue> credsMap = new TreeMap<>()
 
     // Caching for resolved environment variables and credentials so we don't process them twice if we don't need to.
-    private transient Map<String,String> interimResolved = new TreeMap<>()
-    private transient Map<String,String> interimResolvedCreds = new TreeMap<>()
+    private Map<String,String> interimResolved = new TreeMap<>()
+    private Map<String,String> interimResolvedCreds = new TreeMap<>()
 
     public void setValueMap(Map<String,EnvValue> inMap) {
         this.valueMap.putAll(inMap)
@@ -64,6 +61,13 @@ public class Environment implements Serializable {
         return valueMap
     }
 
+    /**
+     * Get the map of environment variable names to credential IDs, processed through the environment as needed.
+     *
+     * @param script The {@link CpsScript} we will use for evaluation.
+     * @param parent An optional parent {@link Environment}
+     * @return
+     */
     public Map<String,String> getCredsMap(CpsScript script, Environment parent = null) {
         Map<String,String> resolvedMap = new TreeMap<>()
         if (!credsMap.isEmpty()) {
@@ -87,7 +91,15 @@ public class Environment implements Serializable {
         return resolvedMap
     }
 
-    public Map<String,String> resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null) {
+    /**
+     * Resolve environment variables other than credentials.
+     *
+     * @param script The {@link CpsScript} used for resolution
+     * @param firstLevel Whether this is the first level of resolution or a recursive call.
+     * @param parent An optional parent {@link Environment}
+     * @return
+     */
+    public Map<String,String> resolveEnvVars(CpsScript script, boolean firstLevel, Environment parent = null) {
         Map<String, String> alreadySet = new TreeMap<>()
         if (getMap().isEmpty()) {
             return alreadySet
@@ -119,7 +131,7 @@ public class Environment implements Serializable {
 
             // If we're being called directly and not to pull in root-level environment variables into a stage, add anything
             // in the current env global variable.
-            if (withContext) {
+            if (firstLevel) {
                 alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
             }
 
@@ -147,7 +159,7 @@ public class Environment implements Serializable {
             Map<String, String> resolved = roundRobin(binding, alreadySet, overrides, unsetKeys)
 
             // Stash aside the resolved vars for use elsewhere, but only if we're not a nested call.
-            if (withContext) {
+            if (firstLevel) {
                 interimResolved.putAll(resolved)
             }
             return resolved
