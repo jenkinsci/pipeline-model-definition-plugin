@@ -143,79 +143,14 @@ public class Environment implements Serializable {
             // Also add the params global variable to deal with any references to params.FOO.
             binding.setProperty("params", (Map<String, Object>) script.getProperty("params"))
 
-            // Do a first round of resolution before we proceed onward to credentials - if no credentials are defined, we
-            // don't need to do anything more.
-            Map<String, String> preCreds = roundRobin(binding, alreadySet, overrides, unsetKeys)
+            // Do resolution
+            Map<String, String> resolved = roundRobin(binding, alreadySet, overrides, unsetKeys)
 
-            if (!credsMap.isEmpty()) {
-                // Get the current build for use in credentials processing.
-                Run<?, ?> r = script.$build()
-
-                // Keep a list of resolved credentials environment variables.
-                List<String> credKeys = []
-
-                // Resolve credentials that don't require a workspace so we can insert them into the environment variables as needed.
-                // Note that we'll discard these values for now and recreate them later in the actual withCredentials block.
-                credsMap.each { k, v ->
-                    try {
-                        // Resolve the string passed to credentials(...) in case it contains an environment variable defined
-                        // in the environment directive.
-
-                        String resolvedCredId = resolveAsScript(binding, v.value.toString())
-                        CredentialsBindingHandler handler = CredentialsBindingHandler.forId(resolvedCredId, r)
-
-                        if (handler != null) {
-                            // Iterate over the bindings corresponding to the credential the ID represents.
-                            handler.toBindings(k, resolvedCredId).each { b ->
-                                // We don't actually bother resolving anything that needs a workspace at this point. So a file
-                                // credential, for example, will not be resolved in time for insertion into the environment.
-                                if (!b.descriptor.requiresWorkspace()) {
-                                    // Get the actual environment variables that would be produced by the binding.
-                                    MultiBinding.MultiEnvironment bindingEnv = b.bind(r, null, null, TaskListener.NULL)
-                                    // Add those environment variables to the shell we're using for resolving the environment
-                                    // entries, and record that we've processed that environment variable.
-                                    bindingEnv.values.each { cKey, cVal ->
-                                        credKeys.add(cKey)
-                                        binding.setVariable(cKey, StringUtils.replace(cVal, '$', DOLLAR_PLACEHOLDER))
-                                    }
-                                } else if (withContext) {
-                                    // Note that we need to reprocess this once we have an agent context.
-                                    needsAgent = true
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Something went wrong? Don't care! We'll be processing this for real later anyway.
-                    }
-                }
-
-                // Only bother with any of this if there are resolved credentials.
-                if (!credKeys.isEmpty()) {
-                    // Find all environment variable keys that have a value containing one or more of the now-resolved
-                    // credentials environment variables. Ideally, we'd do this before resolving the credentials themselves,
-                    // but we can't know what those variables may be until we've actually resolved them.
-                    List<String> keysWithCreds = overrides.findAll { k, v -> containsVariable(v, credKeys) }.collect {
-                        it.key
-                    }
-
-                    // Only actually evaluate anything if there are env keys with unresolved cred references.
-                    if (!keysWithCreds.isEmpty()) {
-                        // Round-robin resolve the environment one more time, with the credentials included.
-                        Map<String, String> postCreds = roundRobin(binding, preCreds, overrides, keysWithCreds, credKeys)
-
-                        // Stash aside the resolved vars for use elsewhere, but only if we're not a nested call.
-                        if (withContext) {
-                            interimResolved.putAll(postCreds)
-                        }
-                        return postCreds
-                    }
-                }
-            }
             // Stash aside the resolved vars for use elsewhere, but only if we're not a nested call.
             if (withContext) {
-                interimResolved.putAll(alreadySet)
+                interimResolved.putAll(resolved)
             }
-            return alreadySet
+            return resolved
         }
     }
 

@@ -73,8 +73,8 @@ public class ModelInterpreter implements Serializable {
                 // Entire build, including notifications, runs in the agent.
                 inDeclarativeAgent(root, root, root.agent) {
                     withCredentialsBlock(root.environment) {
-                        inWrappers(root.options) {
-                            withEnvBlock(root.getEnvVars(script)) {
+                        withEnvBlock(root.getEnvVars(script)) {
+                            inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
