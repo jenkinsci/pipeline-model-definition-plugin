@@ -24,7 +24,7 @@
 
 pipeline {
     environment {
-        FOO = 'FOO'
+        FOO = '${FOOTHAT}'
         BAR = "${FOO}BAR"
     }
     agent {

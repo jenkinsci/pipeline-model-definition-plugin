@@ -346,10 +346,14 @@ public class Utils {
         return StringEscapeUtils.unescapeJava(s)
     }
 
-    static List<List<String>> getEnvCredentials(Environment environment, CpsScript script) {
+    static String unescapeDollars(String s) {
+        return StringUtils.replace(s, Environment.DOLLAR_PLACEHOLDER, '$')
+    }
+
+    static List<List<String>> getEnvCredentials(Environment environment, CpsScript script, Environment parent = null) {
         List<List<String>> credsTuples = new ArrayList<>()
         if (environment != null) {
-            credsTuples.addAll(environment.getCredsMap(script)?.collect { k, v ->
+            credsTuples.addAll(environment.getCredsMap(script, parent)?.collect { k, v ->
                 [k, v]
             })
         }

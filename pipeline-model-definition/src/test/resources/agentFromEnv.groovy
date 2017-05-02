@@ -23,26 +23,27 @@
  */
 
 pipeline {
-    environment {
-        FOO = 'FOO'
-        BAR = "${FOO}BAR"
-    }
     agent {
-        label "some-label"
+        label "${FIRST_LABEL}"
     }
-
+    environment {
+        FIRST_LABEL = "docker"
+    }
     stages {
         stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-                SPLODE = "${params.WUT ?: 'banana'}"
-            }
-
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
-                sh 'echo "SPLODE is $SPLODE"'
+                sh('echo WHICH_AGENT=$WHICH_AGENT')
+            }
+        }
+        stage("bar") {
+            agent {
+                label "${SECOND_LABEL}"
+            }
+            environment {
+                SECOND_LABEL = "other-docker"
+            }
+            steps {
+                sh('echo WHICH_AGENT=$WHICH_AGENT')
             }
         }
     }

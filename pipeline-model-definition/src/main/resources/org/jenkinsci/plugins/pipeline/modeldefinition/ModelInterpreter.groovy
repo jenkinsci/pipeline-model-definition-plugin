@@ -72,9 +72,9 @@ public class ModelInterpreter implements Serializable {
 
                 // Entire build, including notifications, runs in the agent.
                 inDeclarativeAgent(root, root, root.agent) {
-                    withEnvBlock(root.getEnvVars(script)) {
-                        inWrappers(root.options) {
-                            withCredentialsBlock(root.environment) {
+                    withCredentialsBlock(root.environment) {
+                        withEnvBlock(root.getEnvVars(script)) {
+                            inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
@@ -92,10 +92,10 @@ public class ModelInterpreter implements Serializable {
                                                     // environment is populated before we evaluate any when condition,
                                                     // and so that we don't go into a per-stage agent if the when condition
                                                     // isn't satisfied.
-                                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
+                                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                         if (evaluateWhen(thisStage.when)) {
-                                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                                withCredentialsBlock(thisStage.environment) {
+                                                            withCredentialsBlock(thisStage.environment, root.environment) {
+                                                                withEnvBlock(thisStage.getEnvVars(root, script)) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)
@@ -213,7 +213,7 @@ public class ModelInterpreter implements Serializable {
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
                 String toEval = Utils.prepareForEvalToString(envVars.get(i))
-                evaledEnv.add(Utils.unescapeFromEval((String)script.evaluate(toEval)))
+                evaledEnv.add(Utils.unescapeDollars(Utils.unescapeFromEval((String)script.evaluate(toEval))))
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -231,15 +231,16 @@ public class ModelInterpreter implements Serializable {
      * Execute a given closure within a "withCredentials" block.
      *
      * @param environment The environment we're processing from
+     * @param parent Optional parent environment
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
+    def withCredentialsBlock(@CheckForNull Environment environment, Environment parent = null, Closure body) {
         Map<String,CredentialWrapper> creds = new TreeMap<>()
         
         if (environment != null) {
             try {
-                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script)
+                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script, parent)
                 if (!credStrings.isEmpty()) {
                     creds.putAll(processCredentials(credStrings))
                 }

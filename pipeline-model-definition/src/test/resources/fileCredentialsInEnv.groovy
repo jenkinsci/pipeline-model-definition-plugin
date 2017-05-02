@@ -24,29 +24,35 @@
 
 pipeline {
     environment {
-        FOO = 'FOO'
-        BAR = "${FOO}BAR"
+        FILECRED = credentials("fileCred")
+        INBETWEEN = "Something ${FILECRED} between"
+        CRED_NAME = "cred1"
+        CRED1 = credentials("${CRED_NAME}")
     }
-    agent {
-        label "some-label"
-    }
+
+    agent any
 
     stages {
         stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-                SPLODE = "${params.WUT ?: 'banana'}"
-            }
-
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
-                sh 'echo "SPLODE is $SPLODE"'
+                sh 'echo "FILECRED is $FILECRED"'
+                sh 'echo "INBETWEEN is $INBETWEEN"'
+                sh 'echo $CRED1 > cred1.txt'
+            }
+        }
+        stage("bar") {
+            environment {
+                OTHERCRED = credentials("otherFileCred")
+                OTHER_INBETWEEN = "THIS ${OTHERCRED} THAT"
+                SECOND_CRED = "cred2"
+                CRED2 = credentials("${SECOND_CRED}")
+            }
+            steps {
+                sh 'echo "OTHERCRED is $OTHERCRED"'
+                sh 'echo "OTHER_INBETWEEN is $OTHER_INBETWEEN"'
+                sh 'echo $CRED2 > cred2.txt'
+                archive "**/*.txt"
             }
         }
     }
 }
-
-
-
