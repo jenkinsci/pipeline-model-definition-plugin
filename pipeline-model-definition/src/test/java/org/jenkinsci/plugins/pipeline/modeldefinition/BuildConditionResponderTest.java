@@ -78,7 +78,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertLogContains("I FAILED", b);
 
         WorkflowJob job = b.getParent();
-        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeChanged")));
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeChanged"), true));
         WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
         j.assertBuildStatusSuccess(j.waitForCompletion(b2));
         j.assertLogContains("[Pipeline] { (foo)", b2);
