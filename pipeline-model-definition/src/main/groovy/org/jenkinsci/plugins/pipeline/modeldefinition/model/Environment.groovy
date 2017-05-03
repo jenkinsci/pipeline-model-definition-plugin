@@ -99,7 +99,7 @@ public class Environment implements Serializable {
      * @param parent An optional parent {@link Environment}
      * @return
      */
-    public Map<String,String> resolveEnvVars(CpsScript script, boolean withContext, Environment parent = null,
+    public Map<String,String> resolveEnvVars(CpsScript script, boolean firstLevel, Environment parent = null,
                                              Stage parentStage = null) {
         Map<String, String> alreadySet = new TreeMap<>()
         if (getMap().isEmpty()) {
@@ -132,7 +132,7 @@ public class Environment implements Serializable {
 
             // If we're being called directly and not to pull in root-level environment variables into a stage, add anything
             // in the current env global variable.
-            if (withContext) {
+            if (firstLevel) {
                 alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
             }
 
