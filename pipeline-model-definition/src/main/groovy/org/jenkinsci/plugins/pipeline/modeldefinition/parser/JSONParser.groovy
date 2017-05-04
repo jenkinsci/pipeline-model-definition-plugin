@@ -158,8 +158,8 @@ class JSONParser implements Parser {
         if (j.node.has("agent")) {
             stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
-        if (j.node.has("parallelStages")) {
-            stage.parallelStages = parseStages(j.append(JsonPointer.of("parallelStages")))
+        if (j.node.has("parallel")) {
+            stage.parallel = parseStages(j.append(JsonPointer.of("parallel")))
         }
 
         JsonTree branches = j.append(JsonPointer.of("branches"))

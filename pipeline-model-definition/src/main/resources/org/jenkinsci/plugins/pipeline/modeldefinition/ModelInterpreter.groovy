@@ -61,7 +61,7 @@ public class ModelInterpreter implements Serializable {
         Throwable firstError
 
         if (root != null) {
-            // Attach the parallelStages model to the run for introspection etc.
+            // Attach the parallel model to the run for introspection etc.
             root = Utils.attachDeclarativeActions(root, script)
             boolean postBuildRun = false
 
@@ -93,7 +93,7 @@ public class ModelInterpreter implements Serializable {
                                         }
                                     }
 
-                                    // Execute post-build actions now that we've finished all parallelStages.
+                                    // Execute post-build actions now that we've finished all parallel.
                                     try {
                                         postBuildRun = true
                                         executePostBuild(root)
@@ -113,13 +113,13 @@ public class ModelInterpreter implements Serializable {
                     }
                 }
             } catch (Exception e) {
-                // Catch any errors that may have been thrown outside of the parallelStages proper and make sure we set
+                // Catch any errors that may have been thrown outside of the parallel proper and make sure we set
                 // firstError accordingly.
                 if (firstError == null) {
                     firstError = e
                 }
             } finally {
-                // If we hit an exception somewhere *before* we got to parallelStages, we still need to do post-build tasks.
+                // If we hit an exception somewhere *before* we got to parallel, we still need to do post-build tasks.
                 if (!postBuildRun) {
                     try {
                         executePostBuild(root)
@@ -159,13 +159,13 @@ public class ModelInterpreter implements Serializable {
                     Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
                     Utils.markStageSkippedForUnstable(thisStage.name)
                 } else {
-                    if (thisStage.parallelStages != null) {
+                    if (thisStage.parallel != null) {
                         if (evaluateWhen(thisStage.when)) {
                             withCredentialsBlock(thisStage.environment, root.environment) {
                                 withEnvBlock(thisStage.getEnvVars(root, script)) {
                                     def parallelStages = [:]
-                                    for (int i = 0; i < thisStage.parallelStages.stages.size(); i++) {
-                                        Stage parallelStage = thisStage.parallelStages.getStages().get(i)
+                                    for (int i = 0; i < thisStage.parallel.stages.size(); i++) {
+                                        Stage parallelStage = thisStage.parallel.getStages().get(i)
                                         parallelStages.put(parallelStage.name,
                                             evaluateStage(root, thisStage.agent ?: parentAgent, parallelStage, firstError, thisStage))
                                     }

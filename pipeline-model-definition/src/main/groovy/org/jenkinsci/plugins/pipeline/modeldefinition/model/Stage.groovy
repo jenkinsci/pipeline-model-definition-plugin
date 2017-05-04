@@ -26,10 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-import javax.annotation.Nonnull
 
 /**
  * An individual stage to be executed within the build.
@@ -55,7 +52,7 @@ public class Stage implements NestedModel, Serializable {
 
     Environment environment
 
-    Stages parallelStages
+    Stages parallel
 
     Stage name(String n) {
         this.name = n
@@ -92,8 +89,8 @@ public class Stage implements NestedModel, Serializable {
         return this
     }
 
-    Stage parallelStages(Stages stages) {
-        this.parallelStages = stages
+    Stage parallel(Stages stages) {
+        this.parallel = stages
         return this
     }
     /**

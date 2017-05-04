@@ -295,12 +295,12 @@ public class Utils {
             stage.when(new StageConditionals(processedConditions))
         }
 
-        if (stage.parallelStages != null && !stage.parallelStages.stages.isEmpty()) {
+        if (stage.parallel != null && !stage.parallel.stages.isEmpty()) {
             List<Stage> nestedStages = []
-            stage.parallelStages.stages.each { s ->
-                nestedStages.add(populateSingleStageFromModel(r, astStage.parallelStages, s))
+            stage.parallel.stages.each { s ->
+                nestedStages.add(populateSingleStageFromModel(r, astStage.parallel, s))
             }
-            stage.parallelStages.stages = nestedStages
+            stage.parallel.stages = nestedStages
         }
 
         return stage

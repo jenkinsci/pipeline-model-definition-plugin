@@ -1,10 +1,10 @@
 {"pipeline": {
   "stages": [  {
     "name": "foo",
-    "parallelStages":     [
+    "parallel":     [
       {
         "name": "first",
-        "parallelStages":         [
+        "parallel":         [
           {
             "name": "first-and-one",
             "branches": [            {

@@ -9,7 +9,7 @@
         "value": "apache-maven-3.0.1"
       }
     }],
-    "parallelStages":     [
+    "parallel":     [
       {
         "name": "first",
         "branches": [        {

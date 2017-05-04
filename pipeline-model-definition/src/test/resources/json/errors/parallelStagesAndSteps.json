@@ -14,7 +14,7 @@
         }]
       }]
     }],
-    "parallelStages":     [
+    "parallel":     [
       {
         "name": "first",
         "branches": [        {
