@@ -23,7 +23,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTTools tools;
     private ModelASTEnvironment environment;
     private Boolean failFast;
-    private ModelASTStages parallelStages;
+    private ModelASTStages parallel;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -34,8 +34,8 @@ public final class ModelASTStage extends ModelASTElement {
         JSONObject o = new JSONObject();
         o.accumulate("name", name);
 
-        if (branches.isEmpty() && parallelStages != null) {
-            o.accumulate("parallelStages", parallelStages.toJSON());
+        if (branches.isEmpty() && parallel != null) {
+            o.accumulate("parallel", parallel.toJSON());
         } else {
             final JSONArray a = new JSONArray();
             for (ModelASTBranch branch : branches) {
@@ -79,8 +79,8 @@ public final class ModelASTStage extends ModelASTElement {
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);
         }
-        if (parallelStages != null) {
-            parallelStages.validate(validator, true);
+        if (parallel != null) {
+            parallel.validate(validator, true);
         }
         if (agent != null) {
             agent.validate(validator);
@@ -116,9 +116,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (environment != null) {
             result.append(environment.toGroovy());
         }
-        if (branches.isEmpty() && parallelStages != null) {
-            result.append("parallelStages {\n");
-            result.append(parallelStages.toGroovy());
+        if (branches.isEmpty() && parallel != null) {
+            result.append("parallel {\n");
+            result.append(parallel.toGroovy());
             result.append("}\n");
         } else {
             result.append("steps {\n");
@@ -166,8 +166,8 @@ public final class ModelASTStage extends ModelASTElement {
         if (agent != null) {
             agent.removeSourceLocation();
         }
-        if (parallelStages != null) {
-            parallelStages.removeSourceLocation();
+        if (parallel != null) {
+            parallel.removeSourceLocation();
         }
         if (when != null) {
             when.removeSourceLocation();
@@ -247,12 +247,12 @@ public final class ModelASTStage extends ModelASTElement {
         this.failFast = f;
     }
 
-    public ModelASTStages getParallelStages() {
-        return parallelStages;
+    public ModelASTStages getParallel() {
+        return parallel;
     }
 
-    public void setParallelStages(ModelASTStages s) {
-        this.parallelStages = s;
+    public void setParallel(ModelASTStages s) {
+        this.parallel = s;
     }
 
     @Override
@@ -266,7 +266,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", tools=" + tools +
                 ", environment=" + environment +
                 ", failFast=" + failFast +
-                ", parallelStages=" + parallelStages +
+                ", parallel=" + parallel +
                 "}";
     }
 
@@ -300,7 +300,7 @@ public final class ModelASTStage extends ModelASTElement {
         if (getFailFast() != null ? !getFailFast().equals(that.getFailFast()) : that.getFailFast() != null) {
             return false;
         }
-        if (getParallelStages() != null ? !getParallelStages().equals(that.getParallelStages()) : that.getParallelStages() != null) {
+        if (getParallel() != null ? !getParallel().equals(that.getParallel()) : that.getParallel() != null) {
             return false;
         }
         if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
@@ -324,7 +324,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getFailFast() != null ? getFailFast().hashCode() : 0);
-        result = 31 * result + (getParallelStages() != null ? getParallelStages().hashCode() : 0);
+        result = 31 * result + (getParallel() != null ? getParallel().hashCode() : 0);
         return result;
     }
 }

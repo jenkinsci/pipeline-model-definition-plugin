@@ -26,9 +26,9 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            parallelStages {
+            parallel {
                 stage("first") {
-                    parallelStages {
+                    parallel {
                         stage("first-and-one") {
                             steps {
                                 echo "This should never be reached"

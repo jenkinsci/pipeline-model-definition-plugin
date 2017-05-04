@@ -475,7 +475,7 @@
             "$ref": "#/definitions/branch"
           }
         },
-        "parallelStages": {
+        "parallel": {
           "$ref": "#/definitions/stages"
         }
       },

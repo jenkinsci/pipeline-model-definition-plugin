@@ -29,7 +29,7 @@ pipeline {
             steps {
                 echo "This will never happen"
             }
-            parallelStages {
+            parallel {
                 stage("first") {
                     steps {
                         echo "First branch"

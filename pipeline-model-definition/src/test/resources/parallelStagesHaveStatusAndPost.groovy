@@ -26,7 +26,7 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            parallelStages {
+            parallel {
                 stage("first") {
                     steps {
                         error "First branch"

@@ -36,7 +36,7 @@ pipeline {
                 OVERRIDE_ONCE = "overrode once and done"
                 OVERRIDE_PER_NESTED = "override in each branch"
             }
-            parallelStages {
+            parallel {
                 stage("first") {
                     agent {
                         label "first-agent"

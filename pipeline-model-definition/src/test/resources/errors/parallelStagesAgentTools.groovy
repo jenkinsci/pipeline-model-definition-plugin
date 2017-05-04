@@ -30,7 +30,7 @@ pipeline {
             tools {
                 maven "apache-maven-3.0.1"
             }
-            parallelStages {
+            parallel {
                 stage("first") {
                     steps {
                         echo "First branch"

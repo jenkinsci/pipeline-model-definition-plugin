@@ -606,22 +606,22 @@ class ModelValidatorImpl implements ModelValidator {
         if (stage.name == null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NoStageName())
             valid = false
-        } else if (isNested && (stage.branches.size() > 1 || stage.parallelStages != null)) {
+        } else if (isNested && (stage.branches.size() > 1 || stage.parallel != null)) {
             ModelASTElement errorElement
-            if (stage.parallelStages != null) {
-                errorElement = stage.parallelStages
+            if (stage.parallel != null) {
+                errorElement = stage.parallel
             } else {
                 errorElement = stage.branches.first()
             }
             errorCollector.error(errorElement, Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
             valid = false
-        } else if (!stage.branches.isEmpty() && stage.parallelStages != null) {
+        } else if (!stage.branches.isEmpty() && stage.parallel != null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))
             valid = false
-        } else if (stage.branches.isEmpty() && stage.parallelStages == null) {
+        } else if (stage.branches.isEmpty() && stage.parallel == null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (stage.parallelStages != null) {
+        } else if (stage.parallel != null) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false

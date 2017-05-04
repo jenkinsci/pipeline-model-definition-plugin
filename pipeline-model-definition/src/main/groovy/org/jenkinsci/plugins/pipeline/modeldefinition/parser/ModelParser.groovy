@@ -488,8 +488,8 @@ class ModelParser implements Parser {
                         case 'environment':
                             stage.environment = parseEnvironment(s)
                             break
-                        case 'parallelStages':
-                            stage.parallelStages = parseStages(s)
+                        case 'parallel':
+                            stage.parallel = parseStages(s)
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
