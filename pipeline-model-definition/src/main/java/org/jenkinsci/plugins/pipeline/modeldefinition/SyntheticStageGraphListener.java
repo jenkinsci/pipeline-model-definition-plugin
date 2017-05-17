@@ -26,13 +26,16 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionListener;
+import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import java.io.IOException;
@@ -82,7 +85,19 @@ public final class SyntheticStageGraphListener implements GraphListener {
         @Override
         public void onRunning(FlowExecution execution) {
             if (execution != null && !execution.isComplete()) {
-                execution.addListener(new SyntheticStageGraphListener());
+                // Only attach the graph listener if we know the run this execution is for is a Declarative run,
+                // i.e., if it has an ExecutionModelAction.
+                try {
+                    FlowExecutionOwner owner = execution.getOwner();
+                    if (owner != null && owner.getExecutable() instanceof WorkflowRun) {
+                        WorkflowRun r = (WorkflowRun)owner.getExecutable();
+                        if (r.getAction(ExecutionModelAction.class) != null) {
+                            execution.addListener(new SyntheticStageGraphListener());
+                        }
+                    }
+                } catch (IOException e) {
+                    // Do nothing
+                }
             }
         }
     }
