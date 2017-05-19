@@ -87,7 +87,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
     @Extension
     public static class FlowExecutionListenerImpl extends FlowExecutionListener {
         @Override
-        public void onRunning(FlowExecution execution) {
+        public void onRunning(FlowExecution execution, boolean resumed) {
             if (execution != null && !execution.isComplete()) {
                 // Only attach the graph listener if we know the run this execution is for is a Declarative run,
                 // i.e., if it has an ExecutionModelAction.
