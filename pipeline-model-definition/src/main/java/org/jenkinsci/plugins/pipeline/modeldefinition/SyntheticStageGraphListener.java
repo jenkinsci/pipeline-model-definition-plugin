@@ -25,6 +25,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
+import hudson.model.InvisibleAction;
+import hudson.model.Run;
+import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
@@ -39,6 +42,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.WARNING;
@@ -96,9 +100,22 @@ public final class SyntheticStageGraphListener implements GraphListener {
                         }
                     }
                 } catch (IOException e) {
-                    // Do nothing
+                    LOGGER.log(Level.WARNING, "Failure to get run for FlowExecution: {0}", e);
                 }
             }
+        }
+    }
+
+    @Deprecated
+    public static class GraphListenerAction extends InvisibleAction implements RunAction2 {
+        @Override
+        public void onLoad(Run<?,?> r) {
+            // no-op
+        }
+
+        @Override
+        public void onAttached(Run<?, ?> r) {
+            // no-op
         }
     }
 }
