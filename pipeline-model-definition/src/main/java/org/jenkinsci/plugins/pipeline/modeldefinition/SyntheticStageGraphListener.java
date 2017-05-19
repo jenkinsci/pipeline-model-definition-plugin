@@ -107,15 +107,6 @@ public final class SyntheticStageGraphListener implements GraphListener {
     }
 
     @Deprecated
-    public static class GraphListenerAction extends InvisibleAction implements RunAction2 {
-        @Override
-        public void onLoad(Run<?,?> r) {
-            // no-op
-        }
-
-        @Override
-        public void onAttached(Run<?, ?> r) {
-            // no-op
-        }
+    public static class GraphListenerAction extends InvisibleAction {
     }
 }
