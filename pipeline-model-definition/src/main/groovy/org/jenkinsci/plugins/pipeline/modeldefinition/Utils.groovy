@@ -33,6 +33,7 @@ import groovy.json.StringEscapeUtils
 import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.ParametersDefinitionProperty
 import hudson.model.Result
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
@@ -71,7 +72,9 @@ import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
@@ -209,6 +212,27 @@ public class Utils {
         } catch (_) {
             // If we get an IllegalStateException, "checkout scm" isn't valid, so return false.
             return false
+        }
+    }
+
+    static boolean hasJobProperties(CpsScript script) {
+        WorkflowRun r = script.$build()
+
+        WorkflowJob j = r.getParent()
+
+        return j.getAllProperties().any { p ->
+            // We only consider PipelineTriggersJobProperty and ParametersDefinitionProperty if they're empty.
+            if (p instanceof PipelineTriggersJobProperty) {
+                if (!p.getTriggers().isEmpty()) {
+                    return true
+                }
+            } else if (p instanceof ParametersDefinitionProperty) {
+                if (!p.getParameterDefinitions().isEmpty()) {
+                    return true
+                }
+            } else {
+                return true
+            }
         }
     }
 

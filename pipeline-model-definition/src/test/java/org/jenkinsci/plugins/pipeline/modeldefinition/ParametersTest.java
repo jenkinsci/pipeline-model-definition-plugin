@@ -26,12 +26,15 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ParametersTest extends AbstractModelDefTest {
@@ -54,4 +57,21 @@ public class ParametersTest extends AbstractModelDefTest {
         assertTrue(bpd.isDefaultValue());
     }
 
+    @Issue("JENKINS-44149")
+    @Test
+    public void paramsRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        ParametersDefinitionProperty paramProp = job.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp);
+        assertEquals(1, paramProp.getParameterDefinitions().size());
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+
+        assertNull(job.getProperty(ParametersDefinitionProperty.class));
+    }
 }

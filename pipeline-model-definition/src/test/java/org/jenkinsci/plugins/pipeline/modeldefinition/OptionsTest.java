@@ -33,14 +33,17 @@ import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty;
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class OptionsTest extends AbstractModelDefTest {
@@ -144,6 +147,22 @@ public class OptionsTest extends AbstractModelDefTest {
                         "hello")
                 .logNotContains("[Pipeline] { (Post Actions)")
                 .go();
+    }
+
+    @Issue("JENKINS-44149")
+    @Test
+    public void propsRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleJobProperties");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        assertNotNull(job.getProperty(BuildDiscarderProperty.class));
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+
+        assertNull(job.getProperty(BuildDiscarderProperty.class));
     }
 
 }

@@ -547,7 +547,7 @@ public class ModelInterpreter implements Serializable {
         if (root.parameters != null) {
             jobProps.add(script.parameters(root.parameters.parameters))
         }
-        if (!jobProps.isEmpty()) {
+        if (!jobProps.isEmpty() || Utils.hasJobProperties(script)) {
             script.properties(jobProps)
         }
     }
