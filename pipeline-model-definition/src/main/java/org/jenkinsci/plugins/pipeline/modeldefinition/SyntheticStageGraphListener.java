@@ -26,8 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
 import hudson.model.InvisibleAction;
-import hudson.model.Run;
-import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
@@ -54,15 +52,31 @@ public final class SyntheticStageGraphListener implements GraphListener {
     public void onNewHead(FlowNode node) {
         if (node != null && node instanceof StepStartNode &&
                 ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
-            LabelAction label = node.getPersistentAction(LabelAction.class);
-            if (label != null &&
-                    (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
-                            SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
-                if (SyntheticStageNames.preStages().contains(label.getDisplayName())) {
-                    attachTag(node, SyntheticStage.getPre());
+
+            ExecutionModelAction action = null;
+            try {
+                FlowExecutionOwner owner = node.getExecution().getOwner();
+                if (owner != null && owner.getExecutable() instanceof WorkflowRun) {
+                    action = ((WorkflowRun) owner.getExecutable()).getAction(ExecutionModelAction.class);
                 }
-                if (SyntheticStageNames.postStages().contains(label.getDisplayName())) {
-                    attachTag(node, SyntheticStage.getPost());
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
+            }
+
+            // If the action isn't present, this isn't a Declarative run, so remove the listener.
+            if (action == null) {
+                node.getExecution().removeListener(this);
+            } else {
+                LabelAction label = node.getPersistentAction(LabelAction.class);
+                if (label != null &&
+                        (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
+                                SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
+                    if (SyntheticStageNames.preStages().contains(label.getDisplayName())) {
+                        attachTag(node, SyntheticStage.getPre());
+                    }
+                    if (SyntheticStageNames.postStages().contains(label.getDisplayName())) {
+                        attachTag(node, SyntheticStage.getPost());
+                    }
                 }
             }
         }
@@ -98,19 +112,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
 
         private void attachGraphListener(FlowExecution execution) {
             if (execution != null && !execution.isComplete()) {
-                // Only attach the graph listener if we know the run this execution is for is a Declarative run,
-                // i.e., if it has an ExecutionModelAction.
-                try {
-                    FlowExecutionOwner owner = execution.getOwner();
-                    if (owner != null && owner.getExecutable() instanceof WorkflowRun) {
-                        WorkflowRun r = (WorkflowRun)owner.getExecutable();
-                        if (r.getAction(ExecutionModelAction.class) != null) {
-                            execution.addListener(new SyntheticStageGraphListener());
-                        }
-                    }
-                } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failure to get run for FlowExecution: {0}", e);
-                }
+                execution.addListener(new SyntheticStageGraphListener());
             }
         }
     }
