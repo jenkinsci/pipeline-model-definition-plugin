@@ -80,12 +80,12 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-job</artifactId>
-        <version>2.12-20170519.152035-2</version> <!-- TODO: update to release once https://github.com/jenkinsci/workflow-job-plugin/pull/51 is merged and released. -->
+        <version>2.12-20170522.174553-3</version> <!-- TODO: update to release once https://github.com/jenkinsci/workflow-job-plugin/pull/51 is merged and released. -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-api</artifactId>
-        <version>2.14-20170519.151127-6</version> <!-- TODO: update when https://github.com/jenkinsci/workflow-api-plugin/pull/36 is merged and released -->
+        <version>2.15</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
