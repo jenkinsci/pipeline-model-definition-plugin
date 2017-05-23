@@ -851,7 +851,17 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "[second] Apache Maven 3.0.1")
                 .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
-
-
     }
+
+    @Issue("JENKINS-44456")
+    @Test
+    public void parallelStagesHaveStageName() throws Exception {
+        expect("parallelStagesHaveStageName")
+                .logContains("STAGE_NAME is first",
+                        "STAGE_NAME is second",
+                        "STAGE_NAME is bar")
+                .logNotContains("STAGE_NAME is foo")
+                .go();
+    }
+
 }
