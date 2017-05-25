@@ -30,8 +30,10 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -213,4 +215,37 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         }
     }
 
+    @Test
+    public void testInvalidScriptContentsInJson() throws Exception {
+        final String simpleJson = fileContentsFromResources("json/errors/invalidScriptContents.json", true);
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
+
+        assertNotNull(simpleJson);
+
+        NameValuePair pair = new NameValuePair("json", simpleJson);
+        req.setRequestParameters(Collections.singletonList(pair));
+
+        String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+        assertNotNull(rawResult);
+
+        JSONObject result = JSONObject.fromObject(rawResult);
+        assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
+        JSONObject resultData = result.getJSONObject("data");
+        assertNotNull(resultData);
+
+        assertEquals("failure", resultData.getString("result"));
+
+        JSONArray topErrors = resultData.getJSONArray("errors");
+        assertNotNull(topErrors);
+        assertEquals(1, topErrors.size());
+
+        JSONObject jenkinsfileErrors = topErrors.getJSONObject(0).getJSONObject("jenkinsfileErrors");
+
+        assertNotNull(jenkinsfileErrors);
+        String expectedError = "unexpected token: } @ line 8, column 9.";
+
+        assertTrue(foundExpectedErrorInJSON(jenkinsfileErrors.getJSONArray("errors"), expectedError));
+    }
 }

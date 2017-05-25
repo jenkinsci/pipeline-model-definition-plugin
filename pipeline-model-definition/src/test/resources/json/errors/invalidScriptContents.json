@@ -1,0 +1,19 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "script",
+        "arguments": [        {
+          "key": "scriptBlock",
+          "value":           {
+            "isLiteral": true,
+            "value": "echo \"In a script step\" 4(--1111d"
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent": {"type": "none"}
+}}
