@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
+import hudson.model.Actionable;
 import hudson.model.InvisibleAction;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
@@ -35,7 +36,6 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import javax.annotation.Nonnull;
@@ -57,12 +57,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
     public void onNewHead(FlowNode node) {
         if (node != null && node instanceof StepStartNode &&
                 ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
-            FlowExecution execution = node.getExecution();
-            if (!declarativeRuns.containsKey(execution)) {
-                declarativeRuns.put(execution, isDeclarativeRun(execution));
-            }
-
-            if (declarativeRuns.get(execution)) {
+            if (isDeclarativeRun(node.getExecution())) {
                 LabelAction label = node.getPersistentAction(LabelAction.class);
                 if (label != null &&
                         (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
@@ -94,19 +89,24 @@ public final class SyntheticStageGraphListener implements GraphListener {
         }
     }
 
-    private boolean isDeclarativeRun(@Nonnull FlowExecution execution) {
-        try {
-            FlowExecutionOwner owner = execution.getOwner();
-            if (owner != null && owner.getExecutable() instanceof WorkflowRun) {
-                if (((WorkflowRun) owner.getExecutable()).getAction(ExecutionModelAction.class) != null) {
-                    return true;
+    private synchronized boolean isDeclarativeRun(@Nonnull FlowExecution execution) {
+        if (!declarativeRuns.containsKey(execution)) {
+            boolean isDeclarative = false;
+            try {
+                FlowExecutionOwner owner = execution.getOwner();
+                if (owner != null && owner.getExecutable() instanceof Actionable) {
+                    if (((Actionable) owner.getExecutable()).getAction(ExecutionModelAction.class) != null) {
+                        isDeclarative = true;
+                    }
                 }
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
             }
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
+
+            declarativeRuns.put(execution, isDeclarative);
         }
 
-        return false;
+        return declarativeRuns.get(execution);
     }
 
     @Deprecated
