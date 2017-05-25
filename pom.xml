@@ -75,17 +75,17 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.29</version>
+        <version>2.33-20170525.192309-1</version> <!-- TODO: update to release once 2.33 is released -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-job</artifactId>
-        <version>2.12-20170522.174553-3</version> <!-- TODO: update to release once https://github.com/jenkinsci/workflow-job-plugin/pull/51 is merged and released. -->
+        <version>2.11</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-api</artifactId>
-        <version>2.15</version>
+        <version>2.16-20170524.173224-1</version> <!-- TODO: update to release once 2.16 is released -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>

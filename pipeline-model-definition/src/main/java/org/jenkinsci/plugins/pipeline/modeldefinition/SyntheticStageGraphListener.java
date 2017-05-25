@@ -32,41 +32,37 @@ import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
-import org.jenkinsci.plugins.workflow.flow.FlowExecutionListener;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.WARNING;
 
+@Extension
 public final class SyntheticStageGraphListener implements GraphListener {
     private static final Logger LOGGER = Logger.getLogger(SyntheticStageGraphListener.class.getName());
+
+    private final transient Map<FlowExecution,Boolean> declarativeRuns = new WeakHashMap<>();
 
     @Override
     public void onNewHead(FlowNode node) {
         if (node != null && node instanceof StepStartNode &&
                 ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
-
-            ExecutionModelAction action = null;
-            try {
-                FlowExecutionOwner owner = node.getExecution().getOwner();
-                if (owner != null && owner.getExecutable() instanceof WorkflowRun) {
-                    action = ((WorkflowRun) owner.getExecutable()).getAction(ExecutionModelAction.class);
-                }
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
+            FlowExecution execution = node.getExecution();
+            if (!declarativeRuns.containsKey(execution)) {
+                declarativeRuns.put(execution, isDeclarativeRun(execution));
             }
 
-            // If the action isn't present, this isn't a Declarative run, so remove the listener.
-            if (action == null) {
-                node.getExecution().removeListener(this);
-            } else {
+            if (declarativeRuns.get(execution)) {
                 LabelAction label = node.getPersistentAction(LabelAction.class);
                 if (label != null &&
                         (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
@@ -98,23 +94,19 @@ public final class SyntheticStageGraphListener implements GraphListener {
         }
     }
 
-    @Extension
-    public static class FlowExecutionListenerImpl extends FlowExecutionListener {
-        @Override
-        public void onRunning(FlowExecution execution) {
-            attachGraphListener(execution);
-        }
-
-        @Override
-        public void onResumed(FlowExecution execution) {
-            attachGraphListener(execution);
-        }
-
-        private void attachGraphListener(FlowExecution execution) {
-            if (execution != null && !execution.isComplete()) {
-                execution.addListener(new SyntheticStageGraphListener());
+    private boolean isDeclarativeRun(@Nonnull FlowExecution execution) {
+        try {
+            FlowExecutionOwner owner = execution.getOwner();
+            if (owner != null && owner.getExecutable() instanceof WorkflowRun) {
+                if (((WorkflowRun) owner.getExecutable()).getAction(ExecutionModelAction.class) != null) {
+                    return true;
+                }
             }
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
         }
+
+        return false;
     }
 
     @Deprecated
