@@ -165,4 +165,22 @@ public class OptionsTest extends AbstractModelDefTest {
         assertNull(job.getProperty(BuildDiscarderProperty.class));
     }
 
+    @Issue("JENKINS-44621")
+    @Test
+    public void externalPropsNotRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleJobProperties");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        assertNotNull(job.getProperty(BuildDiscarderProperty.class));
+        job.addProperty(new DisableConcurrentBuildsJobProperty());
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+
+        assertNull(job.getProperty(BuildDiscarderProperty.class));
+
+        assertNotNull(job.getProperty(DisableConcurrentBuildsJobProperty.class));
+    }
 }

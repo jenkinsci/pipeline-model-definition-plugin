@@ -536,19 +536,6 @@ public class ModelInterpreter implements Serializable {
      * @param root The root context we're running in
      */
     def executeProperties(Root root) {
-        def jobProps = []
-
-        if (root.options != null) {
-            jobProps.addAll(root.options.properties)
-        }
-        if (root.triggers != null) {
-            jobProps.add(script.pipelineTriggers(root.triggers.triggers))
-        }
-        if (root.parameters != null) {
-            jobProps.add(script.parameters(root.parameters.parameters))
-        }
-        if (!jobProps.isEmpty() || Utils.hasJobProperties(script)) {
-            script.properties(jobProps)
-        }
+        Utils.updateJobProperties(root.options?.properties, root.triggers?.triggers, root.parameters?.parameters, script)
     }
 }
