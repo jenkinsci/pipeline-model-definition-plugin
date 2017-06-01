@@ -244,9 +244,6 @@ public class Utils {
             ModelASTStages stages = model.stages
 
             stages.removeSourceLocation()
-            if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
-                r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
-            }
             if (r.getAction(ExecutionModelAction.class) == null) {
                 r.addAction(new ExecutionModelAction(stages))
             }
