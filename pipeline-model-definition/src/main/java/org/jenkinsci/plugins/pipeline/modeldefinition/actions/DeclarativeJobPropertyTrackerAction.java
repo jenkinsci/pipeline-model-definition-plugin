@@ -40,14 +40,14 @@ import java.util.Set;
  * Invisible action used for tracking what {@link JobProperty}s, {@link Trigger}s, and {@link ParameterDefinition}s were
  * defined in the Jenkinsfile for a given run.
  */
-public class JobPropertyTrackerAction extends InvisibleAction {
+public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
     private final Set<String> jobProperties = new HashSet<>();
     private final Set<String> triggers = new HashSet<>();
     private final Set<String> parameters = new HashSet<>();
 
-    public JobPropertyTrackerAction(@CheckForNull List<JobProperty> rawJobProperties,
-                                    @CheckForNull List<Trigger> rawTriggers,
-                                    @CheckForNull List<ParameterDefinition> rawParameters) {
+    public DeclarativeJobPropertyTrackerAction(@CheckForNull List<JobProperty> rawJobProperties,
+                                               @CheckForNull List<Trigger> rawTriggers,
+                                               @CheckForNull List<ParameterDefinition> rawParameters) {
         if (rawJobProperties != null) {
             for (JobProperty p : rawJobProperties) {
                 jobProperties.add(p.getDescriptor().getId());
@@ -66,11 +66,11 @@ public class JobPropertyTrackerAction extends InvisibleAction {
     }
 
     /**
-     * Alternative constructor for copying an existing {@link JobPropertyTrackerAction}'s contents directly.
+     * Alternative constructor for copying an existing {@link DeclarativeJobPropertyTrackerAction}'s contents directly.
      *
-     * @param copyFrom a non-null {@link JobPropertyTrackerAction}
+     * @param copyFrom a non-null {@link DeclarativeJobPropertyTrackerAction}
      */
-    public JobPropertyTrackerAction(@Nonnull JobPropertyTrackerAction copyFrom) {
+    public DeclarativeJobPropertyTrackerAction(@Nonnull DeclarativeJobPropertyTrackerAction copyFrom) {
         this.jobProperties.addAll(copyFrom.getJobProperties());
         this.triggers.addAll(copyFrom.getTriggers());
         this.parameters.addAll(copyFrom.getParameters());

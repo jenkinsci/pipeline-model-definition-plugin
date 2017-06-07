@@ -45,7 +45,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.JobPropertyTrackerAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
@@ -799,10 +799,10 @@ public class Utils {
         Set<String> previousTriggers = new HashSet<>()
         Set<String> previousParameters = new HashSet<>()
 
-        JobPropertyTrackerAction previousAction = null
+        DeclarativeJobPropertyTrackerAction previousAction = null
         WorkflowRun previousBuild = r.getPreviousBuild()
         if (previousBuild != null) {
-            previousAction = previousBuild.getAction(JobPropertyTrackerAction.class)
+            previousAction = previousBuild.getAction(DeclarativeJobPropertyTrackerAction.class)
             if (previousAction != null) {
                 previousProperties.addAll(previousAction.getJobProperties())
                 previousTriggers.addAll(previousAction.getTriggers())
@@ -865,13 +865,13 @@ public class Utils {
             if ((rawJobProperties != null && !rawJobProperties.isEmpty()) ||
                 (rawTriggers != null && !rawTriggers.isEmpty()) ||
                 (rawParameters != null && !rawParameters.isEmpty())) {
-                r.addAction(new JobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
+                r.addAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
             }
         } finally {
             bc.abort();
             // Roll back and use the same action tracking as last build, if any.
             if (previousAction != null) {
-                r.addAction(new JobPropertyTrackerAction(previousAction))
+                r.addAction(new DeclarativeJobPropertyTrackerAction(previousAction))
             }
         }
     }
@@ -884,7 +884,7 @@ public class Utils {
      *
      * @param newTriggers New triggers from the Jenkinsfile.
      * @param existingTriggers Any triggers already defined on the job.
-     * @param prevDefined Any trigger classes recorded in a {@link JobPropertyTrackerAction} on the previous run.
+     * @param prevDefined Any trigger classes recorded in a {@link DeclarativeJobPropertyTrackerAction} on the previous run.
      *
      * @return A list of triggers to apply. May be empty.
      */
@@ -916,7 +916,7 @@ public class Utils {
      *
      * @param newParameters New parameters from the Jenkinsfile.
      * @param existingParameters Any parameters already defined on the job.
-     * @param prevDefined Any parameter names recorded in a {@link JobPropertyTrackerAction} on the previous run.
+     * @param prevDefined Any parameter names recorded in a {@link DeclarativeJobPropertyTrackerAction} on the previous run.
      *
      * @return A list of parameters to apply. May be empty.
      */

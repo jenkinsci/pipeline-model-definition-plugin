@@ -74,8 +74,7 @@ public class ParametersTest extends AbstractModelDefTest {
         assertEquals(1, paramProp.getParameterDefinitions().size());
 
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        j.buildAndAssertSuccess(job);
 
         assertNull(job.getProperty(ParametersDefinitionProperty.class));
     }
@@ -98,8 +97,7 @@ public class ParametersTest extends AbstractModelDefTest {
         job.addProperty(new ParametersDefinitionProperty(newParams));
 
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        j.buildAndAssertSuccess(job);
 
         ParametersDefinitionProperty newProp = job.getProperty(ParametersDefinitionProperty.class);
         assertNotNull(newProp);
