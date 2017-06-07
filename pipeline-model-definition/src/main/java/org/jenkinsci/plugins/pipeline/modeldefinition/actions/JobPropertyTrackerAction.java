@@ -50,12 +50,12 @@ public class JobPropertyTrackerAction extends InvisibleAction {
                                     @CheckForNull List<ParameterDefinition> rawParameters) {
         if (rawJobProperties != null) {
             for (JobProperty p : rawJobProperties) {
-                jobProperties.add(p.getClass().getName());
+                jobProperties.add(p.getDescriptor().getId());
             }
         }
         if (rawTriggers != null) {
             for (Trigger t : rawTriggers) {
-                triggers.add(t.getClass().getName());
+                triggers.add(t.getDescriptor().getId());
             }
         }
         if (rawParameters != null) {

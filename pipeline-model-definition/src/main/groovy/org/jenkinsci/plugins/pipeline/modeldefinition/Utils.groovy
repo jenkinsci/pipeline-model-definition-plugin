@@ -39,7 +39,6 @@ import hudson.model.ParameterDefinition
 import hudson.model.ParametersDefinitionProperty
 import hudson.model.Result
 import hudson.triggers.Trigger
-import jenkins.model.BuildDiscarderProperty
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
 import org.jenkinsci.plugins.pipeline.StageStatus
@@ -757,8 +756,8 @@ public class Utils {
         List<T> l = []
         toInstantiate.each { t ->
             if (t instanceof UninstantiatedDescribable) {
-                l.add((T) t.instantiate())
-            } else if (clazz.isInstance(t)) {
+                l.add((T) t.instantiate(clazz))
+            } else {
                 l.add((T)t)
             }
         }
@@ -812,10 +811,10 @@ public class Utils {
         }
 
         List<JobProperty> jobPropertiesToApply = []
-        Set<Class<? extends JobProperty>> seenClasses = new HashSet<>()
+        Set<String> seenClasses = new HashSet<>()
         if (rawJobProperties != null) {
             jobPropertiesToApply.addAll(rawJobProperties)
-            seenClasses.addAll(rawJobProperties.collect { it.class })
+            seenClasses.addAll(rawJobProperties.collect { it.descriptor.id })
         }
         // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
         // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
@@ -824,8 +823,8 @@ public class Utils {
         List<JobProperty> propsToRemove = []
         existingJobProperties.each { p ->
             // We only care about classes that we haven't already seen in the new properties list.
-            if (!(p.class in seenClasses)) {
-                if (!(p.class.name in previousProperties)) {
+            if (!(p.descriptor.id in seenClasses)) {
+                if (!(p.descriptor.id in previousProperties)) {
                     // This means it's a job property defined outside of our scope, so leave it there.
                     jobPropertiesToApply.add(p)
                 } else {
@@ -893,17 +892,17 @@ public class Utils {
     private static List<Trigger> getTriggersToApply(@CheckForNull List<Trigger> newTriggers,
                                                     @Nonnull List<Trigger> existingTriggers,
                                                     @Nonnull Set<String> prevDefined) {
-        Set<Class<? extends Trigger>> seenTriggerClasses = new HashSet<>()
+        Set<String> seenTriggerClasses = new HashSet<>()
         List<Trigger> toApply = []
         if (newTriggers != null) {
             toApply.addAll(newTriggers)
-            seenTriggerClasses.addAll(newTriggers.collect { it.class })
+            seenTriggerClasses.addAll(newTriggers.collect { it.descriptor.id })
         }
 
         // Find all existing triggers that aren't of classes we've explicitly defined, *and* aren't
         // in the set of classes of triggers defined by the Jenkinsfile in the previous build. Add those too.
         toApply.addAll(existingTriggers.findAll {
-            !(it.class in seenTriggerClasses) && !(it.class.name in prevDefined)
+            !(it.descriptor.id in seenTriggerClasses) && !(it.descriptor.id in prevDefined)
         })
 
         return toApply
