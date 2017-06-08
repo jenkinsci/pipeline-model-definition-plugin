@@ -656,6 +656,30 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43035")
+    @Test
+    public void libraryObjectInWhenExpression() throws Exception {
+        otherRepo.init();
+        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
+                "\n" +
+                "class Zot implements Serializable {\n" +
+                "  Zot(){\n" +
+                "  }\n" +
+                "  def returnTrue() {\n" +
+                "    return true\n" +
+                "  }\n" +
+                "}\n");
+        otherRepo.git("add", "src");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("zot-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("libraryObjectInWhenExpression")
+                .logContains("Hello")
+                .go();
+    }
+
     @Issue("JENKINS-40657")
     @Test
     public void libraryObjectDefinedOutsidePipeline() throws Exception {
