@@ -260,6 +260,10 @@ class ModelParser implements Parser {
                                     errorCollector.error(new ModelASTKey(exp.rightExpression), Messages.ModelParser_InvalidEnvironmentOperation())
                                     return
                                 }
+                            } else if (exp.rightExpression instanceof VariableExpression) {
+                                String var = matchStringLiteral(exp.rightExpression)
+                                r.variables[key] =  ModelASTValue.fromConstant(var, exp.rightExpression)
+                                return
                             } else {
                                 errorCollector.error(new ModelASTKey(exp.rightExpression), Messages.ModelParser_InvalidEnvironmentValue())
                                 return

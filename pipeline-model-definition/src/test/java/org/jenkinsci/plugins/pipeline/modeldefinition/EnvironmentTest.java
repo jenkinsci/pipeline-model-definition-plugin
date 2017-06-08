@@ -167,6 +167,15 @@ public class EnvironmentTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void environmentWithVariable() throws Exception {
+        expect("environmentWithVariable")
+                .logContains("[Pipeline] { (foo)",
+                             "FOO is BAR")
+                .go();
+    }
+
+
+    @Test
     public void nonLiteralEnvironment() throws Exception {
         initGlobalLibrary();
 
