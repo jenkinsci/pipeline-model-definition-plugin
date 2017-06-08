@@ -54,6 +54,10 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
         this.parameters = params
     }
 
+    public List<ParameterDefinition> getParameters() {
+        return parameters
+    }
+
     /**
      * Get a map of allowed parameter type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
      * parameter definition, use that as the key. Otherwise, use the class name.

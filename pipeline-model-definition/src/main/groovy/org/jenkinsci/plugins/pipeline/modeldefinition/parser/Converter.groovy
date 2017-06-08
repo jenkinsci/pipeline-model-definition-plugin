@@ -49,6 +49,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import java.security.CodeSource
 import java.security.cert.Certificate
+import java.util.concurrent.TimeUnit
 
 import static groovy.lang.GroovyShell.DEFAULT_CODE_BASE
 import static org.codehaus.groovy.control.Phases.CANONICALIZATION
@@ -201,12 +202,14 @@ public class Converter {
      * @param run The {@link WorkflowRun} to pull from.
      * @return A parsed and validated {@link ModelASTPipelineDef}
      */
-    public static ModelASTPipelineDef parseFromWorkflowRun(WorkflowRun run) {
-        CpsFlowExecution execution = Utils.getExecutionForRun(run)
-
-        String rawScript = execution.script
-
-        return scriptToPipelineDef(rawScript)
+    public static ModelASTPipelineDef parseFromWorkflowRun(WorkflowRun run) throws Exception {
+        CpsFlowExecution execution = null
+        if (run.execution != null) {
+            execution = (CpsFlowExecution) run.execution
+        } else if (run.getExecutionPromise() != null) {
+            execution = (CpsFlowExecution) run.getExecutionPromise().get(2, TimeUnit.SECONDS)
+        }
+        return scriptToPipelineDef(execution.script)
     }
 
 }
