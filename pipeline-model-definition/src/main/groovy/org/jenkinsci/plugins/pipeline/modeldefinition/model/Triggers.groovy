@@ -56,6 +56,10 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
         this.triggers = t
     }
 
+    public List<Trigger> getTriggers() {
+        return triggers
+    }
+
     protected Object readResolve() throws IOException {
         // Need to make sure triggers is initialized on deserialization, even if it's going to be empty.
         this.triggers = []
