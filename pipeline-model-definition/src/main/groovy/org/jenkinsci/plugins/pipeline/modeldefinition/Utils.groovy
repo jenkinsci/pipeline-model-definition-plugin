@@ -813,18 +813,14 @@ public class Utils {
             jobPropertiesToApply.addAll(rawJobProperties)
             seenClasses.addAll(rawJobProperties.collect { it.descriptor.id })
         }
-        // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
-        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
-        // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
-        // And stash the property classes that should be removed aside as well.
+        // Find all existing job properties that aren't of classes we've explicitly defined, *and* are
+        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Remove those. Leave
+        // all other existing job properties as is.
         List<JobProperty> propsToRemove = []
         existingJobProperties.each { p ->
             // We only care about classes that we haven't already seen in the new properties list.
             if (!(p.descriptor.id in seenClasses)) {
-                if (!(p.descriptor.id in previousProperties)) {
-                    // This means it's a job property defined outside of our scope, so leave it there.
-                    jobPropertiesToApply.add(p)
-                } else {
+                if (p.descriptor.id in previousProperties) {
                     // This means we should be removing it - it was defined via the Jenkinsfile last time but is no
                     // longer defined.
                     propsToRemove.add(p)
@@ -854,6 +850,11 @@ public class Utils {
 
             // Now add all the other job properties we know need to be added.
             jobPropertiesToApply.each { p ->
+                // Remove the existing instance(s) of the property class before we add the new one. We're looping and
+                // removing multiple to deal with the results of JENKINS-44809.
+                while (j.getProperty(p.class) != null) {
+                    j.removeProperty(p.class)
+                }
                 j.addProperty(p)
             }
 
