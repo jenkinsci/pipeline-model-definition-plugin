@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.BooleanParameterDefinition;
+import hudson.model.JobProperty;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
@@ -182,5 +183,44 @@ public class OptionsTest extends AbstractModelDefTest {
         assertNull(job.getProperty(BuildDiscarderProperty.class));
 
         assertNotNull(job.getProperty(DisableConcurrentBuildsJobProperty.class));
+
+        int externalPropCount = 0;
+        for (JobProperty p : job.getAllProperties()) {
+            if (p instanceof DisableConcurrentBuildsJobProperty) {
+                externalPropCount++;
+            }
+        }
+
+        assertEquals(1, externalPropCount);
+    }
+
+    @Issue("JENKINS-44809")
+    @Test
+    public void duplicateExternalPropsCleaned() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleJobProperties");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        assertNotNull(job.getProperty(BuildDiscarderProperty.class));
+        job.addProperty(new DisableConcurrentBuildsJobProperty());
+        job.addProperty(new DisableConcurrentBuildsJobProperty());
+        job.addProperty(new DisableConcurrentBuildsJobProperty());
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+
+        assertNull(job.getProperty(BuildDiscarderProperty.class));
+
+        assertNotNull(job.getProperty(DisableConcurrentBuildsJobProperty.class));
+
+        int externalPropCount = 0;
+        for (JobProperty p : job.getAllProperties()) {
+            if (p instanceof DisableConcurrentBuildsJobProperty) {
+                externalPropCount++;
+            }
+        }
+
+        assertEquals(1, externalPropCount);
     }
 }

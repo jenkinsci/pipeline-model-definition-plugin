@@ -813,14 +813,23 @@ public class Utils {
             jobPropertiesToApply.addAll(rawJobProperties)
             seenClasses.addAll(rawJobProperties.collect { it.descriptor.id })
         }
-        // Find all existing job properties that aren't of classes we've explicitly defined, *and* are
-        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Remove those. Leave
-        // all other existing job properties as is.
+        // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
+        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
+        // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
+        // And stash the property classes that should be removed aside as well.
         List<JobProperty> propsToRemove = []
         existingJobProperties.each { p ->
             // We only care about classes that we haven't already seen in the new properties list.
             if (!(p.descriptor.id in seenClasses)) {
-                if (p.descriptor.id in previousProperties) {
+                if (!(p.descriptor.id in previousProperties)) {
+                    // This means it's a job property defined outside of our scope, so retain it, if it's the first
+                    // instance of the class that we've seen so far. Ideally we'd be ignoring it completely, but due to
+                    // JENKINS-44809, we've created situations where tons of duplicate job property instances exist,
+                    // which need to be nuked, so go through normal cleanup.
+                    if (!jobPropertiesToApply.any { p.class.isInstance(it) }) {
+                        jobPropertiesToApply.add(p)
+                    }
+                } else {
                     // This means we should be removing it - it was defined via the Jenkinsfile last time but is no
                     // longer defined.
                     propsToRemove.add(p)
