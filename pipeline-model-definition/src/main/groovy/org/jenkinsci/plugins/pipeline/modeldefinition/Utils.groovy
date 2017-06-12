@@ -822,8 +822,13 @@ public class Utils {
             // We only care about classes that we haven't already seen in the new properties list.
             if (!(p.descriptor.id in seenClasses)) {
                 if (!(p.descriptor.id in previousProperties)) {
-                    // This means it's a job property defined outside of our scope, so leave it there.
-                    jobPropertiesToApply.add(p)
+                    // This means it's a job property defined outside of our scope, so retain it, if it's the first
+                    // instance of the class that we've seen so far. Ideally we'd be ignoring it completely, but due to
+                    // JENKINS-44809, we've created situations where tons of duplicate job property instances exist,
+                    // which need to be nuked, so go through normal cleanup.
+                    if (!jobPropertiesToApply.any { p.descriptor == it.descriptor }) {
+                        jobPropertiesToApply.add(p)
+                    }
                 } else {
                     // This means we should be removing it - it was defined via the Jenkinsfile last time but is no
                     // longer defined.
@@ -854,6 +859,11 @@ public class Utils {
 
             // Now add all the other job properties we know need to be added.
             jobPropertiesToApply.each { p ->
+                // Remove the existing instance(s) of the property class before we add the new one. We're looping and
+                // removing multiple to deal with the results of JENKINS-44809.
+                while (j.getProperty(p.class) != null) {
+                    j.removeProperty(p.class)
+                }
                 j.addProperty(p)
             }
 
