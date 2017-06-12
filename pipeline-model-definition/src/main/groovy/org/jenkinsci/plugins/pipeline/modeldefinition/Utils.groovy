@@ -826,7 +826,7 @@ public class Utils {
                     // instance of the class that we've seen so far. Ideally we'd be ignoring it completely, but due to
                     // JENKINS-44809, we've created situations where tons of duplicate job property instances exist,
                     // which need to be nuked, so go through normal cleanup.
-                    if (!jobPropertiesToApply.any { p.class.isInstance(it) }) {
+                    if (!jobPropertiesToApply.any { p.descriptor == it.descriptor }) {
                         jobPropertiesToApply.add(p)
                     }
                 } else {
