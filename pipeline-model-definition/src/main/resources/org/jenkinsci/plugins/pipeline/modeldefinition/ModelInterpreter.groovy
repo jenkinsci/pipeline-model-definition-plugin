@@ -73,7 +73,7 @@ public class ModelInterpreter implements Serializable {
                 // Entire build, including notifications, runs in the agent.
                 inDeclarativeAgent(root, root, root.agent) {
                     withCredentialsBlock(root.environment) {
-                        withEnvBlock(root.getEnvVars(script), null) {
+                        withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
@@ -149,8 +149,6 @@ public class ModelInterpreter implements Serializable {
 
 
     def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage = null) {
-        // TODO: When we switch to using stage(...) {} inside parallel, get rid of this logic.
-        String parallelStageNameForEnv = parentStage != null ? thisStage.name : null
         return {
             try {
                 // NOTE - this will switch to script.stage in the future.
@@ -164,7 +162,7 @@ public class ModelInterpreter implements Serializable {
                     if (thisStage.parallel != null) {
                         if (evaluateWhen(thisStage.when)) {
                             withCredentialsBlock(thisStage.environment, root.environment) {
-                                withEnvBlock(thisStage.getEnvVars(root, script), parallelStageNameForEnv) {
+                                withEnvBlock(thisStage.getEnvVars(root, script)) {
                                     def parallelStages = [:]
                                     for (int i = 0; i < thisStage.parallel.stages.size(); i++) {
                                         Stage parallelStage = thisStage.parallel.getStages().get(i)
@@ -182,7 +180,7 @@ public class ModelInterpreter implements Serializable {
                         inDeclarativeAgent(thisStage, root, thisStage.agent) {
                             if (evaluateWhen(thisStage.when)) {
                                 withCredentialsBlock(thisStage.environment, root.environment) {
-                                    withEnvBlock(thisStage.getEnvVars(root, script), parallelStageNameForEnv) {
+                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
                                         toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
                                             // Execute the actual stage and potential post-stage actions
                                             executeSingleStage(root, thisStage, parentAgent)
@@ -252,21 +250,16 @@ public class ModelInterpreter implements Serializable {
      * Execute a body closure within a "withEnv" block.
      *
      * @param envVars A list of "FOO=BAR" environment variables. Can be null.
-     * @param nestedStageName The name of the "stage" if it's actually a nested parallel invocation. Can be null.
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withEnvBlock(List<String> envVars, String nestedStageName, Closure body) {
-        // TODO: When we switch to using stage(...) {} inside parallel, get rid of the nestedStageName stuff.
-        if (nestedStageName != null || (envVars != null && !envVars.isEmpty())) {
+    def withEnvBlock(List<String> envVars, Closure body) {
+        if (envVars != null && !envVars.isEmpty()) {
             List<String> evaledEnv = new ArrayList<>()
             for (int i = 0; i < envVars.size(); i++) {
                 // Evaluate to deal with any as-of-yet unresolved expressions.
                 String toEval = Utils.prepareForEvalToString(envVars.get(i))
                 evaledEnv.add(Utils.unescapeDollars(Utils.unescapeFromEval((String)script.evaluate(toEval))))
-            }
-            if (nestedStageName != null) {
-                evaledEnv.add("STAGE_NAME=${nestedStageName}")
             }
             return {
                 script.withEnv(evaledEnv) {
