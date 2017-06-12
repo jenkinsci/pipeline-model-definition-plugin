@@ -116,7 +116,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>pipeline-stage-step</artifactId>
-        <version>2.3-20170523.163757-1</version> <!-- TODO: Switch to release once https://github.com/jenkinsci/pipeline-stage-step-plugin/pull/10 is merged and released -->
+        <version>2.2</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
