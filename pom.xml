@@ -33,7 +33,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-parent</artifactId>
-  <version>1.2-beta-3</version>
+  <version>1.2-beta-4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Pipeline: Model Parent POM</name>
   <description>An opinionated, declarative Pipeline</description>
@@ -58,7 +58,7 @@
     <connection>scm:git:git://git@github.com/jenkinsci/pipeline-model-definition-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
-    <tag>pipeline-model-definition-1.2-beta-3</tag>
+    <tag>HEAD</tag>
   </scm>
   
 
