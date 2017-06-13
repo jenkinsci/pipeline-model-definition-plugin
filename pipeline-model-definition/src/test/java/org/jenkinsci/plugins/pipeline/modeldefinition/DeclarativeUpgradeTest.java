@@ -54,7 +54,6 @@ public class DeclarativeUpgradeTest extends AbstractDeclarativeTest {
     @LocalData
     @Test
     public void trackerPropertyUpgrade() throws Exception {
-        System.err.println(j.jenkins.getAllItems());
         WorkflowJob p = j.jenkins.getItemByFullName("trackerPropertyUpgrade", WorkflowJob.class);
         assertNotNull(p);
         WorkflowRun b1 = p.getLastBuild();
