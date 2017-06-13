@@ -797,7 +797,7 @@ public class Utils {
         Set<String> previousParameters = new HashSet<>()
 
         DeclarativeJobPropertyTrackerAction previousAction = null
-        WorkflowRun previousBuild = r.getPreviousBuild()
+        WorkflowRun previousBuild = r.getPreviousCompletedBuild()
         if (previousBuild != null) {
             previousAction = previousBuild.getAction(DeclarativeJobPropertyTrackerAction.class)
             if (previousAction != null) {
