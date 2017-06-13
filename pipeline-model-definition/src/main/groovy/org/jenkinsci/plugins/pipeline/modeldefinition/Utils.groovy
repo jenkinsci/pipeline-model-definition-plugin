@@ -877,7 +877,7 @@ public class Utils {
         } finally {
             bc.abort();
             // Roll back and use the same action tracking as last build, if any.
-            if (previousAction != null) {
+            if (r.getAction(DeclarativeJobPropertyTrackerAction.class) == null && previousAction != null) {
                 r.addAction(new DeclarativeJobPropertyTrackerAction(previousAction))
             }
         }
