@@ -796,15 +796,20 @@ public class Utils {
         Set<String> previousTriggers = new HashSet<>()
         Set<String> previousParameters = new HashSet<>()
 
-        DeclarativeJobPropertyTrackerAction previousAction = null
-        WorkflowRun previousBuild = r.getPreviousCompletedBuild()
-        if (previousBuild != null) {
-            previousAction = previousBuild.getAction(DeclarativeJobPropertyTrackerAction.class)
-            if (previousAction != null) {
-                previousProperties.addAll(previousAction.getJobProperties())
-                previousTriggers.addAll(previousAction.getTriggers())
-                previousParameters.addAll(previousAction.getParameters())
+        // First, use the action from the job if it's present.
+        DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
+
+        // Fall back to previous build for compatibility reasons.
+        if (previousAction == null) {
+            WorkflowRun previousBuild = r.getPreviousCompletedBuild()
+            if (previousBuild != null) {
+                previousAction = previousBuild.getAction(DeclarativeJobPropertyTrackerAction.class)
             }
+        }
+        if (previousAction != null) {
+            previousProperties.addAll(previousAction.getJobProperties())
+            previousTriggers.addAll(previousAction.getTriggers())
+            previousParameters.addAll(previousAction.getParameters())
         }
 
         List<JobProperty> jobPropertiesToApply = []
@@ -868,18 +873,10 @@ public class Utils {
             }
 
             bc.commit();
-            // Add the action tracking what we added if there's anything for it.
-            if ((rawJobProperties != null && !rawJobProperties.isEmpty()) ||
-                (rawTriggers != null && !rawTriggers.isEmpty()) ||
-                (rawParameters != null && !rawParameters.isEmpty())) {
-                r.addAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
-            }
+            // Add the action tracking what we added (or empty otherwise)
+            j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
         } finally {
             bc.abort();
-            // Roll back and use the same action tracking as last build, if any.
-            if (r.getAction(DeclarativeJobPropertyTrackerAction.class) == null && previousAction != null) {
-                r.addAction(new DeclarativeJobPropertyTrackerAction(previousAction))
-            }
         }
     }
 
