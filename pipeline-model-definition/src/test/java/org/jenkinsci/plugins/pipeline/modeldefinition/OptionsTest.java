@@ -34,6 +34,7 @@ import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -197,22 +198,38 @@ public class OptionsTest extends AbstractModelDefTest {
     @Issue("JENKINS-44809")
     @Test
     public void duplicateExternalPropsCleaned() throws Exception {
-        WorkflowRun b = getAndStartNonRepoBuild("simpleJobProperties");
+        // Starting with parameters so that we get a populated tracker action to start.
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
+        // Testing to make sure we don't end up with the previous tracker action as well as the new one.
         WorkflowJob job = b.getParent();
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleJobProperties"), true));
+        WorkflowRun b2 = j.buildAndAssertSuccess(job);
+
         assertNotNull(job.getProperty(BuildDiscarderProperty.class));
+        assertNull(job.getProperty(ParametersDefinitionProperty.class));
+        assertEquals(1, b2.getActions(DeclarativeJobPropertyTrackerAction.class).size());
+        DeclarativeJobPropertyTrackerAction action2 = b2.getAction(DeclarativeJobPropertyTrackerAction.class);
+        assertNotNull(action2);
+        assertTrue(action2.getParameters().isEmpty());
+
         job.addProperty(new DisableConcurrentBuildsJobProperty());
         job.addProperty(new DisableConcurrentBuildsJobProperty());
         job.addProperty(new DisableConcurrentBuildsJobProperty());
 
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        WorkflowRun b3 = j.buildAndAssertSuccess(job);
 
         assertNull(job.getProperty(BuildDiscarderProperty.class));
+        assertNull(job.getProperty(ParametersDefinitionProperty.class));
+        assertEquals(1, b3.getActions(DeclarativeJobPropertyTrackerAction.class).size());
 
         assertNotNull(job.getProperty(DisableConcurrentBuildsJobProperty.class));
+
+        DeclarativeJobPropertyTrackerAction action3 = b3.getAction(DeclarativeJobPropertyTrackerAction.class);
+        assertNotNull(action3);
+        assertTrue(action3.getParameters().isEmpty());
 
         int externalPropCount = 0;
         for (JobProperty p : job.getAllProperties()) {
