@@ -61,14 +61,10 @@ public abstract class WithScriptDescribable<T extends WithScriptDescribable<T>> 
         } catch (ClassNotFoundException e) {
             // This is special casing to deal with PluginFirstClassLoaders, which don't have a functional findResource method.
             // That results in GroovyClassLoader.loadClass failing to find resources to parse and load.
-            PluginWrapper pw = Jenkins.getInstance().getPluginManager().whichPlugin(getDescriptor().getClass());
-            if (pw != null) {
-                URL res = pw.classLoader.getResource(getDescriptor().getScriptClass().replace('.', '/') + ".groovy");
-                if (res != null) {
-                    clz = ((GroovyClassLoader) cpsScript.getClass().getClassLoader()).parseClass(new GroovyCodeSource(res));
-                }
-            }
-            if (clz == null) {
+            URL res = getDescriptor().getClass().getClassLoader().getResource(getDescriptor().getScriptClass().replace('.', '/') + ".groovy");
+            if (res != null) {
+                clz = ((GroovyClassLoader) cpsScript.getClass().getClassLoader()).parseClass(new GroovyCodeSource(res));
+            } else {
                 throw e;
             }
         }
