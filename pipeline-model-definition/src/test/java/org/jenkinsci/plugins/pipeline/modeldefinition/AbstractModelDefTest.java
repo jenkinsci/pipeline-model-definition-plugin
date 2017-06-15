@@ -97,12 +97,11 @@ import static org.junit.Assume.assumeTrue;
 /**
  * @author Andrew Bayer
  */
-public abstract class AbstractModelDefTest {
+public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
-    @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
@@ -276,122 +275,6 @@ public abstract class AbstractModelDefTest {
         return result;
     }
 
-
-    public enum PossibleOS {
-        WINDOWS,
-        LINUX,
-        MAC
-    }
-
-    protected void onAllowedOS(PossibleOS... osList) throws Exception {
-        boolean passed = false;
-        for (PossibleOS os : osList) {
-            switch (os) {
-                case LINUX:
-                    if (SystemUtils.IS_OS_LINUX) {
-                        passed = true;
-                    }
-                    break;
-                case WINDOWS:
-                    if (SystemUtils.IS_OS_WINDOWS) {
-                        passed = true;
-                    }
-                    break;
-                case MAC:
-                    if (SystemUtils.IS_OS_MAC) {
-                        passed = true;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        Assume.assumeTrue("Not on a valid OS for this test", passed);
-    }
-
-    protected String pipelineSourceFromResources(String pipelineName) throws IOException {
-        return fileContentsFromResources(pipelineName + ".groovy");
-    }
-
-    protected String fileContentsFromResources(String fileName) throws IOException {
-        return fileContentsFromResources(fileName, false);
-    }
-
-    protected String fileContentsFromResources(String fileName, boolean swallowError) throws IOException {
-        String fileContents = null;
-
-        URL url = getClass().getResource("/" + fileName);
-        if (url != null) {
-            fileContents = IOUtils.toString(url);
-        }
-
-        if (!swallowError) {
-            assertNotNull("No file contents for file " + fileName, fileContents);
-        } else {
-            assumeTrue(fileContents != null);
-        }
-        return fileContents;
-
-    }
-
-    protected boolean foundExpectedErrorInJSON(JSONArray errors, String expectedError) {
-        for (Object e : errors) {
-            if (e instanceof JSONObject) {
-                JSONObject o = (JSONObject) e;
-                if (o.getString("error").equals(expectedError)) {
-                    return true;
-                } else if (o.getString("error").contains(expectedError)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-
-    protected void prepRepoWithJenkinsfile(String pipelineName) throws Exception {
-        prepRepoWithJenkinsfileAndOtherFiles(pipelineName);
-    }
-
-    protected void prepRepoWithJenkinsfile(String subDir, String pipelineName) throws Exception {
-        prepRepoWithJenkinsfileAndOtherFiles(subDir + "/" + pipelineName);
-    }
-
-    protected void prepRepoWithJenkinsfileAndOtherFiles(String pipelineName, String... otherFiles) throws Exception {
-        Map<String,String> otherMap = new HashMap<>();
-        for (String otherFile : otherFiles) {
-            otherMap.put(otherFile, otherFile);
-        }
-        prepRepoWithJenkinsfileAndOtherFiles(pipelineName, otherMap);
-    }
-
-    protected void prepRepoWithJenkinsfileAndOtherFiles(String pipelineName, Map<String,String> otherFiles) throws Exception {
-        sampleRepo.init();
-        sampleRepo.write("Jenkinsfile",
-                pipelineSourceFromResources(pipelineName));
-        sampleRepo.git("add", "Jenkinsfile");
-
-
-        for (Map.Entry<String,String> otherFile : otherFiles.entrySet()) {
-            if (otherFile != null) {
-                sampleRepo.write(otherFile.getValue(), fileContentsFromResources(otherFile.getKey()));
-                sampleRepo.git("add", otherFile.getValue());
-            }
-        }
-
-        sampleRepo.git("commit", "--message=files");
-    }
-
-    protected void prepRepoWithJenkinsfileFromString(String jf) throws Exception {
-        sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", jf);
-        sampleRepo.git("add", "Jenkinsfile");
-
-        sampleRepo.git("commit", "--message=files");
-    }
-
     protected WorkflowRun getAndStartBuild() throws Exception {
         return getAndStartBuild(null);
     }
@@ -418,17 +301,6 @@ public abstract class AbstractModelDefTest {
         } else {
             return folder.createProject(WorkflowJob.class, "test" + (folder.getItems().size() + 1));
         }
-    }
-
-    protected void assumeDocker() throws Exception {
-        Launcher.LocalLauncher localLauncher = new Launcher.LocalLauncher(StreamTaskListener.NULL);
-        try {
-            Assume.assumeThat("Docker working", localLauncher.launch().cmds(DockerTool.getExecutable(null, null, null, null), "ps").join(), is(0));
-        } catch (IOException x) {
-            Assume.assumeNoException("have Docker installed", x);
-        }
-        DockerClient dockerClient = new DockerClient(localLauncher, null, null);
-        Assume.assumeFalse("Docker version not < 1.3", dockerClient.version().isOlderThan(new VersionNumber("1.3")));
     }
 
     protected void initGlobalLibrary() throws IOException {

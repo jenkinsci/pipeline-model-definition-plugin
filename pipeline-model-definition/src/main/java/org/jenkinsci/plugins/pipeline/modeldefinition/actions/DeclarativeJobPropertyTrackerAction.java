@@ -90,6 +90,6 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
 
     @Override
     public String toString() {
-        return "JobPropertyTrackerAction[jobProperties:" + jobProperties + ",triggers:" + triggers + ",parameters:" + parameters + "]";
+        return "DeclarativeJobPropertyTrackerAction[jobProperties:" + jobProperties + ",triggers:" + triggers + ",parameters:" + parameters + "]";
     }
 }
