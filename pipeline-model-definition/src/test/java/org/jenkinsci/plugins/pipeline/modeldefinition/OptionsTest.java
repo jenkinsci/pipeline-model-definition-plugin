@@ -38,6 +38,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty;
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -143,6 +144,14 @@ public class OptionsTest extends AbstractModelDefTest {
                         "[Pipeline] retry",
                         "hello")
                 .logNotContains("[Pipeline] { (Post Actions)")
+                .go();
+    }
+
+    @Issue("JENKINS-42772")
+    @Test
+    public void optionNoParamsSingleRequired() throws Exception {
+        expect("optionNoParamsSingleRequired")
+                .logContains("[Pipeline] { (foo)", "THIS WORKS")
                 .go();
     }
 

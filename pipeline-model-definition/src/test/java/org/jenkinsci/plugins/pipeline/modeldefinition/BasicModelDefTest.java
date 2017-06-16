@@ -736,6 +736,4 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)", "THIS WORKS")
                 .go();
     }
-
-
 }
