@@ -25,13 +25,21 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.BooleanParameterDefinition;
+import hudson.model.ParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.StringParameterDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ParametersTest extends AbstractModelDefTest {
@@ -54,4 +62,47 @@ public class ParametersTest extends AbstractModelDefTest {
         assertTrue(bpd.isDefaultValue());
     }
 
+    @Issue("JENKINS-44149")
+    @Test
+    public void paramsRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        ParametersDefinitionProperty paramProp = job.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp);
+        assertEquals(1, paramProp.getParameterDefinitions().size());
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        j.buildAndAssertSuccess(job);
+
+        assertNull(job.getProperty(ParametersDefinitionProperty.class));
+    }
+
+    @Issue("JENKINS-44621")
+    @Test
+    public void externalParamsNotRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        ParametersDefinitionProperty paramProp = job.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp);
+        assertEquals(1, paramProp.getParameterDefinitions().size());
+
+        List<ParameterDefinition> newParams = new ArrayList<>();
+        newParams.addAll(paramProp.getParameterDefinitions());
+        newParams.add(new StringParameterDefinition("DO_NOT_DELETE", "something"));
+        job.removeProperty(paramProp);
+        job.addProperty(new ParametersDefinitionProperty(newParams));
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        j.buildAndAssertSuccess(job);
+
+        ParametersDefinitionProperty newProp = job.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(newProp);
+        assertEquals(1, newProp.getParameterDefinitions().size());
+        ParameterDefinition paramDef = newProp.getParameterDefinition("DO_NOT_DELETE");
+        assertNotNull(paramDef);
+    }
 }

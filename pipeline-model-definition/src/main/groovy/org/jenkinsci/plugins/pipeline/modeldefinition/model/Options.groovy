@@ -76,6 +76,18 @@ public class Options implements Serializable {
         }
     }
 
+    public List<JobProperty> getProperties() {
+        return properties
+    }
+
+    public Map<String, DeclarativeOption> getOptions() {
+        return options
+    }
+
+    public Map<String, Object> getWrappers() {
+        return wrappers
+    }
+
     private static final Object OPTION_CACHE_KEY = new Object()
     private static final Object CACHE_KEY = new Object()
     private static final Object WRAPPER_STEPS_KEY = new Object()

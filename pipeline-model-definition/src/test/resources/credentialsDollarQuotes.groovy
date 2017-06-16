@@ -24,29 +24,26 @@
 
 pipeline {
     environment {
-        FOO = 'FOO'
-        BAR = "${FOO}BAR"
+        SOME_VAR = "SOME VALUE"
+        CRED3 = credentials("cred3")
+        INBETWEEN = "Something ${CRED3} between"
+        CRED2 = credentials("cred2")
+        OTHER_VAR = "OTHER VALUE"
     }
-    agent {
-        label "some-label"
-    }
+
+    agent any
 
     stages {
         stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-                SPLODE = "${params.WUT ?: 'banana'}"
-            }
-
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
-                sh 'echo "SPLODE is $SPLODE"'
+                sh 'echo "SOME_VAR is $SOME_VAR"'
+                sh 'echo "OTHER_VAR is $OTHER_VAR"'
+                sh 'echo "INBETWEEN is $INBETWEEN"'
+                sh 'echo $INBETWEEN > inbetween.txt'
+                sh 'echo $CRED3 > cred3.txt'
+                sh 'echo $CRED2 > cred2.txt'
+                archive "**/*.txt"
             }
         }
     }
 }
-
-
-

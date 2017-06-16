@@ -29,6 +29,7 @@ import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -48,11 +49,13 @@ public class AgentTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+                new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
 
         s2 = j.createOnlineSlave();
         s2.setLabelString("other-docker");
-        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+                new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second")));
     }
 
     @Test
@@ -291,6 +294,16 @@ public class AgentTest extends AbstractModelDefTest {
                         "The answer is 42",
                         "-v /tmp:/tmp -p 8000:8000",
                         "HI THERE")
+                .go();
+    }
+
+    @Ignore("Still not sure yet whether we'll ever fix JENKINS-43911, but wanted to have a test here for if we do")
+    @Issue("JENKINS-43911")
+    @Test
+    public void agentFromEnv() throws Exception {
+        expect("agentFromEnv")
+                .logContains("WHICH_AGENT=first",
+                        "WHICH_AGENT=second")
                 .go();
     }
 

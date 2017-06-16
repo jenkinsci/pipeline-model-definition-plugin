@@ -24,40 +24,50 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.Extension;
+import hudson.model.Actionable;
 import hudson.model.InvisibleAction;
-import hudson.model.Run;
-import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.WARNING;
 
+@Extension
 public final class SyntheticStageGraphListener implements GraphListener {
     private static final Logger LOGGER = Logger.getLogger(SyntheticStageGraphListener.class.getName());
+
+    private final transient Map<FlowExecution,Boolean> declarativeRuns = new WeakHashMap<>();
 
     @Override
     public void onNewHead(FlowNode node) {
         if (node != null && node instanceof StepStartNode &&
                 ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
-            LabelAction label = node.getPersistentAction(LabelAction.class);
-            if (label != null &&
-                    (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
-                            SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
-                if (SyntheticStageNames.preStages().contains(label.getDisplayName())) {
-                    attachTag(node, SyntheticStage.getPre());
-                }
-                if (SyntheticStageNames.postStages().contains(label.getDisplayName())) {
-                    attachTag(node, SyntheticStage.getPost());
+            if (isDeclarativeRun(node.getExecution())) {
+                LabelAction label = node.getPersistentAction(LabelAction.class);
+                if (label != null &&
+                        (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
+                                SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
+                    if (SyntheticStageNames.preStages().contains(label.getDisplayName())) {
+                        attachTag(node, SyntheticStage.getPre());
+                    }
+                    if (SyntheticStageNames.postStages().contains(label.getDisplayName())) {
+                        attachTag(node, SyntheticStage.getPost());
+                    }
                 }
             }
         }
@@ -79,30 +89,27 @@ public final class SyntheticStageGraphListener implements GraphListener {
         }
     }
 
-    public static class GraphListenerAction extends InvisibleAction implements RunAction2 {
-        @Override
-        public void onLoad(Run<?, ?> r) {
-            if (r != null && r instanceof WorkflowRun) {
-                WorkflowRun run = (WorkflowRun) r;
-                attachListener(run);
-            }
-        }
-
-        @Override
-        public void onAttached(Run<?, ?> r) {
-            if (r != null && r instanceof WorkflowRun) {
-                WorkflowRun run = (WorkflowRun) r;
-                attachListener(run);
-            }
-        }
-
-        private void attachListener(WorkflowRun run) {
-            if (run != null) {
-                FlowExecution exec = run.getExecution();
-                if (exec != null && !exec.isComplete()) {
-                    exec.addListener(new SyntheticStageGraphListener());
+    private synchronized boolean isDeclarativeRun(@Nonnull FlowExecution execution) {
+        if (!declarativeRuns.containsKey(execution)) {
+            boolean isDeclarative = false;
+            try {
+                FlowExecutionOwner owner = execution.getOwner();
+                if (owner != null && owner.getExecutable() instanceof Actionable) {
+                    if (((Actionable) owner.getExecutable()).getAction(ExecutionModelAction.class) != null) {
+                        isDeclarative = true;
+                    }
                 }
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
             }
+
+            declarativeRuns.put(execution, isDeclarative);
         }
+
+        return declarativeRuns.get(execution);
+    }
+
+    @Deprecated
+    public static class GraphListenerAction extends InvisibleAction {
     }
 }

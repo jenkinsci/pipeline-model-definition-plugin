@@ -24,15 +24,22 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class TriggersTest extends AbstractModelDefTest {
@@ -58,4 +65,50 @@ public class TriggersTest extends AbstractModelDefTest {
         assertEquals("@daily", timer.getSpec());
     }
 
+    @Issue("JENKINS-44149")
+    @Test
+    public void triggersRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleTriggers");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        PipelineTriggersJobProperty triggersJobProperty = job.getProperty(PipelineTriggersJobProperty.class);
+        assertNotNull(triggersJobProperty);
+        assertEquals(1, triggersJobProperty.getTriggers().size());
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+
+        assertNull(job.getProperty(PipelineTriggersJobProperty.class));
+    }
+
+    @Issue("JENKINS-44621")
+    @Test
+    public void externalTriggersNotRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleTriggers");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        PipelineTriggersJobProperty triggersJobProperty = job.getProperty(PipelineTriggersJobProperty.class);
+        assertNotNull(triggersJobProperty);
+        assertEquals(1, triggersJobProperty.getTriggers().size());
+
+        List<Trigger> newTriggers = new ArrayList<>();
+        newTriggers.addAll(triggersJobProperty.getTriggers());
+        newTriggers.add(new SCMTrigger("1 1 1 * *"));
+        job.removeProperty(triggersJobProperty);
+        job.addProperty(new PipelineTriggersJobProperty(newTriggers));
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+
+        PipelineTriggersJobProperty newProp = job.getProperty(PipelineTriggersJobProperty.class);
+        assertNotNull(newProp);
+        assertEquals(1, newProp.getTriggers().size());
+        Trigger t = newProp.getTriggers().get(0);
+        assertNotNull(t);
+        assertTrue(t instanceof SCMTrigger);
+    }
 }

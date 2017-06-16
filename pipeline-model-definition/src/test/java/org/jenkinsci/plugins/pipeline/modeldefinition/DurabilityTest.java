@@ -27,9 +27,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.labels.LabelAtom;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig;
 import org.jenkinsci.plugins.workflow.actions.WorkspaceAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -41,14 +43,17 @@ import org.junit.Test;
 import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.logging.Level;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class DurabilityTest {
     @ClassRule
@@ -56,6 +61,9 @@ public class DurabilityTest {
 
     @Rule
     public RestartableJenkinsRule story = new RestartableJenkinsRule();
+
+    @Rule
+    public LoggerRule logger = new LoggerRule();
 
     @Issue("JENKINS-42027")
     @Test
@@ -80,6 +88,7 @@ public class DurabilityTest {
     public void survivesRestart() throws Exception {
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
+                logger.record(CpsFlowExecution.class, Level.WARNING).capture(100);
                 DumbSlave s = story.j.createOnlineSlave();
                 s.setLabelString("remote quick");
                 s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
@@ -131,6 +140,8 @@ public class DurabilityTest {
                 }
                 assertEquals(1, actions.size());
                 assertEquals(new HashSet<LabelAtom>(Arrays.asList(LabelAtom.get("remote"), LabelAtom.get("quick"))), actions.get(0).getLabels());
+                assertThat(logger.getRecords(), Matchers.hasSize(Matchers.equalTo(0)));
+
             }
         });
 

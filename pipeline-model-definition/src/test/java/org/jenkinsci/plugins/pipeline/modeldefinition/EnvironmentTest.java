@@ -105,6 +105,18 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43872")
+    @Test
+    public void envDollarQuotes() throws Exception {
+        expect("envDollarQuotes")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is ${FOOTHAT}",
+                        "BAR is ${FOOTHAT}BAR",
+                        "BAZ is ${FOOTHAT}BAZ",
+                        "SPLODE is banana")
+                .go();
+    }
+
     @Test
     public void envDotCrossRef() throws Exception {
         expect("envDotCrossRef")

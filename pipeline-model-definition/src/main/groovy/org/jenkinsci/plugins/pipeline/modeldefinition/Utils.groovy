@@ -30,16 +30,22 @@ import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.json.StringEscapeUtils
+import hudson.BulkChange
 import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.JobProperty
+import hudson.model.ParameterDefinition
+import hudson.model.ParametersDefinitionProperty
 import hudson.model.Result
+import hudson.triggers.Trigger
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
@@ -71,11 +77,15 @@ import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
+import org.jenkinsci.plugins.workflow.multibranch.BranchJobProperty
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
@@ -212,6 +222,27 @@ public class Utils {
         }
     }
 
+    static boolean hasJobProperties(CpsScript script) {
+        WorkflowRun r = script.$build()
+
+        WorkflowJob j = r.getParent()
+
+        return j.getAllProperties().any { p ->
+            // We only consider PipelineTriggersJobProperty and ParametersDefinitionProperty if they're empty.
+            if (p instanceof PipelineTriggersJobProperty) {
+                if (!p.getTriggers().isEmpty()) {
+                    return true
+                }
+            } else if (p instanceof ParametersDefinitionProperty) {
+                if (!p.getParameterDefinitions().isEmpty()) {
+                    return true
+                }
+            } else {
+                return !(p instanceof BranchJobProperty)
+            }
+        }
+    }
+
     static Root attachDeclarativeActions(@Nonnull Root root, CpsScript script) {
         WorkflowRun r = script.$build()
         ModelASTPipelineDef model = Converter.parseFromWorkflowRun(r)
@@ -220,9 +251,6 @@ public class Utils {
             ModelASTStages stages = model.stages
 
             stages.removeSourceLocation()
-            if (r.getAction(SyntheticStageGraphListener.GraphListenerAction.class) == null) {
-                r.addAction(new SyntheticStageGraphListener.GraphListenerAction())
-            }
             if (r.getAction(ExecutionModelAction.class) == null) {
                 r.addAction(new ExecutionModelAction(stages))
             }
@@ -346,10 +374,14 @@ public class Utils {
         return StringEscapeUtils.unescapeJava(s)
     }
 
-    static List<List<String>> getEnvCredentials(Environment environment, CpsScript script) {
+    static String unescapeDollars(String s) {
+        return StringUtils.replace(s, Environment.DOLLAR_PLACEHOLDER, '$')
+    }
+
+    static List<List<String>> getEnvCredentials(Environment environment, CpsScript script, Environment parent = null) {
         List<List<String>> credsTuples = new ArrayList<>()
         if (environment != null) {
-            credsTuples.addAll(environment.getCredsMap(script)?.collect { k, v ->
+            credsTuples.addAll(environment.getCredsMap(script, parent)?.collect { k, v ->
                 [k, v]
             })
         }
@@ -705,6 +737,258 @@ public class Utils {
         } else {
             return Result.FAILURE
         }
+    }
+
+    /**
+     * Translate a list of objects which may either be instances of a given class or {@link UninstantiatedDescribable}s,
+     * and return a list of those instances of the class and instantiated version of those {@link UninstantiatedDescribable}s.
+     *
+     * @param clazz The class we'll be instantiating, which must implement {@link Describable}.
+     * @param toInstantiate The list of either instances of the class or {@link UninstantiatedDescribable}s that can be
+     * instantiated to instances of the class.
+     * @return The list of instances. May be empty.
+     */
+    @Nonnull
+    private static <T extends Describable> List<T> instantiateList(Class<T> clazz, List<Object> toInstantiate) {
+        List<T> l = []
+        toInstantiate.each { t ->
+            if (t instanceof UninstantiatedDescribable) {
+                l.add((T) t.instantiate(clazz))
+            } else {
+                l.add((T)t)
+            }
+        }
+
+        return l
+    }
+
+    /**
+     * Given the values from {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Options#getProperties()},
+     * {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers#getTriggers()}, and
+     * {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters#getParameters()}, figure out which job
+     * properties, triggers, and parameters should be added/removed to the job, and actually do so, properly preserving
+     * such job properties, triggers, and parameters which were defined outside of the Jenkinsfile.
+     *
+     * @param propsOrUninstantiated Newly-defined job properties, potentially a mix of {@link JobProperty}s and
+     *   {@link UninstantiatedDescribable}s.
+     * @param trigsOrUninstantiated Newly-defined triggers, potentially a mix of {@link Trigger}s and
+     *   {@link UninstantiatedDescribable}s.
+     * @param paramsOrUninstantiated Newly-defined parameters, potentially a mix of {@link ParameterDefinition}s and
+     *   {@link UninstantiatedDescribable}s.
+     * @param script
+     */
+    static void updateJobProperties(@CheckForNull List<Object> propsOrUninstantiated,
+                                    @CheckForNull List<Object> trigsOrUninstantiated,
+                                    @CheckForNull List<Object> paramsOrUninstantiated,
+                                    @Nonnull CpsScript script) {
+        List<JobProperty> rawJobProperties = instantiateList(JobProperty.class, propsOrUninstantiated)
+        List<Trigger> rawTriggers = instantiateList(Trigger.class, trigsOrUninstantiated)
+        List<ParameterDefinition> rawParameters = instantiateList(ParameterDefinition.class, paramsOrUninstantiated)
+
+        WorkflowRun r = script.$build()
+        WorkflowJob j = r.getParent()
+
+        List<JobProperty> existingJobProperties = existingJobPropertiesForJob(j)
+        List<Trigger> existingTriggers = existingTriggersForJob(j)
+        List<ParameterDefinition> existingParameters = existingParametersForJob(j)
+
+        Set<String> previousProperties = new HashSet<>()
+        Set<String> previousTriggers = new HashSet<>()
+        Set<String> previousParameters = new HashSet<>()
+
+        // First, use the action from the job if it's present.
+        DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
+
+        // Fall back to previous build for compatibility reasons.
+        if (previousAction == null) {
+            WorkflowRun previousBuild = r.getPreviousCompletedBuild()
+            if (previousBuild != null) {
+                previousAction = previousBuild.getAction(DeclarativeJobPropertyTrackerAction.class)
+            }
+        }
+        if (previousAction != null) {
+            previousProperties.addAll(previousAction.getJobProperties())
+            previousTriggers.addAll(previousAction.getTriggers())
+            previousParameters.addAll(previousAction.getParameters())
+        }
+
+        List<JobProperty> jobPropertiesToApply = []
+        Set<String> seenClasses = new HashSet<>()
+        if (rawJobProperties != null) {
+            jobPropertiesToApply.addAll(rawJobProperties)
+            seenClasses.addAll(rawJobProperties.collect { it.descriptor.id })
+        }
+        // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
+        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
+        // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
+        // And stash the property classes that should be removed aside as well.
+        List<JobProperty> propsToRemove = []
+        existingJobProperties.each { p ->
+            // We only care about classes that we haven't already seen in the new properties list.
+            if (!(p.descriptor.id in seenClasses)) {
+                if (!(p.descriptor.id in previousProperties)) {
+                    // This means it's a job property defined outside of our scope, so retain it, if it's the first
+                    // instance of the class that we've seen so far. Ideally we'd be ignoring it completely, but due to
+                    // JENKINS-44809, we've created situations where tons of duplicate job property instances exist,
+                    // which need to be nuked, so go through normal cleanup.
+                    if (!jobPropertiesToApply.any { p.descriptor == it.descriptor }) {
+                        jobPropertiesToApply.add(p)
+                    }
+                } else {
+                    // This means we should be removing it - it was defined via the Jenkinsfile last time but is no
+                    // longer defined.
+                    propsToRemove.add(p)
+                }
+            }
+        }
+
+        List<Trigger> triggersToApply = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
+        List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters, previousParameters)
+
+        BulkChange bc = new BulkChange(j)
+        try {
+            // Remove the triggers/parameters properties regardless.
+            j.removeProperty(PipelineTriggersJobProperty.class)
+            j.removeProperty(ParametersDefinitionProperty.class)
+
+            // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
+            propsToRemove.each { j.removeProperty(it) }
+
+            // If there are any triggers and if there are any parameters, add those properties.
+            if (!triggersToApply.isEmpty()) {
+                j.addProperty(new PipelineTriggersJobProperty(triggersToApply))
+            }
+            if (!parametersToApply.isEmpty()) {
+                j.addProperty(new ParametersDefinitionProperty(parametersToApply))
+            }
+
+            // Now add all the other job properties we know need to be added.
+            jobPropertiesToApply.each { p ->
+                // Remove the existing instance(s) of the property class before we add the new one. We're looping and
+                // removing multiple to deal with the results of JENKINS-44809.
+                while (j.getProperty(p.class) != null) {
+                    j.removeProperty(p.class)
+                }
+                j.addProperty(p)
+            }
+
+            bc.commit();
+            // Add the action tracking what we added (or empty otherwise)
+            j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
+        } finally {
+            bc.abort();
+        }
+    }
+
+    /**
+     * Given the new triggers defined in the Jenkinsfile, the existing triggers already on the job, and the set of
+     * trigger classes that may have been recorded as defined in the Jenkinsfile in the previous build, return a list of
+     * triggers that will actually be applied, including both the newly defined in Jenkinsfile triggers and any triggers
+     * defined outside of the Jenkinsfile.
+     *
+     * @param newTriggers New triggers from the Jenkinsfile.
+     * @param existingTriggers Any triggers already defined on the job.
+     * @param prevDefined Any trigger classes recorded in a {@link DeclarativeJobPropertyTrackerAction} on the previous run.
+     *
+     * @return A list of triggers to apply. May be empty.
+     */
+    @Nonnull
+    private static List<Trigger> getTriggersToApply(@CheckForNull List<Trigger> newTriggers,
+                                                    @Nonnull List<Trigger> existingTriggers,
+                                                    @Nonnull Set<String> prevDefined) {
+        Set<String> seenTriggerClasses = new HashSet<>()
+        List<Trigger> toApply = []
+        if (newTriggers != null) {
+            toApply.addAll(newTriggers)
+            seenTriggerClasses.addAll(newTriggers.collect { it.descriptor.id })
+        }
+
+        // Find all existing triggers that aren't of classes we've explicitly defined, *and* aren't
+        // in the set of classes of triggers defined by the Jenkinsfile in the previous build. Add those too.
+        toApply.addAll(existingTriggers.findAll {
+            !(it.descriptor.id in seenTriggerClasses) && !(it.descriptor.id in prevDefined)
+        })
+
+        return toApply
+    }
+
+    /**
+     * Given the new parameters defined in the Jenkinsfile, the existing parameters already on the job, and the set of
+     * parameter names that may have been recorded as defined in the Jenkinsfile in the previous build, return a list of
+     * parameters that will actually be applied, including both the newly defined in Jenkinsfile parameters and any
+     * parameters defined outside of the Jenkinsfile.
+     *
+     * @param newParameters New parameters from the Jenkinsfile.
+     * @param existingParameters Any parameters already defined on the job.
+     * @param prevDefined Any parameter names recorded in a {@link DeclarativeJobPropertyTrackerAction} on the previous run.
+     *
+     * @return A list of parameters to apply. May be empty.
+     */
+    @Nonnull
+    private static List<ParameterDefinition> getParametersToApply(@CheckForNull List<ParameterDefinition> newParameters,
+                                                                  @Nonnull List<ParameterDefinition> existingParameters,
+                                                                  @Nonnull Set<String> prevDefined) {
+        Set<String> seenNames = new HashSet<>()
+        List<ParameterDefinition> toApply = []
+        if (newParameters != null) {
+            toApply.addAll(newParameters)
+            seenNames.addAll(newParameters.collect { it.name })
+        }
+        // Find all existing parameters that aren't of names we've explicitly defined, *and* aren't
+        // in the set of names of parameters defined by the Jenkinsfile in the previous build. Add those too.
+        toApply.addAll(existingParameters.findAll {
+            !(it.name in seenNames) && !(it.name in prevDefined)
+        })
+
+        return toApply
+    }
+
+    /**
+     * Helper method for getting the appropriate {@link JobProperty}s from a job.
+     *
+     * @param j a job
+     * @return A list of all {@link JobProperty}s on the given job, other than ones specifically excluded because we're
+     * handling them elsewhere. May be empty.
+     */
+    @Nonnull
+    private static List<JobProperty> existingJobPropertiesForJob(@Nonnull WorkflowJob j) {
+        List<JobProperty> existing = []
+        existing.addAll(j.getAllProperties().findAll {
+            !(it instanceof PipelineTriggersJobProperty) && !(it instanceof ParametersDefinitionProperty)
+        })
+
+        return existing
+    }
+
+    /**
+     * Helper method for getting all {@link Trigger}s on a job.
+     *
+     * @param j a job
+     * @return A list of all {@link Trigger}s defined in the job's {@link PipelineTriggersJobProperty}. May be empty.
+     */
+    @Nonnull
+    private static List<Trigger> existingTriggersForJob(@Nonnull WorkflowJob j) {
+        List<Trigger> existing = []
+        if (j.getProperty(PipelineTriggersJobProperty.class) != null) {
+            existing.addAll(j.getProperty(PipelineTriggersJobProperty.class)?.getTriggers())
+        }
+        return existing
+    }
+
+    /**
+     * Helper method for getting all {@link ParameterDefinition}s on a job.
+     *
+     * @param j a job
+     * @return A list of all {@link ParameterDefinition}s defined in the job's {@link ParametersDefinitionProperty}. May
+     * be empty.
+     */
+    @Nonnull
+    private static List<ParameterDefinition> existingParametersForJob(@Nonnull WorkflowJob j) {
+        List<ParameterDefinition> existing = []
+        if (j.getProperty(ParametersDefinitionProperty.class) != null) {
+            existing.addAll(j.getProperty(ParametersDefinitionProperty.class)?.getParameterDefinitions())
+        }
+        return existing
     }
 
 }

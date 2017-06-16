@@ -34,10 +34,10 @@ pipeline {
             junit '*/target/surefire-reports/*.xml'
         }
         success {
-            archive "*/target/**/*"
+            archive "**/target/*.hpi"
         }
         unstable {
-            archive "*/target/**/*"
+            archive "**/target/*.hpi"
         }
     }
 
