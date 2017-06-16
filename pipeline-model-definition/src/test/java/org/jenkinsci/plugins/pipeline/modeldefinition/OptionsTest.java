@@ -42,13 +42,8 @@ import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobP
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-<<<<<<< HEAD
-=======
-import org.jvnet.hudson.test.recipes.LocalData;
->>>>>>> origin/master
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
