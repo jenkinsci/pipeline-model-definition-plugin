@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.cli.CLICommandInvoker;
 import hudson.model.Item;
+import hudson.model.User;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertThat;
 
 public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
 
+    private DeclarativeLinterCommand declarativeLinterCommand;
     private CLICommandInvoker command;
 
     @Rule
@@ -53,7 +55,8 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
 
     @Before
     public void setUpPerTest() {
-        command = new CLICommandInvoker(j, "declarative-linter");
+        declarativeLinterCommand = new DeclarativeLinterCommand();
+        command = new CLICommandInvoker(j, declarativeLinterCommand);
     }
 
     @Test
@@ -96,6 +99,14 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
 
         assertThat(result, not(succeeded()));
         assertThat(result.stderr(), containsString("ERROR: anonymous is missing the Overall/Read permission"));
+
+        declarativeLinterCommand.setTransportAuth(User.get("alice").impersonate());
+        final CLICommandInvoker.Result result2 = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
+
+        assertThat(result2, succeeded());
+        assertThat(result2, hasNoErrorOutput());
+        assertThat(result2.stdout(), containsString("Jenkinsfile successfully validated."));
+
     }
 
     private File writeJenkinsfileToTmpFile(String dir, String testName) throws IOException {
