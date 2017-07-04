@@ -34,7 +34,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static hudson.security.Permission.READ;
+import static jenkins.model.Jenkins.READ;
 
 @Extension
 public class DeclarativeLinterCommand extends CLICommand {
