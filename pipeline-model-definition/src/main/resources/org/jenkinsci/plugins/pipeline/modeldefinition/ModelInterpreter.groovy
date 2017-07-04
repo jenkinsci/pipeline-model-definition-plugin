@@ -128,6 +128,11 @@ public class ModelInterpreter implements Serializable {
                                         }
                                     }
                                 }
+                                // Throw any error we might have here to make sure that it gets caught and handled by
+                                // wrappers.
+                                if (firstError != null) {
+                                    throw firstError
+                                }
                             }
                         }
                     }

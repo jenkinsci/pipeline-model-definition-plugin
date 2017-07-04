@@ -238,4 +238,12 @@ public class OptionsTest extends AbstractModelDefTest {
 
         assertEquals(1, externalPropCount);
     }
+
+    @Issue("TBD")
+    @Test
+    public void retryOptions() throws Exception {
+        expect(Result.FAILURE, "retryOptions")
+                .logContains("Retrying")
+                .go();
+    }
 }
