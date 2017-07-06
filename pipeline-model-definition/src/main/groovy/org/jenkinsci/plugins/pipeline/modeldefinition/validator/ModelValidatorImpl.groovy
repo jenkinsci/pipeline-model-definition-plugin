@@ -311,9 +311,16 @@ class ModelValidatorImpl implements ModelValidator {
             // a sole describable map
             if (valid && !soleDescribableMap) {
                 model.parameters.each { p ->
-                    if (p.isRequired() && !argList.containsKeyName(p.name)) {
-                        errorCollector.error(element, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
-                        valid = false
+                    if (p.isRequired() &&
+                        !argList.containsKeyName(p.name)) {
+                        // Only error out if any of the following are false:
+                        // - there's only a single parameter (which we already know is required)
+                        // - There are arguments specified
+                        if (model.parameters.size() != 1 ||
+                            !argList.arguments.isEmpty()) {
+                            errorCollector.error(element, Messages.ModelValidatorImpl_MissingRequiredStepParameter(p.name))
+                            valid = false
+                        }
                     }
                 }
             }
@@ -429,12 +436,11 @@ class ModelValidatorImpl implements ModelValidator {
                     List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
                     if (requiredParams.size() != meth.args.size()) {
-                        // NOTE: This is a specialized hack for allowing single-required-Boolean-parameter constructors
+                        // NOTE: This is a specialized hack for allowing single-required-parameter constructors
                         // to be called like "foo()", Groovy-style, passing null as the parameter value. Added for
                         // JENKINS-41391, may need to be revisited in the future.
-                        if (!(requiredParams.size() == 1 &&
-                            meth.args.isEmpty() &&
-                            requiredParams.get(0).erasedType == Boolean.class)) {
+                        if (!requiredParams.size() != 1 ||
+                            !meth.args.isEmpty()) {
                             errorCollector.error(meth, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(meth.name, requiredParams.size(), meth.args.size()))
                             valid = false
                         }

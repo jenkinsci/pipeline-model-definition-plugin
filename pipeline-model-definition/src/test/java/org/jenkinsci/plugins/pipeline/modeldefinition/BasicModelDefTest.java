@@ -738,4 +738,12 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logMatches("Workspace dir is .*some-sub-dir")
                 .go();
     }
+
+    @Issue("JENKINS-42772")
+    @Test
+    public void noParamsSingleRequired() throws Exception {
+        expect("noParamsSingleRequired")
+                .logContains("[Pipeline] { (foo)", "THIS WORKS")
+                .go();
+    }
 }
