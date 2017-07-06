@@ -312,7 +312,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                 "def hello(name) {echo \"Hello ${name}\"}",
                 "def foo(x) { this.x = x+'-set'; }",
                 "def bar() { return x+'-get' }",
-                "def baz() { return 'nothing here' }")
+                "def baz() { return 'nothing here' }",
+                "def pipeline(Closure c) { c.call() }")
                 , "\n"));
         FileUtils.writeStringToFile(new File(vars, "returnAThing.groovy"), StringUtils.join(Arrays.asList(
                 "def call(a) { return \"${a} tada\" }"), "\n"

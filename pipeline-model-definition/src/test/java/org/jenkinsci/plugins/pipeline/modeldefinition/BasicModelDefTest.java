@@ -345,6 +345,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-45081")
+    @Test
+    public void objectMethodPipelineCall() throws Exception {
+        initGlobalLibrary();
+
+        expect("objectMethodPipelineCall")
+                .logContains("Hi there")
+                .go();
+    }
+
     @Test
     public void basicWhen() throws Exception {
         expect("basicWhen")

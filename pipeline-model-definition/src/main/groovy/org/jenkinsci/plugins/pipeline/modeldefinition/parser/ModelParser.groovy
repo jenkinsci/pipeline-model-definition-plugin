@@ -118,11 +118,12 @@ class ModelParser implements Parser {
         // first, quickly ascertain if this module should be parsed at all
         // TODO: 'use script' escape hatch
         def pst = src.statementBlock.statements.find {
-            matchMethodCall(it)?.methodAsString == ModelStepLoader.STEP_NAME
+            MethodCallExpression m = matchMethodCall(it)
+            return m != null && matchMethodName(m) == ModelStepLoader.STEP_NAME
         }
 
         if (pst==null) {
-            // Check if there's a 'pipeline' step somewhere nexted within the other statements and error out if that's the case.
+            // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
             src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
             return null; // no 'pipeline', so this doesn't apply
         }
