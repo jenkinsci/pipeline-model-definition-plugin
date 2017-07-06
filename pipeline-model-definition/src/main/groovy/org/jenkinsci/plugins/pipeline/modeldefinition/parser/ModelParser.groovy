@@ -400,18 +400,18 @@ class ModelParser implements Parser {
                 def mc = matchMethodCall(s);
                 if (mc == null) {
                     // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-                    errorCollector.error(r,Messages.ModelParser_ExpectedTool());
-                }
-
-                def toolTypeKey = parseKey(mc.method);
-
-                List<Expression> args = ((TupleExpression) mc.arguments).expressions
-                if (args.isEmpty()) {
-                    errorCollector.error(toolTypeKey, Messages.ModelParser_NoArgForTool(toolTypeKey.key))
-                } else if (args.size() > 1) {
-                    errorCollector.error(toolTypeKey, Messages.ModelParser_TooManyArgsForTool(toolTypeKey.key))
+                    errorCollector.error(r, Messages.ModelParser_ExpectedTool());
                 } else {
-                    r.tools[toolTypeKey] = parseArgument(args[0])
+                    def toolTypeKey = parseKey(mc.method);
+
+                    List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                    if (args.isEmpty()) {
+                        errorCollector.error(toolTypeKey, Messages.ModelParser_NoArgForTool(toolTypeKey.key))
+                    } else if (args.size() > 1) {
+                        errorCollector.error(toolTypeKey, Messages.ModelParser_TooManyArgsForTool(toolTypeKey.key))
+                    } else {
+                        r.tools[toolTypeKey] = parseArgument(args[0])
+                    }
                 }
             }
         }
