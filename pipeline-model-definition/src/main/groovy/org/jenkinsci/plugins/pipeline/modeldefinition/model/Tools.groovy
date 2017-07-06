@@ -29,6 +29,7 @@ import hudson.tools.ToolDescriptor
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -53,6 +54,23 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
     public List<List<Object>> getToolEntries() {
         return getMap().collect { k, v ->
             return [k, v]
+        }
+    }
+
+    /**
+     * Merges the tool entries from another instance into this one, defaulting to the current instance's values.
+     *
+     * @return A list of type/name tuples
+     */
+    public List<List<Object>> mergeToolEntries(@CheckForNull Tools other) {
+        if (other == null) {
+            return getToolEntries()
+        } else {
+            Map<String,Object> mergedMap = new TreeMap<>()
+            mergedMap.putAll(other.getMap())
+            mergedMap.putAll(getMap())
+
+            return mergedMap.collect { k, v -> return [k, v] }
         }
     }
 

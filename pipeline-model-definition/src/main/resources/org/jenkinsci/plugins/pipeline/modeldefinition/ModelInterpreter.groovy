@@ -96,7 +96,7 @@ public class ModelInterpreter implements Serializable {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             withCredentialsBlock(thisStage.environment, root.environment) {
                                                                 withEnvBlock(thisStage.getEnvVars(root, script)) {
-                                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools) {
+                                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)
                                                                     }
@@ -306,14 +306,20 @@ public class ModelInterpreter implements Serializable {
      * Executes a given closure in a "withEnv" block after installing the specified tools
      * @param agent The agent context we're running in
      * @param tools The tools configuration we're using
+     * @param root The root level configuration, if we're called within a stage. Can be null.
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def toolsBlock(Agent agent, Tools tools, Closure body) {
+    def toolsBlock(Agent agent, Tools tools, Root root = null, Closure body) {
+        def toolsList = []
+        if (tools != null) {
+            toolsList = tools.mergeToolEntries(root?.tools)
+        } else if (root?.tools != null) {
+            toolsList = root.tools.getToolEntries()
+        }
         // If there's no agent, don't install tools in the first place.
-        if (agent.hasAgent() && tools != null) {
+        if (agent.hasAgent() && !toolsList.isEmpty()) {
             def toolEnv = []
-            def toolsList = tools.getToolEntries()
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.toolInstall()) {
                     toolEnv = actualToolsInstall(toolsList)
