@@ -401,6 +401,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-45098")
+    @Test
+    public void toolWithoutVersion() throws Exception {
+        expectError("toolWithoutVersion")
+                .logContains(Messages.ModelParser_ExpectedTool())
+                .go();
+    }
+
     @Test
     public void globalLibraryNonStepBody() throws Exception {
         initGlobalLibrary();
