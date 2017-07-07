@@ -738,4 +738,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logMatches("Workspace dir is .*some-sub-dir")
                 .go();
     }
+
+    @Issue("JENKINS-43625")
+    @Test
+    public void parallelAndPostFailure() throws Exception {
+        expect(Result.FAILURE, "parallelAndPostFailure")
+                .logContains("[Pipeline] { (foo)", "I HAVE EXPLODED")
+                .logNotContains("[first] { (Branch: first)", "[second] { (Branch: second)")
+                .go();
+    }
+
 }
