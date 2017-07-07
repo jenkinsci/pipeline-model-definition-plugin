@@ -37,6 +37,8 @@ pipeline {
             steps {
                 echo "TEST_VAR is ${TEST_VAR}"
                 echo "VAR_TEST is ${VAR_TEST}"
+                sh 'echo "TEST_VAR from shell is ${TEST_VAR}"'
+                sh 'echo "VAR_TEST from shell is ${VAR_TEST}"'
             }
         }
     }

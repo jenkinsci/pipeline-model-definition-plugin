@@ -61,7 +61,9 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void envVarContainsTEST() throws Exception {
         expect("envVarContainsTEST")
                 .logContains("TEST_VAR is BAR",
-                        "VAR_TEST is VALID")
+                        "VAR_TEST is VALID",
+                        "TEST_VAR from shell is BAR",
+                        "VAR_TEST from shell is VALID")
                 .go();
     }
 
