@@ -51,6 +51,7 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
      *
      * @return A list of type/name tuples
      */
+    @Nonnull
     public List<List<Object>> getToolEntries() {
         return getMap().collect { k, v ->
             return [k, v]
@@ -62,6 +63,7 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
      *
      * @return A list of type/name tuples
      */
+    @Nonnull
     public List<List<Object>> mergeToolEntries(@CheckForNull Tools other) {
         if (other == null) {
             return getToolEntries()
