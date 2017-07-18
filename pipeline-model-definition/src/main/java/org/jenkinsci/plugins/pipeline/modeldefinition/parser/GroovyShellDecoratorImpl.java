@@ -30,8 +30,8 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
         ic.addStarImports("hudson.model","jenkins.model");
         this.customizeImports(context, ic);
         cc.addCompilationCustomizers(ic);
-        
-        cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.CANONICALIZATION) {
+
+        cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.SEMANTIC_ANALYSIS) {
             @Override
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 // TODO: workflow-cps-plugin CpsFlowExecution.parseScript() should be passing in CodeSource
@@ -47,5 +47,6 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
                 }
             }
         });
+        cc.addCompilationCustomizers(new EnvironmentCustomizer());
     }
 }

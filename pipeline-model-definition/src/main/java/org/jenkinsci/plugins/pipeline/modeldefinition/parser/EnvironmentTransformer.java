@@ -24,17 +24,26 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
+import groovy.lang.Closure;
+import groovy.lang.GroovyObjectSupport;
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -48,17 +57,25 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.runtime.InvokerHelper;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*;
 
 public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
     private final SourceUnit sourceUnit;
@@ -74,7 +91,6 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
         return sourceUnit;
     }
 
-    @Override
     public Expression transform(Expression exp) {
         if (exp != null && exp instanceof MethodCallExpression) {
             MethodCallExpression methodCallExpression = (MethodCallExpression) exp;
@@ -86,6 +102,7 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
                     block.arguments.getExpressions().size() == 1 &&
                     block.body != null) {
                 BlockStatement body = ModelParser.asBlock(block.body.getCode());
+                System.err.println("Transforming, theoretically, " + methodCallExpression.getMethodAsString());
 
                 Map<String,Expression> rawEntries = new HashMap<>();
 
@@ -100,7 +117,7 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
                             if (binaryExpression.getLeftExpression() instanceof VariableExpression) {
                                 String varName = ((VariableExpression) binaryExpression.getLeftExpression()).getName();
 
-                                rawEntries.put(varName, binaryExpression.getLeftExpression());
+                                rawEntries.put(varName, binaryExpression.getRightExpression());
                             } else {
                                 // TODO: The left side isn't a variable!
                             }
@@ -115,39 +132,75 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
                 ClassNode classNode = new ClassNode("EnvironmentResolver" + envCounter.getAndIncr(),
                         Opcodes.ACC_PUBLIC,
                         ClassHelper.make(AbstractEnvironmentResolver.class));
+                Parameter[] constructorParams = { new Parameter(ClassHelper.STRING_TYPE.makeArray(), "keyNames") };
 
+                for (ConstructorNode c : classNode.getSuperClass().getDeclaredConstructors()) {
+                    for (Parameter p : c.getParameters()) {
+                        System.err.println("type: " + p.getType());
+                    }
+                }
+                BlockStatement constructorBody = new BlockStatement();
+                constructorBody.addStatement(ctorSuperS(args("keyNames")));
+
+                List<Expression> paramExpressions = new ArrayList<>();
                 for (Map.Entry<String,Expression> entry : rawEntries.entrySet()) {
                     String k = entry.getKey();
                     Expression expr = entry.getValue();
-
-                    classNode.addMethod(createGetter(k, expr, rawEntries.keySet()));
+                    constructorBody.addStatement(stmt(callThisX("addClosure",
+                            new TupleExpression(constX(k), createGetter(k, expr, rawEntries.keySet())))));
+                    paramExpressions.add(new ConstantExpression(k));
                 }
+
+                classNode.addConstructor(Opcodes.ACC_PUBLIC, constructorParams, ClassNode.EMPTY_ARRAY,
+                        constructorBody);
+
+                ArrayExpression paramArray = new ArrayExpression(ClassHelper.STRING_TYPE, paramExpressions);
 
                 sourceUnit.getAST().addClass(classNode);
 
-                return new ConstructorCallExpression(classNode, ArgumentListExpression.EMPTY_ARGUMENTS);
+                methodCallExpression.setArguments(new TupleExpression(new ConstructorCallExpression(classNode, new ArgumentListExpression(paramExpressions))));
+
+                System.err.println("methodCallExpr: " + methodCallExpression);
+                return methodCallExpression;
 
             }
         }
 
-        return exp;
+        if (exp != null && exp instanceof ClosureExpression) {
+            ClosureExpression closureExpression = (ClosureExpression) exp;
+            BlockStatement newClosureBody = new BlockStatement();
+
+            for (Statement s : ModelParser.asBlock(closureExpression.getCode()).getStatements()) {
+                if (s instanceof ExpressionStatement) {
+                    newClosureBody.addStatement(stmt(transform(((ExpressionStatement) s).getExpression())));
+                } else {
+                    newClosureBody.addStatement(s);
+                }
+            }
+
+            closureExpression.setCode(newClosureBody);
+
+            return closureExpression;
+        }
+
+        return super.transform(exp);
     }
 
-    private MethodNode createGetter(String name, Expression valueExpr, Set<String> keys) {
+    private ClosureExpression createGetter(String name, Expression valueExpr, Set<String> keys) {
         String methodName = getterName(name);
         ClassNode returnType = ClassHelper.STRING_TYPE;
         BlockStatement body = new BlockStatement();
 
-        body.addStatement(GeneralUtils.returnS(expressionTranslation(valueExpr, keys)));
-        return new MethodNode(methodName,
-                Opcodes.ACC_PUBLIC,
-                returnType,
-                Parameter.EMPTY_ARRAY,
-                ClassNode.EMPTY_ARRAY,
-                body);
+        Expression translated = expressionTranslation(valueExpr, keys);
+        body.addStatement(returnS(translated));
+        ClosureExpression c = new ClosureExpression(Parameter.EMPTY_ARRAY, body);
+        c.setVariableScope(new VariableScope());
+        System.err.println("CLOSURE EXPR: " + name + " --- " + translated);
+        return c;
     }
 
     private Expression expressionTranslation(Expression expr, Set<String> keys) {
+        System.err.println("VALUE EXPR: " + expr);
         if (expr instanceof ConstantExpression) {
             // If it's a constant, just return it, with a String.valueOf call if needed.
             if (!(expr.getType().equals(ClassHelper.STRING_TYPE))) {
@@ -180,6 +233,7 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
                     // If it's an "env.foo" where "foo" is one of the keys, return the appropriate getter call.
                     return getterCall(propExpr.getPropertyAsString());
                 } else {
+                    System.err.println("obj prop - " + propExpr.getPropertyAsString());
                     // If it's an object property, transform the object expression.
                     return new PropertyExpression(expressionTranslation(propExpr.getObjectExpression(), keys),
                             propExpr.getProperty());
@@ -204,10 +258,14 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
                 return getterCall(varExpr.getName());
             } else {
                 // If it's not a known key, fall back on getScript().getProperty(name)
-                return new MethodCallExpression(GeneralUtils.callThisX("getScript"),
+                return new MethodCallExpression(callThisX("getScript"),
                         "getProperty",
                         new TupleExpression(new ConstantExpression(varExpr.getName())));
             }
+        } else if (expr instanceof ElvisOperatorExpression) {
+            ElvisOperatorExpression elvis = (ElvisOperatorExpression) expr;
+            return new ElvisOperatorExpression(expressionTranslation(elvis.getTrueExpression(), keys),
+                    expressionTranslation(elvis.getFalseExpression(), keys));
         } else {
             // What kind of expression got past us here? Let's find out!
             throw new IllegalArgumentException("Got an unexpected " + expr.getClass() + ": '" +
@@ -216,10 +274,10 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
     }
 
     private MethodCallExpression getterCall(String name) {
-        return GeneralUtils.callThisX(getterName(name));
+        return callThisX("getClosure", args(constX(name)));
     }
 
-    private String getterName(String name) {
+    public static String getterName(String name) {
         return "get" + MetaClassHelper.capitalize(name);
     }
 
@@ -231,8 +289,16 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
         }
     }
 
-    public static abstract class AbstractEnvironmentResolver {
+    public static abstract class AbstractEnvironmentResolver implements Serializable {
+        private static final long serialVersionUID = 1L;
+
         private CpsScript script;
+        private Set<String> keyNames = new TreeSet<>();
+        private Map<String,Closure> closureMap = new TreeMap<>();
+
+        public AbstractEnvironmentResolver(String... keyNames) {
+            this.keyNames.addAll(Arrays.asList(keyNames));
+        }
 
         public void setScript(CpsScript script) {
             this.script = script;
@@ -241,5 +307,31 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
         public CpsScript getScript() {
             return script;
         }
+
+        public void setKeyNames(Set<String> keyNames) {
+            this.keyNames.addAll(keyNames);
+        }
+
+        public Set<String> getKeyNames() {
+            return keyNames;
+        }
+
+        public void addClosure(String key, Closure closure) {
+            System.err.println("adding closure: " + key);
+            this.closureMap.put(key, closure);
+        }
+
+        public Closure getClosure(String key) {
+            return closureMap.get(key);
+        }
+
+        public Object callClosure(String key) {
+            return getClosure(key).call();
+        }
+
+        public Map<String,Closure> getClosureMap() {
+            return closureMap;
+        }
     }
+
 }

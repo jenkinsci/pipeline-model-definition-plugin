@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import org.codehaus.groovy.runtime.InvokerHelper
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.AbstractBuildConditionResponder
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.ClosureContentsChecker
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
@@ -36,8 +37,10 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.PropertiesToMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.EnvironmentTransformer
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
+import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.createStepsBlock
 
 /**
@@ -46,7 +49,7 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.Utils.createStepsBl
  * @author Andrew Bayer
  */
 public class ClosureModelTranslator implements MethodMissingWrapper, Serializable {
-    private static final List<Class> UNTRANSLATED_CLASSES = [StageConditionals.class, Environment.class]
+    private static final List<Class> UNTRANSLATED_CLASSES = [StageConditionals.class]
 
     Map<String,Object> actualMap = [:]
     Class<NestedModel> actualClass
@@ -132,6 +135,23 @@ public class ClosureModelTranslator implements MethodMissingWrapper, Serializabl
                     }
                     ctm.actualMap.name = n
                     resultValue = ctm.toNestedModel()
+                }
+                else if (actualType == Environment.class &&
+                    argValue != null &&
+                    argValue instanceof EnvironmentTransformer.AbstractEnvironmentResolver) {
+                    System.err.println("hi?")
+                    Map<String,Object> resolved = [:]
+                    argValue.setScript(script)
+                    for (String k : argValue.keyNames) {
+                        System.err.println("k: ${k}")
+                        def cl = argValue.getClosure(k)
+                        def v = cl.call()
+                        System.err.println("v: ${v}")
+                        resolved.put(k, v)
+
+                    }
+
+                    System.err.println("resolved: ${resolved}")
                 }
                 // If the argument is a Closure, we've got a few possibilities.
                 else if (argValue != null && Utils.instanceOfWrapper(Closure.class, argValue)) {
