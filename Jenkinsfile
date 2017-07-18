@@ -35,9 +35,11 @@ pipeline {
         }
         success {
             archive "**/target/*.hpi"
+            archive "**/target/site/jacoco/jacoco.xml"
         }
         unstable {
             archive "**/target/*.hpi"
+            archive "**/target/site/jacoco/jacoco.xml"
         }
     }
 
