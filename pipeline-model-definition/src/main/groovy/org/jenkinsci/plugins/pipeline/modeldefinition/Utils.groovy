@@ -41,6 +41,10 @@ import hudson.model.Result
 import hudson.triggers.Trigger
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.control.SourceUnit
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
@@ -991,4 +995,44 @@ public class Utils {
         return existing
     }
 
+
+    /**
+     * Obtains the source text of the given {@link org.codehaus.groovy.ast.ASTNode}.
+     */
+    public static String getSourceTextForASTNode(@Nonnull ASTNode n, @Nonnull SourceUnit sourceUnit) {
+        def result = new StringBuilder();
+        int beginLine = n.getLineNumber()
+        int endLine = n.getLastLineNumber()
+        int beginLineColumn = n.getColumnNumber()
+        int endLineLastColumn = n.getLastColumnNumber()
+
+        //The node seems to be lying about the last line, so go through each statement to try to make sure
+        if (n instanceof BlockStatement) {
+            for (Statement s : n.statements) {
+                if (s.lineNumber < beginLine) {
+                    beginLine = s.lineNumber
+                    beginLineColumn = s.columnNumber
+                }
+                if (s.lastLineNumber > endLine) {
+                    endLine = s.lastLineNumber
+                    endLineLastColumn = s.lastColumnNumber
+                }
+            }
+        }
+        for (int x = beginLine; x <= endLine; x++) {
+            String line = sourceUnit.source.getLine(x, null);
+            if (line == null)
+                throw new AssertionError("Unable to get source line"+x);
+
+            if (x == endLine) {
+                line = line.substring(0, endLineLastColumn - 1);
+            }
+            if (x == beginLine) {
+                line = line.substring(beginLineColumn - 1);
+            }
+            result.append(line).append('\n');
+        }
+
+        return result.toString().trim();
+    }
 }

@@ -1063,7 +1063,7 @@ class ModelParser implements Parser {
      * Attempts to match a method call of the form {@code foo(...)} and
      * return 'foo' as a string.
      */
-    protected @CheckForNull String matchMethodName(MethodCallExpression exp) {
+    public static @CheckForNull String matchMethodName(MethodCallExpression exp) {
         def lhs = exp.objectExpression;
         if (lhs instanceof VariableExpression) {
             if (lhs.name.equals("this")) {
@@ -1091,21 +1091,31 @@ class ModelParser implements Parser {
      * Attempts to match AST node as {@link BlockStatementMatch} or
      * return null.
      */
-    public @CheckForNull BlockStatementMatch matchBlockStatement(Statement st) {
+    protected @CheckForNull BlockStatementMatch matchBlockStatement(Statement st) {
         def whole = matchMethodCall(st);
         if (whole!=null) {
-            def methodName = matchMethodName(whole);
-            def args = (TupleExpression)whole.arguments;
-            int sz = args.expressions.size();
-            if (sz>0 && methodName!=null) {
-                def last = args.getExpression(sz - 1);
-                if (last instanceof ClosureExpression) {
-                    return new BlockStatementMatch(whole,methodName,last);
-                }
-            }
+            return blockStatementFromExpression(whole)
         }
 
         return null;
+    }
+
+    /**
+     * Splits out and returns the {@link BlockStatementMatch} corresponding to  the given {@link MethodCallExpression}.
+     */
+    @CheckForNull
+    public static BlockStatementMatch blockStatementFromExpression(@Nonnull MethodCallExpression exp) {
+        def methodName = matchMethodName(exp);
+        def args = (TupleExpression)exp.arguments;
+        int sz = args.expressions.size();
+        if (sz>0 && methodName!=null) {
+            def last = args.getExpression(sz - 1);
+            if (last instanceof ClosureExpression) {
+                return new BlockStatementMatch(exp,methodName,last);
+            }
+        }
+
+        return null
     }
 
     /**
@@ -1167,7 +1177,7 @@ class ModelParser implements Parser {
     /**
      * Normalizes a statement to a block of statement by creating a wrapper if need be.
      */
-    protected BlockStatement asBlock(Statement st) {
+    public static BlockStatement asBlock(Statement st) {
         if (st instanceof BlockStatement) {
             return st;
         } else {
@@ -1213,39 +1223,6 @@ class ModelParser implements Parser {
      * Obtains the source text of the given {@link org.codehaus.groovy.ast.ASTNode}.
      */
     protected String getSourceText(ASTNode n) {
-        def result = new StringBuilder();
-        int beginLine = n.getLineNumber()
-        int endLine = n.getLastLineNumber()
-        int beginLineColumn = n.getColumnNumber()
-        int endLineLastColumn = n.getLastColumnNumber()
-
-        //The node seems to be lying about the last line, so go through each statement to try to make sure
-        if (n instanceof BlockStatement) {
-            for (Statement s : n.statements) {
-                if (s.lineNumber < beginLine) {
-                    beginLine = s.lineNumber
-                    beginLineColumn = s.columnNumber
-                }
-                if (s.lastLineNumber > endLine) {
-                    endLine = s.lastLineNumber
-                    endLineLastColumn = s.lastColumnNumber
-                }
-            }
-        }
-        for (int x = beginLine; x <= endLine; x++) {
-            String line = sourceUnit.source.getLine(x, null);
-            if (line == null)
-                throw new AssertionError("Unable to get source line"+x);
-
-            if (x == endLine) {
-                line = line.substring(0, endLineLastColumn - 1);
-            }
-            if (x == beginLine) {
-                line = line.substring(beginLineColumn - 1);
-            }
-            result.append(line).append('\n');
-        }
-
-        return result.toString().trim();
+        return Utils.getSourceTextForASTNode(n, sourceUnit)
     }
 }
