@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.tools.ToolDescriptor
+import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
@@ -33,13 +34,18 @@ import org.codehaus.groovy.ast.expr.TupleExpression
 import org.codehaus.groovy.ast.stmt.Statement
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ParserUtils
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ParserUtils.*
+import static ASTParserUtils.*
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.eachStatement
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchBlockStatement
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchMethodCall
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchStringLiteral
 
 /**
  * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and
@@ -70,42 +76,36 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
             return [k, v]
         }
     }
-    /*
 
     @CheckForNull
-    public static Statement transform(@CheckForNull Statement original) {
-        if (original == null) {
+    public static ASTNode transformToRuntimeAST(@CheckForNull ModelASTTools original) {
+        if (original == null ||
+            original.tools.isEmpty() ||
+            original.sourceLocation == null ||
+            !(original.sourceLocation instanceof ASTNode)) {
             return null
         } else {
-            BlockStatementMatch m = matchBlockStatement(original)
-            if (m == null) {
-                return null
-            } else {
-                def astResult = new AstBuilder().buildFromSpec {
-                    returnStatement {
-                        constructorCall(Tools) {
-                            argumentList {
-                                map {
-                                    eachStatement(m.body.code) { s ->
-                                        MethodCallExpression mce = matchMethodCall(s)
-                                        if (mce != null) {
-                                            String key = parseStringLiteral(mce.method)
-                                            List<Expression> args = ((TupleExpression) mce.arguments).expressions
-                                            if (!args.isEmpty() && args.size() == 1) {
-
+            return getAst(new AstBuilder().buildFromSpec {
+                returnStatement {
+                    constructorCall(Tools) {
+                        argumentList {
+                            map {
+                                original.tools.each { k, v ->
+                                    mapEntry {
+                                        if (v.sourceLocation != null && v.sourceLocation instanceof ASTNode) {
+                                            constant k.key
+                                            expression.add((ASTNode) v.sourceLocation)
                                         }
                                     }
-
                                 }
                             }
                         }
                     }
                 }
-            }
+            })
         }
     }
 
-     */
     /**
      * Merges the tool entries from another instance into this one, defaulting to the current instance's values.
      *

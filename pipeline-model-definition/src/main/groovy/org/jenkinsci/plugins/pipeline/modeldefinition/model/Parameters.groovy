@@ -30,8 +30,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import hudson.model.ParameterDefinition
+import org.codehaus.groovy.ast.ASTNode
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -76,5 +80,10 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
      */
     public static String typeForKey(@Nonnull String key) {
         return getAllowedParameterTypes().get(key)
+    }
+
+    @CheckForNull
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildParameters original) {
+        return ASTParserUtils.transformDescribableContainer(original, original?.parameters, Parameters.class)
     }
 }

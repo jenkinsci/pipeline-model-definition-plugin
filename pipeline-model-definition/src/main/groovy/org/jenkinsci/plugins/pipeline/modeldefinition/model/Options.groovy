@@ -34,15 +34,30 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.stmt.Statement
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchMethodCall
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.methodCallToDescribable
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.transformListOfDescribables
 
 /**
  * Container for job options.
@@ -74,6 +89,13 @@ public class Options implements Serializable {
                 wrappers[(String)i[0]] = i[1]
             }
         }
+    }
+
+    Options(@Nonnull List<JobProperty> properties, @Nonnull Map<String, DeclarativeOption> options,
+            @Nonnull Map<String, Object> wrappers) {
+        this.properties.addAll(properties)
+        this.options.putAll(options)
+        this.wrappers.putAll(wrappers)
     }
 
     public List<JobProperty> getProperties() {
@@ -145,5 +167,53 @@ public class Options implements Serializable {
      */
     public static String typeForKey(@Nonnull String key) {
         return getAllowedOptionTypes().get(key)
+    }
+
+    @CheckForNull
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTOptions original) {
+        if (original != null && !original.options.isEmpty()) {
+            List<ModelASTOption> jobProps = new ArrayList<>()
+            List<ModelASTOption> options = new ArrayList<>()
+            List<ModelASTOption> wrappers = new ArrayList<>()
+
+            SymbolLookup symbolLookup = SymbolLookup.get()
+
+            original.options.each { o ->
+                if (symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
+                    jobProps.add(o)
+                } else if (symbolLookup.findDescriptor(DeclarativeOption.class, o.name) != null) {
+                    options.add(o)
+                } else if (StepDescriptor.byFunctionName(o.name) != null) {
+                    wrappers.add(o)
+                }
+            }
+            return getAst(new AstBuilder().buildFromSpec {
+                returnStatement {
+                    constructorCall(Options) {
+                        argumentList {
+                            expression.add(transformListOfDescribables(jobProps))
+                        }
+                        map {
+                            options.each { o ->
+                                if (o.getSourceLocation() instanceof Statement) {
+                                    MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
+                                    if (expr != null) {
+                                        mapEntry {
+                                            constant o.name
+                                            expression.add(methodCallToDescribable(expr))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        map {
+                            wrappers.each { w ->
+
+                            }
+                        }
+                    }
+                }
+            })
+        }
     }
 }

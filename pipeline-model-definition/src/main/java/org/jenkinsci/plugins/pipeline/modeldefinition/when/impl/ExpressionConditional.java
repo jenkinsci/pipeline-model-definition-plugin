@@ -24,26 +24,41 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import groovy.lang.Closure;
 import hudson.Extension;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.CheckForNull;
 
 /**
  * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
 public class ExpressionConditional extends DeclarativeStageConditional<ExpressionConditional> {
-    private final String block;
+    private final Closure block;
 
     @DataBoundConstructor
-    public ExpressionConditional(String block) {
+    public ExpressionConditional(Closure block) {
         this.block = block;
     }
 
-    public String getBlock() {
+    public Closure getBlock() {
         return block;
     }
 
@@ -51,5 +66,25 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
     @Symbol("expression")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ExpressionConditional> {
 
+        @CheckForNull
+        @Override
+        public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+            if (original != null && original instanceof ModelASTWhenExpression) {
+                ModelASTWhenExpression whenExpr = (ModelASTWhenExpression) original;
+                if (whenExpr.getSourceLocation() instanceof Statement) {
+                    BlockStatementMatch block =
+                            ASTParserUtils.matchBlockStatement((Statement) whenExpr.getSourceLocation());
+                    if (block != null) {
+                        return new ReturnStatement(
+                                new ConstructorCallExpression(ClassHelper.make(ExpressionConditional.class),
+                                        new ArgumentListExpression(block.body)
+                                )
+                        );
+                    }
+                }
+            }
+
+            return null;
+        }
     }
 }

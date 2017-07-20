@@ -29,12 +29,19 @@ import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import org.apache.tools.ant.types.selectors.SelectorUtils;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 
@@ -73,6 +80,10 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
     @Extension
     @Symbol("branch")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<BranchConditional> {
-
+        @CheckForNull
+        @Override
+        public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+            return AbstractConditionalWithChildren.transformToRuntimeAST(original);
+        }
     }
 }

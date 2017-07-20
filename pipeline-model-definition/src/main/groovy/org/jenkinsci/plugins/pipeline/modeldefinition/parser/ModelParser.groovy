@@ -53,7 +53,7 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ParserUtils.getSourceText
+import static ASTParserUtils.getSourceText
 
 /**
  * Recursively walks AST tree of parsed Jenkinsfile and builds validation model into {@link ModelASTPipelineDef}
@@ -99,13 +99,13 @@ class ModelParser implements Parser {
     }
 
     public void checkForNestedPipelineStep(Statement statement) {
-        def b = ParserUtils.matchBlockStatement(statement)
+        def b = ASTParserUtils.matchBlockStatement(statement)
         if (b != null) {
             if (b.methodName == ModelStepLoader.STEP_NAME) {
                 ModelASTPipelineDef p = new ModelASTPipelineDef(statement)
                 errorCollector.error(p, Messages.ModelParser_PipelineBlockNotAtTop(ModelStepLoader.STEP_NAME))
             }
-            ParserUtils.eachStatement(b.body.code) { s ->
+            ASTParserUtils.eachStatement(b.body.code) { s ->
                 checkForNestedPipelineStep(s)
             }
         }
@@ -119,8 +119,8 @@ class ModelParser implements Parser {
         // first, quickly ascertain if this module should be parsed at all
         // TODO: 'use script' escape hatch
         def pst = src.statementBlock.statements.find {
-            MethodCallExpression m = ParserUtils.matchMethodCall(it)
-            return m != null && ParserUtils.matchMethodName(m) == ModelStepLoader.STEP_NAME
+            MethodCallExpression m = ASTParserUtils.matchMethodCall(it)
+            return m != null && ASTParserUtils.matchMethodName(m) == ModelStepLoader.STEP_NAME
         }
 
         if (pst==null) {
@@ -133,7 +133,7 @@ class ModelParser implements Parser {
 
         Root modelRoot = new Root()
 
-        def pipelineBlock = ParserUtils.matchBlockStatement(pst);
+        def pipelineBlock = ASTParserUtils.matchBlockStatement(pst);
         if (pipelineBlock==null) {
             // We never get to the validator with this error
             errorCollector.error(r, Messages.ModelParser_PipelineStepWithoutBlock(ModelStepLoader.STEP_NAME))
@@ -141,9 +141,9 @@ class ModelParser implements Parser {
         }
 
         def sectionsSeen = new HashSet();
-        ParserUtils.eachStatement(pipelineBlock.body.code) { stmt ->
+        ASTParserUtils.eachStatement(pipelineBlock.body.code) { stmt ->
             ModelASTKey placeholderForErrors = new ModelASTKey(stmt)
-            def mc = ParserUtils.matchMethodCall(stmt);
+            def mc = ASTParserUtils.matchMethodCall(stmt);
             if (mc == null) {
                 errorCollector.error(placeholderForErrors,
                     Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt, sourceUnit)))
@@ -213,12 +213,12 @@ class ModelParser implements Parser {
     public @Nonnull ModelASTStages parseStages(Statement stmt) {
         def r = new ModelASTStages(stmt);
 
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
             // Should be able to get this validation later.
             return r
         } else {
-            ParserUtils.eachStatement(m.body.code) {
+            ASTParserUtils.eachStatement(m.body.code) {
                 r.stages.add(parseStage(it));
             }
         }
@@ -228,14 +228,14 @@ class ModelParser implements Parser {
     public @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt);
 
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
             // Should be able to get this validation later.
             return r
             //errorCollector.error(r, "Expected a block")
         } else {
             boolean errorEncountered = false
-            ParserUtils.eachStatement(m.body.code) { s ->
+            ASTParserUtils.eachStatement(m.body.code) { s ->
                 if (s instanceof ExpressionStatement) {
                     def exp = s.expression;
                     if (exp instanceof BinaryExpression && exp.operation.type == Types.EQUAL) {
@@ -360,17 +360,17 @@ class ModelParser implements Parser {
     public @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
         def r = new ModelASTLibraries(stmt);
 
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
             // Should be able to get this validation later.
             return r
         } else {
-            ParserUtils.eachStatement(m.body.code) {
+            ASTParserUtils.eachStatement(m.body.code) {
                 ModelASTMethodCall methCall = new ModelASTMethodCall(it)
-                def mc = ParserUtils.matchMethodCall(it);
+                def mc = ASTParserUtils.matchMethodCall(it);
                 if (mc == null || mc.methodAsString != "lib") {
                     errorCollector.error(r,Messages.ModelParser_ExpectedLibrary(getSourceText(it, sourceUnit)));
-                } else if (ParserUtils.matchBlockStatement(it) != null) {
+                } else if (ASTParserUtils.matchBlockStatement(it) != null) {
                     errorCollector.error(methCall, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Libraries()))
                 } else {
                     methCall = parseMethodCall(mc)
@@ -395,13 +395,13 @@ class ModelParser implements Parser {
     public @Nonnull ModelASTTools parseTools(Statement stmt) {
         def r = new ModelASTTools(stmt);
 
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
             // Should be able to get this validation later.
             return r
         } else {
-            ParserUtils.eachStatement(m.body.code) { s ->
-                def mc = ParserUtils.matchMethodCall(s);
+            ASTParserUtils.eachStatement(m.body.code) { s ->
+                def mc = ASTParserUtils.matchMethodCall(s);
                 if (mc == null) {
                     // Not sure of a better way to deal with this - it's a full-on parse-time failure.
                     errorCollector.error(r, Messages.ModelParser_ExpectedTool());
@@ -424,7 +424,7 @@ class ModelParser implements Parser {
 
     public @Nonnull ModelASTStage parseStage(Statement stmt) {
         ModelASTStage stage = new ModelASTStage(stmt)
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (!m?.methodName?.equals("stage")) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
             errorCollector.error(stage, Messages.ModelParser_ExpectedStage());
@@ -443,8 +443,8 @@ class ModelParser implements Parser {
         if (bodyExp == null || !(bodyExp instanceof ClosureExpression)) {
             errorCollector.error(stage, Messages.ModelParser_StageWithoutBlock())
         } else {
-            ParserUtils.eachStatement(((ClosureExpression)bodyExp).code) { s ->
-                def mc = ParserUtils.matchMethodCall(s);
+            ASTParserUtils.eachStatement(((ClosureExpression)bodyExp).code) { s ->
+                def mc = ASTParserUtils.matchMethodCall(s);
                 if (mc == null) {
                     errorCollector.error(stage, Messages.ModelParser_InvalidStageSectionDefinition(getSourceText(s, sourceUnit)))
                 } else {
@@ -463,8 +463,8 @@ class ModelParser implements Parser {
                             stage.when = parseWhen(s)
                             break
                         case 'steps':
-                            def stepsBlock = ParserUtils.matchBlockStatement(s);
-                            BlockStatement block = ParserUtils.asBlock(stepsBlock.body.code)
+                            def stepsBlock = ASTParserUtils.matchBlockStatement(s);
+                            BlockStatement block = ASTParserUtils.asBlock(stepsBlock.body.code)
 
                             // Handle parallel as a special case
                             if (block.statements.size()==1) {
@@ -472,7 +472,7 @@ class ModelParser implements Parser {
 
                                 if (parallel != null) {
                                     parallel.args.each { k, v ->
-                                        stage.branches.add(parseBranch(k, ParserUtils.asBlock(v.code)));
+                                        stage.branches.add(parseBranch(k, ASTParserUtils.asBlock(v.code)));
                                     }
                                     stage.failFast = parallel.failFast
                                 } else {
@@ -503,8 +503,8 @@ class ModelParser implements Parser {
     }
 
     public ModelASTWhen parseWhen(Statement statement) {
-        def stepsBlock = ParserUtils.matchBlockStatement(statement)
-        BlockStatement block = ParserUtils.asBlock(stepsBlock.body.code)
+        def stepsBlock = ASTParserUtils.matchBlockStatement(statement)
+        BlockStatement block = ASTParserUtils.asBlock(stepsBlock.body.code)
         ModelASTWhen w = new ModelASTWhen(statement)
         block.statements.each { s ->
             w.conditions.add(parseWhenContent(s))
@@ -530,12 +530,12 @@ class ModelParser implements Parser {
      */
     public ModelASTOptions parseOptions(Statement stmt) {
         def o = new ModelASTOptions(stmt);
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m == null) {
             // Should be able to get this validation later.
             return o
         } else {
-            ParserUtils.eachStatement(m.body.code) { s ->
+            ASTParserUtils.eachStatement(m.body.code) { s ->
                 o.options.add(parseOption(s));
             }
         }
@@ -547,7 +547,7 @@ class ModelParser implements Parser {
      */
     public ModelASTOption parseOption(Statement st) {
         ModelASTOption thisOpt = new ModelASTOption(st)
-        def mc = ParserUtils.matchMethodCall(st);
+        def mc = ASTParserUtils.matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
                 errorCollector.error(thisOpt, Messages.ModelParser_MapNotAllowed(Messages.Parser_Options()))
@@ -559,7 +559,7 @@ class ModelParser implements Parser {
             }
         };
 
-        def bs = ParserUtils.matchBlockStatement(st);
+        def bs = ASTParserUtils.matchBlockStatement(st);
         if (bs != null) {
             errorCollector.error(thisOpt, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Options()))
             return thisOpt
@@ -577,12 +577,12 @@ class ModelParser implements Parser {
      */
     public ModelASTTriggers parseTriggers(Statement stmt) {
         def triggers = new ModelASTTriggers(stmt);
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m == null) {
             // Should be able to get this validation later.
             return triggers
         } else {
-            ParserUtils.eachStatement(m.body.code) { s ->
+            ASTParserUtils.eachStatement(m.body.code) { s ->
                 triggers.triggers.add(parseTrigger(s));
             }
         }
@@ -594,7 +594,7 @@ class ModelParser implements Parser {
      */
     public ModelASTTrigger parseTrigger(Statement st) {
         ModelASTTrigger trig = new ModelASTTrigger(st)
-        def mc = ParserUtils.matchMethodCall(st);
+        def mc = ASTParserUtils.matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
                 errorCollector.error(trig, Messages.ModelParser_MapNotAllowed(Messages.Parser_Triggers()))
@@ -606,7 +606,7 @@ class ModelParser implements Parser {
             }
         };
 
-        def bs = ParserUtils.matchBlockStatement(st);
+        def bs = ASTParserUtils.matchBlockStatement(st);
         if (bs != null) {
             errorCollector.error(trig, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_Triggers()))
             return trig
@@ -624,12 +624,12 @@ class ModelParser implements Parser {
      */
     public ModelASTBuildParameters parseBuildParameters(Statement stmt) {
         def bp = new ModelASTBuildParameters(stmt);
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m == null) {
             // Should be able to get this validation later.
             return bp
         } else {
-            ParserUtils.eachStatement(m.body.code) { s ->
+            ASTParserUtils.eachStatement(m.body.code) { s ->
                 bp.parameters.add(parseBuildParameter(s));
             }
         }
@@ -641,7 +641,7 @@ class ModelParser implements Parser {
      */
     public ModelASTBuildParameter parseBuildParameter(Statement st) {
         ModelASTBuildParameter param = new ModelASTBuildParameter(st)
-        def mc = ParserUtils.matchMethodCall(st);
+        def mc = ASTParserUtils.matchMethodCall(st);
         if (mc == null) {
             if (st instanceof ExpressionStatement && st.expression instanceof MapExpression) {
                 errorCollector.error(param, Messages.ModelParser_MapNotAllowed(Messages.Parser_BuildParameters()))
@@ -653,7 +653,7 @@ class ModelParser implements Parser {
             }
         };
 
-        def bs = ParserUtils.matchBlockStatement(st);
+        def bs = ASTParserUtils.matchBlockStatement(st);
         if (bs != null) {
             errorCollector.error(param, Messages.ModelParser_CannotHaveBlocks(Messages.Parser_BuildParameters()))
             return param
@@ -674,7 +674,7 @@ class ModelParser implements Parser {
         List<Expression> args = ((TupleExpression) expr.arguments).expressions
 
         args.each { a ->
-            def namedArgs = ParserUtils.castOrNull(MapExpression, a);
+            def namedArgs = ASTParserUtils.castOrNull(MapExpression, a);
             if (namedArgs != null) {
                 namedArgs.mapEntryExpressions.each { e ->
                     // Don't need to check key duplication here because Groovy compilation will do it for us.
@@ -703,7 +703,7 @@ class ModelParser implements Parser {
 
     public ModelASTEnvironmentValue parseInternalFunctionCall(MethodCallExpression expr) {
         ModelASTInternalFunctionCall m = new ModelASTInternalFunctionCall(expr)
-        def methodName = ParserUtils.matchMethodName(expr);
+        def methodName = ASTParserUtils.matchMethodName(expr);
 
         // TODO: post JENKINS-41759, switch to checking if it's a valid function name
         if (methodName == null || methodName != "credentials") {
@@ -727,8 +727,8 @@ class ModelParser implements Parser {
     public ModelASTClosureMap parseClosureMap(ClosureExpression expression) {
         ModelASTClosureMap map = new ModelASTClosureMap(expression)
 
-        ParserUtils.eachStatement(expression.code) { s ->
-            def mc = ParserUtils.matchMethodCall(s);
+        ASTParserUtils.eachStatement(expression.code) { s ->
+            def mc = ASTParserUtils.matchMethodCall(s);
             if (mc == null) {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
                 errorCollector.error(map, Messages.ModelParser_ExpectedMapMethod());
@@ -757,7 +757,7 @@ class ModelParser implements Parser {
      */
     public ModelASTStep parseStep(Statement st) {
         ModelASTStep thisStep = new ModelASTStep(st)
-        def mc = ParserUtils.matchMethodCall(st);
+        def mc = ASTParserUtils.matchMethodCall(st);
         if (mc == null) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
              errorCollector.error(thisStep, Messages.ModelParser_ExpectedStep());
@@ -773,13 +773,13 @@ class ModelParser implements Parser {
 
         List<Expression> args = ((TupleExpression) mc.arguments).expressions
 
-        def bs = ParserUtils.matchBlockStatement(st);
+        def bs = ASTParserUtils.matchBlockStatement(st);
         if (bs != null) {
             args = args.subList(0, args.size() - 1)    // cut out the closure argument
             thisStep = new ModelASTTreeStep(st)
             thisStep.name = stepName
             thisStep.args = parseArgumentList(args)
-            thisStep.children = ParserUtils.eachStatement(bs.body.code) { parseStep(it) }
+            thisStep.children = ASTParserUtils.eachStatement(bs.body.code) { parseStep(it) }
         } else {
             thisStep.name = stepName
             thisStep.args = populateStepArgumentList(thisStep, parseArgumentList(args))
@@ -793,7 +793,7 @@ class ModelParser implements Parser {
      */
     public ModelASTWhenContent parseWhenContent(Statement st) {
         ModelASTWhenCondition condition = new ModelASTWhenCondition(st)
-        def mc = ParserUtils.matchMethodCall(st);
+        def mc = ASTParserUtils.matchMethodCall(st);
         if (mc == null) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
             errorCollector.error(condition, Messages.ModelParser_ExpectedStep());
@@ -807,14 +807,14 @@ class ModelParser implements Parser {
 
         List<Expression> args = ((TupleExpression) mc.arguments).expressions
 
-        def bs = ParserUtils.matchBlockStatement(st);
+        def bs = ASTParserUtils.matchBlockStatement(st);
         condition.name = stepName
         if (bs != null) {
             args = args.subList(0, args.size() - 1)    // cut out the closure argument
             if (!args.isEmpty()) {
                 condition.args = parseArgumentList(args)
             }
-            condition.children = ParserUtils.eachStatement(bs.body.code) { parseWhenContent(it) }
+            condition.children = ASTParserUtils.eachStatement(bs.body.code) { parseWhenContent(it) }
         } else {
             condition.args = parseArgumentList(args)
         }
@@ -859,7 +859,7 @@ class ModelParser implements Parser {
 
     private <T extends AbstractModelASTCodeBlock> T parseCodeBlockInternal(Statement st, T scriptBlock, String pronoun) {
         // TODO: Probably error out for cases with parameters?
-        def bs = ParserUtils.matchBlockStatement(st);
+        def bs = ASTParserUtils.matchBlockStatement(st);
         if (bs != null) {
             ModelASTNamedArgumentList groovyBlock = new ModelASTNamedArgumentList(bs.body)
             ModelASTKey key = new ModelASTKey(null)
@@ -879,8 +879,8 @@ class ModelParser implements Parser {
      */
     public @Nonnull ModelASTAgent parseAgent(Statement st) {
         ModelASTAgent agent = new ModelASTAgent(st)
-        def m = ParserUtils.matchBlockStatement(st);
-        def mc = ParserUtils.matchMethodCall(st);
+        def m = ASTParserUtils.matchBlockStatement(st);
+        def mc = ASTParserUtils.matchMethodCall(st);
         if (m==null) {
             if (mc == null) {
                 // Not sure of a better way to deal with this - it's a full-on parse-time failure.
@@ -901,13 +901,13 @@ class ModelParser implements Parser {
                 }
             }
         } else {
-            def block = ParserUtils.asBlock(m.body.code)
+            def block = ASTParserUtils.asBlock(m.body.code)
             if (block.statements.isEmpty()) {
                 errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
             } else if (block.statements.size() > 1) {
                 errorCollector.error(agent, Messages.ModelParser_OneAgentMax())
             } else {
-                def typeMeth = ParserUtils.matchMethodCall(block.statements[0])
+                def typeMeth = ASTParserUtils.matchMethodCall(block.statements[0])
                 if (typeMeth == null) {
                     errorCollector.error(agent, Messages.ModelParser_ExpectedAgent())
                 } else {
@@ -940,12 +940,12 @@ class ModelParser implements Parser {
 
     @Nonnull
     public <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(Statement stmt, R responder) {
-        def m = ParserUtils.matchBlockStatement(stmt);
+        def m = ASTParserUtils.matchBlockStatement(stmt);
 
         if (m==null) {
             errorCollector.error(responder, Messages.ModelParser_ExpectedBlock());
         } else {
-            ParserUtils.eachStatement(m.body.code) {
+            ASTParserUtils.eachStatement(m.body.code) {
                 ModelASTBuildCondition bc = parseBuildCondition(it)
                 if (bc.condition != null && bc.branch != null) {
                     responder.conditions.add(bc);
@@ -957,11 +957,11 @@ class ModelParser implements Parser {
 
     public @Nonnull ModelASTBuildCondition parseBuildCondition(Statement st) {
         ModelASTBuildCondition b = new ModelASTBuildCondition(st)
-        def m = ParserUtils.matchBlockStatement(st);
+        def m = ASTParserUtils.matchBlockStatement(st);
         if (m == null) {
             errorCollector.error(b, Messages.ModelParser_InvalidBuildCondition(BuildCondition.getOrderedConditionNames()))
         } else {
-            b.branch = parseBranch("default", ParserUtils.asBlock(m.body.code))
+            b.branch = parseBranch("default", ASTParserUtils.asBlock(m.body.code))
 
             b.condition = m.methodName
         }
@@ -981,7 +981,7 @@ class ModelParser implements Parser {
         case 0:
             return new ModelASTNamedArgumentList(null);  // no arguments
         case 1:
-            def namedArgs = ParserUtils.castOrNull(MapExpression, args[0]);
+            def namedArgs = ASTParserUtils.castOrNull(MapExpression, args[0]);
             // Special casing for legacy meta-step syntax, i.e., "[$class: 'Foo', arg1: 'something', ...]" - need to
             // treat that as a single argument but still handle the more standard "foo(arg1: 'something', ...)" case.
             if (namedArgs!=null && !namedArgs.mapEntryExpressions.any { parseKey(it.keyExpression)?.key?.equals('$class') }) {
@@ -1030,7 +1030,7 @@ class ModelParser implements Parser {
     }
 
     protected String parseStringLiteral(Expression exp) {
-        return ParserUtils.parseStringLiteral(exp, errorCollector)
+        return ASTParserUtils.parseStringLiteral(exp, errorCollector)
     }
 
     /**
@@ -1051,15 +1051,14 @@ class ModelParser implements Parser {
         return "\${"+getSourceText(e, sourceUnit)+"}"
     }
 
-
     protected String parseMethodName(MethodCallExpression exp) {
-        def s = ParserUtils.matchMethodName(exp)
+        def s = ASTParserUtils.matchMethodName(exp)
         if (s==null) {
             if (exp.objectExpression instanceof VariableExpression &&
                 !((VariableExpression)exp.objectExpression).isThisExpression()) {
-                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ObjectMethodCall())
+                errorCollector?.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ObjectMethodCall())
             } else {
-                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
+                errorCollector?.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
             }
             s = "error";
         }
@@ -1070,9 +1069,9 @@ class ModelParser implements Parser {
      * Attempts to match a statement as {@link ParallelMatch} or return null.
      */
     public @CheckForNull ParallelMatch matchParallel(Statement st) {
-        def whole = ParserUtils.matchMethodCall(st);
+        def whole = ASTParserUtils.matchMethodCall(st);
         if (whole!=null) {
-            def methodName = ParserUtils.matchMethodName(whole);
+            def methodName = ASTParserUtils.matchMethodName(whole);
             if ("parallel".equals(methodName)) {
                 // beyond this point, if there's mismatch from the expectation we'll throw a problem, instead of returning null
 
@@ -1081,12 +1080,12 @@ class ModelParser implements Parser {
                 Boolean failFast = null
                 Map<String,ClosureExpression> parallelArgs = new LinkedHashMap<>()
                 if (sz==1) {
-                    def branches = ParserUtils.castOrNull(NamedArgumentListExpression, args.getExpression(sz - 1));
+                    def branches = ASTParserUtils.castOrNull(NamedArgumentListExpression, args.getExpression(sz - 1));
                     if (branches!=null) {
                         for (MapEntryExpression e : branches.mapEntryExpressions) {
-                            String keyName = ParserUtils.matchStringLiteral(e.keyExpression)
+                            String keyName = ASTParserUtils.matchStringLiteral(e.keyExpression)
                             if (keyName != null && keyName.equals("failFast")) {
-                                ConstantExpression exp = ParserUtils.castOrNull(ConstantExpression.class, e.valueExpression)
+                                ConstantExpression exp = ASTParserUtils.castOrNull(ConstantExpression.class, e.valueExpression)
                                 if (exp == null || !(exp.value instanceof Boolean)) {
                                     errorCollector.error(new ModelASTKey(e.keyExpression),
                                         Messages.ModelParser_ExpectedFailFast())
@@ -1094,7 +1093,7 @@ class ModelParser implements Parser {
                                     failFast = exp.value
                                 }
                             } else {
-                                ClosureExpression value = ParserUtils.castOrNull(ClosureExpression, e.valueExpression);
+                                ClosureExpression value = ASTParserUtils.castOrNull(ClosureExpression, e.valueExpression);
                                 if (value == null) {
                                     errorCollector.error(new ModelASTKey(e.keyExpression),
                                         Messages.ModelParser_ExpectedClosureOrFailFast())

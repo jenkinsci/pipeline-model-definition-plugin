@@ -24,8 +24,15 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.stmt.Statement;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 
+import javax.annotation.CheckForNull;
 import java.util.List;
 
 /**
@@ -40,5 +47,20 @@ public abstract class AbstractConditionalWithChildren<C extends AbstractConditio
 
     public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
         return children;
+    }
+
+    @CheckForNull
+    public static ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+        if (original != null && original instanceof ModelASTWhenCondition) {
+            ModelASTWhenCondition cond = (ModelASTWhenCondition) original;
+            if (cond.getSourceLocation() != null && cond.getSourceLocation() instanceof Statement) {
+                MethodCallExpression methCall = ASTParserUtils.matchMethodCall((Statement) cond.getSourceLocation());
+
+                if (methCall != null) {
+                    return ASTParserUtils.methodCallToDescribable(methCall);
+                }
+            }
+        }
+        return null;
     }
 }

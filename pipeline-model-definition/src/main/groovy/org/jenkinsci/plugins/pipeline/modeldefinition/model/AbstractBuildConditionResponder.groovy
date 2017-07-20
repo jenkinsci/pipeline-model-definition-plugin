@@ -24,9 +24,15 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
+import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
 
 
 /**
@@ -37,6 +43,10 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
     extends MappedClosure<StepsBlock,T> {
+
+    public AbstractBuildConditionResponder(Map<String,StepsBlock> m) {
+        super(m)
+    }
 
     @Override
     public void modelFromMap(Map<String,Object> inMap) {
@@ -69,4 +79,32 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
             getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
         }
     }
+
+    @CheckForNull
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildConditionsContainer original,
+                                         @Nonnull Class container) {
+        if (original != null) {
+            return getAst(new AstBuilder().buildFromSpec {
+                returnStatement {
+                    constructorCall(container) {
+                        argumentList {
+                            map {
+                                original.conditions.each { cond ->
+                                    ASTNode steps = StepsBlock.transformToRuntimeAST(cond)
+                                    if (steps != null) {
+                                        mapEntry {
+                                            constant cond.condition
+                                            expression.add(steps)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        }
+        return null
+    }
+
 }

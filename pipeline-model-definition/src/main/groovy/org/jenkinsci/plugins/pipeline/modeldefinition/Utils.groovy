@@ -254,7 +254,7 @@ public class Utils {
         if (model != null) {
             ModelASTStages stages = model.stages
 
-            stages.removeSourceLocation()
+            stages.makeSaveable()
             if (r.getAction(ExecutionModelAction.class) == null) {
                 r.addAction(new ExecutionModelAction(stages))
             }

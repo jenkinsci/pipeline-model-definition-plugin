@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * </xmp></pre>
  *
  * @author Kohsuke Kawaguchi
- * @see org.jenkinsci.plugins.pipeline.modeldefinition.parser.ParserUtils#matchBlockStatement(Statement)
+ * @see ASTParserUtils#matchBlockStatement(Statement)
  */
 public class BlockStatementMatch {
     /**

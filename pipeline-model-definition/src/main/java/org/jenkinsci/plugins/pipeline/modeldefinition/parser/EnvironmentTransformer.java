@@ -85,14 +85,14 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
     public Expression transform(Expression exp) {
         if (exp != null && exp instanceof MethodCallExpression) {
             MethodCallExpression methodCallExpression = (MethodCallExpression) exp;
-            BlockStatementMatch block = ParserUtils.blockStatementFromExpression(methodCallExpression);
+            BlockStatementMatch block = ASTParserUtils.blockStatementFromExpression(methodCallExpression);
 
             // Match only {@code environment { ... } }
             if (block != null &&
                     block.methodName.equals("environment") &&
                     block.arguments.getExpressions().size() == 1 &&
                     block.body != null) {
-                BlockStatement body = ParserUtils.asBlock(block.body.getCode());
+                BlockStatement body = ASTParserUtils.asBlock(block.body.getCode());
                 System.err.println("Transforming, theoretically, " + methodCallExpression.getMethodAsString());
 
                 Map<String,Expression> rawEntries = new HashMap<>();
@@ -161,7 +161,7 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
             ClosureExpression closureExpression = (ClosureExpression) exp;
             BlockStatement newClosureBody = new BlockStatement();
 
-            for (Statement s : ParserUtils.asBlock(closureExpression.getCode()).getStatements()) {
+            for (Statement s : ASTParserUtils.asBlock(closureExpression.getCode()).getStatements()) {
                 if (s instanceof ExpressionStatement) {
                     newClosureBody.addStatement(stmt(transform(((ExpressionStatement) s).getExpression())));
                 } else {

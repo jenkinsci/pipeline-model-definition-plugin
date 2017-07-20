@@ -25,11 +25,18 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.CheckForNull;
 import java.util.List;
 
 /**
@@ -48,5 +55,12 @@ public class AnyOfConditional extends AbstractConditionalWithChildren<AnyOfCondi
         public int getAllowedChildrenCount() {
             return -1;
         }
+
+        @CheckForNull
+        @Override
+        public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+            return AbstractConditionalWithChildren.transformToRuntimeAST(original);
+        }
+
     }
 }

@@ -31,8 +31,14 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import hudson.triggers.Trigger
 import hudson.triggers.TriggerDescriptor
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -84,5 +90,10 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
      */
     public static String typeForKey(@Nonnull String key) {
         return getAllowedTriggerTypes().get(key)
+    }
+
+    @CheckForNull
+    public static ASTNode transformToRuntimeAST(@CheckForNull ModelASTTriggers original) {
+        return ASTParserUtils.transformDescribableContainer(original, original?.triggers, Triggers.class)
     }
 }

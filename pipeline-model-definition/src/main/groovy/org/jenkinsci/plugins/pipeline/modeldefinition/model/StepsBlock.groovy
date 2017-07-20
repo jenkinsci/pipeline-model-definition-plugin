@@ -26,6 +26,21 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.expr.ClosureExpression
+import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.TupleExpression
+import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch
+
+import javax.annotation.CheckForNull
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
 
 
 /**
@@ -36,18 +51,70 @@ import groovy.transform.ToString
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class StepsBlock implements Serializable {
+class StepsBlock implements Serializable {
     Closure closure
 
     /**
      * Empty constructor to get around some weirdness...
      */
-    public StepsBlock() {
+    StepsBlock() {
 
     }
 
+    StepsBlock(Closure c) {
+        this.closure = c
+    }
+
     // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
-    public void setClosure(Object c) {
+    void setClosure(Object c) {
         this.closure = (Closure) c
+    }
+
+    @CheckForNull
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTStage original) {
+        Object origSrc = original?.sourceLocation
+        if (origSrc != null && origSrc instanceof MethodCallExpression) {
+            BlockStatementMatch stageMatch = ASTParserUtils.blockStatementFromExpression(origSrc)
+            if (stageMatch != null) {
+                MethodCallExpression stepsMethod = ASTParserUtils.asBlock(stageMatch.body.code).statements.find { s ->
+                    ASTParserUtils.matchMethodCall(s)?.methodAsString == "steps"
+                }
+                if (stepsMethod != null) {
+                    BlockStatementMatch stepsMatch = ASTParserUtils.blockStatementFromExpression(stepsMethod)
+                    if (stepsMatch != null) {
+                        return getAst(new AstBuilder().buildFromSpec {
+                            returnStatement {
+                                constructorCall(StepsBlock) {
+                                    argumentList {
+                                        expression.add(stepsMatch.body)
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+            }
+        }
+
+        return null
+    }
+
+    @CheckForNull
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildCondition original) {
+        Object origSrc = original?.sourceLocation
+        if (origSrc != null && origSrc instanceof MethodCallExpression) {
+            BlockStatementMatch condMatch = ASTParserUtils.blockStatementFromExpression(origSrc)
+            return getAst(new AstBuilder().buildFromSpec {
+                returnStatement {
+                    constructorCall(StepsBlock) {
+                        argumentList {
+                            expression.add(condMatch.body)
+                        }
+                    }
+                }
+            })
+        } else {
+            return null
+        }
     }
 }
