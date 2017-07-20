@@ -28,24 +28,14 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.tools.ToolDescriptor
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.builder.AstBuilder
-import org.codehaus.groovy.ast.expr.Expression
-import org.codehaus.groovy.ast.expr.MethodCallExpression
-import org.codehaus.groovy.ast.expr.TupleExpression
-import org.codehaus.groovy.ast.stmt.Statement
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static ASTParserUtils.*
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.eachStatement
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchBlockStatement
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchMethodCall
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchStringLiteral
 
 /**
  * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and

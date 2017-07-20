@@ -36,6 +36,8 @@ import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.stmt.Statement
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -56,6 +58,7 @@ import javax.annotation.Nonnull
 
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchMethodCall
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.methodCallArgs
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.methodCallToDescribable
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.transformListOfDescribables
 
@@ -192,28 +195,51 @@ public class Options implements Serializable {
                     constructorCall(Options) {
                         argumentList {
                             expression.add(transformListOfDescribables(jobProps))
-                        }
-                        map {
-                            options.each { o ->
-                                if (o.getSourceLocation() instanceof Statement) {
-                                    MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
-                                    if (expr != null) {
-                                        mapEntry {
-                                            constant o.name
-                                            expression.add(methodCallToDescribable(expr))
+                            map {
+                                options.each { o ->
+                                    if (o.getSourceLocation() instanceof Statement) {
+                                        MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
+                                        if (expr != null) {
+                                            mapEntry {
+                                                constant o.name
+                                                expression.add(methodCallToDescribable(expr))
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        map {
-                            wrappers.each { w ->
+                            map {
+                                wrappers.each { w ->
+                                    if (w.getSourceLocation() instanceof Statement) {
+                                        MethodCallExpression expr = matchMethodCall((Statement) w.getSourceLocation())
+                                        if (expr != null) {
+                                            List<Expression> args = methodCallArgs(expr)
 
+                                            mapEntry {
+                                                constant w.name
+                                                if (args.size() == 1) {
+                                                    expression.add(args.get(0))
+                                                } else if (args.size() > 1) {
+                                                    list {
+                                                        args.each { a ->
+                                                            expression.add(a)
+                                                        }
+                                                    }
+                                                } else {
+                                                    // TODO: This may be wrong...
+                                                    empty()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             })
         }
+
+        return null
     }
 }

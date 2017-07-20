@@ -36,7 +36,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 import javax.annotation.CheckForNull
 

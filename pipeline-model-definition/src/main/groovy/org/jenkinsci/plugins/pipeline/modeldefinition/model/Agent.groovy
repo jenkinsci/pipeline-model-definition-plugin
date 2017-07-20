@@ -26,10 +26,17 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.stmt.Statement
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTClosureMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
@@ -46,6 +53,11 @@ import javax.annotation.CheckForNull
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Agent extends MappedClosure<Object,Agent> implements Serializable {
+
+    Agent(Map<String,Object> inMap) {
+        resultMap.putAll(inMap)
+    }
+
     @Deprecated
     public DeclarativeAgent getDeclarativeAgent(Object context) {
         return getDeclarativeAgent(null, context)
@@ -120,5 +132,37 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
             }
         }
         return new Agent(inMap)
+    }
+
+    @CheckForNull
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTAgent original) {
+        if (original != null && original.sourceLocation != null && original.sourceLocation instanceof Statement) {
+            return ASTParserUtils.getAst(new AstBuilder().buildFromSpec {
+                returnStatement {
+                    constructorCall(Agent) {
+                        argumentList {
+                            if (original.variables == null ||
+                                (original.variables instanceof ModelASTClosureMap &&
+                                    ((ModelASTClosureMap)original.variables).variables.isEmpty())) {
+                                map {
+                                    mapEntry {
+                                        constant original.agentType.key
+                                        constant true
+                                    }
+                                }
+                            } else {
+                                BlockStatementMatch match =
+                                    ASTParserUtils.matchBlockStatement((Statement)original.sourceLocation)
+                                if (match != null) {
+                                    expression.add(ASTParserUtils.recurseAndTransformMappedClosure(match.body))
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        return null
     }
 }

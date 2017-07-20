@@ -42,11 +42,16 @@ import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
+import org.jaxen.expr.Expr
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTClosureMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
@@ -195,6 +200,50 @@ class ASTParserUtils {
         }
     }
 
+    @CheckForNull
+    static ASTNode transformWhenConditionToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+        if (original != null && original instanceof ModelASTWhenCondition) {
+            ModelASTWhenCondition cond = (ModelASTWhenCondition) original
+            if (cond.getSourceLocation() != null && cond.getSourceLocation() instanceof Statement) {
+                MethodCallExpression methCall = matchMethodCall((Statement) cond.getSourceLocation())
+
+                if (methCall != null) {
+                    return methodCallToDescribable(methCall)
+                }
+            }
+        }
+        return null
+    }
+
+    @CheckForNull
+    static ASTNode recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
+        if (original != null) {
+            return getAst(new AstBuilder().buildFromSpec {
+                map {
+                    eachStatement(original.code) { s ->
+                        MethodCallExpression mce = matchMethodCall(s)
+                        if (mce != null) {
+                            List<Expression> args = methodCallArgs(mce)
+                            if (args.size() == 1) {
+                                Expression singleArg = args.get(0)
+                                mapEntry {
+                                    expression.add(mce.method)
+                                    if (singleArg instanceof ClosureExpression) {
+                                        expression.add(recurseAndTransformMappedClosure(singleArg))
+                                    } else {
+                                        expression.add(singleArg)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        return null
+    }
+
 /*
     public ASTNode parseArgumentToSpec(Expression e, SourceUnit sourceUnit) {
         return new AstBuilder().buildFromSpec {
@@ -285,10 +334,15 @@ class ASTParserUtils {
         })
     }
 
+    @Nonnull
+    static List<Expression> methodCallArgs(@Nonnull MethodCallExpression expr) {
+        return ((TupleExpression) expr.arguments).expressions
+    }
+
     @CheckForNull
     static ASTNode methodCallToDescribable(MethodCallExpression expr) {
         def methodName = matchMethodName(expr)
-        List<Expression> args = ((TupleExpression) expr.arguments).expressions
+        List<Expression> args = methodCallArgs(expr)
 
         DescriptorLookupCache lookupCache = DescriptorLookupCache.getPublicCache()
 

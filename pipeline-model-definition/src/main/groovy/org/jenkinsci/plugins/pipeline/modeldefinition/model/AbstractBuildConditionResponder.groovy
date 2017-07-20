@@ -27,7 +27,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.builder.AstBuilder
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull

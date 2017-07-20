@@ -26,6 +26,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+
+import javax.annotation.CheckForNull
 
 
 /**
@@ -39,6 +45,10 @@ import groovy.transform.ToString
 public class Libraries implements Serializable {
     List<String> libs = []
 
+    Libraries(List<String> s) {
+        libs.addAll(s)
+    }
+
     Libraries libs(List<String> s) {
         this.libs = s
         return this
@@ -46,5 +56,28 @@ public class Libraries implements Serializable {
 
     List<String> getLibs() {
         return libs
+    }
+
+    @CheckForNull
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTLibraries original) {
+        if (original != null && !original.libs.isEmpty()) {
+            return ASTParserUtils.getAst(new AstBuilder().buildFromSpec {
+                returnStatement {
+                    constructorCall(Libraries) {
+                        argumentList {
+                            list {
+                                original.libs.each { l ->
+                                    if (l.sourceLocation instanceof ASTNode) {
+                                        expression.addAll((ASTNode)l.sourceLocation)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        }
+
+        return null
     }
 }

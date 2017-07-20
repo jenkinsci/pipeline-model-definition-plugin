@@ -32,8 +32,6 @@ import groovy.transform.ToString
 import hudson.triggers.Trigger
 import hudson.triggers.TriggerDescriptor
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.builder.AstBuilder
-import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
