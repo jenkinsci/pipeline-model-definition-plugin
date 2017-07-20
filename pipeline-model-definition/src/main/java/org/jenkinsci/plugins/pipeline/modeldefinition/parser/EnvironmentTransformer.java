@@ -25,21 +25,16 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
 import groovy.lang.Closure;
-import groovy.lang.GroovyObjectSupport;
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
@@ -53,16 +48,12 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.runtime.InvokerHelper;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
 import java.io.Serializable;
@@ -94,14 +85,14 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
     public Expression transform(Expression exp) {
         if (exp != null && exp instanceof MethodCallExpression) {
             MethodCallExpression methodCallExpression = (MethodCallExpression) exp;
-            BlockStatementMatch block = ModelParser.blockStatementFromExpression(methodCallExpression);
+            BlockStatementMatch block = ParserUtils.blockStatementFromExpression(methodCallExpression);
 
             // Match only {@code environment { ... } }
             if (block != null &&
                     block.methodName.equals("environment") &&
                     block.arguments.getExpressions().size() == 1 &&
                     block.body != null) {
-                BlockStatement body = ModelParser.asBlock(block.body.getCode());
+                BlockStatement body = ParserUtils.asBlock(block.body.getCode());
                 System.err.println("Transforming, theoretically, " + methodCallExpression.getMethodAsString());
 
                 Map<String,Expression> rawEntries = new HashMap<>();
@@ -170,7 +161,7 @@ public class EnvironmentTransformer extends ClassCodeExpressionTransformer {
             ClosureExpression closureExpression = (ClosureExpression) exp;
             BlockStatement newClosureBody = new BlockStatement();
 
-            for (Statement s : ModelParser.asBlock(closureExpression.getCode()).getStatements()) {
+            for (Statement s : ParserUtils.asBlock(closureExpression.getCode()).getStatements()) {
                 if (s instanceof ExpressionStatement) {
                     newClosureBody.addStatement(stmt(transform(((ExpressionStatement) s).getExpression())));
                 } else {

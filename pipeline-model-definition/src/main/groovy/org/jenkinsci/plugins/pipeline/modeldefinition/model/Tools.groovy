@@ -26,11 +26,20 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.tools.ToolDescriptor
+import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.TupleExpression
+import org.codehaus.groovy.ast.stmt.Statement
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ParserUtils
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ParserUtils.*
 
 /**
  * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and
@@ -46,6 +55,10 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
     private static final LoadingCache<Object,Map<String,String>> toolTypeCache =
         Utils.generateTypeCache(ToolDescriptor.class, true)
 
+    public Tools(Map<String,String> inMap) {
+        resultMap.putAll(inMap)
+    }
+
     /**
      * Workaround for iterating over a map in CPS code. Gets the tools as a list of type/name tuples.
      *
@@ -57,7 +70,42 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
             return [k, v]
         }
     }
+    /*
 
+    @CheckForNull
+    public static Statement transform(@CheckForNull Statement original) {
+        if (original == null) {
+            return null
+        } else {
+            BlockStatementMatch m = matchBlockStatement(original)
+            if (m == null) {
+                return null
+            } else {
+                def astResult = new AstBuilder().buildFromSpec {
+                    returnStatement {
+                        constructorCall(Tools) {
+                            argumentList {
+                                map {
+                                    eachStatement(m.body.code) { s ->
+                                        MethodCallExpression mce = matchMethodCall(s)
+                                        if (mce != null) {
+                                            String key = parseStringLiteral(mce.method)
+                                            List<Expression> args = ((TupleExpression) mce.arguments).expressions
+                                            if (!args.isEmpty() && args.size() == 1) {
+
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+     */
     /**
      * Merges the tool entries from another instance into this one, defaulting to the current instance's values.
      *
