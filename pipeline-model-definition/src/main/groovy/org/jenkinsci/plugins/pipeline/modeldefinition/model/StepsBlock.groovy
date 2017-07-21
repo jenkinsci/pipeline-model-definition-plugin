@@ -27,9 +27,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
+import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GeneralUtils
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
@@ -55,6 +58,7 @@ class StepsBlock implements Serializable {
     /**
      * Empty constructor to get around some weirdness...
      */
+    @Whitelisted
     StepsBlock() {
 
     }
@@ -71,24 +75,17 @@ class StepsBlock implements Serializable {
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTStage original) {
         Object origSrc = original?.sourceLocation
-        if (origSrc != null && origSrc instanceof MethodCallExpression) {
-            BlockStatementMatch stageMatch = ASTParserUtils.blockStatementFromExpression(origSrc)
+        if (origSrc != null && origSrc instanceof Statement) {
+            BlockStatementMatch stageMatch = ASTParserUtils.matchBlockStatement(origSrc)
             if (stageMatch != null) {
-                ExpressionStatement stepsMethod = ASTParserUtils.asBlock(stageMatch.body.code).statements.find { s ->
+                Statement stepsMethod = ASTParserUtils.asBlock(stageMatch.body.code).statements.find { s ->
                     ASTParserUtils.matchMethodCall(s)?.methodAsString == "steps"
                 }
                 if (stepsMethod != null) {
-                    BlockStatementMatch stepsMatch = ASTParserUtils.blockStatementFromExpression(stepsMethod.expression)
+                    BlockStatementMatch stepsMatch = ASTParserUtils.matchBlockStatement(stepsMethod)
                     if (stepsMatch != null) {
-                        return buildAst {
-                            returnStatement {
-                                constructorCall(StepsBlock) {
-                                    argumentList {
-                                        expression.add(stepsMatch.body)
-                                    }
-                                }
-                            }
-                        }
+                        return GeneralUtils.callX(ClassHelper.make(Utils), "createStepsBlock",
+                            GeneralUtils.args(stepsMatch.body))
                     }
                 }
             }
@@ -101,13 +98,8 @@ class StepsBlock implements Serializable {
         Object origSrc = original?.sourceLocation
         if (origSrc != null && origSrc instanceof MethodCallExpression) {
             BlockStatementMatch condMatch = ASTParserUtils.blockStatementFromExpression(origSrc)
-            return buildAst {
-                constructorCall(StepsBlock) {
-                    argumentList {
-                        expression.add(condMatch.body)
-                    }
-                }
-            }
+            return GeneralUtils.callX(ClassHelper.make(Utils), "createStepsBlock",
+                GeneralUtils.args(condMatch.body))
         } else {
             return GeneralUtils.constX(null)
         }

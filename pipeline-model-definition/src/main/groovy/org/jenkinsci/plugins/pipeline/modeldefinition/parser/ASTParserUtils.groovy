@@ -31,16 +31,21 @@ import hudson.model.Descriptor
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.builder.AstSpecificationCompiler
+import org.codehaus.groovy.ast.expr.ArgumentListExpression
 import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression
 import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.ListExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
 import org.codehaus.groovy.ast.expr.TupleExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
+import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.control.SourceUnit
@@ -74,6 +79,49 @@ class ASTParserUtils {
             }
         }
         return null;
+    }
+
+    static printer(String s, int ind) {
+        System.err.println("${' ' * ind * 2}${s}")
+    }
+    static prettyPrint(ASTNode n, int ind = -1) {
+        ind++
+        if (n instanceof ReturnStatement) {
+            printer("- return:", ind)
+            prettyPrint(n.expression, ind)
+        } else if (n instanceof ArgumentListExpression) {
+            printer("- args:", ind)
+            n.expressions.each { prettyPrint(it, ind) }
+        } else if (n instanceof ClosureExpression) {
+            printer("- closure:", ind)
+            prettyPrint(n.code, ind)
+        } else if (n instanceof BlockStatement) {
+            printer("- block", ind)
+            n.statements.each {
+                prettyPrint(it, ind)
+            }
+        } else if (n instanceof ConstructorCallExpression) {
+            printer("- constructor of ${n.type.typeClass}:", ind)
+            n.arguments.each {
+                prettyPrint(it, ind)
+            }
+        } else if (n instanceof MapExpression) {
+            printer("- map:", ind)
+            n.mapEntryExpressions.each {
+                prettyPrint(it, ind)
+            }
+        } else if (n instanceof ListExpression) {
+            printer("- list:", ind)
+            n.expressions.each {
+                prettyPrint(it, ind)
+            }
+        } else if (n instanceof StaticMethodCallExpression) {
+            printer("- static method '${n.method}':", ind)
+            prettyPrint(n.receiver, ind)
+            prettyPrint(n.arguments, ind)
+        } else {
+            printer("- ${n}", ind)
+        }
     }
 
     /**

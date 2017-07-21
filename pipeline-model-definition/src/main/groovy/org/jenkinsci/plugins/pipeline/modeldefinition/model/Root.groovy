@@ -67,6 +67,7 @@ public class Root implements NestedModel, Serializable {
     @Whitelisted
     Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
          Triggers triggers, Parameters parameters, Libraries libraries) {
+        System.err.println("Did we get here?")
         this.agent = agent
         this.stages = stages
         this.post = post
@@ -129,12 +130,11 @@ public class Root implements NestedModel, Serializable {
      *
      * @return a list of "key=value" strings.
      */
-    List<String> getEnvVars(CpsScript script) {
+    List<List<Object>> getEnvVars(CpsScript script) {
         if (environment != null) {
-            return environment.resolveEnvVars(script, true).findAll {
-                it.key in environment.getMap().keySet()
-            }.collect { k, v ->
-                "${k}=${v}"
+            environment.envResolver.setScript(script)
+            return environment.envResolver.closureMap.collect { k, v ->
+                [k, v]
             }
         } else {
             return []

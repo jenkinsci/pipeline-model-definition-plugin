@@ -206,7 +206,20 @@ class ModelParser implements Parser {
         }
 
         r.validate(validator)
-        pipelineBlock.whole.arguments = new ArgumentListExpression(Root.transformToRuntimeAST(r))
+        pipelineBlock.whole.arguments = (ArgumentListExpression)ASTParserUtils.buildAst {
+            argumentList {
+                closure {
+                    parameters {}
+                    block {
+                        returnStatement {
+                            expression.add(Root.transformToRuntimeAST(r))
+                        }
+                    }
+                }
+            }
+        }
+        ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)
+
 /*        BlockStatement newBlock = new BlockStatement()
         newBlock.addStatement((Statement)ASTParserUtils.buildAst {
             expression {

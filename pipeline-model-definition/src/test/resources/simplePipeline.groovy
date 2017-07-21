@@ -22,8 +22,6 @@
  * THE SOFTWARE.
  */
 
-def fooBar = "barFoo"
-
 pipeline {
     agent none
     stages {

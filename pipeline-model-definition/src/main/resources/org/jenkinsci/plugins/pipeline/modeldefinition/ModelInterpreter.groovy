@@ -49,8 +49,10 @@ public class ModelInterpreter implements Serializable {
         this.script = script
     }
 
-    def call(Root root) {
-
+    def call(CpsClosure closure) {
+        def obj = closure.call()
+        Root root = (Root) obj
+        System.err.println("SET ROOT")
 /*        ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
 
         closure.delegate = m
@@ -80,6 +82,7 @@ public class ModelInterpreter implements Serializable {
                         withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
+                                    System.err.println("stages: ${root.stages.getStages()}")
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
                                         try {
@@ -99,7 +102,7 @@ public class ModelInterpreter implements Serializable {
                                                     inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                         if (evaluateWhen(thisStage.when)) {
                                                             withCredentialsBlock(thisStage.environment, root.environment) {
-                                                                withEnvBlock(thisStage.getEnvVars(root, script)) {
+                                                                withEnvBlock(thisStage.getEnvVars(script)) {
                                                                     toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
                                                                         // Execute the actual stage and potential post-stage actions
                                                                         executeSingleStage(root, thisStage)
@@ -216,13 +219,14 @@ public class ModelInterpreter implements Serializable {
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withEnvBlock(List<String> envVars, Closure body) {
+    def withEnvBlock(List<List<Object>> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
             List<String> evaledEnv = new ArrayList<>()
             for (int i = 0; i < envVars.size(); i++) {
-                // Evaluate to deal with any as-of-yet unresolved expressions.
-                String toEval = Utils.prepareForEvalToString(envVars.get(i))
-                evaledEnv.add(Utils.unescapeDollars(Utils.unescapeFromEval((String)script.evaluate(toEval))))
+                List<Object> envVar = envVars.get(i)
+                String key = (String)envVar.get(0)
+                Closure value = (Closure)envVar.get(1)
+                evaledEnv.add("${key}=${value.call()}")
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -438,7 +442,9 @@ public class ModelInterpreter implements Serializable {
     def executeSingleStage(Root root, Stage thisStage) throws Throwable {
         Throwable stageError = null
         try {
+            System.err.println("About to catch")
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
+                System.err.println("About to delegate ${thisStage.steps}")
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Exception e) {

@@ -29,6 +29,7 @@ import hudson.Extension;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
@@ -43,6 +44,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
@@ -54,7 +56,7 @@ import javax.annotation.CheckForNull;
 public class ExpressionConditional extends DeclarativeStageConditional<ExpressionConditional> {
     private final String block;
 
-    private final Closure closureBlock;
+    private Closure closureBlock;
 
     @Deprecated
     public ExpressionConditional(String block) {
@@ -63,8 +65,7 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
     }
 
     @DataBoundConstructor
-    public ExpressionConditional(Closure closureBlock) {
-        this.closureBlock = closureBlock;
+    public ExpressionConditional() {
         this.block = null;
     }
 
@@ -74,6 +75,10 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
 
     public Closure getClosureBlock() {
         return closureBlock;
+    }
+
+    public void setClosureBlock(Closure closureBlock) {
+        this.closureBlock = closureBlock;
     }
 
     @Extension
@@ -88,7 +93,8 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
                     BlockStatementMatch block =
                             ASTParserUtils.matchBlockStatement((Statement) whenExpr.getSourceLocation());
                     if (block != null) {
-                        return new ConstructorCallExpression(ClassHelper.make(ExpressionConditional.class),
+                        return GeneralUtils.callX(ClassHelper.make(DescriptorImpl.class),
+                                "instanceFromClosure",
                                 new ArgumentListExpression(block.body)
                         );
                     }
@@ -96,6 +102,13 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
             }
 
             return GeneralUtils.constX(null);
+        }
+
+        @Whitelisted
+        public static ExpressionConditional instanceFromClosure(Closure c) {
+            ExpressionConditional conditional = new ExpressionConditional();
+            conditional.setClosureBlock(c);
+            return conditional;
         }
     }
 }

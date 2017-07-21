@@ -112,12 +112,11 @@ public class Stage implements NestedModel, Serializable {
      *
      * @return a list of "key=value" strings.
      */
-    List<String> getEnvVars(Root root, CpsScript script) {
+    List<List<Object>> getEnvVars(CpsScript script) {
         if (environment != null) {
-            return environment.resolveEnvVars(script, true, root.environment).findAll {
-                it.key in environment.getMap().keySet()
-            }.collect { k, v ->
-                "${k}=${v}"
+            environment.envResolver.setScript(script)
+            return environment.envResolver.closureMap.collect { k, v ->
+                [k, v]
             }
         } else {
             return []

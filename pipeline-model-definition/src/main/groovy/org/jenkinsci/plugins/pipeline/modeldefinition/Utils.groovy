@@ -69,6 +69,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
@@ -521,6 +522,7 @@ public class Utils {
     /**
      * @param c The closure to wrap.
      */
+    @Whitelisted
     public static StepsBlock createStepsBlock(Closure c) {
         // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
         StepsBlock wrapper = new StepsBlock()

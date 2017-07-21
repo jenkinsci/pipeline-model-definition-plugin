@@ -25,12 +25,15 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.GStringExpression
+import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
@@ -65,6 +68,14 @@ public class Environment implements Serializable {
         this.credsResolver = credsResolver
     }
 
+    EnvironmentResolver getEnvResolver() {
+        return envResolver
+    }
+
+    EnvironmentResolver getCredsResolver() {
+        return credsResolver
+    }
+
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTEnvironment original) {
         if (original != null && !original.variables.isEmpty()) {
             return ASTParserUtils.buildAst {
@@ -83,16 +94,16 @@ public class Environment implements Serializable {
     private static ASTNode generateResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
         Set<String> keys = new HashSet<>()
         keys.addAll(original.variables.keySet().collect { it.key })
-        Map<String,ClosureExpression> closures = [:]
+        MapExpression closureMap = new MapExpression()
 
         original.variables.each { k, v ->
             // Filter for only the desired value type - ModelASTValue for env vars, ModelASTInternalFunctionCall for
             // credentials.
             if (v instanceof ModelASTElement && valueType.isInstance(v) && v.sourceLocation != null) {
-                if (v instanceof Expression) {
-                    ClosureExpression expr = translateValue((Expression)v, keys)
+                if (v.sourceLocation instanceof Expression) {
+                    ClosureExpression expr = translateValue((Expression)v.sourceLocation, keys)
                     if (expr != null) {
-                        closures.put(k.key, expr)
+                        closureMap.addMapEntryExpression(GeneralUtils.constX(k.key), expr)
                     } else {
                         throw new IllegalArgumentException("Empty closure for ${k.key}")
                     }
@@ -100,42 +111,15 @@ public class Environment implements Serializable {
             }
         }
 
-        return ASTParserUtils.buildAst {
-            methodCall {
-                closure {
-                    block {
-                        declaration {
-                            variable "resolver"
-                            token "="
-                            constructorCall(EnvironmentResolver) {
-                                argumentList {}
-                            }
-                        }
-                        closures.each { k, v ->
-                            methodCall {
-                                variable "resolver"
-                                constant "addClosure"
-                                argumentList {
-                                    constant k
-                                    expression.add(v)
-                                }
-                            }
-                        }
-                        returnStatement {
-                            variable "resolver"
-                        }
-                    }
-                }
-                constant "call"
-                argumentList {}
-            }
-        }
+        return GeneralUtils.callX(ClassHelper.make(EnvironmentResolver), "instanceFromMap",
+            GeneralUtils.args(closureMap))
     }
 
     @CheckForNull
     private static ClosureExpression translateValue(Expression expr, Set<String> keys) {
         ASTNode node = ASTParserUtils.buildAst {
             closure {
+                parameters {}
                 block {
                     returnStatement {
                         if (expr instanceof ConstantExpression) {
@@ -260,6 +244,7 @@ public class Environment implements Serializable {
         EnvironmentResolver() {
         }
 
+        @Whitelisted
         void setScript(CpsScript script) {
             this.script = script
         }
@@ -282,6 +267,16 @@ public class Environment implements Serializable {
 
         Map<String,Closure> getClosureMap() {
             return closureMap
+        }
+
+        @Whitelisted
+        static EnvironmentResolver instanceFromMap(Map<String, Closure> closureMap) {
+            EnvironmentResolver resolver = new EnvironmentResolver()
+            closureMap.each { k, v ->
+                resolver.addClosure(k, v)
+            }
+
+            return resolver
         }
     }
 
