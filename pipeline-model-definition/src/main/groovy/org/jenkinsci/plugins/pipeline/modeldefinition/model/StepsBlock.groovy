@@ -96,8 +96,8 @@ class StepsBlock implements Serializable {
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildCondition original) {
         Object origSrc = original?.sourceLocation
-        if (origSrc != null && origSrc instanceof MethodCallExpression) {
-            BlockStatementMatch condMatch = ASTParserUtils.blockStatementFromExpression(origSrc)
+        if (origSrc != null && origSrc instanceof Statement) {
+            BlockStatementMatch condMatch = ASTParserUtils.matchBlockStatement(origSrc)
             return GeneralUtils.callX(ClassHelper.make(Utils), "createStepsBlock",
                 GeneralUtils.args(condMatch.body))
         } else {

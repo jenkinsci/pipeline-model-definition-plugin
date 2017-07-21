@@ -88,6 +88,7 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
                         map {
                             original.conditions.each { cond ->
                                 ASTNode steps = StepsBlock.transformToRuntimeAST(cond)
+                                System.err.println("STEPS: ${steps}")
                                 if (steps != null) {
                                     mapEntry {
                                         constant cond.condition
