@@ -254,6 +254,7 @@ public class Environment implements Serializable {
             this.script = script
         }
 
+        @Whitelisted
         CpsScript getScript() {
             return script
         }
@@ -262,6 +263,7 @@ public class Environment implements Serializable {
             this.closureMap.put(key, closure)
         }
 
+        @Whitelisted
         Closure getClosure(String key) {
             return closureMap.get(key)
         }
@@ -278,6 +280,8 @@ public class Environment implements Serializable {
         static EnvironmentResolver instanceFromMap(Map<String, Closure> closureMap) {
             EnvironmentResolver resolver = new EnvironmentResolver()
             closureMap.each { k, v ->
+                v.delegate = resolver
+                v.resolveStrategy = Closure.DELEGATE_FIRST
                 resolver.addClosure(k, v)
             }
 
