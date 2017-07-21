@@ -27,6 +27,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.DynamicVariable
+import org.codehaus.groovy.ast.expr.ArgumentListExpression
 import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
@@ -37,6 +38,8 @@ import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.stmt.ExpressionStatement
+import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.runtime.MetaClassHelper
 import org.codehaus.groovy.syntax.Types
@@ -50,6 +53,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt
 
 /**
  * Special wrapper for environment to deal with mapped closure problems with property declarations.
@@ -87,7 +96,7 @@ public class Environment implements Serializable {
                 }
             }
         }
-        return GeneralUtils.constX(null)
+        return constX(null)
     }
     
     @CheckForNull
@@ -103,7 +112,7 @@ public class Environment implements Serializable {
                 if (v.sourceLocation instanceof Expression) {
                     ClosureExpression expr = translateValue((Expression)v.sourceLocation, keys)
                     if (expr != null) {
-                        closureMap.addMapEntryExpression(GeneralUtils.constX(k.key), expr)
+                        closureMap.addMapEntryExpression(constX(k.key), expr)
                     } else {
                         throw new IllegalArgumentException("Empty closure for ${k.key}")
                     }
@@ -111,8 +120,12 @@ public class Environment implements Serializable {
             }
         }
 
-        return GeneralUtils.callX(ClassHelper.make(EnvironmentResolver), "instanceFromMap",
-            GeneralUtils.args(closureMap))
+        return callX(ClassHelper.make(EnvironmentResolver), "instanceFromMap",
+            args(closureMap))
+    }
+
+    private static MethodCallExpression translateAndCall(Expression expr, Set<String> keys) {
+        return callX(translateValue(expr, keys), constX("call"), new ArgumentListExpression())
     }
 
     @CheckForNull
@@ -128,9 +141,9 @@ public class Environment implements Serializable {
                             ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
                             BinaryExpression binExpr = (BinaryExpression) expr
                             binary {
-                                expression.add(translateValue(binExpr.leftExpression, keys))
+                                expression.add(translateAndCall(binExpr.leftExpression, keys))
                                 token "+"
-                                expression.add(translateValue(binExpr.rightExpression, keys))
+                                expression.add(translateAndCall(binExpr.rightExpression, keys))
                             }
                         } else if (expr instanceof GStringExpression) {
                             GStringExpression gStrExpr = (GStringExpression) expr
@@ -143,11 +156,7 @@ public class Environment implements Serializable {
                                 }
                                 values {
                                     gStrExpr.values.each { v ->
-                                        methodCall {
-                                            expression.add(translateValue(v, keys))
-                                            constant "call"
-                                            argumentList {}
-                                        }
+                                        expression.add(translateAndCall(v, keys))
                                     }
                                 }
                             }
@@ -159,7 +168,7 @@ public class Environment implements Serializable {
                                     expression.add(getterCall(propExpr.propertyAsString))
                                 } else {
                                     property {
-                                        expression.add(translateValue(propExpr.objectExpression, keys))
+                                        expression.add(translateAndCall(propExpr.objectExpression, keys))
                                         expression.add(propExpr.property)
                                     }
                                 }
@@ -173,7 +182,7 @@ public class Environment implements Serializable {
                                 expression.add(mce.method)
                                 argumentList {
                                     mce.arguments.each { a ->
-                                        expression.add(translateValue(a, keys))
+                                        expression.add(translateAndCall(a, keys))
                                     }
                                 }
                             }
@@ -182,23 +191,20 @@ public class Environment implements Serializable {
                             if (keys.contains(ve.name)) {
                                 expression.add(getterCall(ve.name))
                             } else {
-                                methodCall {
+                                property {
                                     methodCall {
                                         variable("this")
                                         constant "getScript"
                                         argumentList {}
                                     }
-                                    constant("getProperty")
-                                    argumentList {
-                                        constant(ve.name)
-                                    }
+                                    constant ve.name
                                 }
                             }
                         } else if (expr instanceof ElvisOperatorExpression) {
                             ElvisOperatorExpression elvis = (ElvisOperatorExpression) expr
                             elvisOperator {
-                                expression.add(translateValue(elvis.trueExpression, keys))
-                                expression.add(translateValue(elvis.falseExpression, keys))
+                                expression.add(translateAndCall(elvis.trueExpression, keys))
+                                expression.add(translateAndCall(elvis.falseExpression, keys))
                             }
                         } else {
                             throw new IllegalArgumentException("Got an unexpected " + expr.getClass())
@@ -257,6 +263,11 @@ public class Environment implements Serializable {
         @Whitelisted
         CpsScript getScript() {
             return script
+        }
+
+        @Whitelisted
+        Object getScriptProperty(String key) {
+            return script.getProperty(key)
         }
 
         void addClosure(String key, Closure closure) {
