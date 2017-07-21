@@ -281,7 +281,6 @@ public class Environment implements Serializable {
             EnvironmentResolver resolver = new EnvironmentResolver()
             closureMap.each { k, v ->
                 v.delegate = resolver
-                v.resolveStrategy = Closure.DELEGATE_FIRST
                 resolver.addClosure(k, v)
             }
 
