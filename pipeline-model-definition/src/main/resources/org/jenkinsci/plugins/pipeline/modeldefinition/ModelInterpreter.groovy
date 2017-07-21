@@ -253,13 +253,26 @@ public class ModelInterpreter implements Serializable {
         
         if (environment != null) {
             try {
-                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script, parent)
-                if (!credStrings.isEmpty()) {
-                    creds.putAll(processCredentials(credStrings))
+                RunWrapper currentBuild = script.getProperty("currentBuild")
+                List<List<Object>> credList = Utils.getCredsFromResolver(environment, script)
+                for (int i = 0; i < credList.size(); i++) {
+                    List<Object> credTuple = credList.get(i)
+                    String key = (String) credTuple.get(0)
+                    Closure value = (Closure) credTuple.get(1)
+                    String id = (String) value.call()
+                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
+                    creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
                 }
             } catch (MissingMethodException e) {
-                // This will only happen in a running upgrade situation, so check the legacy approach as well.
-                creds.putAll(Utils.getLegacyEnvCredentials(environment))
+                try {
+                    List<List<String>> credStrings = Utils.getEnvCredentials(environment, script, parent)
+                    if (!credStrings.isEmpty()) {
+                        creds.putAll(processCredentials(credStrings))
+                    }
+                } catch (MissingMethodException e2) {
+                    // This will only happen in a running upgrade situation, so check the legacy approach as well.
+                    creds.putAll(Utils.getLegacyEnvCredentials(environment))
+                }
             }
         }
 
@@ -277,6 +290,7 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
+    @Deprecated
     private Map<String,CredentialWrapper> processCredentials(@Nonnull List<List<String>> varsAndIds) {
         Map<String,CredentialWrapper> creds = new TreeMap<>()
         RunWrapper currentBuild = script.getProperty("currentBuild")

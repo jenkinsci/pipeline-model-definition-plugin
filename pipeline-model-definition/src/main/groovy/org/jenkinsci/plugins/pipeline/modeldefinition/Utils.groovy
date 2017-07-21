@@ -71,6 +71,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -306,6 +307,17 @@ public class Utils {
         return s
     }
 
+    static List<List<Object>> getCredsFromResolver(Environment environment, CpsScript script) {
+        if (environment != null) {
+            environment.credsResolver.setScript(script)
+            return environment.credsResolver.closureMap.collect { k, v ->
+                [k, v]
+            }
+        } else {
+            return []
+        }
+    }
+
     static List<List<String>> getEnvCredentials(Environment environment, CpsScript script, Environment parent = null) {
         List<List<String>> credsTuples = new ArrayList<>()
         // TODO: Creds
@@ -505,6 +517,12 @@ public class Utils {
         }
 
         return knownTypes
+    }
+
+    @Whitelisted
+    static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
+        DescribableModel<T> model = new DescribableModel<>(c)
+        return model?.instantiate(args)
     }
 
     /**

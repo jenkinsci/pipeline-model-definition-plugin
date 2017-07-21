@@ -235,9 +235,11 @@ class ASTParserUtils {
         return buildAst {
             list {
                 children?.each { d ->
-                    if (d.sourceLocation instanceof MethodCallExpression) {
-                        MethodCallExpression m = (MethodCallExpression) d.sourceLocation
-                        expression.add(methodCallToDescribable(m))
+                    if (d.sourceLocation instanceof Statement) {
+                        MethodCallExpression m = matchMethodCall((Statement) d.sourceLocation)
+                        if (m != null) {
+                            expression.add(methodCallToDescribable(m))
+                        }
                     }
                 }
             }
@@ -429,12 +431,9 @@ class ASTParserUtils {
             Class<? extends Describable> descType = funcDesc.clazz
 
             return buildAst {
-                methodCall {
-                    constructorCall(DescribableModel) {
-                        classNode(descType)
-                    }
-                    constant "instantiate"
+                staticMethodCall(Utils, "instantiateDescribable") {
                     argumentList {
+                        classExpression(descType)
                         expression.add(argsMap(args))
                     }
                 }
