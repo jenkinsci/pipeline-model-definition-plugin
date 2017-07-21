@@ -261,6 +261,7 @@ public class ModelInterpreter implements Serializable {
                     System.err.println("checking cred for ${key}")
                     Closure value = (Closure) credTuple.get(1)
                     String id = (String) value.call()
+                    System.err.println("cred done for ${key}: ${id}")
                     CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
                     creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
                 }

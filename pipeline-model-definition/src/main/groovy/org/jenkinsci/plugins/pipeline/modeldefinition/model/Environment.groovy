@@ -97,7 +97,8 @@ public class Environment implements Serializable {
     @CheckForNull
     private static ASTNode generateResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
         Set<String> keys = new HashSet<>()
-        keys.addAll(original.variables.keySet().collect { it.key })
+        keys.addAll(original.variables.findAll { k, v -> v instanceof ModelASTValue }.collect { k, v -> k.key })
+
         MapExpression closureMap = new MapExpression()
 
         original.variables.each { k, v ->
