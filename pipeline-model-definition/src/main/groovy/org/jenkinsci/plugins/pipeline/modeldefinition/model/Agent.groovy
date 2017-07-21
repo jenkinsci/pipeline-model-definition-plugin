@@ -57,8 +57,6 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
     @Whitelisted
     Agent(Map<String,Object> inMap) {
-        System.err.println("resultMap: ${resultMap}")
-        System.err.println("inMap: ${inMap}")
         resultMap = inMap
     }
 

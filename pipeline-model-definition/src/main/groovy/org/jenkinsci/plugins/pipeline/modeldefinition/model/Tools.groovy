@@ -53,8 +53,8 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
         Utils.generateTypeCache(ToolDescriptor.class, true)
 
     @Whitelisted
-    public Tools(Map<String,String> inMap) {
-        resultMap.putAll(inMap)
+    Tools(Map<String,String> inMap) {
+        resultMap = inMap
     }
 
     /**
