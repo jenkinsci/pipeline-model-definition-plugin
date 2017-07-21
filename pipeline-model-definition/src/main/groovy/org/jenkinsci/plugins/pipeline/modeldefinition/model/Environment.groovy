@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
-import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.ArgumentListExpression
 import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
@@ -38,9 +37,6 @@ import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
-import org.codehaus.groovy.ast.stmt.ExpressionStatement
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.runtime.MetaClassHelper
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
@@ -56,9 +52,7 @@ import javax.annotation.Nonnull
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt
 
 /**
  * Special wrapper for environment to deal with mapped closure problems with property declarations.
@@ -75,6 +69,7 @@ public class Environment implements Serializable {
     Environment(EnvironmentResolver envResolver, EnvironmentResolver credsResolver) {
         this.envResolver = envResolver
         this.credsResolver = credsResolver
+        this.credsResolver.setFallback(this.envResolver)
     }
 
     EnvironmentResolver getEnvResolver() {
@@ -110,7 +105,15 @@ public class Environment implements Serializable {
             // credentials.
             if (v instanceof ModelASTElement && valueType.isInstance(v) && v.sourceLocation != null) {
                 if (v.sourceLocation instanceof Expression) {
-                    ClosureExpression expr = translateValue((Expression)v.sourceLocation, keys)
+                    Expression toTransform = (Expression)v.sourceLocation
+
+                    if (valueType == ModelASTInternalFunctionCall && toTransform instanceof MethodCallExpression) {
+                        List<Expression> args = ASTParserUtils.methodCallArgs((MethodCallExpression)toTransform)
+                        if (args.size() == 1) {
+                            toTransform = args.get(0)
+                        }
+                    }
+                    ClosureExpression expr = translateValue(toTransform, keys)
                     if (expr != null) {
                         closureMap.addMapEntryExpression(constX(k.key), expr)
                     } else {
@@ -250,6 +253,7 @@ public class Environment implements Serializable {
 
         private CpsScript script
         private Map<String,Closure> closureMap = new TreeMap<>()
+        private EnvironmentResolver fallback
 
         @Whitelisted
         EnvironmentResolver() {
@@ -270,13 +274,21 @@ public class Environment implements Serializable {
             return script.getProperty(key)
         }
 
+        void setFallback(EnvironmentResolver fallback) {
+            this.fallback = fallback
+        }
+
         void addClosure(String key, Closure closure) {
             this.closureMap.put(key, closure)
         }
 
         @Whitelisted
         Closure getClosure(String key) {
-            return closureMap.get(key)
+            if (closureMap.containsKey(key)) {
+                return closureMap.get(key)
+            } else if (fallback != null) {
+                return fallback.getClosure(key)
+            }
         }
 
         Object callClosure(String key) {

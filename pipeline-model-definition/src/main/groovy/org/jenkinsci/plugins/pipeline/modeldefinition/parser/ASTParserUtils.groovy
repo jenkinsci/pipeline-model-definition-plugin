@@ -42,6 +42,7 @@ import org.codehaus.groovy.ast.expr.ListExpression
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
 import org.codehaus.groovy.ast.expr.TupleExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
@@ -137,6 +138,10 @@ class ASTParserUtils {
             n.strings.each { prettyPrint(it, ind) }
             printer("- values:", ind)
             n.values.each { prettyPrint(it, ind) }
+        } else if (n instanceof PropertyExpression) {
+            printer("- property:", ind)
+            prettyPrint(n.objectExpression, ind)
+            prettyPrint(n.property, ind)
         } else {
             printer("- ${n}", ind)
         }

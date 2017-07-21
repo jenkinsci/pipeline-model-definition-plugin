@@ -90,8 +90,8 @@ class ModelParser implements Parser {
         this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
-    public @CheckForNull ModelASTPipelineDef parse() {
-        return parse(sourceUnit.AST);
+    public @CheckForNull ModelASTPipelineDef parse(boolean secondaryRun = false) {
+        return parse(sourceUnit.AST, secondaryRun);
     }
 
     public @CheckForNull List<ModelASTStep> parsePlainSteps(ModuleNode src) {
@@ -117,7 +117,7 @@ class ModelParser implements Parser {
      * Given a Groovy AST that represents a parsed source code, parses
      * that into {@link ModelASTPipelineDef}
      */
-    public @CheckForNull ModelASTPipelineDef parse(ModuleNode src) {
+    public @CheckForNull ModelASTPipelineDef parse(ModuleNode src, boolean secondaryRun = false) {
         // first, quickly ascertain if this module should be parsed at all
         // TODO: 'use script' escape hatch
         def pst = src.statementBlock.statements.find {
@@ -205,33 +205,23 @@ class ModelParser implements Parser {
             }
         }
 
-        r.validate(validator)
-        pipelineBlock.whole.arguments = (ArgumentListExpression)ASTParserUtils.buildAst {
-            argumentList {
-                closure {
-                    parameters {}
-                    block {
-                        returnStatement {
-                            expression.add(Root.transformToRuntimeAST(r))
+        if (!secondaryRun) {
+            r.validate(validator)
+            pipelineBlock.whole.arguments = (ArgumentListExpression) ASTParserUtils.buildAst {
+                argumentList {
+                    closure {
+                        parameters {}
+                        block {
+                            returnStatement {
+                                expression.add(Root.transformToRuntimeAST(r))
+                            }
                         }
                     }
                 }
             }
+            ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)
         }
-        ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)
 
-/*        BlockStatement newBlock = new BlockStatement()
-        newBlock.addStatement((Statement)ASTParserUtils.buildAst {
-            expression {
-                declaration {
-                    variable "declarativeModelRoot"
-                    token "="
-                    expression.add(Root.transformToRuntimeAST(r))
-                }
-            }
-        })
-        newBlock.addStatements(src.statementBlock.getStatements())
-        src.statementBlock = newBlock*/
         return r;
     }
 
