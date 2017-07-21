@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.ASTNode
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -56,6 +57,7 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
     // anyway.
     transient List<Trigger> triggers = []
 
+    @Whitelisted
     public Triggers(List<Trigger> t) {
         this.triggers = t
     }
@@ -90,7 +92,6 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
         return getAllowedTriggerTypes().get(key)
     }
 
-    @CheckForNull
     public static ASTNode transformToRuntimeAST(@CheckForNull ModelASTTriggers original) {
         return ASTParserUtils.transformDescribableContainer(original, original?.triggers, Triggers.class)
     }

@@ -26,10 +26,16 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.tools.GeneralUtils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
+
+import javax.annotation.CheckForNull
 
 /**
  * Root-level configuration object for the entire model.
@@ -57,6 +63,20 @@ public class Root implements NestedModel, Serializable {
     Parameters parameters
 
     Libraries libraries
+
+    @Whitelisted
+    Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
+         Triggers triggers, Parameters parameters, Libraries libraries) {
+        this.agent = agent
+        this.stages = stages
+        this.post = post
+        this.environment = environment
+        this.tools = tools
+        this.options = options
+        this.triggers = triggers
+        this.parameters = parameters
+        this.libraries = libraries
+    }
 
     Root stages(Stages s) {
         this.stages = s
@@ -142,5 +162,27 @@ public class Root implements NestedModel, Serializable {
             return false
         }
 
+    }
+
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTPipelineDef original) {
+        if (original != null) {
+            return ASTParserUtils.buildAst {
+                constructorCall(Root) {
+                    argumentList {
+                        expression.add(Agent.transformToRuntimeAST(original.agent))
+                        expression.add(Stages.transformToRuntimeAST(original.stages))
+                        expression.add(PostBuild.transformToRuntimeAST(original.postBuild))
+                        expression.add(Environment.transformToRuntimeAST(original.environment))
+                        expression.add(Tools.transformToRuntimeAST(original.tools))
+                        expression.add(Options.transformToRuntimeAST(original.options))
+                        expression.add(Triggers.transformToRuntimeAST(original.triggers))
+                        expression.add(Parameters.transformToRuntimeAST(original.parameters))
+                        expression.add(Libraries.transformToRuntimeAST(original.libraries))
+                    }
+                }
+            }
+        }
+
+        return GeneralUtils.constX(null)
     }
 }

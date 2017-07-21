@@ -27,9 +27,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.CheckForNull
 
@@ -45,6 +46,7 @@ import javax.annotation.CheckForNull
 public class Libraries implements Serializable {
     List<String> libs = []
 
+    @Whitelisted
     Libraries(List<String> s) {
         libs.addAll(s)
     }
@@ -58,26 +60,23 @@ public class Libraries implements Serializable {
         return libs
     }
 
-    @CheckForNull
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTLibraries original) {
         if (original != null && !original.libs.isEmpty()) {
-            return ASTParserUtils.getAst(new AstBuilder().buildFromSpec {
-                returnStatement {
-                    constructorCall(Libraries) {
-                        argumentList {
-                            list {
-                                original.libs.each { l ->
-                                    if (l.sourceLocation instanceof ASTNode) {
-                                        expression.addAll((ASTNode)l.sourceLocation)
-                                    }
+            return ASTParserUtils.buildAst {
+                constructorCall(Libraries) {
+                    argumentList {
+                        list {
+                            original.libs.each { l ->
+                                if (l.sourceLocation instanceof ASTNode) {
+                                    expression.addAll((ASTNode) l.sourceLocation)
                                 }
                             }
                         }
                     }
                 }
-            })
+            }
         }
 
-        return null
+        return GeneralUtils.constX(null)
     }
 }

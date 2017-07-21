@@ -26,6 +26,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.tools.GeneralUtils
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+
+import javax.annotation.CheckForNull
 
 
 /**
@@ -38,6 +45,11 @@ import groovy.transform.ToString
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Stages implements NestedModel, Serializable {
     List<Stage> stages = []
+
+    @Whitelisted
+    Stages(List<Stage> stages) {
+        this.stages = stages
+    }
 
     Stages stages(List<Stage> s) {
         this.stages = s
@@ -55,4 +67,21 @@ public class Stages implements NestedModel, Serializable {
         }
     }
 
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTStages original) {
+        if (original != null && !original.stages.isEmpty()) {
+            return ASTParserUtils.buildAst {
+                constructorCall(Stages) {
+                    argumentList {
+                        list {
+                            original.stages.each { s ->
+                                expression.add(Stage.transformToRuntimeAST(s))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return GeneralUtils.constX(null)
+    }
 }

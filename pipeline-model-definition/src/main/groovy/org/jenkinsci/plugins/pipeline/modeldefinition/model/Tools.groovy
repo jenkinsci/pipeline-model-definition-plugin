@@ -27,15 +27,16 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.tools.ToolDescriptor
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
 
 /**
  * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and
@@ -51,6 +52,7 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
     private static final LoadingCache<Object,Map<String,String>> toolTypeCache =
         Utils.generateTypeCache(ToolDescriptor.class, true)
 
+    @Whitelisted
     public Tools(Map<String,String> inMap) {
         resultMap.putAll(inMap)
     }
@@ -67,32 +69,29 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
         }
     }
 
-    @CheckForNull
     public static ASTNode transformToRuntimeAST(@CheckForNull ModelASTTools original) {
         if (original == null ||
             original.tools.isEmpty() ||
             original.sourceLocation == null ||
             !(original.sourceLocation instanceof ASTNode)) {
-            return null
+            return GeneralUtils.constX(null)
         } else {
-            return getAst(new AstBuilder().buildFromSpec {
-                returnStatement {
-                    constructorCall(Tools) {
-                        argumentList {
-                            map {
-                                original.tools.each { k, v ->
-                                    mapEntry {
-                                        if (v.sourceLocation != null && v.sourceLocation instanceof ASTNode) {
-                                            constant k.key
-                                            expression.add((ASTNode) v.sourceLocation)
-                                        }
+            return buildAst {
+                constructorCall(Tools) {
+                    argumentList {
+                        map {
+                            original.tools.each { k, v ->
+                                mapEntry {
+                                    if (v.sourceLocation != null && v.sourceLocation instanceof ASTNode) {
+                                        constant k.key
+                                        expression.add((ASTNode) v.sourceLocation)
                                     }
                                 }
                             }
                         }
                     }
                 }
-            })
+            }
         }
     }
 

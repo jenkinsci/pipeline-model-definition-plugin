@@ -3,6 +3,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 import com.cloudbees.groovy.cps.NonCPS;
 import hudson.Extension;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
@@ -47,6 +50,23 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
                 }
             }
         });
-        cc.addCompilationCustomizers(new EnvironmentCustomizer());
+
+
+        cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.INSTRUCTION_SELECTION) {
+            @Override
+            public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
+                ModuleNode ast = source.getAST();
+                System.err.println("post mod meth:");
+                for (Statement s : ast.getStatementBlock().getStatements()) {
+                    System.err.println(" stmt: " + s);
+                }
+                for (ClassNode c : ast.getClasses()) {
+                    System.err.println("- class: " + c.getName());
+                    for (MethodNode m : c.getMethods()) {
+                        System.err.println(" - " + m.getCode().getText());
+                    }
+                }
+            }
+        });
     }
 }

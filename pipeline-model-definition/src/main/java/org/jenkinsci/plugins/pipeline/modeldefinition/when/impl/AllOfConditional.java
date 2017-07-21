@@ -53,7 +53,6 @@ public class AllOfConditional extends AbstractConditionalWithChildren<AllOfCondi
             return -1;
         }
 
-        @CheckForNull
         @Override
         public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenConditionToRuntimeAST(original);

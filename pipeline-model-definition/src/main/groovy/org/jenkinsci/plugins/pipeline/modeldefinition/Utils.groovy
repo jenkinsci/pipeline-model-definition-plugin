@@ -254,94 +254,17 @@ public class Utils {
         if (model != null) {
             ModelASTStages stages = model.stages
 
-            stages.makeSaveable()
+            stages.removeSourceLocation()
             if (r.getAction(ExecutionModelAction.class) == null) {
                 r.addAction(new ExecutionModelAction(stages))
             }
 
-            if (root != null) {
-                root = populateWhen(root, model)
-                root = populateEnv(r, root, model)
-            }
         }
 
         return root
     }
 
-    static Root populateEnv(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        root.environment = environmentFromAST(r, model.environment)
 
-        List<Stage> stagesWithEnvs = []
-
-        root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            s.environment = environmentFromAST(r, astStage.environment)
-            stagesWithEnvs.add(s)
-        }
-
-        root.stages.stages = stagesWithEnvs
-
-        return root
-    }
-
-    /**
-     * Attaches the {@link StageConditionals} to the appropriate {@link Stage}s, pulling from the AST model.
-     *
-     * @param root
-     * @param model
-     * @return an updated {@link Root}
-     */
-    static Root populateWhen(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        List<Stage> stagesWithWhen = []
-
-        root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            if (astStage.when != null) {
-                List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
-                    astStage.when.conditions.collect { c ->
-                        stageConditionalFromAST(c)
-                    }
-
-                s.when(new StageConditionals(processedConditions))
-            }
-            stagesWithWhen.add(s)
-        }
-
-        root.stages.stages = stagesWithWhen
-
-        return root
-    }
-
-    /**
-     * Translates the {@link ModelASTWhenContent} into a {@link DeclarativeStageConditional}.
-     *
-     * @param w
-     * @return A populated {@link DeclarativeStageConditional}
-     */
-    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
-        DeclarativeStageConditional c = null
-        DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
-
-        if (w instanceof ModelASTWhenCondition) {
-            if (desc.allowedChildrenCount == 0) {
-                Object[] arg = new Object[1]
-                arg[0] = w.args?.argListToMap()
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
-            } else if (desc.allowedChildrenCount == 1) {
-                DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
-            } else {
-                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(it) }
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, nested).instantiate()
-            }
-        } else if (w instanceof ModelASTWhenExpression) {
-            ModelASTWhenExpression expr = (ModelASTWhenExpression)w
-
-            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
-        }
-
-        return c
-    }
 
     /**
      * Takes a string and makes sure it starts/ends with double quotes so that it can be evaluated correctly.
@@ -379,16 +302,12 @@ public class Utils {
     }
 
     static String unescapeDollars(String s) {
-        return StringUtils.replace(s, Environment.DOLLAR_PLACEHOLDER, '$')
+        return s
     }
 
     static List<List<String>> getEnvCredentials(Environment environment, CpsScript script, Environment parent = null) {
         List<List<String>> credsTuples = new ArrayList<>()
-        if (environment != null) {
-            credsTuples.addAll(environment.getCredsMap(script, parent)?.collect { k, v ->
-                [k, v]
-            })
-        }
+        // TODO: Creds
         return credsTuples
     }
 
@@ -421,33 +340,6 @@ public class Utils {
         }
     }
 
-    static Environment environmentFromAST(WorkflowRun r, ModelASTEnvironment inEnv) {
-        if (inEnv != null) {
-            Environment env = new Environment()
-
-            Map<String, Environment.EnvValue> inMap = [:]
-            Map<String, Environment.EnvValue> credMap = [:]
-            inEnv.variables.each { k, v ->
-                if (v instanceof ModelASTInternalFunctionCall) {
-                    ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall)v
-                    // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
-                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: func.args.first().isLiteral(),
-                        value: func.args.first().value)
-                    credMap.put(k.key, envVal)
-                } else {
-                    ModelASTValue val = (ModelASTValue)v
-                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: val.isLiteral(), value: val.value)
-                    inMap.put(k.key, envVal)
-                }
-            }
-
-            env.setValueMap(inMap)
-            env.setCredsMap(credMap)
-            return env
-        } else {
-            return null
-        }
-    }
 
     static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
         return new Predicate<FlowNode>() {

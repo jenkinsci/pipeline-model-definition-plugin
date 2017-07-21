@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.CheckForNull
 
@@ -36,13 +37,13 @@ import javax.annotation.CheckForNull
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class PostBuild extends AbstractBuildConditionResponder<PostBuild> {
+    @Whitelisted
     PostBuild(Map<String,StepsBlock> m) {
         super(m)
     }
 
-    @CheckForNull
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTPostBuild original) {
-        return transformToRuntimeAST(original, PostBuild.class)
+        return transformContainerToRuntimeAST(original, PostBuild.class)
     }
 
 }

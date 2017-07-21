@@ -54,7 +54,6 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         return 0;
     }
 
-    @CheckForNull
     public abstract ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original);
 
     /**

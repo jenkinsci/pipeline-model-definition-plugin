@@ -25,13 +25,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
 
 
 /**
@@ -79,31 +79,28 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         }
     }
 
-    @CheckForNull
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildConditionsContainer original,
-                                         @Nonnull Class container) {
+    static ASTNode transformContainerToRuntimeAST(@CheckForNull ModelASTBuildConditionsContainer original,
+                                                  @Nonnull Class container) {
         if (original != null) {
-            return getAst(new AstBuilder().buildFromSpec {
-                returnStatement {
-                    constructorCall(container) {
-                        argumentList {
-                            map {
-                                original.conditions.each { cond ->
-                                    ASTNode steps = StepsBlock.transformToRuntimeAST(cond)
-                                    if (steps != null) {
-                                        mapEntry {
-                                            constant cond.condition
-                                            expression.add(steps)
-                                        }
+            return buildAst {
+                constructorCall(container) {
+                    argumentList {
+                        map {
+                            original.conditions.each { cond ->
+                                ASTNode steps = StepsBlock.transformToRuntimeAST(cond)
+                                if (steps != null) {
+                                    mapEntry {
+                                        constant cond.condition
+                                        expression.add(steps)
                                     }
                                 }
                             }
                         }
                     }
                 }
-            })
+            }
         }
-        return null
+        return GeneralUtils.constX(null)
     }
 
 }

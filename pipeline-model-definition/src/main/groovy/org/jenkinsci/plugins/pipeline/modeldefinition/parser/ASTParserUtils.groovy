@@ -30,6 +30,7 @@ import hudson.model.Describable
 import hudson.model.Descriptor
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.builder.AstSpecificationCompiler
 import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
@@ -41,14 +42,12 @@ import org.codehaus.groovy.ast.expr.VariableExpression
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.control.SourceUnit
-import org.jaxen.expr.Expr
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTClosureMap
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
@@ -160,13 +159,14 @@ class ASTParserUtils {
     }
 
     @CheckForNull
-    static getAst(@CheckForNull List<ASTNode> nodes) {
+    static buildAst(@DelegatesTo(AstSpecificationCompiler) Closure specification) {
+        def nodes = new AstBuilder().buildFromSpec(specification)
         return nodes?.get(0)
     }
 
     @Nonnull
     static ASTNode transformListOfDescribables(@CheckForNull List<ModelASTElement> children) {
-        return getAst(new AstBuilder().buildFromSpec {
+        return buildAst {
             list {
                 children?.each { d ->
                     if (d.sourceLocation instanceof MethodCallExpression) {
@@ -175,10 +175,9 @@ class ASTParserUtils {
                     }
                 }
             }
-        })
+        }
     }
 
-    @CheckForNull
     static ASTNode transformDescribableContainer(@CheckForNull ModelASTElement original,
                                                  @CheckForNull List<ModelASTElement> children,
                                                  @Nonnull Class containerClass) {
@@ -186,21 +185,18 @@ class ASTParserUtils {
             children?.isEmpty() ||
             original.sourceLocation == null ||
             !(original.sourceLocation instanceof ASTNode)) {
-            return null
+            return GeneralUtils.constX(null)
         } else {
-            return getAst(new AstBuilder().buildFromSpec {
-                returnStatement {
-                    constructorCall(containerClass) {
-                        argumentList {
-                            expression.add(transformListOfDescribables(children))
-                        }
+            return buildAst {
+                constructorCall(containerClass) {
+                    argumentList {
+                        expression.add(transformListOfDescribables(children))
                     }
                 }
-            })
+            }
         }
     }
 
-    @CheckForNull
     static ASTNode transformWhenConditionToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
         if (original != null && original instanceof ModelASTWhenCondition) {
             ModelASTWhenCondition cond = (ModelASTWhenCondition) original
@@ -212,13 +208,13 @@ class ASTParserUtils {
                 }
             }
         }
-        return null
+        return GeneralUtils.constX(null)
     }
 
     @CheckForNull
     static ASTNode recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
         if (original != null) {
-            return getAst(new AstBuilder().buildFromSpec {
+            return buildAst {
                 map {
                     eachStatement(original.code) { s ->
                         MethodCallExpression mce = matchMethodCall(s)
@@ -238,7 +234,7 @@ class ASTParserUtils {
                         }
                     }
                 }
-            })
+            }
         }
 
         return null
@@ -304,7 +300,7 @@ class ASTParserUtils {
 
     @CheckForNull
     static ASTNode argsMap(List<Expression> args) {
-        return getAst(new AstBuilder().buildFromSpec {
+        return buildAst {
             map {
                 args.each { singleArg ->
                     if (singleArg instanceof MapExpression) {
@@ -331,7 +327,7 @@ class ASTParserUtils {
                     }
                 }
             }
-        })
+        }
     }
 
     @Nonnull
@@ -350,7 +346,7 @@ class ASTParserUtils {
         StepDescriptor stepDesc = lookupCache.lookupStepDescriptor(methodName)
         // This is the case where we've got a wrapper in options
         if (stepDesc != null || (funcDesc != null && !StepDescriptor.metaStepsOf(methodName).isEmpty())) {
-            return getAst(new AstBuilder().buildFromSpec {
+            return buildAst {
                 map {
                     mapEntry {
                         constant "name"
@@ -361,12 +357,12 @@ class ASTParserUtils {
                         expression.add(argsMap(args))
                     }
                 }
-            })
+            }
         } else if (funcDesc != null) {
             // Ok, now it's a non-executable descriptor. Phew.
             Class<? extends Describable> descType = funcDesc.clazz
 
-            return getAst(new AstBuilder().buildFromSpec {
+            return buildAst {
                 methodCall {
                     constructorCall(DescribableModel) {
                         classNode(descType)
@@ -376,7 +372,7 @@ class ASTParserUtils {
                         expression.add(argsMap(args))
                     }
                 }
-            })
+            }
         } else {
             // Not a describable at all!
             return expr

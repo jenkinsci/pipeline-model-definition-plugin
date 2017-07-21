@@ -30,16 +30,17 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 
 import javax.annotation.CheckForNull
 
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.getAst
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
 
 /**
  * The {@link Stage#when} block.
@@ -75,36 +76,33 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
 
     public List<DeclarativeStageConditional> conditions = []
 
+    @Whitelisted
     public StageConditionals(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> inList) {
         conditions.addAll(inList)
     }
 
-    @CheckForNull
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhen original) {
         if (original != null && !original.getConditions().isEmpty()) {
-            return getAst(new AstBuilder().buildFromSpec {
-                returnStatement {
-                    constructorCall(StageConditionals) {
-                        argumentList {
-                            list {
-                                original.getConditions().each { cond ->
-                                    if (cond.name != null) {
-                                        DeclarativeStageConditionalDescriptor desc =
-                                            (DeclarativeStageConditionalDescriptor)SymbolLookup.get().findDescriptor(
-                                                DeclarativeStageConditionalDescriptor.class, cond.name)
+            return buildAst {
+                constructorCall(StageConditionals) {
+                    argumentList {
+                        list {
+                            original.getConditions().each { cond ->
+                                if (cond.name != null) {
+                                    DeclarativeStageConditionalDescriptor desc =
+                                        (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
+                                            DeclarativeStageConditionalDescriptor.class, cond.name)
 
-                                        if (desc != null) {
-                                            expression.add(desc.transformToRuntimeAST(cond))
-                                        }
+                                    if (desc != null) {
+                                        expression.add(desc.transformToRuntimeAST(cond))
                                     }
                                 }
                             }
                         }
                     }
                 }
-            })
+            }
         }
-
-        return null
+        return GeneralUtils.constX(null)
     }
 }

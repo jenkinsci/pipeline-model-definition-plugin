@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.ASTNode
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -54,6 +55,7 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
 
     List<ParameterDefinition> parameters = []
 
+    @Whitelisted
     public Parameters(List<ParameterDefinition> params) {
         this.parameters = params
     }
@@ -82,7 +84,6 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
         return getAllowedParameterTypes().get(key)
     }
 
-    @CheckForNull
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildParameters original) {
         return ASTParserUtils.transformDescribableContainer(original, original?.parameters, Parameters.class)
     }

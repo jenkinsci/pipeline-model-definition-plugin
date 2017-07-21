@@ -49,15 +49,19 @@ public class ModelInterpreter implements Serializable {
         this.script = script
     }
 
-    def call(CpsClosure closure) {
+    def call(Root root) {
 
-        ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
+/*        ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
 
         closure.delegate = m
         closure.resolveStrategy = Closure.DELEGATE_FIRST
-        closure.call()
+        closure.call()*/
+/*
+        Closure getRoot = { System.err.println delegate.fooBar; return declarativeModelRoot }
+        getRoot.delegate = script
+        getRoot.resolveStrategy = Closure.DELEGATE_FIRST
 
-        Root root = m.toNestedModel()
+        Root root = (Root)getRoot.call()*/
         Throwable firstError
 
         if (root != null) {

@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
@@ -51,22 +52,34 @@ import javax.annotation.CheckForNull;
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
 public class ExpressionConditional extends DeclarativeStageConditional<ExpressionConditional> {
-    private final Closure block;
+    private final String block;
 
-    @DataBoundConstructor
-    public ExpressionConditional(Closure block) {
+    private final Closure closureBlock;
+
+    @Deprecated
+    public ExpressionConditional(String block) {
         this.block = block;
+        this.closureBlock = null;
     }
 
-    public Closure getBlock() {
+    @DataBoundConstructor
+    public ExpressionConditional(Closure closureBlock) {
+        this.closureBlock = closureBlock;
+        this.block = null;
+    }
+
+    public String getBlock() {
         return block;
+    }
+
+    public Closure getClosureBlock() {
+        return closureBlock;
     }
 
     @Extension
     @Symbol("expression")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ExpressionConditional> {
 
-        @CheckForNull
         @Override
         public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             if (original != null && original instanceof ModelASTWhenExpression) {
@@ -75,16 +88,14 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
                     BlockStatementMatch block =
                             ASTParserUtils.matchBlockStatement((Statement) whenExpr.getSourceLocation());
                     if (block != null) {
-                        return new ReturnStatement(
-                                new ConstructorCallExpression(ClassHelper.make(ExpressionConditional.class),
-                                        new ArgumentListExpression(block.body)
-                                )
+                        return new ConstructorCallExpression(ClassHelper.make(ExpressionConditional.class),
+                                new ArgumentListExpression(block.body)
                         );
                     }
                 }
             }
 
-            return null;
+            return GeneralUtils.constX(null);
         }
     }
 }

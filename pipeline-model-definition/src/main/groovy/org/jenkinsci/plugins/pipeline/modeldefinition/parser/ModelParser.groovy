@@ -28,6 +28,8 @@ import hudson.model.Describable
 import hudson.model.Descriptor
 import jenkins.model.Jenkins
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -131,8 +133,6 @@ class ModelParser implements Parser {
 
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst);
 
-        Root modelRoot = new Root()
-
         def pipelineBlock = ASTParserUtils.matchBlockStatement(pst);
         if (pipelineBlock==null) {
             // We never get to the validator with this error
@@ -206,7 +206,19 @@ class ModelParser implements Parser {
         }
 
         r.validate(validator)
-
+        pipelineBlock.whole.arguments = new ArgumentListExpression(Root.transformToRuntimeAST(r))
+/*        BlockStatement newBlock = new BlockStatement()
+        newBlock.addStatement((Statement)ASTParserUtils.buildAst {
+            expression {
+                declaration {
+                    variable "declarativeModelRoot"
+                    token "="
+                    expression.add(Root.transformToRuntimeAST(r))
+                }
+            }
+        })
+        newBlock.addStatements(src.statementBlock.getStatements())
+        src.statementBlock = newBlock*/
         return r;
     }
 

@@ -24,14 +24,29 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import hudson.EnvVars
-import org.apache.commons.lang.StringUtils
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SecureGroovyScript
-import org.jenkinsci.plugins.scriptsecurity.scripts.ApprovalContext
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.expr.BinaryExpression
+import org.codehaus.groovy.ast.expr.ClosureExpression
+import org.codehaus.groovy.ast.expr.ConstantExpression
+import org.codehaus.groovy.ast.expr.ElvisOperatorExpression
+import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.GStringExpression
+import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.PropertyExpression
+import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.tools.GeneralUtils
+import org.codehaus.groovy.runtime.MetaClassHelper
+import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-import org.jenkinsci.plugins.workflow.cps.CpsThread
-import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
+
+import javax.annotation.CheckForNull
+import javax.annotation.Nonnull
 
 /**
  * Special wrapper for environment to deal with mapped closure problems with property declarations.
@@ -40,224 +55,234 @@ import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Environment implements Serializable {
-    public static final String DOLLAR_PLACEHOLDER = "___DOLLAR_SIGN___"
 
-    Map<String,EnvValue> valueMap = new TreeMap<>()
-    Map<String,EnvValue> credsMap = new TreeMap<>()
+    private final EnvironmentResolver envResolver
+    private final EnvironmentResolver credsResolver
 
-    // Caching for resolved environment variables and credentials so we don't process them twice if we don't need to.
-    private Map<String,String> interimResolved = new TreeMap<>()
-    private Map<String,String> interimResolvedCreds = new TreeMap<>()
-
-    public void setValueMap(Map<String,EnvValue> inMap) {
-        this.valueMap.putAll(inMap)
+    @Whitelisted
+    Environment(EnvironmentResolver envResolver, EnvironmentResolver credsResolver) {
+        this.envResolver = envResolver
+        this.credsResolver = credsResolver
     }
 
-    public void setCredsMap(Map<String,EnvValue> inMap) {
-        this.credsMap.putAll(inMap)
-    }
-
-    public Map<String,EnvValue> getMap() {
-        return valueMap
-    }
-
-    /**
-     * Get the map of environment variable names to credential IDs, processed through the environment as needed.
-     *
-     * @param script The {@link CpsScript} we will use for evaluation.
-     * @param parent An optional parent {@link Environment}
-     * @return
-     */
-    public Map<String,String> getCredsMap(CpsScript script, Environment parent = null) {
-        Map<String,String> resolvedMap = new TreeMap<>()
-        if (!credsMap.isEmpty()) {
-            if (interimResolvedCreds.isEmpty()) {
-                EnvVars contextEnv = new EnvVars()
-                resolveEnvVars(script, true, parent).each { k, v ->
-                    if (v instanceof String) {
-                        contextEnv.put(k, v)
+    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTEnvironment original) {
+        if (original != null && !original.variables.isEmpty()) {
+            return ASTParserUtils.buildAst {
+                constructorCall(Environment) {
+                    argumentList {
+                        expression.add(generateResolver(original, ModelASTValue.class))
+                        expression.add(generateResolver(original, ModelASTInternalFunctionCall.class))
                     }
                 }
-
-                credsMap.each { k, v ->
-                    resolvedMap.put(k, Utils.trimQuotes(contextEnv.expand(v.value.toString())))
-                }
-                interimResolvedCreds.putAll(resolvedMap)
             }
-        } else {
-            interimResolvedCreds.putAll(resolvedMap)
         }
-
-        return resolvedMap
+        return GeneralUtils.constX(null)
     }
+    
+    @CheckForNull
+    private static ASTNode generateResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
+        Set<String> keys = new HashSet<>()
+        keys.addAll(original.variables.keySet().collect { it.key })
+        Map<String,ClosureExpression> closures = [:]
 
-    /**
-     * Resolve environment variables other than credentials.
-     *
-     * @param script The {@link CpsScript} used for resolution
-     * @param firstLevel Whether this is the first level of resolution or a recursive call.
-     * @param parent An optional parent {@link Environment}
-     * @return
-     */
-    public Map<String,String> resolveEnvVars(CpsScript script, boolean firstLevel, Environment parent = null) {
-        Map<String, String> alreadySet = new TreeMap<>()
-        if (getMap().isEmpty()) {
-            return alreadySet
-        } else if (!interimResolved.isEmpty()) {
-            alreadySet.putAll(interimResolved)
-            return alreadySet
-        } else {
-            Map<String, String> overrides = getMap().collectEntries { k, v ->
-                String val = v.value.toString()
-                if (v.isLiteral) {
-                    // Escape dollar-signs.
-                    val = StringUtils.replace(val, '$', DOLLAR_PLACEHOLDER)
-                } else {
-                    // Switch out env.FOO for FOO, since the env global variable isn't available in the shell we're processing.
-                    val = replaceEnvDotInCurlies(val)
-                }
-                // Remove quotes from any GStrings that may have them.
-                if (v.isLiteral || (v.value.toString().startsWith('$'))) {
-                    [(k): val]
-                } else {
-                    [(k): Utils.trimQuotes(val)]
-                }
-            }
-
-            // Add any already-set environment variables for the run to the map of already-set variables.
-            alreadySet.putAll(CpsThread.current()?.getExecution()?.getShell()?.getContext()?.variables?.findAll { k, v ->
-                k instanceof String && v instanceof String
-            })
-
-            // If we're being called directly and not to pull in root-level environment variables into a stage, add anything
-            // in the current env global variable.
-            if (firstLevel) {
-                alreadySet.putAll(((EnvActionImpl) script.getProperty("env")).getEnvironment())
-            }
-
-            // Add parameters.
-            ((Map<String, Object>) script.getProperty("params")).each { k, v ->
-                alreadySet.put(k, v?.toString() ?: "")
-            }
-
-            // If we're being called for a stage, add any root level environment variables after resolving them.
-            if (parent != null) {
-                alreadySet.putAll(parent.resolveEnvVars(script, false))
-            }
-
-            List<String> unsetKeys = []
-            // Initially define the list of unset environment variable keys to the full list of keys for this environment
-            // directive.
-            unsetKeys.addAll(overrides.keySet())
-
-            Binding binding = new Binding(alreadySet)
-
-            // Also add the params global variable to deal with any references to params.FOO.
-            binding.setProperty("params", (Map<String, Object>) script.getProperty("params"))
-
-            // Do resolution
-            Map<String, String> resolved = roundRobin(binding, alreadySet, overrides, unsetKeys)
-
-            // Stash aside the resolved vars for use elsewhere, but only if we're not a nested call.
-            if (firstLevel) {
-                interimResolved.putAll(resolved)
-            }
-            return resolved
-        }
-    }
-
-    /**
-     * Loop over environment entries and try to resolve them. To prevent infinite looping for unresolvable variables,
-     * stop looping once we've hit as many unresolvable entries in a row as the total size of possible variables.
-     *
-     * @param binding The {@link Binding} containing already-set variables.
-     * @param preSet A map of environment variables we know have already been set.
-     * @param toSet A map of environment variables that are defined in the environment directive we're processing.
-     * @param unsetKeys A list of environment variable keys we know aren't yet set.
-     * @param otherKeysToAllow A list of additional environment variable keys to look for besides the ones defined
-     *          in the environment directive, such as credentials.
-     * @return A map of environment variables after we've resolved as many as we can.
-     */
-    private Map<String,String> roundRobin(Binding binding, Map<String,String> preSet, Map<String,String> toSet,
-                                          List<String> unsetKeys, List<String> otherKeysToAllow = []) {
-        Map<String,String> alreadySet = new TreeMap<>()
-        alreadySet.putAll(preSet)
-
-        int unsuccessfulCount = 0
-        // Stop once all keys have been resolved or we've looped over everything enough that we know no further
-        // resolution is possible.
-        while (!unsetKeys.isEmpty() && unsuccessfulCount <= toSet.size()) {
-            String nextKey = unsetKeys.first()
-
-            unsetKeys.remove(nextKey)
-            try {
-                String resolved = toSet.get(nextKey)
-
-                // Only do the eval here if the string actually contains another environment variable we know about.
-                // This is to defer evaluation of things like ${WORKSPACE} or currentBuild.getNumber() until later.
-                if (containsVariable(resolved, toSet.keySet()) ||
-                    containsVariable(resolved, alreadySet.keySet()) ||
-                    containsVariable(resolved, otherKeysToAllow)) {
-                    resolved = resolveAsScript(binding, resolved)
-                }
-                // Make sure we escape backslashes - they'll only show up at this point if they were '\\' in the original.
-                resolved = StringUtils.replace(resolved, '\\', '\\\\')
-                alreadySet.put(nextKey, resolved)
-                binding.setVariable(nextKey, resolved)
-                unsuccessfulCount = 0
-            } catch (_) {
-                unsuccessfulCount++
-                unsetKeys.add(nextKey)
-            }
-        }
-
-        return alreadySet
-    }
-
-    private boolean containsVariable(String var, Collection<String> keys) {
-        def group = (var =~ /(\$\{.*?\})/)
-        def found = group.any { m ->
-            keys.any { k ->
-                String curlies = m[1]
-                return curlies.matches(/.*\W${k}\W.*/)
-            }
-        }
-        if (!found) {
-            def explicit = (var =~ /(\$.*?)\W/)
-            found = explicit.any { m ->
-                keys.any { k ->
-                    String single = m[1]
-                    return single == '$' + k
+        original.variables.each { k, v ->
+            // Filter for only the desired value type - ModelASTValue for env vars, ModelASTInternalFunctionCall for
+            // credentials.
+            if (v instanceof ModelASTElement && valueType.isInstance(v) && v.sourceLocation != null) {
+                if (v instanceof Expression) {
+                    ClosureExpression expr = translateValue((Expression)v, keys)
+                    if (expr != null) {
+                        closures.put(k.key, expr)
+                    } else {
+                        throw new IllegalArgumentException("Empty closure for ${k.key}")
+                    }
                 }
             }
         }
-        return found
+
+        return ASTParserUtils.buildAst {
+            methodCall {
+                closure {
+                    block {
+                        declaration {
+                            variable "resolver"
+                            token "="
+                            constructorCall(EnvironmentResolver) {
+                                argumentList {}
+                            }
+                        }
+                        closures.each { k, v ->
+                            methodCall {
+                                variable "resolver"
+                                constant "addClosure"
+                                argumentList {
+                                    constant k
+                                    expression.add(v)
+                                }
+                            }
+                        }
+                        returnStatement {
+                            variable "resolver"
+                        }
+                    }
+                }
+                constant "call"
+                argumentList {}
+            }
+        }
     }
 
-    private String replaceEnvDotInCurlies(String inString) {
-        def group = (inString =~ /(\$\{.*?\})/)
-        def outString = inString
-
-        group.each { m ->
-            String toReplace = m[1]
-            String replaced = toReplace.replaceAll(/env\.([a-zA-Z_][a-zA-Z0-9_]*?)/,
-                { full, part -> "${part}" })
-
-            outString = StringUtils.replace(outString, toReplace, replaced)
+    @CheckForNull
+    private static ClosureExpression translateValue(Expression expr, Set<String> keys) {
+        ASTNode node = ASTParserUtils.buildAst {
+            closure {
+                block {
+                    returnStatement {
+                        if (expr instanceof ConstantExpression) {
+                            expression.add(expr)
+                        } else if (expr instanceof BinaryExpression &&
+                            ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
+                            BinaryExpression binExpr = (BinaryExpression) expr
+                            binary {
+                                expression.add(translateValue(binExpr.leftExpression, keys))
+                                token "+"
+                                expression.add(translateValue(binExpr.rightExpression, keys))
+                            }
+                        } else if (expr instanceof GStringExpression) {
+                            GStringExpression gStrExpr = (GStringExpression) expr
+                            gString(gStrExpr.text) {
+                                strings {
+                                    gStrExpr.strings.each { s ->
+                                        expression.add(s)
+                                    }
+                                }
+                                values {
+                                    gStrExpr.values.each { v ->
+                                        expression.add(translateValue(v, keys))
+                                    }
+                                }
+                            }
+                        } else if (expr instanceof PropertyExpression) {
+                            PropertyExpression propExpr = (PropertyExpression) expr
+                            if (propExpr.objectExpression instanceof VariableExpression) {
+                                if (((VariableExpression)propExpr.objectExpression).name == "env" &&
+                                    keys.contains(propExpr.propertyAsString)) {
+                                    expression.add(getterCall(propExpr.propertyAsString))
+                                } else {
+                                    property {
+                                        expression.add(translateValue(propExpr.objectExpression, keys))
+                                        expression.add(propExpr.property)
+                                    }
+                                }
+                            } else {
+                                expression.add(propExpr)
+                            }
+                        } else if (expr instanceof MethodCallExpression) {
+                            MethodCallExpression mce = (MethodCallExpression) expr
+                            methodCall {
+                                expression.add(mce.objectExpression)
+                                expression.add(mce.method)
+                                argumentList {
+                                    mce.arguments.each { a ->
+                                        expression.add(translateValue(a, keys))
+                                    }
+                                }
+                            }
+                        } else if (expr instanceof VariableExpression) {
+                            VariableExpression ve = (VariableExpression)expr
+                            if (keys.contains(ve.name)) {
+                                expression.add(getterCall(ve.name))
+                            } else {
+                                methodCall {
+                                    methodCall {
+                                        variable("this")
+                                        constant "getScript"
+                                        argumentList {}
+                                    }
+                                    constant("getProperty")
+                                    argumentList {
+                                        constant(ve.name)
+                                    }
+                                }
+                            }
+                        } else if (expr instanceof ElvisOperatorExpression) {
+                            ElvisOperatorExpression elvis = (ElvisOperatorExpression) expr
+                            elvisOperator {
+                                expression.add(translateValue(elvis.trueExpression, keys))
+                                expression.add(translateValue(elvis.falseExpression, keys))
+                            }
+                        } else {
+                            throw new IllegalArgumentException("Got an unexpected " + expr.getClass())
+                        }
+                    }
+                }
+            }
         }
 
-        return outString
+        return node instanceof ClosureExpression ? (ClosureExpression) node : null
     }
 
-    public static class EnvValue implements Serializable {
-        public boolean isLiteral
-        public Object value
+    private static MethodCallExpression getterCall(String name) {
+        return (MethodCallExpression)ASTParserUtils.buildAst {
+            methodCall {
+                methodCall {
+                    variable("this")
+                    constant "getClosure"
+                    argumentList {
+                        constant name
+                    }
+                }
+                constant "call"
+                argumentList{}
+            }
+        }
     }
 
-    private String resolveAsScript(Binding binding, String script) {
-        String toRun = Utils.prepareForEvalToString(script)
-        SecureGroovyScript toExec = new SecureGroovyScript(toRun, true)
-            .configuring(ApprovalContext.create().withCurrentUser())
-        return Utils.unescapeFromEval((String)toExec.evaluate(this.class.getClassLoader(), binding))
+    static String getterName(String name) {
+        return "get" + MetaClassHelper.capitalize(name)
     }
+
+    static class EnvCounter {
+        private int count = 0
+
+        int getAndIncr() {
+            return ++count
+        }
+    }
+
+    static class EnvironmentResolver implements Serializable {
+        private static final long serialVersionUID = 1L
+
+        private CpsScript script
+        private Map<String,Closure> closureMap = new TreeMap<>()
+
+        @Whitelisted
+        EnvironmentResolver() {
+        }
+
+        void setScript(CpsScript script) {
+            this.script = script
+        }
+
+        CpsScript getScript() {
+            return script
+        }
+
+        void addClosure(String key, Closure closure) {
+            this.closureMap.put(key, closure)
+        }
+
+        Closure getClosure(String key) {
+            return closureMap.get(key)
+        }
+
+        Object callClosure(String key) {
+            return getClosure(key).call()
+        }
+
+        Map<String,Closure> getClosureMap() {
+            return closureMap
+        }
+    }
+
 }
