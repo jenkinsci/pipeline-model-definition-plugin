@@ -205,8 +205,9 @@ class ModelParser implements Parser {
             }
         }
 
+        r.validate(validator)
+
         if (!secondaryRun) {
-            r.validate(validator)
             pipelineBlock.whole.arguments = (ArgumentListExpression) ASTParserUtils.buildAst {
                 argumentList {
                     closure {
