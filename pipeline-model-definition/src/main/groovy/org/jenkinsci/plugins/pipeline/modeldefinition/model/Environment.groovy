@@ -134,6 +134,7 @@ public class Environment implements Serializable {
                             }
                         } else if (expr instanceof GStringExpression) {
                             GStringExpression gStrExpr = (GStringExpression) expr
+
                             gString(gStrExpr.text) {
                                 strings {
                                     gStrExpr.strings.each { s ->
@@ -142,7 +143,11 @@ public class Environment implements Serializable {
                                 }
                                 values {
                                     gStrExpr.values.each { v ->
-                                        expression.add(translateValue(v, keys))
+                                        methodCall {
+                                            expression.add(translateValue(v, keys))
+                                            constant "call"
+                                            argumentList {}
+                                        }
                                     }
                                 }
                             }

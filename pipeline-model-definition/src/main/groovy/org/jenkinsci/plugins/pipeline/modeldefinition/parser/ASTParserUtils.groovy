@@ -37,7 +37,9 @@ import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression
 import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.GStringExpression
 import org.codehaus.groovy.ast.expr.ListExpression
+import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
@@ -119,6 +121,22 @@ class ASTParserUtils {
             printer("- static method '${n.method}':", ind)
             prettyPrint(n.receiver, ind)
             prettyPrint(n.arguments, ind)
+        } else if (n instanceof MethodCallExpression) {
+            printer("- method '${n.method}':", ind)
+            prettyPrint(n.receiver, ind)
+            prettyPrint(n.arguments, ind)
+        }else if (n instanceof MapEntryExpression) {
+            prettyPrint(n.keyExpression, ind)
+            prettyPrint(n.valueExpression, ind)
+        } else if (n instanceof ExpressionStatement) {
+            prettyPrint(n.expression, ind)
+        } else if (n instanceof GStringExpression) {
+            printer("- gstring:", ind)
+            ind++
+            printer("- strings:", ind)
+            n.strings.each { prettyPrint(it, ind) }
+            printer("- values:", ind)
+            n.values.each { prettyPrint(it, ind) }
         } else {
             printer("- ${n}", ind)
         }
