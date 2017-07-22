@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.runtime.MetaClassHelper
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -222,7 +223,32 @@ public class Environment implements Serializable {
                                 expression.add(translateAndCall(elvis.trueExpression, keys))
                                 expression.add(translateAndCall(elvis.falseExpression, keys))
                             }
+                        } else if (expr instanceof ClosureExpression) {
+                            ClosureExpression cl = (ClosureExpression) expr
+                            closure {
+                                parameters {
+                                    cl.parameters.each {
+                                        expression.add(it)
+                                    }
+                                }
+                                block {
+                                    ASTParserUtils.eachStatement(cl.code) { s ->
+                                        if (s instanceof ExpressionStatement) {
+                                            ExpressionStatement stmt = (ExpressionStatement) s
+                                            expression {
+                                                expression.add(translateAndCall(stmt.expression, keys))
+                                            }
+                                        } else {
+                                            // TODO: Message asking to report this so I can address it.
+
+                                            throw new IllegalArgumentException("Got an unexpected" + s.getClass())
+                                        }
+
+                                    }
+                                }
+                            }
                         } else {
+                            // TODO: Message asking to report this so I can address it.
                             throw new IllegalArgumentException("Got an unexpected " + expr.getClass())
                         }
                     }
