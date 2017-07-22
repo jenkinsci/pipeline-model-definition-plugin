@@ -50,23 +50,5 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
                 }
             }
         });
-
-
-        cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.INSTRUCTION_SELECTION) {
-            @Override
-            public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-                ModuleNode ast = source.getAST();
-                System.err.println("post mod meth:");
-                for (Statement s : ast.getStatementBlock().getStatements()) {
-                    System.err.println(" stmt: " + s);
-                }
-                for (ClassNode c : ast.getClasses()) {
-                    System.err.println("- class: " + c.getName());
-                    for (MethodNode m : c.getMethods()) {
-                        System.err.println(" - " + m.getCode().getText());
-                    }
-                }
-            }
-        });
     }
 }

@@ -81,16 +81,14 @@ public class Root implements NestedModel, Serializable {
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
      *
-     * @return a list of "key=value" strings.
+     * @return a map of keys to closures.
      */
-    List<List<Object>> getEnvVars(CpsScript script) {
+    Map<String,Closure> getEnvVars(CpsScript script) {
         if (environment != null) {
             environment.envResolver.setScript(script)
-            return environment.envResolver.closureMap.collect { k, v ->
-                [k, v]
-            }
+            return environment.envResolver.closureMap
         } else {
-            return []
+            return [:]
         }
     }
 

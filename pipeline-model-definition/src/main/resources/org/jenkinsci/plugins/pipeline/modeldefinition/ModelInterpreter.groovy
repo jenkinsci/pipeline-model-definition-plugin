@@ -50,20 +50,7 @@ public class ModelInterpreter implements Serializable {
     }
 
     def call(CpsClosure closure) {
-        def obj = closure.call()
-        Root root = (Root) obj
-        System.err.println("SET ROOT")
-/*        ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
-
-        closure.delegate = m
-        closure.resolveStrategy = Closure.DELEGATE_FIRST
-        closure.call()*/
-/*
-        Closure getRoot = { System.err.println delegate.fooBar; return declarativeModelRoot }
-        getRoot.delegate = script
-        getRoot.resolveStrategy = Closure.DELEGATE_FIRST
-
-        Root root = (Root)getRoot.call()*/
+        Root root = (Root) closure.call()
         Throwable firstError
 
         if (root != null) {
@@ -216,18 +203,14 @@ public class ModelInterpreter implements Serializable {
     /**
      * Execute a body closure within a "withEnv" block.
      *
-     * @param envVars A list of "FOO=BAR" environment variables. Can be null.
+     * @param envVars A map of env vars to closures.
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withEnvBlock(List<List<Object>> envVars, Closure body) {
+    def withEnvBlock(Map<String,Closure> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
-            List<String> evaledEnv = new ArrayList<>()
-            for (int i = 0; i < envVars.size(); i++) {
-                List<Object> envVar = envVars.get(i)
-                String key = (String)envVar.get(0)
-                Closure value = (Closure)envVar.get(1)
-                evaledEnv.add("${key}=${value.call()}")
+            List<String> evaledEnv = envVars.collect { k, v ->
+                "${key}=${value.call()}"
             }
             return {
                 script.withEnv(evaledEnv) {

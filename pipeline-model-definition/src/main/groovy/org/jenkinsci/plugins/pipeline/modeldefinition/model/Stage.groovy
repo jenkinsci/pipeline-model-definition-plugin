@@ -71,55 +71,18 @@ public class Stage implements NestedModel, Serializable {
         this.environment = environment
     }
 
-    Stage name(String n) {
-        this.name = n
-        return this
-    }
-
-    Stage agent(Agent a) {
-        this.agent = a?.convertZeroArgs()
-        return this
-    }
-
-    Stage steps(StepsBlock s) {
-        this.steps = s
-        return this
-    }
-
-    Stage post(PostStage post) {
-        this.post = post
-        return this
-    }
-
-    Stage when(StageConditionals when) {
-        this.when = when
-        return this
-    }
-
-    Stage tools(Tools tools) {
-        this.tools = tools
-        return this
-    }
-
-    Stage environment(Environment environment) {
-        this.environment = environment
-        return this
-    }
-
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
      *
-     * @return a list of "key=value" strings.
+     * @return a map of keys to closures.
      */
-    List<List<Object>> getEnvVars(CpsScript script) {
+    Map<String,Closure> getEnvVars(CpsScript script) {
         if (environment != null) {
             environment.envResolver.setScript(script)
-            return environment.envResolver.closureMap.collect { k, v ->
-                [k, v]
-            }
+            return environment.envResolver.closureMap
         } else {
-            return []
+            return [:]
         }
     }
 

@@ -64,7 +64,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
-import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
@@ -205,17 +204,6 @@ class ASTParserUtils {
         return null;
     }
 
-    static List<String> methodNamesFromBlock(BlockStatement block) {
-        return block.statements.collect { s ->
-            def mc = matchMethodCall(s);
-            if (mc != null) {
-                return matchMethodName(mc);
-            } else {
-                return null
-            }
-        }
-    }
-
     static <T> List<T> eachStatement(Statement st, @ClosureParams(FirstParam.class) Closure<T> c) {
         return asBlock(st).statements.collect(c)
     }
@@ -347,35 +335,6 @@ class ASTParserUtils {
 
         return null
     }
-
-/*
-    public ASTNode parseArgumentToSpec(Expression e, SourceUnit sourceUnit) {
-        return new AstBuilder().buildFromSpec {
-            if (e instanceof ConstantExpression) {
-                expression.add(e)
-            } else if (e instanceof GStringExpression) {
-            GStringExpression g = (GStringExpression) e
-            return {
-                gString g.text, {
-                    strings {
-                        g.strings.each { s ->
-                            constant s.value
-                        }
-                    }
-                    values {
-                        g.values.each { v ->
-                            if (v instanceof VariableExpression) {
-                                variable v.name
-                            } else if (v instanceof ConstantExpression) {
-                                constant v.value
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-*/
 
     static String parseStringLiteral(Expression exp, ErrorCollector errorCollector = null) {
         def s = matchStringLiteral(exp)
