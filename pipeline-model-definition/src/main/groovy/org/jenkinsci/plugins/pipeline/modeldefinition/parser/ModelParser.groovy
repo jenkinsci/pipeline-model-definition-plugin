@@ -207,7 +207,9 @@ class ModelParser implements Parser {
 
         r.validate(validator)
 
-        if (!secondaryRun) {
+        // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
+        // are no errors.
+        if (!secondaryRun && errorCollector.errorCount == 0) {
             pipelineBlock.whole.arguments = (ArgumentListExpression) ASTParserUtils.buildAst {
                 argumentList {
                     closure {

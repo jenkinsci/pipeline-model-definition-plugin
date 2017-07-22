@@ -137,7 +137,10 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTAgent original) {
-        if (original != null && original.sourceLocation != null && original.sourceLocation instanceof Statement) {
+        if (original != null &&
+            original.sourceLocation != null &&
+            original.sourceLocation instanceof Statement &&
+            original.agentType != null) {
             return ASTParserUtils.buildAst {
                 constructorCall(Agent) {
                     argumentList {
