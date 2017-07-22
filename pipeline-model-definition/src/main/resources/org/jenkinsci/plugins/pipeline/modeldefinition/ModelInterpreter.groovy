@@ -210,7 +210,7 @@ public class ModelInterpreter implements Serializable {
     def withEnvBlock(Map<String,Closure> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
             List<String> evaledEnv = envVars.collect { k, v ->
-                "${key}=${value.call()}"
+                "${k}=${v.call()}"
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -238,16 +238,10 @@ public class ModelInterpreter implements Serializable {
         if (environment != null) {
             try {
                 RunWrapper currentBuild = script.getProperty("currentBuild")
-                List<List<Object>> credList = Utils.getCredsFromResolver(environment, script)
-                for (int i = 0; i < credList.size(); i++) {
-                    List<Object> credTuple = credList.get(i)
-                    String key = (String) credTuple.get(0)
-                    System.err.println("checking cred for ${key}")
-                    Closure value = (Closure) credTuple.get(1)
-                    String id = (String) value.call()
-                    System.err.println("cred done for ${key}: ${id}")
+                Utils.getCredsFromResolver(environment, script).each { k, v ->
+                    String id = (String) v.call()
                     CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
-                    creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
+                    creds.put(k, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
                 }
             } catch (MissingMethodException e) {
                 try {

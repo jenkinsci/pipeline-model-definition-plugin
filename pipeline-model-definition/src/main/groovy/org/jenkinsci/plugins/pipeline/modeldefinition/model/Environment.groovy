@@ -204,6 +204,8 @@ public class Environment implements Serializable {
                             VariableExpression ve = (VariableExpression)expr
                             if (keys.contains(ve.name)) {
                                 expression.add(getterCall(ve.name))
+                            } else if (ve.name == "this") {
+                                expression.add(ve)
                             } else {
                                 System.err.println("ve.name: ${ve.name}")
                                 methodCall {

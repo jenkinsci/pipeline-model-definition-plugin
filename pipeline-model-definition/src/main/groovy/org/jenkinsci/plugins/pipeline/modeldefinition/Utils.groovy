@@ -316,14 +316,12 @@ public class Utils {
         return s
     }
 
-    static List<List<Object>> getCredsFromResolver(Environment environment, CpsScript script) {
+    static Map<String,Closure> getCredsFromResolver(Environment environment, CpsScript script) {
         if (environment != null) {
             environment.credsResolver.setScript(script)
-            return environment.credsResolver.closureMap.collect { k, v ->
-                [k, v]
-            }
+            return environment.credsResolver.closureMap
         } else {
-            return []
+            return [:]
         }
     }
 
