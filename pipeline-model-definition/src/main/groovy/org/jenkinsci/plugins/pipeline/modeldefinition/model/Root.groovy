@@ -30,7 +30,6 @@ import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
@@ -67,7 +66,6 @@ public class Root implements NestedModel, Serializable {
     @Whitelisted
     Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
          Triggers triggers, Parameters parameters, Libraries libraries) {
-        System.err.println("Did we get here?")
         this.agent = agent
         this.stages = stages
         this.post = post
@@ -77,51 +75,6 @@ public class Root implements NestedModel, Serializable {
         this.triggers = triggers
         this.parameters = parameters
         this.libraries = libraries
-    }
-
-    Root stages(Stages s) {
-        this.stages = s
-        return this
-    }
-
-    Root post(PostBuild p) {
-        this.post = p
-        return this
-    }
-
-    Root agent(Agent a) {
-        this.agent = a.convertZeroArgs()
-        return this
-    }
-
-    Root environment(Environment m) {
-        this.environment = m
-        return this
-    }
-
-    Root tools(Tools t) {
-        this.tools = t
-        return this
-    }
-
-    Root options(Options p) {
-        this.options = p
-        return this
-    }
-
-    Root triggers(Triggers t) {
-        this.triggers = t
-        return this
-    }
-
-    Root parameters(Parameters p) {
-        this.parameters = p
-        return this
-    }
-
-    Root libraries(Libraries l) {
-        this.libraries = l
-        return this
     }
 
     /**
