@@ -59,7 +59,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
@@ -271,14 +275,45 @@ class ASTParserUtils {
     }
 
     static ASTNode transformWhenConditionToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-        if (original != null && original instanceof ModelASTWhenCondition) {
-            ModelASTWhenCondition cond = (ModelASTWhenCondition) original
-            if (cond.getSourceLocation() != null && cond.getSourceLocation() instanceof Statement) {
-                MethodCallExpression methCall = matchMethodCall((Statement) cond.getSourceLocation())
+        if (original != null) {
+            DeclarativeStageConditionalDescriptor parentDesc =
+                (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
+                    DeclarativeStageConditional.class, original.name)
+            if (original instanceof ModelASTWhenCondition) {
+                ModelASTWhenCondition cond = (ModelASTWhenCondition) original
+                if (cond.getSourceLocation() != null && cond.getSourceLocation() instanceof Statement) {
+                    MethodCallExpression methCall = matchMethodCall((Statement) cond.getSourceLocation())
 
-                if (methCall != null) {
-                    return methodCallToDescribable(methCall)
+                    if (methCall != null) {
+                        if (cond.children.isEmpty()) {
+                            return methodCallToDescribable(methCall)
+                        } else {
+                            return buildAst {
+                                staticMethodCall(Utils, "instantiateDescribable") {
+                                    argumentList {
+                                        classExpression(parentDesc.clazz)
+                                        map {
+                                            mapEntry {
+                                                constant UninstantiatedDescribable.ANONYMOUS_KEY
+                                                if (parentDesc.allowedChildrenCount == 1) {
+                                                    expression.add(transformWhenConditionToRuntimeAST(cond.children.first()))
+                                                } else {
+                                                    list {
+                                                        cond.children.each { child ->
+                                                            expression.add(transformWhenConditionToRuntimeAST(child))
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            } else if (original instanceof ModelASTWhenExpression) {
+                return parentDesc.transformToRuntimeAST(original)
             }
         }
         return GeneralUtils.constX(null)
@@ -380,6 +415,7 @@ class ASTParserUtils {
                         singleArg.mapEntryExpressions.each { entry ->
                             mapEntry {
                                 expression.add(entry.keyExpression)
+                                System.err.println("arg map value: ${entry.valueExpression}")
                                 if (entry.valueExpression instanceof MethodCallExpression) {
                                     MethodCallExpression m = (MethodCallExpression) entry.valueExpression
                                     expression.add(methodCallToDescribable(m))
@@ -391,6 +427,7 @@ class ASTParserUtils {
                     } else {
                         mapEntry {
                             constant UninstantiatedDescribable.ANONYMOUS_KEY
+                            System.err.println("singleArg value: ${singleArg}")
                             if (singleArg instanceof MethodCallExpression) {
                                 expression.add(methodCallToDescribable(singleArg))
                             } else {

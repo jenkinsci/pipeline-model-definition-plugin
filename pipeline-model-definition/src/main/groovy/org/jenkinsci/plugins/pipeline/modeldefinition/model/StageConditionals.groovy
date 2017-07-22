@@ -88,11 +88,12 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
                     argumentList {
                         list {
                             original.getConditions().each { cond ->
+                                System.err.println("condition: ${cond} (${cond.name})")
                                 if (cond.name != null) {
                                     DeclarativeStageConditionalDescriptor desc =
                                         (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
-                                            DeclarativeStageConditionalDescriptor.class, cond.name)
-
+                                            DeclarativeStageConditional.class, cond.name)
+                                    System.err.println("desc: ${desc}")
                                     if (desc != null) {
                                         expression.add(desc.transformToRuntimeAST(cond))
                                     }
