@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.expr.ArgumentListExpression
 import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
@@ -37,8 +38,11 @@ import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.runtime.MetaClassHelper
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
@@ -93,10 +97,18 @@ public class Environment implements Serializable {
         }
         return constX(null)
     }
-    
-    @CheckForNull
+
+    /**
+     * Create the AST for the {@link EnvironmentResolver} for this environment value type.
+     *
+     * @param original The parsed model of the environment
+     * @param valueType Either {@link ModelASTInternalFunctionCall} for credentials or {@link ModelASTValue} for env.
+     * @return The AST for instantiating the resolver.
+     */
     private static ASTNode generateResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
         Set<String> keys = new HashSet<>()
+
+        // We need to keep track of the environment keys for use in
         keys.addAll(original.variables.findAll { k, v -> v instanceof ModelASTValue }.collect { k, v -> k.key })
 
         MapExpression closureMap = new MapExpression()
@@ -167,6 +179,7 @@ public class Environment implements Serializable {
                         } else if (expr instanceof PropertyExpression) {
                             PropertyExpression propExpr = (PropertyExpression) expr
                             if (propExpr.objectExpression instanceof VariableExpression) {
+                                System.err.println("propExpr: ${propExpr}")
                                 if (((VariableExpression)propExpr.objectExpression).name == "env" &&
                                     keys.contains(propExpr.propertyAsString)) {
                                     expression.add(getterCall(propExpr.propertyAsString))
@@ -182,7 +195,7 @@ public class Environment implements Serializable {
                         } else if (expr instanceof MethodCallExpression) {
                             MethodCallExpression mce = (MethodCallExpression) expr
                             methodCall {
-                                expression.add(mce.objectExpression)
+                                expression.add(translateAndCall(mce.objectExpression, keys))
                                 expression.add(mce.method)
                                 argumentList {
                                     mce.arguments.each { a ->
@@ -195,13 +208,13 @@ public class Environment implements Serializable {
                             if (keys.contains(ve.name)) {
                                 expression.add(getterCall(ve.name))
                             } else {
-                                property {
-                                    methodCall {
-                                        variable("this")
-                                        constant "getScript"
-                                        argumentList {}
+                                System.err.println("ve.name: ${ve.name}")
+                                methodCall {
+                                    variable("this")
+                                    constant "getScriptPropOrParam"
+                                    argumentList {
+                                        constant ve.name
                                     }
-                                    constant ve.name
                                 }
                             }
                         } else if (expr instanceof ElvisOperatorExpression) {
@@ -270,11 +283,6 @@ public class Environment implements Serializable {
             return script
         }
 
-        @Whitelisted
-        Object getScriptProperty(String key) {
-            return script.getProperty(key)
-        }
-
         void setFallback(EnvironmentResolver fallback) {
             this.fallback = fallback
         }
@@ -289,7 +297,14 @@ public class Environment implements Serializable {
                 return closureMap.get(key)
             } else if (fallback != null) {
                 return fallback.getClosure(key)
+            } else {
+                return null
             }
+        }
+
+        @Whitelisted
+        Object getScriptPropOrParam(String name) {
+            return Utils.getScriptPropOrParam(script, name)
         }
 
         Object callClosure(String key) {

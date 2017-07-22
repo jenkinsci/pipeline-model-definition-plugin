@@ -77,6 +77,7 @@ import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner
 import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
@@ -225,6 +226,14 @@ public class Utils {
         } catch (_) {
             // If we get an IllegalStateException, "checkout scm" isn't valid, so return false.
             return false
+        }
+    }
+
+    static Object getScriptPropOrParam(CpsScript script, String name) {
+        try {
+            return script.getProperty(name)
+        } catch (MissingPropertyException e) {
+            return script.params?.get(name)
         }
     }
 
