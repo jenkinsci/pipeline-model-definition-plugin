@@ -74,7 +74,7 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
         return multipleNestedTypeCache.get(MULTIPLE_NESTED_CACHE_KEY)
     }
 
-    public final rawClosure
+    public final Closure rawClosure
 
     @Whitelisted
     StageConditionals(Closure rawClosure) {

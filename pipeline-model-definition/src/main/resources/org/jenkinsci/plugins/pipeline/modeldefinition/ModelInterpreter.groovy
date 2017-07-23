@@ -469,21 +469,34 @@ public class ModelInterpreter implements Serializable {
         } else {
             // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
             // to actually instantiate the conditional now, via a closure.
-            Closure c = when.rawClosure
-            c.delegate = script
-            c.resolveStrategy = Closure.DELEGATE_FIRST
-
-            for (Object rawCond : c.call()) {
-                if (rawCond instanceof DeclarativeStageConditional) {
-                    if (!((DeclarativeStageConditional) rawCond).getScript(script).evaluate()) {
-                        return false
-                    }
-                }
+            return instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class).every {
+                it.getScript(script).evaluate()
             }
-            return true
         }
     }
 
+    /**
+     * Takes a closure that evaluates into a list of instances of a given class, sets that closure to delegate to our
+     * CpsScript, calls it, and returns a list of the instances of that class.
+     *
+     * @param rawClosure
+     * @param instanceType
+     * @return A list of instances
+     */
+    private <Z> List<Z> instancesFromClosure(Closure rawClosure, Class<Z> instanceType) {
+        rawClosure.delegate = script
+        rawClosure.resolveStrategy = Closure.DELEGATE_FIRST
+
+        List<Z> instanceList = []
+
+        rawClosure.call().each { inst ->
+            if (instanceType.isInstance(inst)) {
+                instanceList.add(instanceType.cast(inst))
+            }
+        }
+
+        return instanceList
+    }
     /**
      * Executes the post build actions for this build
      * @param root The root context we're executing in
