@@ -71,6 +71,25 @@ public class OptionsTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void envVarInOptions() throws Exception {
+        WorkflowRun b = expect("envVarInOptions")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
+        assertNotNull(bdp);
+        BuildDiscarder strategy = bdp.getStrategy();
+        assertNotNull(strategy);
+        assertEquals(LogRotator.class, strategy.getClass());
+        LogRotator lr = (LogRotator) strategy;
+        assertEquals(1, lr.getNumToKeep());
+
+    }
+
+    @Test
     public void multipleProperties() throws Exception {
         WorkflowRun b = expect(Result.FAILURE, "multipleProperties")
                 .logContains("[Pipeline] { (foo)",
@@ -135,6 +154,16 @@ public class OptionsTest extends AbstractModelDefTest {
     @Test
     public void simpleWrapper() throws Exception {
         expect("simpleWrapper")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Actions)")
+                .go();
+    }
+
+    @Test
+    public void envVarInWrapper() throws Exception {
+        expect("envVarInWrapper")
                 .logContains("[Pipeline] { (foo)",
                         "[Pipeline] timeout",
                         "hello")

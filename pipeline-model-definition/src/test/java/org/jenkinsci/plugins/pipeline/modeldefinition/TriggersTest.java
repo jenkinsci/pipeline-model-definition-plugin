@@ -65,6 +65,28 @@ public class TriggersTest extends AbstractModelDefTest {
         assertEquals("@daily", timer.getSpec());
     }
 
+    @Test
+    public void envVarInTriggers() throws Exception {
+        WorkflowRun b = expect("envVarInTriggers")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Actions)")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        PipelineTriggersJobProperty triggersJobProperty = p.getTriggersJobProperty();
+        assertNotNull(triggersJobProperty);
+        assertEquals(1, triggersJobProperty.getTriggers().size());
+        TimerTrigger.DescriptorImpl timerDesc = j.jenkins.getDescriptorByType(TimerTrigger.DescriptorImpl.class);
+
+        Trigger trigger = triggersJobProperty.getTriggerForDescriptor(timerDesc);
+        assertNotNull(trigger);
+
+        assertTrue(trigger instanceof TimerTrigger);
+        TimerTrigger timer = (TimerTrigger) trigger;
+        assertEquals("@daily", timer.getSpec());
+    }
+
     @Issue("JENKINS-44149")
     @Test
     public void triggersRemoved() throws Exception {

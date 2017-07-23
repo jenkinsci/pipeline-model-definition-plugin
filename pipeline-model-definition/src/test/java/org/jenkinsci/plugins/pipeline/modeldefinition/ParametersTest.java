@@ -62,6 +62,25 @@ public class ParametersTest extends AbstractModelDefTest {
         assertTrue(bpd.isDefaultValue());
     }
 
+    @Test
+    public void envVarInParameters() throws Exception {
+        WorkflowRun b = expect("envVarInParameters")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(pdp);
+
+        assertEquals(1, pdp.getParameterDefinitions().size());
+        assertEquals(BooleanParameterDefinition.class, pdp.getParameterDefinitions().get(0).getClass());
+        BooleanParameterDefinition bpd = (BooleanParameterDefinition) pdp.getParameterDefinitions().get(0);
+        assertEquals("flag", bpd.getName());
+        assertTrue(bpd.isDefaultValue());
+    }
+
     @Issue("JENKINS-44149")
     @Test
     public void paramsRemoved() throws Exception {
