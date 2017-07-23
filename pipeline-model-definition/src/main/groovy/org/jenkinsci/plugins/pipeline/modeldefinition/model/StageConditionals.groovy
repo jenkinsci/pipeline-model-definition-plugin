@@ -74,11 +74,11 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
         return multipleNestedTypeCache.get(MULTIPLE_NESTED_CACHE_KEY)
     }
 
-    public List<DeclarativeStageConditional> conditions = []
+    public final rawClosure
 
     @Whitelisted
-    public StageConditionals(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> inList) {
-        conditions.addAll(inList)
+    StageConditionals(Closure rawClosure) {
+        this.rawClosure = rawClosure
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhen original) {
@@ -86,16 +86,24 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
             return buildAst {
                 constructorCall(StageConditionals) {
                     argumentList {
-                        list {
-                            original.getConditions().each { cond ->
-                                System.err.println("condition: ${cond} (${cond.name})")
-                                if (cond.name != null) {
-                                    DeclarativeStageConditionalDescriptor desc =
-                                        (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
-                                            DeclarativeStageConditional.class, cond.name)
-                                    System.err.println("desc: ${desc}")
-                                    if (desc != null) {
-                                        expression.add(desc.transformToRuntimeAST(cond))
+                        closure {
+                            parameters {
+                            }
+                            block {
+                                returnStatement {
+                                    list {
+                                        original.getConditions().each { cond ->
+                                            System.err.println("condition: ${cond} (${cond.name})")
+                                            if (cond.name != null) {
+                                                DeclarativeStageConditionalDescriptor desc =
+                                                    (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
+                                                        DeclarativeStageConditional.class, cond.name)
+                                                System.err.println("desc: ${desc}")
+                                                if (desc != null) {
+                                                    expression.add(desc.transformToRuntimeAST(cond))
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

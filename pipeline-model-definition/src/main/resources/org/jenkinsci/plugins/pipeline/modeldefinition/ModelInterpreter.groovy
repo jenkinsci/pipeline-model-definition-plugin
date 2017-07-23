@@ -467,10 +467,17 @@ public class ModelInterpreter implements Serializable {
         if (when == null) {
             return true
         } else {
-            for (int i = 0; i < when.conditions.size(); i++) {
-                DeclarativeStageConditional c = when.conditions.get(i)
-                if (!c.getScript(script).evaluate()) {
-                    return false
+            // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
+            // to actually instantiate the conditional now, via a closure.
+            Closure c = when.rawClosure
+            c.delegate = script
+            c.resolveStrategy = Closure.DELEGATE_FIRST
+
+            for (Object rawCond : c.call()) {
+                if (rawCond instanceof DeclarativeStageConditional) {
+                    if (!((DeclarativeStageConditional) rawCond).getScript(script).evaluate()) {
+                        return false
+                    }
                 }
             }
             return true

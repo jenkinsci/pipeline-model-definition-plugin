@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression
+import org.codehaus.groovy.ast.expr.ElvisOperatorExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.GStringExpression
 import org.codehaus.groovy.ast.expr.ListExpression
@@ -52,6 +53,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -69,6 +71,9 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 
 
 class ASTParserUtils {
@@ -444,5 +449,4 @@ class ASTParserUtils {
             return expr
         }
     }
-
 }
