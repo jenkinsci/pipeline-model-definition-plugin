@@ -81,6 +81,13 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
         this.rawClosure = rawClosure
     }
 
+    /**
+     * Instantiates a stage's when variable. Note that this does not instantiate the when conditions inside, it just
+     * creates a closure that will return them when needed. This is to ensure lazy evaluation of variables.
+     *
+     * @param original
+     * @return
+     */
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhen original) {
         if (original != null && !original.getConditions().isEmpty()) {
             return buildAst {
