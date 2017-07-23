@@ -40,6 +40,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty;
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.recipes.LocalData;
@@ -70,6 +71,7 @@ public class OptionsTest extends AbstractModelDefTest {
 
     }
 
+    @Ignore("Properties are set before withEnv is called.")
     @Test
     public void envVarInOptions() throws Exception {
         WorkflowRun b = expect("envVarInOptions")
@@ -161,6 +163,9 @@ public class OptionsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("Technically we could allow env vars in wrappers, since wrappers get invoked within env block, but since " +
+            "we can't for properties, triggers, or parameters due to being invoked before the env block, let's be " +
+            "consistent")
     @Test
     public void envVarInWrapper() throws Exception {
         expect("envVarInWrapper")

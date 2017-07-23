@@ -31,6 +31,7 @@ import hudson.model.StringParameterDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -62,6 +63,7 @@ public class ParametersTest extends AbstractModelDefTest {
         assertTrue(bpd.isDefaultValue());
     }
 
+    @Ignore("Parameters are set before withEnv is called.")
     @Test
     public void envVarInParameters() throws Exception {
         WorkflowRun b = expect("envVarInParameters")
