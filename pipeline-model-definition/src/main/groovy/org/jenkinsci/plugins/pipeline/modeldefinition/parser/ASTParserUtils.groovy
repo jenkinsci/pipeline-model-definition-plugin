@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FirstParam
 import hudson.model.Describable
@@ -75,7 +76,7 @@ import javax.annotation.Nonnull
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 
-
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class ASTParserUtils {
 
     /**
