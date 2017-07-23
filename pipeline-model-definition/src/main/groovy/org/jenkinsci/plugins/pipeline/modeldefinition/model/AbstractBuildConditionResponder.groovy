@@ -27,6 +27,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -40,15 +41,15 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUti
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
+abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
     extends MappedClosure<StepsBlock,T> {
 
-    public AbstractBuildConditionResponder(Map<String,StepsBlock> m) {
+    AbstractBuildConditionResponder(Map<String,StepsBlock> m) {
         super(m)
     }
 
     @Override
-    public void modelFromMap(Map<String,Object> inMap) {
+    void modelFromMap(Map<String,Object> inMap) {
 
         inMap.each { conditionName, conditionClosure ->
             if (conditionName in BuildCondition.getConditionMethods().keySet()) {
@@ -60,7 +61,7 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         }
     }
 
-    public Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
+    Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
         if (getMap().containsKey(conditionName)) {
             BuildCondition condition = BuildCondition.getConditionMethods().get(conditionName)
             if (condition != null && condition.meetsCondition(runWrapperObj)) {
@@ -71,7 +72,7 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         return null
     }
 
-    public boolean satisfiedConditions(Object runWrapperObj) {
+    boolean satisfiedConditions(Object runWrapperObj) {
         Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
 
         return BuildCondition.orderedConditionNames.any { conditionName ->
@@ -79,16 +80,23 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         }
     }
 
+    /**
+     * Generate the AST (to be CPS-transformed) for instantiating a {@link AbstractBuildConditionResponder}.
+     *
+     * @param original The parsed AST model.
+     * @param container The class of the container we're instantiating.
+     * @return The AST for a constructor call for this container class, or the constant null expression if the original
+     * cannot be transformed.
+     */
     static ASTNode transformContainerToRuntimeAST(@CheckForNull ModelASTBuildConditionsContainer original,
                                                   @Nonnull Class container) {
-        if (original != null) {
+        if (ASTParserUtils.isGroovyAST(original)) {
             return buildAst {
                 constructorCall(container) {
                     argumentList {
                         map {
                             original.conditions.each { cond ->
                                 ASTNode steps = StepsBlock.transformToRuntimeAST(cond)
-                                System.err.println("STEPS: ${steps}")
                                 if (steps != null) {
                                     mapEntry {
                                         constant cond.condition

@@ -449,4 +449,13 @@ class ASTParserUtils {
             return expr
         }
     }
+
+    /**
+     * Determine whether this element can be used for Groovy AST transformation
+     * @param original
+     * @return True if the element isn't null, it has a source location, and that source location is an {@link ASTNode}
+     */
+    static boolean isGroovyAST(ModelASTElement original) {
+        return original != null && original.sourceLocation != null && original.sourceLocation instanceof ASTNode
+    }
 }
