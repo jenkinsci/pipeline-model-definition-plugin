@@ -26,6 +26,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.Queue
+import hudson.model.Run
 import jenkins.model.Jenkins
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ModuleNode
@@ -48,6 +50,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorIm
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -80,11 +83,26 @@ class ModelParser implements Parser {
 
     private final DescriptorLookupCache lookup
 
+    private final Run<?,?> build;
+
     public ModelParser(SourceUnit sourceUnit) {
+        this(sourceUnit, null)
+    }
+
+    public ModelParser(SourceUnit sourceUnit, @CheckForNull FlowExecution execution) {
         this.sourceUnit = sourceUnit;
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
         this.validator = new ModelValidatorImpl(errorCollector)
         this.lookup = DescriptorLookupCache.getPublicCache()
+        Queue.Executable executable = null
+        if (execution != null) {
+            executable = execution.getOwner().getExecutable();
+        }
+        if (executable != null && executable instanceof Run) {
+            this.build = (Run) executable
+        } else {
+            this.build = null
+        }
     }
 
     public @CheckForNull ModelASTPipelineDef parse(boolean secondaryRun = false) {
@@ -207,7 +225,7 @@ class ModelParser implements Parser {
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = new RuntimeASTTransformer(r).transform()
+            pipelineBlock.whole.arguments = new RuntimeASTTransformer(r).transform(build)
             ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)
         }
 

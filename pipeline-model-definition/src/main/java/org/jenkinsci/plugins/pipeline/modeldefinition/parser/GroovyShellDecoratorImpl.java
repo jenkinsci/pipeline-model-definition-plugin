@@ -27,11 +27,11 @@ import javax.annotation.CheckForNull;
 @Extension
 public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
     @Override
-    public void configureCompiler(@CheckForNull CpsFlowExecution context, CompilerConfiguration cc) {
+    public void configureCompiler(@CheckForNull final CpsFlowExecution execution, CompilerConfiguration cc) {
         ImportCustomizer ic = new ImportCustomizer();
         ic.addStarImports(NonCPS.class.getPackage().getName());
         ic.addStarImports("hudson.model","jenkins.model");
-        this.customizeImports(context, ic);
+        this.customizeImports(execution, ic);
         cc.addCompilationCustomizers(ic);
 
         cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.SEMANTIC_ANALYSIS) {
@@ -46,7 +46,7 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
                 // but until that happens,
                 // Using getNameWithoutPackage to make sure we don't end up executing without parsing when an inadvertent package name is put in the Jenkinsfile.
                 if (classNode.getNameWithoutPackage().equals(Converter.PIPELINE_SCRIPT_NAME)) {
-                    new ModelParser(source).parse();
+                    new ModelParser(source, execution).parse();
                 }
             }
         });

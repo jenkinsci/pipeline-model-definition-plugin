@@ -225,17 +225,6 @@ public class Utils {
         }
     }
 
-    static Root attachDeclarativeActions(@Nonnull Root root, CpsScript script) {
-        WorkflowRun r = script.$build()
-        if (r.getAction(ExecutionModelAction.class) == null) {
-            r.addAction(new ExecutionModelAction(root.stages.stages.collect { it.name }))
-        }
-
-        return root
-    }
-
-
-
     /**
      * Takes a string and makes sure it starts/ends with double quotes so that it can be evaluated correctly.
      *

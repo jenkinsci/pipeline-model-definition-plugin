@@ -54,9 +54,6 @@ public class ModelInterpreter implements Serializable {
         Throwable firstError
 
         if (root != null) {
-            // Attach the stages model to the run for introspection etc.
-            // TODO: Do this without reparsing, somehow thanks to the Root stuff.
-            root = Utils.attachDeclarativeActions(root, script)
             boolean postBuildRun = false
 
             try {

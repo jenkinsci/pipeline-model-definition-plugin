@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.JobProperty
+import hudson.model.Run
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.expr.*
@@ -35,6 +36,7 @@ import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
@@ -67,13 +69,17 @@ class RuntimeASTTransformer {
         this.pipelineDef = pipelineDef
     }
 
-    ArgumentListExpression transform() {
+    ArgumentListExpression transform(@CheckForNull Run<?,?> run) {
+        Expression root = transformRoot(pipelineDef)
+        if (run != null && run.getAction(ExecutionModelAction.class) == null) {
+            ModelASTStages stages = pipelineDef.stages
+            stages.removeSourceLocation()
+            run.addAction(new ExecutionModelAction(stages))
+        }
         return args(
             closureX(
                 GeneralUtils.block(
-                    returnS(
-                        transformRoot(pipelineDef)
-                    )
+                    returnS(root)
                 )
             )
         )
