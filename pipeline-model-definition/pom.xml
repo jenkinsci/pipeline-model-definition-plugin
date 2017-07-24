@@ -47,6 +47,26 @@
           <compatibleSinceVersion>0.8</compatibleSinceVersion>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>codenarc-maven-plugin</artifactId>
+        <version>0.22-1</version>
+        <configuration>
+          <groovyVersion>2.4.7</groovyVersion>
+          <sourceDirectory>${project.basedir}/src/main/</sourceDirectory>
+          <maxPriority1Violations>0</maxPriority1Violations>
+        </configuration>
+        <executions>
+          <execution>
+            <id>codenarc</id>
+            <goals>
+              <goal>codenarc</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
