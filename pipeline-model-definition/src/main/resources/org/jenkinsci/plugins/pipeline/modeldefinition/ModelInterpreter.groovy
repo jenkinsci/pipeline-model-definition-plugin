@@ -307,21 +307,21 @@ public class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def toolsBlock(Agent agent, Tools tools, Root root = null, Closure body) {
-        def toolsList = []
+        def toolsMap = [:]
         if (tools != null) {
-            toolsList = tools.mergeToolEntries(root?.tools)
+            toolsMap = tools.mergeToolEntries(root?.tools)
         } else if (root?.tools != null) {
-            toolsList = root.tools.getToolEntries()
+            toolsMap = root.tools.getMap()
         }
         // If there's no agent, don't install tools in the first place.
-        if (agent.hasAgent() && !toolsList.isEmpty()) {
+        if (agent.hasAgent() && !toolsMap.isEmpty()) {
             def toolEnv = []
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.toolInstall()) {
-                    toolEnv = actualToolsInstall(tools.getMap())
+                    toolEnv = actualToolsInstall(toolsMap)
                 }
             } else {
-                toolEnv = actualToolsInstall(tools.getMap())
+                toolEnv = actualToolsInstall(toolsMap)
             }
             return {
                 script.withEnv(toolEnv) {
