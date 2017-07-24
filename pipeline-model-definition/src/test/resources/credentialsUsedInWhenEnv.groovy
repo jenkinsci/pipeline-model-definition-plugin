@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,29 +22,33 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
-
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import hudson.model.JobProperty
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
-
-
-/**
- * Container for an individual {@link JobProperty} or {@link DeclarativeOption}
- *
- * @author Andrew Bayer
- */
-@ToString
-@EqualsAndHashCode
-class PropertyOptionContainer {
-    public final JobProperty property
-    public final DeclarativeOption option
-
-    public PropertyOptionContainer(JobProperty property, DeclarativeOption option) {
-        this.property = property
-        this.option = option
+pipeline {
+    environment {
+        CRED1 = credentials("cred1")
+        INBETWEEN = "Something ${CRED1} between"
     }
 
+    agent any
+
+    stages {
+        stage("foo") {
+            steps {
+                sh 'echo "CRED1 is $CRED1"'
+                sh 'echo "INBETWEEN is $INBETWEEN"'
+                sh 'echo $CRED1 > cred1.txt'
+                archive "**/*.txt"
+            }
+        }
+        stage("bar") {
+            when {
+                allOf {
+                    environment name: "CRED1", value: "Some secret text for 1"
+                    environment name: "INBETWEEN", value: "Something ${CRED1} between"
+                }
+            }
+            steps {
+                echo "Got to stage 'bar'"
+            }
+        }
+    }
 }

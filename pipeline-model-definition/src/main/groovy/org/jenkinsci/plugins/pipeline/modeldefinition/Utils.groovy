@@ -41,31 +41,27 @@ import hudson.model.Result
 import hudson.triggers.Trigger
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.control.SourceUnit
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.LabelAction
 import org.jenkinsci.plugins.workflow.actions.TagsAction
@@ -94,7 +90,6 @@ import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
@@ -173,27 +168,6 @@ public class Utils {
     }
 
     /**
-     * Finds the parameterized type argument for a {@link MethodsToList} class and returns it.
-     *
-     * @param c A class.
-     * @return The parameterized type argument for the class, if it's a {@link MethodsToList} class. Null otherwise.
-     */
-    public static Class<Describable> getMethodsToListType(Class c) {
-        Class retClass
-        c.genericInterfaces.each { Type t ->
-            if (t instanceof ParameterizedType) {
-                if (t.getRawType() instanceof Class
-                    && MethodsToList.class.isAssignableFrom((Class)t.getRawType())
-                    && t.getActualTypeArguments().first() instanceof Class) {
-                    retClass = (Class)t.actualTypeArguments.first()
-                }
-            }
-        }
-
-        return retClass
-    }
-
-    /**
      * Simple wrapper for isInstance to avoid whitelisting issues.
      *
      * @param c The class to check against
@@ -226,6 +200,14 @@ public class Utils {
         }
     }
 
+    static Object getScriptPropOrParam(CpsScript script, String name) {
+        try {
+            return script.getProperty(name)
+        } catch (MissingPropertyException e) {
+            return script.params?.get(name)
+        }
+    }
+
     static boolean hasJobProperties(CpsScript script) {
         WorkflowRun r = script.$build()
 
@@ -245,96 +227,6 @@ public class Utils {
                 return !(p instanceof BranchJobProperty)
             }
         }
-    }
-
-    static Root attachDeclarativeActions(@Nonnull Root root, CpsScript script) {
-        WorkflowRun r = script.$build()
-        ModelASTPipelineDef model = Converter.parseFromWorkflowRun(r)
-
-        if (model != null) {
-            ModelASTStages stages = model.stages
-
-            stages.removeSourceLocation()
-            if (r.getAction(ExecutionModelAction.class) == null) {
-                r.addAction(new ExecutionModelAction(stages))
-            }
-
-            if (root != null) {
-                root = populateFromModel(r, root, model)
-            }
-        }
-
-        return root
-    }
-
-    static Root populateFromModel(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        root.environment = environmentFromAST(r, model.environment)
-
-        List<Stage> stagesWithEnvs = []
-
-        root.stages.stages.each { s ->
-            stagesWithEnvs.add(populateSingleStageFromModel(r, model.stages, s))
-        }
-
-        root.stages.stages = stagesWithEnvs
-
-        return root
-    }
-
-    private static Stage populateSingleStageFromModel(@Nonnull WorkflowRun r, @Nonnull ModelASTStages allStages,
-                                                      @Nonnull Stage stage) {
-        ModelASTStage astStage = allStages.stages.find { it.name == stage.name }
-        stage.environment = environmentFromAST(r, astStage.environment)
-
-        if (astStage.when != null) {
-            List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
-                astStage.when.conditions.collect { c ->
-                    stageConditionalFromAST(c)
-                }
-
-            stage.when(new StageConditionals(processedConditions))
-        }
-
-        if (stage.parallel != null && !stage.parallel.stages.isEmpty()) {
-            List<Stage> nestedStages = []
-            stage.parallel.stages.each { s ->
-                nestedStages.add(populateSingleStageFromModel(r, astStage.parallel, s))
-            }
-            stage.parallel.stages = nestedStages
-        }
-
-        return stage
-    }
-
-    /**
-     * Translates the {@link ModelASTWhenContent} into a {@link DeclarativeStageConditional}.
-     *
-     * @param w
-     * @return A populated {@link DeclarativeStageConditional}
-     */
-    private static DeclarativeStageConditional stageConditionalFromAST(ModelASTWhenContent w) {
-        DeclarativeStageConditional c = null
-        DeclarativeStageConditionalDescriptor desc = DeclarativeStageConditionalDescriptor.byName(w.name)
-
-        if (w instanceof ModelASTWhenCondition) {
-            if (desc.allowedChildrenCount == 0) {
-                Object[] arg = new Object[1]
-                arg[0] = w.args?.argListToMap()
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, arg).instantiate()
-            } else if (desc.allowedChildrenCount == 1) {
-                DeclarativeStageConditional single = stageConditionalFromAST(w.children.first())
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, single).instantiate()
-            } else {
-                List<DeclarativeStageConditional> nested = w.children.collect { stageConditionalFromAST(it) }
-                c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, nested).instantiate()
-            }
-        } else if (w instanceof ModelASTWhenExpression) {
-            ModelASTWhenExpression expr = (ModelASTWhenExpression)w
-
-            c = (DeclarativeStageConditional)getDescribable(w.name, desc.clazz, expr.codeBlockAsString()).instantiate()
-        }
-
-        return c
     }
 
     /**
@@ -373,16 +265,21 @@ public class Utils {
     }
 
     static String unescapeDollars(String s) {
-        return StringUtils.replace(s, Environment.DOLLAR_PLACEHOLDER, '$')
+        return s
+    }
+
+    static Map<String,Closure> getCredsFromResolver(Environment environment, CpsScript script) {
+        if (environment != null) {
+            environment.credsResolver.setScript(script)
+            return environment.credsResolver.closureMap
+        } else {
+            return [:]
+        }
     }
 
     static List<List<String>> getEnvCredentials(Environment environment, CpsScript script, Environment parent = null) {
         List<List<String>> credsTuples = new ArrayList<>()
-        if (environment != null) {
-            credsTuples.addAll(environment.getCredsMap(script, parent)?.collect { k, v ->
-                [k, v]
-            })
-        }
+        // TODO: Creds
         return credsTuples
     }
 
@@ -415,33 +312,6 @@ public class Utils {
         }
     }
 
-    static Environment environmentFromAST(WorkflowRun r, ModelASTEnvironment inEnv) {
-        if (inEnv != null) {
-            Environment env = new Environment()
-
-            Map<String, Environment.EnvValue> inMap = [:]
-            Map<String, Environment.EnvValue> credMap = [:]
-            inEnv.variables.each { k, v ->
-                if (v instanceof ModelASTInternalFunctionCall) {
-                    ModelASTInternalFunctionCall func = (ModelASTInternalFunctionCall)v
-                    // TODO: JENKINS-41759 - look up the right method and dispatch accordingly, with the right # of args
-                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: func.args.first().isLiteral(),
-                        value: func.args.first().value)
-                    credMap.put(k.key, envVal)
-                } else {
-                    ModelASTValue val = (ModelASTValue)v
-                    Environment.EnvValue envVal = new Environment.EnvValue(isLiteral: val.isLiteral(), value: val.value)
-                    inMap.put(k.key, envVal)
-                }
-            }
-
-            env.setValueMap(inMap)
-            env.setCredsMap(credMap)
-            return env
-        } else {
-            return null
-        }
-    }
 
     static Predicate<FlowNode> endNodeForStage(final BlockStartNode startNode) {
         return new Predicate<FlowNode>() {
@@ -619,6 +489,12 @@ public class Utils {
         return knownTypes
     }
 
+    @Whitelisted
+    static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
+        DescribableModel<T> model = new DescribableModel<>(c)
+        return model?.instantiate(args)
+    }
+
     /**
      * Determines whether a given {@link UninstantiatedDescribable} is of a given type.
      *
@@ -634,6 +510,7 @@ public class Utils {
     /**
      * @param c The closure to wrap.
      */
+    @Whitelisted
     public static StepsBlock createStepsBlock(Closure c) {
         // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
         StepsBlock wrapper = new StepsBlock()
@@ -1000,4 +877,44 @@ public class Utils {
         return existing
     }
 
+
+    /**
+     * Obtains the source text of the given {@link org.codehaus.groovy.ast.ASTNode}.
+     */
+    public static String getSourceTextForASTNode(@Nonnull ASTNode n, @Nonnull SourceUnit sourceUnit) {
+        def result = new StringBuilder();
+        int beginLine = n.getLineNumber()
+        int endLine = n.getLastLineNumber()
+        int beginLineColumn = n.getColumnNumber()
+        int endLineLastColumn = n.getLastColumnNumber()
+
+        //The node seems to be lying about the last line, so go through each statement to try to make sure
+        if (n instanceof BlockStatement) {
+            for (Statement s : n.statements) {
+                if (s.lineNumber < beginLine) {
+                    beginLine = s.lineNumber
+                    beginLineColumn = s.columnNumber
+                }
+                if (s.lastLineNumber > endLine) {
+                    endLine = s.lastLineNumber
+                    endLineLastColumn = s.lastColumnNumber
+                }
+            }
+        }
+        for (int x = beginLine; x <= endLine; x++) {
+            String line = sourceUnit.source.getLine(x, null);
+            if (line == null)
+                throw new AssertionError("Unable to get source line"+x);
+
+            if (x == endLine) {
+                line = line.substring(0, endLineLastColumn - 1);
+            }
+            if (x == beginLine) {
+                line = line.substring(beginLineColumn - 1);
+            }
+            result.append(line).append('\n');
+        }
+
+        return result.toString().trim();
+    }
 }

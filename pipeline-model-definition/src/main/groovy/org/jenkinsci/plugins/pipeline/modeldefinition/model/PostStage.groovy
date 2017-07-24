@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  *
@@ -31,4 +32,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class PostStage  extends AbstractBuildConditionResponder<PostStage> {
+    @Whitelisted
+    PostStage(Map<String,StepsBlock> m) {
+        super(m)
+    }
 }

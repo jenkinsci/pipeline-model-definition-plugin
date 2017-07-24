@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,35 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
-/**
- * A container for a closure representing a block of steps to execute.
- *
- * @author Andrew Bayer
- */
-@ToString
-@EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class StepsBlock implements Serializable {
-    Closure closure
-
-    /**
-     * Empty constructor to get around some weirdness...
-     */
-    @Whitelisted
-    StepsBlock() {
-
+pipeline {
+    agent none
+    environment {
+        PARAM_NAME = "flag"
     }
-
-    // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
-    @Whitelisted
-    void setClosure(Object c) {
-        this.closure = (Closure) c
+    parameters {
+        booleanParam(defaultValue: true, description: '', name: "${PARAM_NAME}")
+    }
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
 }
+
+
+

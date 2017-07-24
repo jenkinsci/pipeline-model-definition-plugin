@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,14 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-
-/**
- * Marker for model objects that contain a {@link StepsBlock} and take an argument. Currently just {@link Stage}.
- *
- * @author Andrew Bayer
- */
-interface StepBlockWithOtherArgs {
-
+pipeline {
+    agent none
+    environment {
+        CRON_SCHEDULE = '@daily'
+    }
+    triggers {
+        cron("${CRON_SCHEDULE}")
+    }
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
+    }
 }
+
+
+

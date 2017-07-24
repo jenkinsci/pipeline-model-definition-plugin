@@ -30,11 +30,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
 import javax.annotation.CheckForNull
-
 
 /**
  * What context the build should run in - i.e., on a given label, within a container of a given Docker agent, or without
@@ -46,6 +46,12 @@ import javax.annotation.CheckForNull
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Agent extends MappedClosure<Object,Agent> implements Serializable {
+
+    @Whitelisted
+    Agent(Map<String,Object> inMap) {
+        resultMap = inMap
+    }
+
     @Deprecated
     public DeclarativeAgent getDeclarativeAgent(Object context) {
         return getDeclarativeAgent(null, context)

@@ -30,6 +30,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.Maven;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -53,6 +54,14 @@ public class ToolsTest extends AbstractModelDefTest {
     @Test
     public void simpleTools() throws Exception {
         expect("simpleTools")
+                .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
+                .go();
+    }
+
+    @Ignore("Allowing env vars in tool version string breaks validation of version...needs thought.")
+    @Test
+    public void envVarInTools() throws Exception {
+        expect("envVarInTools")
                 .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
                 .go();
     }

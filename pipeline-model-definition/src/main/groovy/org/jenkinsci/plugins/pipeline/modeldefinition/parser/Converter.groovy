@@ -159,7 +159,7 @@ public class Converter {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
                 if (model[0] == null) {
-                    model[0] = new ModelParser(source).parse();
+                    model[0] = new ModelParser(source).parse(true);
                 }
             }
         }, CANONICALIZATION);

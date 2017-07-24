@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
@@ -54,60 +55,31 @@ public class Stage implements NestedModel, Serializable {
 
     Stages parallel
 
-    Stage name(String n) {
-        this.name = n
-        return this
-    }
-
-    Stage agent(Agent a) {
-        this.agent = a?.convertZeroArgs()
-        return this
-    }
-
-    Stage steps(StepsBlock s) {
-        this.steps = s
-        return this
-    }
-
-    Stage post(PostStage post) {
+    @Whitelisted
+    Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
+          Environment environment, Stages parallel) {
+        this.name = name
+        this.steps = steps
+        this.agent = agent
         this.post = post
-        return this
-    }
-
-    Stage when(StageConditionals when) {
         this.when = when
-        return this
-    }
-
-    Stage tools(Tools tools) {
         this.tools = tools
-        return this
-    }
-
-    Stage environment(Environment environment) {
         this.environment = environment
-        return this
+        this.parallel = parallel
     }
 
-    Stage parallel(Stages stages) {
-        this.parallel = stages
-        return this
-    }
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
      *
-     * @return a list of "key=value" strings.
+     * @return a map of keys to closures.
      */
-    List<String> getEnvVars(Root root, CpsScript script, Stage parentStage = null) {
+    Map<String,Closure> getEnvVars(CpsScript script) {
         if (environment != null) {
-            return environment.resolveEnvVars(script, true, root.environment, parentStage).findAll {
-                it.key in environment.getMap().keySet()
-            }.collect { k, v ->
-                "${k}=${v}"
-            }
+            environment.envResolver.setScript(script)
+            return environment.envResolver.closureMap
         } else {
-            return []
+            return [:]
         }
     }
 

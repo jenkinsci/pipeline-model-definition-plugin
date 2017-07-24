@@ -22,31 +22,22 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-/**
- * Translates a closure containing a sequence of "lib('string')" calls into an instance of {@link Libraries}.
- *
- * @author Andrew Bayer
- */
-public class LibrariesTranslator implements Serializable {
-    List<String> actualList = []
-    CpsScript script
-
-    LibrariesTranslator(CpsScript script) {
-        this.script = script
+pipeline {
+    agent none
+    environment {
+        NUM_TO_KEEP = 1
     }
-
-    def lib(String l) {
-        actualList.add(l)
+    options {
+        buildDiscarder(logRotator(numToKeepStr:"${NUM_TO_KEEP}"))
     }
-
-    Libraries toListModel() {
-        Libraries l = new Libraries()
-        l.libs(actualList)
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
 }
+
+
+

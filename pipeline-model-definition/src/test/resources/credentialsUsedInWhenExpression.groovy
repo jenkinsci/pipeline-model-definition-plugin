@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-/**
- * Used to mark {@link MappedClosure}s that are specified as "foo = 'bar'", rather than "foo 'bar'"
- * @author Andrew Bayer
- */
-public interface PropertiesToMap {
+pipeline {
+    environment {
+        CRED1 = credentials("cred1")
+        INBETWEEN = "Something ${CRED1} between"
+    }
+
+    agent any
+
+    stages {
+        stage("foo") {
+            steps {
+                sh 'echo "CRED1 is $CRED1"'
+                sh 'echo "INBETWEEN is $INBETWEEN"'
+                sh 'echo $CRED1 > cred1.txt'
+                archive "**/*.txt"
+            }
+        }
+        stage("bar") {
+            when {
+                expression {
+                    "${INBETWEEN}".contains(CRED1)
+                }
+            }
+            steps {
+                echo "Got to stage 'bar'"
+            }
+        }
+    }
 }
