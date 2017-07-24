@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.JobProperty
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
@@ -58,7 +59,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
 
-class RuntimeASTTransformer {
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID") class RuntimeASTTransformer {
     private final ModelASTPipelineDef pipelineDef
 
     RuntimeASTTransformer(@Nonnull ModelASTPipelineDef pipelineDef) {
