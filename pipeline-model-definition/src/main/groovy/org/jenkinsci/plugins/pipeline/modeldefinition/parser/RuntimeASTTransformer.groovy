@@ -116,7 +116,6 @@ class RuntimeASTTransformer {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            System.err.println("argList: ${argList}")
             return ctorX(ClassHelper.make(Agent.class), argList)
         }
 

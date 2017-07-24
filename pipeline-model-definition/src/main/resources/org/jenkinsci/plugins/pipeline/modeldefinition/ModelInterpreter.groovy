@@ -67,9 +67,7 @@ public class ModelInterpreter implements Serializable {
                         withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
-                                    System.err.println("stages: ${root.stages.getStages()}")
-                                    for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                        Stage thisStage = root.stages.getStages().get(i)
+                                    root.stages.stages.each { thisStage ->
                                         try {
                                             script.stage(thisStage.name) {
                                                 if (firstError != null) {
@@ -272,10 +270,10 @@ public class ModelInterpreter implements Serializable {
         Map<String,CredentialWrapper> creds = new TreeMap<>()
         RunWrapper currentBuild = script.getProperty("currentBuild")
 
-        for (int i = 0; i < varsAndIds.size(); i++) {
-            String key = varsAndIds.get(i)?.get(0)
+        varsAndIds.each { l ->
+            String key = l.get(0)
             if (key != null) {
-                String id = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(varsAndIds.get(i)?.get(1))))
+                String id = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(l.get(1))))
 
                 CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
                 creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
@@ -294,9 +292,8 @@ public class ModelInterpreter implements Serializable {
     private List<Map<String, Object>> createWithCredentialsParameters(
             @Nonnull Map<String, CredentialWrapper> credentials) {
         List<Map<String, Object>> parameters = []
-        Set<Map.Entry<String, CredentialWrapper>> set = credentials.entrySet()
-        for (Map.Entry<String, CredentialWrapper> entry : set) {
-            entry.value.addParameters(entry.key, parameters)
+        credentials.each { k, v ->
+            v.addParameters(k, parameters)
         }
         parameters
     }
@@ -321,10 +318,10 @@ public class ModelInterpreter implements Serializable {
             def toolEnv = []
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.toolInstall()) {
-                    toolEnv = actualToolsInstall(toolsList)
+                    toolEnv = actualToolsInstall(tools.getMap())
                 }
             } else {
-                toolEnv = actualToolsInstall(toolsList)
+                toolEnv = actualToolsInstall(tools.getMap())
             }
             return {
                 script.withEnv(toolEnv) {
@@ -338,13 +335,10 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-    def actualToolsInstall(List<List<Object>> toolsList) {
+    def actualToolsInstall(Map<String,String> toolsMap) {
         def toolEnv = []
-        for (int i = 0; i < toolsList.size(); i++) {
-            def entry = toolsList.get(i)
-            String k = entry.get(0)
-            String v = entry.get(1)
 
+        toolsMap.each { k, v ->
             String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
 
             toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
@@ -433,9 +427,7 @@ public class ModelInterpreter implements Serializable {
     def executeSingleStage(Root root, Stage thisStage) throws Throwable {
         Throwable stageError = null
         try {
-            System.err.println("About to catch")
             catchRequiredContextForNode(thisStage.agent ?: root.agent) {
-                System.err.println("About to delegate ${thisStage.steps}")
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Exception e) {
@@ -523,11 +515,8 @@ public class ModelInterpreter implements Serializable {
                           Agent agentContext,
                           Throwable stageError,
                           String stageName = null) {
-        List<String> orderedConditions = BuildCondition.orderedConditionNames
-        for (int i = 0; i < orderedConditions.size(); i++) {
+        BuildCondition.orderedConditionNames.each { conditionName ->
             try {
-                String conditionName = orderedConditions.get(i)
-
                 Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
                 if (c != null) {
                     catchRequiredContextForNode(agentContext) {
@@ -555,8 +544,7 @@ public class ModelInterpreter implements Serializable {
      */
     def loadLibraries(Root root) {
         if (root.libraries != null) {
-            for (int i = 0; i < root.libraries.libs.size(); i++) {
-                String lib = root.libraries.libs.get(i)
+            root.libraries.libs.each { lib ->
                 script.library(lib)
             }
         }
