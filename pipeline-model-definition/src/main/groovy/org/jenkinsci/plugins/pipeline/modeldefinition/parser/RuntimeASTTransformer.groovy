@@ -59,7 +59,8 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
 
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID") class RuntimeASTTransformer {
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+class RuntimeASTTransformer {
     private final ModelASTPipelineDef pipelineDef
 
     RuntimeASTTransformer(@Nonnull ModelASTPipelineDef pipelineDef) {

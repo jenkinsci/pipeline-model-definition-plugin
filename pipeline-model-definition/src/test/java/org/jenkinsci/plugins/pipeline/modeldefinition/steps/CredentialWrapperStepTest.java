@@ -199,4 +199,24 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P)
                 .go();
     }
+
+    @Test
+    public void credentialsUsedInWhenEnv() throws Exception {
+        expect("credentialsUsedInWhenEnv")
+                .logContains("CRED1 is ****",
+                        "INBETWEEN is Something **** between",
+                        "Got to stage 'bar'")
+                .archives("cred1.txt", mixedEnvCred1Secret)
+                .go();
+    }
+
+    @Test
+    public void credentialsUsedInWhenExpression() throws Exception {
+        expect("credentialsUsedInWhenExpression")
+                .logContains("CRED1 is ****",
+                        "INBETWEEN is Something **** between",
+                        "Got to stage 'bar'")
+                .archives("cred1.txt", mixedEnvCred1Secret)
+                .go();
+    }
 }
