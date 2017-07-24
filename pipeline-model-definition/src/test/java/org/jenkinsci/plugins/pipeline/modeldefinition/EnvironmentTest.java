@@ -56,6 +56,17 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42082")
+    @Test
+    public void envVarContainsTEST() throws Exception {
+        expect("envVarContainsTEST")
+                .logContains("TEST_VAR is BAR",
+                        "VAR_TEST is VALID",
+                        "TEST_VAR from shell is BAR",
+                        "VAR_TEST from shell is VALID")
+                .go();
+    }
+
     @Issue("JENKINS-43143")
     @Test
     public void paramsInEnvironment() throws Exception {
