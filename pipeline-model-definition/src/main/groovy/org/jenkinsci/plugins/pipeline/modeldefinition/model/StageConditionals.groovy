@@ -29,18 +29,9 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-import org.jenkinsci.plugins.structs.SymbolLookup
-
-import javax.annotation.CheckForNull
-
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
 
 /**
  * The {@link Stage#when} block.
@@ -79,46 +70,5 @@ class StageConditionals implements Serializable {
     @Whitelisted
     StageConditionals(Closure rawClosure) {
         this.rawClosure = rawClosure
-    }
-
-    /**
-     * Instantiates a stage's when variable. Note that this does not instantiate the when conditions inside, it just
-     * creates a closure that will return them when needed. This is to ensure lazy evaluation of variables.
-     *
-     * @param original
-     * @return
-     */
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhen original) {
-        if (original != null && !original.getConditions().isEmpty()) {
-            return buildAst {
-                constructorCall(StageConditionals) {
-                    argumentList {
-                        closure {
-                            parameters {
-                            }
-                            block {
-                                returnStatement {
-                                    list {
-                                        original.getConditions().each { cond ->
-                                            System.err.println("condition: ${cond} (${cond.name})")
-                                            if (cond.name != null) {
-                                                DeclarativeStageConditionalDescriptor desc =
-                                                    (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
-                                                        DeclarativeStageConditional.class, cond.name)
-                                                System.err.println("desc: ${desc}")
-                                                if (desc != null) {
-                                                    expression.add(desc.transformToRuntimeAST(cond))
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return GeneralUtils.constX(null)
     }
 }

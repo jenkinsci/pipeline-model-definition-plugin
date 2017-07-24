@@ -26,14 +26,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.tools.GeneralUtils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-import javax.annotation.CheckForNull
 
 /**
  * An individual stage to be executed within the build.
@@ -91,25 +85,5 @@ public class Stage implements NestedModel, Serializable {
         m.each { k, v ->
             this."${k}"(v)
         }
-    }
-
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTStage original) {
-        if (ASTParserUtils.isGroovyAST(original)) {
-            return ASTParserUtils.buildAst {
-                constructorCall(Stage) {
-                    argumentList {
-                        constant original.name
-                        expression.add(StepsBlock.transformToRuntimeAST(original))
-                        expression.add(Agent.transformToRuntimeAST(original.agent))
-                        expression.add(PostStage.transformToRuntimeAST(original.post))
-                        expression.add(StageConditionals.transformToRuntimeAST(original.when))
-                        expression.add(Tools.transformToRuntimeAST(original.tools))
-                        expression.add(Environment.transformToRuntimeAST(original.environment))
-                    }
-                }
-            }
-        }
-
-        return GeneralUtils.constX(null)
     }
 }

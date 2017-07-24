@@ -33,31 +33,15 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.expr.Expression
-import org.codehaus.groovy.ast.expr.MethodCallExpression
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
-import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
-
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchMethodCall
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.methodCallArgs
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.methodCallToDescribable
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.transformListOfDescribables
 
 /**
  * Container for job options.
@@ -168,72 +152,5 @@ public class Options implements Serializable {
      */
     public static String typeForKey(@Nonnull String key) {
         return getAllowedOptionTypes().get(key)
-    }
-
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTOptions original) {
-        if (ASTParserUtils.isGroovyAST(original) && !original.options.isEmpty()) {
-            List<ModelASTOption> jobProps = new ArrayList<>()
-            List<ModelASTOption> options = new ArrayList<>()
-            List<ModelASTOption> wrappers = new ArrayList<>()
-
-            SymbolLookup symbolLookup = SymbolLookup.get()
-
-            original.options.each { o ->
-                if (symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
-                    jobProps.add(o)
-                } else if (symbolLookup.findDescriptor(DeclarativeOption.class, o.name) != null) {
-                    options.add(o)
-                } else if (StepDescriptor.byFunctionName(o.name) != null) {
-                    wrappers.add(o)
-                }
-            }
-            return buildAst {
-                constructorCall(Options) {
-                    argumentList {
-                        expression.add(transformListOfDescribables(jobProps))
-                        map {
-                            options.each { o ->
-                                if (o.getSourceLocation() instanceof Statement) {
-                                    MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
-                                    if (expr != null) {
-                                        mapEntry {
-                                            constant o.name
-                                            expression.add(methodCallToDescribable(expr))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        map {
-                            wrappers.each { w ->
-                                if (w.getSourceLocation() instanceof Statement) {
-                                    MethodCallExpression expr = matchMethodCall((Statement) w.getSourceLocation())
-                                    if (expr != null) {
-                                        List<Expression> args = methodCallArgs(expr)
-
-                                        mapEntry {
-                                            constant w.name
-                                            if (args.size() == 1) {
-                                                expression.add(args.get(0))
-                                            } else if (args.size() > 1) {
-                                                list {
-                                                    args.each { a ->
-                                                        expression.add(a)
-                                                    }
-                                                }
-                                            } else {
-                                                constant null
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return GeneralUtils.constX(null)
     }
 }

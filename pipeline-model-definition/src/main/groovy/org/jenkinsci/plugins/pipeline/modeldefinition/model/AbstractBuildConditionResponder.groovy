@@ -24,16 +24,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.tools.GeneralUtils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
-
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
-
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
-
 
 /**
  * Parent for {@link PostStage} and {@link PostBuild} - containers for condition name/step block pairs.
@@ -79,37 +69,4 @@ abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionR
             getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
         }
     }
-
-    /**
-     * Generate the AST (to be CPS-transformed) for instantiating a {@link AbstractBuildConditionResponder}.
-     *
-     * @param original The parsed AST model.
-     * @param container The class of the container we're instantiating.
-     * @return The AST for a constructor call for this container class, or the constant null expression if the original
-     * cannot be transformed.
-     */
-    static ASTNode transformContainerToRuntimeAST(@CheckForNull ModelASTBuildConditionsContainer original,
-                                                  @Nonnull Class container) {
-        if (ASTParserUtils.isGroovyAST(original)) {
-            return buildAst {
-                constructorCall(container) {
-                    argumentList {
-                        map {
-                            original.conditions.each { cond ->
-                                ASTNode steps = StepsBlock.transformToRuntimeAST(cond)
-                                if (steps != null) {
-                                    mapEntry {
-                                        constant cond.condition
-                                        expression.add(steps)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return GeneralUtils.constX(null)
-    }
-
 }

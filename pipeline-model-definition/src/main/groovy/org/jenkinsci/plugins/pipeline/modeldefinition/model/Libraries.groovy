@@ -26,14 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.tools.GeneralUtils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
-import javax.annotation.CheckForNull
-
 
 /**
  * A container for one or more library identifiers, within the build, in the order they're declared.
@@ -51,32 +44,7 @@ public class Libraries implements Serializable {
         libs.addAll(s)
     }
 
-    Libraries libs(List<String> s) {
-        this.libs = s
-        return this
-    }
-
     List<String> getLibs() {
         return libs
-    }
-
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTLibraries original) {
-        if (ASTParserUtils.isGroovyAST(original) && !original.libs.isEmpty()) {
-            return ASTParserUtils.buildAst {
-                constructorCall(Libraries) {
-                    argumentList {
-                        list {
-                            original.libs.each { l ->
-                                if (l.sourceLocation instanceof ASTNode) {
-                                    expression.addAll((ASTNode) l.sourceLocation)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return GeneralUtils.constX(null)
     }
 }

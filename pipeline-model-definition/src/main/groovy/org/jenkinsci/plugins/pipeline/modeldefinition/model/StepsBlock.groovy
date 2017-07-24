@@ -26,21 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassHelper
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.ast.tools.GeneralUtils
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
-import javax.annotation.CheckForNull
-
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
-
 
 /**
  * A container for a closure representing a block of steps to execute.
@@ -61,43 +47,9 @@ class StepsBlock implements Serializable {
 
     }
 
-    @Whitelisted
-    StepsBlock(Closure c) {
-        this.closure = c
-    }
-
     // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
+    @Whitelisted
     void setClosure(Object c) {
         this.closure = (Closure) c
-    }
-
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTStage original) {
-        if (ASTParserUtils.isGroovyAST(original)) {
-            BlockStatementMatch stageMatch = ASTParserUtils.matchBlockStatement((Statement)original.sourceLocation)
-            if (stageMatch != null) {
-                Statement stepsMethod = ASTParserUtils.asBlock(stageMatch.body.code).statements.find { s ->
-                    ASTParserUtils.matchMethodCall(s)?.methodAsString == "steps"
-                }
-                if (stepsMethod != null) {
-                    BlockStatementMatch stepsMatch = ASTParserUtils.matchBlockStatement(stepsMethod)
-                    if (stepsMatch != null) {
-                        return GeneralUtils.callX(ClassHelper.make(Utils), "createStepsBlock",
-                            GeneralUtils.args(stepsMatch.body))
-                    }
-                }
-            }
-        }
-
-        return GeneralUtils.constX(null)
-    }
-
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildCondition original) {
-        if (ASTParserUtils.isGroovyAST(original)) {
-            BlockStatementMatch condMatch = ASTParserUtils.matchBlockStatement((Statement)original.sourceLocation)
-            return GeneralUtils.callX(ClassHelper.make(Utils), "createStepsBlock",
-                GeneralUtils.args(condMatch.body))
-        } else {
-            return GeneralUtils.constX(null)
-        }
     }
 }

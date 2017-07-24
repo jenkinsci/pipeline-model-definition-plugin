@@ -26,18 +26,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.tools.ToolDescriptor
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
-import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
-
-import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.buildAst
 
 /**
  * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and
@@ -68,29 +61,6 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
         return getMap().collect { k, v ->
             return [k, v]
         }
-    }
-
-    public static ASTNode transformToRuntimeAST(@CheckForNull ModelASTTools original) {
-        if (ASTParserUtils.isGroovyAST(original) && !original.tools?.isEmpty()) {
-            return buildAst {
-                constructorCall(Tools) {
-                    argumentList {
-                        map {
-                            original.tools.each { k, v ->
-                                mapEntry {
-                                    if (v.sourceLocation != null && v.sourceLocation instanceof ASTNode) {
-                                        constant k.key
-                                        expression.add((ASTNode) v.sourceLocation)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return GeneralUtils.constX(null)
-
     }
 
     /**

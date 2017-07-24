@@ -28,8 +28,6 @@ import hudson.model.Describable
 import hudson.model.Descriptor
 import jenkins.model.Jenkins
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -39,12 +37,11 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -210,18 +207,7 @@ class ModelParser implements Parser {
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = (ArgumentListExpression) ASTParserUtils.buildAst {
-                argumentList {
-                    closure {
-                        parameters {}
-                        block {
-                            returnStatement {
-                                expression.add(Root.transformToRuntimeAST(r))
-                            }
-                        }
-                    }
-                }
-            }
+            pipelineBlock.whole.arguments = new RuntimeASTTransformer(r).transform()
             ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)
         }
 

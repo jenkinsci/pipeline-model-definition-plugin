@@ -24,11 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.codehaus.groovy.ast.ASTNode
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
-import javax.annotation.CheckForNull
 
 /**
  *
@@ -39,9 +35,5 @@ public class PostStage  extends AbstractBuildConditionResponder<PostStage> {
     @Whitelisted
     PostStage(Map<String,StepsBlock> m) {
         super(m)
-    }
-
-    static ASTNode transformToRuntimeAST(@CheckForNull ModelASTPostStage original) {
-        return transformContainerToRuntimeAST(original, PostStage.class)
     }
 }
