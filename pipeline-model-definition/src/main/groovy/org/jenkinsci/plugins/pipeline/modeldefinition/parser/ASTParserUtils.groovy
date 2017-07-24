@@ -333,25 +333,19 @@ class ASTParserUtils {
     }
 
     @CheckForNull
-    static ASTNode recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
+    static Expression recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
         if (isGroovyAST(original)) {
-            return buildAst {
-                map {
-                    eachStatement(original.code) { s ->
-                        MethodCallExpression mce = matchMethodCall(s)
-                        if (mce != null) {
-                            List<Expression> args = methodCallArgs(mce)
-                            if (args.size() == 1) {
-                                Expression singleArg = args.get(0)
-                                mapEntry {
-                                    expression.add(mce.method)
-                                    if (singleArg instanceof ClosureExpression) {
-                                        expression.add(recurseAndTransformMappedClosure(singleArg))
-                                    } else {
-                                        expression.add(singleArg)
-                                    }
-                                }
-                            }
+            MapExpression mappedClosure = new MapExpression()
+            eachStatement(original.code) { s ->
+                MethodCallExpression mce = matchMethodCall(s)
+                if (mce != null) {
+                    List<Expression> args = methodCallArgs(mce)
+                    if (args.size() == 1) {
+                        Expression singleArg = args.get(0)
+                        if (singleArg instanceof ClosureExpression) {
+                            mappedClosure.addMapEntryExpression(mce.method, recurseAndTransformMappedClosure(singleArg))
+                        } else {
+                            mappedClosure.addMapEntryExpression(mce.method, singleArg)
                         }
                     }
                 }

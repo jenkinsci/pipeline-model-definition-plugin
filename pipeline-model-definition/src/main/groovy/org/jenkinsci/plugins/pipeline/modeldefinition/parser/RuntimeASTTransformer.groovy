@@ -73,52 +73,38 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for this container class, or the constant null expression if the original
      * cannot be transformed.
      */
-    ASTNode transformBuildConditionsContainer(@CheckForNull ModelASTBuildConditionsContainer original,
+    Expression transformBuildConditionsContainer(@CheckForNull ModelASTBuildConditionsContainer original,
                                               @Nonnull Class container) {
-        if (isGroovyAST(original)) {
-            return buildAst {
-                constructorCall(container) {
-                    argumentList {
-                        map {
-                            original.conditions.each { cond ->
-                                ASTNode steps = transformStepsFromBuildCondition(cond)
-                                if (steps != null) {
-                                    mapEntry {
-                                        constant cond.condition
-                                        expression.add(steps)
-                                    }
-                                }
-                            }
-                        }
-                    }
+        if (isGroovyAST(original) && !original.conditions.isEmpty()) {
+            MapExpression nameToSteps = new MapExpression()
+            original.conditions.each { cond ->
+                Expression steps = transformStepsFromBuildCondition(cond)
+                if (steps != null) {
+                    nameToSteps.addMapEntryExpression(constX(cond.condition), steps)
                 }
             }
+            return ctorX(ClassHelper.make(container), args(nameToSteps))
         }
         return constX(null)
     }
 
-    ASTNode transformAgent(@CheckForNull ModelASTAgent original) {
+    Expression transformAgent(@CheckForNull ModelASTAgent original) {
         if (isGroovyAST(original) && original.agentType != null) {
-            return buildAst {
-                constructorCall(Agent) {
-                    argumentList {
-                        if (original.variables == null ||
-                            (original.variables instanceof ModelASTClosureMap &&
-                                ((ModelASTClosureMap) original.variables).variables.isEmpty())) {
-                            map {
-                                mapEntry {
-                                    constant original.agentType.key
-                                    constant true
-                                }
-                            }
-                        } else {
-                            BlockStatementMatch match =
-                                matchBlockStatement((Statement) original.sourceLocation)
-                            if (match != null) {
-                                expression.add(recurseAndTransformMappedClosure(match.body))
-                            }
-                        }
-                    }
+            ArgumentListExpression argList = new ArgumentListExpression()
+            if (original.variables == null ||
+                (original.variables instanceof ModelASTClosureMap &&
+                    ((ModelASTClosureMap)original.variables).variables.isEmpty())) {
+                // Zero-arg agent type
+                MapExpression zeroArg = new MapExpression()
+                zeroArg.addMapEntryExpression(constX(original.agentType.key), constX(true))
+                argList.addExpression(zeroArg)
+            } else {
+                BlockStatementMatch match =
+                    matchBlockStatement((Statement) original.sourceLocation)
+                if (match != null) {
+                    argList.addExpression(recurseAndTransformMappedClosure(match.body))
+                } else {
+                    throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
         }
@@ -126,16 +112,13 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    ASTNode transformEnvironment(@CheckForNull ModelASTEnvironment original) {
+    Expression transformEnvironment(@CheckForNull ModelASTEnvironment original) {
         if (isGroovyAST(original) && !original.variables.isEmpty()) {
-            return buildAst {
-                constructorCall(Environment) {
-                    argumentList {
-                        expression.add(generateEnvironmentResolver(original, ModelASTValue.class))
-                        expression.add(generateEnvironmentResolver(original, ModelASTInternalFunctionCall.class))
-                    }
-                }
-            }
+            return ctorX(ClassHelper.make(Environment.class),
+                args(
+                    generateEnvironmentResolver(original, ModelASTValue.class),
+                    generateEnvironmentResolver(original, ModelASTInternalFunctionCall.class)
+                ))
         }
         return constX(null)
     }
@@ -147,7 +130,7 @@ class RuntimeASTTransformer {
      * @param valueType Either {@link ModelASTInternalFunctionCall} for credentials or {@link ModelASTValue} for env.
      * @return The AST for instantiating the resolver.
      */
-    private ASTNode generateEnvironmentResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
+    private Expression generateEnvironmentResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
         Set<String> keys = new HashSet<>()
 
         // We need to keep track of the environment keys for use in
@@ -178,7 +161,7 @@ class RuntimeASTTransformer {
             }
         }
 
-        return callX(ClassHelper.make(Environment.EnvironmentResolver), "instanceFromMap",
+        return callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
             args(closureMap))
     }
 
@@ -535,14 +518,13 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    ASTNode transformStepsFromBuildCondition(@CheckForNull ModelASTBuildCondition original) {
+    Expression transformStepsFromBuildCondition(@CheckForNull ModelASTBuildCondition original) {
         if (isGroovyAST(original)) {
-            BlockStatementMatch condMatch = matchBlockStatement((Statement)original.sourceLocation)
+            BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
             return callX(ClassHelper.make(Utils), "createStepsBlock",
                 args(condMatch.body))
-        } else {
-            return constX(null)
         }
+        return constX(null)
     }
 
     ASTNode transformTools(@CheckForNull ModelASTTools original) {
