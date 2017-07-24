@@ -468,6 +468,7 @@ class RuntimeASTTransformer {
                     toolsMap.addMapEntryExpression(constX(k.key), (Expression)v.sourceLocation)
                 }
             }
+            return ctorX(ClassHelper.make(Tools.class), args(toolsMap))
         }
         return constX(null)
     }
