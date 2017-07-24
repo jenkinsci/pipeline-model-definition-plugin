@@ -31,6 +31,7 @@ import hudson.tasks.Maven;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.assertNotNull;
@@ -59,6 +60,14 @@ public class ToolsTest extends AbstractModelDefTest {
     @Test
     public void toolsInStage() throws Exception {
         expect("toolsInStage")
+                .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
+                .go();
+    }
+
+    @Issue("JENKINS-42338")
+    @Test
+    public void toolsAndAgentNone() throws Exception {
+        expect("toolsAndAgentNone")
                 .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
                 .go();
     }
