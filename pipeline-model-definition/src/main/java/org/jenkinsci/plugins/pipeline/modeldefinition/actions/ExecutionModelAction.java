@@ -27,14 +27,29 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 import hudson.model.InvisibleAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ExecutionModelAction extends InvisibleAction {
     private final ModelASTStages stages;
+    private List<String> topLevelStages = new ArrayList<>();
 
+    public ExecutionModelAction(List<String> topLevelStages) {
+        this.topLevelStages.addAll(topLevelStages);
+        this.stages = null;
+    }
+
+    @Deprecated
     public ExecutionModelAction(ModelASTStages s) {
         this.stages = s;
     }
 
+    @Deprecated
     public ModelASTStages getStages() {
         return stages;
+    }
+
+    public List<String> getTopLevelStages() {
+        return topLevelStages;
     }
 }

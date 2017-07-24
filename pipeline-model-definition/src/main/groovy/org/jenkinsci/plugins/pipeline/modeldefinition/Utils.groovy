@@ -227,16 +227,8 @@ public class Utils {
 
     static Root attachDeclarativeActions(@Nonnull Root root, CpsScript script) {
         WorkflowRun r = script.$build()
-        ModelASTPipelineDef model = Converter.parseFromWorkflowRun(r)
-
-        if (model != null) {
-            ModelASTStages stages = model.stages
-
-            stages.removeSourceLocation()
-            if (r.getAction(ExecutionModelAction.class) == null) {
-                r.addAction(new ExecutionModelAction(stages))
-            }
-
+        if (r.getAction(ExecutionModelAction.class) == null) {
+            r.addAction(new ExecutionModelAction(root.stages.stages.collect { it.name }))
         }
 
         return root
