@@ -26,7 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
-import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
@@ -86,7 +86,7 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
     @Symbol("environment")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
         @Override
-        public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
     }

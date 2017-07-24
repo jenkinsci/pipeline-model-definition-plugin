@@ -30,23 +30,8 @@ import groovy.transform.stc.FirstParam
 import hudson.model.Describable
 import hudson.model.Descriptor
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.builder.AstBuilder
-import org.codehaus.groovy.ast.builder.AstSpecificationCompiler
-import org.codehaus.groovy.ast.expr.ArgumentListExpression
-import org.codehaus.groovy.ast.expr.BinaryExpression
-import org.codehaus.groovy.ast.expr.ClosureExpression
-import org.codehaus.groovy.ast.expr.ConstantExpression
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression
-import org.codehaus.groovy.ast.expr.Expression
-import org.codehaus.groovy.ast.expr.GStringExpression
-import org.codehaus.groovy.ast.expr.ListExpression
-import org.codehaus.groovy.ast.expr.MapEntryExpression
-import org.codehaus.groovy.ast.expr.MapExpression
-import org.codehaus.groovy.ast.expr.MethodCallExpression
-import org.codehaus.groovy.ast.expr.PropertyExpression
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
-import org.codehaus.groovy.ast.expr.TupleExpression
-import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.ReturnStatement
@@ -55,11 +40,7 @@ import org.codehaus.groovy.control.SourceUnit
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
@@ -70,7 +51,7 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class ASTParserUtils {
@@ -228,37 +209,27 @@ class ASTParserUtils {
     }
 
     /**
-     * Transforms an {@link AstSpecificationCompiler}-style closure via {@link AstBuilder#buildFromSpec(Closure)},
-     * returning the first generated {@link ASTNode}, if any.
-     */
-    @CheckForNull
-    static buildAst(@DelegatesTo(AstSpecificationCompiler) Closure specification) {
-        def nodes = new AstBuilder().buildFromSpec(specification)
-        return nodes?.get(0)
-    }
-
-    /**
      * Takes a list of {@link ModelASTElement}s corresponding to {@link Describable}s (such as {@link JobProperty}s, etc),
      * and transforms their Groovy AST nodes into AST from {@link #methodCallToDescribable(MethodCallExpression)}.
      */
     @Nonnull
-    static ASTNode transformListOfDescribables(@CheckForNull List<ModelASTElement> children) {
-        return buildAst {
-            list {
-                children?.each { d ->
-                    if (d.sourceLocation instanceof Statement) {
-                        MethodCallExpression m = matchMethodCall((Statement) d.sourceLocation)
-                        if (m != null) {
-                            expression.add(methodCallToDescribable(m))
-                        } else {
-                            throw new IllegalArgumentException("Expected a method call expression but received ${d.sourceLocation}")
-                        }
-                    } else {
-                        throw new IllegalArgumentException("Expected a statement but received ${d.sourceLocation}")
-                    }
+    static Expression transformListOfDescribables(@CheckForNull List<ModelASTElement> children) {
+        ListExpression descList = new ListExpression()
+
+        children?.each { d ->
+            if (d.sourceLocation instanceof Statement) {
+                MethodCallExpression m = matchMethodCall((Statement) d.sourceLocation)
+                if (m != null) {
+                    descList.addExpression(methodCallToDescribable(m))
+                } else {
+                    throw new IllegalArgumentException("Expected a method call expression but received ${d.sourceLocation}")
                 }
+            } else {
+                throw new IllegalArgumentException("Expected a statement but received ${d.sourceLocation}")
             }
         }
+
+        return descList
     }
 
     /**
@@ -269,17 +240,11 @@ class ASTParserUtils {
      * @param containerClass The class we will be instantiating, i.e., {@link Parameters} or {@link Triggers}.
      * @return The AST for instantiating the container and its contents.
      */
-    static ASTNode transformDescribableContainer(@CheckForNull ModelASTElement original,
+    static Expression transformDescribableContainer(@CheckForNull ModelASTElement original,
                                                  @CheckForNull List<ModelASTElement> children,
                                                  @Nonnull Class containerClass) {
         if (isGroovyAST(original) && !children?.isEmpty()) {
-            return buildAst {
-                constructorCall(containerClass) {
-                    argumentList {
-                        expression.add(transformListOfDescribables(children))
-                    }
-                }
-            }
+            return ctorX(ClassHelper.make(containerClass), args(transformListOfDescribables(children)))
         }
         return constX(null)
     }
@@ -287,8 +252,8 @@ class ASTParserUtils {
     /**
      * Transform a when condition, and its children if any exist, into instantiation AST.
      */
-    static ASTNode transformWhenContentToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-        if (isGroovyAST(original)) {
+    static Expression transformWhenContentToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+        if (original instanceof ModelASTElement && isGroovyAST((ModelASTElement)original)) {
             DeclarativeStageConditionalDescriptor parentDesc =
                 (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
                     DeclarativeStageConditional.class, original.name)
@@ -301,27 +266,20 @@ class ASTParserUtils {
                         if (cond.children.isEmpty()) {
                             return methodCallToDescribable(methCall)
                         } else {
-                            return buildAst {
-                                staticMethodCall(Utils, "instantiateDescribable") {
-                                    argumentList {
-                                        classExpression(parentDesc.clazz)
-                                        map {
-                                            mapEntry {
-                                                constant UninstantiatedDescribable.ANONYMOUS_KEY
-                                                if (parentDesc.allowedChildrenCount == 1) {
-                                                    expression.add(transformWhenContentToRuntimeAST(cond.children.first()))
-                                                } else {
-                                                    list {
-                                                        cond.children.each { child ->
-                                                            expression.add(transformWhenContentToRuntimeAST(child))
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            MapExpression argMap = new MapExpression()
+                            if (parentDesc.allowedChildrenCount == 1) {
+                                argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
+                                    transformWhenContentToRuntimeAST(cond.children.first()))
+                            } else {
+                                argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
+                                    new ListExpression(cond.children.collect { transformWhenContentToRuntimeAST(it) }))
                             }
+                            return callX(ClassHelper.make(Utils.class),
+                                "instantiateDescribable",
+                                args(
+                                    classX(parentDesc.clazz),
+                                    argMap
+                                ))
                         }
                     }
                 }
@@ -386,37 +344,29 @@ class ASTParserUtils {
     }
 
     @CheckForNull
-    static ASTNode argsMap(List<Expression> args) {
-        return buildAst {
-            map {
-                args.each { singleArg ->
-                    if (singleArg instanceof MapExpression) {
-                        singleArg.mapEntryExpressions.each { entry ->
-                            mapEntry {
-                                expression.add(entry.keyExpression)
-                                System.err.println("arg map value: ${entry.valueExpression}")
-                                if (entry.valueExpression instanceof MethodCallExpression) {
-                                    MethodCallExpression m = (MethodCallExpression) entry.valueExpression
-                                    expression.add(methodCallToDescribable(m))
-                                } else {
-                                    expression.add(entry.valueExpression)
-                                }
-                            }
-                        }
+    static Expression argsMap(List<Expression> args) {
+        MapExpression tmpMap = new MapExpression()
+        args.each { singleArg ->
+            if (singleArg instanceof MapExpression) {
+                singleArg.mapEntryExpressions.each { entry ->
+                    if (entry.valueExpression instanceof MethodCallExpression) {
+                        MethodCallExpression m = (MethodCallExpression) entry.valueExpression
+                        tmpMap.addMapEntryExpression(entry.keyExpression, methodCallToDescribable(m))
                     } else {
-                        mapEntry {
-                            constant UninstantiatedDescribable.ANONYMOUS_KEY
-                            System.err.println("singleArg value: ${singleArg}")
-                            if (singleArg instanceof MethodCallExpression) {
-                                expression.add(methodCallToDescribable(singleArg))
-                            } else {
-                                expression.add(singleArg)
-                            }
-                        }
+                        tmpMap.addMapEntryExpression(entry)
                     }
+                }
+            } else {
+                if (singleArg instanceof MethodCallExpression) {
+                    tmpMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
+                        methodCallToDescribable(singleArg))
+                } else {
+                    tmpMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY), singleArg)
                 }
             }
         }
+
+        return tmpMap
     }
 
     @Nonnull
@@ -425,9 +375,9 @@ class ASTParserUtils {
     }
 
     @CheckForNull
-    static ASTNode methodCallToDescribable(MethodCallExpression expr) {
+    static Expression methodCallToDescribable(MethodCallExpression expr) {
         def methodName = matchMethodName(expr)
-        List<Expression> args = methodCallArgs(expr)
+        List<Expression> methArgs = methodCallArgs(expr)
 
         DescriptorLookupCache lookupCache = DescriptorLookupCache.getPublicCache()
 
@@ -435,30 +385,16 @@ class ASTParserUtils {
         StepDescriptor stepDesc = lookupCache.lookupStepDescriptor(methodName)
         // This is the case where we've got a wrapper in options
         if (stepDesc != null || (funcDesc != null && !StepDescriptor.metaStepsOf(methodName).isEmpty())) {
-            return buildAst {
-                map {
-                    mapEntry {
-                        constant "name"
-                        constant methodName
-                    }
-                    mapEntry {
-                        constant "args"
-                        expression.add(argsMap(args))
-                    }
-                }
-            }
+            MapExpression m = new MapExpression()
+            m.addMapEntryExpression(constX("name"), constX(methodName))
+            m.addMapEntryExpression(constX("args"), argsMap(methArgs))
+            return m
         } else if (funcDesc != null) {
             // Ok, now it's a non-executable descriptor. Phew.
             Class<? extends Describable> descType = funcDesc.clazz
 
-            return buildAst {
-                staticMethodCall(Utils, "instantiateDescribable") {
-                    argumentList {
-                        classExpression(descType)
-                        expression.add(argsMap(args))
-                    }
-                }
-            }
+            return callX(ClassHelper.make(Utils.class), "instantiateDescribable",
+                args(classX(descType), argsMap(methArgs)))
         } else {
             // Not a describable at all!
             return expr

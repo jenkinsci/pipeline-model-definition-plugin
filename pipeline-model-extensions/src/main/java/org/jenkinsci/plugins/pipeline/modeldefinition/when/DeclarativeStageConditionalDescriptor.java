@@ -26,9 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
 import hudson.ExtensionList;
-import org.codehaus.groovy.ast.ASTNode;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
@@ -38,7 +36,10 @@ import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Base descriptor for {@link DeclarativeStageConditional}.
@@ -54,7 +55,7 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         return 0;
     }
 
-    public abstract ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original);
+    public abstract Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original);
 
     /**
      * Get all {@link DeclarativeStageConditionalDescriptor}s.

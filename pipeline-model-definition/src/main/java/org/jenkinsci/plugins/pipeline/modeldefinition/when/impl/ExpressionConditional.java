@@ -26,20 +26,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import groovy.lang.Closure;
 import hudson.Extension;
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.BlockStatementMatch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
@@ -86,7 +80,7 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ExpressionConditional> {
 
         @Override
-        public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             if (original != null && original instanceof ModelASTWhenExpression) {
                 ModelASTWhenExpression whenExpr = (ModelASTWhenExpression) original;
                 if (whenExpr.getSourceLocation() instanceof Statement) {

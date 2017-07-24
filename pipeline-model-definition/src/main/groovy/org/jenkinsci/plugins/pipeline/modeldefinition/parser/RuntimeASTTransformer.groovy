@@ -27,7 +27,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.JobProperty
 import hudson.model.Run
-import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -48,17 +47,7 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-// TODO: Once we've eliminated all the AstBuilder.buildFromSpec stuff, we can do .* here
-import static org.codehaus.groovy.ast.tools.GeneralUtils.args
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.closureX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.plusX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.propX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS
-import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt
-import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
 
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
@@ -288,43 +277,25 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    private  MethodCallExpression environmentValueGetterCall(String name) {
-        return (MethodCallExpression)buildAst {
-            methodCall {
-                methodCall {
-                    variable("this")
-                    constant "getClosure"
-                    argumentList {
-                        constant name
-                    }
-                }
-                constant "call"
-                argumentList{}
-            }
-        }
+    private MethodCallExpression environmentValueGetterCall(String name) {
+        return callX(callThisX("getClosure", constX(name)), "call")
     }
 
-    ASTNode transformLibraries(@CheckForNull ModelASTLibraries original) {
+    Expression transformLibraries(@CheckForNull ModelASTLibraries original) {
         if (isGroovyAST(original) && !original.libs.isEmpty()) {
-            return buildAst {
-                constructorCall(Libraries) {
-                    argumentList {
-                        list {
-                            original.libs.each { l ->
-                                if (l.sourceLocation instanceof ASTNode) {
-                                    expression.addAll((ASTNode) l.sourceLocation)
-                                }
-                            }
-                        }
-                    }
+            ListExpression listArg = new ListExpression()
+            original.libs.each { l ->
+                if (l.sourceLocation instanceof Expression) {
+                    listArg.addExpression((Expression)l.sourceLocation)
                 }
             }
+            return ctorX(ClassHelper.make(Libraries.class), args(listArg))
         }
 
         return constX(null)
     }
 
-    ASTNode transformOptions(@CheckForNull ModelASTOptions original) {
+    Expression transformOptions(@CheckForNull ModelASTOptions original) {
         if (isGroovyAST(original) && !original.options.isEmpty()) {
             List<ModelASTOption> jobProps = new ArrayList<>()
             List<ModelASTOption> options = new ArrayList<>()
@@ -341,105 +312,80 @@ class RuntimeASTTransformer {
                     wrappers.add(o)
                 }
             }
-            return buildAst {
-                constructorCall(Options) {
-                    argumentList {
-                        expression.add(transformListOfDescribables(jobProps))
-                        map {
-                            options.each { o ->
-                                if (o.getSourceLocation() instanceof Statement) {
-                                    MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
-                                    if (expr != null) {
-                                        mapEntry {
-                                            constant o.name
-                                            expression.add(methodCallToDescribable(expr))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        map {
-                            wrappers.each { w ->
-                                if (w.getSourceLocation() instanceof Statement) {
-                                    MethodCallExpression expr = matchMethodCall((Statement) w.getSourceLocation())
-                                    if (expr != null) {
-                                        List<Expression> args = methodCallArgs(expr)
+            MapExpression optsMap = new MapExpression()
+            MapExpression wrappersMap = new MapExpression()
 
-                                        mapEntry {
-                                            constant w.name
-                                            if (args.size() == 1) {
-                                                expression.add(args.get(0))
-                                            } else if (args.size() > 1) {
-                                                list {
-                                                    args.each { a ->
-                                                        expression.add(a)
-                                                    }
-                                                }
-                                            } else {
-                                                constant null
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+            options.each { o ->
+                if (o.getSourceLocation() instanceof Statement) {
+                    MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
+                    if (expr != null) {
+                        optsMap.addMapEntryExpression(constX(o.name), methodCallToDescribable(expr))
+                    }
+                }
+            }
+            wrappers.each { w ->
+                if (w.getSourceLocation() instanceof Statement) {
+                    MethodCallExpression expr = matchMethodCall((Statement) w.getSourceLocation())
+                    if (expr != null) {
+                        List<Expression> methArgs = methodCallArgs(expr)
+                        if (methArgs.size() == 1) {
+                            wrappersMap.addMapEntryExpression(constX(w.name), methArgs.get(0))
+                        } else if (methArgs.size() > 1) {
+                            ListExpression argList = new ListExpression(methArgs)
+                            wrappersMap.addMapEntryExpression(constX(w.name), argList)
+                        } else {
+                            wrappersMap.addMapEntryExpression(constX(w.name), constX(null))
                         }
                     }
                 }
             }
+
+            return ctorX(ClassHelper.make(Options.class),
+                args(transformListOfDescribables(jobProps), optsMap, wrappersMap))
         }
 
         return constX(null)
     }
 
-    ASTNode transformParameters(@CheckForNull ModelASTBuildParameters original) {
+    Expression transformParameters(@CheckForNull ModelASTBuildParameters original) {
         return transformDescribableContainer(original, original?.parameters, Parameters.class)
     }
 
-    ASTNode transformPostBuild(@CheckForNull ModelASTPostBuild original) {
+    Expression transformPostBuild(@CheckForNull ModelASTPostBuild original) {
         return transformBuildConditionsContainer(original, PostBuild.class)
     }
 
-    ASTNode transformPostStage(@CheckForNull ModelASTPostStage original) {
+    Expression transformPostStage(@CheckForNull ModelASTPostStage original) {
         return transformBuildConditionsContainer(original, PostStage.class)
     }
 
     Expression transformRoot(@CheckForNull ModelASTPipelineDef original) {
         if (isGroovyAST(original)) {
-            return (Expression)buildAst {
-                constructorCall(Root) {
-                    argumentList {
-                        expression.add(transformAgent(original.agent))
-                        expression.add(transformStages(original.stages))
-                        expression.add(transformPostBuild(original.postBuild))
-                        expression.add(transformEnvironment(original.environment))
-                        expression.add(transformTools(original.tools))
-                        expression.add(transformOptions(original.options))
-                        expression.add(transformTriggers(original.triggers))
-                        expression.add(transformParameters(original.parameters))
-                        expression.add(transformLibraries(original.libraries))
-                    }
-                }
-            }
+            return ctorX(ClassHelper.make(Root.class),
+                args(transformAgent(original.agent),
+                    transformStages(original.stages),
+                    transformPostBuild(original.postBuild),
+                    transformEnvironment(original.environment),
+                    transformTools(original.tools),
+                    transformOptions(original.options),
+                    transformTriggers(original.triggers),
+                    transformParameters(original.parameters),
+                    transformLibraries(original.libraries)))
         }
 
         return constX(null)
     }
 
-    ASTNode transformStage(@CheckForNull ModelASTStage original) {
+    Expression transformStage(@CheckForNull ModelASTStage original) {
         if (isGroovyAST(original)) {
-            return buildAst {
-                constructorCall(Stage) {
-                    argumentList {
-                        constant original.name
-                        expression.add(transformStepsFromStage(original))
-                        expression.add(transformAgent(original.agent))
-                        expression.add(transformPostStage(original.post))
-                        expression.add(transformStageConditionals(original.when))
-                        expression.add(transformTools(original.tools))
-                        expression.add(transformEnvironment(original.environment))
-                    }
-                }
-            }
+            return ctorX(ClassHelper.make(Stage.class),
+                args(constX(original.name),
+                    transformStepsFromStage(original),
+                    transformAgent(original.agent),
+                    transformPostStage(original.post),
+                    transformStageConditionals(original.when),
+                    transformTools(original.tools),
+                    transformEnvironment(original.environment)))
         }
 
         return constX(null)
@@ -452,58 +398,40 @@ class RuntimeASTTransformer {
      * @param original
      * @return
      */
-    ASTNode transformStageConditionals(@CheckForNull ModelASTWhen original) {
+    Expression transformStageConditionals(@CheckForNull ModelASTWhen original) {
         if (isGroovyAST(original) && !original.getConditions().isEmpty()) {
-            return buildAst {
-                constructorCall(StageConditionals) {
-                    argumentList {
-                        closure {
-                            parameters {
-                            }
-                            block {
-                                returnStatement {
-                                    list {
-                                        original.getConditions().each { cond ->
-                                            if (cond.name != null) {
-                                                DeclarativeStageConditionalDescriptor desc =
-                                                    (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
-                                                        DeclarativeStageConditional.class, cond.name)
-                                                if (desc != null) {
-                                                    expression.add(desc.transformToRuntimeAST(cond))
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+            ListExpression closList = new ListExpression()
+            original.getConditions().each { cond ->
+                if (cond.name != null) {
+                    DeclarativeStageConditionalDescriptor desc =
+                        (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
+                            DeclarativeStageConditional.class, cond.name)
+                    if (desc != null) {
+                        closList.addExpression(desc.transformToRuntimeAST(cond))
                     }
                 }
             }
+
+            return ctorX(ClassHelper.make(StageConditionals.class),
+                args(closureX(GeneralUtils.block(returnS(closList)))))
         }
         return constX(null)
     }
 
-    ASTNode transformStages(@CheckForNull ModelASTStages original) {
+    Expression transformStages(@CheckForNull ModelASTStages original) {
         if (isGroovyAST(original) && !original.stages.isEmpty()) {
-            return buildAst {
-                constructorCall(Stages) {
-                    argumentList {
-                        list {
-                            original.stages.each { s ->
-                                expression.add(transformStage(s))
-                            }
-                        }
-                    }
-                }
+            ListExpression argList = new ListExpression()
+            original.stages.each { s ->
+                argList.addExpression(transformStage(s))
             }
+
+            return ctorX(ClassHelper.make(Stages.class), args(argList))
         }
 
         return constX(null)
     }
 
-
-    ASTNode transformStepsFromStage(@CheckForNull ModelASTStage original) {
+    Expression transformStepsFromStage(@CheckForNull ModelASTStage original) {
         if (isGroovyAST(original)) {
             BlockStatementMatch stageMatch = matchBlockStatement((Statement)original.sourceLocation)
             if (stageMatch != null) {
@@ -532,29 +460,19 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    ASTNode transformTools(@CheckForNull ModelASTTools original) {
+    Expression transformTools(@CheckForNull ModelASTTools original) {
         if (isGroovyAST(original) && !original.tools?.isEmpty()) {
-            return buildAst {
-                constructorCall(Tools) {
-                    argumentList {
-                        map {
-                            original.tools.each { k, v ->
-                                mapEntry {
-                                    if (v.sourceLocation != null && v.sourceLocation instanceof ASTNode) {
-                                        constant k.key
-                                        expression.add((ASTNode) v.sourceLocation)
-                                    }
-                                }
-                            }
-                        }
-                    }
+            MapExpression toolsMap = new MapExpression()
+            original.tools.each { k, v ->
+                if (v.sourceLocation != null && v.sourceLocation instanceof Expression) {
+                    toolsMap.addMapEntryExpression(constX(k.key), (Expression)v.sourceLocation)
                 }
             }
         }
         return constX(null)
     }
 
-    ASTNode transformTriggers(@CheckForNull ModelASTTriggers original) {
+    Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
         return transformDescribableContainer(original, original?.triggers, Triggers.class)
     }
 
