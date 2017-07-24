@@ -334,7 +334,7 @@ class ASTParserUtils {
 
     @CheckForNull
     static Expression recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
-        if (isGroovyAST(original)) {
+        if (original != null) {
             MapExpression mappedClosure = new MapExpression()
             eachStatement(original.code) { s ->
                 MethodCallExpression mce = matchMethodCall(s)
@@ -350,6 +350,7 @@ class ASTParserUtils {
                     }
                 }
             }
+            return mappedClosure
         }
 
         return null

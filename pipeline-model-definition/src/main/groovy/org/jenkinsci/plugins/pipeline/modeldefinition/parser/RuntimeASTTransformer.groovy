@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
@@ -44,7 +45,17 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+// TODO: Once we've eliminated all the AstBuilder.buildFromSpec stuff, we can do .* here
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.closureX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.plusX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.propX
+import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS
+import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
 
 class RuntimeASTTransformer {
@@ -57,7 +68,7 @@ class RuntimeASTTransformer {
     ArgumentListExpression transform() {
         return args(
             closureX(
-                block(
+                GeneralUtils.block(
                     returnS(
                         transformRoot(pipelineDef)
                     )
@@ -108,6 +119,8 @@ class RuntimeASTTransformer {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
+            System.err.println("argList: ${argList}")
+            return ctorX(ClassHelper.make(Agent.class), argList)
         }
 
         return constX(null)
@@ -234,7 +247,7 @@ class RuntimeASTTransformer {
             )
         } else if (expr instanceof ClosureExpression) {
             ClosureExpression cl = (ClosureExpression) expr
-            BlockStatement closureBlock = block()
+            BlockStatement closureBlock = GeneralUtils.block()
             eachStatement(cl.code) { s ->
                 if (s instanceof ExpressionStatement) {
                     closureBlock.addStatement(
@@ -256,7 +269,7 @@ class RuntimeASTTransformer {
 
         if (body != null) {
             return closureX(
-                block(
+                GeneralUtils.block(
                     returnS(
                         body
                     )
