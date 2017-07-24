@@ -184,7 +184,7 @@ class RuntimeASTTransformer {
     }
 
     @CheckForNull
-    private ClosureExpression translateEnvironmentValue(Expression expr, Set<String> keys) {
+    private Expression translateEnvironmentValue(Expression expr, Set<String> keys) {
         Expression body = null
 
         if (expr instanceof ConstantExpression) {
