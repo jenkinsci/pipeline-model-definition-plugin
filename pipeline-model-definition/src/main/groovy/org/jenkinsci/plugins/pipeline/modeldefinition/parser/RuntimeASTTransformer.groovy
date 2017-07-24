@@ -28,6 +28,7 @@ import hudson.model.JobProperty
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.syntax.Types
@@ -171,116 +172,99 @@ class RuntimeASTTransformer {
 
     @CheckForNull
     private ClosureExpression translateEnvironmentValue(Expression expr, Set<String> keys) {
-        ASTNode node = buildAst {
-            closure {
-                parameters {}
-                block {
-                    returnStatement {
-                        if (expr instanceof ConstantExpression) {
-                            expression.add(expr)
-                        } else if (expr instanceof BinaryExpression &&
-                            ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
-                            BinaryExpression binExpr = (BinaryExpression) expr
-                            binary {
-                                expression.add(translateEnvironmentValueAndCall(binExpr.leftExpression, keys))
-                                token "+"
-                                expression.add(translateEnvironmentValueAndCall(binExpr.rightExpression, keys))
-                            }
-                        } else if (expr instanceof GStringExpression) {
-                            GStringExpression gStrExpr = (GStringExpression) expr
+        Expression body = null
 
-                            gString(gStrExpr.text) {
-                                strings {
-                                    gStrExpr.strings.each { s ->
-                                        expression.add(s)
-                                    }
-                                }
-                                values {
-                                    gStrExpr.values.each { v ->
-                                        expression.add(translateEnvironmentValueAndCall(v, keys))
-                                    }
-                                }
-                            }
-                        } else if (expr instanceof PropertyExpression) {
-                            PropertyExpression propExpr = (PropertyExpression) expr
-                            if (propExpr.objectExpression instanceof VariableExpression) {
-                                if (((VariableExpression)propExpr.objectExpression).name == "env" &&
-                                    keys.contains(propExpr.propertyAsString)) {
-                                    expression.add(environmentValueGetterCall(propExpr.propertyAsString))
-                                } else {
-                                    property {
-                                        expression.add(translateEnvironmentValueAndCall(propExpr.objectExpression, keys))
-                                        expression.add(propExpr.property)
-                                    }
-                                }
-                            } else {
-                                expression.add(propExpr)
-                            }
-                        } else if (expr instanceof MethodCallExpression) {
-                            MethodCallExpression mce = (MethodCallExpression) expr
-                            methodCall {
-                                expression.add(translateEnvironmentValueAndCall(mce.objectExpression, keys))
-                                expression.add(mce.method)
-                                argumentList {
-                                    mce.arguments.each { a ->
-                                        expression.add(translateEnvironmentValueAndCall(a, keys))
-                                    }
-                                }
-                            }
-                        } else if (expr instanceof VariableExpression) {
-                            VariableExpression ve = (VariableExpression)expr
-                            if (keys.contains(ve.name)) {
-                                expression.add(environmentValueGetterCall(ve.name))
-                            } else if (ve.name == "this") {
-                                expression.add(ve)
-                            } else {
-                                methodCall {
-                                    variable("this")
-                                    constant "getScriptPropOrParam"
-                                    argumentList {
-                                        constant ve.name
-                                    }
-                                }
-                            }
-                        } else if (expr instanceof ElvisOperatorExpression) {
-                            ElvisOperatorExpression elvis = (ElvisOperatorExpression) expr
-                            elvisOperator {
-                                expression.add(translateEnvironmentValueAndCall(elvis.trueExpression, keys))
-                                expression.add(translateEnvironmentValueAndCall(elvis.falseExpression, keys))
-                            }
-                        } else if (expr instanceof ClosureExpression) {
-                            ClosureExpression cl = (ClosureExpression) expr
-                            closure {
-                                parameters {
-                                    cl.parameters.each {
-                                        expression.add(it)
-                                    }
-                                }
-                                block {
-                                    eachStatement(cl.code) { s ->
-                                        if (s instanceof ExpressionStatement) {
-                                            ExpressionStatement stmt = (ExpressionStatement) s
-                                            expression {
-                                                expression.add(translateEnvironmentValueAndCall(stmt.expression, keys))
-                                            }
-                                        } else {
-                                            // TODO: Message asking to report this so I can address it.
-                                            throw new IllegalArgumentException("Got an unexpected" + s.getClass())
-                                        }
-
-                                    }
-                                }
-                            }
-                        } else {
-                            // TODO: Message asking to report this so I can address it.
-                            throw new IllegalArgumentException("Got an unexpected " + expr.getClass())
-                        }
-                    }
+        if (expr instanceof ConstantExpression) {
+            body = expr
+        } else if (expr instanceof BinaryExpression &&
+            ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
+            BinaryExpression binExpr = (BinaryExpression) expr
+            body = plusX(
+                translateEnvironmentValueAndCall(binExpr.leftExpression, keys),
+                translateEnvironmentValueAndCall(binExpr.rightExpression, keys)
+            )
+        } else if (expr instanceof GStringExpression) {
+            GStringExpression gStrExpr = (GStringExpression) expr
+            body = new GStringExpression(gStrExpr.text,
+                gStrExpr.strings,
+                gStrExpr.values.collect { translateEnvironmentValueAndCall(it, keys) }
+            )
+        } else if (expr instanceof PropertyExpression) {
+            PropertyExpression propExpr = (PropertyExpression) expr
+            if (propExpr.objectExpression instanceof VariableExpression) {
+                if (((VariableExpression) propExpr.objectExpression).name == "env" &&
+                    keys.contains(propExpr.propertyAsString)) {
+                    body = environmentValueGetterCall(propExpr.propertyAsString)
+                } else {
+                    body = propX(
+                        translateEnvironmentValueAndCall(propExpr.objectExpression, keys),
+                        propExpr.property
+                    )
+                }
+            } else {
+                body = propExpr
+            }
+        } else if (expr instanceof MethodCallExpression) {
+            MethodCallExpression mce = (MethodCallExpression) expr
+            body = callX(
+                translateEnvironmentValueAndCall(mce.objectExpression, keys),
+                mce.method,
+                args(mce.arguments.collect { a ->
+                    translateEnvironmentValueAndCall(a, keys)
+                })
+            )
+        } else if (expr instanceof VariableExpression) {
+            VariableExpression ve = (VariableExpression) expr
+            if (keys.contains(ve.name)) {
+                body = environmentValueGetterCall(ve.name)
+            } else if (ve.name == "this") {
+                body = ve
+            } else {
+                body = callX(
+                    varX("this"),
+                    constX("getScriptPropOrParam"),
+                    args(constX(ve.name))
+                )
+            }
+        } else if (expr instanceof ElvisOperatorExpression) {
+            ElvisOperatorExpression elvis = (ElvisOperatorExpression) expr
+            body = new ElvisOperatorExpression(
+                translateEnvironmentValueAndCall(elvis.trueExpression, keys),
+                translateEnvironmentValueAndCall(elvis.falseExpression, keys)
+            )
+        } else if (expr instanceof ClosureExpression) {
+            ClosureExpression cl = (ClosureExpression) expr
+            BlockStatement closureBlock = block()
+            eachStatement(cl.code) { s ->
+                if (s instanceof ExpressionStatement) {
+                    closureBlock.addStatement(
+                        stmt(translateEnvironmentValueAndCall(s.expression, keys))
+                    )
+                } else {
+                    // TODO: Message asking to report this so I can address it.
+                    throw new IllegalArgumentException("Got an unexpected" + s.getClass())
                 }
             }
+            body = closureX(
+                cl.parameters,
+                closureBlock
+            )
+        } else {
+            // TODO: Message asking to report this so I can address it.
+            throw new IllegalArgumentException("Got an unexpected " + expr.getClass())
         }
 
-        return node instanceof ClosureExpression ? (ClosureExpression) node : null
+        if (body != null) {
+            return closureX(
+                block(
+                    returnS(
+                        body
+                    )
+                )
+            )
+        }
+
+        return constX(null)
     }
 
     private  MethodCallExpression environmentValueGetterCall(String name) {
