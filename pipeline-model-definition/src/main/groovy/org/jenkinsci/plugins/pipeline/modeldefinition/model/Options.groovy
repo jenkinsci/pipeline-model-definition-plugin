@@ -44,6 +44,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
@@ -170,7 +171,7 @@ public class Options implements Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTOptions original) {
-        if (original != null && !original.options.isEmpty()) {
+        if (ASTParserUtils.isGroovyAST(original) && !original.options.isEmpty()) {
             List<ModelASTOption> jobProps = new ArrayList<>()
             List<ModelASTOption> options = new ArrayList<>()
             List<ModelASTOption> wrappers = new ArrayList<>()

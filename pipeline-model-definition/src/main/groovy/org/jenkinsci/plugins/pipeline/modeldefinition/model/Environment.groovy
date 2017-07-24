@@ -83,7 +83,7 @@ public class Environment implements Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTEnvironment original) {
-        if (original != null && !original.variables.isEmpty()) {
+        if (ASTParserUtils.isGroovyAST(original) && !original.variables.isEmpty()) {
             return ASTParserUtils.buildAst {
                 constructorCall(Environment) {
                     argumentList {

@@ -87,7 +87,7 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
         @Override
         public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenConditionToRuntimeAST(original);
+            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
     }
 }

@@ -75,7 +75,7 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<BranchConditional> {
         @Override
         public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenConditionToRuntimeAST(original);
+            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
     }
 }

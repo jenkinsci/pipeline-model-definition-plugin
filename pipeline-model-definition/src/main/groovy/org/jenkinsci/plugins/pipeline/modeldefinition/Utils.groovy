@@ -50,24 +50,14 @@ import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenExpression
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.MethodsToList
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Root
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -77,7 +67,6 @@ import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
-import org.jenkinsci.plugins.workflow.cps.EnvActionImpl
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner
 import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
@@ -97,7 +86,6 @@ import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
@@ -173,27 +161,6 @@ public class Utils {
             }
         }
 
-    }
-
-    /**
-     * Finds the parameterized type argument for a {@link MethodsToList} class and returns it.
-     *
-     * @param c A class.
-     * @return The parameterized type argument for the class, if it's a {@link MethodsToList} class. Null otherwise.
-     */
-    public static Class<Describable> getMethodsToListType(Class c) {
-        Class retClass
-        c.genericInterfaces.each { Type t ->
-            if (t instanceof ParameterizedType) {
-                if (t.getRawType() instanceof Class
-                    && MethodsToList.class.isAssignableFrom((Class)t.getRawType())
-                    && t.getActualTypeArguments().first() instanceof Class) {
-                    retClass = (Class)t.actualTypeArguments.first()
-                }
-            }
-        }
-
-        return retClass
     }
 
     /**

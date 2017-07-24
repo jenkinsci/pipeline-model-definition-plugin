@@ -60,7 +60,7 @@ public class NotConditional extends DeclarativeStageConditional<NotConditional> 
 
         @Override
         public ASTNode transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenConditionToRuntimeAST(original);
+            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
     }
 }

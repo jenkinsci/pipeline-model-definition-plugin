@@ -72,9 +72,8 @@ class StepsBlock implements Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTStage original) {
-        Object origSrc = original?.sourceLocation
-        if (origSrc != null && origSrc instanceof Statement) {
-            BlockStatementMatch stageMatch = ASTParserUtils.matchBlockStatement(origSrc)
+        if (ASTParserUtils.isGroovyAST(original)) {
+            BlockStatementMatch stageMatch = ASTParserUtils.matchBlockStatement((Statement)original.sourceLocation)
             if (stageMatch != null) {
                 Statement stepsMethod = ASTParserUtils.asBlock(stageMatch.body.code).statements.find { s ->
                     ASTParserUtils.matchMethodCall(s)?.methodAsString == "steps"
@@ -93,9 +92,8 @@ class StepsBlock implements Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTBuildCondition original) {
-        Object origSrc = original?.sourceLocation
-        if (origSrc != null && origSrc instanceof Statement) {
-            BlockStatementMatch condMatch = ASTParserUtils.matchBlockStatement(origSrc)
+        if (ASTParserUtils.isGroovyAST(original)) {
+            BlockStatementMatch condMatch = ASTParserUtils.matchBlockStatement((Statement)original.sourceLocation)
             return GeneralUtils.callX(ClassHelper.make(Utils), "createStepsBlock",
                 GeneralUtils.args(condMatch.body))
         } else {

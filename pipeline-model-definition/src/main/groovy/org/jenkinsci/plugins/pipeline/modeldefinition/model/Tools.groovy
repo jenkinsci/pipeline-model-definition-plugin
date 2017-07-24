@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.CheckForNull
@@ -70,12 +71,7 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
     }
 
     public static ASTNode transformToRuntimeAST(@CheckForNull ModelASTTools original) {
-        if (original == null ||
-            original.tools.isEmpty() ||
-            original.sourceLocation == null ||
-            !(original.sourceLocation instanceof ASTNode)) {
-            return GeneralUtils.constX(null)
-        } else {
+        if (ASTParserUtils.isGroovyAST(original) && !original.tools?.isEmpty()) {
             return buildAst {
                 constructorCall(Tools) {
                     argumentList {
@@ -93,6 +89,8 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
                 }
             }
         }
+        return GeneralUtils.constX(null)
+
     }
 
     /**

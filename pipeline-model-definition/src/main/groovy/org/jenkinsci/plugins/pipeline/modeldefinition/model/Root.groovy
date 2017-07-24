@@ -116,7 +116,7 @@ public class Root implements NestedModel, Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTPipelineDef original) {
-        if (original != null) {
+        if (ASTParserUtils.isGroovyAST(original)) {
             return ASTParserUtils.buildAst {
                 constructorCall(Root) {
                     argumentList {

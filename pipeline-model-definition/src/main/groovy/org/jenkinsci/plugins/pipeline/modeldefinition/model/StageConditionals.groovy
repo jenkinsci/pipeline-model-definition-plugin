@@ -48,7 +48,7 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUti
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
+class StageConditionals implements Serializable {
     private static final Object NESTED_CACHE_KEY = new Object()
     private static final Object MULTIPLE_NESTED_CACHE_KEY = new Object()
 

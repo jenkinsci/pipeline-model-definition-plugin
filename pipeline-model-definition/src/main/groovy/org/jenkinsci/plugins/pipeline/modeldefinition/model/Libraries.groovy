@@ -61,7 +61,7 @@ public class Libraries implements Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTLibraries original) {
-        if (original != null && !original.libs.isEmpty()) {
+        if (ASTParserUtils.isGroovyAST(original) && !original.libs.isEmpty()) {
             return ASTParserUtils.buildAst {
                 constructorCall(Libraries) {
                     argumentList {

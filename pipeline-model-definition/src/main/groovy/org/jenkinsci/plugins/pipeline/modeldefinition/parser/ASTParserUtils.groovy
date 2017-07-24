@@ -37,7 +37,6 @@ import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression
-import org.codehaus.groovy.ast.expr.ElvisOperatorExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.GStringExpression
 import org.codehaus.groovy.ast.expr.ListExpression
@@ -52,9 +51,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.control.SourceUnit
-import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -73,7 +70,6 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
@@ -210,6 +206,10 @@ class ASTParserUtils {
         return null;
     }
 
+    /**
+     * Takes a statement and iterates over its contents - if the statement is not a {@link BlockStatement}, it gets
+     * wrapped in a new block to simplify iteration.
+     */
     static <T> List<T> eachStatement(Statement st, @ClosureParams(FirstParam.class) Closure<T> c) {
         return asBlock(st).statements.collect(c)
     }
@@ -227,12 +227,20 @@ class ASTParserUtils {
         return null;
     }
 
+    /**
+     * Transforms an {@link AstSpecificationCompiler}-style closure via {@link AstBuilder#buildFromSpec(Closure)},
+     * returning the first generated {@link ASTNode}, if any.
+     */
     @CheckForNull
     static buildAst(@DelegatesTo(AstSpecificationCompiler) Closure specification) {
         def nodes = new AstBuilder().buildFromSpec(specification)
         return nodes?.get(0)
     }
 
+    /**
+     * Takes a list of {@link ModelASTElement}s corresponding to {@link Describable}s (such as {@link JobProperty}s, etc),
+     * and transforms their Groovy AST nodes into AST from {@link #methodCallToDescribable(MethodCallExpression)}.
+     */
     @Nonnull
     static ASTNode transformListOfDescribables(@CheckForNull List<ModelASTElement> children) {
         return buildAst {
@@ -242,22 +250,29 @@ class ASTParserUtils {
                         MethodCallExpression m = matchMethodCall((Statement) d.sourceLocation)
                         if (m != null) {
                             expression.add(methodCallToDescribable(m))
+                        } else {
+                            throw new IllegalArgumentException("Expected a method call expression but received ${d.sourceLocation}")
                         }
+                    } else {
+                        throw new IllegalArgumentException("Expected a statement but received ${d.sourceLocation}")
                     }
                 }
             }
         }
     }
 
+    /**
+     * Transforms a container for describables, such as {@link Triggers}, into AST for instantation.
+     * @param original A {@link ModelASTElement} such as {@link ModelASTTriggers} or {@link ModelASTBuildParameters}
+     * @param children The children for the original element - passed as a separate argument since the getter will
+     * be different.
+     * @param containerClass The class we will be instantiating, i.e., {@link Parameters} or {@link Triggers}.
+     * @return The AST for instantiating the container and its contents.
+     */
     static ASTNode transformDescribableContainer(@CheckForNull ModelASTElement original,
                                                  @CheckForNull List<ModelASTElement> children,
                                                  @Nonnull Class containerClass) {
-        if (original == null ||
-            children?.isEmpty() ||
-            original.sourceLocation == null ||
-            !(original.sourceLocation instanceof ASTNode)) {
-            return GeneralUtils.constX(null)
-        } else {
+        if (isGroovyAST(original) && !children?.isEmpty()) {
             return buildAst {
                 constructorCall(containerClass) {
                     argumentList {
@@ -266,10 +281,14 @@ class ASTParserUtils {
                 }
             }
         }
+        return constX(null)
     }
 
-    static ASTNode transformWhenConditionToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-        if (original != null) {
+    /**
+     * Transform a when condition, and its children if any exist, into instantiation AST.
+     */
+    static ASTNode transformWhenContentToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+        if (isGroovyAST(original)) {
             DeclarativeStageConditionalDescriptor parentDesc =
                 (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
                     DeclarativeStageConditional.class, original.name)
@@ -290,11 +309,11 @@ class ASTParserUtils {
                                             mapEntry {
                                                 constant UninstantiatedDescribable.ANONYMOUS_KEY
                                                 if (parentDesc.allowedChildrenCount == 1) {
-                                                    expression.add(transformWhenConditionToRuntimeAST(cond.children.first()))
+                                                    expression.add(transformWhenContentToRuntimeAST(cond.children.first()))
                                                 } else {
                                                     list {
                                                         cond.children.each { child ->
-                                                            expression.add(transformWhenConditionToRuntimeAST(child))
+                                                            expression.add(transformWhenContentToRuntimeAST(child))
                                                         }
                                                     }
                                                 }
@@ -310,12 +329,12 @@ class ASTParserUtils {
                 return parentDesc.transformToRuntimeAST(original)
             }
         }
-        return GeneralUtils.constX(null)
+        return constX(null)
     }
 
     @CheckForNull
     static ASTNode recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
-        if (original != null) {
+        if (isGroovyAST(original)) {
             return buildAst {
                 map {
                     eachStatement(original.code) { s ->

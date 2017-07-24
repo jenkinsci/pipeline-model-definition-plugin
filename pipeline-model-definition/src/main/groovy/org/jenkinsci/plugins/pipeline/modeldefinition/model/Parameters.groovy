@@ -47,7 +47,7 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Parameters implements Serializable, MethodsToList<ParameterDefinition> {
+public class Parameters implements Serializable {
     private static final Object CACHE_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> parameterTypeCache =

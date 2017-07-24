@@ -94,7 +94,7 @@ public class Stage implements NestedModel, Serializable {
     }
 
     static ASTNode transformToRuntimeAST(@CheckForNull ModelASTStage original) {
-        if (original != null) {
+        if (ASTParserUtils.isGroovyAST(original)) {
             return ASTParserUtils.buildAst {
                 constructorCall(Stage) {
                     argumentList {
