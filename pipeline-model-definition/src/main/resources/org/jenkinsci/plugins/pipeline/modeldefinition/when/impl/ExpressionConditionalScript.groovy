@@ -38,9 +38,14 @@ class ExpressionConditionalScript extends DeclarativeStageConditionalScript<Expr
     public boolean evaluate() {
         Object retVal = null
         String block = describable.block
+        Closure closureBlock = describable.closureBlock
 
         if (block != null) {
             retVal = script.evaluate(block)
+        } else if (closureBlock != null) {
+            closureBlock.delegate = script
+            closureBlock.resolveStrategy = Closure.DELEGATE_FIRST
+            retVal = closureBlock.call()
         }
 
         return retVal ? true : false

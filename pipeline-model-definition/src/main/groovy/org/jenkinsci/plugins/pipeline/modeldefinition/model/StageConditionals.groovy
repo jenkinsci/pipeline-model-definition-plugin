@@ -30,9 +30,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  * The {@link Stage#when} block.
@@ -40,7 +39,7 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class StageConditionals implements MethodsToList<DeclarativeStageConditional<? extends DeclarativeStageConditional>>, Serializable {
+class StageConditionals implements Serializable {
     private static final Object NESTED_CACHE_KEY = new Object()
     private static final Object MULTIPLE_NESTED_CACHE_KEY = new Object()
 
@@ -66,9 +65,10 @@ class StageConditionals implements MethodsToList<DeclarativeStageConditional<? e
         return multipleNestedTypeCache.get(MULTIPLE_NESTED_CACHE_KEY)
     }
 
-    public List<DeclarativeStageConditional> conditions = []
+    public final Closure rawClosure
 
-    public StageConditionals(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> inList) {
-        conditions.addAll(inList)
+    @Whitelisted
+    StageConditionals(Closure rawClosure) {
+        this.rawClosure = rawClosure
     }
 }

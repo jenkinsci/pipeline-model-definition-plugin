@@ -29,16 +29,15 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import hudson.ExtensionList
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
@@ -74,6 +73,14 @@ public class Options implements Serializable {
                 wrappers[(String)i[0]] = i[1]
             }
         }
+    }
+
+    @Whitelisted
+    Options(@Nonnull List<JobProperty> properties, @Nonnull Map<String, DeclarativeOption> options,
+            @Nonnull Map<String, Object> wrappers) {
+        this.properties.addAll(properties)
+        this.options.putAll(options)
+        this.wrappers.putAll(wrappers)
     }
 
     public List<JobProperty> getProperties() {

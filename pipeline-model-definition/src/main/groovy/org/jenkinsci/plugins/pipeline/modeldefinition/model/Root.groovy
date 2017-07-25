@@ -26,8 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
@@ -58,66 +57,32 @@ public class Root implements NestedModel, Serializable {
 
     Libraries libraries
 
-    Root stages(Stages s) {
-        this.stages = s
-        return this
-    }
-
-    Root post(PostBuild p) {
-        this.post = p
-        return this
-    }
-
-    Root agent(Agent a) {
-        this.agent = a.convertZeroArgs()
-        return this
-    }
-
-    Root environment(Environment m) {
-        this.environment = m
-        return this
-    }
-
-    Root tools(Tools t) {
-        this.tools = t
-        return this
-    }
-
-    Root options(Options p) {
-        this.options = p
-        return this
-    }
-
-    Root triggers(Triggers t) {
-        this.triggers = t
-        return this
-    }
-
-    Root parameters(Parameters p) {
-        this.parameters = p
-        return this
-    }
-
-    Root libraries(Libraries l) {
-        this.libraries = l
-        return this
+    @Whitelisted
+    Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
+         Triggers triggers, Parameters parameters, Libraries libraries) {
+        this.agent = agent
+        this.stages = stages
+        this.post = post
+        this.environment = environment
+        this.tools = tools
+        this.options = options
+        this.triggers = triggers
+        this.parameters = parameters
+        this.libraries = libraries
     }
 
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
      *
-     * @return a list of "key=value" strings.
+     * @return a map of keys to closures.
      */
-    List<String> getEnvVars(CpsScript script) {
+    Map<String,Closure> getEnvVars(CpsScript script) {
         if (environment != null) {
-            return environment.resolveEnvVars(script, true).findAll {
-                it.key in environment.getMap().keySet()
-            }.collect { k, v ->
-                "${k}=${v}"
-            }
+            environment.envResolver.setScript(script)
+            return environment.envResolver.closureMap
         } else {
-            return []
+            return [:]
         }
     }
 

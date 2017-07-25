@@ -31,6 +31,7 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import hudson.model.ParameterDefinition
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.Nonnull
 
@@ -42,7 +43,7 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Parameters implements Serializable, MethodsToList<ParameterDefinition> {
+public class Parameters implements Serializable {
     private static final Object CACHE_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> parameterTypeCache =
@@ -50,6 +51,7 @@ public class Parameters implements Serializable, MethodsToList<ParameterDefiniti
 
     List<ParameterDefinition> parameters = []
 
+    @Whitelisted
     public Parameters(List<ParameterDefinition> params) {
         this.parameters = params
     }
