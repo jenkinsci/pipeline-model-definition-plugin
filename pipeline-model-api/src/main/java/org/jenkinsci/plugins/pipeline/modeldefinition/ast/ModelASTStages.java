@@ -28,19 +28,22 @@ public final class ModelASTStages extends ModelASTElement {
 
     @Override
     public void validate(final ModelValidator validator) {
+        validate(validator, false);
+    }
+
+    public void validate(final ModelValidator validator, boolean isNested) {
         validator.validateElement(this);
         for (ModelASTStage stage : stages) {
-            stage.validate(validator);
+            stage.validate(validator, isNested);
         }
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("stages {\n");
+        StringBuilder result = new StringBuilder();
         for (ModelASTStage stage: stages) {
             result.append(stage.toGroovy());
         }
-        result.append("}\n");
         return result.toString();
     }
 

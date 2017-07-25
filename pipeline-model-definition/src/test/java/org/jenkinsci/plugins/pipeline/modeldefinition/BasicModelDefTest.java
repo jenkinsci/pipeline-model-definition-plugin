@@ -28,8 +28,10 @@ import com.google.common.base.Predicate;
 import htmlpublisher.HtmlPublisherTarget;
 import hudson.model.Result;
 import hudson.model.Slave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
@@ -40,9 +42,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
+import org.jenkinsci.plugins.workflow.actions.ErrorAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -63,6 +67,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -139,6 +144,66 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         FlowNode shouldBeFailedNode = execution.getNode("" + (Integer.valueOf(endFoo.getId()) - 1));
         assertNotNull(shouldBeFailedNode);
         assertNotNull(shouldBeFailedNode.getError());
+        TagsAction parentTags = startFoo.getAction(TagsAction.class);
+        assertNotNull(parentTags);
+        assertNotNull(parentTags.getTags());
+        assertFalse(parentTags.getTags().isEmpty());
+        assertTrue(parentTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(Utils.getStageStatusMetadata().getFailedAndContinued(),
+                parentTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void parallelStagesHaveStatusAndPost() throws Exception {
+        WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatusAndPost")
+                .logContains("[Pipeline] { (foo)",
+                        "[first] { (Branch: first)",
+                        "[second] { (Branch: second)",
+                        "FIRST BRANCH FAILED",
+                        "SECOND BRANCH POST",
+                        "FOO STAGE FAILED")
+                .hasFailureCase()
+                .go();
+
+        FlowExecution execution = b.getExecution();
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        assertNotNull(startFoo);
+        assertTrue(startFoo instanceof BlockStartNode);
+        FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFoo));
+        assertNotNull(endFoo);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+        assertNotNull(endFoo.getError());
+
+        FlowNode startFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("first"));
+        assertNotNull(startFirst);
+        assertTrue(startFirst instanceof BlockStartNode);
+        FlowNode endFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFirst));
+        assertNotNull(endFirst);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFirst, endFirst, null));
+        assertNotNull(endFirst.getError());
+
+        TagsAction nestedTags = startFirst.getAction(TagsAction.class);
+        assertNotNull(nestedTags);
+        assertNotNull(nestedTags.getTags());
+        assertFalse(nestedTags.getTags().isEmpty());
+        assertTrue(nestedTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(StageStatus.getFailedAndContinued(),
+                nestedTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+
+        TagsAction parentTags = startFoo.getAction(TagsAction.class);
+        assertNotNull(parentTags);
+        assertNotNull(parentTags.getTags());
+        assertFalse(parentTags.getTags().isEmpty());
+        assertTrue(parentTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(StageStatus.getFailedAndContinued(),
+                parentTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+
+        // Was originally testing to see if the last-but-one node in the failed block was the failure but that's
+        // actually a bogus test, particularly when running post stuff.
     }
 
     @Issue("JENKINS-42039")
@@ -748,4 +813,45 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41334")
+    @Test
+    public void nestedParallelStages() throws Exception {
+        expect("nestedParallelStages")
+                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .go();
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void parallelStagesAgentEnvWhen() throws Exception {
+        Slave s = j.createOnlineSlave();
+        s.setLabelString("first-agent");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
+
+        Slave s2 = j.createOnlineSlave();
+        s2.setLabelString("second-agent");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
+
+        expect("parallelStagesAgentEnvWhen")
+                .logContains("[Pipeline] { (foo)",
+                        "[first] { (Branch: first)",
+                        "[second] { (Branch: second)",
+                        "First stage, first agent",
+                        "First stage, do not override",
+                        "First stage, overrode once and done",
+                        "First stage, overrode twice, in first branch",
+                        "First stage, overrode per nested, in first branch",
+                        "First stage, declared per nested, in first branch",
+                        "Second stage, second agent",
+                        "Second stage, do not override",
+                        "Second stage, overrode once and done",
+                        "Second stage, overrode twice, in second branch",
+                        "Second stage, overrode per nested, in second branch",
+                        "Second stage, declared per nested, in second branch",
+                        "[second] Apache Maven 3.0.1")
+                .logNotContains("WE SHOULD NEVER GET HERE")
+                .go();
+
+
+    }
 }

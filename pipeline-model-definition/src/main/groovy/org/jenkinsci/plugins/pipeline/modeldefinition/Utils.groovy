@@ -67,14 +67,18 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.workflow.actions.LabelAction
 import org.jenkinsci.plugins.workflow.actions.TagsAction
+import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner
+import org.jenkinsci.plugins.workflow.graph.BlockEndNode
+import org.jenkinsci.plugins.workflow.graph.BlockStartNode
+import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner
 import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
-import org.jenkinsci.plugins.workflow.cps.nodes.StepEndNode
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
@@ -256,23 +260,20 @@ public class Utils {
             }
 
             if (root != null) {
-                root = populateWhen(root, model)
-                root = populateEnv(r, root, model)
+                root = populateFromModel(r, root, model)
             }
         }
 
         return root
     }
 
-    static Root populateEnv(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
+    static Root populateFromModel(@Nonnull WorkflowRun r, @Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
         root.environment = environmentFromAST(r, model.environment)
 
         List<Stage> stagesWithEnvs = []
 
         root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            s.environment = environmentFromAST(r, astStage.environment)
-            stagesWithEnvs.add(s)
+            stagesWithEnvs.add(populateSingleStageFromModel(r, model.stages, s))
         }
 
         root.stages.stages = stagesWithEnvs
@@ -280,32 +281,29 @@ public class Utils {
         return root
     }
 
-    /**
-     * Attaches the {@link StageConditionals} to the appropriate {@link Stage}s, pulling from the AST model.
-     *
-     * @param root
-     * @param model
-     * @return an updated {@link Root}
-     */
-    static Root populateWhen(@Nonnull Root root, @Nonnull ModelASTPipelineDef model) {
-        List<Stage> stagesWithWhen = []
+    private static Stage populateSingleStageFromModel(@Nonnull WorkflowRun r, @Nonnull ModelASTStages allStages,
+                                                      @Nonnull Stage stage) {
+        ModelASTStage astStage = allStages.stages.find { it.name == stage.name }
+        stage.environment = environmentFromAST(r, astStage.environment)
 
-        root.stages.stages.each { s ->
-            ModelASTStage astStage = model.stages.stages.find { it.name == s.name }
-            if (astStage.when != null) {
-                List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
-                    astStage.when.conditions.collect { c ->
-                        stageConditionalFromAST(c)
-                    }
+        if (astStage.when != null) {
+            List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> processedConditions =
+                astStage.when.conditions.collect { c ->
+                    stageConditionalFromAST(c)
+                }
 
-                s.when(new StageConditionals(processedConditions))
-            }
-            stagesWithWhen.add(s)
+            stage.when(new StageConditionals(processedConditions))
         }
 
-        root.stages.stages = stagesWithWhen
+        if (stage.parallel != null && !stage.parallel.stages.isEmpty()) {
+            List<Stage> nestedStages = []
+            stage.parallel.stages.each { s ->
+                nestedStages.add(populateSingleStageFromModel(r, astStage.parallel, s))
+            }
+            stage.parallel.stages = nestedStages
+        }
 
-        return root
+        return stage
     }
 
     /**
@@ -445,12 +443,12 @@ public class Utils {
         }
     }
 
-    static Predicate<FlowNode> endNodeForStage(final StepStartNode startNode) {
+    static Predicate<FlowNode> endNodeForStage(final BlockStartNode startNode) {
         return new Predicate<FlowNode>() {
             @Override
             boolean apply(@Nullable FlowNode input) {
                 return input != null &&
-                    input instanceof StepEndNode &&
+                    input instanceof BlockEndNode &&
                     input.getStartNode().equals(startNode)
             }
         }
@@ -460,10 +458,21 @@ public class Utils {
         return new Predicate<FlowNode>() {
             @Override
             boolean apply(@Nullable FlowNode input) {
-                return input != null &&
-                    input instanceof StepStartNode &&
-                    ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
-                    (stageName == null || input.displayName?.equals(stageName))
+                if (input != null) {
+                    if (input instanceof StepStartNode &&
+                        ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
+                        (stageName == null || input.displayName?.equals(stageName))) {
+                        // This is a true stage.
+                        return true
+                    } else if (input.getAction(LabelAction.class) != null &&
+                        input.getAction(ThreadNameAction.class) != null &&
+                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
+                        // This is actually a parallel block
+                        return true
+                    }
+                }
+
+                return false
             }
         }
     }
@@ -505,7 +514,7 @@ public class Utils {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
-        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
+        ForkScanner scanner = new ForkScanner()
 
         return scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
     }

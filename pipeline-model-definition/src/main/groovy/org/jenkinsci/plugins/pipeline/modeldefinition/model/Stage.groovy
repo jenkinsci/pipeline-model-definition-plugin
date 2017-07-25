@@ -26,10 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-import javax.annotation.Nonnull
 
 /**
  * An individual stage to be executed within the build.
@@ -54,6 +51,8 @@ public class Stage implements NestedModel, Serializable {
     Tools tools
 
     Environment environment
+
+    Stages parallel
 
     Stage name(String n) {
         this.name = n
@@ -90,15 +89,19 @@ public class Stage implements NestedModel, Serializable {
         return this
     }
 
+    Stage parallel(Stages stages) {
+        this.parallel = stages
+        return this
+    }
     /**
      * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
      * suitable for use with the withEnv step.
      *
      * @return a list of "key=value" strings.
      */
-    List<String> getEnvVars(Root root, CpsScript script) {
+    List<String> getEnvVars(Root root, CpsScript script, Stage parentStage = null) {
         if (environment != null) {
-            return environment.resolveEnvVars(script, true, root.environment).findAll {
+            return environment.resolveEnvVars(script, true, root.environment, parentStage).findAll {
                 it.key in environment.getMap().keySet()
             }.collect { k, v ->
                 "${k}=${v}"

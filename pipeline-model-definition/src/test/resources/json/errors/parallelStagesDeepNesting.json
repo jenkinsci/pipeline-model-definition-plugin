@@ -1,0 +1,61 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "parallel":     [
+      {
+        "name": "first",
+        "parallel":         [
+          {
+            "name": "first-and-one",
+            "branches": [            {
+              "name": "default",
+              "steps": [              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": true,
+                    "value": "This should never be reached"
+                  }
+                }]
+              }]
+            }]
+          },
+          {
+            "name": "first-and-two",
+            "branches": [            {
+              "name": "default",
+              "steps": [              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": true,
+                    "value": "This should also never be reached"
+                  }
+                }]
+              }]
+            }]
+          }
+        ]
+      },
+      {
+        "name": "second",
+        "branches": [        {
+          "name": "default",
+          "steps": [          {
+            "name": "echo",
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": true,
+                "value": "Second branch"
+              }
+            }]
+          }]
+        }]
+      }
+    ]
+  }],
+  "agent": {"type": "none"}
+}}

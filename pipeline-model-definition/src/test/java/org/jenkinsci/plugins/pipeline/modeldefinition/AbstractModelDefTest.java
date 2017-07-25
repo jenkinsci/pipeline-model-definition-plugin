@@ -209,7 +209,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "whenOr",
             "whenAnd",
             "usernamePassword",
-            "environmentCrossReferences"
+            "environmentCrossReferences",
+            "nestedParallelStages"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -258,6 +259,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
+        result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_BothStagesAndSteps("foo")});
+        result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
 
         result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
 

@@ -23,6 +23,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTTools tools;
     private ModelASTEnvironment environment;
     private Boolean failFast;
+    private ModelASTStages parallel;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -30,13 +31,19 @@ public final class ModelASTStage extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTBranch branch : branches) {
-            a.add(branch.toJSON());
-        }
         JSONObject o = new JSONObject();
         o.accumulate("name", name);
-        o.accumulate("branches", a);
+
+        if (branches.isEmpty() && parallel != null) {
+            o.accumulate("parallel", parallel.toJSON());
+        } else {
+            final JSONArray a = new JSONArray();
+            for (ModelASTBranch branch : branches) {
+                a.add(branch.toJSON());
+            }
+            o.accumulate("branches", a);
+        }
+
         if (failFast != null) {
             o.accumulate("failFast", failFast);
         }
@@ -64,9 +71,16 @@ public final class ModelASTStage extends ModelASTElement {
 
     @Override
     public void validate(final ModelValidator validator) {
-        validator.validateElement(this);
+        validate(validator, false);
+    }
+
+    public void validate(final ModelValidator validator, boolean isNested) {
+        validator.validateElement(this, isNested);
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);
+        }
+        if (parallel != null) {
+            parallel.validate(validator, true);
         }
         if (agent != null) {
             agent.validate(validator);
@@ -102,31 +116,37 @@ public final class ModelASTStage extends ModelASTElement {
         if (environment != null) {
             result.append(environment.toGroovy());
         }
-        result.append("steps {\n");
-        if (branches.size() > 1) {
-            result.append("parallel(");
-            boolean first = true;
-            for (ModelASTBranch branch: branches) {
-                if (first) {
-                    first = false;
-                } else {
-                    result.append(',');
+        if (branches.isEmpty() && parallel != null) {
+            result.append("parallel {\n");
+            result.append(parallel.toGroovy());
+            result.append("}\n");
+        } else {
+            result.append("steps {\n");
+            if (branches.size() > 1) {
+                result.append("parallel(");
+                boolean first = true;
+                for (ModelASTBranch branch : branches) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        result.append(',');
+                    }
+                    result.append('\n');
+                    result.append('"' + StringEscapeUtils.escapeJava(branch.getName()) + '"')
+                            .append(": {\n")
+                            .append(branch.toGroovy())
+                            .append("\n}");
                 }
-                result.append('\n');
-                result.append('"' + StringEscapeUtils.escapeJava(branch.getName()) + '"')
-                        .append(": {\n")
-                        .append(branch.toGroovy())
-                        .append("\n}");
+                if (failFast != null && failFast) {
+                    result.append(",\nfailFast: true");
+                }
+                result.append("\n)\n");
+            } else if (branches.size() == 1) {
+                result.append(branches.get(0).toGroovy());
             }
-            if (failFast != null && failFast) {
-                result.append(",\nfailFast: true");
-            }
-            result.append("\n)\n");
-        } else if (branches.size() == 1) {
-            result.append(branches.get(0).toGroovy());
-        }
 
-        result.append("}\n");
+            result.append("}\n");
+        }
 
         if (post != null) {
             result.append(post.toGroovy());
@@ -145,6 +165,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (agent != null) {
             agent.removeSourceLocation();
+        }
+        if (parallel != null) {
+            parallel.removeSourceLocation();
         }
         if (when != null) {
             when.removeSourceLocation();
@@ -224,6 +247,14 @@ public final class ModelASTStage extends ModelASTElement {
         this.failFast = f;
     }
 
+    public ModelASTStages getParallel() {
+        return parallel;
+    }
+
+    public void setParallel(ModelASTStages s) {
+        this.parallel = s;
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
@@ -235,6 +266,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", tools=" + tools +
                 ", environment=" + environment +
                 ", failFast=" + failFast +
+                ", parallel=" + parallel +
                 "}";
     }
 
@@ -268,6 +300,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (getFailFast() != null ? !getFailFast().equals(that.getFailFast()) : that.getFailFast() != null) {
             return false;
         }
+        if (getParallel() != null ? !getParallel().equals(that.getParallel()) : that.getParallel() != null) {
+            return false;
+        }
         if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
             return false;
         }
@@ -289,6 +324,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getFailFast() != null ? getFailFast().hashCode() : 0);
+        result = 31 * result + (getParallel() != null ? getParallel().hashCode() : 0);
         return result;
     }
 }

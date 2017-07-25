@@ -445,7 +445,7 @@
       "additionalProperties": false
     },
     "stage": {
-      "description": "A single Pipeline stage, with a name and one or more branches",
+      "description": "A single Pipeline stage, with a name and either one or more branches or one or more nested stages",
       "type": "object",
       "properties": {
         "name": {
@@ -474,11 +474,13 @@
           "items": {
             "$ref": "#/definitions/branch"
           }
+        },
+        "parallel": {
+          "$ref": "#/definitions/stages"
         }
       },
       "required": [
-        "name",
-        "branches"
+        "name"
       ],
       "additionalProperties": false
     },

@@ -3,7 +3,8 @@
 * Author: Andrew Bayer
 * Created Date: February 27, 2017
 * Approved Date: March 21, 2017
-* Target Release: 1.3
+* Revised Date: April 13, 2017
+* Target Release: 1.2
 * JIRA: [JENKINS-41334](https://issues.jenkins-ci.org/browse/JENKINS-41334)
 * Status: Approved
 
@@ -51,7 +52,6 @@ stage('foo') {
     would be able to contain further `parallel` `stage`s.
 * `stage`s within a `parallel` would not allow use of the `parallel`
     step either, so as to prevent visualization confusion.
-* Naming of `parallel` is up for debate.
 
 ### Runtime Implementation
 
@@ -74,3 +74,7 @@ else will just function properly right out of the box.
 
 No changes should be needed in Blue Ocean visualization, since we will simply
 be using `parallel` branches with no nested `StageStep` executions.
+
+#### Revisions
+* Apr 13, 2017 - switched name in the syntax to `parallel` to prevent 
+confusion with the existing `parallel` step, switched target release to 1.2.

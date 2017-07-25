@@ -601,20 +601,41 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
-    public boolean validateElement(@Nonnull ModelASTStage stage) {
+    public boolean validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
         boolean valid = true
         if (stage.name == null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NoStageName())
             valid = false
-        }
-        if (stage.branches.isEmpty()) {
+        } else if (isNested && (stage.branches.size() > 1 || stage.parallel != null)) {
+            ModelASTElement errorElement
+            if (stage.parallel != null) {
+                errorElement = stage.parallel
+            } else {
+                errorElement = stage.branches.first()
+            }
+            errorCollector.error(errorElement, Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+            valid = false
+        } else if (!stage.branches.isEmpty() && stage.parallel != null) {
+            errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))
+            valid = false
+        } else if (stage.branches.isEmpty() && stage.parallel == null) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        }
-        def branchNames = stage.branches.collect { it.name }
-        branchNames.findAll { branchNames.count(it) > 1 }.unique().each { bn ->
-            errorCollector.error(stage, Messages.ModelValidatorImpl_DuplicateParallelName(bn))
-            valid = false
+        } else if (stage.parallel != null) {
+            if (stage.agent != null) {
+                errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
+                valid = false
+            }
+            if (stage.tools != null) {
+                errorCollector.error(stage.tools, Messages.ModelValidatorImpl_ToolsInNestedStages(stage.name))
+                valid = false
+            }
+        } else {
+            def branchNames = stage.branches.collect { it.name }
+            branchNames.findAll { branchNames.count(it) > 1 }.unique().each { bn ->
+                errorCollector.error(stage, Messages.ModelValidatorImpl_DuplicateParallelName(bn))
+                valid = false
+            }
         }
 
         return valid
