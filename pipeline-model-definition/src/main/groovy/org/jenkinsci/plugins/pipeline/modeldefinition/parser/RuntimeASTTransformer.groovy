@@ -289,6 +289,9 @@ class RuntimeASTTransformer {
             } else if (ve.name == "this") {
                 // If the variable is this, well, just use it.
                 return ve
+            } else if (!(ve.accessedVariable instanceof DynamicVariable)) {
+                // If this is a real variable, not a dynamic variable, just use it.
+                return ve
             } else {
                 // Otherwise, fall back to getScriptPropOrParam, which will first try script.getProperty(name), then
                 // script.getProperty('params').get(name), and finally falls back to the original expression (the last of
@@ -296,10 +299,7 @@ class RuntimeASTTransformer {
                 body = callX(
                     varX("this"),
                     constX("getScriptPropOrParam"),
-                    args(constX(ve.name),
-                        // We only use a default value if the expression is *not* pointing to a DynamicVariable.
-                        // If it is pointing to a DynamicVariable, just use a null default value.
-                        ve.accessedVariable instanceof DynamicVariable ? constX(null) : ve)
+                    args(constX(ve.name))
                 )
             }
         } else if (expr instanceof ElvisOperatorExpression) {
@@ -401,7 +401,7 @@ class RuntimeASTTransformer {
             }
             return new TupleExpression(expressions)
         } else if (expr instanceof UnaryMinusExpression) {
-            // Translate the nested expression
+            // Translate the nested expression - unary ops are also not whitelisted and so aren't tested
             return new UnaryMinusExpression(translateEnvironmentValueAndCall(expr.expression, keys))
         } else if (expr instanceof UnaryPlusExpression) {
             // Translate the nested expression

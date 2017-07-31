@@ -87,15 +87,11 @@ public class Utils {
      * Get the value for this name. First, check the script's properties, then parameters, and finally use the default
      * value, which is set at parse time.
      */
-    static Object getScriptPropOrParam(CpsScript script, String name, Object defaultValue) {
+    static Object getScriptPropOrParam(CpsScript script, String name) {
         try {
             return script.getProperty(name)
         } catch (MissingPropertyException e) {
-            if (script.getProperty('params')?.containsKey(name)) {
-                return script.getProperty('params')?.get(name)
-            } else {
-                return defaultValue
-            }
+            return script.getProperty('params')?.get(name)
         }
     }
 

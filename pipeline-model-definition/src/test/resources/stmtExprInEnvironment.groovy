@@ -22,7 +22,8 @@
  * THE SOFTWARE.
  */
 
-def cnt = 0
+def prefixCnt = 0
+def postfixCnt = 0
 pipeline {
     environment {
         FOO = "${ true ? 'BAR' : 'OOF' }"
@@ -35,6 +36,11 @@ pipeline {
         CAST_EXP = "${(Collection)['a', FOO, 'c']}"
         PTR_EXP = "${(Boolean.&parseBoolean)(TRUE_STR)}"
         AS_EXP = "${(['a', FOO, 'c'] as Set).class}"
+        // There's some weirdness around this kind of operation because there's no deterministic order of operations.
+        PREFIX_EXP = "${++prefixCnt}"
+        POSTFIX_EXP = "${postfixCnt++}"
+        RANGE_EXP = "${(0..2)}"
+        //UNARY_EXP = "${-(+(-(+1)))}"
     }
 
     agent {
@@ -55,6 +61,8 @@ pipeline {
                 sh 'echo "AS_EXP is $AS_EXP"'
                 sh 'echo "PREFIX_EXP is $PREFIX_EXP"'
                 sh 'echo "POSTFIX_EXP is $POSTFIX_EXP"'
+                sh 'echo "RANGE_EXP is $RANGE_EXP"'
+                //sh 'echo "UNARY_EXP is $UNARY_EXP"'
             }
         }
     }

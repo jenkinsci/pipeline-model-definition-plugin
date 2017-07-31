@@ -185,7 +185,10 @@ public class EnvironmentTest extends AbstractModelDefTest {
                         "CTOR_EXP is http://BAR",
                         "CAST_EXP is [a, BAR, c]",
                         "PTR_EXP is true",
-                        "AS_EXP is class java.util.LinkedHashSet")
+                        "AS_EXP is class java.util.LinkedHashSet",
+                        "PREFIX_EXP is 1",
+                        "POSTFIX_EXP is 0",
+                        "RANGE_EXP is [0, 1, 2]")
                 .go();
     }
 

@@ -150,6 +150,12 @@ class ASTParserUtils {
             printer("- var:", ind)
             printer("  - name: ${n.name}", ind)
             printer("  - accessedVariable: ${n.accessedVariable}", ind)
+        } else if (n instanceof PrefixExpression) {
+            printer("- prefix (${n.operation}):", ind)
+            prettyPrint(n.expression, ind)
+        } else if (n instanceof PostfixExpression) {
+            printer("- postfix (${n.operation}):", ind)
+            prettyPrint(n.expression, ind)
         } else {
             printer("- ${n}", ind)
         }
