@@ -29,13 +29,11 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.json.StringEscapeUtils
 import hudson.BulkChange
 import hudson.ExtensionList
 import hudson.model.*
 import hudson.triggers.Trigger
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang.StringUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.Statement
@@ -45,10 +43,8 @@ import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
@@ -60,8 +56,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
-import org.jenkinsci.plugins.workflow.flow.FlowExecution
-import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner
 import org.jenkinsci.plugins.workflow.graph.BlockEndNode
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
@@ -70,7 +64,6 @@ import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
-import org.jenkinsci.plugins.workflow.multibranch.BranchJobProperty
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
@@ -79,7 +72,6 @@ import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
-import java.lang.reflect.ParameterizedType
 import java.util.concurrent.TimeUnit
 
 // TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
@@ -99,8 +91,8 @@ public class Utils {
         try {
             return script.getProperty(name)
         } catch (MissingPropertyException e) {
-            if (script.params?.containsKey(name)) {
-                return script.params?.get(name)
+            if (script.getProperty('params')?.containsKey(name)) {
+                return script.getProperty('params')?.get(name)
             } else {
                 return defaultValue
             }

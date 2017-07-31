@@ -38,7 +38,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.Nonnull

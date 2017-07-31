@@ -28,6 +28,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.JobProperty
 import hudson.model.Run
 import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
@@ -279,7 +280,10 @@ class RuntimeASTTransformer {
                 body = callX(
                     varX("this"),
                     constX("getScriptPropOrParam"),
-                    args(constX(ve.name), ve)
+                    args(constX(ve.name),
+                        // We only use a default value if the expression is *not* pointing to a DynamicVariable.
+                        // If it is pointing to a DynamicVariable, just use a null default value.
+                        ve.accessedVariable instanceof DynamicVariable ? constX(null) : ve)
                 )
             }
         } else if (expr instanceof ElvisOperatorExpression) {

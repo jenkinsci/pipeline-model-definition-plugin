@@ -34,11 +34,7 @@ import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
-import org.codehaus.groovy.ast.stmt.BlockStatement
-import org.codehaus.groovy.ast.stmt.ExpressionStatement
-import org.codehaus.groovy.ast.stmt.ReturnStatement
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.ast.stmt.ThrowStatement
+import org.codehaus.groovy.ast.stmt.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
