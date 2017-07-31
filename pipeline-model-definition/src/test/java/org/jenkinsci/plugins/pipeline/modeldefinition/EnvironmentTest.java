@@ -174,6 +174,21 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42753")
+    @Test
+    public void stmtExprInEnvironment() throws Exception {
+        expect("stmtExprInEnvironment")
+                .logContains("FOO is BAR",
+                        "LIST_EXP is [a, BAR, c]",
+                        "MAP_EXP is [a:z, b:BAR, c:x]",
+                        "BOOL_EXP is false",
+                        "CTOR_EXP is http://BAR",
+                        "CAST_EXP is [a, BAR, c]",
+                        "PTR_EXP is true",
+                        "AS_EXP is class java.util.LinkedHashSet")
+                .go();
+    }
+
     @Test
     public void nonLiteralEnvironment() throws Exception {
         initGlobalLibrary();

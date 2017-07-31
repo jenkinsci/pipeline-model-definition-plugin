@@ -143,6 +143,13 @@ class ASTParserUtils {
         } else if (n instanceof ThrowStatement) {
             printer("- throw:", ind)
             prettyPrint(n.expression, ind)
+        } else if (n instanceof CastExpression) {
+            printer("- cast:", ind)
+            prettyPrint(n.expression, ind)
+        } else if (n instanceof VariableExpression) {
+            printer("- var:", ind)
+            printer("  - name: ${n.name}", ind)
+            printer("  - accessedVariable: ${n.accessedVariable}", ind)
         } else {
             printer("- ${n}", ind)
         }

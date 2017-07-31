@@ -189,9 +189,13 @@ class RuntimeASTTransformer {
                             toTransform = args.get(0)
                         }
                     }
-                    ClosureExpression expr = translateEnvironmentValue(toTransform, keys)
+                    Expression expr = translateEnvironmentValue(toTransform, keys)
                     if (expr != null) {
-                        closureMap.addMapEntryExpression(constX(k.key), expr)
+                        if (expr instanceof ClosureExpression) {
+                            closureMap.addMapEntryExpression(constX(k.key), expr)
+                        } else {
+                            closureMap.addMapEntryExpression(constX(k.key), closureX(block(returnS(expr))))
+                        }
                     } else {
                         throw new IllegalArgumentException("Empty closure for ${k.key}")
                     }
@@ -208,10 +212,14 @@ class RuntimeASTTransformer {
      * itself is evaluated, as this is only called for children. May be null if the translation is null.
      */
     @CheckForNull
-    private MethodCallExpression translateEnvironmentValueAndCall(Expression expr, Set<String> keys) {
-        ClosureExpression translated = translateEnvironmentValue(expr, keys)
+    private Expression translateEnvironmentValueAndCall(Expression expr, Set<String> keys) {
+        Expression translated = translateEnvironmentValue(expr, keys)
         if (translated != null) {
-            return callX(translated, "call")
+            if (translated instanceof ClosureExpression) {
+                return callX(translated, "call")
+            } else {
+                return translated
+            }
         } else {
             return null
         }
@@ -222,55 +230,51 @@ class RuntimeASTTransformer {
      * environment variable we've defined to instead lazily call the closure defined in the resolver for that value.
      */
     @CheckForNull
-    private ClosureExpression translateEnvironmentValue(Expression expr, Set<String> keys) {
+    private Expression translateEnvironmentValue(Expression expr, Set<String> keys) {
         Expression body = null
 
         if (expr instanceof ConstantExpression) {
             // If the expression is a constant, like 1, "foo", etc, just use that.
-            body = expr
+            return expr
         } else if (expr instanceof ClassExpression) {
             // If the expression is a class, just use that.
-            body = expr
+            return expr
         } else if (expr instanceof EmptyExpression) {
             // If it's an empty expression, just use that
-            body = expr
+            return expr
         } else if (expr instanceof BinaryExpression &&
             ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
             // If the expression is a binary expression of plusses, translate its components.
             BinaryExpression binExpr = (BinaryExpression) expr
-            body = plusX(
+            return plusX(
                 translateEnvironmentValueAndCall(binExpr.leftExpression, keys),
                 translateEnvironmentValueAndCall(binExpr.rightExpression, keys)
             )
         } else if (expr instanceof GStringExpression) {
             // If the expression is a GString, translate its values.
             GStringExpression gStrExpr = (GStringExpression) expr
-            body = new GStringExpression(gStrExpr.text,
+            return new GStringExpression(gStrExpr.text,
                 gStrExpr.strings,
                 gStrExpr.values.collect { translateEnvironmentValueAndCall(it, keys) }
             )
         } else if (expr instanceof PropertyExpression) {
             PropertyExpression propExpr = (PropertyExpression) expr
-            if (propExpr.objectExpression instanceof VariableExpression) {
-                if (((VariableExpression) propExpr.objectExpression).name == "env" &&
+            if (propExpr.objectExpression instanceof VariableExpression &&
+                ((VariableExpression) propExpr.objectExpression).name == "env" &&
                     keys.contains(propExpr.propertyAsString)) {
-                    // If the property this expression refers to is env.whatever, replace with the env getter.
-                    body = environmentValueGetterCall(propExpr.propertyAsString)
-                } else {
-                    // Otherwise, if the property is still on a variable, just translate the object expression
-                    body = propX(
-                        translateEnvironmentValueAndCall(propExpr.objectExpression, keys),
-                        propExpr.property
-                    )
-                }
+                // If the property this expression refers to is env.whatever, replace with the env getter.
+                body = environmentValueGetterCall(propExpr.propertyAsString)
             } else {
-                // Otherwise, just use the existing expression.
-                body = propExpr
+                // Otherwise, if the property is still on a variable, translate everything
+                return propX(
+                    translateEnvironmentValueAndCall(propExpr.objectExpression, keys),
+                    translateEnvironmentValueAndCall(propExpr.property, keys)
+                )
             }
         } else if (expr instanceof MethodCallExpression) {
             // If the expression is a method call, translate its arguments.
             MethodCallExpression mce = (MethodCallExpression) expr
-            body = callX(
+            return callX(
                 translateEnvironmentValueAndCall(mce.objectExpression, keys),
                 mce.method,
                 args(mce.arguments.collect { a ->
@@ -284,7 +288,7 @@ class RuntimeASTTransformer {
                 body = environmentValueGetterCall(ve.name)
             } else if (ve.name == "this") {
                 // If the variable is this, well, just use it.
-                body = ve
+                return ve
             } else {
                 // Otherwise, fall back to getScriptPropOrParam, which will first try script.getProperty(name), then
                 // script.getProperty('params').get(name), and finally falls back to the original expression (the last of
@@ -301,7 +305,7 @@ class RuntimeASTTransformer {
         } else if (expr instanceof ElvisOperatorExpression) {
             // If the expression is ?:, translate its components.
             ElvisOperatorExpression elvis = (ElvisOperatorExpression) expr
-            body = new ElvisOperatorExpression(
+            return new ElvisOperatorExpression(
                 translateEnvironmentValueAndCall(elvis.trueExpression, keys),
                 translateEnvironmentValueAndCall(elvis.falseExpression, keys)
             )
@@ -310,22 +314,9 @@ class RuntimeASTTransformer {
             ClosureExpression cl = (ClosureExpression) expr
             BlockStatement closureBlock = block()
             eachStatement(cl.code) { s ->
-                Statement newStatement = null
-                if (s instanceof ExpressionStatement) {
-                    // Translate the nested expression
-                    newStatement = stmt(translateEnvironmentValueAndCall(s.expression, keys))
-                } else if (s instanceof ReturnStatement) {
-                    // Translate the nested expression
-                    newStatement = stmt(translateEnvironmentValueAndCall(s.expression, keys))
-                } else if (s instanceof IfStatement) {
-                    IfStatement
-                } else {
-                    throw new IllegalArgumentException("Got an unexpected " + s.getClass() + " in environment, please " +
-                        "report at issues.jenkins-ci.org")
-                }
-                closureBlock.addStatement(newStatement)
+                closureBlock.addStatement(translateClosureStatement(s, keys))
             }
-            body = closureX(
+            return closureX(
                 cl.parameters,
                 closureBlock
             )
@@ -339,7 +330,7 @@ class RuntimeASTTransformer {
                 translateEnvironmentValueAndCall(it, keys)
             }
 
-            body = new ArrayExpression(a.elementType, expressions, sizes)
+            return new ArrayExpression(a.elementType, expressions, sizes)
         } else if (expr instanceof ListExpression) {
             // If the expression is a list, transform its contents
             ListExpression l = (ListExpression) expr
@@ -347,7 +338,7 @@ class RuntimeASTTransformer {
                 translateEnvironmentValueAndCall(it, keys)
             }
 
-            body = new ListExpression(expressions)
+            return new ListExpression(expressions)
         } else if (expr instanceof MapExpression) {
             // If the expression is a map, translate its entries.
             MapExpression m = (MapExpression) expr
@@ -355,60 +346,71 @@ class RuntimeASTTransformer {
                 translateEnvironmentValueAndCall(it, keys)
             }
 
-            body = new MapExpression(entries)
+            return new MapExpression(entries)
         } else if (expr instanceof MapEntryExpression) {
             // If the expression is a map entry, translate its key and value
             MapEntryExpression m = (MapEntryExpression) expr
 
-            body = new MapEntryExpression(translateEnvironmentValueAndCall(m.keyExpression, keys),
+            return new MapEntryExpression(translateEnvironmentValueAndCall(m.keyExpression, keys),
                 translateEnvironmentValueAndCall(m.valueExpression, keys))
         } else if (expr instanceof BitwiseNegationExpression) {
-            // Translate the nested expression
-            body = new BitwiseNegationExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+            // Translate the nested expression - note, no test coverage due to bitwiseNegate not being whitelisted
+            return new BitwiseNegationExpression(translateEnvironmentValueAndCall(expr.expression, keys))
         } else if (expr instanceof BooleanExpression) {
             // Translate the nested expression
-            body = new BooleanExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+            return new BooleanExpression(translateEnvironmentValueAndCall(expr.expression, keys))
         } else if (expr instanceof CastExpression) {
             // Translate the nested expression
-            body = new CastExpression(expr.type,
-                translateEnvironmentValueAndCall(expr.expression, keys),
-                expr.ignoringAutoboxing)
+            Expression transformed = translateEnvironmentValueAndCall(expr.expression, keys)
+            def cast = new CastExpression(expr.type, transformed, expr.ignoringAutoboxing)
+            return cast
         } else if (expr instanceof ConstructorCallExpression) {
             // Translate the arguments
-            body = ctorX(expr.type, translateEnvironmentValueAndCall(expr.arguments, keys))
+            return ctorX(expr.type, translateEnvironmentValueAndCall(expr.arguments, keys))
         } else if (expr instanceof MethodPointerExpression) {
             // Translate the nested expression and method
-            body = new MethodPointerExpression(translateEnvironmentValueAndCall(expr.expression, keys),
+            return new MethodPointerExpression(translateEnvironmentValueAndCall(expr.expression, keys),
                 translateEnvironmentValueAndCall(expr.methodName, keys))
         } else if (expr instanceof PostfixExpression) {
             // Translate the nested expression
-            body = new PostfixExpression(translateEnvironmentValueAndCall(expr.expression, keys), expr.operation)
+            return new PostfixExpression(translateEnvironmentValueAndCall(expr.expression, keys), expr.operation)
         } else if (expr instanceof PrefixExpression) {
             // Translate the nested expression
-            body = new PrefixExpression(expr.operation, translateEnvironmentValueAndCall(expr.expression, keys))
+            return new PrefixExpression(expr.operation, translateEnvironmentValueAndCall(expr.expression, keys))
         } else if (expr instanceof RangeExpression) {
             // Translate the from and to
-            body = new RangeExpression(translateEnvironmentValueAndCall(expr.from, keys),
+            return new RangeExpression(translateEnvironmentValueAndCall(expr.from, keys),
                 translateEnvironmentValueAndCall(expr.to, keys),
                 expr.inclusive)
         } else if (expr instanceof TernaryExpression) {
             // Translate the true, false and boolean expressions
             TernaryExpression t = (TernaryExpression) expr
-            body = ternaryX(translateEnvironmentValueAndCall(t.booleanExpression, keys),
+            return ternaryX(translateEnvironmentValueAndCall(t.booleanExpression, keys),
                 translateEnvironmentValueAndCall(t.trueExpression, keys),
                 translateEnvironmentValueAndCall(t.falseExpression, keys))
+        } else if (expr instanceof ArgumentListExpression) {
+            // Translate the contents
+            List<Expression> expressions = expr.expressions.collect {
+                translateEnvironmentValueAndCall(it, keys)
+            }
+            return args(expressions)
         } else if (expr instanceof TupleExpression) {
             // Translate the contents
             List<Expression> expressions = expr.expressions.collect {
                 translateEnvironmentValueAndCall(it, keys)
             }
-            body = new TupleExpression(expressions)
+            return new TupleExpression(expressions)
         } else if (expr instanceof UnaryMinusExpression) {
             // Translate the nested expression
-            body = new UnaryMinusExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+            return new UnaryMinusExpression(translateEnvironmentValueAndCall(expr.expression, keys))
         } else if (expr instanceof UnaryPlusExpression) {
             // Translate the nested expression
-            body = new UnaryPlusExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+            return new UnaryPlusExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+        } else if (expr instanceof BinaryExpression) {
+            // Translate the component expressions
+            return new BinaryExpression(translateEnvironmentValueAndCall(expr.leftExpression, keys),
+                expr.operation,
+                translateEnvironmentValueAndCall(expr.rightExpression, keys))
         } else {
             throw new IllegalArgumentException("Got an unexpected " + expr.getClass() + " in environment, please report " +
                 "at issues.jenkins-ci.org")
