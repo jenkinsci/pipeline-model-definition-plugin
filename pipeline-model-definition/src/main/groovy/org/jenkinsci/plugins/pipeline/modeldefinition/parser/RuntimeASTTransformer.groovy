@@ -31,8 +31,14 @@ import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.CatchStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
+import org.codehaus.groovy.ast.stmt.ForStatement
+import org.codehaus.groovy.ast.stmt.IfStatement
+import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.stmt.TryCatchStatement
+import org.codehaus.groovy.ast.stmt.WhileStatement
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
@@ -222,6 +228,12 @@ class RuntimeASTTransformer {
         if (expr instanceof ConstantExpression) {
             // If the expression is a constant, like 1, "foo", etc, just use that.
             body = expr
+        } else if (expr instanceof ClassExpression) {
+            // If the expression is a class, just use that.
+            body = expr
+        } else if (expr instanceof EmptyExpression) {
+            // If it's an empty expression, just use that
+            body = expr
         } else if (expr instanceof BinaryExpression &&
             ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
             // If the expression is a binary expression of plusses, translate its components.
@@ -298,22 +310,108 @@ class RuntimeASTTransformer {
             ClosureExpression cl = (ClosureExpression) expr
             BlockStatement closureBlock = block()
             eachStatement(cl.code) { s ->
+                Statement newStatement = null
                 if (s instanceof ExpressionStatement) {
-                    closureBlock.addStatement(
-                        stmt(translateEnvironmentValueAndCall(s.expression, keys))
-                    )
+                    // Translate the nested expression
+                    newStatement = stmt(translateEnvironmentValueAndCall(s.expression, keys))
+                } else if (s instanceof ReturnStatement) {
+                    // Translate the nested expression
+                    newStatement = stmt(translateEnvironmentValueAndCall(s.expression, keys))
+                } else if (s instanceof IfStatement) {
+                    IfStatement
                 } else {
-                    // TODO: Message asking to report this so I can address it.
-                    throw new IllegalArgumentException("Got an unexpected" + s.getClass())
+                    throw new IllegalArgumentException("Got an unexpected " + s.getClass() + " in environment, please " +
+                        "report at issues.jenkins-ci.org")
                 }
+                closureBlock.addStatement(newStatement)
             }
             body = closureX(
                 cl.parameters,
                 closureBlock
             )
+        } else if (expr instanceof ArrayExpression) {
+            // If the expression is an array, transform its contents.
+            ArrayExpression a = (ArrayExpression) expr
+            List<Expression> sizes = a.sizeExpression?.collect {
+                translateEnvironmentValueAndCall(it, keys)
+            }
+            List<Expression> expressions = a.expressions?.collect {
+                translateEnvironmentValueAndCall(it, keys)
+            }
+
+            body = new ArrayExpression(a.elementType, expressions, sizes)
+        } else if (expr instanceof ListExpression) {
+            // If the expression is a list, transform its contents
+            ListExpression l = (ListExpression) expr
+            List<Expression> expressions = l.expressions?.collect {
+                translateEnvironmentValueAndCall(it, keys)
+            }
+
+            body = new ListExpression(expressions)
+        } else if (expr instanceof MapExpression) {
+            // If the expression is a map, translate its entries.
+            MapExpression m = (MapExpression) expr
+            List<MapEntryExpression> entries = m.mapEntryExpressions?.collect {
+                translateEnvironmentValueAndCall(it, keys)
+            }
+
+            body = new MapExpression(entries)
+        } else if (expr instanceof MapEntryExpression) {
+            // If the expression is a map entry, translate its key and value
+            MapEntryExpression m = (MapEntryExpression) expr
+
+            body = new MapEntryExpression(translateEnvironmentValueAndCall(m.keyExpression, keys),
+                translateEnvironmentValueAndCall(m.valueExpression, keys))
+        } else if (expr instanceof BitwiseNegationExpression) {
+            // Translate the nested expression
+            body = new BitwiseNegationExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+        } else if (expr instanceof BooleanExpression) {
+            // Translate the nested expression
+            body = new BooleanExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+        } else if (expr instanceof CastExpression) {
+            // Translate the nested expression
+            body = new CastExpression(expr.type,
+                translateEnvironmentValueAndCall(expr.expression, keys),
+                expr.ignoringAutoboxing)
+        } else if (expr instanceof ConstructorCallExpression) {
+            // Translate the arguments
+            body = ctorX(expr.type, translateEnvironmentValueAndCall(expr.arguments, keys))
+        } else if (expr instanceof MethodPointerExpression) {
+            // Translate the nested expression and method
+            body = new MethodPointerExpression(translateEnvironmentValueAndCall(expr.expression, keys),
+                translateEnvironmentValueAndCall(expr.methodName, keys))
+        } else if (expr instanceof PostfixExpression) {
+            // Translate the nested expression
+            body = new PostfixExpression(translateEnvironmentValueAndCall(expr.expression, keys), expr.operation)
+        } else if (expr instanceof PrefixExpression) {
+            // Translate the nested expression
+            body = new PrefixExpression(expr.operation, translateEnvironmentValueAndCall(expr.expression, keys))
+        } else if (expr instanceof RangeExpression) {
+            // Translate the from and to
+            body = new RangeExpression(translateEnvironmentValueAndCall(expr.from, keys),
+                translateEnvironmentValueAndCall(expr.to, keys),
+                expr.inclusive)
+        } else if (expr instanceof TernaryExpression) {
+            // Translate the true, false and boolean expressions
+            TernaryExpression t = (TernaryExpression) expr
+            body = ternaryX(translateEnvironmentValueAndCall(t.booleanExpression, keys),
+                translateEnvironmentValueAndCall(t.trueExpression, keys),
+                translateEnvironmentValueAndCall(t.falseExpression, keys))
+        } else if (expr instanceof TupleExpression) {
+            // Translate the contents
+            List<Expression> expressions = expr.expressions.collect {
+                translateEnvironmentValueAndCall(it, keys)
+            }
+            body = new TupleExpression(expressions)
+        } else if (expr instanceof UnaryMinusExpression) {
+            // Translate the nested expression
+            body = new UnaryMinusExpression(translateEnvironmentValueAndCall(expr.expression, keys))
+        } else if (expr instanceof UnaryPlusExpression) {
+            // Translate the nested expression
+            body = new UnaryPlusExpression(translateEnvironmentValueAndCall(expr.expression, keys))
         } else {
-            // TODO: Message asking to report this so I can address it.
-            throw new IllegalArgumentException("Got an unexpected " + expr.getClass())
+            throw new IllegalArgumentException("Got an unexpected " + expr.getClass() + " in environment, please report " +
+                "at issues.jenkins-ci.org")
         }
 
         if (body != null) {
@@ -327,6 +425,47 @@ class RuntimeASTTransformer {
         }
 
         return null
+    }
+
+    private Statement translateClosureStatement(Statement s, Set<String> keys) {
+        if (s == null) {
+            return null
+        } else if (s instanceof ExpressionStatement) {
+            // Translate the nested expression
+            return stmt(translateEnvironmentValueAndCall(s.expression, keys))
+        } else if (s instanceof ReturnStatement) {
+            // Translate the nested expression
+            return stmt(translateEnvironmentValueAndCall(s.expression, keys))
+        } else if (s instanceof IfStatement) {
+            // Translate the boolean expression, the if block and the else block
+            return ifElseS(translateEnvironmentValueAndCall(s.booleanExpression, keys),
+                translateClosureStatement(s.ifBlock, keys),
+                translateClosureStatement(s.elseBlock, keys))
+        } else if (s instanceof ForStatement) {
+            // Translate the collection and loop block
+            return new ForStatement(s.variable,
+                translateEnvironmentValueAndCall(s.collectionExpression, keys),
+                translateClosureStatement(s.loopBlock, keys))
+        } else if (s instanceof WhileStatement) {
+            // Translate the boolean expression's contents and the loop block
+            BooleanExpression newBool = new BooleanExpression(translateEnvironmentValueAndCall(s.booleanExpression?.expression, keys))
+            return new WhileStatement(newBool, translateClosureStatement(s.loopBlock, keys))
+        } else if (s instanceof TryCatchStatement) {
+            // Translate the try and finally statements, as well as any catch statements
+            TryCatchStatement t = (TryCatchStatement) s
+            TryCatchStatement newTry = new TryCatchStatement(translateClosureStatement(t.tryStatement, keys),
+                translateClosureStatement(t.finallyStatement, keys))
+            t.catchStatements.each { c ->
+                newTry.addCatch((CatchStatement)translateClosureStatement(c, keys))
+            }
+            return newTry
+        } else if (s instanceof CatchStatement) {
+            // Translate the nested statement
+            return catchS(s.variable, translateClosureStatement(s.code, keys))
+        } else {
+            throw new IllegalArgumentException("Got an unexpected " + s.getClass() + " in environment, please " +
+                "report at issues.jenkins-ci.org")
+        }
     }
 
     /**
