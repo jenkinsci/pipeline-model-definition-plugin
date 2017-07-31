@@ -36,7 +36,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stages implements NestedModel, Serializable {
+public class Stages implements Serializable {
     List<Stage> stages = []
 
     @Whitelisted
@@ -44,19 +44,7 @@ public class Stages implements NestedModel, Serializable {
         this.stages = stages
     }
 
-    Stages stages(List<Stage> s) {
-        this.stages = s
-        return this
-    }
-
     List<Stage> getStages() {
         return stages
-    }
-
-    @Override
-    public void modelFromMap(Map<String,Object> m) {
-        m.each { k, v ->
-            this."${k}"(v)
-        }
     }
 }

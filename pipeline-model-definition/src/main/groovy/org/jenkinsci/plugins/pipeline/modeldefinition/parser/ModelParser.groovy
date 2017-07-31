@@ -1087,6 +1087,9 @@ class ModelParser implements Parser {
         return Utils.getSourceTextForASTNode(n, sourceUnit)
     }
 
+    /**
+     * Special-casing of {@link #getSourceText(ASTNode)} for dealing with particular quirks of binary expressions.
+     */
     String getSourceText(BinaryExpression e) {
         return getSourceText(e.leftExpression) + e.operation.getText() +
             getSourceText(e.rightExpression)

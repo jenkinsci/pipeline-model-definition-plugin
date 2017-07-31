@@ -117,14 +117,4 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
         DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }
-
-    public Agent convertZeroArgs() {
-        Map<String,Object> inMap = getMap()
-        DeclarativeAgentDescriptor.zeroArgModels().keySet().each { k ->
-            if (inMap.keySet().contains("${k}Key".toString())) {
-                inMap.put(k, inMap.remove("${k}Key".toString()))
-            }
-        }
-        return new Agent(inMap)
-    }
 }

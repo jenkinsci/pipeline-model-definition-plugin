@@ -39,8 +39,7 @@ import groovy.transform.ToString
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
-    implements NestedModel, MethodMissingWrapper, Serializable {
+public abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements Serializable {
 
     @Delegate Map<String,O> resultMap = [:]
 
@@ -48,7 +47,7 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
     }
 
     public MappedClosure(Map<String,O> inMap) {
-        this.modelFromMap(inMap)
+        this.resultMap.putAll(inMap)
     }
 
     /**
@@ -70,11 +69,6 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
         this."${methodName}" = argValue
 
         this
-    }
-
-    @Override
-    public void modelFromMap(Map<String,Object> inMap) {
-        this.resultMap.putAll(inMap)
     }
 
     public Map<String, Object> getMap() {

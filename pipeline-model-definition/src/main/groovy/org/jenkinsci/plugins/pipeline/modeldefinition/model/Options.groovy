@@ -60,21 +60,6 @@ public class Options implements Serializable {
     transient Map<String, DeclarativeOption> options = [:]
     transient Map<String, Object> wrappers = [:]
 
-    public Options(List<Object> input) {
-        input.each { i ->
-            if (i instanceof UninstantiatedDescribable) {
-                def o = i.instantiate()
-                if (o instanceof JobProperty) {
-                    properties << o
-                } else if (o instanceof DeclarativeOption) {
-                    options[o.descriptor.name] = o
-                }
-            } else if (i instanceof List && i.size() == 2 && i[0] instanceof String) {
-                wrappers[(String)i[0]] = i[1]
-            }
-        }
-    }
-
     @Whitelisted
     Options(@Nonnull List<JobProperty> properties, @Nonnull Map<String, DeclarativeOption> options,
             @Nonnull Map<String, Object> wrappers) {
@@ -117,10 +102,6 @@ public class Options implements Serializable {
 
     public static Map<String,String> getEligibleWrapperStepClasses() {
         return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
-    }
-
-    public static List<String> getEligibleWrapperSteps() {
-        return getEligibleWrapperStepClasses().keySet().sort()
     }
 
     protected Object readResolve() throws IOException {

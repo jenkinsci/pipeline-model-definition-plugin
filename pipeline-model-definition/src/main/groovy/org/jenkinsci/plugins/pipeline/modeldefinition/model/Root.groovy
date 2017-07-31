@@ -38,7 +38,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Root implements NestedModel, Serializable {
+public class Root implements Serializable {
     Agent agent
 
     Stages stages
@@ -83,13 +83,6 @@ public class Root implements NestedModel, Serializable {
             return environment.envResolver.closureMap
         } else {
             return [:]
-        }
-    }
-
-    @Override
-    public void modelFromMap(Map<String,Object> m) {
-        m.each { k, v ->
-            this."${k}"(v)
         }
     }
 

@@ -38,19 +38,6 @@ abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionR
         super(m)
     }
 
-    @Override
-    void modelFromMap(Map<String,Object> inMap) {
-
-        inMap.each { conditionName, conditionClosure ->
-            if (conditionName in BuildCondition.getConditionMethods().keySet()) {
-
-                if (StepsBlock.class.isInstance(conditionClosure)) {
-                    put(conditionName, (StepsBlock)conditionClosure)
-                }
-            }
-        }
-    }
-
     Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
         if (getMap().containsKey(conditionName)) {
             BuildCondition condition = BuildCondition.getConditionMethods().get(conditionName)

@@ -25,7 +25,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -37,7 +36,7 @@ class BranchConditionalScript extends DeclarativeStageConditionalScript<BranchCo
 
     @Override
     public boolean evaluate() {
-        return describable.branchMatches((String)script.evaluate(Utils.prepareForEvalToString(describable.compare)),
+        return describable.branchMatches(describable.compare,
             (String)script.getProperty("env").getProperty("BRANCH_NAME"))
     }
 }

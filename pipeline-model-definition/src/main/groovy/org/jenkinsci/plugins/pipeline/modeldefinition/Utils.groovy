@@ -91,171 +91,12 @@ import java.util.concurrent.TimeUnit
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Utils {
 
-    /**
-     * Workaround for not having to whitelist isAssignableFrom, metaClass etc to determine whether a field on
-     * a class is of a specific type.
-     *
-     * @param fieldType The type we're checking
-     * @param actualClass The class we're inspecting
-     * @param fieldName The name of the field - could be a singular when the field name is plural, in which case
-     *   we'll get the actual name from actualFieldName(...)
-     * @return True if the field exists and is of the given type.
-     */
-    public static boolean isFieldA(Class fieldType, Class actualClass, String fieldName) {
-        def actualFieldName = actualFieldName(actualClass, fieldName)
-        def realFieldType = actualClass.metaClass.getMetaProperty(actualFieldName)?.type
-
-        if (realFieldType == null) {
-            return false
-        } else {
-            return realFieldType == fieldType || fieldType.isAssignableFrom(realFieldType)
-        }
-    }
-
-    /**
-     * Gets the actual field name for a possibly-needs-to-be-pluralized name.
-     *
-     * @param actualClass The class we're inspecting
-     * @param fieldName The original field name, which could need to be pluralized.
-     * @return The real field name, pluralized if necessary, or null if not found.
-     */
-    public static String actualFieldName(Class actualClass, String fieldName) {
-        if (actualClass.metaClass.getMetaProperty(fieldName) != null) {
-            return fieldName
-        } else if (actualClass.metaClass.getMetaProperty("${fieldName}s") != null) {
-            return "${fieldName}s"
-        } else {
-            return null
-        }
-    }
-
-    /**
-     * Get the actual field type or contained field type in the case of parameterized types in the inspected class.
-     *
-     * @param actualClass The class we're inspecting
-     * @param fieldName The field name we're looking for, which could get pluralized.
-     * @return The class of the field in the inspected class, or the class contained in the list or map.
-     */
-    public static Class actualFieldType(Class actualClass, String fieldName) {
-        def actualFieldName = actualFieldName(actualClass, fieldName)
-        if (actualFieldName == null) {
-            return null
-        } else {
-            def field = actualClass.getDeclaredFields().find { !it.isSynthetic() && it.name == actualFieldName }
-            // If the field's a ParameterizedType, we need to check it to see if it's containing a Plumber class.
-            if (field.getGenericType() instanceof ParameterizedType) {
-                if (Map.class.isAssignableFrom(field.getType())) {
-                    return (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]
-                } else {
-                    // First class listed in the actual type arguments - we ignore anything past this because eh.
-                    return (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]
-                }
-            } else {
-                return field.getType()
-            }
-        }
-
-    }
-
-    /**
-     * Simple wrapper for isInstance to avoid whitelisting issues.
-     *
-     * @param c The class to check against
-     * @param o The object to check
-     * @return True if the object is an instance of the class, false otherwise
-     */
-    public static boolean instanceOfWrapper(Class c, Object o) {
-        return c.isInstance(o)
-    }
-
-    /**
-     * Simple wrapper for isAssignableFrom to avoid whitelisting issues.
-     *
-     * @param c The class that should be assignable from
-     * @param o The class to check
-     * @return True if o can be assigned to c, false otherwise
-     */
-    public static boolean assignableFromWrapper(Class c, Class o) {
-        return c.isAssignableFrom(o)
-    }
-
-    public static boolean hasScmContext(CpsScript script) {
-        try {
-            // Just rely on SCMVar's own context-checking (via CpsScript) rather than brewing our own.
-            script.getProperty("scm")
-            return true
-        } catch (_) {
-            // If we get an IllegalStateException, "checkout scm" isn't valid, so return false.
-            return false
-        }
-    }
-
     static Object getScriptPropOrParam(CpsScript script, String name) {
         try {
             return script.getProperty(name)
         } catch (MissingPropertyException e) {
             return script.params?.get(name)
         }
-    }
-
-    static boolean hasJobProperties(CpsScript script) {
-        WorkflowRun r = script.$build()
-
-        WorkflowJob j = r.getParent()
-
-        return j.getAllProperties().any { p ->
-            // We only consider PipelineTriggersJobProperty and ParametersDefinitionProperty if they're empty.
-            if (p instanceof PipelineTriggersJobProperty) {
-                if (!p.getTriggers().isEmpty()) {
-                    return true
-                }
-            } else if (p instanceof ParametersDefinitionProperty) {
-                if (!p.getParameterDefinitions().isEmpty()) {
-                    return true
-                }
-            } else {
-                return !(p instanceof BranchJobProperty)
-            }
-        }
-    }
-
-    /**
-     * Takes a string and makes sure it starts/ends with double quotes so that it can be evaluated correctly.
-     *
-     * @param s The original string
-     * @return Either the original string, if it already starts/ends with double quotes, or the original string
-     * prepended/appended with double quotes.
-     */
-    public static String prepareForEvalToString(String s) {
-        String toEval = s ?: ""
-        if (!toEval.startsWith('"') || !toEval.endsWith('"')) {
-            if (toEval.indexOf('\n') == -1) {
-                toEval = '"' + escapeForEval(toEval) + '"';
-            } else {
-                toEval = '"""' + escapeForEval(toEval) + '"""';
-            }
-        }
-
-        return toEval
-    }
-
-    static String escapeForEval(String s) {
-        s = StringUtils.replace(s, '\\\\', '\\\\')
-        s = StringEscapeUtils.escapeJava(s)
-
-        s.eachMatch(/\$\{.*?\}/) { m ->
-            s = StringUtils.replaceOnce(s, m, StringEscapeUtils.unescapeJava(m))
-        }
-
-        return s
-    }
-
-    static String unescapeFromEval(String s) {
-        return StringEscapeUtils.unescapeJava(s)
-    }
-
-    static String unescapeDollars(String s) {
-        return s
     }
 
     static Map<String,Closure> getCredsFromResolver(Environment environment, CpsScript script) {
@@ -265,12 +106,6 @@ public class Utils {
         } else {
             return [:]
         }
-    }
-
-    static List<List<String>> getEnvCredentials(Environment environment, CpsScript script, Environment parent = null) {
-        List<List<String>> credsTuples = new ArrayList<>()
-        // TODO: Creds
-        return credsTuples
     }
 
     /**
@@ -301,7 +136,6 @@ public class Utils {
             return s
         }
     }
-
 
     static Predicate<FlowNode> endNodeForStage(final BlockStartNode startNode) {
         return new Predicate<FlowNode>() {
@@ -486,18 +320,6 @@ public class Utils {
     }
 
     /**
-     * Determines whether a given {@link UninstantiatedDescribable} is of a given type.
-     *
-     * @param ud The {@link UninstantiatedDescribable} to check
-     * @param base The {@link Class}
-     * @return True if the uninstantiated describable is of the type given
-     */
-    public static boolean isOfType(UninstantiatedDescribable ud, Class<?> base) {
-        Descriptor d = SymbolLookup.get().findDescriptor(base, ud.symbol)
-        return d != null
-    }
-
-    /**
      * @param c The closure to wrap.
      */
     @Whitelisted
@@ -516,88 +338,6 @@ public class Utils {
             return false
         }
         return true
-    }
-
-    static CpsFlowExecution getExecutionForRun(WorkflowRun run) {
-        FlowExecutionOwner owner = ((FlowExecutionOwner.Executable) run).asFlowExecutionOwner()
-        if (owner == null) {
-            return null
-        }
-        FlowExecution exec = owner.getOrNull()
-        return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null
-    }
-
-    /**
-     * Shortcut for determining whether we've got a {@link DeclarativeStageConditionalDescriptor} for a given name.
-     * @param name
-     * @return True if found, false otherwise
-     */
-    public static boolean whenConditionDescriptorFound(String name) {
-        return DeclarativeStageConditionalDescriptor.byName(name) != null
-    }
-
-    /**
-     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes children conditions.
-     * @param name
-     * @return True if there is a descriptor with that name and it takes children conditions.
-     */
-    public static boolean nestedWhenCondition(String name) {
-        return StageConditionals.nestedConditionals.containsKey(name)
-    }
-
-    /**
-     * Whether a given name has a {@link DeclarativeStageConditionalDescriptor} that takes multiple children conditions
-     * @param name
-     * @return True if there is a descriptor with that name and it takes multiple children conditions.
-     */
-    public static boolean takesWhenConditionList(String name) {
-        return StageConditionals.multipleNestedConditionals.containsKey(name)
-    }
-
-    /**
-     * Find and create an {@link UninstantiatedDescribable} from a symbol name and arguments.
-     * The arguments are assumed to be packaged as Groovy does to {@code invokeMethod} et.al.
-     * And to be either a single argument or named arguments, and not taking a closure.
-     *
-     * @param symbol the {@code @Symbol} name
-     * @param baseClazz the base class the describable is supposed to inherit
-     * @param _args the arguments packaged as described above
-     * @return an UninstantiatedDescribable ready to be instantiated or {@code null} if the descriptor could not be found
-     */
-    public static UninstantiatedDescribable getDescribable(String symbol, Class<? extends Describable> baseClazz, Object _args) {
-        def descriptor = SymbolLookup.get().findDescriptor(baseClazz, symbol)
-        if (descriptor != null) {
-            //Lots copied from org.jenkinsci.plugins.workflow.cps.DSL.invokeDescribable
-
-            Map<String, ?> args = unPackageArgs(_args)
-            return new UninstantiatedDescribable(symbol, descriptor.clazz.name, args)
-        }
-        return null
-    }
-
-    /**
-     * Unpacks the arguments for {@link  #getDescribable(java.lang.String, java.lang.Class, java.lang.Object)}.
-     *
-     * @param _args the arguments
-     * @return the unpacked version suitable to give to an {@link UninstantiatedDescribable}.
-     * @see #getDescribable(java.lang.String, java.lang.Class, java.lang.Object)
-     */
-    static Map<String, ?> unPackageArgs(Object _args) {
-        if(_args instanceof Object[]) {
-            List a = Arrays.asList((Object[])_args);
-            if (a.size()==0) {
-                return Collections.emptyMap()
-            }
-
-            if (a.size()==1 && a.get(0) instanceof Map && !((Map)a.get(0)).containsKey('$class')) {
-                return (Map) a.get(0)
-            } else if (a.size() == 1 && !(a.get(0) instanceof Map)) {
-                return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, a.get(0))
-            }
-            throw new IllegalArgumentException("Expected named arguments but got "+a)
-        } else {
-            return Collections.singletonMap(UninstantiatedDescribable.ANONYMOUS_KEY, _args)
-        }
     }
 
     /**

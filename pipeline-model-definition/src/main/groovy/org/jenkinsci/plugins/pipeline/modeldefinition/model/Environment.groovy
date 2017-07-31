@@ -94,6 +94,9 @@ public class Environment implements Serializable {
             }
         }
 
+        /**
+         * Called at runtime for fetching a variable defined outside of the resolver.
+         */
         @Whitelisted
         Object getScriptPropOrParam(String name) {
             return Utils.getScriptPropOrParam(script, name)
@@ -103,6 +106,9 @@ public class Environment implements Serializable {
             return closureMap
         }
 
+        /**
+         * Called in AST transformation to instantiate the resolver.
+         */
         @Whitelisted
         static EnvironmentResolver instanceFromMap(Map<String, Closure> closureMap) {
             EnvironmentResolver resolver = new EnvironmentResolver()

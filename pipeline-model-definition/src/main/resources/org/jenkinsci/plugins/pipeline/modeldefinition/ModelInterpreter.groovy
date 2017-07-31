@@ -27,6 +27,7 @@ import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
+import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -151,7 +152,7 @@ public class ModelInterpreter implements Serializable {
                 } else {
                     if (thisStage.parallel != null) {
                         if (evaluateWhen(thisStage.when)) {
-                            withCredentialsBlock(thisStage.environment, root.environment) {
+                            withCredentialsBlock(thisStage.environment) {
                                 withEnvBlock(thisStage.getEnvVars(script)) {
                                     def parallelStages = [:]
                                     thisStage.parallel.stages.each { parallelStage ->
@@ -168,7 +169,7 @@ public class ModelInterpreter implements Serializable {
                     } else {
                         inDeclarativeAgent(thisStage, root, thisStage.agent) {
                             if (evaluateWhen(thisStage.when)) {
-                                withCredentialsBlock(thisStage.environment, root.environment) {
+                                withCredentialsBlock(thisStage.environment) {
                                     withEnvBlock(thisStage.getEnvVars(script)) {
                                         toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
                                             // Execute the actual stage and potential post-stage actions
@@ -263,11 +264,10 @@ public class ModelInterpreter implements Serializable {
      * Execute a given closure within a "withCredentials" block.
      *
      * @param environment The environment we're processing from
-     * @param parent Optional parent environment
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@CheckForNull Environment environment, Environment parent = null, Closure body) {
+    def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
         Map<String,CredentialWrapper> creds = new TreeMap<>()
         
         if (environment != null) {
@@ -279,15 +279,8 @@ public class ModelInterpreter implements Serializable {
                     creds.put(k, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
                 }
             } catch (MissingMethodException e) {
-                try {
-                    List<List<String>> credStrings = Utils.getEnvCredentials(environment, script, parent)
-                    if (!credStrings.isEmpty()) {
-                        creds.putAll(processCredentials(credStrings))
-                    }
-                } catch (MissingMethodException e2) {
-                    // This will only happen in a running upgrade situation, so check the legacy approach as well.
-                    creds.putAll(Utils.getLegacyEnvCredentials(environment))
-                }
+                // This will only happen in a running upgrade situation, so check the legacy approach as well.
+                creds.putAll(Utils.getLegacyEnvCredentials(environment))
             }
         }
 
@@ -303,24 +296,6 @@ public class ModelInterpreter implements Serializable {
                 body.call()
             }.call()
         }
-    }
-
-    @Deprecated
-    private Map<String,CredentialWrapper> processCredentials(@Nonnull List<List<String>> varsAndIds) {
-        Map<String,CredentialWrapper> creds = new TreeMap<>()
-        RunWrapper currentBuild = script.getProperty("currentBuild")
-
-        varsAndIds.each { l ->
-            String key = l.get(0)
-            if (key != null) {
-                String id = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(l.get(1))))
-
-                CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
-                creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
-            }
-        }
-
-        return creds
     }
 
     /**

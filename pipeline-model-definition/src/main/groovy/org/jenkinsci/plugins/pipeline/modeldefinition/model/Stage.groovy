@@ -37,7 +37,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stage implements NestedModel, Serializable {
+public class Stage implements Serializable {
 
     String name
 
@@ -80,13 +80,6 @@ public class Stage implements NestedModel, Serializable {
             return environment.envResolver.closureMap
         } else {
             return [:]
-        }
-    }
-
-    @Override
-    public void modelFromMap(Map<String,Object> m) {
-        m.each { k, v ->
-            this."${k}"(v)
         }
     }
 }
