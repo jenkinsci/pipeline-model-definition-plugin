@@ -1,8 +1,8 @@
-package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
+package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.expr.ClosureExpression
+import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.stmt.Statement
 
 /**
  * Pattern match for the following Groovy construct:

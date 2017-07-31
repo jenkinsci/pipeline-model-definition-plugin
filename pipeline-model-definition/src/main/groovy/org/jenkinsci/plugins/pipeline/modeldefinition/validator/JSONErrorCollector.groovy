@@ -23,12 +23,12 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.jsonpointer.JsonPointer
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.jsonpointer.JsonPointer
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree
 
 /**
  * Error collector for JSON parsing.

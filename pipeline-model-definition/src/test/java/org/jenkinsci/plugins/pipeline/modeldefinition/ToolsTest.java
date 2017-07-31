@@ -25,10 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.JDK;
 import hudson.model.Slave;
-import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.Maven;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;

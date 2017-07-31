@@ -1,12 +1,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import javax.annotation.Nonnull;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+
+import javax.annotation.Nonnull;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents the named parameters for a step in a map of {@link ModelASTKey}s and {@link ModelASTValue}s.

@@ -23,11 +23,10 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.endpoints;
 
-import hudson.security.csrf.CrumbExclusion;
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import hudson.Extension;
 import hudson.model.RootAction;
+import hudson.security.csrf.CrumbExclusion;
 import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
@@ -39,6 +38,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.SimpleJsonTree;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector;

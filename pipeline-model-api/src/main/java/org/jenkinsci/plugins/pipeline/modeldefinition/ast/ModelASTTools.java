@@ -1,10 +1,11 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents a map of tool types to tool names (i.e., the name of the configured installation). Corresponds to

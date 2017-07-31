@@ -24,14 +24,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.ProcessingException
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.main.JsonSchema
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingReport
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.SimpleJsonTree
 import jenkins.model.Jenkins
 import net.sf.json.JSONObject
 import org.codehaus.groovy.control.CompilationFailedException
@@ -42,6 +34,13 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ASTSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.ProcessingException
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.main.JsonSchema
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingReport
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.SimpleJsonTree
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator

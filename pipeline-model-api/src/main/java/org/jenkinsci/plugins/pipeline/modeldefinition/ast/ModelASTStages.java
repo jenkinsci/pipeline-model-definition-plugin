@@ -1,9 +1,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents the collection of {@code Stage}s to be executed in the build. Corresponds to {@code Stages}.
