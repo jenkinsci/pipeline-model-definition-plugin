@@ -185,7 +185,8 @@ public class EnvironmentTest extends AbstractModelDefTest {
                         "ANOTHER_ENV is 1",
                         "INHERITED_ENV is 1 is inherited",
                         "ACME_FUNC is banana tada",
-                        "JUST_A_CONSTANT is 3")
+                        "JUST_A_CONSTANT is 3",
+                        "FROM_OUTSIDE is Hi there. This comes from a function")
                 .go();
     }
 

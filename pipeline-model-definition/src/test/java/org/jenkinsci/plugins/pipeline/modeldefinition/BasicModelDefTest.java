@@ -427,6 +427,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenExprUsingOutsideVarAndFunc() throws Exception {
+        expect("whenExprUsingOutsideVarAndFunc")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
     public void skippedWhen() throws Exception {
         expect("skippedWhen")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")

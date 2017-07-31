@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,33 +28,27 @@ def someFunc() {
 }
 
 pipeline {
-    environment {
-        FOO = "BAR"
-        BUILD_NUM_ENV = currentBuild.getNumber()
-        ANOTHER_ENV = "${currentBuild.getNumber()}"
-        INHERITED_ENV = "\${BUILD_NUM_ENV} is inherited"
-        ACME_FUNC = returnAThing("banana")
-        JUST_A_CONSTANT = "${1 + 2}"
-        FROM_OUTSIDE = "${someVar}. ${someFunc()}"
-    }
-
-    agent {
-        label "some-label"
-    }
-
+    agent any
     stages {
-        stage("foo") {
+        stage("One") {
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
-                sh 'echo "ANOTHER_ENV is $ANOTHER_ENV"'
-                sh 'echo "INHERITED_ENV is $INHERITED_ENV"'
-                sh 'echo "ACME_FUNC is $ACME_FUNC"'
-                sh 'echo "JUST_A_CONSTANT is $JUST_A_CONSTANT"'
-                sh 'echo "FROM_OUTSIDE is $FROM_OUTSIDE"'
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                expression {
+                    echo "Should I run?"
+                    return someVar == "Hi there" && someFunc() == "This comes from a function"
+                }
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
+
             }
         }
     }
 }
-
-
