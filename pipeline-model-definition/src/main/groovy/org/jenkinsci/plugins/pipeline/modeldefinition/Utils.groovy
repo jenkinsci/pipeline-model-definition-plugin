@@ -91,11 +91,19 @@ import java.util.concurrent.TimeUnit
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class Utils {
 
-    static Object getScriptPropOrParam(CpsScript script, String name) {
+    /**
+     * Get the value for this name. First, check the script's properties, then parameters, and finally use the default
+     * value, which is set at parse time.
+     */
+    static Object getScriptPropOrParam(CpsScript script, String name, Object defaultValue) {
         try {
             return script.getProperty(name)
         } catch (MissingPropertyException e) {
-            return script.params?.get(name)
+            if (script.params?.containsKey(name)) {
+                return script.params?.get(name)
+            } else {
+                return defaultValue
+            }
         }
     }
 

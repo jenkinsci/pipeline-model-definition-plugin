@@ -98,8 +98,8 @@ public class Environment implements Serializable {
          * Called at runtime for fetching a variable defined outside of the resolver.
          */
         @Whitelisted
-        Object getScriptPropOrParam(String name) {
-            return Utils.getScriptPropOrParam(script, name)
+        Object getScriptPropOrParam(String name, Object defaultValue) {
+            return Utils.getScriptPropOrParam(script, name, defaultValue)
         }
 
         Map<String,Closure> getClosureMap() {

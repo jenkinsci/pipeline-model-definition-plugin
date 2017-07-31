@@ -132,7 +132,6 @@ class ModelParser implements Parser {
      */
     public @CheckForNull ModelASTPipelineDef parse(ModuleNode src, boolean secondaryRun = false) {
         // first, quickly ascertain if this module should be parsed at all
-        // TODO: 'use script' escape hatch
         def pst = src.statementBlock.statements.find {
             MethodCallExpression m = ASTParserUtils.matchMethodCall(it)
             return m != null && ASTParserUtils.matchMethodName(m) == ModelStepLoader.STEP_NAME

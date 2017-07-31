@@ -219,15 +219,18 @@ class RuntimeASTTransformer {
         Expression body = null
 
         if (expr instanceof ConstantExpression) {
+            // If the expression is a constant, like 1, "foo", etc, just use that.
             body = expr
         } else if (expr instanceof BinaryExpression &&
             ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
+            // If the expression is a binary expression of plusses, translate its components.
             BinaryExpression binExpr = (BinaryExpression) expr
             body = plusX(
                 translateEnvironmentValueAndCall(binExpr.leftExpression, keys),
                 translateEnvironmentValueAndCall(binExpr.rightExpression, keys)
             )
         } else if (expr instanceof GStringExpression) {
+            // If the expression is a GString, translate its values.
             GStringExpression gStrExpr = (GStringExpression) expr
             body = new GStringExpression(gStrExpr.text,
                 gStrExpr.strings,
@@ -238,17 +241,21 @@ class RuntimeASTTransformer {
             if (propExpr.objectExpression instanceof VariableExpression) {
                 if (((VariableExpression) propExpr.objectExpression).name == "env" &&
                     keys.contains(propExpr.propertyAsString)) {
+                    // If the property this expression refers to is env.whatever, replace with the env getter.
                     body = environmentValueGetterCall(propExpr.propertyAsString)
                 } else {
+                    // Otherwise, if the property is still on a variable, just translate the object expression
                     body = propX(
                         translateEnvironmentValueAndCall(propExpr.objectExpression, keys),
                         propExpr.property
                     )
                 }
             } else {
+                // Otherwise, just use the existing expression.
                 body = propExpr
             }
         } else if (expr instanceof MethodCallExpression) {
+            // If the expression is a method call, translate its arguments.
             MethodCallExpression mce = (MethodCallExpression) expr
             body = callX(
                 translateEnvironmentValueAndCall(mce.objectExpression, keys),
@@ -260,23 +267,30 @@ class RuntimeASTTransformer {
         } else if (expr instanceof VariableExpression) {
             VariableExpression ve = (VariableExpression) expr
             if (keys.contains(ve.name)) {
+                // If the variable name is one we know is an environment variable, use the env getter.
                 body = environmentValueGetterCall(ve.name)
             } else if (ve.name == "this") {
+                // If the variable is this, well, just use it.
                 body = ve
             } else {
+                // Otherwise, fall back to getScriptPropOrParam, which will first try script.getProperty(name), then
+                // script.getProperty('params').get(name), and finally falls back to the original expression (the last of
+                // which handles things like variables defined outside the pipeline block)
                 body = callX(
                     varX("this"),
                     constX("getScriptPropOrParam"),
-                    args(constX(ve.name))
+                    args(constX(ve.name), ve)
                 )
             }
         } else if (expr instanceof ElvisOperatorExpression) {
+            // If the expression is ?:, translate its components.
             ElvisOperatorExpression elvis = (ElvisOperatorExpression) expr
             body = new ElvisOperatorExpression(
                 translateEnvironmentValueAndCall(elvis.trueExpression, keys),
                 translateEnvironmentValueAndCall(elvis.falseExpression, keys)
             )
         } else if (expr instanceof ClosureExpression) {
+            // If the expression is a closure, translate its statements.
             ClosureExpression cl = (ClosureExpression) expr
             BlockStatement closureBlock = block()
             eachStatement(cl.code) { s ->

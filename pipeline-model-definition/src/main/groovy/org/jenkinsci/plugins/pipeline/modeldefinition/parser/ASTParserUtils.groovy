@@ -31,11 +31,14 @@ import hudson.model.Describable
 import hudson.model.Descriptor
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.stmt.ThrowStatement
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
@@ -131,6 +134,19 @@ class ASTParserUtils {
             printer("- property:", ind)
             prettyPrint(n.objectExpression, ind)
             prettyPrint(n.property, ind)
+        } else if (n instanceof ModuleNode) {
+            printer("- module:", ind)
+            ind++
+            printer("- methods:", ind)
+            n.methods.each { prettyPrint(it, ind) }
+            printer("- statements:", ind)
+            n.statementBlock.statements.each { prettyPrint(it, ind) }
+        } else if (n instanceof MethodNode) {
+            printer("- methodNode:", ind)
+            prettyPrint(n.code, ind)
+        } else if (n instanceof ThrowStatement) {
+            printer("- throw:", ind)
+            prettyPrint(n.expression, ind)
         } else {
             printer("- ${n}", ind)
         }
