@@ -79,11 +79,7 @@ public class ModelInterpreter implements Serializable {
                                     for (int i = 0; i < root.stages.getStages().size(); i++) {
                                         Stage thisStage = root.stages.getStages().get(i)
                                         try {
-                                            // NOTE that this will eventually be moved into evaluateStage, once BO can
-                                            // handle visualizing stage-inside-parallel.
-                                            script.stage(thisStage.name) {
-                                                evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError).call()
-                                            }
+                                            evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError).call()
                                         } catch (Exception e) {
                                             script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                                             Utils.markStageFailedAndContinued(thisStage.name)
@@ -150,66 +146,68 @@ public class ModelInterpreter implements Serializable {
 
     def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage = null) {
         return {
-            try {
-                // NOTE - this will switch to script.stage in the future.
-                if (firstError != null) {
-                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
-                    Utils.markStageSkippedForFailure(thisStage.name)
-                } else if (skipUnstable(root.options)) {
-                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
-                    Utils.markStageSkippedForUnstable(thisStage.name)
-                } else {
-                    if (thisStage.parallel != null) {
-                        if (evaluateWhen(thisStage.when)) {
-                            withCredentialsBlock(thisStage.environment, root.environment) {
-                                withEnvBlock(thisStage.getEnvVars(root, script)) {
-                                    def parallelStages = [:]
-                                    for (int i = 0; i < thisStage.parallel.stages.size(); i++) {
-                                        Stage parallelStage = thisStage.parallel.getStages().get(i)
-                                        parallelStages.put(parallelStage.name,
-                                            evaluateStage(root, thisStage.agent ?: parentAgent, parallelStage, firstError, thisStage))
-                                    }
-                                    script.parallel(parallelStages)
-                                }
-                            }
-                        } else {
-                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                            Utils.markStageSkippedForConditional(thisStage.name)
-                        }
+            script.stage(thisStage.name) {
+                try {
+                    // NOTE - this will switch to script.stage in the future.
+                    if (firstError != null) {
+                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
+                        Utils.markStageSkippedForFailure(thisStage.name)
+                    } else if (skipUnstable(root.options)) {
+                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
+                        Utils.markStageSkippedForUnstable(thisStage.name)
                     } else {
-                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                        if (thisStage.parallel != null) {
                             if (evaluateWhen(thisStage.when)) {
                                 withCredentialsBlock(thisStage.environment, root.environment) {
                                     withEnvBlock(thisStage.getEnvVars(root, script)) {
-                                        toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
-                                            // Execute the actual stage and potential post-stage actions
-                                            executeSingleStage(root, thisStage, parentAgent)
+                                        def parallelStages = [:]
+                                        for (int i = 0; i < thisStage.parallel.stages.size(); i++) {
+                                            Stage parallelStage = thisStage.parallel.getStages().get(i)
+                                            parallelStages.put(parallelStage.name,
+                                                evaluateStage(root, thisStage.agent ?: parentAgent, parallelStage, firstError, thisStage))
                                         }
+                                        script.parallel(parallelStages)
                                     }
                                 }
                             } else {
                                 Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                 Utils.markStageSkippedForConditional(thisStage.name)
                             }
+                        } else {
+                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                if (evaluateWhen(thisStage.when)) {
+                                    withCredentialsBlock(thisStage.environment, root.environment) {
+                                        withEnvBlock(thisStage.getEnvVars(root, script)) {
+                                            toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
+                                                // Execute the actual stage and potential post-stage actions
+                                                executeSingleStage(root, thisStage, parentAgent)
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                    Utils.markStageSkippedForConditional(thisStage.name)
+                                }
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    script.getProperty("currentBuild").result = Result.FAILURE
+                    Utils.markStageFailedAndContinued(thisStage.name)
+                    if (firstError == null) {
+                        firstError = e
+                    }
+                } finally {
+                    // And finally, run the post stage steps.
+                    if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                        Utils.logToTaskListener("Post stage")
+                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
+                    }
                 }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Result.FAILURE
-                Utils.markStageFailedAndContinued(thisStage.name)
-                if (firstError == null) {
-                    firstError = e
-                }
-            } finally {
-                // And finally, run the post stage steps.
-                if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
-                    Utils.logToTaskListener("Post stage")
-                    firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
-                }
-            }
 
-            if (firstError != null) {
-                throw firstError
+                if (firstError != null) {
+                    throw firstError
+                }
             }
         }
     }

@@ -160,7 +160,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatusAndPost")
                 .logContains("[Pipeline] { (foo)",
                         "[first] { (Branch: first)",
+                        "[Pipeline] [first] { (first)",
                         "[second] { (Branch: second)",
+                        "[Pipeline] [second] { (second)",
                         "FIRST BRANCH FAILED",
                         "SECOND BRANCH POST",
                         "FOO STAGE FAILED")
