@@ -194,21 +194,4 @@ public class Converter {
 
         return model[0];
     }
-
-    /**
-     * Converts the raw script from a {@link WorkflowRun} into {@link ModelASTPipelineDef}
-     *
-     * @param run The {@link WorkflowRun} to pull from.
-     * @return A parsed and validated {@link ModelASTPipelineDef}
-     */
-    public static ModelASTPipelineDef parseFromWorkflowRun(WorkflowRun run) throws Exception {
-        CpsFlowExecution execution = null
-        if (run.execution != null) {
-            execution = (CpsFlowExecution) run.execution
-        } else if (run.getExecutionPromise() != null) {
-            execution = (CpsFlowExecution) run.getExecutionPromise().get(2, TimeUnit.SECONDS)
-        }
-        return scriptToPipelineDef(execution.script)
-    }
-
 }

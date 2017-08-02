@@ -65,10 +65,6 @@ class ModelValidatorImpl implements ModelValidator {
         this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
-    public DescriptorLookupCache getLookup() {
-        return lookup
-    }
-
     public boolean validateElement(@Nonnull ModelASTPostBuild postBuild) {
         // post specific validation
         true

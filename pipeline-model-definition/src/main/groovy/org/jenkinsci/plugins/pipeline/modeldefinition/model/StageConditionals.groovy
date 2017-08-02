@@ -57,14 +57,6 @@ class StageConditionals implements Serializable {
             }
         )
 
-    public static Map<String,String> getNestedConditionals() {
-        return nestedTypeCache.get(NESTED_CACHE_KEY)
-    }
-
-    public static Map<String,String> getMultipleNestedConditionals() {
-        return multipleNestedTypeCache.get(MULTIPLE_NESTED_CACHE_KEY)
-    }
-
     public final Closure rawClosure
 
     @Whitelisted

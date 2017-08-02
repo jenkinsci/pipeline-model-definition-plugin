@@ -28,7 +28,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 import hudson.ExtensionList;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
@@ -100,19 +99,5 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
     @Nullable
     public static DeclarativeStageConditionalDescriptor byName(@Nonnull String name) {
         return (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(DeclarativeStageConditional.class, name);
-    }
-
-    /**
-     * For a given descriptor and map of arguments, return an instance using those arguments.
-     *
-     * @param descriptor The descriptor instance
-     * @param arguments A map of arguments
-     * @return The instantiated {@link DeclarativeOption} instance.
-     * @throws Exception
-     */
-    @Nonnull
-    public static DeclarativeStageConditional<?> instanceFromDescriptor(@Nonnull DeclarativeStageConditionalDescriptor<?> descriptor,
-                                                                        Map<String,Object> arguments) throws Exception {
-        return descriptor.newInstance(arguments);
     }
 }

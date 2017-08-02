@@ -60,6 +60,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
@@ -95,6 +96,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     protected static String legalOptionTypes = "";
     protected static String legalAgentTypes = "";
+    protected TemporaryFolder antTmp = new TemporaryFolder();
 
     @Inject
     WorkflowLibRepository globalLibRepo;
@@ -153,7 +155,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     @Before
     public void setUp() throws Exception {
+        antTmp.create();
         ToolInstallations.configureMaven3();
+        ToolInstallations.configureDefaultAnt(antTmp);
     }
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
@@ -198,7 +202,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "whenAnd",
             "usernamePassword",
             "environmentCrossReferences",
-            "nestedParallelStages"
+            "nestedParallelStages",
+            "stagePost"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

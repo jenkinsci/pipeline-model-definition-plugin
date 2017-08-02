@@ -29,6 +29,9 @@ import htmlpublisher.HtmlPublisherTarget;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.tasks.LogRotator;
+import jenkins.model.BuildDiscarder;
+import jenkins.model.BuildDiscarderProperty;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.StageStatus;
@@ -48,6 +51,7 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
@@ -530,6 +534,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenEnvIgnoreCase() throws Exception {
+        expect("whenEnvIgnoreCase")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
     public void whenEnvFalse() throws Exception {
         expect("whenEnvFalse")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
@@ -858,6 +869,25 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
 
+
+    }
+
+    @Test
+    public void mapCallsWithMethodCallValues() throws Exception {
+        WorkflowRun b = expect("mapCallsWithMethodCallValues")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
+        assertNotNull(bdp);
+        BuildDiscarder strategy = bdp.getStrategy();
+        assertNotNull(strategy);
+        assertEquals(LogRotator.class, strategy.getClass());
+        LogRotator lr = (LogRotator) strategy;
+        assertEquals(1, lr.getNumToKeep());
 
     }
 }

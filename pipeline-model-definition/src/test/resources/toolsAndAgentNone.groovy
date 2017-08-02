@@ -32,8 +32,12 @@ pipeline {
             agent {
                 label "some-label"
             }
+            tools {
+                ant "default"
+            }
             steps {
                 sh 'mvn --version'
+                sh 'ant -version'
             }
         }
     }

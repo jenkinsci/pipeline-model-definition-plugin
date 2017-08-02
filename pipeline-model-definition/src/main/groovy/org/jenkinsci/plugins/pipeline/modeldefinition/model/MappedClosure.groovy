@@ -50,27 +50,6 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements S
         this.resultMap.putAll(inMap)
     }
 
-    /**
-     * Convenience method to allow for "foo 'bar'" style population of the underlying map.
-     *
-     * @param methodName Key name, basically.
-     * @param args First element will be a String hopefully.
-     *
-     * @return this
-     */
-    def methodMissing(String methodName, args) {
-        def argValue
-        if (args.length > 1) {
-            argValue = args
-        } else if (args.length == 1) {
-            argValue = args[0]
-        }
-
-        this."${methodName}" = argValue
-
-        this
-    }
-
     public Map<String, Object> getMap() {
         def mapCopy = [:]
         mapCopy.putAll(resultMap)

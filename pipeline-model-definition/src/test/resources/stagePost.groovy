@@ -1,3 +1,4 @@
+package postStage
 /*
  * The MIT License
  *
@@ -20,17 +21,20 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when;
-
-import hudson.ExtensionPoint;
-import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
-
-/**
- * Conditionals for when to run a stage.
- */
-public abstract class DeclarativeStageConditional<S extends DeclarativeStageConditional<S>>
-        extends WithScriptDescribable<S> implements ExtensionPoint {
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+            post {
+                always {
+                    echo "Local Always"
+                }
+            }
+        }
+    }
 }

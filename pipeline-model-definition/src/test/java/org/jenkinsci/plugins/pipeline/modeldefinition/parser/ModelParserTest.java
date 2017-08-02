@@ -66,4 +66,30 @@ public class ModelParserTest extends BaseParserLoaderTest {
         assertEquals(nodeRoot, newRoot);
     }
 
+    @Test
+    public void librariesDirective() throws Exception {
+        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/librariesDirective.groovy"));
+
+        assertNotNull(origRoot);
+
+        JSONObject origJson = origRoot.toJSON();
+        assertNotNull(origJson);
+
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
+        ModelASTPipelineDef newRoot = jp.parse();
+
+        assertEquals(getJSONErrorReport(jp, "librariesDirective"), 0, jp.getErrorCollector().getErrorCount());
+        assertNotNull("Pipeline null for librariesDirective", newRoot);
+
+        JSONObject nodeJson = JSONObject.fromObject(fileContentsFromResources("json/librariesDirective.json"));
+
+        JSONParser nodeParser = new JSONParser(Converter.jsonTreeFromJSONObject(nodeJson));
+        ModelASTPipelineDef nodeRoot = nodeParser.parse();
+
+        assertEquals(getJSONErrorReport(nodeParser, "librariesDirective"),
+                0, nodeParser.getErrorCollector().getErrorCount());
+        assertNotNull("Pipeline null for librariesDirective", nodeRoot);
+
+        assertEquals(nodeRoot, newRoot);
+    }
 }

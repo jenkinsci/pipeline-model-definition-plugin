@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,17 +20,31 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when;
+pipeline {
+    agent any
+    environment {
+        FOO = "BAR"
+    }
 
-import hudson.ExtensionPoint;
-import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                environment name: "FOO", value: "bar", ignoreCase: true
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-/**
- * Conditionals for when to run a stage.
- */
-public abstract class DeclarativeStageConditional<S extends DeclarativeStageConditional<S>>
-        extends WithScriptDescribable<S> implements ExtensionPoint {
+            }
+        }
+    }
 }
