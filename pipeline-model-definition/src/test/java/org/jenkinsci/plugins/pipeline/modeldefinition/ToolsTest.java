@@ -29,8 +29,10 @@ import hudson.tasks.Maven;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.ToolInstallations;
 
 import static org.junit.Assert.assertNotNull;
 import static org.jvnet.hudson.test.ToolInstallations.configureDefaultMaven;
@@ -73,6 +75,10 @@ public class ToolsTest extends AbstractModelDefTest {
     @Issue("JENKINS-42338")
     @Test
     public void toolsAndAgentNone() throws Exception {
+        TemporaryFolder antTmp = new TemporaryFolder();
+        antTmp.create();
+        ToolInstallations.configureDefaultAnt(antTmp);
+
         expect("toolsAndAgentNone")
                 .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1",
                         "Apache Ant") // since ANT_HOME may be set, we can't actually guarantee the version

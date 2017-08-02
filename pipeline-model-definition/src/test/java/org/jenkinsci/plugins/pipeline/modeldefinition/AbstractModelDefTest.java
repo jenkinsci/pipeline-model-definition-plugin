@@ -96,7 +96,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     protected static String legalOptionTypes = "";
     protected static String legalAgentTypes = "";
-    protected TemporaryFolder antTmp = new TemporaryFolder();
 
     @Inject
     WorkflowLibRepository globalLibRepo;
@@ -155,9 +154,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     @Before
     public void setUp() throws Exception {
-        antTmp.create();
         ToolInstallations.configureMaven3();
-        ToolInstallations.configureDefaultAnt(antTmp);
     }
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
@@ -254,6 +251,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
         result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_BothStagesAndSteps("foo")});
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
+
+        // TODO: Better error messaging for these schema violations.
+        result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});
+        result.add(new Object[]{"invalidWhenWithChildren", "instance failed to match at least one schema"});
 
         result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
 

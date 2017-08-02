@@ -310,21 +310,8 @@ class ModelValidatorImpl implements ModelValidator {
                 }
             }
         } else if (args instanceof ModelASTPositionalArgumentList) {
-            ModelASTPositionalArgumentList argList = (ModelASTPositionalArgumentList) args
-
-            List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
-
-            if (requiredParams.size() != argList.arguments.size()) {
-                errorCollector.error(element, Messages.ModelValidatorImpl_WrongNumberOfStepParameters(name, requiredParams.size(), argList.arguments.size()))
-                valid = false
-            } else {
-                requiredParams.eachWithIndex { DescribableParameter entry, int i ->
-                    def argVal = argList.arguments.get(i)
-                    if (!validateParameterType(argVal, entry.erasedType)) {
-                        valid = false
-                    }
-                }
-            }
+            errorCollector.error(element, Messages.ModelValidatorImpl_TooManyUnnamedParameters(name))
+            valid = false
         } else {
             assert args instanceof ModelASTSingleArgument;
             ModelASTSingleArgument arg = (ModelASTSingleArgument) args;
@@ -417,7 +404,11 @@ class ModelValidatorImpl implements ModelValidator {
                             }
                         }
                     }
+                } else if (meth.args.size() > 1) {
+                    errorCollector.error(meth, Messages.ModelValidatorImpl_TooManyUnnamedParameters(meth.name))
+                    valid = false
                 } else {
+                    // TODO: Rewrite this to just handle the single argument case.
                     List<DescribableParameter> requiredParams = model.parameters.findAll { it.isRequired() }
 
                     if (requiredParams.size() != meth.args.size()) {

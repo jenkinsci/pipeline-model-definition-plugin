@@ -114,6 +114,20 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void nestedWhenWithArgs() throws Exception {
+        expectError("nestedWhenWithArgs")
+                .logContains(Messages.ModelValidatorImpl_NestedWhenNoArgs("allOf"))
+                .go();
+    }
+
+    @Test
+    public void invalidWhenWithChildren() throws Exception {
+        expectError("invalidWhenWithChildren")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWhenAllowed("branch"))
+                .go();
+    }
+
+    @Test
     public void unknownWhenConditional() throws Exception {
         expectError("unknownWhenConditional")
                 .logContains(Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
