@@ -235,11 +235,13 @@ class ModelParser implements Parser {
 
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
-            // Should be able to get this validation later.
-            return r
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("stages"))
         } else {
             ASTParserUtils.eachStatement(m.body.code) {
-                r.stages.add(parseStage(it));
+                ModelASTStage s = parseStage(it)
+                if (s != null) {
+                    r.stages.add(s)
+                }
             }
         }
         return r;
@@ -251,6 +253,7 @@ class ModelParser implements Parser {
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
             // Should be able to get this validation later.
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("environment"))
             return r
             //errorCollector.error(r, "Expected a block")
         } else {
@@ -382,7 +385,7 @@ class ModelParser implements Parser {
 
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
-            // Should be able to get this validation later.
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("libraries"))
             return r
         } else {
             ASTParserUtils.eachStatement(m.body.code) {
@@ -417,7 +420,7 @@ class ModelParser implements Parser {
 
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m==null) {
-            // Should be able to get this validation later.
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("tools"))
             return r
         } else {
             ASTParserUtils.eachStatement(m.body.code) { s ->
@@ -442,19 +445,20 @@ class ModelParser implements Parser {
         return r;
     }
 
-    public @Nonnull ModelASTStage parseStage(Statement stmt) {
+    public @CheckForNull ModelASTStage parseStage(Statement stmt) {
         ModelASTStage stage = new ModelASTStage(stmt)
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (!m?.methodName?.equals("stage")) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
             errorCollector.error(stage, Messages.ModelParser_ExpectedStage());
-            return stage
+            return null
         }
 
         def nameExp = m.getArgument(0);
         if (nameExp==null) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
             errorCollector.error(stage, Messages.ModelParser_ExpectedStageName());
+            return null
         }
 
         stage.name = parseStringLiteral(nameExp)
@@ -555,7 +559,7 @@ class ModelParser implements Parser {
         def o = new ModelASTOptions(stmt);
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m == null) {
-            // Should be able to get this validation later.
+            errorCollector.error(o, Messages.ModelParser_ExpectedBlockFor("options"))
             return o
         } else {
             ASTParserUtils.eachStatement(m.body.code) { s ->
@@ -602,7 +606,7 @@ class ModelParser implements Parser {
         def triggers = new ModelASTTriggers(stmt);
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m == null) {
-            // Should be able to get this validation later.
+            errorCollector.error(triggers, Messages.ModelParser_ExpectedBlockFor("triggers"))
             return triggers
         } else {
             ASTParserUtils.eachStatement(m.body.code) { s ->
@@ -649,7 +653,7 @@ class ModelParser implements Parser {
         def bp = new ModelASTBuildParameters(stmt);
         def m = ASTParserUtils.matchBlockStatement(stmt);
         if (m == null) {
-            // Should be able to get this validation later.
+            errorCollector.error(bp, Messages.ModelParser_ExpectedBlockFor("parameters"))
             return bp
         } else {
             ASTParserUtils.eachStatement(m.body.code) { s ->

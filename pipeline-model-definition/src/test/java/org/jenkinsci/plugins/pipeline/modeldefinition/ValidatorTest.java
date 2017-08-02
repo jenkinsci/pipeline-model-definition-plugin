@@ -640,4 +640,44 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
     }
+
+    @Test
+    public void notStageInStages() throws Exception {
+        expectError("notStageInStages")
+                .logContains(Messages.ModelParser_ExpectedStage())
+                .go();
+    }
+
+    @Test
+    public void multipleTopLevelSections() throws Exception {
+        expectError("multipleTopLevelSections")
+                .logContains(Messages.Parser_MultipleOfSection("stages"))
+                .go();
+    }
+
+    @Test
+    public void multipleStageLevelSections() throws Exception {
+        expectError("multipleStageLevelSections")
+                .logContains(Messages.Parser_MultipleOfSection("agent"))
+                .go();
+    }
+
+    @Test
+    public void nonBlockStages() throws Exception {
+        expectError("nonBlockStages")
+                .logContains(Messages.ModelParser_ExpectedBlockFor("stages"))
+                .go();
+    }
+
+    @Test
+    public void nonBlockSections() throws Exception {
+        expectError("nonBlockSections")
+                .logContains(Messages.ModelParser_ExpectedBlockFor("environment"),
+                        Messages.ModelParser_ExpectedBlockFor("libraries"),
+                        Messages.ModelParser_ExpectedBlockFor("options"),
+                        Messages.ModelParser_ExpectedBlockFor("triggers"),
+                        Messages.ModelParser_ExpectedBlockFor("parameters"),
+                        Messages.ModelParser_ExpectedBlockFor("tools"))
+                .go();
+    }
 }
