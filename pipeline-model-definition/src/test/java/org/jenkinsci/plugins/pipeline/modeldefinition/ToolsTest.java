@@ -75,7 +75,7 @@ public class ToolsTest extends AbstractModelDefTest {
     public void toolsAndAgentNone() throws Exception {
         expect("toolsAndAgentNone")
                 .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1",
-                        "Apache Ant(TM) version") // since ANT_HOME may be set, we can't actually guarantee the version
+                        "Apache Ant") // since ANT_HOME may be set, we can't actually guarantee the version
                 .go();
     }
 

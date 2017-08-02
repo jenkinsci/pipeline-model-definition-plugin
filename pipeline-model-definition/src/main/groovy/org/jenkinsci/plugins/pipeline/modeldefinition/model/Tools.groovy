@@ -62,7 +62,7 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
         if (other == null) {
             return getMap()
         } else {
-            Map<String,Object> mergedMap = new TreeMap<>()
+            Map<String,Object> mergedMap = [:]
             mergedMap.putAll(other.getMap())
             mergedMap.putAll(getMap())
 
