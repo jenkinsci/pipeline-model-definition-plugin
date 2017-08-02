@@ -20,13 +20,6 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     private String name;
     private List<ModelASTMethodArg> args = new ArrayList<ModelASTMethodArg>();
 
-    public static Map<String, String> getBlockedSteps() {
-        Map<String, String> map = new LinkedHashMap<String, String>();
-        map.put("node", Messages.ModelASTMethodCall_BlockedSteps_Node());
-        map.putAll(ModelASTStep.getBlockedSteps());
-        return map;
-    }
-
     public ModelASTMethodCall(Object sourceLocation) {
         super(sourceLocation);
     }

@@ -33,6 +33,7 @@ import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
+import org.jenkinsci.plugins.pipeline.modeldefinition.DeclarativeBlockedSteps
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -368,9 +369,10 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (ModelASTStep.blockedSteps.keySet().contains(step.name)) {
+        if (DeclarativeBlockedSteps.allBlockedInSteps().keySet().contains(step.name)) {
             errorCollector.error(step,
-                Messages.ModelValidatorImpl_BlockedStep(step.name, ModelASTStep.blockedSteps.get(step.name)))
+                Messages.ModelValidatorImpl_BlockedStep(step.name,
+                    DeclarativeBlockedSteps.allBlockedInSteps().get(step.name)))
             valid = false
         } else {
             // We can't do step validation without a Jenkins instance, so move on.
@@ -389,9 +391,10 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
-        if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
+        if (DeclarativeBlockedSteps.allBlockedInMethodCalls().keySet().contains(meth.name)) {
             errorCollector.error(meth,
-                Messages.ModelValidatorImpl_BlockedStep(meth.name, ModelASTMethodCall.blockedSteps.get(meth.name)))
+                Messages.ModelValidatorImpl_BlockedStep(meth.name,
+                    DeclarativeBlockedSteps.allBlockedInMethodCalls().get(meth.name)))
             valid = false
         }
         if (Jenkins.getInstance() != null) {

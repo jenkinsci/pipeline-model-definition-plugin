@@ -144,7 +144,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         for (StepDescriptor d : j.jenkins.getExtensionList(StepDescriptor.class)) {
             if (d.takesImplicitBlockArgument() &&
-                    !(ModelASTMethodCall.getBlockedSteps().containsKey(d.getFunctionName())) &&
+                    !(DeclarativeBlockedSteps.allBlockedInMethodCalls().containsKey(d.getFunctionName())) &&
                     !(d.getRequiredContext().contains(FilePath.class)) &&
                     !(d.getRequiredContext().contains(Launcher.class))) {
                 optionTypes.add(d.getFunctionName());
@@ -223,8 +223,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"emptyEnvironment", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"emptyPostBuild", Messages.JSONParser_TooFewItems(0, 1)});
 
-        result.add(new Object[]{"rejectStageInSteps", Messages.ModelValidatorImpl_BlockedStep("stage", ModelASTStep.getBlockedSteps().get("stage"))});
-        result.add(new Object[]{"rejectParallelMixedInSteps", Messages.ModelValidatorImpl_BlockedStep("parallel", ModelASTStep.getBlockedSteps().get("parallel"))});
+        result.add(new Object[]{"rejectStageInSteps", Messages.ModelValidatorImpl_BlockedStep("stage",
+                Messages.BaseBlockedSteps_Stage())});
+        result.add(new Object[]{"rejectParallelMixedInSteps", Messages.ModelValidatorImpl_BlockedStep("parallel",
+                Messages.BaseBlockedSteps_Parallel())});
 
         result.add(new Object[]{"stageWithoutName", Messages.JSONParser_MissingRequiredProperties("'name'")});
 
@@ -237,7 +239,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"mixedMethodArgs", Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters()});
 
         result.add(new Object[]{"rejectPropertiesStepInMethodCall",
-                Messages.ModelValidatorImpl_BlockedStep("properties", ModelASTStep.getBlockedSteps().get("properties"))});
+                Messages.ModelValidatorImpl_BlockedStep("properties",
+                        Messages.BaseBlockedSteps_Properties())});
 
         result.add(new Object[]{"wrongParameterNameMethodCall", Messages.ModelValidatorImpl_InvalidStepParameter("namd", "name")});
         result.add(new Object[]{"invalidParameterTypeMethodCall", Messages.ModelValidatorImpl_InvalidParameterType("class java.lang.String", "name", "1234", Integer.class)});
