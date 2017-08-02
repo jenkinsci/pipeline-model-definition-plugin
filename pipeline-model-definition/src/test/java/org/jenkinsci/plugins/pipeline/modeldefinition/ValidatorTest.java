@@ -205,7 +205,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectPropertiesStepInMethodCall() throws Exception {
         expectError("rejectPropertiesStepInMethodCall")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties", ModelASTStep.getBlockedSteps().get("properties")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties",
+                        Messages.BaseBlockedSteps_Properties()))
                 .go();
     }
 
