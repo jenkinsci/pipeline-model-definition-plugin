@@ -586,10 +586,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
         boolean valid = true
-        if (stage.name == null) {
-            errorCollector.error(stage, Messages.ModelValidatorImpl_NoStageName())
-            valid = false
-        } else if (isNested && (stage.branches.size() > 1 || stage.parallel != null)) {
+        if (isNested && (stage.branches.size() > 1 || stage.parallel != null)) {
             ModelASTElement errorElement
             if (stage.parallel != null) {
                 errorElement = stage.parallel
