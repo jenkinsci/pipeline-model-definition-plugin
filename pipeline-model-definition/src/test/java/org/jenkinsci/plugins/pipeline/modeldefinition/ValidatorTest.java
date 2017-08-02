@@ -597,6 +597,17 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42771")
+    @Test
+    public void additionalInvalidExpressionsInEnvironment() throws Exception {
+        expectError("additionalInvalidExpressionsInEnvironment")
+                .logContains(Messages.ModelParser_InvalidEnvironmentOperation(),
+                        Messages.ModelParser_InvalidEnvironmentConcatValue(),
+                        Messages.ModelParser_InvalidEnvironmentValue(),
+                        Messages.ModelParser_InvalidEnvironmentIdentifier("echo('HI THERE')"))
+                .go();
+    }
+
     @Issue("JENKINS-42858")
     @Test
     public void scriptSecurityRejectionInEnvironment() throws Exception {
