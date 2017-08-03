@@ -36,11 +36,17 @@ import java.util.Map;
 public abstract class DeclarativeBlockedSteps implements ExtensionPoint {
     /**
      * Steps which are blocked in "steps", "post" conditions, and the like.
+     *
+     * @return A map of step names (which can also be function or method names that aren't actual steps) to strings
+     * explaining the reason for the step being blocked.
      */
     public abstract Map<String,String> blockedInSteps();
 
     /**
      * Steps which are blocked in method calls like "options" entries.
+     *
+     * @return A map of step names (which can also be function or method names that aren't actual steps) to strings
+     * explaining the reason for the step being blocked.
      */
     public abstract Map<String,String> blockedInMethodCalls();
 
