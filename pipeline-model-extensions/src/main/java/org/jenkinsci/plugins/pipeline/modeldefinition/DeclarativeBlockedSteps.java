@@ -50,7 +50,7 @@ public abstract class DeclarativeBlockedSteps implements ExtensionPoint {
     public static Map<String,String> allBlockedInSteps() {
         Map<String,String> map = new LinkedHashMap<>();
 
-        for (DeclarativeBlockedSteps dbs : ExtensionList.lookup(DeclarativeBlockedSteps.class)) {
+        for (DeclarativeBlockedSteps dbs : ExtensionList.lookup(DeclarativeBlockedSteps.class).reverseView()) {
             map.putAll(dbs.blockedInSteps());
         }
 
@@ -63,7 +63,7 @@ public abstract class DeclarativeBlockedSteps implements ExtensionPoint {
     public static Map<String,String> allBlockedInMethodCalls() {
         Map<String,String> map = new LinkedHashMap<>();
 
-        for (DeclarativeBlockedSteps dbs : ExtensionList.lookup(DeclarativeBlockedSteps.class)) {
+        for (DeclarativeBlockedSteps dbs : ExtensionList.lookup(DeclarativeBlockedSteps.class).reverseView()) {
             map.putAll(dbs.blockedInMethodCalls());
         }
 
