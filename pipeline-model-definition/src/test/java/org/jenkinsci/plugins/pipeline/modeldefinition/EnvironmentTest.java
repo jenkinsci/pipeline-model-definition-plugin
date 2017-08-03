@@ -231,4 +231,13 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logMatches("PATH: .*tmpDir:")
                 .go();
     }
+
+    @Test
+    public void undefinedEnvRef() throws Exception {
+        expect("undefinedEnvRef")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "_UNDERSCORE is VALIDnullORNOT")
+                .go();
+    }
 }
