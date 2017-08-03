@@ -250,4 +250,13 @@ public class EnvironmentTest extends AbstractModelDefTest {
                         "AAA_EN_ONLY: en: \\d+")
                 .go();
     }
+
+    @Issue("JENKINS-45636")
+    @Test
+    public void backslashReductionInEnv() throws Exception {
+        expect("backslashReductionInEnv")
+                .logMatches("AAA_Key1: a\\\\b \\d+",
+                        "AAA_Key2: a\\\\b")
+                .go();
+    }
 }
