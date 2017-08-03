@@ -70,95 +70,99 @@ class ASTParserUtils {
     }
 
     // TODO: Remove or otherwise cleanup so that it's not always firing!
-    static printer(String s, int ind) {
-        System.err.println("${' ' * ind * 2}${s}")
+    static String printer(String s, int ind) {
+        return "${' ' * ind * 2}${s}"
     }
 
     // TODO: Remove or otherwise cleanup so that it's not always firing!
-    static prettyPrint(ASTNode n, int ind = -1) {
+    static String prettyPrint(ASTNode n, int ind = -1) {
+        List<String> s = []
+        
         ind++
         if (n instanceof ReturnStatement) {
-            printer("- return:", ind)
-            prettyPrint(n.expression, ind)
+            s << printer("- return:", ind)
+            s << prettyPrint(n.expression, ind)
         } else if (n instanceof ArgumentListExpression) {
-            printer("- args:", ind)
-            n.expressions.each { prettyPrint(it, ind) }
+            s << printer("- args:", ind)
+            n.expressions.each { s << prettyPrint(it, ind) }
         } else if (n instanceof ClosureExpression) {
-            printer("- closure:", ind)
-            prettyPrint(n.code, ind)
+            s << printer("- closure:", ind)
+            s << prettyPrint(n.code, ind)
         } else if (n instanceof BlockStatement) {
-            printer("- block", ind)
+            s << printer("- block", ind)
             n.statements.each {
-                prettyPrint(it, ind)
+                s << prettyPrint(it, ind)
             }
         } else if (n instanceof ConstructorCallExpression) {
-            printer("- constructor of ${n.type.typeClass}:", ind)
+            s << printer("- constructor of ${n.type.typeClass}:", ind)
             n.arguments.each {
-                prettyPrint(it, ind)
+                s << prettyPrint(it, ind)
             }
         } else if (n instanceof MapExpression) {
-            printer("- map:", ind)
+            s << printer("- map:", ind)
             n.mapEntryExpressions.each {
-                prettyPrint(it, ind)
+                s << prettyPrint(it, ind)
             }
         } else if (n instanceof ListExpression) {
-            printer("- list:", ind)
+            s << printer("- list:", ind)
             n.expressions.each {
-                prettyPrint(it, ind)
+                s << prettyPrint(it, ind)
             }
         } else if (n instanceof StaticMethodCallExpression) {
-            printer("- static method '${n.method}':", ind)
-            prettyPrint(n.receiver, ind)
-            prettyPrint(n.arguments, ind)
+            s << printer("- static method '${n.method}':", ind)
+            s << prettyPrint(n.receiver, ind)
+            s << prettyPrint(n.arguments, ind)
         } else if (n instanceof MethodCallExpression) {
-            printer("- method '${n.method}':", ind)
-            prettyPrint(n.receiver, ind)
-            prettyPrint(n.arguments, ind)
+            s << printer("- method '${n.method}':", ind)
+            s << prettyPrint(n.receiver, ind)
+            s << prettyPrint(n.arguments, ind)
         }else if (n instanceof MapEntryExpression) {
-            prettyPrint(n.keyExpression, ind)
-            prettyPrint(n.valueExpression, ind)
+            s << prettyPrint(n.keyExpression, ind)
+            s << prettyPrint(n.valueExpression, ind)
         } else if (n instanceof ExpressionStatement) {
-            prettyPrint(n.expression, ind)
+            s << prettyPrint(n.expression, ind)
         } else if (n instanceof GStringExpression) {
-            printer("- gstring:", ind)
+            s << printer("- gstring:", ind)
             ind++
-            printer("- strings:", ind)
-            n.strings.each { prettyPrint(it, ind) }
-            printer("- values:", ind)
-            n.values.each { prettyPrint(it, ind) }
+            s << printer("- strings:", ind)
+            n.strings.each { s << prettyPrint(it, ind) }
+            s << printer("- values:", ind)
+            n.values.each { s << prettyPrint(it, ind) }
         } else if (n instanceof PropertyExpression) {
-            printer("- property:", ind)
-            prettyPrint(n.objectExpression, ind)
-            prettyPrint(n.property, ind)
+            s << printer("- property:", ind)
+            s << prettyPrint(n.objectExpression, ind)
+            s << prettyPrint(n.property, ind)
         } else if (n instanceof ModuleNode) {
-            printer("- module:", ind)
+            s << printer("- module:", ind)
             ind++
-            printer("- methods:", ind)
-            n.methods.each { prettyPrint(it, ind) }
-            printer("- statements:", ind)
-            n.statementBlock.statements.each { prettyPrint(it, ind) }
+            s << printer("- methods:", ind)
+            n.methods.each { s << prettyPrint(it, ind) }
+            s << printer("- statements:", ind)
+            n.statementBlock.statements.each { s << prettyPrint(it, ind) }
         } else if (n instanceof MethodNode) {
-            printer("- methodNode:", ind)
-            prettyPrint(n.code, ind)
+            s << printer("- methodNode:", ind)
+            s << prettyPrint(n.code, ind)
         } else if (n instanceof ThrowStatement) {
-            printer("- throw:", ind)
-            prettyPrint(n.expression, ind)
+            s << printer("- throw:", ind)
+            s << prettyPrint(n.expression, ind)
         } else if (n instanceof CastExpression) {
-            printer("- cast:", ind)
-            prettyPrint(n.expression, ind)
+            s << printer("- cast:", ind)
+            s << prettyPrint(n.expression, ind)
         } else if (n instanceof VariableExpression) {
-            printer("- var:", ind)
-            printer("  - name: ${n.name}", ind)
-            printer("  - accessedVariable: ${n.accessedVariable}", ind)
+            s << printer("- var:", ind)
+            s << printer("  - name: ${n.name}", ind)
+            s << printer("  - accessedVariable: ${n.accessedVariable}", ind)
         } else if (n instanceof PrefixExpression) {
-            printer("- prefix (${n.operation}):", ind)
-            prettyPrint(n.expression, ind)
+            s << printer("- prefix (${n.operation}):", ind)
+            s << prettyPrint(n.expression, ind)
         } else if (n instanceof PostfixExpression) {
-            printer("- postfix (${n.operation}):", ind)
-            prettyPrint(n.expression, ind)
+            s << printer("- postfix (${n.operation}):", ind)
+            s << prettyPrint(n.expression, ind)
         } else {
-            printer("- ${n}", ind)
+            s << printer("- ${n}", ind)
         }
+
+        return s.join("\n")
     }
 
     /**

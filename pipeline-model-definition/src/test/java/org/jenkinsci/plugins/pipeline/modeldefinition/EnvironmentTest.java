@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Slave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -42,6 +43,9 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
+        s.getNodeProperties().add(
+                new EnvironmentVariablesNodeProperty(
+                        new EnvironmentVariablesNodeProperty.Entry("HAS_BACKSLASHES", "C:\\Windows")));
     }
 
     @Test
@@ -257,6 +261,23 @@ public class EnvironmentTest extends AbstractModelDefTest {
         expect("backslashReductionInEnv")
                 .logMatches("AAA_Key1: a\\\\b \\d+",
                         "AAA_Key2: a\\\\b")
+                .go();
+    }
+
+    @Issue("JENKINS-44603")
+    @Test
+    public void variableToMethodToEnvVal() throws Exception {
+        initGlobalLibrary();
+        expect("variableToMethodToEnvVal")
+                .logMatches("TADA_VAR: 1 tada")
+                .go();
+    }
+
+    @Issue("JENKINS-44482")
+    @Test
+    public void backslashesFromExistingEnvVar() throws Exception {
+        expect("backslashesFromExistingEnvVar")
+                .logContains("FOO is C:\\Windows\\BAR")
                 .go();
     }
 }

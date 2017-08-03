@@ -29,6 +29,7 @@ import hudson.model.Descriptor
 import hudson.model.Queue
 import hudson.model.Run
 import jenkins.model.Jenkins
+import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -54,6 +55,8 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+import java.util.logging.Level
+import java.util.logging.Logger
 
 /**
  * Recursively walks AST tree of parsed Jenkinsfile and builds validation model into {@link ModelASTPipelineDef}
@@ -70,6 +73,7 @@ import javax.annotation.Nonnull
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class ModelParser implements Parser {
+
     /**
      * Represents the source file being processed.
      */
@@ -219,12 +223,13 @@ class ModelParser implements Parser {
 
         r.validate(validator)
 
+        astDebugLog("Model as JSON: ${r.toJSON().toString(2)}")
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
             pipelineBlock.whole.arguments = new RuntimeASTTransformer(r).transform(build)
             // TODO: Remove or otherwise cleanup so that it's not always firing!
-            //ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)
+            astDebugLog("Transformed runtime AST: ${ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)}")
         }
 
         return r;
@@ -1156,5 +1161,15 @@ class ModelParser implements Parser {
         }
 
         return null;
+    }
+
+    public static boolean AST_DEBUG_LOGGING = SystemProperties.getBoolean(ModelParser.class.getName()+".astDebugLogging")
+
+    private static final Logger LOGGER = Logger.getLogger(ModelParser.class.getName())
+
+    static void astDebugLog(String toLog) {
+        if (AST_DEBUG_LOGGING) {
+            LOGGER.log(Level.WARNING, toLog)
+        }
     }
 }
