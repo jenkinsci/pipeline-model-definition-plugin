@@ -223,4 +223,12 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("hello")
                 .go();
     }
+
+    @Issue("JENKINS-45916")
+    @Test
+    public void pathInEnv() throws Exception {
+        expect("pathInEnv")
+                .logMatches("PATH: .*tmpDir:")
+                .go();
+    }
 }
