@@ -240,4 +240,14 @@ public class EnvironmentTest extends AbstractModelDefTest {
                         "_UNDERSCORE is VALIDnullORNOT")
                 .go();
     }
+
+    @Issue("JENKINS-45637")
+    @Test
+    public void multipleEnvSubstitutions() throws Exception {
+        expect("multipleEnvSubstitutions")
+                .logMatches("AAA_Key: key: \\d+ \\d+",
+                        "AAA_BN_ONLY: bn: \\d+",
+                        "AAA_EN_ONLY: en: \\d+")
+                .go();
+    }
 }
