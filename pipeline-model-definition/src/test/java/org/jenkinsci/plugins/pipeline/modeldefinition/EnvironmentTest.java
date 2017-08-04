@@ -45,7 +45,8 @@ public class EnvironmentTest extends AbstractModelDefTest {
         s.setLabelString("some-label docker");
         s.getNodeProperties().add(
                 new EnvironmentVariablesNodeProperty(
-                        new EnvironmentVariablesNodeProperty.Entry("HAS_BACKSLASHES", "C:\\Windows")));
+                        new EnvironmentVariablesNodeProperty.Entry("HAS_BACKSLASHES", "C:\\Windows"),
+                        new EnvironmentVariablesNodeProperty.Entry("FOO", "OTHER")));
     }
 
     @Test
@@ -278,6 +279,14 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void backslashesFromExistingEnvVar() throws Exception {
         expect("backslashesFromExistingEnvVar")
                 .logContains("FOO is C:\\Windows\\BAR")
+                .go();
+    }
+
+    @Issue("JENKINS-45991")
+    @Test
+    public void defaultEnvValue() throws Exception {
+        expect("defaultEnvValue")
+                .logContains("FOO is OTHER", "BAZ is BAR")
                 .go();
     }
 }

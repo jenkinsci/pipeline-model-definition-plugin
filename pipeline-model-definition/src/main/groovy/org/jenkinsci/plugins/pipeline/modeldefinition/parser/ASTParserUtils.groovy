@@ -158,6 +158,10 @@ class ASTParserUtils {
         } else if (n instanceof PostfixExpression) {
             s << printer("- postfix (${n.operation}):", ind)
             s << prettyPrint(n.expression, ind)
+        } else if (n instanceof ElvisOperatorExpression) {
+            s << printer("- elvis:", ind)
+            s << prettyPrint(n.trueExpression, ind)
+            s << prettyPrint(n.falseExpression, ind)
         } else {
             s << printer("- ${n}", ind)
         }

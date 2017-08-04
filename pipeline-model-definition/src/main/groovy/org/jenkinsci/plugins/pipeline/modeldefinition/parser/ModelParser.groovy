@@ -1163,7 +1163,7 @@ class ModelParser implements Parser {
         return null;
     }
 
-    public static boolean AST_DEBUG_LOGGING = SystemProperties.getBoolean(ModelParser.class.getName()+".astDebugLogging")
+    public static final boolean AST_DEBUG_LOGGING = SystemProperties.getBoolean(ModelParser.class.getName()+".astDebugLogging")
 
     private static final Logger LOGGER = Logger.getLogger(ModelParser.class.getName())
 

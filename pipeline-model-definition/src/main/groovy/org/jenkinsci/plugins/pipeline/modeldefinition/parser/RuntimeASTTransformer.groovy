@@ -287,14 +287,12 @@ class RuntimeASTTransformer {
                 // If the variable name is one we know is an environment variable, use the env getter, unless the reference
                 // is to the same variable we're setting!
                 body = environmentValueGetterCall(ve.name)
-            } else if (ve.name == "this" || !(ve.accessedVariable instanceof DynamicVariable) || ve.name == targetVar) {
-                // If the variable is this, or if this is a real variable, not a dynamic variable, or the reference is to
-                // the same variable name we're setting, just use it.
+            } else if (ve.name == "this" || !(ve.accessedVariable instanceof DynamicVariable)) {
+                // If the variable is this, or if this is a real variable, not a dynamic variable, just use it.
                 return ve
             } else {
                 // Otherwise, fall back to getScriptPropOrParam, which will first try script.getProperty(name), then
-                // script.getProperty('params').get(name), and finally falls back to the original expression (the last of
-                // which handles things like variables defined outside the pipeline block)
+                // script.getProperty('params').get(name).
                 body = callX(
                     varX("this"),
                     constX("getScriptPropOrParam"),
