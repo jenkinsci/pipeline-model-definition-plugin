@@ -55,7 +55,7 @@ public class CheckoutScript implements Serializable {
                     checkoutMap = script.checkout script.scm
                 }
             }
-            if (checkoutMap != null && checkoutMap instanceof Map) {
+            if (checkoutMap) {
                 script.withEnv(checkoutMap.collect { k, v -> "${k}=${v}" }) {
                     body.call()
                 }
