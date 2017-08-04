@@ -223,13 +223,18 @@ class ModelParser implements Parser {
 
         r.validate(validator)
 
-        astDebugLog("Model as JSON: ${r.toJSON().toString(2)}")
+        // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
+        astDebugLog {
+            "Model as JSON: ${r.toJSON().toString(2)}"
+        }
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
             pipelineBlock.whole.arguments = new RuntimeASTTransformer(r).transform(build)
-            // TODO: Remove or otherwise cleanup so that it's not always firing!
-            astDebugLog("Transformed runtime AST: ${ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)}")
+            // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
+            astDebugLog {
+                "Transformed runtime AST: ${ -> ASTParserUtils.prettyPrint(pipelineBlock.whole.arguments)}"
+            }
         }
 
         return r;
@@ -1167,9 +1172,13 @@ class ModelParser implements Parser {
 
     private static final Logger LOGGER = Logger.getLogger(ModelParser.class.getName())
 
-    static void astDebugLog(String toLog) {
+    static void astDebugLog(Closure<String> c) {
         if (AST_DEBUG_LOGGING) {
-            LOGGER.log(Level.WARNING, toLog)
+            try {
+                LOGGER.log(Level.WARNING, c.call())
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Error evaluating debug closure: ${e}")
+            }
         }
     }
 }
