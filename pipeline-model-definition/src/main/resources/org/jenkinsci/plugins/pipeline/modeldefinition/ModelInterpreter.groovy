@@ -148,7 +148,6 @@ public class ModelInterpreter implements Serializable {
         return {
             script.stage(thisStage.name) {
                 try {
-                    // NOTE - this will switch to script.stage in the future.
                     if (firstError != null) {
                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
                         Utils.markStageSkippedForFailure(thisStage.name)
