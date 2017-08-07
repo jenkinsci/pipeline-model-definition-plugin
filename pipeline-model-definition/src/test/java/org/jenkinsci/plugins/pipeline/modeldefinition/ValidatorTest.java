@@ -60,14 +60,16 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectStageInSteps() throws Exception {
         expectError("rejectStageInSteps")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("stage", ModelASTStep.getBlockedSteps().get("stage")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("stage",
+                        Messages.BaseBlockedSteps_Stage()))
                 .go();
     }
 
     @Test
     public void rejectParallelMixedInSteps() throws Exception {
         expectError("rejectParallelMixedInSteps")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel", ModelASTStep.getBlockedSteps().get("parallel")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel",
+                        Messages.BaseBlockedSteps_Parallel()))
                 .go();
     }
 
@@ -203,7 +205,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectPropertiesStepInMethodCall() throws Exception {
         expectError("rejectPropertiesStepInMethodCall")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties", ModelASTStep.getBlockedSteps().get("properties")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties",
+                        Messages.BaseBlockedSteps_Properties()))
                 .go();
     }
 

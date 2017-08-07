@@ -23,23 +23,6 @@ public class ModelASTStep extends ModelASTElement {
     private String name;
     private ModelASTArgumentList args;
 
-    public static Map<String, String> blockedStepsBase() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
-        map.put("stage", Messages.ModelASTStep_BlockedSteps_Stage());
-        map.put("properties", Messages.ModelASTStep_BlockedSteps_Properties());
-        map.put("parallel", Messages.ModelASTStep_BlockedSteps_Parallel());
-        return map;
-    }
-
-    /**
-     * A map of step names which are banned from being executed within a step block.
-     *
-     * @return the map of steps that are banned from being executed within a step block, keyed by step name.
-     */
-    public static Map<String, String> getBlockedSteps() {
-        return blockedStepsBase();
-    }
-
     public ModelASTStep(Object sourceLocation) {
         super(sourceLocation);
     }

@@ -34,6 +34,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.DeclarativeBlockedSteps
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
@@ -102,7 +103,7 @@ public class Options implements Serializable {
         Utils.generateTypeCache(StepDescriptor.class, false, [],
             { StepDescriptor s ->
                 return s.takesImplicitBlockArgument() &&
-                    !(s.getFunctionName() in ModelASTMethodCall.blockedSteps.keySet()) &&
+                    !(s.getFunctionName() in DeclarativeBlockedSteps.allBlockedInMethodCalls(null).keySet()) &&
                     !(Launcher.class in s.getRequiredContext()) &&
                     !(FilePath.class in s.getRequiredContext())
             }

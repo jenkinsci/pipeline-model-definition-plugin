@@ -33,6 +33,7 @@ import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
+import org.jenkinsci.plugins.pipeline.modeldefinition.DeclarativeBlockedSteps
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -48,7 +49,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -63,9 +66,16 @@ class ModelValidatorImpl implements ModelValidator {
 
     private final ErrorCollector errorCollector
     private transient DescriptorLookupCache lookup
+    @CheckForNull
+    private final FlowExecution execution
 
-    public ModelValidatorImpl(ErrorCollector e) {
+    ModelValidatorImpl(ErrorCollector e) {
+        this(e, null)
+    }
+
+    public ModelValidatorImpl(ErrorCollector e, FlowExecution execution) {
         this.errorCollector = e
+        this.execution = execution
         this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
@@ -368,9 +378,10 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (ModelASTStep.blockedSteps.keySet().contains(step.name)) {
+        if (DeclarativeBlockedSteps.allBlockedInSteps(execution).keySet().contains(step.name)) {
             errorCollector.error(step,
-                Messages.ModelValidatorImpl_BlockedStep(step.name, ModelASTStep.blockedSteps.get(step.name)))
+                Messages.ModelValidatorImpl_BlockedStep(step.name,
+                    DeclarativeBlockedSteps.allBlockedInSteps(execution).get(step.name)))
             valid = false
         } else {
             // We can't do step validation without a Jenkins instance, so move on.
@@ -389,9 +400,10 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
-        if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
+        if (DeclarativeBlockedSteps.allBlockedInMethodCalls().keySet().contains(meth.name)) {
             errorCollector.error(meth,
-                Messages.ModelValidatorImpl_BlockedStep(meth.name, ModelASTMethodCall.blockedSteps.get(meth.name)))
+                Messages.ModelValidatorImpl_BlockedStep(meth.name,
+                    DeclarativeBlockedSteps.allBlockedInMethodCalls().get(meth.name)))
             valid = false
         }
         if (Jenkins.getInstance() != null) {
