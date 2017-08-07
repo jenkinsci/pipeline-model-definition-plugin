@@ -49,7 +49,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -64,9 +66,16 @@ class ModelValidatorImpl implements ModelValidator {
 
     private final ErrorCollector errorCollector
     private transient DescriptorLookupCache lookup
+    @CheckForNull
+    private final FlowExecution execution
 
-    public ModelValidatorImpl(ErrorCollector e) {
+    ModelValidatorImpl(ErrorCollector e) {
+        this(e, null)
+    }
+
+    public ModelValidatorImpl(ErrorCollector e, FlowExecution execution) {
         this.errorCollector = e
+        this.execution = execution
         this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
@@ -369,10 +378,10 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (DeclarativeBlockedSteps.allBlockedInSteps().keySet().contains(step.name)) {
+        if (DeclarativeBlockedSteps.allBlockedInSteps(execution).keySet().contains(step.name)) {
             errorCollector.error(step,
                 Messages.ModelValidatorImpl_BlockedStep(step.name,
-                    DeclarativeBlockedSteps.allBlockedInSteps().get(step.name)))
+                    DeclarativeBlockedSteps.allBlockedInSteps(execution).get(step.name)))
             valid = false
         } else {
             // We can't do step validation without a Jenkins instance, so move on.

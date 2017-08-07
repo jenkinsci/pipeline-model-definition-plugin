@@ -144,7 +144,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         for (StepDescriptor d : j.jenkins.getExtensionList(StepDescriptor.class)) {
             if (d.takesImplicitBlockArgument() &&
-                    !(DeclarativeBlockedSteps.allBlockedInMethodCalls().containsKey(d.getFunctionName())) &&
+                    !(DeclarativeBlockedSteps.allBlockedInMethodCalls(null).containsKey(d.getFunctionName())) &&
                     !(d.getRequiredContext().contains(FilePath.class)) &&
                     !(d.getRequiredContext().contains(Launcher.class))) {
                 optionTypes.add(d.getFunctionName());

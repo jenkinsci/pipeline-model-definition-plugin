@@ -25,7 +25,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
+import javax.annotation.CheckForNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -33,7 +35,7 @@ import java.util.Map;
 public class BaseBlockedSteps extends DeclarativeBlockedSteps {
 
     @Override
-    public Map<String,String> blockedInSteps() {
+    public Map<String,String> blockedInSteps(@CheckForNull FlowExecution execution) {
         Map<String, String> map = new LinkedHashMap<String, String>();
         map.put("stage", Messages.BaseBlockedSteps_Stage());
         map.put("properties", Messages.BaseBlockedSteps_Properties());
@@ -42,11 +44,11 @@ public class BaseBlockedSteps extends DeclarativeBlockedSteps {
     }
 
     @Override
-    public Map<String,String> blockedInMethodCalls() {
+    public Map<String,String> blockedInMethodCalls(@CheckForNull FlowExecution execution) {
         Map<String,String> map = new LinkedHashMap<>();
         map.put("node", Messages.BaseBlockedSteps_Node());
 
-        map.putAll(blockedInSteps());
+        map.putAll(blockedInSteps(execution));
 
         return map;
     }

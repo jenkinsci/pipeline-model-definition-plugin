@@ -103,7 +103,7 @@ public class Options implements Serializable {
         Utils.generateTypeCache(StepDescriptor.class, false, [],
             { StepDescriptor s ->
                 return s.takesImplicitBlockArgument() &&
-                    !(s.getFunctionName() in DeclarativeBlockedSteps.allBlockedInMethodCalls().keySet()) &&
+                    !(s.getFunctionName() in DeclarativeBlockedSteps.allBlockedInMethodCalls(null).keySet()) &&
                     !(Launcher.class in s.getRequiredContext()) &&
                     !(FilePath.class in s.getRequiredContext())
             }

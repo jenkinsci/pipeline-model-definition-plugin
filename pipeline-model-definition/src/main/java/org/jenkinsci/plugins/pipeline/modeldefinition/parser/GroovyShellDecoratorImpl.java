@@ -24,7 +24,7 @@ import javax.annotation.CheckForNull;
 @Extension
 public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
     @Override
-    public void configureCompiler(@CheckForNull CpsFlowExecution context, CompilerConfiguration cc) {
+    public void configureCompiler(@CheckForNull final CpsFlowExecution context, CompilerConfiguration cc) {
         ImportCustomizer ic = new ImportCustomizer();
         ic.addStarImports(NonCPS.class.getPackage().getName());
         ic.addStarImports("hudson.model","jenkins.model");
@@ -33,7 +33,7 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
         
         cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.CANONICALIZATION) {
             @Override
-            public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
+            public void call(SourceUnit source, GeneratorContext generatorContext, ClassNode classNode) throws CompilationFailedException {
                 // TODO: workflow-cps-plugin CpsFlowExecution.parseScript() should be passing in CodeSource
                 // to help us determine that that is a user-written script
                 // Commenting out for findbugs

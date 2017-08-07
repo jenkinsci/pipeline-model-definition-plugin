@@ -26,7 +26,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
+import javax.annotation.CheckForNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -37,27 +39,36 @@ public abstract class DeclarativeBlockedSteps implements ExtensionPoint {
     /**
      * Steps which are blocked in "steps", "post" conditions, and the like.
      *
+     * @param execution {@link FlowExecution} for the current context. Can be used for more detailed decision making.
+     *                                       Note that this will be null in some contexts.
      * @return A map of step names (which can also be function or method names that aren't actual steps) to strings
      * explaining the reason for the step being blocked.
      */
-    public abstract Map<String,String> blockedInSteps();
+    public abstract Map<String,String> blockedInSteps(@CheckForNull FlowExecution execution);
 
     /**
      * Steps which are blocked in method calls like "options" entries.
      *
+     * @param execution {@link FlowExecution} for the current context. Can be used for more detailed decision making.
+     *                                       Note that this will be null in some contexts.
      * @return A map of step names (which can also be function or method names that aren't actual steps) to strings
      * explaining the reason for the step being blocked.
      */
-    public abstract Map<String,String> blockedInMethodCalls();
+    public abstract Map<String,String> blockedInMethodCalls(@CheckForNull FlowExecution execution);
 
     /**
      * Get all blocked-in-steps steps across all extensions.
+     *
+     * @param execution {@link FlowExecution} for the current context. Can be used for more detailed decision making.
+     *                                       Note that this will be null in some contexts.
+     * @return A map of step names (which can also be function or method names that aren't actual steps) to strings
+     * explaining the reason for the step being blocked.
      */
-    public static Map<String,String> allBlockedInSteps() {
+    public static Map<String,String> allBlockedInSteps(@CheckForNull FlowExecution execution) {
         Map<String,String> map = new LinkedHashMap<>();
 
         for (DeclarativeBlockedSteps dbs : ExtensionList.lookup(DeclarativeBlockedSteps.class).reverseView()) {
-            map.putAll(dbs.blockedInSteps());
+            map.putAll(dbs.blockedInSteps(execution));
         }
 
         return map;
@@ -65,12 +76,17 @@ public abstract class DeclarativeBlockedSteps implements ExtensionPoint {
 
     /**
      * Get all blocked-in-method-calls steps across all extensions.
+     *
+     * @param execution {@link FlowExecution} for the current context. Can be used for more detailed decision making.
+     *                                       Note that this will be null in some contexts.
+     * @return A map of step names (which can also be function or method names that aren't actual steps) to strings
+     * explaining the reason for the step being blocked.
      */
-    public static Map<String,String> allBlockedInMethodCalls() {
+    public static Map<String,String> allBlockedInMethodCalls(@CheckForNull FlowExecution execution) {
         Map<String,String> map = new LinkedHashMap<>();
 
         for (DeclarativeBlockedSteps dbs : ExtensionList.lookup(DeclarativeBlockedSteps.class).reverseView()) {
-            map.putAll(dbs.blockedInMethodCalls());
+            map.putAll(dbs.blockedInMethodCalls(execution));
         }
 
         return map;
