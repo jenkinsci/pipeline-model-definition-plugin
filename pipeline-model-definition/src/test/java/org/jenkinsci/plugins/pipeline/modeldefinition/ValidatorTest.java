@@ -24,17 +24,26 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.slaves.DumbSlave;
+import jenkins.model.OptionalJobProperty;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.TestExtension;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.Nonnull;
 
 /**
  * @author Andrew Bayer
@@ -614,5 +623,41 @@ public class ValidatorTest extends AbstractModelDefTest {
         expectError("parallelStagesDeepNesting")
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
+    }
+
+    @Issue("JENKINS-46065")
+    @Test
+    public void validatorContributor() throws Exception {
+        expectError("validatorContributor")
+                .logContains("testProperty is rejected")
+                .go();
+    }
+
+    @TestExtension
+    public static class RejectTestProperty extends DeclarativeValidatorContributor {
+        @Override
+        public String validateElement(@Nonnull ModelASTOption option) {
+            if (option.getName() != null && option.getName().equals("testProperty")) {
+                return "testProperty is rejected";
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public static class TestProperty extends OptionalJobProperty<WorkflowJob> {
+        @DataBoundConstructor
+        public TestProperty() {
+
+        }
+
+        @TestExtension
+        @Symbol("testProperty")
+        public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
+            @Override
+            public String getDisplayName() {
+                return "Test job property to be rejected by a validator contributor.";
+            }
+        }
     }
 }
