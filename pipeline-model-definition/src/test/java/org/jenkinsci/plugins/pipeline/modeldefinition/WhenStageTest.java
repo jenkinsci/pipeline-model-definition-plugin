@@ -31,6 +31,7 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.Result;
 import hudson.model.Slave;
 import net.sf.json.JSONObject;
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
 import org.junit.BeforeClass;
@@ -38,7 +39,9 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 
@@ -119,6 +122,44 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void paramsInWhenExpression() throws Exception {
         expect("paramsInWhenExpression")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenChangeset() throws Exception {
+        //First time build always skips the changelog
+        final ExpectationsBuilder builder = expect("when/changelog", "changeset")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional")
+                .logNotContains("JS World");
+        builder.go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+
+        sampleRepo.write("webapp/js/somecode.js", "//fake file");
+        sampleRepo.git("add", "webapp/js/somecode.js");
+        sampleRepo.git("commit", "--message=files");
+
+        builder.logContains("Hello", "JS World")
+                .logNotContains("Stage 'Two' skipped due to when conditional")
+                .go();
+    }
+
+    @Test
+    public void whenChangelog() throws Exception {
+        //First time build always skips the changelog
+        final ExpectationsBuilder builder = expect("when/changelog", "changelog")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional")
+                .logNotContains("Dull World");
+        builder.go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+
+        sampleRepo.write("something.txt", "//fake file");
+        sampleRepo.git("add", "something.txt");
+        sampleRepo.git("commit", "-m", "Some title that we don't care about\n\nSome explanation\n[DEPENDENCY] some-app#45");
+
+        builder.logContains("Hello", "Dull World")
+                .logNotContains("Stage 'Two' skipped due to when conditional")
                 .go();
     }
 
