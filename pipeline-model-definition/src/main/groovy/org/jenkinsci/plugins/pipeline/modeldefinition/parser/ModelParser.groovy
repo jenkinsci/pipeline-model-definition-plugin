@@ -50,6 +50,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorIm
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -80,11 +81,14 @@ class ModelParser implements Parser {
 
     private final DescriptorLookupCache lookup
 
-    public ModelParser(SourceUnit sourceUnit) {
+    private transient FlowExecution execution
+
+    public ModelParser(SourceUnit sourceUnit, FlowExecution execution = null) {
         this.sourceUnit = sourceUnit;
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
-        this.validator = new ModelValidatorImpl(errorCollector)
+        this.validator = new ModelValidatorImpl(errorCollector, execution)
         this.lookup = DescriptorLookupCache.getPublicCache()
+        this.execution = execution
     }
 
     public @CheckForNull ModelASTPipelineDef parse() {

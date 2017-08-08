@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
 import hudson.Extension;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -37,7 +38,7 @@ import javax.annotation.Nonnull;
 public class ParametersAndTriggersInOptions extends DeclarativeValidatorContributor {
     @Override
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTOption option) {
+    public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
         if (option.getName() != null) {
             if (option.getName().equals("parameters")) {
                 return Messages.ParametersAndTriggersInOptions_RejectParameters();

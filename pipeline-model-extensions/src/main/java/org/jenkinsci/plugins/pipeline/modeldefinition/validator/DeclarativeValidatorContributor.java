@@ -50,6 +50,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -65,122 +66,122 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
      * Fallback for any unknown element type. Always returns true, cannot be overridden.
      */
     @CheckForNull
-    public final String validateElement(@Nonnull ModelASTElement element) {
+    public final String validateElement(@Nonnull ModelASTElement element, @CheckForNull FlowExecution execution) {
         return null;
     }
     
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTAgent agent) {
+    public String validateElement(@Nonnull ModelASTAgent agent, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTBranch branch) {
+    public String validateElement(@Nonnull ModelASTBranch branch, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTBuildConditionsContainer container) {
+    public String validateElement(@Nonnull ModelASTBuildConditionsContainer container, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTPostBuild postBuild) {
+    public String validateElement(@Nonnull ModelASTPostBuild postBuild, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTPostStage post) {
+    public String validateElement(@Nonnull ModelASTPostStage post, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTBuildCondition buildCondition) {
+    public String validateElement(@Nonnull ModelASTBuildCondition buildCondition, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTEnvironment environment) {
+    public String validateElement(@Nonnull ModelASTEnvironment environment, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTTools tools) {
+    public String validateElement(@Nonnull ModelASTTools tools, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTStep step) {
+    public String validateElement(@Nonnull ModelASTStep step, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTWhen when) {
+    public String validateElement(@Nonnull ModelASTWhen when, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTMethodCall methodCall) {
+    public String validateElement(@Nonnull ModelASTMethodCall methodCall, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTOptions properties) {
+    public String validateElement(@Nonnull ModelASTOptions properties, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTTriggers triggers) {
+    public String validateElement(@Nonnull ModelASTTriggers triggers, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTBuildParameters buildParameters) {
+    public String validateElement(@Nonnull ModelASTBuildParameters buildParameters, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTOption jobProperty) {
+    public String validateElement(@Nonnull ModelASTOption jobProperty, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTTrigger trigger) {
+    public String validateElement(@Nonnull ModelASTTrigger trigger, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTBuildParameter buildParameter) {
+    public String validateElement(@Nonnull ModelASTBuildParameter buildParameter, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTPipelineDef pipelineDef) {
+    public String validateElement(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
+    public String validateElement(@Nonnull ModelASTStage stage, boolean isNested, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTStages stages) {
+    public String validateElement(@Nonnull ModelASTStages stages, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTLibraries libraries) {
+    public String validateElement(@Nonnull ModelASTLibraries libraries, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTWhenCondition condition) {
+    public String validateElement(@Nonnull ModelASTWhenCondition condition, @CheckForNull FlowExecution execution) {
         return null;
     }
 
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTInternalFunctionCall call) {
+    public String validateElement(@Nonnull ModelASTInternalFunctionCall call, @CheckForNull FlowExecution execution) {
         return null;
     }
 

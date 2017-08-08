@@ -34,8 +34,10 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -43,6 +45,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 /**
@@ -69,14 +72,16 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectStageInSteps() throws Exception {
         expectError("rejectStageInSteps")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("stage", ModelASTStep.getBlockedSteps().get("stage")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("stage",
+                        BlockedStepsAndMethodCalls.blockedInSteps().get("stage")))
                 .go();
     }
 
     @Test
     public void rejectParallelMixedInSteps() throws Exception {
         expectError("rejectParallelMixedInSteps")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel", ModelASTStep.getBlockedSteps().get("parallel")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel", 
+                        BlockedStepsAndMethodCalls.blockedInSteps().get("parallel")))
                 .go();
     }
 
@@ -212,7 +217,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectPropertiesStepInMethodCall() throws Exception {
         expectError("rejectPropertiesStepInMethodCall")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties", ModelASTStep.getBlockedSteps().get("properties")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties",
+                        BlockedStepsAndMethodCalls.blockedInSteps().get("properties")))
                 .go();
     }
 
@@ -644,7 +650,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @TestExtension
     public static class RejectTestProperty extends DeclarativeValidatorContributor {
         @Override
-        public String validateElement(@Nonnull ModelASTOption option) {
+        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
             if (option.getName() != null && option.getName().equals("testProperty")) {
                 return "testProperty is rejected";
             } else {

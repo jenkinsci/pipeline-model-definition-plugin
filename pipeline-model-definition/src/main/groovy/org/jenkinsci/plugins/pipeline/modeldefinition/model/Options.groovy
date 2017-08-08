@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
@@ -102,7 +103,7 @@ public class Options implements Serializable {
         Utils.generateTypeCache(StepDescriptor.class, false, [],
             { StepDescriptor s ->
                 return s.takesImplicitBlockArgument() &&
-                    !(s.getFunctionName() in ModelASTMethodCall.blockedSteps.keySet()) &&
+                    !(s.getFunctionName() in BlockedStepsAndMethodCalls.blockedInMethodCalls().keySet()) &&
                     !(Launcher.class in s.getRequiredContext()) &&
                     !(FilePath.class in s.getRequiredContext())
             }

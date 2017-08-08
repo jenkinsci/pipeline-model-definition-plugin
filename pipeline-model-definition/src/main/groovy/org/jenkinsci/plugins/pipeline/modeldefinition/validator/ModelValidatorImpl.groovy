@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
 import javax.annotation.Nonnull
 
@@ -63,9 +64,11 @@ class ModelValidatorImpl implements ModelValidator {
 
     private final ErrorCollector errorCollector
     private transient DescriptorLookupCache lookup
+    private transient FlowExecution execution
 
-    public ModelValidatorImpl(ErrorCollector e) {
+    public ModelValidatorImpl(ErrorCollector e, FlowExecution execution = null) {
         this.errorCollector = e
+        this.execution = execution
         this.lookup = DescriptorLookupCache.getPublicCache()
     }
 
@@ -368,19 +371,14 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (ModelASTStep.blockedSteps.keySet().contains(step.name)) {
-            errorCollector.error(step,
-                Messages.ModelValidatorImpl_BlockedStep(step.name, ModelASTStep.blockedSteps.get(step.name)))
-            valid = false
-        } else {
-            // We can't do step validation without a Jenkins instance, so move on.
-            if (Jenkins.getInstance() != null) {
-                Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
-                DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
+        // We can't do step validation without a Jenkins instance, so move on.
+        // Also, special casing of parallel due to it not having a DataBoundConstructor.
+        if (Jenkins.getInstance() != null && step.name != "parallel") {
+            Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
+            DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
-                if (model != null) {
-                    valid = validateStep(step, model, desc)
-                }
+            if (model != null) {
+                valid = validateStep(step, model, desc)
             }
         }
 
@@ -389,11 +387,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
-        if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
-            errorCollector.error(meth,
-                Messages.ModelValidatorImpl_BlockedStep(meth.name, ModelASTMethodCall.blockedSteps.get(meth.name)))
-            valid = false
-        }
+
         if (Jenkins.getInstance() != null) {
             Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
             DescribableModel<? extends Describable> model
@@ -540,9 +534,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (opt.name == null) {
             // Validation failed at compilation time so move on.
-        }
-        // We can't do property validation without a Jenkins instance, so move on.
-        else if (Options.typeForKey(opt.name) == null) {
+        } else if (Options.typeForKey(opt.name) == null) {
             errorCollector.error(opt,
                 Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name, Options.getAllowedOptionTypes().keySet()))
             valid = false
@@ -713,9 +705,9 @@ class ModelValidatorImpl implements ModelValidator {
         boolean contributorsValid = DeclarativeValidatorContributor.all().every { contributor ->
             String error = null
             if (!(element instanceof ModelASTStage)) {
-                error = contributor.validateElement(element)
+                error = contributor.validateElement(element, execution)
             } else {
-                error = contributor.validateElement((ModelASTStage)element, isNested)
+                error = contributor.validateElement((ModelASTStage)element, isNested, execution)
             }
             if (error != null) {
                 errorCollector.error(element, error)
