@@ -52,14 +52,9 @@ class ChangelogConditionalScript extends AbstractChangelogConditionalScript<Chan
         //But it's probably simpler to make a build step that recaptures that information
 
         if (gitChangeSetClass != null && change?.getClass()?.isAssignableFrom(gitChangeSetClass)) {
-            script.echo "We are running git"
-            script.echo "Evaluating " + change.title
-            script.echo "And " + change.comment
             return describable.pattern.matcher(change.title).matches() || describable.multiLinePattern.matcher(change.comment).matches()
         } else {
             //Something generic
-            script.echo "We are running something generic"
-            script.echo "Evaluating " + change.msg
             return describable.pattern.matcher(change.msg).matches()
         }
     }
