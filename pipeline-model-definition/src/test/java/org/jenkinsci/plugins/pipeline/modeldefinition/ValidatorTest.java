@@ -625,6 +625,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void parametersAndTriggersInOptions() throws Exception {
+        expectError("parametersAndTriggersInOptions")
+                .logContains(org.jenkinsci.plugins.pipeline.modeldefinition.validator.Messages.ParametersAndTriggersInOptions_RejectParameters(),
+                        org.jenkinsci.plugins.pipeline.modeldefinition.validator.Messages.ParametersAndTriggersInOptions_RejectTriggers())
+                .go();
+    }
+
     @Issue("JENKINS-46065")
     @Test
     public void validatorContributor() throws Exception {
