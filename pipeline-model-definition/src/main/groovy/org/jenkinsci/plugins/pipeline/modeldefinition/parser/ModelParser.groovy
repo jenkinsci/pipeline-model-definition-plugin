@@ -81,14 +81,11 @@ class ModelParser implements Parser {
 
     private final DescriptorLookupCache lookup
 
-    private transient FlowExecution execution
-
     public ModelParser(SourceUnit sourceUnit, FlowExecution execution = null) {
         this.sourceUnit = sourceUnit;
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
         this.validator = new ModelValidatorImpl(errorCollector, execution)
         this.lookup = DescriptorLookupCache.getPublicCache()
-        this.execution = execution
     }
 
     public @CheckForNull ModelASTPipelineDef parse() {

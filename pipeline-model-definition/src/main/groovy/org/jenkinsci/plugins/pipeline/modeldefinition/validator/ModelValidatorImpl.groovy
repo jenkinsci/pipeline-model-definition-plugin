@@ -59,7 +59,7 @@ import javax.annotation.Nonnull
  */
 @ToString
 @EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 class ModelValidatorImpl implements ModelValidator {
 
     private final ErrorCollector errorCollector
@@ -74,6 +74,10 @@ class ModelValidatorImpl implements ModelValidator {
 
     public DescriptorLookupCache getLookup() {
         return lookup
+    }
+
+    private FlowExecution getExecution() {
+        return execution
     }
 
     public boolean validateElement(@Nonnull ModelASTPostBuild postBuild) {
@@ -705,9 +709,9 @@ class ModelValidatorImpl implements ModelValidator {
         boolean contributorsValid = DeclarativeValidatorContributor.all().every { contributor ->
             String error = null
             if (!(element instanceof ModelASTStage)) {
-                error = contributor.validateElement(element, execution)
+                error = contributor.validateElement(element, getExecution())
             } else {
-                error = contributor.validateElement((ModelASTStage)element, isNested, execution)
+                error = contributor.validateElement((ModelASTStage)element, isNested, getExecution())
             }
             if (error != null) {
                 errorCollector.error(element, error)
