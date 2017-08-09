@@ -43,7 +43,15 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
         RunWrapper run = this.script.getProperty("currentBuild")
         if (run != null) {
             List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = run.getChangeSets()
-            for (int i = 0; i < changeSets.size(); i++) { //TODO can we do .each stuff yet?
+            if (changeSets.isEmpty()) {
+                if (run.number <= 1) {
+                    script.echo "Warning, empty changelog. Probably because this is the first build." //TODO JENKINS-46086
+                } else {
+                    script.echo "Warning, empty changelog. Have you run checkout?"
+                }
+                return false
+            }
+            for (int i = 0; i < changeSets.size(); i++) { //TODO switch to .any when #174 lands.
                 def set = changeSets.get(i)
                 def iterator = set.iterator()
                 while (iterator.hasNext()) {

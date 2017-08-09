@@ -129,7 +129,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenChangeset() throws Exception {
         //First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/changelog", "changeset")
-                .logContains("Hello", "Stage 'Two' skipped due to when conditional")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("JS World");
         builder.go();
 
@@ -140,7 +140,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         sampleRepo.git("commit", "--message=files");
 
         builder.logContains("Hello", "JS World")
-                .logNotContains("Stage 'Two' skipped due to when conditional")
+                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
                 .go();
     }
 
@@ -148,7 +148,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenChangelog() throws Exception {
         //First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/changelog", "changelog")
-                .logContains("Hello", "Stage 'Two' skipped due to when conditional")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("Dull World");
         builder.go();
 
@@ -159,7 +159,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         sampleRepo.git("commit", "-m", "Some title that we don't care about\n\nSome explanation\n[DEPENDENCY] some-app#45");
 
         builder.logContains("Hello", "Dull World")
-                .logNotContains("Stage 'Two' skipped due to when conditional")
+                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
                 .go();
     }
 

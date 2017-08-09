@@ -35,7 +35,9 @@ pipeline {
         }
         stage("Two") {
             when {
-                changelog '.*^\\[DEPENDENCY\\] .+$'  //Perhaps we should use the /../ syntax directly so we don't suffer from ugly escaping?
+                //Perhaps we should use the /../ syntax directly so we don't suffer from ugly escaping?
+                //TODO verify the /../ syntax in the #174 parser
+                changelog '.*^\\[DEPENDENCY\\] .+$'
             }
             steps {
                 script {

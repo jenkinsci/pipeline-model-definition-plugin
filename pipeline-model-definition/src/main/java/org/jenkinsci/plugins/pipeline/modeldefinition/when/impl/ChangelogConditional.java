@@ -45,7 +45,7 @@ public class ChangelogConditional extends DeclarativeStageConditional<ChangelogC
 
     @DataBoundConstructor
     public ChangelogConditional(String pattern) {
-        //TODO find a way to validate the regexp in the compile phase
+        //TODO JENKINS-46065 validate the regexp when #179 is merged
         this.pattern = Pattern.compile(pattern);
         this.multiLinePattern = Pattern.compile("(?m)(?s)^[^\\r\\n]*?" + pattern + "[^\\r\\n]*?$",
                 Pattern.MULTILINE | Pattern.DOTALL);

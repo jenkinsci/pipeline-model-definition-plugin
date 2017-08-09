@@ -39,14 +39,14 @@ class ChangesetConditionalScript extends AbstractChangelogConditionalScript<Chan
 
     @Override
     void initializeEval() {
-        glob = (String)script.evaluate(Utils.prepareForEvalToString(describable.glob))
+        glob = (String)script.evaluate(Utils.prepareForEvalToString(describable.glob)) //TODO change when #174 lands
         glob = glob.replace('\\', '/')
     }
 
     @Override
     boolean matches(ChangeLogSet.Entry change) {
         def iterator = change.affectedPaths.iterator()
-        while (iterator.hasNext()) {
+        while (iterator.hasNext()) { //TODO switch to .any when #174 lands
             String path = iterator.next();
             path = path.replace('\\', '/')
             if (DirectoryScanner.match(glob, path, describable.isCaseSensitive())) {
