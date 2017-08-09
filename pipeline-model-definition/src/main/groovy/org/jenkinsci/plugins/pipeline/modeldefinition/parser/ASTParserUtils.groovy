@@ -77,7 +77,7 @@ class ASTParserUtils {
     // TODO: Remove or otherwise cleanup so that it's not always firing!
     static String prettyPrint(ASTNode n, int ind = -1) {
         List<String> s = []
-        
+
         ind++
         if (n instanceof ReturnStatement) {
             s << printer("- return:", ind)
@@ -162,6 +162,20 @@ class ASTParserUtils {
             s << printer("- elvis:", ind)
             s << prettyPrint(n.trueExpression, ind)
             s << prettyPrint(n.falseExpression, ind)
+        } else if (n instanceof BinaryExpression) {
+            s << printer("- binary:", ind)
+            s << printer("  - left:", ind)
+            s << prettyPrint(n.leftExpression, ind)
+            s << printer(" - op: ${n.operation.toString()}", ind)
+            s << printer("  - right:", ind)
+            s << prettyPrint(n.rightExpression, ind)
+        } else if (n instanceof DeclarationExpression) {
+            s << printer("- decl:", ind)
+            s << printer("  - left:", ind)
+            s << prettyPrint(n.leftExpression, ind)
+            s << printer(" - op: ${n.operation.toString()}", ind)
+            s << printer("  - right:", ind)
+            s << prettyPrint(n.rightExpression, ind)
         } else {
             s << printer("- ${n}", ind)
         }
