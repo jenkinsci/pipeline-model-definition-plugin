@@ -29,7 +29,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
- * Special wrapper for environment to deal with mapped closure problems with property declarations.
+ * Special wrapper for environment to deal with cross-references, etc.
  *
  * @author Andrew Bayer
  */
@@ -39,6 +39,10 @@ public class Environment implements Serializable {
     private final EnvironmentResolver envResolver
     private final EnvironmentResolver credsResolver
 
+    /**
+     * @param envResolver {@link EnvironmentResolver} for environment variables
+     * @param credsResolver {@link EnvironmentResolver} for credentials
+     */
     @Whitelisted
     Environment(EnvironmentResolver envResolver, EnvironmentResolver credsResolver) {
         this.envResolver = envResolver
@@ -46,14 +50,24 @@ public class Environment implements Serializable {
         this.credsResolver.setFallback(this.envResolver)
     }
 
+    /**
+     * Gets the {@link EnvironmentResolver} for the environment variables.
+     */
     EnvironmentResolver getEnvResolver() {
         return envResolver
     }
 
+    /**
+     * Gets the {@link EnvironmentResolver} for the credentials.
+     */
     EnvironmentResolver getCredsResolver() {
         return credsResolver
     }
 
+    /**
+     * A special class used for containing a map of environment variable keys and closures for each of them that return
+     * their actual value. Those closures may call the closures for other keys to resolve other variables.
+     */
     static class EnvironmentResolver implements Serializable {
         private static final long serialVersionUID = 1L
 
@@ -65,6 +79,10 @@ public class Environment implements Serializable {
         EnvironmentResolver() {
         }
 
+        /**
+         * Used in in the initialization closure to populate the {@link CpsScript} used for fetching pre-existing property
+         * and parameter values.
+         */
         @Whitelisted
         void setScript(CpsScript script) {
             this.script = script
@@ -75,14 +93,27 @@ public class Environment implements Serializable {
             return script
         }
 
+        /**
+         * Optionally, you can set a fallback {@link EnvironmentResolver}, so that, for example, the credentials resolver
+         * can fall back on the environment variables resolver to get the closure to resolve for an environment variable
+         * key.
+         */
         void setFallback(EnvironmentResolver fallback) {
             this.fallback = fallback
         }
 
+        /**
+         * Used in the initialization closure to actually add the value closure for a key. This is needed due to issues
+         * with passing CPS-transformed closures to constructors, and may be replaced in the future.
+         */
         void addClosure(String key, Closure closure) {
             this.closureMap.put(key, closure)
         }
 
+        /**
+         * Actually fetch the value closure to call for a key. First checks our own map, then falls back to the fallback
+         * {@link EnvironmentResolver} if it exists, and lastly returns null.
+         */
         @Whitelisted
         Closure getClosure(String key) {
             if (closureMap.containsKey(key)) {
@@ -95,13 +126,16 @@ public class Environment implements Serializable {
         }
 
         /**
-         * Called at runtime for fetching a variable defined outside of the resolver.
+         * Called at runtime from inside value closures for fetching a variable defined outside of the resolver.
          */
         @Whitelisted
         Object getScriptPropOrParam(String name) {
             return Utils.getScriptPropOrParam(script, name)
         }
 
+        /**
+         * Get the map of keys to value closures.
+         */
         Map<String,Closure> getClosureMap() {
             return closureMap
         }
