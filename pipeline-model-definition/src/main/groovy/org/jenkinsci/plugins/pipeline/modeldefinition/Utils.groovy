@@ -31,7 +31,12 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
-import hudson.model.*
+import hudson.model.Describable
+import hudson.model.Descriptor
+import hudson.model.JobProperty
+import hudson.model.ParameterDefinition
+import hudson.model.ParametersDefinitionProperty
+import hudson.model.Result
 import hudson.triggers.Trigger
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode

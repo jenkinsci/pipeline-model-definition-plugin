@@ -1,11 +1,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents a list of {@code BuildCondition} and {@code StepsBlock} pairs to be called, depending on whether

@@ -1,13 +1,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
  * A representation of a method call, including its name and a list of {@link ModelASTMethodArg}s.

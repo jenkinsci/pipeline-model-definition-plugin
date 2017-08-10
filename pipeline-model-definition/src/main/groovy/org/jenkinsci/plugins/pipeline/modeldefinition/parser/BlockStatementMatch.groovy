@@ -1,12 +1,12 @@
-package org.jenkinsci.plugins.pipeline.modeldefinition.parser
+package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
-import org.codehaus.groovy.ast.expr.ClosureExpression
-import org.codehaus.groovy.ast.expr.Expression
-import org.codehaus.groovy.ast.expr.MethodCallExpression
-import org.codehaus.groovy.ast.expr.TupleExpression
-import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.stmt.Statement;
 
-import javax.annotation.Nullable
+import javax.annotation.Nullable;
 
 /**
  * Pattern match for the following Groovy construct:

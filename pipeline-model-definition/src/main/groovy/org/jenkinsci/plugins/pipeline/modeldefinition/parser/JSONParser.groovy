@@ -23,11 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
+import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.JsonReferenceException
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.ProcessingException
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.jsonpointer.JsonPointer

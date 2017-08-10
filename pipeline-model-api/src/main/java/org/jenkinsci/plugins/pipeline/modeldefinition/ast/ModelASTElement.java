@@ -23,12 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import javax.annotation.Nonnull;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.codehaus.groovy.ast.ASTNode;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-import javax.annotation.Nonnull;
 
 public abstract class ModelASTElement {
     /**

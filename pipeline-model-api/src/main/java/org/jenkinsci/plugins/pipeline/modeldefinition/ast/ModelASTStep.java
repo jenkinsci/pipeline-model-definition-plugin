@@ -1,6 +1,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import net.sf.json.JSONObject;
@@ -8,9 +11,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.DescribableParameter;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Represents an individual step within any of the various blocks that can contain steps.

@@ -23,11 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.util;
 
-import net.sf.json.JSONObject;
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import net.sf.json.JSONObject;
 
 import java.util.Iterator;
 

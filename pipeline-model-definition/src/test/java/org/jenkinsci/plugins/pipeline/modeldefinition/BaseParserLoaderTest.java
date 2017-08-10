@@ -23,6 +23,9 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.SimpleJsonTree;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Janitor;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
@@ -30,9 +33,6 @@ import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser;
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.SimpleJsonTree;
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
