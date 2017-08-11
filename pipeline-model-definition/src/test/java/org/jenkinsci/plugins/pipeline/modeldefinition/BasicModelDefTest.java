@@ -854,4 +854,17 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
 
     }
+
+    @Issue("JENKINS-45198")
+    @Test
+    public void scmEnvVars() throws Exception {
+        // The change to support checkout scm returning a map and that map being added to the environment works fine with
+        // older core etc, but just doesn't do anything, since checkout scm isn't returning anything yet. But with newer
+        // core, etc, it'll Just Work.
+        expect("scmEnvVars")
+                // TODO: switch to .logNotContains("GIT_COMMIT is null") once we've moved to core 2.60+,
+                // workflow-scm-step 2.6+, git 3.3.1+
+                .logContains("GIT_COMMIT is null")
+                .go();
+    }
 }
