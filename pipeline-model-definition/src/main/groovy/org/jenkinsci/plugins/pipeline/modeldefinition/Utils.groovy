@@ -61,9 +61,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.graph.BlockEndNode
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.graphanalysis.Filterator
+import org.jenkinsci.plugins.workflow.graphanalysis.FlowScanningUtils
 import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner
 import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
@@ -138,6 +141,15 @@ public class Utils {
         }
     }
 
+    static Predicate<FlowNode> nodeIdNotEquals(final FlowNode original) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                return input == null || original == null || original.id != input.id
+            }
+        }
+    }
+
     static Predicate<FlowNode> endNodeForStage(final BlockStartNode startNode) {
         return new Predicate<FlowNode>() {
             @Override
@@ -205,27 +217,66 @@ public class Utils {
         return stageNode != null
     }
 
-    private static FlowNode findStageFlowNode(String stageName) {
-        CpsThread thread = CpsThread.current()
-        CpsFlowExecution execution = thread.execution
+    static Predicate<FlowNode> isParallelBranchFlowNode(final String stageName, FlowExecution execution = null) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                if (input != null) {
+                    if (input.getAction(LabelAction.class) != null &&
+                        input.getAction(ThreadNameAction.class) != null &&
+                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
+                        // This is actually a parallel block
+                        return true
+                    }
+                }
+                return false
+            }
+        }
+    }
+
+    static List<FlowNode> findStageFlowNodes(String stageName, FlowExecution execution = null) {
+        if (execution == null) {
+            CpsThread thread = CpsThread.current()
+            execution = thread.execution
+        }
+
+        List<FlowNode> nodes = []
 
         ForkScanner scanner = new ForkScanner()
 
-        return scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+
+        if (stage != null) {
+            nodes.add(stage)
+
+            // Additional check needed to get the possible enclosing parallel branch for a nested stage.
+            Filterator<FlowNode> filtered = FlowScanningUtils.fetchEnclosingBlocks(stage)
+                .filter(isParallelBranchFlowNode(stageName))
+
+            filtered.each { f ->
+                if (f != null) {
+                    nodes.add(f)
+                }
+            }
+        }
+
+        return nodes
     }
 
     private static void markStageWithTag(String stageName, String tagName, String tagValue) {
-        FlowNode currentNode = findStageFlowNode(stageName)
+        List<FlowNode> matched = findStageFlowNodes(stageName)
 
-        if (currentNode != null) {
-            TagsAction tagsAction = currentNode.getAction(TagsAction.class)
-            if (tagsAction == null) {
-                tagsAction = new TagsAction()
-                tagsAction.addTag(tagName, tagValue)
-                currentNode.addAction(tagsAction)
-            } else if (tagsAction.getTagValue(tagName) == null) {
-                tagsAction.addTag(tagName, tagValue)
-                currentNode.save()
+        matched.each { currentNode ->
+            if (currentNode != null) {
+                TagsAction tagsAction = currentNode.getAction(TagsAction.class)
+                if (tagsAction == null) {
+                    tagsAction = new TagsAction()
+                    tagsAction.addTag(tagName, tagValue)
+                    currentNode.addAction(tagsAction)
+                } else if (tagsAction.getTagValue(tagName) == null) {
+                    tagsAction.addTag(tagName, tagValue)
+                    currentNode.save()
+                }
             }
         }
     }

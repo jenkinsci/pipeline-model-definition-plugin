@@ -216,7 +216,6 @@
       <artifactId>ant</artifactId>
       <scope>test</scope>
     </dependency>
-    
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
