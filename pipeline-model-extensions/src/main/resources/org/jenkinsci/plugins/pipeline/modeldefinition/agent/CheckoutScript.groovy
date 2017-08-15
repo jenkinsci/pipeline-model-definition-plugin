@@ -44,17 +44,24 @@ public class CheckoutScript implements Serializable {
     
     private static Closure checkoutAndRun(CpsScript script, DeclarativeAgent agent, Closure body) {
         return {
+            def checkoutMap
             if (agent.isDoCheckout() && agent.hasScmContext(script)) {
                 if (!agent.inStage) {
                     script.stage(SyntheticStageNames.checkout()) {
-                        script.checkout script.scm
+                        checkoutMap = script.checkout script.scm
                     }
                 } else {
                     // No stage when we're in a nested stage already
-                    script.checkout script.scm
+                    checkoutMap = script.checkout script.scm
                 }
             }
-            body.call()
+            if (checkoutMap) {
+                script.withEnv(checkoutMap.collect { k, v -> "${k}=${v}" }) {
+                    body.call()
+                }
+            } else {
+                body.call()
+            }
         }
     }
     
