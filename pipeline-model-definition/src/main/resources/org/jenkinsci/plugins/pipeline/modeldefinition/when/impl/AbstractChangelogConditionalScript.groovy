@@ -29,6 +29,7 @@ import hudson.scm.ChangeLogSet
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.multibranch.BranchJobProperty
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageConditional<S>> extends DeclarativeStageConditionalScript<S> {
@@ -42,7 +43,49 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
         initializeEval()
         RunWrapper run = this.script.getProperty("currentBuild")
         if (run != null) {
-            List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = run.getChangeSets()
+            List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = []
+            def branchJobProperty = run.rawBuild.parent.getProperty(BranchJobProperty.class) //TODO is there an easier way of finding this?
+            if (branchJobProperty != null) {
+                def branch = branchJobProperty.getBranch()
+                /*
+                  Some special handling for pull requests to take into consideration all the builds for a particular PR.
+                  Since a PR is a series of changes that will be merged in some way as one unit so all the changes should be considered.
+                  There is a difference in for example Gerrit where the change that is going to be merged is only the one commit in the latest patch set,
+                  so the previous builds in the change request are not really dependant on each other.
+                  Otherwise we could have just done this for all ChangeRequestSCMHead instances.
+                  A better approach than checking each specific implementation would be nice.
+                  There are some caveats here, like if build 3 contains a revert commit of what is in build 2
+                  we will still "trigger" for change sets on the commit that was reverted.
+                */
+                boolean includeAllBuilds = false
+                try {
+                    Class githubPr = Class.forName("org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead")
+                    if (branch.head.class.isAssignableFrom(githubPr)) {
+                        includeAllBuilds = true
+                    }
+                } catch (ClassNotFoundException _) { /*Ignore*/}
+                if (!includeAllBuilds) { //If not a GitHub pr then maybe bitbucket?
+                    try {
+                        Class bitbucketPr = Class.forName("com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead")
+                        if (branch.head.class.isAssignableFrom(bitbucketPr)) {
+                            includeAllBuilds = true
+                        }
+                    } catch (ClassNotFoundException _) { /*Ignore*/
+                    }
+                }
+                if (includeAllBuilds) {
+                    script.echo "Examining changelog from all builds of this change request."
+                    for (RunWrapper currB = run; currB != null; currB = currB.previousBuild) {
+                        changeSets.addAll(currB.getChangeSets())
+                    }
+                }
+            }
+
+            if (changeSets.isEmpty()) { //in case none of the above applies
+                changeSets = run.getChangeSets()
+            }
+
+
             if (changeSets.isEmpty()) {
                 if (run.number <= 1) {
                     script.echo "Warning, empty changelog. Probably because this is the first build." //TODO JENKINS-46086

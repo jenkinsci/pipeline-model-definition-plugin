@@ -543,6 +543,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             buildMatchers = new ArrayList<>();
             return this;
         }
+
+        public WorkflowRun getRun() {
+            return run;
+        }
     }
 
     public class EnvBuilder {

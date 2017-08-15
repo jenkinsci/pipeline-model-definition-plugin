@@ -30,18 +30,24 @@ import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.Result;
 import hudson.model.Slave;
+import jenkins.branch.Branch;
+import jenkins.branch.BranchProperty;
 import net.sf.json.JSONObject;
-import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.github_branch_source.BranchSCMHead;
+import org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.multibranch.BranchJobProperty;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.Collections;
 
@@ -127,7 +133,7 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     @Test
     public void whenChangeset() throws Exception {
-        //First time build always skips the changelog
+        //TODO JENKINS-46086 First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/changelog", "changeset")
                 .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("JS World");
@@ -145,8 +151,38 @@ public class WhenStageTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenChangesetPR() throws Exception {
+        //TODO JENKINS-46086 First time build always skips the changelog
+        final ExpectationsBuilder builder = expect("when/changelog", "changeset")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("JS World");
+        builder.go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+
+        sampleRepo.write("webapp/js/somecode.js", "//fake file");
+        sampleRepo.git("add", "webapp/js/somecode.js");
+        sampleRepo.git("commit", "--message=files");
+
+        builder.logContains("Hello", "JS World")
+                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
+                .go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+        fakePRMarker(builder.getRun().getParent());
+
+        sampleRepo.write("dontcare.txt", "empty");
+        sampleRepo.git("add", "dontcare.txt");
+        sampleRepo.git("commit", "--message=file");
+
+        builder.logContains("Hello", "JS World", "Examining changelog from all builds of this change request") //Should go for the file added in build 2
+                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
+                .go();
+    }
+
+    @Test
     public void whenChangelog() throws Exception {
-        //First time build always skips the changelog
+        //TODO JENKINS-46086 First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/changelog", "changelog")
                 .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("Dull World");
@@ -163,4 +199,48 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void whenChangelogPR() throws Exception {
+        //TODO JENKINS-46086 First time build always skips the changelog
+        final ExpectationsBuilder builder = expect("when/changelog", "changelog")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("Dull World");
+        builder.go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+
+        sampleRepo.write("something.txt", "//fake file");
+        sampleRepo.git("add", "something.txt");
+        sampleRepo.git("commit", "-m", "Some title that we don't care about\n\nSome explanation\n[DEPENDENCY] some-app#45");
+
+        builder.logContains("Hello", "Dull World")
+                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
+                .go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+        fakePRMarker(builder.getRun().getParent());
+
+        sampleRepo.write("something2.txt", "//fake file");
+        sampleRepo.git("add", "something2.txt");
+        sampleRepo.git("commit", "-m", "Some title");
+
+        builder.logContains("Hello", "Dull World", "Examining changelog from all builds of this change request") //Should go for the log in build 2
+                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
+                .go();
+
+    }
+
+
+    static void fakePRMarker(WorkflowJob job) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
+        //Black magic ahead!!
+        final Constructor<PullRequestSCMHead> pullRequestSCMHeadConstructor = PullRequestSCMHead.class.getDeclaredConstructor(String.class, boolean.class, int.class, BranchSCMHead.class, String.class, String.class, String.class);
+        pullRequestSCMHeadConstructor.setAccessible(true);
+        final PullRequestSCMHead scmHead = pullRequestSCMHeadConstructor.newInstance("fake", false, 0, null, "fake", "fake", "master");
+        Branch b = new Branch("fake", scmHead, null, Collections.<BranchProperty>emptyList());
+        final Constructor<BranchJobProperty> branchJobPropertyConstructor = BranchJobProperty.class.getDeclaredConstructor(Branch.class);
+        branchJobPropertyConstructor.setAccessible(true);
+        final BranchJobProperty branchJobProperty = branchJobPropertyConstructor.newInstance(b);
+        job.addProperty(branchJobProperty);
+
+    }
 }
