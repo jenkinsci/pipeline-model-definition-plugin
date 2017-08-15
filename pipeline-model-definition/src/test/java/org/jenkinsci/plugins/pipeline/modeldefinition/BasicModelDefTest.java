@@ -42,8 +42,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
-import org.jenkinsci.plugins.workflow.actions.ErrorAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
@@ -160,7 +160,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatusAndPost")
                 .logContains("[Pipeline] { (foo)",
                         "[first] { (Branch: first)",
+                        "[Pipeline] [first] { (first)",
                         "[second] { (Branch: second)",
+                        "[Pipeline] [second] { (second)",
                         "FIRST BRANCH FAILED",
                         "SECOND BRANCH POST",
                         "FOO STAGE FAILED")
@@ -597,6 +599,90 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(scanner.findFirstMatch(heads, stageStatusPredicate("baz", Utils.getStageStatusMetadata().getSkippedForFailure())));
     }
 
+    @Test
+    public void skippedStagesInParallel() throws Exception {
+        WorkflowRun b = expect(Result.FAILURE, "skippedStagesInParallel")
+                .logContains("[Pipeline] { (foo)", "hello", "I will not be skipped but I will fail")
+                .logNotContains("I will be skipped", "skipped for earlier failure", "I have succeeded")
+                .go();
+
+        assertTrue(b.getExecution().getCauseOfFailure() != null);
+
+        FlowExecution execution = b.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        // foo didn't fail at all.
+        List<FlowNode> fooStages = Utils.findStageFlowNodes("foo", execution);
+        assertNotNull(fooStages);
+        assertEquals(1, fooStages.size());
+        FlowNode foo = fooStages.get(0);
+        assertFalse(stageStatusPredicate("foo", StageStatus.getSkippedForFailure()).apply(foo));
+        assertFalse(stageStatusPredicate("foo", StageStatus.getFailedAndContinued()).apply(foo));
+
+        // first-parallel did fail.
+        List<FlowNode> firstParallelStages = Utils.findStageFlowNodes("first-parallel", execution);
+        assertNotNull(firstParallelStages);
+        assertEquals(1, firstParallelStages.size());
+        FlowNode firstParallel = firstParallelStages.get(0);
+        assertFalse(stageStatusPredicate("first-parallel", StageStatus.getSkippedForFailure()).apply(firstParallel));
+        assertTrue(stageStatusPredicate("first-parallel", StageStatus.getFailedAndContinued()).apply(firstParallel));
+
+        // bar was a parallel stage that was skipped due to conditional.
+        List<FlowNode> barStages = Utils.findStageFlowNodes("bar", execution);
+        assertNotNull(barStages);
+        assertEquals(2, barStages.size());
+
+        for (FlowNode bar : barStages) {
+            System.err.println("bar actions: " + bar.getAction(TagsAction.class).getTags());
+            assertTrue(stageStatusPredicate("bar", StageStatus.getSkippedForConditional()).apply(bar));
+        }
+
+        for (FlowNode wut : scanner.filteredNodes(heads, stageStatusPredicate("bar", StageStatus.getSkippedForConditional()))) {
+            System.err.println("wut id: " + wut.getId());
+            System.err.println("wut actions: " + wut.getActions());
+            TagsAction t = wut.getAction(TagsAction.class);
+            if (t != null) {
+                System.err.println("wut tags: " + t.getTags());
+            }
+        }
+        // baz was a parallel stage that failed.
+        List<FlowNode> bazStages = Utils.findStageFlowNodes("baz", execution);
+        assertNotNull(bazStages);
+        assertEquals(2, bazStages.size());
+
+        for (FlowNode baz : bazStages) {
+            assertTrue(stageStatusPredicate("baz", StageStatus.getFailedAndContinued()).apply(baz));
+        }
+
+        // second-parallel should be skipped for failure.
+        List<FlowNode> secondParallelStages = Utils.findStageFlowNodes("second-parallel", execution);
+        assertNotNull(secondParallelStages);
+        assertEquals(1, secondParallelStages.size());
+        FlowNode secondParallel = secondParallelStages.get(0);
+        assertTrue(stageStatusPredicate("second-parallel", StageStatus.getSkippedForFailure()).apply(secondParallel));
+
+        // bar2 was a parallel stage skipped for failure
+        List<FlowNode> bar2Stages = Utils.findStageFlowNodes("bar2", execution);
+        assertNotNull(bar2Stages);
+        assertEquals(2, bar2Stages.size());
+
+        for (FlowNode bar2 : bar2Stages) {
+            assertTrue(stageStatusPredicate("bar2", StageStatus.getSkippedForFailure()).apply(bar2));
+        }
+
+        // baz2 was a parallel stage skipped for failure
+        List<FlowNode> baz2Stages = Utils.findStageFlowNodes("baz2", execution);
+        assertNotNull(baz2Stages);
+        assertEquals(2, baz2Stages.size());
+
+        for (FlowNode baz2 : baz2Stages) {
+            assertTrue(stageStatusPredicate("baz2", StageStatus.getSkippedForFailure()).apply(baz2));
+        }
+    }
+
     @Issue("JENKINS-40226")
     @Test
     public void failureBeforeStages() throws Exception {
@@ -623,7 +709,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         return new Predicate<FlowNode>() {
             @Override
             public boolean apply(FlowNode input) {
-                return input.getDisplayName().equals(stageName) &&
+                return (input.getDisplayName().equals(stageName) ||
+                        (input.getAction(ThreadNameAction.class) != null &&
+                                input.getAction(ThreadNameAction.class).getThreadName().equals(stageName))) &&
                         input.getAction(TagsAction.class) != null &&
                         input.getAction(TagsAction.class).getTagValue(tagName) != null &&
                         input.getAction(TagsAction.class).getTagValue(tagName).equals(tagValue);
@@ -853,5 +941,18 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
 
 
+    }
+
+    @Issue("JENKINS-45198")
+    @Test
+    public void scmEnvVars() throws Exception {
+        // The change to support checkout scm returning a map and that map being added to the environment works fine with
+        // older core etc, but just doesn't do anything, since checkout scm isn't returning anything yet. But with newer
+        // core, etc, it'll Just Work.
+        expect("scmEnvVars")
+                // TODO: switch to .logNotContains("GIT_COMMIT is null") once we've moved to core 2.60+,
+                // workflow-scm-step 2.6+, git 3.3.1+
+                .logContains("GIT_COMMIT is null")
+                .go();
     }
 }
