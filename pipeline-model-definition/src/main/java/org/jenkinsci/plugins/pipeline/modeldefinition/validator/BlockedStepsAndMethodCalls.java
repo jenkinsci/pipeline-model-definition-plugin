@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
+import com.google.common.collect.ImmutableMap;
 import hudson.Extension;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
@@ -40,11 +41,9 @@ public class BlockedStepsAndMethodCalls extends DeclarativeValidatorContributor 
      * Get the map of step names to rejection messages. Exposed statically for testing purposes.
      */
     public static Map<String, String> blockedInSteps() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
-        map.put("stage", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Stage());
-        map.put("properties", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Properties());
-        map.put("parallel", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Parallel());
-        return map;
+        return ImmutableMap.of("stage", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Stage(),
+                "properties", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Properties(),
+                "parallel", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Parallel());
     }
 
     /**
@@ -52,10 +51,9 @@ public class BlockedStepsAndMethodCalls extends DeclarativeValidatorContributor 
      * in more granular validation of job properties vs declarative options vs wrapper steps.
      */
     public static Map<String, String> blockedInMethodCalls() {
-        Map<String, String> map = new LinkedHashMap<>();
-        map.put("node", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Node());
-        map.putAll(blockedInSteps());
-        return map;
+        return ImmutableMap.builder().put("node", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Node())
+                .putAll(blockedInSteps())
+                .build();
     }
 
     @Override

@@ -58,7 +58,11 @@ import javax.annotation.Nonnull;
 /**
  * Extension point for contributing additional {@link ModelASTElement} validation checks to {@link ModelValidator} runs.
  *
- * Override a {@code validateElement} method in your extension to have that check run at the end of normal 
+ * Override a {@code validateElement} method in your extension to have that check run at the end of normal validation.
+ * The new method will take both the relevant {@link ModelASTElement} and a possibly null {@link FlowExecution} for the
+ * current run, if there is one. Since validation can be performed outside of the context of a run, such as from the CLI
+ * or via the REST endpoints (as used by the editor, e.g.), you must handle a null execution cleanly.
+ * 
  * Each method should return a string containing the error message if validation fails, and null otherwise.
  */
 public abstract class DeclarativeValidatorContributor implements ExtensionPoint {

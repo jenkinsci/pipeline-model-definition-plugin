@@ -707,7 +707,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
         boolean contributorsValid = DeclarativeValidatorContributor.all().every { contributor ->
-            String error = null
+            String error
             if (!(element instanceof ModelASTStage)) {
                 error = contributor.validateElement(element, getExecution())
             } else {
@@ -722,6 +722,8 @@ class ModelValidatorImpl implements ModelValidator {
         }
         if (isValid) {
             return contributorsValid
+        } else {
+            return false
         }
     }
 }
