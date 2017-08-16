@@ -26,6 +26,8 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
 import hudson.scm.ChangeLogSet
+import jenkins.scm.api.SCMHead
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -44,9 +46,8 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
         RunWrapper run = this.script.getProperty("currentBuild")
         if (run != null) {
             List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = []
-            def branchJobProperty = run.rawBuild.parent.getProperty(BranchJobProperty.class) //TODO is there an easier way of finding this?
-            if (branchJobProperty != null) {
-                def branch = branchJobProperty.getBranch()
+            def head = SCMHead.HeadByItem.findHead(run.rawBuild.parent)
+            if (head != null) {
                 /*
                   Some special handling for pull requests to take into consideration all the builds for a particular PR.
                   Since a PR is a series of changes that will be merged in some way as one unit so all the changes should be considered.
@@ -57,23 +58,9 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
                   There are some caveats here, like if build 3 contains a revert commit of what is in build 2
                   we will still "trigger" for change sets on the commit that was reverted.
                 */
-                boolean includeAllBuilds = false
-                try {
-                    Class githubPr = Class.forName("org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead")
-                    if (branch.head.class.isAssignableFrom(githubPr)) {
-                        includeAllBuilds = true
-                    }
-                } catch (ClassNotFoundException _) { /*Ignore*/}
-                if (!includeAllBuilds) { //If not a GitHub pr then maybe bitbucket?
-                    try {
-                        Class bitbucketPr = Class.forName("com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead")
-                        if (branch.head.class.isAssignableFrom(bitbucketPr)) {
-                            includeAllBuilds = true
-                        }
-                    } catch (ClassNotFoundException _) { /*Ignore*/
-                    }
-                }
-                if (includeAllBuilds) {
+                //TODO JENKINS-33274
+
+                if (ChangeLogStrategy.isExamineAllBuilds(head)) {
                     script.echo "Examining changelog from all builds of this change request."
                     for (RunWrapper currB = run; currB != null; currB = currB.previousBuild) {
                         changeSets.addAll(currB.getChangeSets())

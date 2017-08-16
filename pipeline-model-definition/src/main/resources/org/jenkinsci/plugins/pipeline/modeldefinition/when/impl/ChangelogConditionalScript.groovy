@@ -52,10 +52,13 @@ class ChangelogConditionalScript extends AbstractChangelogConditionalScript<Chan
         //But it's probably simpler to make a build step that recaptures that information
 
         if (gitChangeSetClass != null && change?.getClass()?.isAssignableFrom(gitChangeSetClass)) {
-            return describable.pattern.matcher(change.title).matches() || describable.multiLinePattern.matcher(change.comment).matches()
+            String title = change.title == null ? "" : change.title
+            String comment = change.comment == null ? "" : change.comment
+            return describable.pattern.matcher(title).matches() || describable.multiLinePattern.matcher(comment).matches()
         } else {
             //Something generic
-            return describable.pattern.matcher(change.msg).matches()
+            String msg = change.msg == null ? "" : change.msg
+            return describable.pattern.matcher(msg).matches() || describable.multiLinePattern.matcher(msg).matches()
         }
     }
 }
