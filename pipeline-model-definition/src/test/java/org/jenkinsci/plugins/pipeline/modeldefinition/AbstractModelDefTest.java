@@ -25,10 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.collect.ImmutableList;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.Descriptor;
-import hudson.model.JobPropertyDescriptor;
 import hudson.model.ParameterDefinition;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -44,10 +41,6 @@ import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -56,12 +49,10 @@ import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
 import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
@@ -72,7 +63,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +85,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
-    protected static String legalOptionTypes = "";
     protected static String legalAgentTypes = "";
 
     @Inject
@@ -115,34 +104,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             }
         }
         legalAgentTypes = "[" + StringUtils.join(agentTypes, ", ") + "]";
-
-        List<String> optionTypes = new ArrayList<>();
-
-        for (JobPropertyDescriptor d : j.jenkins.getExtensionList(JobPropertyDescriptor.class)) {
-            String symbol = symbolFromDescriptor(d);
-            if (symbol != null && !Options.BLOCKED_PROPERTIES.contains(symbol)) {
-                optionTypes.add(symbol);
-            }
-        }
-
-        for (DeclarativeOptionDescriptor d : j.jenkins.getExtensionList(DeclarativeOptionDescriptor.class)) {
-            String symbol = symbolFromDescriptor(d);
-            if (symbol != null) {
-                optionTypes.add(symbol);
-            }
-        }
-
-        for (StepDescriptor d : j.jenkins.getExtensionList(StepDescriptor.class)) {
-            if (d.takesImplicitBlockArgument() &&
-                    !(BlockedStepsAndMethodCalls.blockedInMethodCalls().containsKey(d.getFunctionName())) &&
-                    !(d.getRequiredContext().contains(FilePath.class)) &&
-                    !(d.getRequiredContext().contains(Launcher.class))) {
-                optionTypes.add(d.getFunctionName());
-            }
-        }
-        Collections.sort(optionTypes);
-
-        legalOptionTypes = "[" + StringUtils.join(optionTypes, ", ") + "]";
     }
 
     private static String symbolFromDescriptor(Descriptor d) {
@@ -242,7 +203,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]")});
 
-        result.add(new Object[]{"invalidWrapperType", Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", legalOptionTypes)});
+        // Not using the full message here due to issues with the test extension in MultipleUnnamedParametersTest bleeding over in some situations.
+        // That resulted in multiArgCtorProp sometimes showing up in the list of valid options, but not always. We still have the full test in
+        // ValidatorTest#invalidWrapperType that does use the full message, though.
+        result.add(new Object[]{"invalidWrapperType", "Invalid option type \"echo\". Valid option types:"});
 
         result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes)});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
