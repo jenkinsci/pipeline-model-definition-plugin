@@ -45,8 +45,10 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
+import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
@@ -60,6 +62,7 @@ import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
+import org.jenkinsci.plugins.workflow.steps.ErrorStep;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -959,6 +962,27 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
 
 
+    }
+
+    @Issue("JENKINS-46112")
+    @Test
+    public void logActionPresentForError() throws Exception {
+        WorkflowRun r = expect(Result.FAILURE, "logActionPresentForError").go();
+        FlowExecution execution = r.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        FlowNode n = scanner.findFirstMatch(heads, null, new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(FlowNode input) {
+                return input instanceof StepAtomNode && ((StepAtomNode) input).getDescriptor() instanceof ErrorStep.DescriptorImpl;
+            }
+        });
+
+        LogAction l = n.getAction(LogAction.class);
+        assertNotNull(l);
     }
 
     @Test
