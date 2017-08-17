@@ -1,0 +1,50 @@
+{"pipeline": {
+  "stages":   [
+    {
+      "name": "One",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Hello"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Two",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "script",
+          "arguments": [          {
+            "key": "scriptBlock",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"Dull World\""
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "changelog",
+        "arguments":         {
+          "isLiteral": true,
+          "value": ".*^\\[DEPENDENCY\\] .+$"
+        }
+      }]}
+    }
+  ],
+  "agent":   {
+    "type": "label",
+    "argument":     {
+      "isLiteral": true,
+      "value": "here"
+    }
+  }
+}}

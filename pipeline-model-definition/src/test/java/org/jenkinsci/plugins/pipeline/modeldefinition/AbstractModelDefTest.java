@@ -162,7 +162,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "usernamePassword",
             "environmentCrossReferences",
             "nestedParallelStages",
-            "stagePost"
+            "stagePost",
+            "when/changelog/changelog",
+            "when/changelog/changeset"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
