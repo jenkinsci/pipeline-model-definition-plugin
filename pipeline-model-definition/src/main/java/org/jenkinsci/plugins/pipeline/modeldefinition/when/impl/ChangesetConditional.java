@@ -26,11 +26,16 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+
+import javax.annotation.CheckForNull;
 
 /**
  * Conditional that checks the affected file paths recorded in the changelog.
@@ -64,6 +69,9 @@ public class ChangesetConditional extends DeclarativeStageConditional<ChangesetC
     @Extension
     @Symbol("changeset")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangesetConditional> {
-
+        @Override
+        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+        }
     }
 }

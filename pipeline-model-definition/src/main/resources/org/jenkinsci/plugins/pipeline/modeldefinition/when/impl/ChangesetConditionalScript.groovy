@@ -39,8 +39,7 @@ class ChangesetConditionalScript extends AbstractChangelogConditionalScript<Chan
 
     @Override
     void initializeEval() {
-        glob = (String)script.evaluate(Utils.prepareForEvalToString(describable.glob)) //TODO change when #174 lands
-        glob = glob.replace('\\', '/')
+        glob = describable.glob.replace('\\', '/')
     }
 
     @Override
