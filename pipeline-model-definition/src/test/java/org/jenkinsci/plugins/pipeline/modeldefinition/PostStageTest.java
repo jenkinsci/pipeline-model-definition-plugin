@@ -106,6 +106,12 @@ public class PostStageTest extends AbstractModelDefTest {
 
     }
 
+    @Test
+    public void withAgentNoneAndAgentDocker() throws Exception {
+        expect("withAgentNoneAndAgentDocker")
+                .logNotContains("Required context class hudson.FilePath is missing").go();
+    }
+
     @Override
     protected ExpectationsBuilder expect(String resource) {
         return super.expect("postStage", resource);
