@@ -10,7 +10,6 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ModelParser;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator;
 
@@ -24,14 +23,14 @@ import javax.annotation.CheckForNull;
 @Extension
 public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
     @Override
-    public void configureCompiler(@CheckForNull CpsFlowExecution context, CompilerConfiguration cc) {
+    public void configureCompiler(@CheckForNull final CpsFlowExecution execution, CompilerConfiguration cc) {
         ImportCustomizer ic = new ImportCustomizer();
         ic.addStarImports(NonCPS.class.getPackage().getName());
         ic.addStarImports("hudson.model","jenkins.model");
-        this.customizeImports(context, ic);
+        this.customizeImports(execution, ic);
         cc.addCompilationCustomizers(ic);
-        
-        cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.CANONICALIZATION) {
+
+        cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.SEMANTIC_ANALYSIS) {
             @Override
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 // TODO: workflow-cps-plugin CpsFlowExecution.parseScript() should be passing in CodeSource
@@ -43,7 +42,7 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
                 // but until that happens,
                 // Using getNameWithoutPackage to make sure we don't end up executing without parsing when an inadvertent package name is put in the Jenkinsfile.
                 if (classNode.getNameWithoutPackage().equals(Converter.PIPELINE_SCRIPT_NAME)) {
-                    new ModelParser(source).parse();
+                    new ModelParser(source, execution).parse();
                 }
             }
         });

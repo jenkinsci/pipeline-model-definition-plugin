@@ -24,9 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Slave;
-import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -45,6 +43,10 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
+        s.getNodeProperties().add(
+                new EnvironmentVariablesNodeProperty(
+                        new EnvironmentVariablesNodeProperty.Entry("HAS_BACKSLASHES", "C:\\Windows"),
+                        new EnvironmentVariablesNodeProperty.Entry("FOO", "OTHER")));
     }
 
     @Test
@@ -177,6 +179,24 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42753")
+    @Test
+    public void stmtExprInEnvironment() throws Exception {
+        expect("stmtExprInEnvironment")
+                .logContains("FOO is BAR",
+                        "LIST_EXP is [a, BAR, c]",
+                        "MAP_EXP is [a:z, b:BAR, c:x]",
+                        "BOOL_EXP is false",
+                        "CTOR_EXP is http://BAR",
+                        "CAST_EXP is [a, BAR, c]",
+                        "PTR_EXP is true",
+                        "AS_EXP is class java.util.LinkedHashSet",
+                        "PREFIX_EXP is 1",
+                        "POSTFIX_EXP is 0",
+                        "RANGE_EXP is [0, 1, 2]")
+                .go();
+    }
+
     @Test
     public void nonLiteralEnvironment() throws Exception {
         initGlobalLibrary();
@@ -188,7 +208,8 @@ public class EnvironmentTest extends AbstractModelDefTest {
                         "ANOTHER_ENV is 1",
                         "INHERITED_ENV is 1 is inherited",
                         "ACME_FUNC is banana tada",
-                        "JUST_A_CONSTANT is 3")
+                        "JUST_A_CONSTANT is 3",
+                        "FROM_OUTSIDE is Hi there. This comes from a function")
                 .go();
     }
 
@@ -205,6 +226,67 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void nullParamAndEnv() throws Exception {
         expect("nullParamAndEnv")
                 .logContains("hello")
+                .go();
+    }
+
+    @Issue("JENKINS-45916")
+    @Test
+    public void pathInEnv() throws Exception {
+        expect("pathInEnv")
+                .logMatches("PATH: .*tmpDir:")
+                .go();
+    }
+
+    @Test
+    public void undefinedEnvRef() throws Exception {
+        expect("undefinedEnvRef")
+                .logContains("[Pipeline] { (foo)",
+                        "FOO is BAR",
+                        "_UNDERSCORE is VALIDnullORNOT")
+                .go();
+    }
+
+    @Issue("JENKINS-45637")
+    @Test
+    public void multipleEnvSubstitutions() throws Exception {
+        expect("multipleEnvSubstitutions")
+                .logMatches("AAA_Key: key: \\d+ \\d+",
+                        "AAA_BN_ONLY: bn: \\d+",
+                        "AAA_EN_ONLY: en: \\d+")
+                .go();
+    }
+
+    @Issue("JENKINS-45636")
+    @Test
+    public void backslashReductionInEnv() throws Exception {
+        expect("backslashReductionInEnv")
+                .logMatches("AAA_Key1: a\\\\b \\d+",
+                        "AAA_Key2: a\\\\b")
+                .go();
+    }
+
+    @Issue("JENKINS-44603")
+    @Test
+    public void variableToMethodToEnvVal() throws Exception {
+        initGlobalLibrary();
+        expect("variableToMethodToEnvVal")
+                .logMatches("TADA_VAR: 1 tada")
+                .go();
+    }
+
+    @Issue("JENKINS-44482")
+    @Test
+    public void backslashesFromExistingEnvVar() throws Exception {
+        expect("backslashesFromExistingEnvVar")
+                .logContains("FOO is C:\\Windows\\BAR")
+                .go();
+    }
+
+    @Issue("JENKINS-45991")
+    @Test
+    public void defaultEnvValue() throws Exception {
+        expect("defaultEnvValue")
+                .logContains("FOO is OTHER", "BAZ is BAR")
                 .go();
     }
 }

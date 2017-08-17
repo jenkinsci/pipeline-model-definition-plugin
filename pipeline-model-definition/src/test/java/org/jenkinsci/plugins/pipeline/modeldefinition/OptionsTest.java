@@ -40,12 +40,11 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty;
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.recipes.LocalData;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -54,6 +53,26 @@ public class OptionsTest extends AbstractModelDefTest {
     @Test
     public void simpleJobProperties() throws Exception {
         WorkflowRun b = expect("simpleJobProperties")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
+        assertNotNull(bdp);
+        BuildDiscarder strategy = bdp.getStrategy();
+        assertNotNull(strategy);
+        assertEquals(LogRotator.class, strategy.getClass());
+        LogRotator lr = (LogRotator) strategy;
+        assertEquals(1, lr.getNumToKeep());
+
+    }
+
+    @Ignore("Properties are set before withEnv is called.")
+    @Test
+    public void envVarInOptions() throws Exception {
+        WorkflowRun b = expect("envVarInOptions")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();
@@ -135,6 +154,19 @@ public class OptionsTest extends AbstractModelDefTest {
     @Test
     public void simpleWrapper() throws Exception {
         expect("simpleWrapper")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Actions)")
+                .go();
+    }
+
+    @Ignore("Technically we could allow env vars in wrappers, since wrappers get invoked within env block, but since " +
+            "we can't for properties, triggers, or parameters due to being invoked before the env block, let's be " +
+            "consistent")
+    @Test
+    public void envVarInWrapper() throws Exception {
+        expect("envVarInWrapper")
                 .logContains("[Pipeline] { (foo)",
                         "[Pipeline] timeout",
                         "hello")

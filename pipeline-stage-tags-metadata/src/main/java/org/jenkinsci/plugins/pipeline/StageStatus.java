@@ -52,7 +52,7 @@ public class StageStatus extends StageTagsMetadata {
     }
 
     public List<String> getSkippedStageValues() {
-        return Arrays.asList(getSkippedForConditional(), getSkippedForFailure());
+        return Arrays.asList(getSkippedForConditional(), getSkippedForFailure(), getSkippedForUnstable());
     }
 
     public static String getFailedAndContinued() {

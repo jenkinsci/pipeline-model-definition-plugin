@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,14 +21,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
+pipeline {
+    agent any
+    environment {
+        BRANCH_NAME = "master"
+    }
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                branch(compare: "master") {
+                    not {
+                        expression {
+                            "foo" == "bar"
+                        }
+                    }
+                }
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
 
-/**
- * Marker for model objects that contain a {@link StepsBlock} and take an argument. Currently just {@link Stage}.
- *
- * @author Andrew Bayer
- */
-interface StepBlockWithOtherArgs {
-
+            }
+        }
+    }
 }

@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.options;
 
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
-import hudson.model.JobProperty;
 
 import java.io.Serializable;
 

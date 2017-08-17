@@ -187,11 +187,16 @@
     },
     "libraries": {
       "description": "One or more shared library identifiers to load",
-      "type": "array",
-      "items": {
-        "type": "string"
+      "properties": {
+        "libraries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rawArgument"
+          },
+          "minItems": 1
+        }
       },
-      "minItems": 1
+      "additionalProperties": false
     },
     "environmentValue": {
       "description": "A possible value for an environment variable",

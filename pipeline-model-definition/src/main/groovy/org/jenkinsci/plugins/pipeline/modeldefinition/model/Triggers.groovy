@@ -32,6 +32,7 @@ import groovy.transform.ToString
 import hudson.triggers.Trigger
 import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 import javax.annotation.Nonnull
 
@@ -43,7 +44,7 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Triggers implements Serializable, MethodsToList<Trigger> {
+public class Triggers implements Serializable {
     private static final Object CACHE_KEY = new Object()
     private static final LoadingCache<Object,Map<String,String>> triggerTypeCache =
         Utils.generateTypeCache(TriggerDescriptor.class)
@@ -52,6 +53,7 @@ public class Triggers implements Serializable, MethodsToList<Trigger> {
     // anyway.
     transient List<Trigger> triggers = []
 
+    @Whitelisted
     public Triggers(List<Trigger> t) {
         this.triggers = t
     }

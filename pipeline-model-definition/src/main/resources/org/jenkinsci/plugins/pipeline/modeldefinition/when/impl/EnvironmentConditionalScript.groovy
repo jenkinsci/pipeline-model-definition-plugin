@@ -37,8 +37,8 @@ class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<Env
 
     @Override
     public boolean evaluate() {
-        String n = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getName())))
-        String v = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(describable.getValue())))
+        String n = describable.getName()
+        String v = describable.getValue()
         return describable.environmentMatches(v, (String)script.getProperty("env").getProperty(n))
     }
 }
