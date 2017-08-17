@@ -51,7 +51,7 @@ public class BlockedStepsAndMethodCalls extends DeclarativeValidatorContributor 
      * in more granular validation of job properties vs declarative options vs wrapper steps.
      */
     public static Map<String, String> blockedInMethodCalls() {
-        return ImmutableMap.builder().put("node", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Node())
+        return new ImmutableMap.Builder<String,String>().put("node", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Node())
                 .putAll(blockedInSteps())
                 .build();
     }
