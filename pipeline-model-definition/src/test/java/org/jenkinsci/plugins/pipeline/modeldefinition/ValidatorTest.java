@@ -128,6 +128,20 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void nestedWhenWithArgs() throws Exception {
+        expectError("nestedWhenWithArgs")
+                .logContains(Messages.ModelValidatorImpl_NestedWhenNoArgs("allOf"))
+                .go();
+    }
+
+    @Test
+    public void invalidWhenWithChildren() throws Exception {
+        expectError("invalidWhenWithChildren")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWhenAllowed("branch"))
+                .go();
+    }
+
+    @Test
     public void unknownWhenConditional() throws Exception {
         expectError("unknownWhenConditional")
                 .logContains(Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
@@ -598,9 +612,34 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-42771")
+    @Test
+    public void additionalInvalidExpressionsInEnvironment() throws Exception {
+        expectError("additionalInvalidExpressionsInEnvironment")
+                .logContains(Messages.ModelParser_InvalidEnvironmentOperation(),
+                        Messages.ModelParser_InvalidEnvironmentConcatValue(),
+                        Messages.ModelParser_InvalidEnvironmentValue(),
+                        Messages.ModelParser_InvalidEnvironmentIdentifier("echo('HI THERE')"))
+                .go();
+    }
+
     @Issue("JENKINS-42858")
     @Test
     public void scriptSecurityRejectionInEnvironment() throws Exception {
+        expectError("scriptSecurityRejectionInEnvironment")
+                .logContains("org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException: Scripts not permitted to use staticField java.lang.System err")
+                .go();
+    }
+
+    @Test
+    public void scriptSecurityRejectionInWhenExpression() throws Exception {
+        expectError("scriptSecurityRejectionInEnvironment")
+                .logContains("org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException: Scripts not permitted to use staticField java.lang.System err")
+                .go();
+    }
+
+    @Test
+    public void scriptSecurityRejectionInSteps() throws Exception {
         expectError("scriptSecurityRejectionInEnvironment")
                 .logContains("org.jenkinsci.plugins.scriptsecurity.sandbox.RejectedAccessException: Scripts not permitted to use staticField java.lang.System err")
                 .go();
@@ -673,5 +712,45 @@ public class ValidatorTest extends AbstractModelDefTest {
                 return "Test job property to be rejected by a validator contributor.";
             }
         }
+    }
+
+    @Test
+    public void notStageInStages() throws Exception {
+        expectError("notStageInStages")
+                .logContains(Messages.ModelParser_ExpectedStage())
+                .go();
+    }
+
+    @Test
+    public void multipleTopLevelSections() throws Exception {
+        expectError("multipleTopLevelSections")
+                .logContains(Messages.Parser_MultipleOfSection("stages"))
+                .go();
+    }
+
+    @Test
+    public void multipleStageLevelSections() throws Exception {
+        expectError("multipleStageLevelSections")
+                .logContains(Messages.Parser_MultipleOfSection("agent"))
+                .go();
+    }
+
+    @Test
+    public void nonBlockStages() throws Exception {
+        expectError("nonBlockStages")
+                .logContains(Messages.ModelParser_ExpectedBlockFor("stages"))
+                .go();
+    }
+
+    @Test
+    public void nonBlockSections() throws Exception {
+        expectError("nonBlockSections")
+                .logContains(Messages.ModelParser_ExpectedBlockFor("environment"),
+                        Messages.ModelParser_ExpectedBlockFor("libraries"),
+                        Messages.ModelParser_ExpectedBlockFor("options"),
+                        Messages.ModelParser_ExpectedBlockFor("triggers"),
+                        Messages.ModelParser_ExpectedBlockFor("parameters"),
+                        Messages.ModelParser_ExpectedBlockFor("tools"))
+                .go();
     }
 }

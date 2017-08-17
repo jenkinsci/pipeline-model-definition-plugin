@@ -1,12 +1,12 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and\/or sell
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
@@ -21,18 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-/**
- * Marker for model classes which themselves may contain other model classes.
- *
- * @author Andrew Bayer
- */
-interface NestedModel {
-    /**
-     * Translates a {@link Map} into an instance of the class.
-     *
-     * @param m The input map.
-     */
-    public void modelFromMap(Map<String,Object> m)
+pipeline {
+    environment {
+        FOO = "${HAS_BACKSLASHES}\\BAR"
+    }
+
+    agent {
+        label "some-label"
+    }
+
+    stages {
+        stage("foo") {
+            steps {
+                echo "FOO is ${FOO}"
+            }
+        }
+    }
 }
+
+
+

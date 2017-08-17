@@ -29,18 +29,15 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import hudson.ExtensionList
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.Nonnull
@@ -62,19 +59,12 @@ public class Options implements Serializable {
     transient Map<String, DeclarativeOption> options = [:]
     transient Map<String, Object> wrappers = [:]
 
-    public Options(List<Object> input) {
-        input.each { i ->
-            if (i instanceof UninstantiatedDescribable) {
-                def o = i.instantiate()
-                if (o instanceof JobProperty) {
-                    properties << o
-                } else if (o instanceof DeclarativeOption) {
-                    options[o.descriptor.name] = o
-                }
-            } else if (i instanceof List && i.size() == 2 && i[0] instanceof String) {
-                wrappers[(String)i[0]] = i[1]
-            }
-        }
+    @Whitelisted
+    Options(@Nonnull List<JobProperty> properties, @Nonnull Map<String, DeclarativeOption> options,
+            @Nonnull Map<String, Object> wrappers) {
+        this.properties.addAll(properties)
+        this.options.putAll(options)
+        this.wrappers.putAll(wrappers)
     }
 
     public List<JobProperty> getProperties() {
@@ -111,10 +101,6 @@ public class Options implements Serializable {
 
     public static Map<String,String> getEligibleWrapperStepClasses() {
         return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
-    }
-
-    public static List<String> getEligibleWrapperSteps() {
-        return getEligibleWrapperStepClasses().keySet().sort()
     }
 
     protected Object readResolve() throws IOException {

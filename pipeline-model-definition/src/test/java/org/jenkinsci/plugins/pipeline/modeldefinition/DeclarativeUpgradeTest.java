@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.ParametersDefinitionProperty;
 import jenkins.model.BuildDiscarderProperty;
-import jenkins.plugins.git.GitSampleRepoRule;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;

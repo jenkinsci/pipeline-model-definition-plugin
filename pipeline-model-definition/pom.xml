@@ -44,7 +44,7 @@
         <artifactId>maven-hpi-plugin</artifactId>
         <extensions>true</extensions>
         <configuration>
-          <compatibleSinceVersion>0.8</compatibleSinceVersion>
+          <compatibleSinceVersion>1.2</compatibleSinceVersion>
         </configuration>
       </plugin>
       <plugin>
@@ -134,6 +134,14 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps-global-lib</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>mailer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git-client</artifactId>
+    </dependency>
     <!-- Dependency on tombstoned declarative agent plugin to make sure we don't end up with a
     bad old version installed -->
     <dependency>
@@ -201,7 +209,12 @@
       <artifactId>jcabi-matchers</artifactId>
       <scope>test</scope>
     </dependency>
-    
+
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>ant</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>

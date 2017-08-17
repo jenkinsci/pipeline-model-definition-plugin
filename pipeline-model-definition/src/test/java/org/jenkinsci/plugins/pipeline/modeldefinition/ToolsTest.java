@@ -25,14 +25,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.JDK;
 import hudson.model.Slave;
-import hudson.slaves.DumbSlave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.Maven;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.ToolInstallations;
 
 import static org.junit.Assert.assertNotNull;
 import static org.jvnet.hudson.test.ToolInstallations.configureDefaultMaven;
@@ -57,6 +57,15 @@ public class ToolsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-44497")
+    @Ignore("Allowing env vars in tool version string breaks validation of version, and env vars aren't interpolated in tool string.")
+    @Test
+    public void envVarInTools() throws Exception {
+        expect("envVarInTools")
+                .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
+                .go();
+    }
+
     @Test
     public void toolsInStage() throws Exception {
         expect("toolsInStage")
@@ -67,8 +76,13 @@ public class ToolsTest extends AbstractModelDefTest {
     @Issue("JENKINS-42338")
     @Test
     public void toolsAndAgentNone() throws Exception {
+        TemporaryFolder antTmp = new TemporaryFolder();
+        antTmp.create();
+        ToolInstallations.configureDefaultAnt(antTmp);
+
         expect("toolsAndAgentNone")
-                .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
+                .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1",
+                        "Apache Ant") // since ANT_HOME may be set, we can't actually guarantee the version
                 .go();
     }
 

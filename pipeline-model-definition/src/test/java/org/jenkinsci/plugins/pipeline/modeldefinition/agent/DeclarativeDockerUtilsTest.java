@@ -35,7 +35,6 @@ import hudson.ExtensionList;
 import hudson.model.Slave;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeDockerUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.config.DockerPropertiesProvider;
 import org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig;
 import org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig;

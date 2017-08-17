@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,15 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-
-/**
- * A dummy interface used on {@link MappedClosure} and the CPS-transformed
- * ClosureModelTranslator to make sure we can use methodMissing on them.
- *
- * @author Andrew Bayer
- */
-interface MethodMissingWrapper {
-
+pipeline {
+    agent none
+    stages {
+        steps {
+            echo "hi there"
+        }
+    }
 }
+
+
+

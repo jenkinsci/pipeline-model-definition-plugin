@@ -58,7 +58,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
         if (node != null && node instanceof StepStartNode &&
                 ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
             if (isDeclarativeRun(node.getExecution())) {
-                LabelAction label = node.getPersistentAction(LabelAction.class);
+                LabelAction label = node.getAction(LabelAction.class);
                 if (label != null &&
                         (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
                                 SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
@@ -74,7 +74,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
     }
 
     private void attachTag(FlowNode currentNode, String syntheticContext) {
-        TagsAction tagsAction = currentNode.getPersistentAction(TagsAction.class);
+        TagsAction tagsAction = currentNode.getAction(TagsAction.class);
         if (tagsAction == null) {
             tagsAction = new TagsAction();
             tagsAction.addTag(SyntheticStage.TAG_NAME, syntheticContext);

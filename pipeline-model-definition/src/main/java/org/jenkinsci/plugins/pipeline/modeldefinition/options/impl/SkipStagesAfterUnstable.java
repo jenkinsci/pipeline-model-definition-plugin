@@ -30,8 +30,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nullable;
-
 public class SkipStagesAfterUnstable extends DeclarativeOption {
 
     @DataBoundConstructor

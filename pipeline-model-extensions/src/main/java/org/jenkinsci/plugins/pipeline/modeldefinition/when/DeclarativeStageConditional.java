@@ -27,28 +27,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
 import hudson.ExtensionPoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
-import org.jenkinsci.plugins.workflow.cps.CpsThread;
-import org.jenkinsci.plugins.workflow.steps.StepExecution;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
 
 /**
  * Conditionals for when to run a stage.
  */
 public abstract class DeclarativeStageConditional<S extends DeclarativeStageConditional<S>>
         extends WithScriptDescribable<S> implements ExtensionPoint {
-
-    @Nullable
-    protected <T> T getContextVariable(Class<T> key) throws IOException, InterruptedException {
-        CpsThread current = CpsThread.current();
-        if (current == null) {
-            throw new IllegalStateException("Needs to be called within a CPS Thread");
-        }
-        StepExecution step = current.getStep();
-        if (step != null) {
-            return step.getContext().get(key);
-        }
-        return null;
-    }
 }

@@ -31,6 +31,7 @@ import hudson.model.StringParameterDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -46,6 +47,26 @@ public class ParametersTest extends AbstractModelDefTest {
     @Test
     public void simpleParameters() throws Exception {
         WorkflowRun b = expect("simpleParameters")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(pdp);
+
+        assertEquals(1, pdp.getParameterDefinitions().size());
+        assertEquals(BooleanParameterDefinition.class, pdp.getParameterDefinitions().get(0).getClass());
+        BooleanParameterDefinition bpd = (BooleanParameterDefinition) pdp.getParameterDefinitions().get(0);
+        assertEquals("flag", bpd.getName());
+        assertTrue(bpd.isDefaultValue());
+    }
+
+    @Ignore("Parameters are set before withEnv is called.")
+    @Test
+    public void envVarInParameters() throws Exception {
+        WorkflowRun b = expect("envVarInParameters")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();

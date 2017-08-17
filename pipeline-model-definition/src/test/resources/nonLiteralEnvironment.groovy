@@ -22,6 +22,11 @@
  * THE SOFTWARE.
  */
 
+def someVar = "Hi there"
+def someFunc() {
+    return "This comes from a function"
+}
+
 pipeline {
     environment {
         FOO = "BAR"
@@ -30,6 +35,7 @@ pipeline {
         INHERITED_ENV = "\${BUILD_NUM_ENV} is inherited"
         ACME_FUNC = returnAThing("banana")
         JUST_A_CONSTANT = "${1 + 2}"
+        FROM_OUTSIDE = "${someVar}. ${someFunc()}"
     }
 
     agent {
@@ -45,6 +51,7 @@ pipeline {
                 sh 'echo "INHERITED_ENV is $INHERITED_ENV"'
                 sh 'echo "ACME_FUNC is $ACME_FUNC"'
                 sh 'echo "JUST_A_CONSTANT is $JUST_A_CONSTANT"'
+                sh 'echo "FROM_OUTSIDE is $FROM_OUTSIDE"'
             }
         }
     }

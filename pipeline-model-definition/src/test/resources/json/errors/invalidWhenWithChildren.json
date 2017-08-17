@@ -1,0 +1,67 @@
+{"pipeline": {
+  "stages":   [
+    {
+      "name": "One",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Hello"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Two",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "script",
+          "arguments": [          {
+            "key": "scriptBlock",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"World\"\n                    echo \"Heal it\""
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "branch",
+        "arguments": [        {
+          "key": "compare",
+          "value":           {
+            "isLiteral": true,
+            "value": "master"
+          }
+        }],
+        "children": [        {
+          "name": "not",
+          "children": [          {
+            "name": "expression",
+            "arguments": [            {
+              "key": "scriptBlock",
+              "value":               {
+                "isLiteral": true,
+                "value": "\"foo\" == \"bar\""
+              }
+            }]
+          }]
+        }]
+      }]}
+    }
+  ],
+  "environment": [  {
+    "key": "BRANCH_NAME",
+    "value":     {
+      "isLiteral": true,
+      "value": "master"
+    }
+  }],
+  "agent": {"type": "any"}
+}}

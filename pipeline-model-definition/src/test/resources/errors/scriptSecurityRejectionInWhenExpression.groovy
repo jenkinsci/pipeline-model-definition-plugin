@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,16 +22,23 @@
  * THE SOFTWARE.
  */
 
+pipeline {
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
+    agent {
+        label "some-label"
+    }
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-
-/**
- * Special wrapper for checking the contents of a {@link Closure}.
- *
- * @author Andrew Bayer
- */
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class ClosureContentsChecker extends MappedClosure<Object,ClosureContentsChecker> {
+    stages {
+        stage("foo") {
+            when {
+                expression {
+                    System.err.println("This should never happen")
+                    return true
+                }
+            }
+            steps {
+                echo "I got past the when"
+            }
+        }
+    }
 }

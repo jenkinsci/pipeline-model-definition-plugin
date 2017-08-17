@@ -1,0 +1,35 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": true,
+            "value": "hello"
+          }
+        }]
+      }]
+    }],
+    "post": {"conditions": [    {
+      "condition": "always",
+      "branch":       {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Local Always"
+            }
+          }]
+        }]
+      }
+    }]}
+  }],
+  "agent": {"type": "none"}
+}}
