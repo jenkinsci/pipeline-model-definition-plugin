@@ -224,8 +224,8 @@ public class ModelInterpreter implements Serializable {
                         firstError = e
                     }
                 } finally {
-                    // And finally, run the post stage steps.
-                    if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                    // And finally, run the post stage steps if this was a parallel parent.
+                    if (thisStage.parallel != null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
@@ -485,6 +485,12 @@ public class ModelInterpreter implements Serializable {
             Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
                 stageError = e
+            }
+        } finally {
+            // And finally, run the post stage steps.
+            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                Utils.logToTaskListener("Post stage")
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
             }
         }
 

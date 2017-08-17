@@ -27,6 +27,7 @@ import hudson.model.Result;
 import hudson.model.Slave;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * Tests for {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage#post}
@@ -104,6 +105,21 @@ public class PostStageTest extends AbstractModelDefTest {
                 .logContains("Setting build result UNSTABLE", "I AM UNSTABLE", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "MOST DEFINITELY FINISHED").go();
 
+    }
+
+    @Issue("JENKINS-46276")
+    @Test
+    public void withAgentNoneAndAgentDocker() throws Exception {
+        assumeDocker();
+        expect("withAgentNoneAndAgentDocker")
+                .logNotContains("Required context class hudson.FilePath is missing").go();
+    }
+
+    @Issue("JENKINS-46276")
+    @Test
+    public void withAgentNoneAndAgentAny() throws Exception {
+        expect("withAgentNoneAndAgentAny")
+                .logNotContains("Required context class hudson.FilePath is missing").go();
     }
 
     @Override
