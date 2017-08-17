@@ -28,6 +28,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -87,6 +88,7 @@ public class JSONValidationTest extends BaseParserLoaderTest {
         findErrorInJSON(Messages.ModelValidatorImpl_InvalidParameterType(int.class, "time", "5", String.class), "jsonParameterTypeCoercion");
     }
 
+    @Ignore("This isn't actually an error any more - proper escaping of backslashes fixed it. So...this test is meaningless.")
     @Issue("JENKINS-42551")
     @Test
     public void jsonMismatchedQuotes() throws Exception {
