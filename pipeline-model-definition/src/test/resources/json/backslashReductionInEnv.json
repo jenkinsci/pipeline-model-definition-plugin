@@ -23,6 +23,26 @@
               "value": "\"AAA_Key2: ${AAA_Key2}\""
             }
           }]
+        },
+        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": false,
+              "value": "\"AAA_Key3: ${AAA_Key3}\""
+            }
+          }]
+        },
+        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": false,
+              "value": "\"AAA_Key4: ${AAA_Key4}\""
+            }
+          }]
         }
       ]
     }],

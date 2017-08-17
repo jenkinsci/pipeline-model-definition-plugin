@@ -130,7 +130,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "simpleScript",
             "twoStagePipeline",
             "validStepParameters",
-            "simpleEnvironment",
             "parallelPipeline",
             "simplePostBuild",
             "simpleTools",
