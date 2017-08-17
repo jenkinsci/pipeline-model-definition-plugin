@@ -223,6 +223,12 @@ public class ModelInterpreter implements Serializable {
                     if (firstError == null) {
                         firstError = e
                     }
+                } finally {
+                    // And finally, run the post stage steps if this was a parallel parent.
+                    if (thisStage.parallel != null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                        Utils.logToTaskListener("Post stage")
+                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
+                    }
                 }
 
                 if (firstError != null) {
