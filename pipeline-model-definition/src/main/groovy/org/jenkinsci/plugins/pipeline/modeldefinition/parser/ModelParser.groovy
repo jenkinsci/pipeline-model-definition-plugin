@@ -96,7 +96,7 @@ class ModelParser implements Parser {
     public ModelParser(SourceUnit sourceUnit, @CheckForNull FlowExecution execution) {
         this.sourceUnit = sourceUnit;
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
-        this.validator = new ModelValidatorImpl(errorCollector)
+        this.validator = new ModelValidatorImpl(errorCollector, execution)
         this.lookup = DescriptorLookupCache.getPublicCache()
         Queue.Executable executable = null
         if (execution != null) {

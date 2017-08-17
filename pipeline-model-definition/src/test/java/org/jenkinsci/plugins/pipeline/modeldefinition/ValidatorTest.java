@@ -24,17 +24,29 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.slaves.DumbSlave;
+import jenkins.model.OptionalJobProperty;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.TestExtension;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 /**
  * @author Andrew Bayer
@@ -60,14 +72,16 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectStageInSteps() throws Exception {
         expectError("rejectStageInSteps")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("stage", ModelASTStep.getBlockedSteps().get("stage")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("stage",
+                        BlockedStepsAndMethodCalls.blockedInSteps().get("stage")))
                 .go();
     }
 
     @Test
     public void rejectParallelMixedInSteps() throws Exception {
         expectError("rejectParallelMixedInSteps")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel", ModelASTStep.getBlockedSteps().get("parallel")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel", 
+                        BlockedStepsAndMethodCalls.blockedInSteps().get("parallel")))
                 .go();
     }
 
@@ -217,7 +231,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectPropertiesStepInMethodCall() throws Exception {
         expectError("rejectPropertiesStepInMethodCall")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties", ModelASTStep.getBlockedSteps().get("properties")))
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("properties",
+                        BlockedStepsAndMethodCalls.blockedInSteps().get("properties")))
                 .go();
     }
 
@@ -653,6 +668,50 @@ public class ValidatorTest extends AbstractModelDefTest {
         expectError("parallelStagesDeepNesting")
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
+    }
+
+    @Test
+    public void parametersAndTriggersInOptions() throws Exception {
+        expectError("parametersAndTriggersInOptions")
+                .logContains(org.jenkinsci.plugins.pipeline.modeldefinition.validator.Messages.ParametersAndTriggersInOptions_RejectParameters(),
+                        org.jenkinsci.plugins.pipeline.modeldefinition.validator.Messages.ParametersAndTriggersInOptions_RejectTriggers())
+                .go();
+    }
+
+    @Issue("JENKINS-46065")
+    @Test
+    public void validatorContributor() throws Exception {
+        expectError("validatorContributor")
+                .logContains("testProperty is rejected")
+                .go();
+    }
+
+    @TestExtension
+    public static class RejectTestProperty extends DeclarativeValidatorContributor {
+        @Override
+        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
+            if (option.getName() != null && option.getName().equals("testProperty")) {
+                return "testProperty is rejected";
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public static class TestProperty extends OptionalJobProperty<WorkflowJob> {
+        @DataBoundConstructor
+        public TestProperty() {
+
+        }
+
+        @TestExtension
+        @Symbol("testProperty")
+        public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
+            @Override
+            public String getDisplayName() {
+                return "Test job property to be rejected by a validator contributor.";
+            }
+        }
     }
 
     @Test

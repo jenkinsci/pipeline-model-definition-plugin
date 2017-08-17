@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
 import javax.annotation.Nonnull
 
@@ -58,25 +59,35 @@ import javax.annotation.Nonnull
  */
 @ToString
 @EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 class ModelValidatorImpl implements ModelValidator {
 
     private final ErrorCollector errorCollector
     private transient DescriptorLookupCache lookup
+    private transient FlowExecution execution
 
-    public ModelValidatorImpl(ErrorCollector e) {
+    public ModelValidatorImpl(ErrorCollector e, FlowExecution execution = null) {
         this.errorCollector = e
+        this.execution = execution
         this.lookup = DescriptorLookupCache.getPublicCache()
+    }
+
+    public DescriptorLookupCache getLookup() {
+        return lookup
+    }
+
+    private FlowExecution getExecution() {
+        return execution
     }
 
     public boolean validateElement(@Nonnull ModelASTPostBuild postBuild) {
         // post specific validation
-        true
+        return validateFromContributors(postBuild, true)
     }
 
     public boolean validateElement(@Nonnull ModelASTPostStage post) {
         // post stage specific validation
-        true
+        return validateFromContributors(post, true)
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildConditionsContainer post) {
@@ -96,7 +107,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        return valid
+        return validateFromContributors(post, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildCondition buildCondition) {
@@ -112,7 +123,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(buildCondition, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTEnvironment env) {
@@ -129,12 +140,12 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(env, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTInternalFunctionCall call) {
         // TODO: Make this real validation when JENKINS-41759 lands
-        return true
+        return validateFromContributors(call, true)
     }
 
     public boolean validateElement(@Nonnull ModelASTTools t) {
@@ -166,7 +177,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(t, valid)
     }
 
     public boolean validateElement(ModelASTWhen when) {
@@ -176,7 +187,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        return valid
+        return validateFromContributors(when, valid)
     }
 
     public boolean validateElement(ModelASTLibraries libraries) {
@@ -191,7 +202,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(libraries, valid)
     }
 
     public boolean validateElement(ModelASTWhenCondition condition) {
@@ -236,7 +247,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(condition, valid)
     }
 
     private boolean isValidStepParameter(DescribableModel<? extends Describable> model,
@@ -351,32 +362,23 @@ class ModelValidatorImpl implements ModelValidator {
     public boolean validateElement(@Nonnull ModelASTStep step) {
         boolean valid = true
 
-        if (ModelASTStep.blockedSteps.keySet().contains(step.name)) {
-            errorCollector.error(step,
-                Messages.ModelValidatorImpl_BlockedStep(step.name, ModelASTStep.blockedSteps.get(step.name)))
-            valid = false
-        } else {
-            // We can't do step validation without a Jenkins instance, so move on.
-            if (Jenkins.getInstance() != null) {
-                Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
-                DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
+        // We can't do step validation without a Jenkins instance, so move on.
+        // Also, special casing of parallel due to it not having a DataBoundConstructor.
+        if (Jenkins.getInstance() != null && step.name != "parallel") {
+            Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
+            DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
-                if (model != null) {
-                    valid = validateStep(step, model, desc)
-                }
+            if (model != null) {
+                valid = validateStep(step, model, desc)
             }
         }
 
-        return valid
+        return validateFromContributors(step, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
-        if (ModelASTMethodCall.blockedSteps.keySet().contains(meth.name)) {
-            errorCollector.error(meth,
-                Messages.ModelValidatorImpl_BlockedStep(meth.name, ModelASTMethodCall.blockedSteps.get(meth.name)))
-            valid = false
-        }
+
         if (Jenkins.getInstance() != null) {
             Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
             DescribableModel<? extends Describable> model
@@ -440,7 +442,7 @@ class ModelValidatorImpl implements ModelValidator {
                 }
             }
         }
-        return valid
+        return validateFromContributors(meth, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTOptions opts) {
@@ -456,7 +458,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(opts, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTTrigger trig) {
@@ -474,7 +476,7 @@ class ModelValidatorImpl implements ModelValidator {
             errorCollector.error(trig, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         }
-        return valid
+        return validateFromContributors(trig, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTTriggers triggers) {
@@ -490,7 +492,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(triggers, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildParameter param) {
@@ -509,16 +511,17 @@ class ModelValidatorImpl implements ModelValidator {
             errorCollector.error(param, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         }
-        return valid
+        return validateFromContributors(param, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildParameters params) {
+        boolean valid = true
         if (params.parameters.isEmpty()) {
             errorCollector.error(params, Messages.ModelValidatorImpl_EmptySection("parameters"))
-            return false
+            valid = false
         }
 
-        return true
+        return validateFromContributors(params, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTOption opt) {
@@ -526,9 +529,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (opt.name == null) {
             // Validation failed at compilation time so move on.
-        }
-        // We can't do property validation without a Jenkins instance, so move on.
-        else if (Options.typeForKey(opt.name) == null) {
+        } else if (Options.typeForKey(opt.name) == null) {
             errorCollector.error(opt,
                 Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name, Options.getAllowedOptionTypes().keySet()))
             valid = false
@@ -537,7 +538,7 @@ class ModelValidatorImpl implements ModelValidator {
             errorCollector.error(opt, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
             valid = false
         }
-        return valid
+        return validateFromContributors(opt, valid)
     }
 
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
@@ -571,7 +572,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        return valid
+        return validateFromContributors(branch, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTPipelineDef pipelineDef) {
@@ -585,7 +586,7 @@ class ModelValidatorImpl implements ModelValidator {
         if (pipelineDef.agent == null) {
             errorCollector.error(pipelineDef, Messages.ModelValidatorImpl_RequiredSection("agent"))
         }
-        return valid
+        return validateFromContributors(pipelineDef, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
@@ -622,7 +623,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return valid
+        return validateFromContributors(stage, valid, isNested)
     }
 
     public boolean validateElement(@Nonnull ModelASTStages stages) {
@@ -642,7 +643,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        return valid
+        return validateFromContributors(stages, valid)
     }
 
     public boolean validateElement(@Nonnull ModelASTAgent agent) {
@@ -689,6 +690,28 @@ class ModelValidatorImpl implements ModelValidator {
                 }
             }
         }
-        return valid
+        return validateFromContributors(agent, valid)
+    }
+
+    private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
+        boolean contributorsValid = DeclarativeValidatorContributor.all().every { contributor ->
+            String error
+            if (!(element instanceof ModelASTStage)) {
+                error = contributor.validateElement(element, getExecution())
+            } else {
+                error = contributor.validateElement((ModelASTStage)element, isNested, getExecution())
+            }
+            if (error != null) {
+                errorCollector.error(element, error)
+                return false
+            } else {
+                return true
+            }
+        }
+        if (isValid) {
+            return contributorsValid
+        } else {
+            return false
+        }
     }
 }
