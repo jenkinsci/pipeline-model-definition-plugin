@@ -27,6 +27,7 @@ import hudson.model.Result;
 import hudson.model.Slave;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * Tests for {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage#post}
@@ -106,6 +107,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     }
 
+    @Issue("JENKINS-46276")
     @Test
     public void withAgentNoneAndAgentDocker() throws Exception {
         expect("withAgentNoneAndAgentDocker")
