@@ -31,6 +31,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -46,6 +47,29 @@ public class TriggersTest extends AbstractModelDefTest {
     @Test
     public void simpleTriggers() throws Exception {
         WorkflowRun b = expect("simpleTriggers")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (Post Actions)")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        PipelineTriggersJobProperty triggersJobProperty = p.getTriggersJobProperty();
+        assertNotNull(triggersJobProperty);
+        assertEquals(1, triggersJobProperty.getTriggers().size());
+        TimerTrigger.DescriptorImpl timerDesc = j.jenkins.getDescriptorByType(TimerTrigger.DescriptorImpl.class);
+
+        Trigger trigger = triggersJobProperty.getTriggerForDescriptor(timerDesc);
+        assertNotNull(trigger);
+
+        assertTrue(trigger instanceof TimerTrigger);
+        TimerTrigger timer = (TimerTrigger) trigger;
+        assertEquals("@daily", timer.getSpec());
+    }
+
+    @Ignore("Triggers are set before withEnv is called.")
+    @Test
+    public void envVarInTriggers() throws Exception {
+        WorkflowRun b = expect("envVarInTriggers")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (Post Actions)")
                 .go();

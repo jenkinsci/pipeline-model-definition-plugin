@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-/**
- * Used to mark {@link MappedClosure}s that are specified as "foo = 'bar'", rather than "foo 'bar'"
- * @author Andrew Bayer
- */
-public interface PropertiesToMap {
+pipeline {
+    agent {
+        label "some-label"
+    }
+    environment {
+        MAVEN_VER = "3.0.1"
+    }
+    tools {
+        maven "apache-maven-${MAVEN_VER}"
+    }
+    stages {
+        stage("foo") {
+            steps {
+                sh 'mvn --version'
+            }
+        }
+    }
 }
+
+
+

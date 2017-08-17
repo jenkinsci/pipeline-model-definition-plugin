@@ -25,33 +25,20 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
-
-
 /**
  * Parent for {@link PostStage} and {@link PostBuild} - containers for condition name/step block pairs.
  *
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
+abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
     extends MappedClosure<StepsBlock,T> {
 
-    @Override
-    public void modelFromMap(Map<String,Object> inMap) {
-
-        inMap.each { conditionName, conditionClosure ->
-            if (conditionName in BuildCondition.getConditionMethods().keySet()) {
-
-                if (StepsBlock.class.isInstance(conditionClosure)) {
-                    put(conditionName, (StepsBlock)conditionClosure)
-                }
-            }
-        }
+    AbstractBuildConditionResponder(Map<String,StepsBlock> m) {
+        super(m)
     }
 
-    public Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
+    Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
         if (getMap().containsKey(conditionName)) {
             BuildCondition condition = BuildCondition.getConditionMethods().get(conditionName)
             if (condition != null && condition.meetsCondition(runWrapperObj)) {
@@ -62,7 +49,7 @@ public abstract class AbstractBuildConditionResponder<T extends AbstractBuildCon
         return null
     }
 
-    public boolean satisfiedConditions(Object runWrapperObj) {
+    boolean satisfiedConditions(Object runWrapperObj) {
         Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
 
         return BuildCondition.orderedConditionNames.any { conditionName ->

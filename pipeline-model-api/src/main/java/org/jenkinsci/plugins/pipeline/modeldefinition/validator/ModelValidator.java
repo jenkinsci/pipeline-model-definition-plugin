@@ -25,20 +25,18 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameters;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTClosureMap;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTEnvironment;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTInternalFunctionCall;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTLibraries;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage;

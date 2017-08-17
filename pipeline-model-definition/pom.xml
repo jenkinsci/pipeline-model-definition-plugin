@@ -44,7 +44,7 @@
         <artifactId>maven-hpi-plugin</artifactId>
         <extensions>true</extensions>
         <configuration>
-          <compatibleSinceVersion>0.8</compatibleSinceVersion>
+          <compatibleSinceVersion>1.2</compatibleSinceVersion>
         </configuration>
       </plugin>
       <plugin>
@@ -215,7 +215,6 @@
       <artifactId>ant</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>

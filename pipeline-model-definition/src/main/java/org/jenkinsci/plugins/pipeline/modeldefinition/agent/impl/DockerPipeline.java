@@ -27,13 +27,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class DockerPipeline extends AbstractDockerAgent<DockerPipeline> {
     private String image;

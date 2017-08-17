@@ -26,9 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyCodeSource;
-import hudson.PluginWrapper;
 import hudson.model.AbstractDescribableImpl;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 

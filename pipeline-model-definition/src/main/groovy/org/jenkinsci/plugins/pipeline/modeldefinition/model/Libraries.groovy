@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  * A container for one or more library identifiers, within the build, in the order they're declared.
@@ -39,9 +39,9 @@ import groovy.transform.ToString
 public class Libraries implements Serializable {
     List<String> libs = []
 
-    Libraries libs(List<String> s) {
-        this.libs = s
-        return this
+    @Whitelisted
+    Libraries(List<String> s) {
+        libs.addAll(s)
     }
 
     List<String> getLibs() {

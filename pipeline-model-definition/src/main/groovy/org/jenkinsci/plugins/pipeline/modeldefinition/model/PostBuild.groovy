@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  * Conditions and step blocks to be run after the stages but before the notifications, depending on build status.
@@ -32,5 +33,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class PostBuild extends AbstractBuildConditionResponder<PostBuild> {
-
+    @Whitelisted
+    PostBuild(Map<String,StepsBlock> m) {
+        super(m)
+    }
 }

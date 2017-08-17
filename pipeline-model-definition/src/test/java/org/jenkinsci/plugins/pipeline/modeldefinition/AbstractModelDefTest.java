@@ -37,20 +37,12 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 import hudson.util.DescribableList;
-import hudson.util.StreamTaskListener;
-import hudson.util.VersionNumber;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.GitStep;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
-import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
@@ -64,11 +56,11 @@ import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
@@ -76,7 +68,6 @@ import org.jvnet.hudson.test.ToolInstallations;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,13 +77,11 @@ import java.util.List;
 import java.util.Map;
 
 import static com.jcabi.matchers.RegexMatchers.containsPattern;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.stringContainsInOrder;
-import static org.junit.Assert.assertNotNull;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.hamcrest.text.IsEqualIgnoringWhiteSpace.equalToIgnoringWhiteSpace;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * @author Andrew Bayer
@@ -210,7 +199,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "whenAnd",
             "usernamePassword",
             "environmentCrossReferences",
-            "nestedParallelStages"
+            "nestedParallelStages",
+            "stagePost"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -261,6 +251,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
         result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_BothStagesAndSteps("foo")});
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
+
+        // TODO: Better error messaging for these schema violations.
+        result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});
+        result.add(new Object[]{"invalidWhenWithChildren", "instance failed to match at least one schema"});
 
         result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
 

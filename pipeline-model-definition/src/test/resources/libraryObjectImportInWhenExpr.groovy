@@ -22,31 +22,24 @@
  * THE SOFTWARE.
  */
 
+@Library('zot-stuff@master')
+import org.foo.Zot
 
-package org.jenkinsci.plugins.pipeline.modeldefinition
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Libraries
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-/**
- * Translates a closure containing a sequence of "lib('string')" calls into an instance of {@link Libraries}.
- *
- * @author Andrew Bayer
- */
-public class LibrariesTranslator implements Serializable {
-    List<String> actualList = []
-    CpsScript script
-
-    LibrariesTranslator(CpsScript script) {
-        this.script = script
-    }
-
-    def lib(String l) {
-        actualList.add(l)
-    }
-
-    Libraries toListModel() {
-        Libraries l = new Libraries()
-        l.libs(actualList)
+pipeline {
+    agent any
+    stages {
+        stage ('prepare') {
+            when {
+                expression {
+                    def z = new Zot(steps)
+                    return z != null
+                }
+            }
+            steps {
+                echo "hello"
+            }
+        }
     }
 }
+
+

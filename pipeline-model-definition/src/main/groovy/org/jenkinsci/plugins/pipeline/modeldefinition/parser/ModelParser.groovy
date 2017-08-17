@@ -24,11 +24,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.FirstParam
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.Queue
+import hudson.model.Run
 import jenkins.model.Jenkins
+import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -50,9 +51,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorIm
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+import java.util.logging.Level
+import java.util.logging.Logger
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
 
 /**
  * Recursively walks AST tree of parsed Jenkinsfile and builds validation model into {@link ModelASTPipelineDef}
@@ -69,6 +75,7 @@ import javax.annotation.Nonnull
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class ModelParser implements Parser {
+
     /**
      * Represents the source file being processed.
      */
@@ -80,15 +87,30 @@ class ModelParser implements Parser {
 
     private final DescriptorLookupCache lookup
 
+    private final Run<?,?> build;
+
     public ModelParser(SourceUnit sourceUnit) {
+        this(sourceUnit, null)
+    }
+
+    public ModelParser(SourceUnit sourceUnit, @CheckForNull FlowExecution execution) {
         this.sourceUnit = sourceUnit;
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
         this.validator = new ModelValidatorImpl(errorCollector)
         this.lookup = DescriptorLookupCache.getPublicCache()
+        Queue.Executable executable = null
+        if (execution != null) {
+            executable = execution.getOwner().getExecutable();
+        }
+        if (executable != null && executable instanceof Run) {
+            this.build = (Run) executable
+        } else {
+            this.build = null
+        }
     }
 
-    public @CheckForNull ModelASTPipelineDef parse() {
-        return parse(sourceUnit.AST);
+    public @CheckForNull ModelASTPipelineDef parse(boolean secondaryRun = false) {
+        return parse(sourceUnit.AST, secondaryRun);
     }
 
     public @CheckForNull List<ModelASTStep> parsePlainSteps(ModuleNode src) {
@@ -114,9 +136,8 @@ class ModelParser implements Parser {
      * Given a Groovy AST that represents a parsed source code, parses
      * that into {@link ModelASTPipelineDef}
      */
-    public @CheckForNull ModelASTPipelineDef parse(ModuleNode src) {
+    public @CheckForNull ModelASTPipelineDef parse(ModuleNode src, boolean secondaryRun = false) {
         // first, quickly ascertain if this module should be parsed at all
-        // TODO: 'use script' escape hatch
         def pst = src.statementBlock.statements.find {
             MethodCallExpression m = matchMethodCall(it)
             return m != null && matchMethodName(m) == ModelStepLoader.STEP_NAME
@@ -142,7 +163,8 @@ class ModelParser implements Parser {
             ModelASTKey placeholderForErrors = new ModelASTKey(stmt)
             def mc = matchMethodCall(stmt);
             if (mc == null) {
-                errorCollector.error(placeholderForErrors, Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
+                errorCollector.error(placeholderForErrors,
+                    Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
             } else {
                 def name = parseMethodName(mc);
                 // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
@@ -203,6 +225,20 @@ class ModelParser implements Parser {
 
         r.validate(validator)
 
+        // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
+        astDebugLog {
+            "Model as JSON: ${r.toJSON().toString(2)}"
+        }
+        // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
+        // are no errors.
+        if (!secondaryRun && errorCollector.errorCount == 0) {
+            pipelineBlock.whole.arguments = new RuntimeASTTransformer(r).transform(build)
+            // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
+            astDebugLog {
+                "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"
+            }
+        }
+
         return r;
     }
 
@@ -211,11 +247,13 @@ class ModelParser implements Parser {
 
         def m = matchBlockStatement(stmt);
         if (m==null) {
-            // Should be able to get this validation later.
-            return r
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("stages"))
         } else {
             eachStatement(m.body.code) {
-                r.stages.add(parseStage(it));
+                ModelASTStage s = parseStage(it)
+                if (s != null) {
+                    r.stages.add(s)
+                }
             }
         }
         return r;
@@ -227,6 +265,7 @@ class ModelParser implements Parser {
         def m = matchBlockStatement(stmt);
         if (m==null) {
             // Should be able to get this validation later.
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("environment"))
             return r
             //errorCollector.error(r, "Expected a block")
         } else {
@@ -358,7 +397,7 @@ class ModelParser implements Parser {
 
         def m = matchBlockStatement(stmt);
         if (m==null) {
-            // Should be able to get this validation later.
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("libraries"))
             return r
         } else {
             eachStatement(m.body.code) {
@@ -393,7 +432,7 @@ class ModelParser implements Parser {
 
         def m = matchBlockStatement(stmt);
         if (m==null) {
-            // Should be able to get this validation later.
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("tools"))
             return r
         } else {
             eachStatement(m.body.code) { s ->
@@ -418,19 +457,20 @@ class ModelParser implements Parser {
         return r;
     }
 
-    public @Nonnull ModelASTStage parseStage(Statement stmt) {
+    public @CheckForNull ModelASTStage parseStage(Statement stmt) {
         ModelASTStage stage = new ModelASTStage(stmt)
         def m = matchBlockStatement(stmt);
         if (!m?.methodName?.equals("stage")) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
             errorCollector.error(stage, Messages.ModelParser_ExpectedStage());
-            return stage
+            return null
         }
 
         def nameExp = m.getArgument(0);
         if (nameExp==null) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
             errorCollector.error(stage, Messages.ModelParser_ExpectedStageName());
+            return null
         }
 
         stage.name = parseStringLiteral(nameExp)
@@ -531,7 +571,7 @@ class ModelParser implements Parser {
         def o = new ModelASTOptions(stmt);
         def m = matchBlockStatement(stmt);
         if (m == null) {
-            // Should be able to get this validation later.
+            errorCollector.error(o, Messages.ModelParser_ExpectedBlockFor("options"))
             return o
         } else {
             eachStatement(m.body.code) { s ->
@@ -578,7 +618,7 @@ class ModelParser implements Parser {
         def triggers = new ModelASTTriggers(stmt);
         def m = matchBlockStatement(stmt);
         if (m == null) {
-            // Should be able to get this validation later.
+            errorCollector.error(triggers, Messages.ModelParser_ExpectedBlockFor("triggers"))
             return triggers
         } else {
             eachStatement(m.body.code) { s ->
@@ -625,7 +665,7 @@ class ModelParser implements Parser {
         def bp = new ModelASTBuildParameters(stmt);
         def m = matchBlockStatement(stmt);
         if (m == null) {
-            // Should be able to get this validation later.
+            errorCollector.error(bp, Messages.ModelParser_ExpectedBlockFor("parameters"))
             return bp
         } else {
             eachStatement(m.body.code) { s ->
@@ -863,7 +903,8 @@ class ModelParser implements Parser {
             ModelASTNamedArgumentList groovyBlock = new ModelASTNamedArgumentList(bs.body)
             ModelASTKey key = new ModelASTKey(null)
             key.key = "scriptBlock"
-            groovyBlock.arguments.put(key, ModelASTValue.fromConstant(getSourceText(bs.body.code), bs.body.code))
+            groovyBlock.arguments.put(key, ModelASTValue.fromConstant(getSourceText(bs.body.code),
+                bs.body.code))
             scriptBlock.args = groovyBlock
         } else {
             errorCollector.error(scriptBlock, Messages.ModelParser_StepWithoutBlock(pronoun))
@@ -1035,7 +1076,7 @@ class ModelParser implements Parser {
         return s?:"error";
     }
 
-    protected @CheckForNull String matchStringLiteral(Expression exp) {
+    @CheckForNull String matchStringLiteral(Expression exp) {
         if (exp instanceof ConstantExpression) {
             return castOrNull(String,exp.value);
         } else if (exp instanceof VariableExpression) {
@@ -1045,35 +1086,28 @@ class ModelParser implements Parser {
     }
 
     /**
-     * Accepts literal, GString, function call etc but not other primitives
+     * Works like a regular Java cast, except if the value doesn't match the type, return null
+     * instead of throwing an exception.
      */
-    protected String parseString(Expression e) {
-        if (e instanceof ConstantExpression) {
-            if (e.value instanceof String)
-                return (String)e.value
-            errorCollector.error(ModelASTValue.fromConstant(e.getValue(), e),
-                Messages.ModelParser_ExpectedStringLiteralButGot(e.value))
-            return "error";
-        }
-        if (e instanceof GStringExpression) {
-            return e.text
-        }
-        // for other composite expressions, treat it as in-place GString
-        return "\${"+getSourceText(e)+"}"
+    public <X> X castOrNull(Class<X> type, Object value) {
+        if (type.isInstance(value))
+            return type.cast(value);
+        return null;
     }
 
     /**
-     * Attempts to match a method call of the form {@code foo(...)} and
-     * return 'foo' as a string.
+     * Obtains the source text of the given {@link org.codehaus.groovy.ast.ASTNode}.
      */
-    protected @CheckForNull String matchMethodName(MethodCallExpression exp) {
-        def lhs = exp.objectExpression;
-        if (lhs instanceof VariableExpression) {
-            if (lhs.name.equals("this")) {
-                return exp.methodAsString; // getMethodAsString() returns null if the method isn't a constant
-            }
-        }
-        return null;
+    String getSourceText(ASTNode n) {
+        return Utils.getSourceTextForASTNode(n, sourceUnit)
+    }
+
+    /**
+     * Special-casing of {@link #getSourceText(ASTNode)} for dealing with particular quirks of binary expressions.
+     */
+    String getSourceText(BinaryExpression e) {
+        return getSourceText(e.leftExpression) + e.operation.getText() +
+            getSourceText(e.rightExpression)
     }
 
     protected String parseMethodName(MethodCallExpression exp) {
@@ -1081,34 +1115,13 @@ class ModelParser implements Parser {
         if (s==null) {
             if (exp.objectExpression instanceof VariableExpression &&
                 !((VariableExpression)exp.objectExpression).isThisExpression()) {
-                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ObjectMethodCall())
+                errorCollector?.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ObjectMethodCall())
             } else {
-                errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
+                errorCollector?.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedSymbol())
             }
             s = "error";
         }
         return s;
-    }
-
-    /**
-     * Attempts to match AST node as {@link BlockStatementMatch} or
-     * return null.
-     */
-    public @CheckForNull BlockStatementMatch matchBlockStatement(Statement st) {
-        def whole = matchMethodCall(st);
-        if (whole!=null) {
-            def methodName = matchMethodName(whole);
-            def args = (TupleExpression)whole.arguments;
-            int sz = args.expressions.size();
-            if (sz>0 && methodName!=null) {
-                def last = args.getExpression(sz - 1);
-                if (last instanceof ClosureExpression) {
-                    return new BlockStatementMatch(whole,methodName,last);
-                }
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -1157,98 +1170,18 @@ class ModelParser implements Parser {
         return null;
     }
 
-    /**
-     * Works like a regular Java cast, except if the value doesn't match the type, return null
-     * instead of throwing an exception.
-     */
-    protected <X> X castOrNull(Class<X> type, Object value) {
-        if (type.isInstance(value))
-            return type.cast(value);
-        return null;
-    }
+    public static final boolean AST_DEBUG_LOGGING = SystemProperties.getBoolean(ModelParser.class.getName()+".astDebugLogging") ||
+        SystemProperties.getBoolean("hudson.hpi.run")
 
-    /**
-     * Normalizes a statement to a block of statement by creating a wrapper if need be.
-     */
-    protected BlockStatement asBlock(Statement st) {
-        if (st instanceof BlockStatement) {
-            return st;
-        } else {
-            def bs = new BlockStatement();
-            bs.addStatement(st);
-            return bs;
-        }
-    }
+    private static final Logger LOGGER = Logger.getLogger(ModelParser.class.getName())
 
-    protected List<String> methodNamesFromBlock(BlockStatement block) {
-        return block.statements.collect { s ->
-            def mc = matchMethodCall(s);
-            if (mc != null) {
-                return matchMethodName(mc);
-            } else {
-                return null
+    static void astDebugLog(Closure<String> c) {
+        if (AST_DEBUG_LOGGING) {
+            try {
+                LOGGER.log(Level.WARNING, c.call())
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "Error evaluating debug closure: ${e}")
             }
         }
-    }
-
-    protected <T> List<T> eachStatement(Statement st, @ClosureParams(FirstParam.class) Closure<T> c) {
-        return asBlock(st).statements.collect(c)
-    }
-
-    /**
-     * Attempts to match a given statement as a method call, or return null
-     */
-    protected @CheckForNull MethodCallExpression matchMethodCall(Statement st) {
-        if (st instanceof ExpressionStatement) {
-            def exp = st.expression;
-            if (exp instanceof MethodCallExpression) {
-                return exp;
-            }
-        }
-        return null;
-    }
-
-    protected String getSourceText(BinaryExpression e) {
-        return getSourceText(e.leftExpression) + e.operation.getText() + getSourceText(e.rightExpression)
-    }
-
-    /**
-     * Obtains the source text of the given {@link org.codehaus.groovy.ast.ASTNode}.
-     */
-    protected String getSourceText(ASTNode n) {
-        def result = new StringBuilder();
-        int beginLine = n.getLineNumber()
-        int endLine = n.getLastLineNumber()
-        int beginLineColumn = n.getColumnNumber()
-        int endLineLastColumn = n.getLastColumnNumber()
-
-        //The node seems to be lying about the last line, so go through each statement to try to make sure
-        if (n instanceof BlockStatement) {
-            for (Statement s : n.statements) {
-                if (s.lineNumber < beginLine) {
-                    beginLine = s.lineNumber
-                    beginLineColumn = s.columnNumber
-                }
-                if (s.lastLineNumber > endLine) {
-                    endLine = s.lastLineNumber
-                    endLineLastColumn = s.lastColumnNumber
-                }
-            }
-        }
-        for (int x = beginLine; x <= endLine; x++) {
-            String line = sourceUnit.source.getLine(x, null);
-            if (line == null)
-                throw new AssertionError("Unable to get source line"+x);
-
-            if (x == endLine) {
-                line = line.substring(0, endLineLastColumn - 1);
-            }
-            if (x == beginLine) {
-                line = line.substring(beginLineColumn - 1);
-            }
-            result.append(line).append('\n');
-        }
-
-        return result.toString().trim();
     }
 }
