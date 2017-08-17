@@ -110,7 +110,15 @@ public class PostStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-46276")
     @Test
     public void withAgentNoneAndAgentDocker() throws Exception {
+        assumeDocker();
         expect("withAgentNoneAndAgentDocker")
+                .logNotContains("Required context class hudson.FilePath is missing").go();
+    }
+
+    @Issue("JENKINS-46276")
+    @Test
+    public void withAgentNoneAndAgentAny() throws Exception {
+        expect("withAgentNoneAndAgentAny")
                 .logNotContains("Required context class hudson.FilePath is missing").go();
     }
 
