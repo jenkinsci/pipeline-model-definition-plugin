@@ -164,7 +164,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "nestedParallelStages",
             "stagePost",
             "when/changelog/changelog",
-            "when/changelog/changeset"
+            "when/changelog/changeset",
+            "backslashReductionInEnv"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

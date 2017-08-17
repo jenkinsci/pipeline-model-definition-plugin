@@ -31,11 +31,15 @@ pipeline {
         stage("foo") {
             environment {
                 AAA_Key1 = "a\\b ${EXECUTOR_NUMBER}"
-                AAA_Key2 = "a\\b"
+                AAA_Key2 = "a\\\\b"
+                AAA_Key3 = "a\\b"
+                AAA_Key4 = "a\\\\b ${EXECUTOR_NUMBER}"
             }
             steps {
                 echo "AAA_Key1: ${AAA_Key1}"
                 echo "AAA_Key2: ${AAA_Key2}"
+                echo "AAA_Key3: ${AAA_Key3}"
+                echo "AAA_Key4: ${AAA_Key4}"
             }
         }
     }
