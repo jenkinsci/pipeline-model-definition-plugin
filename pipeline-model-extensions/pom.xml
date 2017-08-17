@@ -37,7 +37,19 @@
   <description>APIs for extension points used in Declarative Pipelines</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
 
-
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <compatibleSinceVersion>1.2-beta-4</compatibleSinceVersion>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
   <dependencies>
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>

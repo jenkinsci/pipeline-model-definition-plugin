@@ -29,6 +29,9 @@ import htmlpublisher.HtmlPublisherTarget;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.tasks.LogRotator;
+import jenkins.model.BuildDiscarder;
+import jenkins.model.BuildDiscarderProperty;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.StageStatus;
@@ -42,13 +45,16 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
+import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
@@ -56,12 +62,13 @@ import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
+import org.jenkinsci.plugins.workflow.steps.ErrorStep;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
-import java.util.Arrays;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -430,6 +437,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenExprUsingOutsideVarAndFunc() throws Exception {
+        expect("whenExprUsingOutsideVarAndFunc")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
     public void skippedWhen() throws Exception {
         expect("skippedWhen")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
@@ -521,6 +535,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Test
     public void whenEnvTrue() throws Exception {
         expect("whenEnvTrue")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenEnvIgnoreCase() throws Exception {
+        expect("whenEnvIgnoreCase")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
                 .go();
     }
@@ -941,6 +962,72 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
 
 
+    }
+
+    @Issue("JENKINS-46112")
+    @Test
+    public void logActionPresentForError() throws Exception {
+        WorkflowRun r = expect(Result.FAILURE, "logActionPresentForError").go();
+        FlowExecution execution = r.getExecution();
+
+        Collection<FlowNode> heads = execution.getCurrentHeads();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+
+        FlowNode n = scanner.findFirstMatch(heads, null, new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(FlowNode input) {
+                return input instanceof StepAtomNode && ((StepAtomNode) input).getDescriptor() instanceof ErrorStep.DescriptorImpl;
+            }
+        });
+
+        LogAction l = n.getAction(LogAction.class);
+        assertNotNull(l);
+    }
+
+    @Test
+    public void mapCallsWithMethodCallValues() throws Exception {
+        WorkflowRun b = expect("mapCallsWithMethodCallValues")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
+
+        WorkflowJob p = b.getParent();
+
+        BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
+        assertNotNull(bdp);
+        BuildDiscarder strategy = bdp.getStrategy();
+        assertNotNull(strategy);
+        assertEquals(LogRotator.class, strategy.getClass());
+        LogRotator lr = (LogRotator) strategy;
+        assertEquals(1, lr.getNumToKeep());
+
+    }
+
+    @Issue("JENKINS-43035")
+    @Test
+    public void libraryObjectImportInWhenExpr() throws Exception {
+        otherRepo.init();
+        otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
+                "\n" +
+                "class Zot implements Serializable {\n" +
+                "  def steps\n" +
+                "  Zot(steps){\n" +
+                "    this.steps = steps\n" +
+                "  }\n" +
+                "  def echo(msg) {\n" +
+                "    steps.sh \"echo ${msg}\"\n" +
+                "  }\n" +
+                "}\n");
+        otherRepo.git("add", "src");
+        otherRepo.git("commit", "--message=init");
+        GlobalLibraries.get().setLibraries(Collections.singletonList(
+                new LibraryConfiguration("zot-stuff",
+                        new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)))));
+
+        expect("libraryObjectImportInWhenExpr")
+                .logContains("hello")
+                .go();
     }
 
     @Issue("JENKINS-45198")

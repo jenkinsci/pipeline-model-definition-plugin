@@ -374,8 +374,6 @@ class JSONParser implements Parser {
             return parseTreeStep(j)
         } else if (j.node.get("name")?.asText()?.equals("script")) {
             return parseScriptBlock(j)
-        } else if (j.node.get("name")?.asText()?.equals("expression")) {
-            return parseWhenExpression(j)
         } else {
             ModelASTStep step = new ModelASTStep(j)
             step.name = j.node.get("name").asText()

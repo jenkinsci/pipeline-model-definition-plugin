@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
  * A container for one or more {@link Stage}s to be executed within the build, in the order they're declared.
@@ -36,23 +36,15 @@ import groovy.transform.ToString
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stages implements NestedModel, Serializable {
+public class Stages implements Serializable {
     List<Stage> stages = []
 
-    Stages stages(List<Stage> s) {
-        this.stages = s
-        return this
+    @Whitelisted
+    Stages(List<Stage> stages) {
+        this.stages = stages
     }
 
     List<Stage> getStages() {
         return stages
     }
-
-    @Override
-    public void modelFromMap(Map<String,Object> m) {
-        m.each { k, v ->
-            this."${k}"(v)
-        }
-    }
-
 }

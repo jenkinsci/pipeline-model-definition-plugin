@@ -39,8 +39,7 @@ import groovy.transform.ToString
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
-    implements NestedModel, MethodMissingWrapper, Serializable {
+public abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements Serializable {
 
     @Delegate Map<String,O> resultMap = [:]
 
@@ -48,32 +47,6 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>>
     }
 
     public MappedClosure(Map<String,O> inMap) {
-        this.modelFromMap(inMap)
-    }
-
-    /**
-     * Convenience method to allow for "foo 'bar'" style population of the underlying map.
-     *
-     * @param methodName Key name, basically.
-     * @param args First element will be a String hopefully.
-     *
-     * @return this
-     */
-    def methodMissing(String methodName, args) {
-        def argValue
-        if (args.length > 1) {
-            argValue = args
-        } else if (args.length == 1) {
-            argValue = args[0]
-        }
-
-        this."${methodName}" = argValue
-
-        this
-    }
-
-    @Override
-    public void modelFromMap(Map<String,Object> inMap) {
         this.resultMap.putAll(inMap)
     }
 

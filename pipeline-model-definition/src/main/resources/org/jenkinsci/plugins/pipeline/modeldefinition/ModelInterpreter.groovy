@@ -27,6 +27,7 @@ import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
+import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -50,19 +51,10 @@ public class ModelInterpreter implements Serializable {
     }
 
     def call(CpsClosure closure) {
-
-        ClosureModelTranslator m = new ClosureModelTranslator(Root.class, script)
-
-        closure.delegate = m
-        closure.resolveStrategy = Closure.DELEGATE_FIRST
-        closure.call()
-
-        Root root = m.toNestedModel()
+        Root root = (Root) closure.call()
         Throwable firstError
 
         if (root != null) {
-            // Attach the parallel model to the run for introspection etc.
-            root = Utils.attachDeclarativeActions(root, script)
             boolean postBuildRun = false
 
             try {
@@ -76,8 +68,7 @@ public class ModelInterpreter implements Serializable {
                         withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
-                                    for (int i = 0; i < root.stages.getStages().size(); i++) {
-                                        Stage thisStage = root.stages.getStages().get(i)
+                                    root.stages.stages.each { thisStage ->
                                         try {
                                             evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError).call()
                                         } catch (Exception e) {
@@ -198,8 +189,8 @@ public class ModelInterpreter implements Serializable {
                     } else {
                         if (thisStage.parallel != null) {
                             if (evaluateWhen(thisStage.when)) {
-                                withCredentialsBlock(thisStage.environment, root.environment) {
-                                    withEnvBlock(thisStage.getEnvVars(root, script)) {
+                                withCredentialsBlock(thisStage.environment) {
+                                    withEnvBlock(thisStage.getEnvVars(script)) {
                                         script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, false))
                                     }
                                 }
@@ -211,8 +202,8 @@ public class ModelInterpreter implements Serializable {
                         } else {
                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                 if (evaluateWhen(thisStage.when)) {
-                                    withCredentialsBlock(thisStage.environment, root.environment) {
-                                        withEnvBlock(thisStage.getEnvVars(root, script)) {
+                                    withCredentialsBlock(thisStage.environment) {
+                                        withEnvBlock(thisStage.getEnvVars(script)) {
                                             toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
                                                 // Execute the actual stage and potential post-stage actions
                                                 executeSingleStage(root, thisStage, parentAgent)
@@ -233,8 +224,8 @@ public class ModelInterpreter implements Serializable {
                         firstError = e
                     }
                 } finally {
-                    // And finally, run the post stage steps.
-                    if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                    // And finally, run the post stage steps if this was a parallel parent.
+                    if (thisStage.parallel != null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
@@ -282,17 +273,14 @@ public class ModelInterpreter implements Serializable {
     /**
      * Execute a body closure within a "withEnv" block.
      *
-     * @param envVars A list of "FOO=BAR" environment variables. Can be null.
+     * @param envVars A map of env vars to closures.
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withEnvBlock(List<String> envVars, Closure body) {
+    def withEnvBlock(Map<String,Closure> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
-            List<String> evaledEnv = new ArrayList<>()
-            for (int i = 0; i < envVars.size(); i++) {
-                // Evaluate to deal with any as-of-yet unresolved expressions.
-                String toEval = Utils.prepareForEvalToString(envVars.get(i))
-                evaledEnv.add(Utils.unescapeDollars(Utils.unescapeFromEval((String)script.evaluate(toEval))))
+            List<String> evaledEnv = envVars.collect { k, v ->
+                "${k}=${v.call()}"
             }
             return {
                 script.withEnv(evaledEnv) {
@@ -310,18 +298,19 @@ public class ModelInterpreter implements Serializable {
      * Execute a given closure within a "withCredentials" block.
      *
      * @param environment The environment we're processing from
-     * @param parent Optional parent environment
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@CheckForNull Environment environment, Environment parent = null, Closure body) {
+    def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
         Map<String,CredentialWrapper> creds = new TreeMap<>()
         
         if (environment != null) {
             try {
-                List<List<String>> credStrings = Utils.getEnvCredentials(environment, script, parent)
-                if (!credStrings.isEmpty()) {
-                    creds.putAll(processCredentials(credStrings))
+                RunWrapper currentBuild = script.getProperty("currentBuild")
+                Utils.getCredsFromResolver(environment, script).each { k, v ->
+                    String id = (String) v.call()
+                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
+                    creds.put(k, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
                 }
             } catch (MissingMethodException e) {
                 // This will only happen in a running upgrade situation, so check the legacy approach as well.
@@ -343,23 +332,6 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-    private Map<String,CredentialWrapper> processCredentials(@Nonnull List<List<String>> varsAndIds) {
-        Map<String,CredentialWrapper> creds = new TreeMap<>()
-        RunWrapper currentBuild = script.getProperty("currentBuild")
-
-        for (int i = 0; i < varsAndIds.size(); i++) {
-            String key = varsAndIds.get(i)?.get(0)
-            if (key != null) {
-                String id = Utils.unescapeFromEval((String)script.evaluate(Utils.prepareForEvalToString(varsAndIds.get(i)?.get(1))))
-
-                CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
-                creds.put(key, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
-            }
-        }
-
-        return creds
-    }
-
     /**
      * Takes a map of keys to {@link CredentialWrapper}s and generates the proper output for the "withCredentials" block argument.
      * @param credentials A map of keys to {@link CredentialWrapper}s
@@ -369,9 +341,8 @@ public class ModelInterpreter implements Serializable {
     private List<Map<String, Object>> createWithCredentialsParameters(
             @Nonnull Map<String, CredentialWrapper> credentials) {
         List<Map<String, Object>> parameters = []
-        Set<Map.Entry<String, CredentialWrapper>> set = credentials.entrySet()
-        for (Map.Entry<String, CredentialWrapper> entry : set) {
-            entry.value.addParameters(entry.key, parameters)
+        credentials.each { k, v ->
+            v.addParameters(k, parameters)
         }
         parameters
     }
@@ -385,21 +356,21 @@ public class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def toolsBlock(Agent agent, Tools tools, Root root = null, Closure body) {
-        def toolsList = []
+        def toolsMap = [:]
         if (tools != null) {
-            toolsList = tools.mergeToolEntries(root?.tools)
+            toolsMap = tools.mergeToolEntries(root?.tools)
         } else if (root?.tools != null) {
-            toolsList = root.tools.getToolEntries()
+            toolsMap = root.tools.getMap()
         }
         // If there's no agent, don't install tools in the first place.
-        if (agent.hasAgent() && !toolsList.isEmpty()) {
+        if (agent.hasAgent() && !toolsMap.isEmpty()) {
             def toolEnv = []
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.toolInstall()) {
-                    toolEnv = actualToolsInstall(toolsList)
+                    toolEnv = actualToolsInstall(toolsMap)
                 }
             } else {
-                toolEnv = actualToolsInstall(toolsList)
+                toolEnv = actualToolsInstall(toolsMap)
             }
             return {
                 script.withEnv(toolEnv) {
@@ -413,13 +384,10 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-    def actualToolsInstall(List<List<Object>> toolsList) {
+    def actualToolsInstall(Map<String,String> toolsMap) {
         def toolEnv = []
-        for (int i = 0; i < toolsList.size(); i++) {
-            def entry = toolsList.get(i)
-            String k = entry.get(0)
-            String v = entry.get(1)
 
+        toolsMap.each { k, v ->
             String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
 
             toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
@@ -518,6 +486,12 @@ public class ModelInterpreter implements Serializable {
             if (stageError == null) {
                 stageError = e
             }
+        } finally {
+            // And finally, run the post stage steps.
+            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                Utils.logToTaskListener("Post stage")
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
+            }
         }
 
         if (stageError != null) {
@@ -534,16 +508,36 @@ public class ModelInterpreter implements Serializable {
         } else if (when == null) {
             return true
         } else {
-            for (int i = 0; i < when.conditions.size(); i++) {
-                DeclarativeStageConditional c = when.conditions.get(i)
-                if (!c.getScript(script).evaluate()) {
-                    return false
-                }
+            // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
+            // to actually instantiate the conditional now, via a closure.
+            return instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class).every {
+                it.getScript(script).evaluate()
             }
-            return true
         }
     }
 
+    /**
+     * Takes a closure that evaluates into a list of instances of a given class, sets that closure to delegate to our
+     * CpsScript, calls it, and returns a list of the instances of that class.
+     *
+     * @param rawClosure
+     * @param instanceType
+     * @return A list of instances
+     */
+    private <Z> List<Z> instancesFromClosure(Closure rawClosure, Class<Z> instanceType) {
+        rawClosure.delegate = script
+        rawClosure.resolveStrategy = Closure.DELEGATE_FIRST
+
+        List<Z> instanceList = []
+
+        rawClosure.call().each { inst ->
+            if (instanceType.isInstance(inst)) {
+                instanceList.add(instanceType.cast(inst))
+            }
+        }
+
+        return instanceList
+    }
     /**
      * Executes the post build actions for this build
      * @param root The root context we're executing in
@@ -573,11 +567,8 @@ public class ModelInterpreter implements Serializable {
                           Agent agentContext,
                           Throwable stageError,
                           String stageName = null) {
-        List<String> orderedConditions = BuildCondition.orderedConditionNames
-        for (int i = 0; i < orderedConditions.size(); i++) {
+        BuildCondition.orderedConditionNames.each { conditionName ->
             try {
-                String conditionName = orderedConditions.get(i)
-
                 Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
                 if (c != null) {
                     catchRequiredContextForNode(agentContext) {
@@ -605,8 +596,7 @@ public class ModelInterpreter implements Serializable {
      */
     def loadLibraries(Root root) {
         if (root.libraries != null) {
-            for (int i = 0; i < root.libraries.libs.size(); i++) {
-                String lib = root.libraries.libs.get(i)
+            root.libraries.libs.each { lib ->
                 script.library(lib)
             }
         }

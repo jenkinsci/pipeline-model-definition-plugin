@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 import com.cloudbees.groovy.cps.NonCPS
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.ProcessingException
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.main.JsonSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingReport
@@ -42,14 +41,11 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ASTSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
-import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import java.security.CodeSource
 import java.security.cert.Certificate
-import java.util.concurrent.TimeUnit
 
 import static groovy.lang.GroovyShell.DEFAULT_CODE_BASE
 import static org.codehaus.groovy.control.Phases.CANONICALIZATION
@@ -159,7 +155,7 @@ public class Converter {
             @Override
             public void call(SourceUnit source) throws CompilationFailedException {
                 if (model[0] == null) {
-                    model[0] = new ModelParser(source).parse();
+                    model[0] = new ModelParser(source).parse(true);
                 }
             }
         }, CANONICALIZATION);
@@ -195,21 +191,4 @@ public class Converter {
 
         return model[0];
     }
-
-    /**
-     * Converts the raw script from a {@link WorkflowRun} into {@link ModelASTPipelineDef}
-     *
-     * @param run The {@link WorkflowRun} to pull from.
-     * @return A parsed and validated {@link ModelASTPipelineDef}
-     */
-    public static ModelASTPipelineDef parseFromWorkflowRun(WorkflowRun run) throws Exception {
-        CpsFlowExecution execution = null
-        if (run.execution != null) {
-            execution = (CpsFlowExecution) run.execution
-        } else if (run.getExecutionPromise() != null) {
-            execution = (CpsFlowExecution) run.getExecutionPromise().get(2, TimeUnit.SECONDS)
-        }
-        return scriptToPipelineDef(execution.script)
-    }
-
 }
