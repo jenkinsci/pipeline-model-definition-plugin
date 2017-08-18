@@ -33,39 +33,42 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
-import java.util.regex.Pattern;
 
 /**
- * Conditional that checks the messages in the changelog.
+ * Conditional that checks the affected file paths recorded in the changelog.
  *
  * The build must first have collected the changelog via for example <code>checkout scm</code>.
  */
-public class ChangelogConditional extends DeclarativeStageConditional<ChangelogConditional> {
+public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetConditional> {
 
-    private Pattern pattern;
-    private Pattern multiLinePattern;
+    private String glob;
+    private boolean caseSensitive;
 
     @DataBoundConstructor
-    public ChangelogConditional(String pattern) {
-        //TODO JENKINS-46065 validate the regexp when #179 is merged
-        this.pattern = Pattern.compile(pattern);
-        this.multiLinePattern = Pattern.compile("(?m)(?s)^[^\\r\\n]*?" + pattern + "[^\\r\\n]*?$",
-                Pattern.MULTILINE | Pattern.DOTALL);
+    public ChangeSetConditional(String glob) {
+        this.glob = glob;
+        this.caseSensitive = false;
     }
 
-    public Pattern getPattern() {
-        return pattern;
+    public String getGlob() {
+        return glob;
     }
 
-    public Pattern getMultiLinePattern() {
-        return multiLinePattern;
+    public boolean isCaseSensitive() {
+        return caseSensitive;
+    }
+
+    @DataBoundSetter
+    public void setCaseSensitive(boolean caseSensitive) {
+        this.caseSensitive = caseSensitive;
     }
 
     @Extension
-    @Symbol("changelog")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangelogConditional> {
+    @Symbol("changeset")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeSetConditional> {
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

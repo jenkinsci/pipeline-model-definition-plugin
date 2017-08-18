@@ -27,13 +27,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
 import hudson.scm.ChangeLogSet
 import org.apache.tools.ant.DirectoryScanner
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-class ChangesetConditionalScript extends AbstractChangelogConditionalScript<ChangesetConditional> {
+class ChangeSetConditionalScript extends AbstractChangelogConditionalScript<ChangeSetConditional> {
     String glob
 
-    ChangesetConditionalScript(CpsScript s, ChangesetConditional c) {
+    ChangeSetConditionalScript(CpsScript s, ChangeSetConditional c) {
         super(s, c)
     }
 

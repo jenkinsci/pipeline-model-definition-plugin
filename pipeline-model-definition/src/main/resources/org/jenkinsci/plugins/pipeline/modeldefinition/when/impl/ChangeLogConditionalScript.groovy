@@ -28,11 +28,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 import hudson.scm.ChangeLogSet
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-class ChangelogConditionalScript extends AbstractChangelogConditionalScript<ChangelogConditional> {
+class ChangeLogConditionalScript extends AbstractChangelogConditionalScript<ChangeLogConditional> {
 
     Class<?> gitChangeSetClass
 
-    ChangelogConditionalScript(CpsScript s, ChangelogConditional c) {
+    ChangeLogConditionalScript(CpsScript s, ChangeLogConditional c) {
         super(s, c)
     }
 
