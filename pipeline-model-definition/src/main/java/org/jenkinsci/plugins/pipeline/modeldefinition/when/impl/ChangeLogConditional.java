@@ -26,7 +26,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
-import hudson.RestrictedSince;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
