@@ -81,14 +81,9 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
                 }
                 return false
             }
-            for (int i = 0; i < changeSets.size(); i++) { //TODO switch to .any when #174 lands.
-                def set = changeSets.get(i)
-                def iterator = set.iterator()
-                while (iterator.hasNext()) {
-                    def change = iterator.next()
-                    if (matches(change)) {
-                        return true
-                    }
+            return changeSets.any {def set ->
+                return set.any { def change ->
+                    return matches(change)
                 }
             }
         }

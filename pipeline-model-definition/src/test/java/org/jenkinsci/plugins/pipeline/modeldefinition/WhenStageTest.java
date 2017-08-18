@@ -153,7 +153,10 @@ public class WhenStageTest extends AbstractModelDefTest {
         sampleRepo.git("commit", "--message=files");
 
         builder.logContains("Hello", "JS World")
-                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
+                .logNotContains(
+                        "Stage 'Two' skipped due to when conditional",
+                        "Warning, empty changelog.",
+                        "Examining changelog from all builds of this change request.")
                 .go();
     }
 

@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
 import hudson.scm.ChangeLogSet
 import org.apache.tools.ant.DirectoryScanner
+import org.apache.tools.ant.types.selectors.SelectorUtils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 class ChangeSetConditionalScript extends AbstractChangelogConditionalScript<ChangeSetConditional> {
@@ -43,14 +44,9 @@ class ChangeSetConditionalScript extends AbstractChangelogConditionalScript<Chan
 
     @Override
     boolean matches(ChangeLogSet.Entry change) {
-        def iterator = change.affectedPaths.iterator()
-        while (iterator.hasNext()) { //TODO switch to .any when #174 lands
-            String path = iterator.next();
+        return change.affectedPaths.any { String path ->
             path = path.replace('\\', '/')
-            if (DirectoryScanner.match(glob, path, describable.isCaseSensitive())) {
-                return true
-            }
+            return SelectorUtils.matchPath(glob, path, describable.isCaseSensitive())
         }
-        return false
     }
 }
