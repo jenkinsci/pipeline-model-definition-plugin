@@ -242,5 +242,8 @@
     </dependency>
 
   </dependencies>
-    
+
+  <properties>
+    <no-test-jar>false</no-test-jar>
+  </properties>
 </project>
