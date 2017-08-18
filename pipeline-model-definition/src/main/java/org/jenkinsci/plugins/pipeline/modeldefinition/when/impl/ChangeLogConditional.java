@@ -26,12 +26,15 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
+import hudson.RestrictedSince;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
@@ -51,7 +54,7 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
     public ChangeLogConditional(String pattern) {
         //TODO JENKINS-46065 validate the regexp when #179 is merged
         this.pattern = Pattern.compile(pattern);
-        this.multiLinePattern = Pattern.compile("(?m)(?s)^[^\\r\\n]*?" + pattern + "[^\\r\\n]*?$",
+        this.multiLinePattern = Pattern.compile(expandForMultiLine(pattern),
                 Pattern.MULTILINE | Pattern.DOTALL);
     }
 
@@ -70,5 +73,10 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
+    }
+
+    @Restricted(NoExternalUse.class)
+    public static String expandForMultiLine(String pattern) {
+        return "(?m)(?s)^[^\\r\\n]*?" + pattern + "[^\\r\\n]*?$";
     }
 }

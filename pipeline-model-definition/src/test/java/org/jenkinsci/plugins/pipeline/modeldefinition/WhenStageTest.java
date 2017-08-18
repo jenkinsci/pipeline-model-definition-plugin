@@ -161,6 +161,39 @@ public class WhenStageTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void whenChangesetMoreCommits() throws Exception {
+        //TODO JENKINS-46086 First time build always skips the changelog
+        final ExpectationsBuilder builder = expect("when/changelog", "changeset")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("JS World");
+        builder.go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+
+        sampleRepo.write("somefile.txt", "//fake file");
+        sampleRepo.git("add", "somefile.txt");
+        sampleRepo.git("commit", "--message=Irrelevant");
+
+        sampleRepo.write("webapp/js/somecode.js", "//fake file");
+        sampleRepo.git("add", "webapp/js/somecode.js");
+        sampleRepo.git("commit", "--message=files");
+        sampleRepo.write("webapp/js/somecode.js", "//same file");
+        sampleRepo.git("add", "webapp/js/somecode.js");
+        sampleRepo.git("commit", "--message=same");
+
+        sampleRepo.write("somefile2.txt", "//fake file");
+        sampleRepo.git("add", "somefile2.txt");
+        sampleRepo.git("commit", "--message=Irrelevant");
+
+        builder.logContains("Hello", "JS World")
+                .logNotContains(
+                        "Stage 'Two' skipped due to when conditional",
+                        "Warning, empty changelog.",
+                        "Examining changelog from all builds of this change request.")
+                .go();
+    }
+
+    @Test
     public void whenChangesetPR() throws Exception {
         //TODO JENKINS-46086 First time build "always" skips the changelog when git, not when mock
 
@@ -232,6 +265,40 @@ public class WhenStageTest extends AbstractModelDefTest {
         builder.logContains("Hello", "Dull World")
                 .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
                 .go();
+    }
+
+    @Test
+    public void whenChangelogMoreCommits() throws Exception {
+        //TODO JENKINS-46086 First time build always skips the changelog
+        final ExpectationsBuilder builder = expect("when/changelog", "changelog")
+                .logContains("Hello", "Stage 'Two' skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("Dull World");
+        builder.go();
+
+        builder.resetForNewRun(Result.SUCCESS);
+
+        sampleRepo.write("something.txt", "//fake file");
+        sampleRepo.git("add", "something.txt");
+        sampleRepo.git("commit", "-m", "Irrelevant");
+
+        sampleRepo.write("something.txt", "//slightly bigger fake file");
+        sampleRepo.git("add", "something.txt");
+        sampleRepo.git("commit", "-m", "Some title that we don't care about\n\nSome explanation\n[DEPENDENCY] some-app#45");
+
+        sampleRepo.write("other.txt", "//fake file");
+        sampleRepo.git("add", "other.txt");
+        sampleRepo.git("commit", "-m", "You should not care");
+
+        builder.logContains("Hello", "Dull World")
+                .logNotContains("Stage 'Two' skipped due to when conditional", "Warning, empty changelog.")
+                .go();
+    }
+
+    @Test
+    public void whenChangelogBadRegularExpression() throws Exception {
+        expect(Result.FAILURE,"when/changelog", "badRegularExpression")
+                .logContains("\"{\"user_id\" : 24}\" is not a valid regular expression.")
+                .logNotContains("Hello,", "Dull World").go();
     }
 
     @Test
