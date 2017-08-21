@@ -7,6 +7,8 @@ import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * A representation of a method call, including its name and a list of {@link ModelASTMethodArg}s.
@@ -17,6 +19,21 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Andrew Bayer
  */
 public class ModelASTMethodCall extends ModelASTElement implements ModelASTMethodArg {
+
+    /**
+     * Use {@code org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls.blockedInMethodCalls()} instead.
+     *
+     * @deprecated since 1.2-beta-4
+     */
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    public static Map<String, String> getBlockedSteps() {
+        Map<String, String> map = new LinkedHashMap<String, String>();
+        map.put("node", Messages.ModelASTMethodCall_BlockedSteps_Node());
+        map.putAll(ModelASTStep.getBlockedSteps());
+        return map;
+    }
+
     private String name;
     private List<ModelASTMethodArg> args = new ArrayList<ModelASTMethodArg>();
 

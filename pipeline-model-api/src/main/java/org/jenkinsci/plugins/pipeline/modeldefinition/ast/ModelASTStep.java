@@ -11,6 +11,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.DescribableParameter;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * Represents an individual step within any of the various blocks that can contain steps.
@@ -20,6 +22,30 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter;
  */
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class ModelASTStep extends ModelASTElement {
+    /**
+     * @deprecated since 1.2-beta-4
+     */
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    public static Map<String, String> blockedStepsBase() {
+        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
+        map.put("stage", Messages.ModelASTStep_BlockedSteps_Stage());
+        map.put("properties", Messages.ModelASTStep_BlockedSteps_Properties());
+        map.put("parallel", Messages.ModelASTStep_BlockedSteps_Parallel());
+        return map;
+    }
+
+    /**
+     * Use {@code org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls.blockedInSteps()} instead.
+     *
+     * @deprecated since 1.2-beta-4
+     */
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    public static Map<String, String> getBlockedSteps() {
+        return blockedStepsBase();
+    }
+
     private String name;
     private ModelASTArgumentList args;
 
