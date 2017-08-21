@@ -57,7 +57,7 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
     @BeforeClass
     public static void setUpAgentAndCreds() throws Exception {
         s = j.createOnlineSlave();
-        s.setLabelString("some-label docker");
+        s.setLabelString("some-label docker here");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();

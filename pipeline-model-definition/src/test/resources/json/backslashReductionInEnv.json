@@ -1,0 +1,87 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": false,
+              "value": "\"AAA_Key1: ${AAA_Key1}\""
+            }
+          }]
+        },
+        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": false,
+              "value": "\"AAA_Key2: ${AAA_Key2}\""
+            }
+          }]
+        },
+        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": false,
+              "value": "\"AAA_Key3: ${AAA_Key3}\""
+            }
+          }]
+        },
+        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": false,
+              "value": "\"AAA_Key4: ${AAA_Key4}\""
+            }
+          }]
+        }
+      ]
+    }],
+    "environment":     [
+      {
+        "key": "AAA_Key1",
+        "value":         {
+          "isLiteral": false,
+          "value": "\"a\\\\b ${EXECUTOR_NUMBER}\""
+        }
+      },
+      {
+        "key": "AAA_Key2",
+        "value":         {
+          "isLiteral": true,
+          "value": "a\\\\b"
+        }
+      },
+      {
+        "key": "AAA_Key3",
+        "value":         {
+          "isLiteral": true,
+          "value": "a\\b"
+        }
+      },
+      {
+        "key": "AAA_Key4",
+        "value":         {
+          "isLiteral": false,
+          "value": "\"a\\\\\\\\b ${EXECUTOR_NUMBER}\""
+        }
+      }
+    ]
+  }],
+  "agent":   {
+    "type": "label",
+    "argument":     {
+      "isLiteral": true,
+      "value": "some-label"
+    }
+  }
+}}

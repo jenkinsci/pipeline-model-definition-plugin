@@ -122,4 +122,20 @@ public class ConvertRoundTripTest extends BaseParserLoaderTest {
 
         assertEquals(origRoot, newRoot);
     }
+
+    @Test
+    public void groovyToASTEqualsJSONToAST() throws Exception {
+        ModelASTPipelineDef groovyRoot = Converter.urlToPipelineDef(getClass().getResource("/" + configName + ".groovy"));
+
+        assertNotNull(groovyRoot);
+
+        JSONObject origJson = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
+        assertNotNull("Couldn't parse JSON for " + configName, origJson);
+
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
+        ModelASTPipelineDef jsonRoot = jp.parse();
+        assertNotNull(jsonRoot);
+
+        assertEquals(groovyRoot, jsonRoot);
+    }
 }

@@ -50,15 +50,15 @@
       {
         "key": "BAZ",
         "value":         {
-          "isLiteral": true,
-          "value": "${FOO}BAZ"
+          "isLiteral": false,
+          "value": "\"${FOO}BAZ\""
         }
       },
       {
         "key": "SPLODE",
         "value":         {
-          "isLiteral": true,
-          "value": "${params.WUT ?: 'banana'}"
+          "isLiteral": false,
+          "value": "\"${params.WUT ?: 'banana'}\""
         }
       }
     ]
@@ -74,8 +74,8 @@
     {
       "key": "BAR",
       "value":       {
-        "isLiteral": true,
-        "value": "${FOO}BAR"
+        "isLiteral": false,
+        "value": "\"${FOO}BAR\""
       }
     }
   ],

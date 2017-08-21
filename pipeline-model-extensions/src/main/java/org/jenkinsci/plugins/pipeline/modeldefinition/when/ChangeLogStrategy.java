@@ -20,30 +20,40 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
 
-pipeline {
-    agent {
-        label "some-label"
+package org.jenkinsci.plugins.pipeline.modeldefinition.when;
+
+import hudson.ExtensionList;
+import hudson.ExtensionPoint;
+import jenkins.scm.api.SCMHead;
+
+import javax.annotation.Nonnull;
+
+/**
+ * Extension point for what strategy to use when examining the changelog.
+ *
+ * In particular if a given {@link jenkins.scm.api.SCMHead}
+ * is a change request that suggest all builds should be examined.
+ */
+public class ChangeLogStrategy implements ExtensionPoint {
+
+    /**
+     *
+     * @param head the head in question
+     * @return {@code true} if all builds changelogs should be examined.
+     */
+    protected boolean shouldExamineAllBuilds(@Nonnull SCMHead head) {
+        return false;
     }
 
-    stages {
-        stage("foo") {
-            environment {
-                AAA_Key1 = "a\\b ${EXECUTOR_NUMBER}"
-                AAA_Key2 = "a\\\\b"
-                AAA_Key3 = "a\\b"
-                AAA_Key4 = "a\\\\b ${EXECUTOR_NUMBER}"
-            }
-            steps {
-                echo "AAA_Key1: ${AAA_Key1}"
-                echo "AAA_Key2: ${AAA_Key2}"
-                echo "AAA_Key3: ${AAA_Key3}"
-                echo "AAA_Key4: ${AAA_Key4}"
+    public static boolean isExamineAllBuilds(@Nonnull SCMHead head) {
+        for (ChangeLogStrategy s : ExtensionList.lookup(ChangeLogStrategy.class)) {
+            if (s.shouldExamineAllBuilds(head)) {
+                return true;
             }
         }
+        return false;
     }
 }
-
-
-

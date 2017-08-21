@@ -130,7 +130,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "simpleScript",
             "twoStagePipeline",
             "validStepParameters",
-            "simpleEnvironment",
             "parallelPipeline",
             "simplePostBuild",
             "simpleTools",
@@ -162,7 +161,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "usernamePassword",
             "environmentCrossReferences",
             "nestedParallelStages",
-            "stagePost"
+            "stagePost",
+            "when/changelog/changelog",
+            "when/changelog/changeset",
+            "backslashReductionInEnv"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -213,7 +215,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]")});
         result.add(new Object[]{"notificationsSectionRemoved", "additional properties are not allowed"});
         result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
-                "allOf, anyOf, branch, environment, expression, not")});
+                "allOf, anyOf, branch, changelog, changeset, environment, expression, not")});
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
@@ -504,6 +506,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             logNotContains = null;
             buildMatchers = new ArrayList<>();
             return this;
+        }
+
+        public WorkflowRun getRun() {
+            return run;
         }
     }
 

@@ -117,6 +117,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
             public String toGroovy() {
                 if (getValue() instanceof String) {
                     String str = (String) getValue();
+                    str = str.replace("\\", "\\\\");
                     if (str.indexOf('\n') == -1) {
                         return "'" + (str.replace("'", "\\'")) + "'";
                     } else {

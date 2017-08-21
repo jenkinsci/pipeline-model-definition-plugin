@@ -3,25 +3,46 @@
     "name": "foo",
     "branches": [    {
       "name": "default",
-      "steps": [      {
-        "name": "sh",
-        "arguments": [        {
-          "key": "script",
-          "value":           {
-            "isLiteral": true,
-            "value": "echo \"FOO is $FOO\""
-          }
-        }]
-      }]
+      "steps":       [
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"FOO is $FOO\""
+            }
+          }]
+        },
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"_UNDERSCORE is $_UNDERSCORE\""
+            }
+          }]
+        }
+      ]
     }]
   }],
-  "environment": [  {
-    "key": "FOO",
-    "value":     {
-      "isLiteral": true,
-      "value": "BAR"
+  "environment":   [
+    {
+      "key": "FOO",
+      "value":       {
+        "isLiteral": true,
+        "value": "BAR"
+      }
+    },
+    {
+      "key": "_UNDERSCORE",
+      "value":       {
+        "isLiteral": true,
+        "value": "VALID"
+      }
     }
-  }],
+  ],
   "agent":   {
     "type": "label",
     "argument":     {

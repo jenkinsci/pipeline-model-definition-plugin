@@ -18,19 +18,38 @@
   "agent":   {
     "type": "otherField",
     "arguments":     [
-            {
+      {
         "key": "label",
         "value":         {
           "isLiteral": true,
           "value": "some-label"
         }
       },
-            {
+      {
         "key": "otherField",
         "value":         {
           "isLiteral": true,
           "value": "banana"
         }
+      },
+      {
+        "key": "nested",
+        "value":         [
+          {
+            "key": "foo",
+            "value":             {
+              "isLiteral": true,
+              "value": "monkey"
+            }
+          },
+          {
+            "key": "bar",
+            "value":             {
+              "isLiteral": true,
+              "value": false
+            }
+          }
+        ]
       }
     ]
   }

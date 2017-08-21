@@ -20,30 +20,33 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
 
-pipeline {
-    agent {
-        label "some-label"
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
+
+import hudson.scm.ChangeLogSet
+import org.apache.tools.ant.DirectoryScanner
+import org.apache.tools.ant.types.selectors.SelectorUtils
+import org.jenkinsci.plugins.workflow.cps.CpsScript
+
+class ChangeSetConditionalScript extends AbstractChangelogConditionalScript<ChangeSetConditional> {
+    String glob
+
+    ChangeSetConditionalScript(CpsScript s, ChangeSetConditional c) {
+        super(s, c)
     }
 
-    stages {
-        stage("foo") {
-            environment {
-                AAA_Key1 = "a\\b ${EXECUTOR_NUMBER}"
-                AAA_Key2 = "a\\\\b"
-                AAA_Key3 = "a\\b"
-                AAA_Key4 = "a\\\\b ${EXECUTOR_NUMBER}"
-            }
-            steps {
-                echo "AAA_Key1: ${AAA_Key1}"
-                echo "AAA_Key2: ${AAA_Key2}"
-                echo "AAA_Key3: ${AAA_Key3}"
-                echo "AAA_Key4: ${AAA_Key4}"
-            }
+    @Override
+    void initializeEval() {
+        glob = describable.glob.replace('\\', '/')
+    }
+
+    @Override
+    boolean matches(ChangeLogSet.Entry change) {
+        return change.affectedPaths.any { String path ->
+            path = path.replace('\\', '/')
+            return SelectorUtils.matchPath(glob, path, describable.isCaseSensitive())
         }
     }
 }
-
-
-

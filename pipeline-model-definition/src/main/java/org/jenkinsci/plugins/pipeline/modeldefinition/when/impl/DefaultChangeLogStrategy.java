@@ -20,30 +20,44 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
 
-pipeline {
-    agent {
-        label "some-label"
-    }
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-    stages {
-        stage("foo") {
-            environment {
-                AAA_Key1 = "a\\b ${EXECUTOR_NUMBER}"
-                AAA_Key2 = "a\\\\b"
-                AAA_Key3 = "a\\b"
-                AAA_Key4 = "a\\\\b ${EXECUTOR_NUMBER}"
-            }
-            steps {
-                echo "AAA_Key1: ${AAA_Key1}"
-                echo "AAA_Key2: ${AAA_Key2}"
-                echo "AAA_Key3: ${AAA_Key3}"
-                echo "AAA_Key4: ${AAA_Key4}"
-            }
+import hudson.Extension;
+import jenkins.scm.api.SCMHead;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
+
+import javax.annotation.Nonnull;
+
+@Extension
+public class DefaultChangeLogStrategy extends ChangeLogStrategy {
+
+    private Class<?> bitbucketPr;
+    private Class<?> githubPr;
+
+    public DefaultChangeLogStrategy() {
+        try {
+            githubPr = Class.forName("org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead");
+        } catch (ClassNotFoundException _) {
+            githubPr = null;
+        }
+        try {
+            bitbucketPr = Class.forName("com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead");
+        } catch (ClassNotFoundException _) {
+            bitbucketPr = null;
         }
     }
+
+    @Override
+    protected boolean shouldExamineAllBuilds(@Nonnull SCMHead head) {
+        if (githubPr != null && head.getClass().isAssignableFrom(githubPr)) {
+            return true;
+        }
+        if (bitbucketPr != null && head.getClass().isAssignableFrom(bitbucketPr)) {
+            return true;
+        }
+        return false;
+    }
 }
-
-
-

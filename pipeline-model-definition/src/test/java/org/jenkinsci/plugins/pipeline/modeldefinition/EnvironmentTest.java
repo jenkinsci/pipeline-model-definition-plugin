@@ -261,7 +261,9 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void backslashReductionInEnv() throws Exception {
         expect("backslashReductionInEnv")
                 .logMatches("AAA_Key1: a\\\\b \\d+",
-                        "AAA_Key2: a\\\\b")
+                        "AAA_Key2: a\\\\\\\\b",
+                        "AAA_Key3: a\\\\b",
+                        "AAA_Key4: a\\\\\\\\b \\d+")
                 .go();
     }
 
