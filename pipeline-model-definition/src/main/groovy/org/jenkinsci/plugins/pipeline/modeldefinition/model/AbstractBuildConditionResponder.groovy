@@ -38,10 +38,10 @@ abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionR
         super(m)
     }
 
-    Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
+    Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj, Exception error = null) {
         if (getMap().containsKey(conditionName)) {
             BuildCondition condition = BuildCondition.getConditionMethods().get(conditionName)
-            if (condition != null && condition.meetsCondition(runWrapperObj)) {
+            if (condition != null && condition.meetsCondition(runWrapperObj, error)) {
                 return ((StepsBlock)getMap().get(conditionName)).getClosure()
             }
         }
@@ -49,11 +49,11 @@ abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionR
         return null
     }
 
-    boolean satisfiedConditions(Object runWrapperObj) {
+    boolean satisfiedConditions(Object runWrapperObj, Exception error = null) {
         Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
 
         return BuildCondition.orderedConditionNames.any { conditionName ->
-            getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
+            getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj, error)
         }
     }
 }

@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 import hudson.Extension
 import hudson.model.Result
 import org.jenkinsci.Symbol
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
@@ -37,8 +38,9 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 @Extension(ordinal=400d) @Symbol("notBuilt")
 public class NotBuilt extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() != null && r.getResult().equals(Result.NOT_BUILT)
+    public boolean meetsCondition(WorkflowRun r, Exception error) {
+        return (error != null && Utils.getResultFromException(error) == Result.NOT_BUILT) ||
+            (r.getResult() != null && r.getResult().equals(Result.NOT_BUILT))
     }
 
     @Override

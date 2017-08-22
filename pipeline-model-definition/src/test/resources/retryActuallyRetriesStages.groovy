@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,30 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
+// Keeping the run count
+int runCount = 0
 
-/**
- * A {@link BuildCondition} for matching successful builds.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=600d) @Symbol("success")
-public class Success extends BuildCondition {
-    @Override
-    public boolean meetsCondition(WorkflowRun r, Exception error) {
-        return error == null && (r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS))
+// Main pipeline
+pipeline {
+    agent none
+    options {
+        retry(3)
     }
-
-    @Override
-    public String getDescription() {
-        return Messages.Success_Description()
+    stages {
+        stage('Init') {
+            steps {
+                script {
+                    // Increment the run count
+                    runCount++
+                }
+                echo "runCount is ${runCount}"
+            }
+        }
+        stage("Foo") {
+            steps {
+                script {
+                    if (runCount < 2) {
+                        error "Failing - retry me!"
+                    } else {
+                        echo "Stage Foo will not fail..."
+                    }
+                }
+            }
+        }
     }
-
-    public static final long serialVersionUID = 1L
 }
+
+
+

@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 import hudson.ExtensionComponent;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.Util;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
@@ -45,13 +46,45 @@ import java.util.Set;
  */
 public abstract class BuildCondition implements Serializable, ExtensionPoint {
 
-    public abstract boolean meetsCondition(WorkflowRun r);
+    /**
+     * @deprecated since 1.2
+     */
+    @Deprecated
+    public boolean meetsCondition(WorkflowRun r) {
+        if (Util.isOverridden(BuildCondition.class, getClass(), "meetsCondition", WorkflowRun.class)) {
+            return getClass().cast(this).meetsCondition(r);
+        } else {
+            return true;
+        }
+    }
 
-    public boolean meetsCondition(Object runWrapperObj) {
+    public boolean meetsCondition(WorkflowRun r, Exception error) {
+        if (Util.isOverridden(BuildCondition.class, getClass(), "meetsCondition", WorkflowRun.class, Exception.class)) {
+            return getClass().cast(this).meetsCondition(r, error);
+        } else {
+            return meetsCondition(r);
+        }
+    }
+
+    /**
+     * @deprecated since 1.2
+     */
+    @Deprecated
+    public final boolean meetsCondition(Object runWrapperObj) {
+        if (Util.isOverridden(BuildCondition.class, getClass(), "meetsCondition", RunWrapper.class)) {
+            RunWrapper runWrapper = (RunWrapper) runWrapperObj;
+            WorkflowRun run = (WorkflowRun) runWrapper.getRawBuild();
+            return meetsCondition(run);
+        } else {
+            return meetsCondition(runWrapperObj, null);
+        }
+    }
+
+    public boolean meetsCondition(Object runWrapperObj, Exception error) {
         RunWrapper runWrapper = (RunWrapper)runWrapperObj;
         WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild();
 
-        return meetsCondition(run);
+        return meetsCondition(run, error);
     }
 
     public abstract String getDescription();

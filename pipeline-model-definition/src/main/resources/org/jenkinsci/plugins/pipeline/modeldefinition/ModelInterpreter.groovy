@@ -27,7 +27,6 @@ import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
-import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -52,10 +51,11 @@ public class ModelInterpreter implements Serializable {
 
     def call(CpsClosure closure) {
         Root root = (Root) closure.call()
-        Throwable firstError
+        Exception firstError
 
         if (root != null) {
             boolean postBuildRun = false
+            int retryCount = 0
 
             try {
                 loadLibraries(root)
@@ -67,12 +67,17 @@ public class ModelInterpreter implements Serializable {
                     withCredentialsBlock(root.environment) {
                         withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options) {
+                                retryCount++
+                                // If this is not our first time through, we're inside a retry block that failed the
+                                // first time. So reset the first error to null and try everything again.
+                                if (retryCount > 1) {
+                                    firstError = null
+                                }
                                 toolsBlock(root.agent, root.tools) {
                                     root.stages.stages.each { thisStage ->
                                         try {
                                             evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError).call()
                                         } catch (Exception e) {
-                                            script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                                             Utils.markStageFailedAndContinued(thisStage.name)
                                             if (firstError == null) {
                                                 firstError = e
@@ -83,7 +88,7 @@ public class ModelInterpreter implements Serializable {
                                     // Execute post-build actions now that we've finished all parallel.
                                     try {
                                         postBuildRun = true
-                                        executePostBuild(root)
+                                        executePostBuild(root, firstError)
                                     } catch (Exception e) {
                                         if (firstError == null) {
                                             firstError = e
@@ -109,7 +114,7 @@ public class ModelInterpreter implements Serializable {
                 // If we hit an exception somewhere *before* we got to parallel, we still need to do post-build tasks.
                 if (!postBuildRun) {
                     try {
-                        executePostBuild(root)
+                        executePostBuild(root, firstError)
                     } catch (Exception e) {
                         if (firstError == null) {
                             firstError = e
@@ -134,7 +139,7 @@ public class ModelInterpreter implements Serializable {
         c.call()
     }
 
-    def getParallelStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage,
+    def getParallelStages(Root root, Agent parentAgent, Stage thisStage, Exception firstError, Stage parentStage,
                           boolean skippedForFailure, boolean skippedForUnstable, boolean skippedForWhen) {
         def parallelStages = [:]
         for (int i = 0; i < thisStage.parallel.stages.size(); i++) {
@@ -170,10 +175,12 @@ public class ModelInterpreter implements Serializable {
 
     }
 
-    def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage = null) {
+    def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Exception firstError, Stage parentStage = null) {
         return {
             script.stage(thisStage.name) {
                 try {
+                    // Only skip the stage for an error if we're not in a retry - i.e., if this is the first time we've
+                    // encountered this stage
                     if (firstError != null) {
                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
                         Utils.markStageSkippedForFailure(thisStage.name)
@@ -181,6 +188,8 @@ public class ModelInterpreter implements Serializable {
                             script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, true, false, false))
                         }
                     } else if (skipUnstable(root.options)) {
+                        // Only skip the stage for an error if we're not in a retry - i.e., if this is the first time we've
+                        // encountered the stage.
                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
                         Utils.markStageSkippedForUnstable(thisStage.name)
                         if (thisStage.parallel != null) {
@@ -206,7 +215,7 @@ public class ModelInterpreter implements Serializable {
                                         withEnvBlock(thisStage.getEnvVars(script)) {
                                             toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
                                                 // Execute the actual stage and potential post-stage actions
-                                                executeSingleStage(root, thisStage, parentAgent)
+                                                executeSingleStage(root, thisStage, parentAgent, firstError)
                                             }
                                         }
                                     }
@@ -218,14 +227,14 @@ public class ModelInterpreter implements Serializable {
                         }
                     }
                 } catch (Exception e) {
-                    script.getProperty("currentBuild").result = Result.FAILURE
                     Utils.markStageFailedAndContinued(thisStage.name)
                     if (firstError == null) {
                         firstError = e
                     }
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
-                    if (thisStage.parallel != null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                    if (thisStage.parallel != null &&
+                        root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), firstError)) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
@@ -473,24 +482,25 @@ public class ModelInterpreter implements Serializable {
      * @param root The root context we're running in
      * @param thisStage The stage context we're running in
      * @param parentAgent the possible parent agent we should be running in
+     * @param earlierError posisbly null error thrown earlier in the build.
      */
-    def executeSingleStage(Root root, Stage thisStage, Agent parentAgent) throws Throwable {
-        Throwable stageError = null
+    def executeSingleStage(Root root, Stage thisStage, Agent parentAgent, Exception earlierError = null) throws Throwable {
+        Exception stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: parentAgent) {
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Exception e) {
-            script.getProperty("currentBuild").result = Utils.getResultFromException(e)
             Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
                 stageError = e
+                earlierError = e
             }
         } finally {
             // And finally, run the post stage steps.
-            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), earlierError)) {
                 Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, earlierError, thisStage.name)
             }
         }
 
@@ -541,12 +551,13 @@ public class ModelInterpreter implements Serializable {
     /**
      * Executes the post build actions for this build
      * @param root The root context we're executing in
+     * @param error Possibly null error from earlier in the build.
      */
-    def executePostBuild(Root root) throws Throwable {
-        Throwable stageError = null
-        if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"))) {
+    def executePostBuild(Root root, Exception error = null) throws Throwable {
+        Exception stageError = null
+        if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"), error)) {
             script.stage(SyntheticStageNames.postBuild()) {
-                stageError = runPostConditions(root.post, root.agent, stageError)
+                stageError = runPostConditions(root.post, root.agent, error)
             }
         }
 
@@ -565,18 +576,17 @@ public class ModelInterpreter implements Serializable {
      */
     def runPostConditions(AbstractBuildConditionResponder responder,
                           Agent agentContext,
-                          Throwable stageError,
+                          Exception stageError,
                           String stageName = null) {
         BuildCondition.orderedConditionNames.each { conditionName ->
             try {
-                Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
+                Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"), stageError)
                 if (c != null) {
                     catchRequiredContextForNode(agentContext) {
                         delegateAndExecute(c)
                     }
                 }
             } catch (Exception e) {
-                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                 if (stageName != null) {
                     Utils.markStageFailedAndContinued(stageName)
                 }
