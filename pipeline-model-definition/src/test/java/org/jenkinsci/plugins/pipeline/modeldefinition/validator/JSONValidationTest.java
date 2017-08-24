@@ -94,4 +94,10 @@ public class JSONValidationTest extends BaseParserLoaderTest {
     public void jsonMismatchedQuotes() throws Exception {
         findErrorInJSON(Messages.JSONParser_InvalidGroovyString("hello\\'"), "jsonMismatchedQuotes");
     }
+
+    @Issue("JENKINS-44039")
+    @Test
+    public void singleQuoteInMultiline() throws Exception {
+        successfulJson("singleQuoteInMultiline");
+    }
 }
