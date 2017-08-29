@@ -143,4 +143,16 @@ public abstract class BaseParserLoaderTest extends AbstractModelDefTest {
 
     }
 
+    protected void successfulJson(String jsonName) throws Exception {
+        JsonNode json = JsonLoader.fromString(fileContentsFromResources("json/" + jsonName + ".json"));
+
+        assertNotNull("Couldn't parse JSON for " + jsonName, json);
+        assertFalse("Couldn't parse JSON for " + jsonName, json.size() == 0);
+        assertFalse("Couldn't parse JSON for " + jsonName, json.isNull());
+
+        JSONParser jp = new JSONParser(new SimpleJsonTree(json));
+        jp.parse();
+
+        assertTrue(jp.getErrorCollector().getErrorCount() == 0);
+    }
 }
