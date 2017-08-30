@@ -753,4 +753,13 @@ public class ValidatorTest extends AbstractModelDefTest {
                         Messages.ModelParser_ExpectedBlockFor("tools"))
                 .go();
     }
+
+    @Issue("JENKINS-46544")
+    @Test
+    public void bareDollarCurly() throws Exception {
+        expectError("bareDollarCurly")
+                .logContains(Messages.ModelParser_BareDollarCurly("${env.BUILD_NUMBER}"),
+                        Messages.ModelParser_BareDollarCurly("${FOO}"))
+                .go();
+    }
 }

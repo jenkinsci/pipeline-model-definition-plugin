@@ -100,4 +100,11 @@ public class JSONValidationTest extends BaseParserLoaderTest {
     public void singleQuoteInMultiline() throws Exception {
         successfulJson("singleQuoteInMultiline");
     }
+
+    @Issue("JENKINS-46544")
+    @Test
+    public void bareDollarCurly() throws Exception {
+        findErrorInJSON(Messages.ModelParser_BareDollarCurly("${env.BUILD_NUMBER}"), "bareDollarCurly");
+        findErrorInJSON(Messages.ModelParser_BareDollarCurly("${FOO}"), "bareDollarCurly");
+    }
 }
