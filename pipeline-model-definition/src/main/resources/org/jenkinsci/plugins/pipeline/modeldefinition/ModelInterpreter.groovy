@@ -63,9 +63,9 @@ public class ModelInterpreter implements Serializable {
                 executeProperties(root)
 
                 // Entire build, including notifications, runs in the agent.
-                inDeclarativeAgent(root, root, root.agent) {
-                    withCredentialsBlock(root.environment) {
-                        withEnvBlock(root.getEnvVars(script)) {
+                withCredentialsBlock(root.environment) {
+                    withEnvBlock(root.getEnvVars(script)) {
+                        inDeclarativeAgent(root, root, root.agent) {
                             inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
                                     root.stages.stages.each { thisStage ->
@@ -200,22 +200,23 @@ public class ModelInterpreter implements Serializable {
                                 script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, true))
                             }
                         } else {
-                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                if (evaluateWhen(thisStage.when)) {
-                                    withCredentialsBlock(thisStage.environment) {
-                                        withEnvBlock(thisStage.getEnvVars(script)) {
+                            if (evaluateWhen(thisStage.when)) {
+                                withCredentialsBlock(thisStage.environment) {
+                                    withEnvBlock(thisStage.getEnvVars(script)) {
+                                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                             toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
                                                 // Execute the actual stage and potential post-stage actions
                                                 executeSingleStage(root, thisStage, parentAgent)
                                             }
                                         }
                                     }
-                                } else {
-                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                    Utils.markStageSkippedForConditional(thisStage.name)
                                 }
+                            } else {
+                                Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                Utils.markStageSkippedForConditional(thisStage.name)
                             }
                         }
+
                     }
                 } catch (Exception e) {
                     script.getProperty("currentBuild").result = Result.FAILURE
