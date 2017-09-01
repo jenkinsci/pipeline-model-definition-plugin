@@ -737,7 +737,11 @@ class RuntimeASTTransformer {
             MapExpression toolsMap = new MapExpression()
             original.tools.each { k, v ->
                 if (v.sourceLocation != null && v.sourceLocation instanceof Expression) {
-                    toolsMap.addMapEntryExpression(constX(k.key), (Expression)v.sourceLocation)
+                    if (v.sourceLocation instanceof ClosureExpression) {
+                        toolsMap.addMapEntryExpression(constX(k.key), (ClosureExpression) v.sourceLocation)
+                    } else {
+                        toolsMap.addMapEntryExpression(constX(k.key), closureX(block(returnS((Expression) v.sourceLocation))))
+                    }
                 }
             }
             return ctorX(ClassHelper.make(Tools.class), args(toolsMap))

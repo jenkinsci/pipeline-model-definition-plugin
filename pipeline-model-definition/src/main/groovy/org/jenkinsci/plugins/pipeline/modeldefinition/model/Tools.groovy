@@ -40,7 +40,7 @@ import javax.annotation.Nonnull
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Tools extends MappedClosure<String,Tools> implements Serializable {
+public class Tools extends MappedClosure<Closure,Tools> implements Serializable {
 
     private static final Object CACHE_KEY = new Object()
 
@@ -48,7 +48,7 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
         Utils.generateTypeCache(ToolDescriptor.class, true)
 
     @Whitelisted
-    Tools(Map<String,String> inMap) {
+    Tools(Map<String,Closure> inMap) {
         resultMap = inMap
     }
 
@@ -58,16 +58,13 @@ public class Tools extends MappedClosure<String,Tools> implements Serializable {
      * @return A map of type/name
      */
     @Nonnull
-    public Map<String,Object> mergeToolEntries(@CheckForNull Tools other) {
-        if (other == null) {
-            return getMap()
-        } else {
-            Map<String,Object> mergedMap = [:]
+    public Map<String,Closure> mergeToolEntries(@CheckForNull Tools other) {
+        Map<String,Closure> mergedMap = [:]
+        if (other != null) {
             mergedMap.putAll(other.getMap())
-            mergedMap.putAll(getMap())
-
-            return mergedMap
         }
+        mergedMap.putAll(getMap())
+        return mergedMap
     }
 
     /**
