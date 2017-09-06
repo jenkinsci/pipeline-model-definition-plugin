@@ -1065,7 +1065,13 @@ class ModelParser implements Parser {
         }
 
         // for other composite expressions, treat it as in-place GString
-        return ModelASTValue.fromGString("\${"+getSourceText(e)+"}", e)
+        ModelASTValue val = ModelASTValue.fromGString("\${"+getSourceText(e)+"}", e)
+
+        if (val.toGroovy().startsWith('${')) {
+            errorCollector.error(val, Messages.ModelParser_BareDollarCurly(val.toGroovy()))
+        }
+
+        return val
     }
 
     protected String parseStringLiteral(Expression exp) {
