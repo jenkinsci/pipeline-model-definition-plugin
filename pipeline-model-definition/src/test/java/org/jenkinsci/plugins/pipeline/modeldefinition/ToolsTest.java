@@ -58,7 +58,6 @@ public class ToolsTest extends AbstractModelDefTest {
     }
 
     @Issue("JENKINS-44497")
-    @Ignore("Allowing env vars in tool version string breaks validation of version, and env vars aren't interpolated in tool string.")
     @Test
     public void envVarInTools() throws Exception {
         expect("envVarInTools")
