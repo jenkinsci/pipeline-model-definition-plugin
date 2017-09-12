@@ -38,7 +38,7 @@ pipeline {
             steps { sh 'echo "first agent = $WHICH_AGENT"' }
         }
         stage("Agent") {
-            agent { label 'some-label' }
+            agent { label 'other-docker' }
             steps { sh 'echo "second agent = $WHICH_AGENT"' }
         }
     }

@@ -305,6 +305,8 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("Until JENKINS-46831 is addressed")
+    @Issue("JENKINS-46831")
     @Test
     public void agentDockerGlobalThenLabel() throws Exception {
         expect("agentDockerGlobalThenLabel")
