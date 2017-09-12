@@ -40,7 +40,8 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 // Only look for pipeline blocks in classes without package names - i.e., in vars and Jenkinsfiles. It's
                 // theoretically possible to do src/Foo.groovy as well, but we'll deal with that later.
-                if (classNode.getPackageName() == null) {
+                // Also allow WorkflowScript cases with package names, since discarding those would break compatibility.
+                if (classNode.getPackageName() == null || classNode.getNameWithoutPackage().equals(Converter.PIPELINE_SCRIPT_NAME)) {
                     new ModelParser(source, execution).parse();
                 }
             }
