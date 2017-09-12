@@ -1042,4 +1042,41 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("GIT_COMMIT is null")
                 .go();
     }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void pipelineDefinedInLibrary() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForPipelineDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        expect("pipelineDefinedInLibrary")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void pipelineDefinedInLibraryInFolder() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForPipelineDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+        Folder folder = j.jenkins.createProject(Folder.class, "testFolder");
+        folder.getProperties().add(new FolderLibraries(Collections.singletonList(firstLib)));
+
+        expect("pipelineDefinedInLibrary")
+                .inFolder(folder)
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
 }

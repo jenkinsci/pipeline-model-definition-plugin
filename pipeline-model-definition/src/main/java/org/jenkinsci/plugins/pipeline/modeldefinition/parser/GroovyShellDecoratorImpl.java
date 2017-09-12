@@ -23,6 +23,11 @@ import javax.annotation.CheckForNull;
 @Extension
 public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
     @Override
+    public GroovyShellDecorator forTrusted() {
+        return this;
+    }
+
+    @Override
     public void configureCompiler(@CheckForNull final CpsFlowExecution execution, CompilerConfiguration cc) {
         ImportCustomizer ic = new ImportCustomizer();
         ic.addStarImports(NonCPS.class.getPackage().getName());
@@ -33,15 +38,9 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
         cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.SEMANTIC_ANALYSIS) {
             @Override
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-                // TODO: workflow-cps-plugin CpsFlowExecution.parseScript() should be passing in CodeSource
-                // to help us determine that that is a user-written script
-                // Commenting out for findbugs
-                // CodeSource cs = classNode.getCompileUnit().getCodeSource();
-                // if (<< cs comes from Jenkinsfile>>) {
-
-                // but until that happens,
-                // Using getNameWithoutPackage to make sure we don't end up executing without parsing when an inadvertent package name is put in the Jenkinsfile.
-                if (classNode.getNameWithoutPackage().equals(Converter.PIPELINE_SCRIPT_NAME)) {
+                // Only look for pipeline blocks in classes without package names - i.e., in vars and Jenkinsfiles. It's
+                // theoretically possible to do src/Foo.groovy as well, but we'll deal with that later.
+                if (classNode.getPackageName() == null) {
                     new ModelParser(source, execution).parse();
                 }
             }
