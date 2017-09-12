@@ -456,18 +456,22 @@ class ASTParserUtils {
         }
     }
 
-    static boolean isDeclarativePipelineStep(Statement stmt) {
+    static boolean isDeclarativePipelineStep(Statement stmt, boolean topLevel = true) {
         def b = matchBlockStatement(stmt)
 
         if (b != null &&
             b.methodName == ModelStepLoader.STEP_NAME &&
             b.arguments.expressions.size() == 1) {
             BlockStatement block = asBlock(b.body.code)
-
-            // Filter out anything that doesn't have agent and stages method calls
-            def hasAgent = blockHasMethod(block, "agent")
-            def hasStages = blockHasMethod(block, "stages")
-            return hasAgent && hasStages
+            if (topLevel) {
+                // If we're in a Jenkinsfile, we want to find any pipeline block at the top-level
+                return block != null
+            } else {
+                // If we're in a shared library, filter out anything that doesn't have agent and stages method calls
+                def hasAgent = blockHasMethod(block, "agent")
+                def hasStages = blockHasMethod(block, "stages")
+                return hasAgent && hasStages
+            }
         }
 
         return false

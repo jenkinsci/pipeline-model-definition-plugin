@@ -34,7 +34,7 @@ class PipelineStepFinder extends CodeVisitorSupport {
 
     @Override
     void visitExpressionStatement(ExpressionStatement exprStmt) {
-        if (ASTParserUtils.isDeclarativePipelineStep(exprStmt)) {
+        if (ASTParserUtils.isDeclarativePipelineStep(exprStmt, false)) {
             pipelineSteps.add(exprStmt)
         } else {
             super.visitExpressionStatement(exprStmt)
