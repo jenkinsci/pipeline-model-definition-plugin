@@ -1070,13 +1070,37 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         otherRepo.git("commit", "--message=init");
         LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
                 new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
-        Folder folder = j.jenkins.createProject(Folder.class, "testFolder");
+        Folder folder = j.jenkins.createProject(Folder.class, "libInFolder");
         folder.getProperties().add(new FolderLibraries(Collections.singletonList(firstLib)));
 
         expect("pipelineDefinedInLibrary")
                 .inFolder(folder)
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void multiplePipelinesDefinedInLibrary() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForMultiplePipelinesDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        expect("multiplePipelinesDefinedInLibraryFirst")
+                .runFromRepo(false)
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+
+        expect("multiplePipelinesDefinedInLibrarySecond")
+                .runFromRepo(false)
+                .logContains("[Pipeline] { (Different)", "This is the alternative pipeline")
                 .go();
     }
 }

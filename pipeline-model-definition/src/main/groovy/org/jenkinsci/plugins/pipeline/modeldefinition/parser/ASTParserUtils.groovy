@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
+import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -443,4 +444,33 @@ class ASTParserUtils {
     static boolean isGroovyAST(ModelASTElement original) {
         return original != null && original.sourceLocation != null && original.sourceLocation instanceof ASTNode
     }
+
+    static boolean blockHasMethod(BlockStatement block, String methodName) {
+        if (block != null) {
+            return block.statements.any {
+                MethodCallExpression expr = matchMethodCall(it)
+                return expr != null && matchMethodName(expr) == methodName
+            }
+        } else {
+            return false
+        }
+    }
+
+    static boolean isDeclarativePipelineStep(Statement stmt) {
+        def b = matchBlockStatement(stmt)
+
+        if (b != null &&
+            b.methodName == ModelStepLoader.STEP_NAME &&
+            b.arguments.expressions.size() == 1) {
+            BlockStatement block = asBlock(b.body.code)
+
+            // Filter out anything that doesn't have agent and stages method calls
+            def hasAgent = blockHasMethod(block, "agent")
+            def hasStages = blockHasMethod(block, "stages")
+            return hasAgent && hasStages
+        }
+
+        return false
+    }
+
 }

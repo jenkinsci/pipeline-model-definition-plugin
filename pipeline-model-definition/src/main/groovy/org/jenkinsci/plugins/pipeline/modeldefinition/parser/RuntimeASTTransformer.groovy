@@ -74,11 +74,18 @@ class RuntimeASTTransformer {
      */
     ArgumentListExpression transform(@CheckForNull Run<?,?> run) {
         Expression root = transformRoot(pipelineDef)
-        if (run != null && run.getAction(ExecutionModelAction.class) == null) {
+        if (run != null) {
             ModelASTStages stages = pipelineDef.stages
             stages.removeSourceLocation()
-            run.addAction(new ExecutionModelAction(stages))
+            ExecutionModelAction action = run.getAction(ExecutionModelAction.class)
+            if (action == null) {
+                run.addAction(new ExecutionModelAction(stages))
+            } else {
+                action.addStages(stages)
+                run.save()
+            }
         }
+
         return args(
             closureX(
                 block(

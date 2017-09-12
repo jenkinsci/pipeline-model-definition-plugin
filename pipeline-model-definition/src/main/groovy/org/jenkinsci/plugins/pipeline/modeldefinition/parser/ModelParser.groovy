@@ -32,6 +32,7 @@ import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.GroovyCodeVisitor
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -121,33 +122,6 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean blockHasMethod(BlockStatement block, String methodName) {
-        if (block != null) {
-            return block.statements.any {
-                MethodCallExpression expr = matchMethodCall(it)
-                return expr != null && matchMethodName(expr) == methodName
-            }
-        } else {
-            return false
-        }
-    }
-
-    private boolean isDeclarativePipelineStep(Statement stmt) {
-        def b = matchBlockStatement(stmt)
-        if (b != null &&
-            b.methodName == ModelStepLoader.STEP_NAME &&
-            b.arguments.expressions.size() == 1) {
-            BlockStatement block = asBlock(b.body.code)
-
-            // Filter out anything that doesn't have agent and stages method calls
-            def hasAgent = blockHasMethod(block, "agent")
-            def hasStages = blockHasMethod(block, "stages")
-            return hasAgent && hasStages
-        }
-
-        return false
-    }
-
     public void checkForNestedPipelineStep(Statement statement) {
         def b = matchBlockStatement(statement)
         if (b != null) {
@@ -168,26 +142,34 @@ class ModelParser implements Parser {
     public @CheckForNull ModelASTPipelineDef parse(ModuleNode src, boolean secondaryRun = false) {
         // first, quickly ascertain if this module should be parsed at all
         def pst = src.statementBlock.statements.find {
-            MethodCallExpression m = matchMethodCall(it)
-            return m != null && matchMethodName(m) == ModelStepLoader.STEP_NAME
+            return isDeclarativePipelineStep(it)
         }
 
-        if (pst==null) {
+        if (pst != null) {
+            return parsePipelineStep(pst, secondaryRun)
+        } else {
             // Look for the pipeline step inside methods named call.
             MethodNode callMethod = src.methods.find { it.name == "call" }
             if (callMethod != null) {
-                pst = asBlock(callMethod.code).statements.find { s ->
-                    return isDeclarativePipelineStep(s)
+                PipelineStepFinder finder = new PipelineStepFinder()
+                callMethod.code.visit(finder)
+                List<Statement> pipelineSteps = finder.pipelineSteps
+
+                if (!pipelineSteps.isEmpty()) {
+                    List<ModelASTPipelineDef> pipelineDefs = pipelineSteps.collect { p ->
+                        return parsePipelineStep(p, secondaryRun)
+                    }
+                    return pipelineDefs.get(0)
                 }
             }
         }
 
-        if (pst == null) {
-            // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
-            src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
-            return null; // no 'pipeline', so this doesn't apply
-        }
+        // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
+        src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
+        return null; // no 'pipeline', so this doesn't apply
+    }
 
+    private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst);
 
         def pipelineBlock = matchBlockStatement(pst);
