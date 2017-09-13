@@ -159,6 +159,10 @@ class ModelParser implements Parser {
                     List<ModelASTPipelineDef> pipelineDefs = pipelineSteps.collect { p ->
                         return parsePipelineStep(p, secondaryRun)
                     }
+                    // Even if there are multiple pipeline blocks, just return the first one - this return value is only
+                    // used in a few places: tests, where there will only ever be one, and linting/converting, which also
+                    // are guaranteed to only have one, since we don't intend to support linting of pipelines defined in
+                    // shared libraries.
                     return pipelineDefs.get(0)
                 }
             }
