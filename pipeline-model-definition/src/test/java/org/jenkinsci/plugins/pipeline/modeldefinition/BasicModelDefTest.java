@@ -1092,15 +1092,27 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
 
-        expect("multiplePipelinesDefinedInLibraryFirst")
+        WorkflowRun firstRun = expect("multiplePipelinesDefinedInLibraryFirst")
                 .runFromRepo(false)
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
 
-        expect("multiplePipelinesDefinedInLibrarySecond")
+        ExecutionModelAction firstAction = firstRun.getAction(ExecutionModelAction.class);
+        assertNotNull(firstAction);
+        ModelASTStages firstStages = firstAction.getStages();
+        assertNotNull(firstStages);
+        assertEquals(2, firstStages.getStages().size());
+
+        WorkflowRun secondRun = expect("multiplePipelinesDefinedInLibrarySecond")
                 .runFromRepo(false)
                 .logContains("[Pipeline] { (Different)", "This is the alternative pipeline")
                 .go();
+
+        ExecutionModelAction secondAction = secondRun.getAction(ExecutionModelAction.class);
+        assertNotNull(secondAction);
+        ModelASTStages secondStages = secondAction.getStages();
+        assertNotNull(secondStages);
+        assertEquals(1, secondStages.getStages().size());
     }
 }

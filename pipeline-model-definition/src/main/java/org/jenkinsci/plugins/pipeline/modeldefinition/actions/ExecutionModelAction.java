@@ -34,6 +34,7 @@ import java.util.List;
 
 public class ExecutionModelAction extends InvisibleAction {
     private ModelASTStages stages;
+    private int stagesHashCode;
     private final List<ModelASTStages> stagesList = new ArrayList<>();
 
     public ExecutionModelAction(ModelASTStages s) {
@@ -55,11 +56,16 @@ public class ExecutionModelAction extends InvisibleAction {
     }
 
     public ModelASTStages getStages() {
-        if (stagesList.isEmpty()) {
-            return null;
-        } else {
-            return stagesList.get(0);
+        for (ModelASTStages s : stagesList) {
+            if (s.hashCode() == stagesHashCode) {
+                return s;
+            }
         }
+        return null;
+    }
+
+    public void setStagesHashCode(int s) {
+        this.stagesHashCode = s;
     }
 
     public List<ModelASTStages> getStagesList() {

@@ -47,6 +47,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -261,6 +262,15 @@ public class Utils {
         }
 
         return nodes
+    }
+
+    static void markExecutedStagesOnAction(CpsScript script, int astHashCode) {
+        WorkflowRun r = script.$build()
+        ExecutionModelAction action = r.getAction(ExecutionModelAction.class)
+        if (action != null) {
+            action.setStagesHashCode(astHashCode)
+            r.save()
+        }
     }
 
     private static void markStageWithTag(String stageName, String tagName, String tagValue) {

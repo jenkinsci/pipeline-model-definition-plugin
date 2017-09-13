@@ -613,7 +613,8 @@ class RuntimeASTTransformer {
                     transformOptions(original.options),
                     transformTriggers(original.triggers),
                     transformParameters(original.parameters),
-                    transformLibraries(original.libraries)))
+                    transformLibraries(original.libraries),
+                    constX(original.stages.hashCode())))
         }
 
         return constX(null)
