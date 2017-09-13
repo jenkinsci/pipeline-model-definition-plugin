@@ -62,17 +62,14 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUti
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeASTTransformer {
-    private final ModelASTPipelineDef pipelineDef
-
-    RuntimeASTTransformer(@Nonnull ModelASTPipelineDef pipelineDef) {
-        this.pipelineDef = pipelineDef
+    RuntimeASTTransformer() {
     }
 
     /**
-     * Given a run, transform {@link #pipelineDef}, attach the {@link ModelASTStages} for {@link #pipelineDef} to the
+     * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
      * run, and return an {@link ArgumentListExpression} containing a closure that returns the {@Root} we just created.
      */
-    ArgumentListExpression transform(@CheckForNull Run<?,?> run) {
+    ArgumentListExpression transform(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?,?> run) {
         Expression root = transformRoot(pipelineDef)
         if (run != null) {
             ModelASTStages stages = pipelineDef.stages
