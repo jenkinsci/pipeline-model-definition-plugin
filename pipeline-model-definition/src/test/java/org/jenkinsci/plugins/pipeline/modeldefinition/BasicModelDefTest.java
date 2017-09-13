@@ -1115,4 +1115,21 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(secondStages);
         assertEquals(1, secondStages.getStages().size());
     }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void multiplePipelinesExecutedInLibraryShouldFail() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForMultiplePipelinesExecutedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        expect(Result.FAILURE, "pipelineDefinedInLibrary")
+                .logContains("java.lang.IllegalStateException: Only one pipeline { ... } block can be executed in a single run")
+                .go();
+    }
 }

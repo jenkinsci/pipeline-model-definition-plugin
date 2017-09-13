@@ -64,6 +64,10 @@ public class ExecutionModelAction extends InvisibleAction {
         return null;
     }
 
+    public int getStagesHashCode() {
+        return stagesHashCode;
+    }
+
     public void setStagesHashCode(int s) {
         this.stagesHashCode = s;
     }
