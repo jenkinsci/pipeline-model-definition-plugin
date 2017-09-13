@@ -1176,8 +1176,7 @@ class ModelParser implements Parser {
         return null;
     }
 
-    public static final boolean AST_DEBUG_LOGGING = SystemProperties.getBoolean(ModelParser.class.getName()+".astDebugLogging") ||
-        SystemProperties.getBoolean("hudson.hpi.run")
+    public static final boolean AST_DEBUG_LOGGING = SystemProperties.getBoolean(ModelParser.class.getName()+".astDebugLogging")
 
     private static final Logger LOGGER = Logger.getLogger(ModelParser.class.getName())
 
