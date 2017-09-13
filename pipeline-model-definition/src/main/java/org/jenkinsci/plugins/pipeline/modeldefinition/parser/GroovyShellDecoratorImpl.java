@@ -11,9 +11,15 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
+import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator;
+import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import javax.annotation.CheckForNull;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Registers the 'pipeline' step validation during Jenkinsfile parsing.
@@ -22,6 +28,8 @@ import javax.annotation.CheckForNull;
  */
 @Extension
 public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
+    private static final Logger LOGGER = Logger.getLogger(GroovyShellDecoratorImpl.class.getName());
+
     @Override
     public GroovyShellDecorator forTrusted() {
         return this;
@@ -38,10 +46,32 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
         cc.addCompilationCustomizers(new CompilationCustomizer(CompilePhase.SEMANTIC_ANALYSIS) {
             @Override
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-                // Only look for pipeline blocks in classes without package names - i.e., in vars and Jenkinsfiles. It's
-                // theoretically possible to do src/Foo.groovy as well, but we'll deal with that later.
-                // Also allow WorkflowScript cases with package names, since discarding those would break compatibility.
-                if (classNode.getPackageName() == null || classNode.getNameWithoutPackage().equals(Converter.PIPELINE_SCRIPT_NAME)) {
+                boolean doModelParsing = false;
+
+                // First, we'll parse if this is WorkflowScript, i.e., a Jenkinsfile
+                if (classNode.getNameWithoutPackage().equals(Converter.PIPELINE_SCRIPT_NAME)) {
+                    doModelParsing = true;
+                } else if (execution != null && classNode.getPackageName() == null) {
+                    // Second, if we've got an execution and there's no package name, we'll parse if this is a global
+                    // variable, which we can determine by looking to see if its name is in the list of global variables.
+                    // Note that the combination of no package name plus global variable name should keep us from
+                    // parsing src/org/whatever/Foo.groovy in shared libraries *or* global variables defined in plugins.
+                    try {
+                        FlowExecutionOwner owner = execution.getOwner();
+                        if (owner != null && owner.getExecutable() instanceof WorkflowRun) {
+                            WorkflowRun run = (WorkflowRun)owner.getExecutable();
+                            for (GlobalVariable v : GlobalVariable.forRun(run)) {
+                                if (classNode.getNameWithoutPackage().equals(v.getName())) {
+                                    doModelParsing = true;
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        LOGGER.log(Level.WARNING, "Error loading WorkflowRun for execution: {0}", e);
+                    }
+
+                }
+                if (doModelParsing) {
                     new ModelParser(source, execution).parse();
                 }
             }
