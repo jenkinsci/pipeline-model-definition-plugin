@@ -57,7 +57,7 @@ public class Root implements Serializable {
 
     Libraries libraries
 
-    int astHashCode
+    final int astHashCode
 
     @Whitelisted
     Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
