@@ -1132,4 +1132,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("java.lang.IllegalStateException: Only one pipeline { ... } block can be executed in a single run")
                 .go();
     }
+
+    @Test
+    public void fromEvaluate() throws Exception {
+        expect("fromEvaluate")
+                .otherResource("whenAnd.groovy", "whenAnd.groovy")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+
+    }
 }
