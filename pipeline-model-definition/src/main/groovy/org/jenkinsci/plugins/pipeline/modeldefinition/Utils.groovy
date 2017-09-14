@@ -268,7 +268,7 @@ public class Utils {
         WorkflowRun r = script.$build()
         ExecutionModelAction action = r.getAction(ExecutionModelAction.class)
         if (action != null) {
-            if (action.stagesHashCode != 0) {
+            if (action.stagesHashCode != null) {
                 throw new IllegalStateException("Only one pipeline { ... } block can be executed in a single run.")
             }
             action.setStagesHashCode(astHashCode)
