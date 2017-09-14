@@ -18,8 +18,6 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 
 import javax.annotation.CheckForNull;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,37 +48,33 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 boolean doModelParsing = false;
 
-                try {
-                    // First, we'll parse anything that's not coming from an actual source file on disk - i.e., Jenkinsfiles
-                    // (which are read in as strings and then compiled), dynamically loaded/evaluated strings, etc. We can
-                    // tell when we've got one of those by looking to see if the code source's location is "file:/groovy/shell".
-                    if (context.getCompileUnit().getCodeSource().getLocation().equals(URI.create("file:/groovy/shell").toURL())) {
-                        doModelParsing = true;
-                    } else if (execution != null && classNode.getPackageName() == null) {
-                        // Second, if we've got an execution and there's no package name, we'll parse if this is a global
-                        // variable, which we can determine by looking to see if its name is in the list of global variables.
-                        // Note that the combination of no package name plus global variable name should keep us from
-                        // parsing src/org/whatever/Foo.groovy in shared libraries *or* global variables defined in plugins.
-                        try {
-                            FlowExecutionOwner owner = execution.getOwner();
-                            if (owner != null && owner.getExecutable() instanceof Run) {
-                                Run run = (Run) owner.getExecutable();
-                                for (GlobalVariable v : GlobalVariable.forRun(run)) {
-                                    if (classNode.getNameWithoutPackage().equals(v.getName())) {
-                                        doModelParsing = true;
-                                    }
+                // First, we'll parse anything that's not coming from an actual source file on disk - i.e., Jenkinsfiles
+                // (which are read in as strings and then compiled), dynamically loaded/evaluated strings, etc. We can
+                // tell when we've got one of those by looking to see if the code source's location is "file:/groovy/shell".
+                if (context.getCompileUnit().getCodeSource().getLocation().toString().equals("file:/groovy/shell")) {
+                    doModelParsing = true;
+                } else if (execution != null && classNode.getPackageName() == null) {
+                    // Second, if we've got an execution and there's no package name, we'll parse if this is a global
+                    // variable, which we can determine by looking to see if its name is in the list of global variables.
+                    // Note that the combination of no package name plus global variable name should keep us from
+                    // parsing src/org/whatever/Foo.groovy in shared libraries *or* global variables defined in plugins.
+                    try {
+                        FlowExecutionOwner owner = execution.getOwner();
+                        if (owner != null && owner.getExecutable() instanceof Run) {
+                            Run run = (Run) owner.getExecutable();
+                            for (GlobalVariable v : GlobalVariable.forRun(run)) {
+                                if (classNode.getNameWithoutPackage().equals(v.getName())) {
+                                    doModelParsing = true;
                                 }
                             }
-                        } catch (IOException e) {
-                            LOGGER.log(Level.WARNING, "Error loading WorkflowRun for execution: {0}", e);
                         }
+                    } catch (IOException e) {
+                        LOGGER.log(Level.WARNING, "Error loading WorkflowRun for execution: {0}", e);
+                    }
 
-                    }
-                    if (doModelParsing) {
-                        new ModelParser(source, execution).parse();
-                    }
-                } catch (MalformedURLException e) {
-                    // Do nothing - this isn't actually going to be reached.
+                }
+                if (doModelParsing) {
+                    new ModelParser(source, execution).parse();
                 }
             }
         });
