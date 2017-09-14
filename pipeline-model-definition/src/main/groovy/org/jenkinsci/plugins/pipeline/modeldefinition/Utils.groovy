@@ -264,14 +264,14 @@ public class Utils {
         return nodes
     }
 
-    static void markExecutedStagesOnAction(CpsScript script, int astHashCode) throws Exception {
+    static void markExecutedStagesOnAction(CpsScript script, String astUUID) throws Exception {
         WorkflowRun r = script.$build()
         ExecutionModelAction action = r.getAction(ExecutionModelAction.class)
         if (action != null) {
-            if (action.stagesHashCode != null) {
+            if (action.stagesUUID != null) {
                 throw new IllegalStateException("Only one pipeline { ... } block can be executed in a single run.")
             }
-            action.setStagesHashCode(astHashCode)
+            action.setStagesUUID(astUUID)
             r.save()
         }
     }

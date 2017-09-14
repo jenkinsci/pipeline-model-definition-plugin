@@ -611,7 +611,7 @@ class RuntimeASTTransformer {
                     transformTriggers(original.triggers),
                     transformParameters(original.parameters),
                     transformLibraries(original.libraries),
-                    constX(original.stages.hashCode())))
+                    constX(original.stages.getUuid().toString())))
         }
 
         return constX(null)
