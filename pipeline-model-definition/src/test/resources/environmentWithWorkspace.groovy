@@ -25,7 +25,7 @@
 pipeline {
     environment {
         FOO = "FOO"
-        BAR = '${WORKSPACE}BAR'
+        BAR = "${WORKSPACE}BAR"
     }
     agent {
         label "some-label"
@@ -34,7 +34,7 @@ pipeline {
     stages {
         stage("foo") {
             environment {
-                BAZ = "\${FOO}BAZ"
+                BAZ = "${FOO}BAZ"
             }
 
             steps {
