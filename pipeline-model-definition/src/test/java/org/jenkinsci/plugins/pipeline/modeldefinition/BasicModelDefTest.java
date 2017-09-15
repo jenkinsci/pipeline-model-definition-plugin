@@ -1043,4 +1043,104 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logNotContains("GIT_COMMIT is null")
                 .go();
     }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void pipelineDefinedInLibrary() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForPipelineDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        expect("pipelineDefinedInLibrary")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void pipelineDefinedInLibraryInFolder() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForPipelineDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+        Folder folder = j.jenkins.createProject(Folder.class, "libInFolder");
+        folder.getProperties().add(new FolderLibraries(Collections.singletonList(firstLib)));
+
+        expect("pipelineDefinedInLibrary")
+                .inFolder(folder)
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void multiplePipelinesDefinedInLibrary() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForMultiplePipelinesDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        WorkflowRun firstRun = expect("multiplePipelinesDefinedInLibraryFirst")
+                .runFromRepo(false)
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+
+        ExecutionModelAction firstAction = firstRun.getAction(ExecutionModelAction.class);
+        assertNotNull(firstAction);
+        ModelASTStages firstStages = firstAction.getStages();
+        assertNotNull(firstStages);
+        assertEquals(2, firstStages.getStages().size());
+
+        WorkflowRun secondRun = expect("multiplePipelinesDefinedInLibrarySecond")
+                .runFromRepo(false)
+                .logContains("[Pipeline] { (Different)", "This is the alternative pipeline")
+                .go();
+
+        ExecutionModelAction secondAction = secondRun.getAction(ExecutionModelAction.class);
+        assertNotNull(secondAction);
+        ModelASTStages secondStages = secondAction.getStages();
+        assertNotNull(secondStages);
+        assertEquals(1, secondStages.getStages().size());
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void multiplePipelinesExecutedInLibraryShouldFail() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForMultiplePipelinesExecutedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        expect(Result.FAILURE, "pipelineDefinedInLibrary")
+                .logContains("java.lang.IllegalStateException: Only one pipeline { ... } block can be executed in a single run")
+                .go();
+    }
+
+    @Test
+    public void fromEvaluate() throws Exception {
+        expect("fromEvaluate")
+                .otherResource("whenAnd.groovy", "whenAnd.groovy")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+
+    }
 }

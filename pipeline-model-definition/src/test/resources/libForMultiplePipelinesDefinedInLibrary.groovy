@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,49 +22,48 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent {
-        label "here"
-    }
-    stages {
-        stage("foo") {
-            steps {
-                echo "hello"
-                script {
-                    String res = env.MAKE_RESULT
-                    if (res != null) {
-                        echo "Setting build result ${res}"
-                        currentBuild.result = res
-                    } else {
-                        echo "All is well"
+def call(boolean firstOrSecond = false) {
+    if (firstOrSecond) {
+        pipeline {
+            agent any
+            environment {
+                BRANCH_NAME = "master"
+            }
+            stages {
+                stage("One") {
+                    steps {
+                        echo "Hello"
+                    }
+                }
+                stage("Two") {
+                    when {
+                        allOf {
+                            branch "master"
+                            expression {
+                                "foo" == "bar"
+                            }
+                        }
+                    }
+                    steps {
+                        script {
+                            echo "World"
+                            echo "Heal it"
+                        }
+
                     }
                 }
             }
-            post {
-                aborted {
-                    echo "I WAS ABORTED"
-                }
-                always {
-                    echo "I AM ALWAYS WITH YOU"
-                }
-                changed {
-                    echo "I HAVE CHANGED"
-                }
-                failure {
-                    echo "I FAILED"
-                }
-                success {
-                    echo "MOST DEFINITELY FINISHED"
-                }
-                unstable {
-                    echo "I AM UNSTABLE"
+        }
+    } else {
+        pipeline {
+            agent any
+            stages {
+                stage("Different") {
+                    steps {
+                        echo "This is the alternative pipeline"
+                    }
                 }
             }
-        }
-    }
-    post {
-        always {
-            echo "And AAAAIIIAAAIAI"
         }
     }
 }

@@ -31,6 +31,9 @@ import hudson.model.Run
 import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.GroovyCodeVisitor
+import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -139,16 +142,38 @@ class ModelParser implements Parser {
     public @CheckForNull ModelASTPipelineDef parse(ModuleNode src, boolean secondaryRun = false) {
         // first, quickly ascertain if this module should be parsed at all
         def pst = src.statementBlock.statements.find {
-            MethodCallExpression m = matchMethodCall(it)
-            return m != null && matchMethodName(m) == ModelStepLoader.STEP_NAME
+            return isDeclarativePipelineStep(it)
         }
 
-        if (pst==null) {
-            // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
-            src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
-            return null; // no 'pipeline', so this doesn't apply
+        if (pst != null) {
+            return parsePipelineStep(pst, secondaryRun)
+        } else {
+            // Look for the pipeline step inside methods named call.
+            MethodNode callMethod = src.methods.find { it.name == "call" }
+            if (callMethod != null) {
+                PipelineStepFinder finder = new PipelineStepFinder()
+                callMethod.code.visit(finder)
+                List<Statement> pipelineSteps = finder.pipelineSteps
+
+                if (!pipelineSteps.isEmpty()) {
+                    List<ModelASTPipelineDef> pipelineDefs = pipelineSteps.collect { p ->
+                        return parsePipelineStep(p, secondaryRun)
+                    }
+                    // Even if there are multiple pipeline blocks, just return the first one - this return value is only
+                    // used in a few places: tests, where there will only ever be one, and linting/converting, which also
+                    // are guaranteed to only have one, since we don't intend to support linting of pipelines defined in
+                    // shared libraries.
+                    return pipelineDefs.get(0)
+                }
+            }
         }
 
+        // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
+        src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
+        return null; // no 'pipeline', so this doesn't apply
+    }
+
+    private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst);
 
         def pipelineBlock = matchBlockStatement(pst);
@@ -232,7 +257,7 @@ class ModelParser implements Parser {
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = new RuntimeASTTransformer(r).transform(build)
+            pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(r, build)
             // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
             astDebugLog {
                 "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"

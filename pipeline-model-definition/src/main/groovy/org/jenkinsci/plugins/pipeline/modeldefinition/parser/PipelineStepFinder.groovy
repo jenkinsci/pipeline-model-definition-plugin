@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,22 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent none
-    stages {
-        stage("foo") {
-            steps {
-                echo "hello"
-            }
-            post {
-                always {
-                    echo "Local Always"
-                }
-            }
-        }
-    }
-    post {
-        always {
-            echo "Global Always"
+package org.jenkinsci.plugins.pipeline.modeldefinition.parser
+
+import org.codehaus.groovy.ast.CodeVisitorSupport
+import org.codehaus.groovy.ast.stmt.ExpressionStatement
+import org.codehaus.groovy.ast.stmt.Statement
+
+
+class PipelineStepFinder extends CodeVisitorSupport {
+    List<Statement> pipelineSteps = []
+
+    @Override
+    void visitExpressionStatement(ExpressionStatement exprStmt) {
+        if (ASTParserUtils.isDeclarativePipelineStep(exprStmt, false)) {
+            pipelineSteps.add(exprStmt)
+        } else {
+            super.visitExpressionStatement(exprStmt)
         }
     }
 }
