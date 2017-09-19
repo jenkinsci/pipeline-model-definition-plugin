@@ -658,18 +658,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertEquals(2, barStages.size());
 
         for (FlowNode bar : barStages) {
-            System.err.println("bar actions: " + bar.getAction(TagsAction.class).getTags());
             assertTrue(stageStatusPredicate("bar", StageStatus.getSkippedForConditional()).apply(bar));
         }
 
-        for (FlowNode wut : scanner.filteredNodes(heads, stageStatusPredicate("bar", StageStatus.getSkippedForConditional()))) {
-            System.err.println("wut id: " + wut.getId());
-            System.err.println("wut actions: " + wut.getActions());
-            TagsAction t = wut.getAction(TagsAction.class);
-            if (t != null) {
-                System.err.println("wut tags: " + t.getTags());
-            }
-        }
         // baz was a parallel stage that failed.
         List<FlowNode> bazStages = Utils.findStageFlowNodes("baz", execution);
         assertNotNull(bazStages);
