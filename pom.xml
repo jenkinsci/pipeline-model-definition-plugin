@@ -261,6 +261,7 @@
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
         <artifactId>gmaven-plugin</artifactId>
+        <version>1.5-jenkins-3</version>
         <configuration>
           <providerSelection>1.8</providerSelection>
         </configuration>
