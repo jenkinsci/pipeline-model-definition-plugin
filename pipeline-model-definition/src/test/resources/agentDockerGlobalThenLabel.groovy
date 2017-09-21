@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,28 +20,26 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
 
+
+
+
 pipeline {
-    environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
-    }
     agent {
-        label "some-label"
+        docker {
+            image 'maven:3.5.0-jdk-8-alpine'
+            label 'docker'
+        }
     }
-
     stages {
-        stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-            }
-
-            steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
-            }
+        stage("Maven") {
+            steps { sh 'echo "first agent = $WHICH_AGENT"' }
+        }
+        stage("Agent") {
+            agent { label 'other-docker' }
+            steps { sh 'echo "second agent = $WHICH_AGENT"' }
         }
     }
 }

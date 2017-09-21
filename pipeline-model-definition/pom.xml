@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>1.2-beta-5-SNAPSHOT</version>
+    <version>1.2-beta-6-SNAPSHOT</version>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
@@ -141,6 +141,10 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials</artifactId>
     </dependency>
     <!-- Dependency on tombstoned declarative agent plugin to make sure we don't end up with a
     bad old version installed -->

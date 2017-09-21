@@ -22,29 +22,22 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
-    }
-    agent {
-        label "some-label"
-    }
+package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
-    stages {
-        stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-            }
+import org.codehaus.groovy.ast.CodeVisitorSupport
+import org.codehaus.groovy.ast.stmt.ExpressionStatement
+import org.codehaus.groovy.ast.stmt.Statement
 
-            steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
-            }
+
+class PipelineStepFinder extends CodeVisitorSupport {
+    List<Statement> pipelineSteps = []
+
+    @Override
+    void visitExpressionStatement(ExpressionStatement exprStmt) {
+        if (ASTParserUtils.isDeclarativePipelineStep(exprStmt, false)) {
+            pipelineSteps.add(exprStmt)
+        } else {
+            super.visitExpressionStatement(exprStmt)
         }
     }
 }
-
-
-

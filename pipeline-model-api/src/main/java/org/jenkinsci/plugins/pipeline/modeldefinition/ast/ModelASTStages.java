@@ -2,6 +2,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -12,9 +14,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  */
 public final class ModelASTStages extends ModelASTElement {
     private List<ModelASTStage> stages = new ArrayList<ModelASTStage>();
+    private final UUID uuid;
 
     public ModelASTStages(Object sourceLocation) {
         super(sourceLocation);
+        this.uuid = UUID.randomUUID();
     }
 
     @Override
@@ -53,6 +57,10 @@ public final class ModelASTStages extends ModelASTElement {
         for (ModelASTStage stage : stages) {
             stage.removeSourceLocation();
         }
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 
     public List<ModelASTStage> getStages() {

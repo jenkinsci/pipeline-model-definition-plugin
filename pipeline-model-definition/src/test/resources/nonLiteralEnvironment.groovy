@@ -32,7 +32,7 @@ pipeline {
         FOO = "BAR"
         BUILD_NUM_ENV = currentBuild.getNumber()
         ANOTHER_ENV = "${currentBuild.getNumber()}"
-        INHERITED_ENV = "\${BUILD_NUM_ENV} is inherited"
+        INHERITED_ENV = "${BUILD_NUM_ENV} is inherited"
         ACME_FUNC = returnAThing("banana")
         JUST_A_CONSTANT = "${1 + 2}"
         FROM_OUTSIDE = "${someVar}. ${someFunc()}"

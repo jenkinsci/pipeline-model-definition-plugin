@@ -57,6 +57,8 @@ public class ModelInterpreter implements Serializable {
         if (root != null) {
             boolean postBuildRun = false
 
+            Utils.markExecutedStagesOnAction(script, root.astUUID)
+
             try {
                 loadLibraries(root)
 
@@ -356,11 +358,11 @@ public class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def toolsBlock(Agent agent, Tools tools, Root root = null, Closure body) {
-        def toolsMap = [:]
+        def toolsMap = new TreeMap<String,Closure>()
         if (tools != null) {
             toolsMap = tools.mergeToolEntries(root?.tools)
         } else if (root?.tools != null) {
-            toolsMap = root.tools.getMap()
+            toolsMap = root.tools.mergeToolEntries(null)
         }
         // If there's no agent, don't install tools in the first place.
         if (agent.hasAgent() && !toolsMap.isEmpty()) {
@@ -384,13 +386,15 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-    def actualToolsInstall(Map<String,String> toolsMap) {
+    def actualToolsInstall(Map<String,Closure> toolsMap) {
         def toolEnv = []
 
         toolsMap.each { k, v ->
-            String toolPath = script.tool(name: v, type: Tools.typeForKey(k))
+            String toolVer = v.call()
 
-            toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: v))
+            String toolPath = script.tool(name: toolVer, type: Tools.typeForKey(k))
+
+            toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: toolVer))
         }
 
         return toolEnv

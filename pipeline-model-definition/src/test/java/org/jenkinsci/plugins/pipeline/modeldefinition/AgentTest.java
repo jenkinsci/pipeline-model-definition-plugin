@@ -305,6 +305,18 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("Until JENKINS-46831 is addressed")
+    @Issue("JENKINS-46831")
+    @Test
+    public void agentDockerGlobalThenLabel() throws Exception {
+        expect("agentDockerGlobalThenLabel")
+            .logContains(
+                "first agent = first",
+                "second agent = second"
+            )
+            .go();
+    }
+
     private void agentDocker(final String jenkinsfile, String... additionalLogContains) throws Exception {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment
