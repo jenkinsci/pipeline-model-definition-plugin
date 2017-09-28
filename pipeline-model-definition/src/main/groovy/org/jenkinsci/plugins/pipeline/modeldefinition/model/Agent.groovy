@@ -89,9 +89,6 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
                 }
             }
             a.setDoCheckout(doCheckout)
-            root?.options?.options?.each { k, v ->
-                a.addOption(v)
-            }
 
             return a
         } else {
