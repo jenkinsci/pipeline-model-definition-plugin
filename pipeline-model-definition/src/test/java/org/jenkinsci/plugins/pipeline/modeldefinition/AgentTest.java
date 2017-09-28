@@ -317,6 +317,27 @@ public class AgentTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Issue("JENKINS-47106")
+    @Test
+    public void dockerPullLocalImage() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        expect("dockerPullLocalImage")
+                .logContains("[Pipeline] { (foo)",
+                        "The answer is 42",
+                        "-v /tmp:/tmp -p 8000:8000",
+                        "HI THERE")
+                .go();
+    }
+
+
     private void agentDocker(final String jenkinsfile, String... additionalLogContains) throws Exception {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment

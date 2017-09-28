@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.AlwaysDoDockerPull
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPipeline> {
@@ -37,8 +38,9 @@ public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPip
 
     @Override
     public Closure runImage(Closure body) {
+        boolean alwaysDoDockerPull = describable.getOption(AlwaysDoDockerPull)?.alwaysDoDockerPull
         return {
-            if (!Utils.withinAStage()) {
+            if (!Utils.withinAStage() && alwaysDoDockerPull) {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     try {
                         script.getProperty("docker").image(describable.image).pull()
@@ -50,7 +52,7 @@ public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPip
                 }
             }
             try {
-                if (Utils.withinAStage()) {
+                if (Utils.withinAStage() && alwaysDoDockerPull) {
                     script.getProperty("docker").image(describable.image).pull()
                 }
                 script.getProperty("docker").image(describable.image).inside(describable.args, {
