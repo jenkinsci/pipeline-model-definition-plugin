@@ -634,7 +634,8 @@ class RuntimeASTTransformer {
                     transformStageConditionals(original.when),
                     transformTools(original.tools),
                     transformEnvironment(original.environment),
-                    transformStages(original.parallel)))
+                    transformStages(original.parallel),
+                    constX(original.failFast != null ? original.failFast : false)))
         }
 
         return constX(null)

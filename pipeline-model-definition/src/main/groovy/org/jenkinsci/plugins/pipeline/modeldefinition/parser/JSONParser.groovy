@@ -167,7 +167,7 @@ class JSONParser implements Parser {
             stage.branches.add(parseBranch(branches.append(JsonPointer.of(i))))
         }
 
-        if (j.node.has("failFast") && stage.branches.size() > 1) {
+        if (j.node.has("failFast") && (stage.branches.size() > 1 || j.node.has("parallel")))  {
             stage.failFast = j.node.get("failFast")?.asBoolean()
         }
 

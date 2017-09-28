@@ -55,9 +55,11 @@ public class Stage implements Serializable {
 
     Stages parallel
 
+    boolean failFast
+
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
-          Environment environment, Stages parallel) {
+          Environment environment, Stages parallel, boolean failFast) {
         this.name = name
         this.steps = steps
         this.agent = agent
@@ -66,6 +68,7 @@ public class Stage implements Serializable {
         this.tools = tools
         this.environment = environment
         this.parallel = parallel
+        this.failFast = failFast
     }
 
     /**
