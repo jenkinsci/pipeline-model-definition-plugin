@@ -25,16 +25,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
@@ -44,7 +38,6 @@ import java.util.List;
 public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
     protected boolean inStage;
     protected boolean doCheckout;
-    protected List<DeclarativeOption> options = new ArrayList<>();
 
     @Override
     public WithScriptScript getScript(CpsScript cpsScript) throws Exception {
@@ -71,25 +64,6 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
 
     public boolean isDoCheckout() {
         return doCheckout;
-    }
-
-    public void addOption(@Nonnull DeclarativeOption option) {
-        for (DeclarativeOption o : options) {
-            if (o.getClass().equals(option.getClass())) {
-                options.remove(o);
-            }
-        }
-        options.add(option);
-    }
-
-    @CheckForNull
-    public <T extends DeclarativeOption> T getOption(@Nonnull Class<T> optionClass) {
-        for (DeclarativeOption o : options) {
-            if (optionClass.isInstance(o)) {
-                return optionClass.cast(o);
-            }
-        }
-        return null;
     }
 
     public boolean hasScmContext(CpsScript script) {

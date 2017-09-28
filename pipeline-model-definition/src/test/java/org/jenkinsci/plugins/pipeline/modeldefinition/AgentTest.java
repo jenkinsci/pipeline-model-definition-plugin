@@ -330,10 +330,11 @@ public class AgentTest extends AbstractModelDefTest {
         sampleRepo.git("commit", "--message=Dockerfile");
 
         expect("dockerPullLocalImage")
-                .logContains("[Pipeline] { (foo)",
+                .logContains("[Pipeline] { (in built image)",
                         "The answer is 42",
                         "-v /tmp:/tmp -p 8000:8000",
-                        "HI THERE")
+                        "HI THERE",
+                        "Maven home: /usr/share/maven")
                 .go();
     }
 

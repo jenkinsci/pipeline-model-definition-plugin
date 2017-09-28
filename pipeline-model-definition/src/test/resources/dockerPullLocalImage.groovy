@@ -27,13 +27,13 @@ pipeline {
     stages {
         stage("build image") {
             steps {
-                sh 'docker build -t test-image:abc .'
+                sh 'docker build -t maven:3-alpine .'
             }
         }
-        stage("foo") {
+        stage("in built image") {
             agent {
                 docker {
-                    image "test-image:abc"
+                    image "maven:3-alpine"
                     args "-v /tmp:/tmp -p 8000:8000"
                     reuseNode true
                 }
@@ -41,6 +41,17 @@ pipeline {
             steps {
                 sh 'cat /hi-there'
                 sh 'echo "The answer is 42"'
+            }
+        }
+        stage("in pulled image") {
+            agent {
+                docker {
+                    image "maven:3-alpine"
+                    alwaysDoPull true
+                }
+                steps {
+                    sh 'mvn --version'
+                }
             }
         }
     }
