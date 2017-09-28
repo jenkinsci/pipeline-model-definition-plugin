@@ -385,4 +385,13 @@ public class WhenStageTest extends AbstractModelDefTest {
             return false;
         }
     }
+
+    @Issue("JENKINS-47064")
+    @Test
+    public void booleanClosureWrapperInExpression() throws Exception {
+        expect("booleanClosureWrapperInExpression")
+                .otherResource("testPom.xml", "pom.xml")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
 }

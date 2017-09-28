@@ -514,9 +514,12 @@ public class ModelInterpreter implements Serializable {
         } else {
             // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
             // to actually instantiate the conditional now, via a closure.
-            return instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class).every {
-                it.getScript(script).evaluate()
+            for (DeclarativeStageConditional conditional : instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class)) {
+                if (conditional.getScript(script).evaluate() == false) {
+                    return false
+                }
             }
+            return true
         }
     }
 
