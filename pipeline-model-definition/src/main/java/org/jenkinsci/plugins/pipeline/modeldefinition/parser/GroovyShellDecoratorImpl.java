@@ -47,11 +47,12 @@ public class GroovyShellDecoratorImpl extends GroovyShellDecorator {
             @Override
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 boolean doModelParsing = false;
-
                 // First, we'll parse anything that's not coming from an actual source file on disk - i.e., Jenkinsfiles
                 // (which are read in as strings and then compiled), dynamically loaded/evaluated strings, etc. We can
-                // tell when we've got one of those by looking to see if the code source's location is "file:/groovy/shell".
-                if (context.getCompileUnit().getCodeSource().getLocation().toString().equals("file:/groovy/shell")) {
+                // tell when we've got one of those by looking to see if the code source's location is "file:/groovy/shell"
+                // and if the classNode is a script.
+                if (context.getCompileUnit().getCodeSource().getLocation().toString().equals("file:/groovy/shell") &&
+                        classNode.isScript()) {
                     doModelParsing = true;
                 } else if (execution != null && classNode.getPackageName() == null) {
                     // Second, if we've got an execution and there's no package name, we'll parse if this is a global
