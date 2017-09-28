@@ -47,7 +47,7 @@ pipeline {
             agent {
                 docker {
                     image "maven:3-alpine"
-                    alwaysDoPull true
+                    alwaysPull true
                 }
                 steps {
                     sh 'mvn --version'
