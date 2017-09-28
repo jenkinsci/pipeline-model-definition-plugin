@@ -51,7 +51,7 @@ public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPip
                 }
             }
             try {
-                if (Utils.withinAStage() && describable.alwaysDoPull) {
+                if (Utils.withinAStage() && describable.alwaysPull) {
                     script.getProperty("docker").image(describable.image).pull()
                 }
                 script.getProperty("docker").image(describable.image).inside(describable.args, {

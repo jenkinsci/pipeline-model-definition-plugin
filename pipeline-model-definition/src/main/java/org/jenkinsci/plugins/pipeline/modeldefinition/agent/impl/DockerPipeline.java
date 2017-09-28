@@ -35,7 +35,7 @@ import javax.annotation.Nonnull;
 
 public class DockerPipeline extends AbstractDockerAgent<DockerPipeline> {
     private String image;
-    private boolean alwaysDoPull;
+    private boolean alwaysPull;
 
     @DataBoundConstructor
     public DockerPipeline(@Nonnull String image) {
@@ -47,12 +47,12 @@ public class DockerPipeline extends AbstractDockerAgent<DockerPipeline> {
     }
 
     @DataBoundSetter
-    public void setAlwaysDoPull(boolean alwaysDoPull) {
-        this.alwaysDoPull = alwaysDoPull;
+    public void setAlwaysPull(boolean alwaysPull) {
+        this.alwaysPull = alwaysPull;
     }
 
-    public boolean isAlwaysDoPull() {
-        return alwaysDoPull;
+    public boolean isAlwaysPull() {
+        return alwaysPull;
     }
 
     @Extension(ordinal = 1000) @Symbol("docker")
