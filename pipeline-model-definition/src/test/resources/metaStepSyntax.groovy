@@ -31,7 +31,13 @@ pipeline {
             steps {
                 writeFile text: 'hello world', file: 'msg.out'
                 archiveArtifacts(allowEmptyArchive: true, artifacts: 'msg.out')
-                sh('echo ONAGENT=$ONAGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo ONAGENT=$ONAGENT')
+                    } else {
+                        bat('echo ONAGENT=%ONAGENT%')
+                    }
+                }
             }
         }
     }
