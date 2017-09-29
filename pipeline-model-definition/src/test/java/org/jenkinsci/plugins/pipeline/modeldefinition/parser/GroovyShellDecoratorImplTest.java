@@ -28,8 +28,8 @@ public class GroovyShellDecoratorImplTest {
         WorkflowRun b = j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
 
         j.assertLogContains(Messages.ModelParser_ExpectedStringLiteral(), b);
-        j.assertLogContains("   pipeline { stages { stage { sh './test.sh' } } }\n" +
-                "                             ^\n"
+        j.assertLogContains(String.format("   pipeline { stages { stage { sh './test.sh' } } }%n" +
+                "                             ^%n")
                 ,b);
     }
 

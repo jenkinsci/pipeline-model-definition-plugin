@@ -5,22 +5,22 @@
       "name": "default",
       "steps":       [
         {
-          "name": "sh",
+          "name": "echo",
           "arguments": [          {
-            "key": "script",
+            "key": "message",
             "value":             {
-              "isLiteral": true,
-              "value": "echo \"FOO is $FOO\""
+              "isLiteral": false,
+              "value": "\"FOO is $FOO\""
             }
           }]
         },
         {
-          "name": "sh",
+          "name": "echo",
           "arguments": [          {
-            "key": "script",
+            "key": "message",
             "value":             {
-              "isLiteral": true,
-              "value": "echo \"_UNDERSCORE is $_UNDERSCORE\""
+              "isLiteral": false,
+              "value": "\"_UNDERSCORE is $_UNDERSCORE\""
             }
           }]
         }

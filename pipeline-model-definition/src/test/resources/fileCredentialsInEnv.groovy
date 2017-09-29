@@ -35,9 +35,9 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh 'echo "FILECRED is $FILECRED"'
-                sh 'echo "INBETWEEN is $INBETWEEN"'
-                sh 'echo $CRED1 > cred1.txt'
+                echo "FILECRED is $FILECRED"
+                echo "INBETWEEN is $INBETWEEN"
+                writeFile file: "cred1.txt", text: "${CRED1}"
             }
         }
         stage("bar") {
@@ -48,9 +48,9 @@ pipeline {
                 CRED2 = credentials("${SECOND_CRED}")
             }
             steps {
-                sh 'echo "OTHERCRED is $OTHERCRED"'
-                sh 'echo "OTHER_INBETWEEN is $OTHER_INBETWEEN"'
-                sh 'echo $CRED2 > cred2.txt'
+                echo "OTHERCRED is $OTHERCRED"
+                echo "OTHER_INBETWEEN is $OTHER_INBETWEEN"
+                writeFile file: "cred2.txt", text: "${CRED2}"
                 archive "**/*.txt"
             }
         }

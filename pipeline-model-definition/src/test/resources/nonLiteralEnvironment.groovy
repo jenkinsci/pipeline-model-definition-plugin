@@ -45,13 +45,13 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"'
-                sh 'echo "ANOTHER_ENV is $ANOTHER_ENV"'
-                sh 'echo "INHERITED_ENV is $INHERITED_ENV"'
-                sh 'echo "ACME_FUNC is $ACME_FUNC"'
-                sh 'echo "JUST_A_CONSTANT is $JUST_A_CONSTANT"'
-                sh 'echo "FROM_OUTSIDE is $FROM_OUTSIDE"'
+                echo "FOO is $FOO"
+                echo "BUILD_NUM_ENV is $BUILD_NUM_ENV"
+                echo "ANOTHER_ENV is $ANOTHER_ENV"
+                echo "INHERITED_ENV is $INHERITED_ENV"
+                echo "ACME_FUNC is $ACME_FUNC"
+                echo "JUST_A_CONSTANT is $JUST_A_CONSTANT"
+                echo "FROM_OUTSIDE is $FROM_OUTSIDE"
             }
         }
     }

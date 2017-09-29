@@ -33,9 +33,9 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh 'echo "CRED1 is $CRED1"'
-                sh 'echo "INBETWEEN is $INBETWEEN"'
-                sh 'echo $CRED1 > cred1.txt'
+                echo "CRED1 is $CRED1"
+                echo "INBETWEEN is $INBETWEEN"
+                writeFile file: "cred1.txt", text: "${CRED1}"
                 archive "**/*.txt"
             }
         }

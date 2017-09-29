@@ -36,12 +36,12 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh 'echo "SOME_VAR is $SOME_VAR"'
-                sh 'echo "OTHER_VAR is $OTHER_VAR"'
-                sh 'echo "INBETWEEN is $INBETWEEN"'
-                sh 'echo $INBETWEEN > inbetween.txt'
-                sh 'echo $CRED1 > cred1.txt'
-                sh 'echo $CRED2 > cred2.txt'
+                echo "SOME_VAR is $SOME_VAR"
+                echo "OTHER_VAR is $OTHER_VAR"
+                echo "INBETWEEN is $INBETWEEN"
+                writeFile file: "inbetween.txt", text: "${INBETWEEN}"
+                writeFile file: "cred1.txt", text: "${CRED1}"
+                writeFile file: "cred2.txt", text: "${CRED2}"
                 archive "**/*.txt"
             }
         }

@@ -33,16 +33,16 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "FOO_USR is $FOO_USR"'
-                sh 'echo "FOO_PSW is $FOO_PSW"'
+                echo "FOO is $FOO"
+                echo "FOO_USR is $FOO_USR"
+                echo "FOO_PSW is $FOO_PSW"
 
                 //Write to file
                 dir("combined") {
-                    sh 'echo $FOO > foo.txt'
+                    writeFile file:"foo.txt", text: "${FOO}"
                 }
-                sh 'echo $FOO_PSW > foo_psw.txt'
-                sh 'echo $FOO_USR > foo_usr.txt'
+                writeFile file:"foo_psw.txt", text: "${FOO_PSW}"
+                writeFile file:"foo_usr.txt", text: "${FOO_USR}"
                 archive "**/*.txt"
             }
         }

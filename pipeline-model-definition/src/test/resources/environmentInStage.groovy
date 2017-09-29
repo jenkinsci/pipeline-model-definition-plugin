@@ -37,7 +37,7 @@ pipeline {
             }
 
             steps {
-                sh 'echo "FOO is $FOO"'
+                echo "FOO is $FOO"
             }
         }
     }

@@ -27,7 +27,13 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh('echo "THIS WORKS"')
+                script {
+                    if (isUnix()) {
+                        sh('echo "THIS WORKS"')
+                    } else {
+                        bat('echo "THIS WORKS"')
+                    }
+                }
             }
         }
     }

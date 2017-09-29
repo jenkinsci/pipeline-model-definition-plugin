@@ -33,7 +33,13 @@ pipeline {
             }
 
             steps {
-                sh 'mvn --version'
+                script {
+                    if (isUnix()) {
+                        sh 'mvn --version'
+                    } else {
+                        bat 'mvn --version'
+                    }
+                }
             }
         }
     }

@@ -40,8 +40,8 @@ pipeline {
                 }
             }
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "_UNDERSCORE is $_UNDERSCORE"'
+                echo "FOO is $FOO"
+                echo "_UNDERSCORE is $_UNDERSCORE"
             }
         }
     }

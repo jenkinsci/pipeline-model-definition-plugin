@@ -28,7 +28,13 @@ pipeline {
         stage("foo") {
             agent any
             steps {
-                sh('echo "THIS WORKS"')
+                script {
+                    if (isUnix()) {
+                        sh('echo "THIS WORKS"')
+                    } else {
+                        bat('echo "THIS WORKS"')
+                    }
+                }
             }
         }
     }

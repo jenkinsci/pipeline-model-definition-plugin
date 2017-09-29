@@ -10,12 +10,12 @@
           "value": "some-label"
         },
         "children": [        {
-          "name": "sh",
-          "arguments": [          {
-            "key": "script",
-            "value":             {
+          "name": "script",
+          "arguments": [        {
+            "key": "scriptBlock",
+            "value":           {
               "isLiteral": true,
-              "value": "echo ONAGENT=$ONAGENT"
+              "value": "if (isUnix()) {\n                        sh('echo ONAGENT=$ONAGENT')\n                    } else {\n                        bat('echo ONAGENT=$ONAGENT')\n                    }"
             }
           }]
         }]

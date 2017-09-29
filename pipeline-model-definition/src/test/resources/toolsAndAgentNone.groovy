@@ -36,8 +36,15 @@ pipeline {
                 ant "default"
             }
             steps {
-                sh 'mvn --version'
-                sh 'ant -version'
+                script {
+                    if (isUnix()) {
+                        sh 'mvn --version'
+                        sh 'ant -version'
+                    } else {
+                        bat 'mvn --version'
+                        bat 'ant -version'
+                    }
+                }
             }
         }
     }

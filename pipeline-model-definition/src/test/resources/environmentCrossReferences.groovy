@@ -39,10 +39,10 @@ pipeline {
             }
 
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
-                sh 'echo "SPLODE is $SPLODE"'
+                echo "FOO is $FOO"
+                echo "BAR is $BAR"
+                echo "BAZ is $BAZ"
+                echo "SPLODE is $SPLODE"
             }
         }
     }
