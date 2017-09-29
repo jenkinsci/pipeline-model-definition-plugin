@@ -818,7 +818,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 "    this.steps = steps\n" +
                 "  }\n" +
                 "  def echo(msg) {\n" +
-                "    echo \"${msg}\"\n" +
+                "    steps.echo \"${msg}\"\n" +
                 "  }\n" +
                 "}\n");
         otherRepo.git("add", "src");
@@ -844,7 +844,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 "    this.steps = steps\n" +
                 "  }\n" +
                 "  def echo(msg) {\n" +
-                "    echo \"${msg}\"\n" +
+                "    steps.echo \"${msg}\"\n" +
                 "  }\n" +
                 "}\n");
         otherRepo.git("add", "src");
@@ -1008,7 +1008,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 "    this.steps = steps\n" +
                 "  }\n" +
                 "  def echo(msg) {\n" +
-                "    echo \"${msg}\"\n" +
+                "    steps.echo \"${msg}\"\n" +
                 "  }\n" +
                 "}\n");
         otherRepo.git("add", "src");
