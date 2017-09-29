@@ -1132,7 +1132,15 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
+    }
 
+    @Issue("JENKINS-47193")
+    @Test
+    public void classInJenkinsfile() throws Exception {
+        expect("classInJenkinsfile")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
     }
 
     @Issue("JENKINS-47109")
