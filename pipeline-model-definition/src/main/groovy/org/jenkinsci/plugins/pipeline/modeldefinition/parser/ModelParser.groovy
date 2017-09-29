@@ -557,6 +557,17 @@ class ModelParser implements Parser {
                         case 'parallel':
                             stage.parallel = parseStages(s)
                             break
+                        case 'failFast':
+                            List<Expression> args = ((TupleExpression) mc.arguments).expressions
+
+                            ConstantExpression exp = castOrNull(ConstantExpression.class, args[0])
+                            if (exp == null || !(exp.value instanceof Boolean)) {
+                                errorCollector.error(new ModelASTKey(mc.method),
+                                    Messages.ModelParser_ExpectedFailFast())
+                            } else {
+                                stage.setFailFast((Boolean)exp.value)
+                            }
+                            break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
                     }
