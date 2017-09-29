@@ -26,8 +26,6 @@ pipeline {
     environment {
         FOO = '${FOOTHAT}'
         BAR = "${FOO}BAR"
-        FOOWIN = '%FOOTHAT%'
-        BARWIN = "${FOOWIN}BAR"
     }
     agent {
         label "some-label"
@@ -37,7 +35,6 @@ pipeline {
         stage("foo") {
             environment {
                 BAZ = "${FOO}BAZ"
-                BAZWIN = "${FOOWIN}BAZ"
                 SPLODE = "${params.WUT ?: 'banana'}"
             }
 
@@ -49,9 +46,9 @@ pipeline {
                         sh 'echo "BAZ is $BAZ"'
                         sh 'echo "SPLODE is $SPLODE"'
                     } else {
-                        bat 'echo "FOO is %FOOWIN%"'
-                        bat 'echo "BAR is %BARWIN%"'
-                        bat 'echo "BAZ is %BAZWIN%"'
+                        bat 'echo "FOO is %FOO%"'
+                        bat 'echo "BAR is %BAR%"'
+                        bat 'echo "BAZ is %BAZ%"'
                         bat 'echo "SPLODE is %SPLODE%"'
                     }
                 }
