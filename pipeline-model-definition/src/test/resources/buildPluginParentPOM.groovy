@@ -19,8 +19,8 @@ pipeline {
                             sh 'echo "JAVA_HOME: ${JAVA_HOME}"'
                             sh 'mvn clean verify -Dmaven.test.failure.ignore=true'
                         } else {
-                            bat 'echo "M2_HOME: ${M2_HOME}"'
-                            bat 'echo "JAVA_HOME: ${JAVA_HOME}"'
+                            bat 'echo "M2_HOME: %M2_HOME%"'
+                            bat 'echo "JAVA_HOME: %JAVA_HOME%"'
                             bat 'mvn clean verify -Dmaven.test.failure.ignore=true'
                         }
                     }
