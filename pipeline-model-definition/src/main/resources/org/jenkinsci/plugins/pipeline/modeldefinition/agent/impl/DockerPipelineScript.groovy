@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPipeline> {
@@ -50,7 +51,7 @@ public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPip
                 }
             }
             try {
-                if (Utils.withinAStage()) {
+                if (Utils.withinAStage() && describable.alwaysPull) {
                     script.getProperty("docker").image(describable.image).pull()
                 }
                 script.getProperty("docker").image(describable.image).inside(describable.args, {

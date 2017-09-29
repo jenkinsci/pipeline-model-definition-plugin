@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,40 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
-
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-
-import javax.annotation.Nonnull;
-
-public class DockerPipeline extends AbstractDockerAgent<DockerPipeline> {
-    private String image;
-    private boolean alwaysPull;
-
-    @DataBoundConstructor
-    public DockerPipeline(@Nonnull String image) {
-        this.image = image;
-    }
-
-    public @Nonnull String getImage() {
-        return image;
-    }
-
-    @DataBoundSetter
-    public void setAlwaysPull(boolean alwaysPull) {
-        this.alwaysPull = alwaysPull;
-    }
-
-    public boolean isAlwaysPull() {
-        return alwaysPull;
-    }
-
-    @Extension(ordinal = 1000) @Symbol("docker")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor<DockerPipeline> {
+pipeline {
+    agent any
+    stages {
+        stage("build image") {
+            steps {
+                sh 'docker build -t maven:3-alpine .'
+            }
+        }
+        stage("in built image") {
+            agent {
+                docker {
+                    image "maven:3-alpine"
+                    args "-v /tmp:/tmp -p 8000:8000"
+                    reuseNode true
+                }
+            }
+            steps {
+                sh 'cat /hi-there'
+                sh 'echo "The answer is 42"'
+            }
+        }
+        stage("in pulled image") {
+            agent {
+                docker {
+                    image "maven:3-alpine"
+                    alwaysPull true
+                }
+                steps {
+                    sh 'mvn --version'
+                }
+            }
+        }
     }
 }
+
+
+
