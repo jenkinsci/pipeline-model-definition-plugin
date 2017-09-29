@@ -15,7 +15,7 @@
             "key": "scriptBlock",
             "value":           {
               "isLiteral": true,
-              "value": "if (isUnix()) {\n                        sh('echo ONAGENT=$ONAGENT')\n                    } else {\n                        bat('echo ONAGENT=$ONAGENT')\n                    }"
+              "value": "if (isUnix()) {\n                        sh('echo ONAGENT=$ONAGENT')\n                    } else {\n                        bat('echo ONAGENT=%ONAGENT%')\n                    }"
             }
           }]
         }]

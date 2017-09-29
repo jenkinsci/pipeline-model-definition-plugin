@@ -35,7 +35,7 @@ pipeline {
                     if (isUnix()) {
                         sh('echo ONAGENT=$ONAGENT')
                     } else {
-                        bat('echo ONAGENT=$ONAGENT')
+                        bat('echo ONAGENT=%ONAGENT%')
                     }
                 }
             }
