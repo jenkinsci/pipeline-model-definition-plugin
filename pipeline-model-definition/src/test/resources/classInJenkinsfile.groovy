@@ -26,6 +26,8 @@ class SomeClass {
     String someField
 }
 
+enum Modes { Debug, Release }
+
 pipeline {
     agent none
     stages {
