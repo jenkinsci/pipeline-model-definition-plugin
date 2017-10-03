@@ -49,9 +49,9 @@ pipeline {
                     image "maven:3-alpine"
                     alwaysPull true
                 }
-                steps {
-                    sh 'mvn --version'
-                }
+            }
+            steps {
+                sh 'mvn --version'
             }
         }
     }
