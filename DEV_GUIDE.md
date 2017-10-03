@@ -1,5 +1,15 @@
 # Developer guide to the Declarative Pipeline plugins
 
+## Docker tests on OS X
+
+Docker for Mac out of the box will not be able to run the Docker tests due
+to mount issues. To fix this, add the following in Docker Preferences ->
+File Sharing, in this order:
+* `/tmp` - this will initially add as `/private/tmp`. Double-click on `/private/tmp` and change to just `/tmp`.
+* `/var/folders` - this will initially add as `/private/var/folders`. 
+Double-click on `/private/var/folders` and change to just `/var/folders`.
+* `/private` - make sure to add this last.
+
 ## AST Parsing, Validation, and Transformation
 
 ### Overview
