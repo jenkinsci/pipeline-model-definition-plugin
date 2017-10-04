@@ -41,13 +41,21 @@ import groovy.transform.ToString
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements Serializable {
 
-    @Delegate Map<String,O> resultMap = [:]
+    Map<String,O> resultMap = [:]
 
     public MappedClosure() {
     }
 
     public MappedClosure(Map<String,O> inMap) {
         this.resultMap.putAll(inMap)
+    }
+
+    public O remove(String p) {
+        return resultMap.remove(p)
+    }
+
+    public add(String k, O v) {
+        resultMap.add(k, v)
     }
 
     public Map<String, Object> getMap() {
