@@ -72,7 +72,7 @@ public class Environment implements Serializable {
         private static final long serialVersionUID = 1L
 
         private CpsScript script
-        private Map<String,Closure> closureMap = new TreeMap<>()
+        private Map<String,Closure> closureMap = new HashMap<>()
         private EnvironmentResolver fallback
 
         @Whitelisted
