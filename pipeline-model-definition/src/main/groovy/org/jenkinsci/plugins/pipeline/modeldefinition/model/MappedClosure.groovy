@@ -54,7 +54,7 @@ public abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements S
         return resultMap.remove(p)
     }
 
-    public add(String k, O v) {
+    public put(String k, O v) {
         resultMap.add(k, v)
     }
 
