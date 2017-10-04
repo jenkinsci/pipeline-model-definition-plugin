@@ -307,7 +307,7 @@ public class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
-        Map<String,CredentialWrapper> creds = new TreeMap<>()
+        Map<String,CredentialWrapper> creds = new HashMap<>()
         
         if (environment != null) {
             try {
