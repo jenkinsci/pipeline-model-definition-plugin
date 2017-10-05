@@ -3,12 +3,18 @@
 ## Docker tests on OS X
 
 Docker for Mac out of the box will not be able to run the Docker tests due
-to mount issues. To fix this, add the following in Docker Preferences ->
-File Sharing, in this order:
+to mount issues. To fix this, make sure the following are present in Docker
+Preferences -> File Sharing. You may need to remove `/private` and then add it
+again after adding `/tmp` and `/var/folders`.
 * `/tmp` - this will initially add as `/private/tmp`. Double-click on `/private/tmp` and change to just `/tmp`.
 * `/var/folders` - this will initially add as `/private/var/folders`. 
 Double-click on `/private/var/folders` and change to just `/var/folders`.
-* `/private` - make sure to add this last.
+* `/private` - make sure to add this last, or you won't be able to add `/tmp`
+and `/var/folders`, since they are both actually symlinks under `/private`.
+
+This has been tested with Docker for Mac 2017.03 and 2017.09, and should keep
+working going forward. You can verify that Docker tests work by running 
+`AgentTest#agentDocker` in the `pipeline-model-definition` module.
 
 ## AST Parsing, Validation, and Transformation
 
