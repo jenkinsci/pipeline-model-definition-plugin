@@ -547,8 +547,8 @@ public class Utils {
             jobPropertiesToApply.each { p ->
                 // Remove the existing instance(s) of the property class before we add the new one. We're looping and
                 // removing multiple to deal with the results of JENKINS-44809.
-                while (j.getProperty(p.class) != null) {
-                    j.removeProperty(p.class)
+                while (j.removeProperty(p.class) != null) {
+                    // removed one, try again in case there is more
                 }
                 j.addProperty(p)
             }
