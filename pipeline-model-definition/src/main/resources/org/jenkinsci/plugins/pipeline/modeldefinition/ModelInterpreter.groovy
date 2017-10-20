@@ -361,21 +361,21 @@ public class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def toolsBlock(Agent agent, Tools tools, Root root = null, Closure body) {
-        def toolsMap = new TreeMap<String,Closure>()
+        def toolsList = []
         if (tools != null) {
-            toolsMap = tools.mergeToolEntries(root?.tools)
+            toolsList = tools.mergeToolEntries(root?.tools)
         } else if (root?.tools != null) {
-            toolsMap = root.tools.mergeToolEntries(null)
+            toolsList = root.tools.mergeToolEntries(null)
         }
         // If there's no agent, don't install tools in the first place.
-        if (agent.hasAgent() && !toolsMap.isEmpty()) {
+        if (agent.hasAgent() && !toolsList.isEmpty()) {
             def toolEnv = []
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.toolInstall()) {
-                    toolEnv = actualToolsInstall(toolsMap)
+                    toolEnv = actualToolsInstall(toolsList)
                 }
             } else {
-                toolEnv = actualToolsInstall(toolsMap)
+                toolEnv = actualToolsInstall(toolsList)
             }
             return {
                 script.withEnv(toolEnv) {
@@ -389,10 +389,12 @@ public class ModelInterpreter implements Serializable {
         }
     }
 
-    def actualToolsInstall(Map<String,Closure> toolsMap) {
+    def actualToolsInstall(List<List<Object>> toolsList) {
         def toolEnv = []
 
-        toolsMap.each { k, v ->
+        toolsList.each { l ->
+            String k = l.get(0)
+            Closure v = (Closure)l.get(1)
             String toolVer = v.call()
 
             String toolPath = script.tool(name: toolVer, type: Tools.typeForKey(k))
