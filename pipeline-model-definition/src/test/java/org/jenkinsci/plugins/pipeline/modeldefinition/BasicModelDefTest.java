@@ -1156,4 +1156,15 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .hasFailureCase()
                 .go();
     }
+
+    @Issue("JENKINS-46359")
+    @Test
+    public void retryActuallyRetriesStages() throws Exception {
+    expect("retryActuallyRetriesStages")
+            .logContains("runCount is 1",
+                    "runCount is 2",
+                    "Failing - retry me!",
+                    "Stage Foo will not fail...")
+            .go();
+    }
 }

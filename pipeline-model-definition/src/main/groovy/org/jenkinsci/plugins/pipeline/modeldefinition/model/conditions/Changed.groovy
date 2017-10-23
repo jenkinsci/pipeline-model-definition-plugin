@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 import hudson.Extension
 import hudson.model.Result
 import org.jenkinsci.Symbol
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
@@ -37,20 +38,26 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 @Extension(ordinal=900d) @Symbol("changed")
 public class Changed extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
+    public boolean meetsCondition(WorkflowRun r, Exception error) {
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
+        Result currentResult
+        if (error != null) {
+            currentResult = Utils.getResultFromException(error)
+        } else {
+            currentResult = r.getResult()
+        }
         // If there's no previous build, we're inherently changed.
         if (prev == null) {
             return true
         }
         // If the current build's result isn't null (i.e., it's got a specified status), and it's different than the
         // previous build's result, we're changed.
-        else if (r.getResult() != null && !prev.getResult().equals(r.getResult())) {
+        else if (currentResult != null && !prev.getResult().equals(currentResult)) {
             return true
         }
         // If the current build's result is null and the previous build's result is not SUCCESS, we're changed.
-        else if (r.getResult() == null && !prev.getResult().equals(Result.SUCCESS)) {
+        else if (currentResult == null && !prev.getResult().equals(Result.SUCCESS)) {
             return true
         }
         // And in any other condition, we're not changed, so return false.
