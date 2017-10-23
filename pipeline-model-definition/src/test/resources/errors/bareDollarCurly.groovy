@@ -24,23 +24,18 @@
 
 pipeline {
     environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
+        FOO = ${env.BUILD_NUMBER}
     }
+
     agent {
         label "some-label"
     }
 
     stages {
         stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-            }
-
             steps {
                 sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
+                sh ${FOO}
             }
         }
     }

@@ -305,6 +305,40 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("Until JENKINS-46831 is addressed")
+    @Issue("JENKINS-46831")
+    @Test
+    public void agentDockerGlobalThenLabel() throws Exception {
+        expect("agentDockerGlobalThenLabel")
+            .logContains(
+                "first agent = first",
+                "second agent = second"
+            )
+            .go();
+    }
+
+    @Issue("JENKINS-47106")
+    @Test
+    public void dockerPullLocalImage() throws Exception {
+        assumeDocker();
+        // Bind mounting /var on OS X doesn't work at the moment
+        onAllowedOS(PossibleOS.LINUX);
+
+        sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        expect("dockerPullLocalImage")
+                .logContains("[Pipeline] { (in built image)",
+                        "The answer is 42",
+                        "-v /tmp:/tmp -p 8000:8000",
+                        "HI THERE",
+                        "Maven home: /usr/share/maven")
+                .go();
+    }
+
+
     private void agentDocker(final String jenkinsfile, String... additionalLogContains) throws Exception {
         assumeDocker();
         // Bind mounting /var on OS X doesn't work at the moment

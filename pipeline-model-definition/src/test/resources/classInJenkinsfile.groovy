@@ -22,25 +22,18 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
-    }
-    agent {
-        label "some-label"
-    }
+class SomeClass {
+    String someField
+}
 
+enum Modes { Debug, Release }
+
+pipeline {
+    agent none
     stages {
         stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-            }
-
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
+                echo "hello"
             }
         }
     }

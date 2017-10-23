@@ -62,23 +62,27 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUti
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeASTTransformer {
-    private final ModelASTPipelineDef pipelineDef
-
-    RuntimeASTTransformer(@Nonnull ModelASTPipelineDef pipelineDef) {
-        this.pipelineDef = pipelineDef
+    RuntimeASTTransformer() {
     }
 
     /**
-     * Given a run, transform {@link #pipelineDef}, attach the {@link ModelASTStages} for {@link #pipelineDef} to the
+     * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
      * run, and return an {@link ArgumentListExpression} containing a closure that returns the {@Root} we just created.
      */
-    ArgumentListExpression transform(@CheckForNull Run<?,?> run) {
+    ArgumentListExpression transform(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?,?> run) {
         Expression root = transformRoot(pipelineDef)
-        if (run != null && run.getAction(ExecutionModelAction.class) == null) {
+        if (run != null) {
             ModelASTStages stages = pipelineDef.stages
             stages.removeSourceLocation()
-            run.addAction(new ExecutionModelAction(stages))
+            ExecutionModelAction action = run.getAction(ExecutionModelAction.class)
+            if (action == null) {
+                run.addAction(new ExecutionModelAction(stages))
+            } else {
+                action.addStages(stages)
+                run.save()
+            }
         }
+
         return args(
             closureX(
                 block(
@@ -606,7 +610,8 @@ class RuntimeASTTransformer {
                     transformOptions(original.options),
                     transformTriggers(original.triggers),
                     transformParameters(original.parameters),
-                    transformLibraries(original.libraries)))
+                    transformLibraries(original.libraries),
+                    constX(original.stages.getUuid().toString())))
         }
 
         return constX(null)
@@ -629,7 +634,8 @@ class RuntimeASTTransformer {
                     transformStageConditionals(original.when),
                     transformTools(original.tools),
                     transformEnvironment(original.environment),
-                    transformStages(original.parallel)))
+                    transformStages(original.parallel),
+                    constX(original.failFast != null ? original.failFast : false)))
         }
 
         return constX(null)
@@ -737,7 +743,11 @@ class RuntimeASTTransformer {
             MapExpression toolsMap = new MapExpression()
             original.tools.each { k, v ->
                 if (v.sourceLocation != null && v.sourceLocation instanceof Expression) {
-                    toolsMap.addMapEntryExpression(constX(k.key), (Expression)v.sourceLocation)
+                    if (v.sourceLocation instanceof ClosureExpression) {
+                        toolsMap.addMapEntryExpression(constX(k.key), (ClosureExpression) v.sourceLocation)
+                    } else {
+                        toolsMap.addMapEntryExpression(constX(k.key), closureX(block(returnS((Expression) v.sourceLocation))))
+                    }
                 }
             }
             return ctorX(ClassHelper.make(Tools.class), args(toolsMap))

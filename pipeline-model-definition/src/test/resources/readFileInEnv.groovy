@@ -23,28 +23,15 @@
  */
 
 pipeline {
+    agent any
     environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
+        MY_VERSION = readFile 'Version'
     }
-    agent {
-        label "some-label"
-    }
-
     stages {
-        stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-            }
-
+        stage ('Print'){
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
+                echo "Version is ${MY_VERSION}"
             }
         }
     }
 }
-
-
-

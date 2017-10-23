@@ -1,0 +1,44 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"FOO is $FOO\""
+            }
+          }]
+        },
+        {
+          "name": "sh",
+          "arguments": [          {
+            "key": "script",
+            "value":             {
+              "isLiteral": false,
+              "value": "${${FOO}}"
+            }
+          }]
+        }
+      ]
+    }]
+  }],
+  "environment": [  {
+    "key": "FOO",
+    "value":     {
+      "isLiteral": false,
+      "value": "${${env.BUILD_NUMBER}}"
+    }
+  }],
+  "agent":   {
+    "type": "label",
+    "argument":     {
+      "isLiteral": true,
+      "value": "some-label"
+    }
+  }
+}}

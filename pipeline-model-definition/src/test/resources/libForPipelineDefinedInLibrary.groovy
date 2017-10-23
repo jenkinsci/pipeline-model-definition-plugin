@@ -22,29 +22,35 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
-    }
-    agent {
-        label "some-label"
-    }
-
-    stages {
-        stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
+def call() {
+    pipeline {
+        agent any
+        environment {
+            BRANCH_NAME = "master"
+        }
+        stages {
+            stage("One") {
+                steps {
+                    echo "Hello"
+                }
             }
+            stage("Two") {
+                when {
+                    allOf {
+                        branch "master"
+                        expression {
+                            "foo" == "bar"
+                        }
+                    }
+                }
+                steps {
+                    script {
+                        echo "World"
+                        echo "Heal it"
+                    }
 
-            steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
+                }
             }
         }
     }
 }
-
-
-

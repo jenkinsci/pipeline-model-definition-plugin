@@ -23,28 +23,32 @@
  */
 
 pipeline {
-    environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
-    }
-    agent {
-        label "some-label"
-    }
-
+    agent none
     stages {
         stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-            }
-
-            steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
+            failFast true
+            parallel {
+                stage("first") {
+                    steps {
+                        error "First branch"
+                    }
+                }
+                stage("second") {
+                    steps {
+                        sleep 10
+                        echo "Second branch"
+                    }
+                    post {
+                        aborted {
+                            echo "SECOND STAGE ABORTED"
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 
 
 

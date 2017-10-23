@@ -29,11 +29,13 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
 
 public class DockerPipeline extends AbstractDockerAgent<DockerPipeline> {
     private String image;
+    private boolean alwaysPull;
 
     @DataBoundConstructor
     public DockerPipeline(@Nonnull String image) {
@@ -42,6 +44,15 @@ public class DockerPipeline extends AbstractDockerAgent<DockerPipeline> {
 
     public @Nonnull String getImage() {
         return image;
+    }
+
+    @DataBoundSetter
+    public void setAlwaysPull(boolean alwaysPull) {
+        this.alwaysPull = alwaysPull;
+    }
+
+    public boolean isAlwaysPull() {
+        return alwaysPull;
     }
 
     @Extension(ordinal = 1000) @Symbol("docker")

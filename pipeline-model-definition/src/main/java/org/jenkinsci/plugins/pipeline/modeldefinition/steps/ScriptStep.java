@@ -71,21 +71,13 @@ public final class ScriptStep extends AbstractStepImpl implements Serializable {
 
     public static final class ScriptStepExecution extends AbstractStepExecutionImpl {
 
-        private BodyExecution body;
-
         @Override
         public boolean start() throws Exception {
 
-            body = getContext().newBodyInvoker()
+            getContext().newBodyInvoker()
                     .withCallback(BodyExecutionCallback.wrap(getContext()))
                     .start();
             return false;
-        }
-
-        @Override
-        public void stop(Throwable cause) throws Exception {
-            if (body != null)
-                body.cancel(cause);
         }
 
         private static final long serialVersionUID = 1L;

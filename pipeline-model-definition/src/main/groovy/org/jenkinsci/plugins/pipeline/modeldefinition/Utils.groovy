@@ -47,6 +47,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -261,6 +262,18 @@ public class Utils {
         }
 
         return nodes
+    }
+
+    static void markExecutedStagesOnAction(CpsScript script, String astUUID) throws Exception {
+        WorkflowRun r = script.$build()
+        ExecutionModelAction action = r.getAction(ExecutionModelAction.class)
+        if (action != null) {
+            if (action.stagesUUID != null) {
+                throw new IllegalStateException("Only one pipeline { ... } block can be executed in a single run.")
+            }
+            action.setStagesUUID(astUUID)
+            r.save()
+        }
     }
 
     private static void markStageWithTag(String stageName, String tagName, String tagValue) {
@@ -534,8 +547,8 @@ public class Utils {
             jobPropertiesToApply.each { p ->
                 // Remove the existing instance(s) of the property class before we add the new one. We're looping and
                 // removing multiple to deal with the results of JENKINS-44809.
-                while (j.getProperty(p.class) != null) {
-                    j.removeProperty(p.class)
+                while (j.removeProperty(p.class) != null) {
+                    // removed one, try again in case there is more
                 }
                 j.addProperty(p)
             }

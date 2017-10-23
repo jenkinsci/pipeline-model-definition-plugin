@@ -163,8 +163,9 @@ class ModelValidatorImpl implements ModelValidator {
             } else {
                 // Don't bother checking whether the tool exists in this Jenkins master if we know it isn't an allowed tool type.
 
-                // Can't do tools validation without a Jenkins instance, so move on if that's not available.
-                if (Jenkins.getInstance() != null) {
+                // Can't do tools validation without a Jenkins instance, so move on if that's not available, or if the tool value is a
+                // non-literal - we allow users to shoot themselves there.
+                if (Jenkins.getInstance() != null && v.isLiteral()) {
                     // Not bothering with a null check here since we could only get this far if the ToolDescriptor's available in the first place.
                     ToolDescriptor desc = ToolInstallation.all().find { it.getId().equals(Tools.typeForKey(k.key)) }
                     def installer = desc.getInstallations().find { it.name.equals((String) v.value) }

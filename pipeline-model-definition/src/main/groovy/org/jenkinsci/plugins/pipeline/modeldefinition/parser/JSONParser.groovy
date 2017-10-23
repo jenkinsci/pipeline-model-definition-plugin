@@ -167,7 +167,7 @@ class JSONParser implements Parser {
             stage.branches.add(parseBranch(branches.append(JsonPointer.of(i))))
         }
 
-        if (j.node.has("failFast") && stage.branches.size() > 1) {
+        if (j.node.has("failFast") && (stage.branches.size() > 1 || j.node.has("parallel")))  {
             stage.failFast = j.node.get("failFast")?.asBoolean()
         }
 
@@ -480,6 +480,12 @@ class JSONParser implements Parser {
             }
         } else {
             val = ModelASTValue.fromGString(o.node.get("value").textValue(), o)
+            String valToGroovy = val.toGroovy()
+            // Make sure we don't allow ${whatever} without being in quotes, since that's actually going to translate as
+            // $() { whatever } which is...not what we wanted.
+            if (valToGroovy.startsWith('${')) {
+                errorCollector.error(val, Messages.ModelParser_BareDollarCurly(valToGroovy))
+            }
         }
 
         return val;

@@ -27,13 +27,13 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>1.2-beta-5-SNAPSHOT</version>
+    <version>1.2.3-SNAPSHOT</version>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-definition</artifactId>
   <packaging>hpi</packaging>
-  <name>Pipeline: Model Definition</name>
+  <name>Pipeline: Declarative</name>
   <description>An opinionated, declarative Pipeline</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
 
@@ -141,6 +141,10 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials</artifactId>
     </dependency>
     <!-- Dependency on tombstoned declarative agent plugin to make sure we don't end up with a
     bad old version installed -->

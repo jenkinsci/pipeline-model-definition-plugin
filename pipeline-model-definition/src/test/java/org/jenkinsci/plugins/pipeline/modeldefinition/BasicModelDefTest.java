@@ -64,6 +64,7 @@ import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.steps.ErrorStep;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -1021,6 +1022,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("This breaks on PCT, so re-enable when we depend on newer core than 2.60")
     @Issue("JENKINS-45198")
     @Test
     public void scmEnvVars() throws Exception {
@@ -1028,9 +1030,130 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         // older core etc, but just doesn't do anything, since checkout scm isn't returning anything yet. But with newer
         // core, etc, it'll Just Work.
         expect("scmEnvVars")
-                // TODO: switch to .logNotContains("GIT_COMMIT is null") once we've moved to core 2.60+,
                 // workflow-scm-step 2.6+, git 3.3.1+
-                .logContains("GIT_COMMIT is null")
+                .logNotContains("GIT_COMMIT is null")
+                .go();
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void pipelineDefinedInLibrary() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForPipelineDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        expect("pipelineDefinedInLibrary")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void pipelineDefinedInLibraryInFolder() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForPipelineDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+        Folder folder = j.jenkins.createProject(Folder.class, "libInFolder");
+        folder.getProperties().add(new FolderLibraries(Collections.singletonList(firstLib)));
+
+        expect("pipelineDefinedInLibrary")
+                .inFolder(folder)
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void multiplePipelinesDefinedInLibrary() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForMultiplePipelinesDefinedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        WorkflowRun firstRun = expect("multiplePipelinesDefinedInLibraryFirst")
+                .runFromRepo(false)
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+
+        ExecutionModelAction firstAction = firstRun.getAction(ExecutionModelAction.class);
+        assertNotNull(firstAction);
+        ModelASTStages firstStages = firstAction.getStages();
+        assertNotNull(firstStages);
+        assertEquals(2, firstStages.getStages().size());
+
+        WorkflowRun secondRun = expect("multiplePipelinesDefinedInLibrarySecond")
+                .runFromRepo(false)
+                .logContains("[Pipeline] { (Different)", "This is the alternative pipeline")
+                .go();
+
+        ExecutionModelAction secondAction = secondRun.getAction(ExecutionModelAction.class);
+        assertNotNull(secondAction);
+        ModelASTStages secondStages = secondAction.getStages();
+        assertNotNull(secondStages);
+        assertEquals(1, secondStages.getStages().size());
+    }
+
+    @Issue("JENKINS-46547")
+    @Test
+    public void multiplePipelinesExecutedInLibraryShouldFail() throws Exception {
+        otherRepo.init();
+        otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libForMultiplePipelinesExecutedInLibrary"));
+        otherRepo.git("add", "vars");
+        otherRepo.git("commit", "--message=init");
+        LibraryConfiguration firstLib = new LibraryConfiguration("from-lib",
+                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib));
+
+        expect(Result.FAILURE, "pipelineDefinedInLibrary")
+                .logContains("java.lang.IllegalStateException: Only one pipeline { ... } block can be executed in a single run")
+                .go();
+    }
+
+    @Test
+    public void fromEvaluate() throws Exception {
+        expect("fromEvaluate")
+                .otherResource("whenAnd.groovy", "whenAnd.groovy")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-47193")
+    @Test
+    public void classInJenkinsfile() throws Exception {
+        expect("classInJenkinsfile")
+                .logContains("[Pipeline] { (foo)", "hello")
+                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+                .go();
+    }
+
+    @Issue("JENKINS-47109")
+    @Test
+    public void parallelStagesFailFast() throws Exception {
+        expect(Result.ABORTED, "parallelStagesFailFast")
+                .logContains("[Pipeline] { (foo)",
+                        "[first] { (Branch: first)",
+                        "[Pipeline] [first] { (first)",
+                        "[second] { (Branch: second)",
+                        "[Pipeline] [second] { (second)",
+                        "SECOND STAGE ABORTED")
+                .hasFailureCase()
                 .go();
     }
 

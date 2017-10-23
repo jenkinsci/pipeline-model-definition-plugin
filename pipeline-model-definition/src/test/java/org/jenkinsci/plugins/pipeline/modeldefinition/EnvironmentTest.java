@@ -291,4 +291,13 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("FOO is OTHER", "BAZ is BAR")
                 .go();
     }
+
+    @Issue("JENKINS-42702")
+    @Test
+    public void readFileInEnv() throws Exception {
+        expect("readFileInEnv")
+                .otherResource("readFileInEnv-data.txt", "Version")
+                .logContains("Version is BANANA")
+                .go();
+    }
 }

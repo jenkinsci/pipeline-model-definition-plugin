@@ -27,14 +27,56 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 import hudson.model.InvisibleAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class ExecutionModelAction extends InvisibleAction {
-    private final ModelASTStages stages;
+    private ModelASTStages stages;
+    private String stagesUUID;
+    private final List<ModelASTStages> stagesList = new ArrayList<>();
 
     public ExecutionModelAction(ModelASTStages s) {
-        this.stages = s;
+        this.stagesList.add(s);
+        this.stages = null;
+    }
+
+    public ExecutionModelAction(List<ModelASTStages> s) {
+        this.stagesList.addAll(s);
+        this.stages = null;
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.stages != null) {
+            this.stagesList.add(stages);
+            this.stages = null;
+        }
+        return this;
     }
 
     public ModelASTStages getStages() {
-        return stages;
+        for (ModelASTStages s : stagesList) {
+            if (s.getUuid().toString().equals(stagesUUID)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    public String getStagesUUID() {
+        return stagesUUID;
+    }
+
+    public void setStagesUUID(String s) {
+        this.stagesUUID = s;
+    }
+
+    public List<ModelASTStages> getStagesList() {
+        return Collections.unmodifiableList(stagesList);
+    }
+
+    public void addStages(ModelASTStages s) {
+        this.stagesList.add(s);
     }
 }

@@ -23,24 +23,35 @@
  */
 
 pipeline {
-    environment {
-        FOO = "FOO"
-        BAR = "${WORKSPACE}BAR"
-    }
-    agent {
-        label "some-label"
-    }
-
+    agent any
     stages {
-        stage("foo") {
-            environment {
-                BAZ = "${FOO}BAZ"
-            }
-
+        stage("build image") {
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
+                sh 'docker build -t maven:3-alpine .'
+            }
+        }
+        stage("in built image") {
+            agent {
+                docker {
+                    image "maven:3-alpine"
+                    args "-v /tmp:/tmp -p 8000:8000"
+                    reuseNode true
+                }
+            }
+            steps {
+                sh 'cat /hi-there'
+                sh 'echo "The answer is 42"'
+            }
+        }
+        stage("in pulled image") {
+            agent {
+                docker {
+                    image "maven:3-alpine"
+                    alwaysPull true
+                }
+            }
+            steps {
+                sh 'mvn --version'
             }
         }
     }
