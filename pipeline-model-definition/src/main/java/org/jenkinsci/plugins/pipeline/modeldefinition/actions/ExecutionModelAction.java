@@ -35,7 +35,7 @@ import java.util.List;
 public class ExecutionModelAction extends InvisibleAction {
     private ModelASTStages stages;
     private String stagesUUID;
-    private final List<ModelASTStages> stagesList = new ArrayList<>();
+    private List<ModelASTStages> stagesList = new ArrayList<>();
 
     public ExecutionModelAction(ModelASTStages s) {
         this.stagesList.add(s);
@@ -49,7 +49,11 @@ public class ExecutionModelAction extends InvisibleAction {
 
     protected Object readResolve() throws IOException {
         if (this.stages != null) {
+            if (this.stagesList == null) {
+                this.stagesList = new ArrayList<>();
+            }
             this.stagesList.add(stages);
+            
             this.stages = null;
         }
         return this;
