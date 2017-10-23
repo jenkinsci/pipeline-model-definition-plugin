@@ -43,7 +43,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker");
-        s.getNodeProperties().add(
+        j.jenkins.getGlobalNodeProperties().add(
                 new EnvironmentVariablesNodeProperty(
                         new EnvironmentVariablesNodeProperty.Entry("HAS_BACKSLASHES", "C:\\Windows"),
                         new EnvironmentVariablesNodeProperty.Entry("FOO", "OTHER")));

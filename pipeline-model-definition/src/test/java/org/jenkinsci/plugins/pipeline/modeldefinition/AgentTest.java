@@ -63,6 +63,22 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43911")
+    @Test
+    public void agentLabelFromExternalVariable() throws Exception {
+        expect("agentLabelFromExternalVariable")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
+                .go();
+    }
+
+    @Issue("JENKINS-43911")
+    @Test
+    public void agentLabelFromEnv() throws Exception {
+        expect("agentLabelFromEnv")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
+                .go();
+    }
+
     @Issue("JENKINS-37932")
     @Test
     public void agentAny() throws Exception {
