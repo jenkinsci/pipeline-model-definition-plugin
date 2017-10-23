@@ -871,7 +871,7 @@ class ModelParser implements Parser {
         def mc = matchMethodCall(st);
         if (mc == null) {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(condition, Messages.ModelParser_ExpectedStep());
+            errorCollector.error(condition, Messages.ModelParser_ExpectedWhen());
             return condition
         };
 

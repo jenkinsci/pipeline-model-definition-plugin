@@ -762,4 +762,12 @@ public class ValidatorTest extends AbstractModelDefTest {
                         Messages.ModelParser_BareDollarCurly("${FOO}"))
                 .go();
     }
+
+    @Issue("JENKINS-47559")
+    @Test
+    public void whenContainingNonCondition() throws Exception {
+        expectError("whenContainingNonCondition")
+                .logContains(Messages.ModelParser_ExpectedWhen())
+                .go();
+    }
 }
