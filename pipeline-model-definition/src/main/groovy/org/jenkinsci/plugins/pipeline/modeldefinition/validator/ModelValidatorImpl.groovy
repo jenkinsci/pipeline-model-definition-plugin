@@ -210,6 +210,11 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
         def allNames = DeclarativeStageConditionalDescriptor.allNames()
 
+        // Short-circuit in cases where the condition didn't parse right in the first place.
+        if (condition?.name == null) {
+            return false
+        }
+        
         if (!(condition.name in allNames)) {
             errorCollector.error(condition, Messages.ModelValidatorImpl_UnknownWhenConditional(condition.name, allNames.join(", ")))
             valid = false
