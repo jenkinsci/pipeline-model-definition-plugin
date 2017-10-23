@@ -25,15 +25,21 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.BooleanParameterDefinition;
+import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.LogRotator;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
+
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -45,6 +51,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -269,6 +276,54 @@ public class OptionsTest extends AbstractModelDefTest {
         }
 
         assertEquals(1, externalPropCount);
+    }
+
+    @Issue("JENKINS-46403")
+    @Test
+    public void replaceLogRotatorWithBuildDiscarderProperty() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleJobProperties"), true));
+
+        // we want to test a job with an old-style logRotator property, for which there is no setter anymore
+        try {
+            Field deprecatedLogRotatorField = Job.class.getDeclaredField("logRotator");
+            deprecatedLogRotatorField.setAccessible(true);
+            deprecatedLogRotatorField.set(job, new LogRotator(-1, 42, -1, 2));
+            job.save();
+            assertNotNull(job.getBuildDiscarder());
+            if (job.getBuildDiscarder() instanceof LogRotator) {
+                LogRotator lr = (LogRotator) job.getBuildDiscarder();
+                assertEquals(lr.getNumToKeep(), 42);
+            }
+        } catch (NoSuchFieldException e) {
+            // if there is no such field anymore, then I guess there is no potential issue anymore
+        }
+
+        // run the job
+        QueueTaskFuture<WorkflowRun> f = job.scheduleBuild2(0);
+
+        // wait up to 10 seconds, fail test on timeout (see livelock described in JENKINS-46403)
+        try {
+            j.waitUntilNoActivityUpTo(10_000);
+            // we could use f.get(...) and TimeoutException instead, but this is convenient to dump threads
+        } catch (AssertionError ae) {
+            // makes termination faster by actually killing the job (avoids another 60 seconds)
+            f.getStartCondition().get(100L, TimeUnit.MILLISECONDS).doKill();
+            throw ae;
+        }
+
+        // no timeout, the build should be blue
+        j.assertBuildStatusSuccess(f);
+
+        // check the original old-style LogRotator has been replaced by something else
+        assertNotNull(job.getBuildDiscarder());
+        if (job.getBuildDiscarder() instanceof LogRotator) {
+            LogRotator lr = (LogRotator) job.getBuildDiscarder();
+            assertNotEquals(lr.getNumToKeep(), 42);
+        }
     }
 
     @Issue("TBD")
