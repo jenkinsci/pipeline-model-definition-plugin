@@ -55,16 +55,18 @@ public class Tools extends MappedClosure<Closure,Tools> implements Serializable 
     /**
      * Merges the tool entries from another instance into this one, defaulting to the current instance's values.
      *
-     * @return A map of type/name
+     * @return A list of type/name
      */
     @Nonnull
-    public Map<String,Closure> mergeToolEntries(@CheckForNull Tools other) {
-        Map<String,Closure> mergedMap = [:]
+    public List<List<Object>> mergeToolEntries(@CheckForNull Tools other) {
+        Map<String,Object> mergedMap = [:]
         if (other != null) {
             mergedMap.putAll(other.getMap())
         }
         mergedMap.putAll(getMap())
-        return mergedMap
+        return mergedMap.collect { k, v ->
+            [k, v]
+        }
     }
 
     /**
