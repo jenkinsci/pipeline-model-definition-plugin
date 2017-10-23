@@ -59,7 +59,7 @@ pipeline {
                 label "windows"
             }
             steps {
-                bat 'mvn clean install -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true'
+                bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true'
             }
             post {
                 always {
