@@ -27,12 +27,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.options;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
-import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 public abstract class DeclarativeOptionDescriptor extends Descriptor<DeclarativeOption> {

@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents what context in which to run the build - i.e., which label to run on, what Docker agent to run in, etc.
  * Corresponds to Agent.
@@ -34,7 +36,7 @@ public final class ModelASTAgent extends ModelASTElement {
     }
 
     @Override
-    public void validate(ModelValidator validator) {
+    public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
         if (variables != null) {
             variables.validate(validator);

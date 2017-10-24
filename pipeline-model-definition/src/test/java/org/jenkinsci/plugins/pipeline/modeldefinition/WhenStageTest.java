@@ -361,6 +361,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         while (item != null && item.getFuture() == null) {
             Thread.sleep(200);
         }
+        assertNotNull(item);
         item.getFuture().waitForStart();
     }
 
@@ -372,7 +373,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         public TestChangeLogStrategy() {
             try {
                 mockPr = Class.forName("jenkins.scm.impl.mock.MockChangeRequestSCMHead");
-            } catch (ClassNotFoundException _) {
+            } catch (ClassNotFoundException e) {
                 mockPr = null;
             }
         }

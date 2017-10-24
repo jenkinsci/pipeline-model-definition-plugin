@@ -31,5 +31,5 @@ import javax.annotation.CheckForNull
 
 
 interface Parser {
-    public @CheckForNull ModelASTPipelineDef parse()
+    @CheckForNull ModelASTPipelineDef parse()
 }

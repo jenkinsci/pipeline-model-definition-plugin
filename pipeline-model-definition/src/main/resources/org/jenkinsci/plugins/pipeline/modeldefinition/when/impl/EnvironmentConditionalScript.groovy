@@ -25,18 +25,17 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
 class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<EnvironmentConditional> {
-    public EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
+     EnvironmentConditionalScript(CpsScript s, EnvironmentConditional c) {
         super(s, c)
     }
 
     @Override
-    public boolean evaluate() {
+     boolean evaluate() {
         String n = describable.getName()
         String v = describable.getValue()
         return describable.environmentMatches(v, (String)script.getProperty("env").getProperty(n))

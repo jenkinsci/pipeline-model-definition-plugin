@@ -28,6 +28,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -57,7 +58,7 @@ public final class ModelASTClosureMap extends ModelASTElement implements ModelAS
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         for (Map.Entry<ModelASTKey, ModelASTMethodArg> entry : variables.entrySet()) {
             entry.getKey().validate(validator);
             entry.getValue().validate(validator);

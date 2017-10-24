@@ -235,8 +235,6 @@ class RuntimeASTTransformer {
      */
     @CheckForNull
     private Expression translateEnvironmentValue(String targetVar, Expression expr, Set<String> keys) {
-        Expression body = null
-
         if (expr instanceof ConstantExpression) {
             // If the expression is a constant, like 1, "foo", etc, just use that.
             return expr
@@ -344,7 +342,7 @@ class RuntimeASTTransformer {
             // If the expression is a map, translate its entries.
             MapExpression m = (MapExpression) expr
             List<MapEntryExpression> entries = m.mapEntryExpressions?.collect {
-                translateEnvironmentValueAndCall(targetVar, it, keys)
+                (MapEntryExpression)translateEnvironmentValueAndCall(targetVar, it, keys)
             }
 
             return new MapExpression(entries)

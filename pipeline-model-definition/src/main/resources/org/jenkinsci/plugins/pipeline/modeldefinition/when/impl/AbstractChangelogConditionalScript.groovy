@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
+import hudson.model.Item
 import hudson.scm.ChangeLogSet
 import jenkins.scm.api.SCMHead
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy
@@ -43,10 +44,10 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
     @Override
     boolean evaluate() {
         initializeEval()
-        RunWrapper run = this.script.getProperty("currentBuild")
+        RunWrapper run = (RunWrapper)this.script.getProperty("currentBuild")
         if (run != null) {
             List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = []
-            def head = SCMHead.HeadByItem.findHead(run.rawBuild.parent)
+            def head = SCMHead.HeadByItem.findHead((Item)run.rawBuild.parent)
             if (head != null) {
                 /*
                   Some special handling for pull requests to take into consideration all the builds for a particular PR.

@@ -6,13 +6,15 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * A container for one or more {@link ModelASTTrigger}s.
  *
  * @author Andrew Bayer
  */
 public final class ModelASTTriggers extends ModelASTElement {
-    private List<ModelASTTrigger> triggers = new ArrayList<ModelASTTrigger>();
+    private List<ModelASTTrigger> triggers = new ArrayList<>();
 
     public ModelASTTriggers(Object sourceLocation) {
         super(sourceLocation);
@@ -28,7 +30,7 @@ public final class ModelASTTriggers extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (ModelASTTrigger trigger : triggers) {
             trigger.validate(validator);

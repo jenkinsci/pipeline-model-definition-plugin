@@ -37,7 +37,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Stage implements Serializable {
+class Stage implements Serializable {
 
     String name
 

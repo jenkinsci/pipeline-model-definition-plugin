@@ -35,9 +35,9 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  * @author Andrew Bayer
  */
 @Extension(ordinal=900d) @Symbol("changed")
-public class Changed extends BuildCondition {
+class Changed extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
+    boolean meetsCondition(WorkflowRun r) {
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
         // If there's no previous build, we're inherently changed.
@@ -46,11 +46,11 @@ public class Changed extends BuildCondition {
         }
         // If the current build's result isn't null (i.e., it's got a specified status), and it's different than the
         // previous build's result, we're changed.
-        else if (r.getResult() != null && !prev.getResult().equals(r.getResult())) {
+        else if (r.getResult() != null && !(prev.getResult() == r.getResult())) {
             return true
         }
         // If the current build's result is null and the previous build's result is not SUCCESS, we're changed.
-        else if (r.getResult() == null && !prev.getResult().equals(Result.SUCCESS)) {
+        else if (r.getResult() == null && !(prev.getResult() == Result.SUCCESS)) {
             return true
         }
         // And in any other condition, we're not changed, so return false.
@@ -60,11 +60,11 @@ public class Changed extends BuildCondition {
     }
 
     @Override
-    public String getDescription() {
+    String getDescription() {
         return Messages.Changed_Description()
     }
 
 
-    public static final long serialVersionUID = 1L
+    static final long serialVersionUID = 1L
 
 }

@@ -32,7 +32,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class PostBuild extends AbstractBuildConditionResponder<PostBuild> {
+class PostBuild extends AbstractBuildConditionResponder<PostBuild> {
     @Whitelisted
     PostBuild(Map<String,StepsBlock> m) {
         super(m)

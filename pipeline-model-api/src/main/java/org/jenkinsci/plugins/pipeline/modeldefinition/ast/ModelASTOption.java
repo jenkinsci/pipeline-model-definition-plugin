@@ -2,6 +2,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * A single job property, corresponding eventually to {@code JobProperty} or DeclarativeOption.
  *
@@ -13,7 +15,7 @@ public class ModelASTOption extends ModelASTMethodCall {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         super.validate(validator);
     }
@@ -38,10 +40,4 @@ public class ModelASTOption extends ModelASTMethodCall {
         return true;
 
     }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
 }

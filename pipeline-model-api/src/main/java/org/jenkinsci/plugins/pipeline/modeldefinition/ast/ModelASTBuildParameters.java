@@ -6,13 +6,15 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * A container for one or more {@link ModelASTBuildParameter}s.
  *
  * @author Andrew Bayer
  */
 public final class ModelASTBuildParameters extends ModelASTElement {
-    private List<ModelASTBuildParameter> parameters = new ArrayList<ModelASTBuildParameter>();
+    private List<ModelASTBuildParameter> parameters = new ArrayList<>();
 
     public ModelASTBuildParameters(Object sourceLocation) {
         super(sourceLocation);
@@ -28,7 +30,7 @@ public final class ModelASTBuildParameters extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (ModelASTBuildParameter parameter: parameters) {
             parameter.validate(validator);

@@ -68,7 +68,7 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
      *
      * @param arguments A map of strings/objects to be passed to the constructor.
      * @return An instantiated {@link WithScriptDescribable}
-     * @throws Exception
+     * @throws Exception if there are issues instantiating
      */
     public T newInstance(Map<String,Object> arguments) throws Exception {
         return new DescribableModel<>(clazz).instantiate(arguments);
@@ -78,7 +78,7 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
      * Creates an instance of the corresponding {@link WithScriptDescribable} with no arguments.
      *
      * @return An instantiated {@link WithScriptDescribable}
-     * @throws Exception
+     * @throws Exception if there are issues instantiating
      */
     public T newInstance() throws Exception {
         return clazz.newInstance();

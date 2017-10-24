@@ -40,7 +40,7 @@ import javax.annotation.Nonnull
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Tools extends MappedClosure<Closure,Tools> implements Serializable {
+class Tools extends MappedClosure<Closure,Tools> implements Serializable {
 
     private static final Object CACHE_KEY = new Object()
 
@@ -58,7 +58,7 @@ public class Tools extends MappedClosure<Closure,Tools> implements Serializable 
      * @return A list of type/name
      */
     @Nonnull
-    public List<List<Object>> mergeToolEntries(@CheckForNull Tools other) {
+    List<List<Object>> mergeToolEntries(@CheckForNull Tools other) {
         Map<String,Object> mergedMap = [:]
         if (other != null) {
             mergedMap.putAll(other.getMap())
@@ -75,7 +75,7 @@ public class Tools extends MappedClosure<Closure,Tools> implements Serializable 
      *
      * @return A map of valid tool type keys to their actual type IDs.
      */
-    public static Map<String,String> getAllowedToolTypes() {
+    static Map<String,String> getAllowedToolTypes() {
         return toolTypeCache.get(CACHE_KEY)
     }
 
@@ -85,7 +85,7 @@ public class Tools extends MappedClosure<Closure,Tools> implements Serializable 
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the tool types cache.
      */
-    public static String typeForKey(@Nonnull String key) {
+    static String typeForKey(@Nonnull String key) {
         return getAllowedToolTypes().get(key)
     }
 }

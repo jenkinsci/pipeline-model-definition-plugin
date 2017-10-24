@@ -28,14 +28,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class AnyScript extends DeclarativeAgentScript<Any> {
+class AnyScript extends DeclarativeAgentScript<Any> {
 
-    public AnyScript(CpsScript s, Any a) {
+    AnyScript(CpsScript s, Any a) {
         super(s, a)
     }
 
     @Override
-    public Closure run(Closure body) {
+    Closure run(Closure body) {
         Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null])
         l.inStage = describable.inStage
         l.doCheckout = describable.doCheckout

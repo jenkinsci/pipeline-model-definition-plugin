@@ -39,15 +39,15 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class SourceUnitErrorCollector extends ErrorCollector {
+class SourceUnitErrorCollector extends ErrorCollector {
     final SourceUnit sourceUnit
 
-    public SourceUnitErrorCollector(SourceUnit u) {
+    SourceUnitErrorCollector(SourceUnit u) {
         this.sourceUnit = u
     }
 
     @Override
-    public JSONArray asJson() {
+    JSONArray asJson() {
         JSONArray a = new JSONArray()
 
         errorsAsStrings().each {
@@ -60,7 +60,7 @@ public class SourceUnitErrorCollector extends ErrorCollector {
     }
 
     @Override
-    public void error(ModelASTElement src, String message) {
+    void error(ModelASTElement src, String message) {
         // TODO: Being defensive here - better ideas?
         ASTNode loc = new ASTNode()
 
@@ -74,12 +74,12 @@ public class SourceUnitErrorCollector extends ErrorCollector {
     }
 
     @Override
-    public int getErrorCount() {
+    int getErrorCount() {
         return sourceUnit.errorCollector.errorCount
     }
 
     @Override
-    public List<String> errorsAsStrings() {
+    List<String> errorsAsStrings() {
         return sourceUnit.errorCollector.errors.findAll { Message m ->
             m instanceof SyntaxErrorMessage
         }.collect { SyntaxErrorMessage s ->

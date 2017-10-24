@@ -30,12 +30,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
 class ExpressionConditionalScript extends DeclarativeStageConditionalScript<ExpressionConditional> {
-    public ExpressionConditionalScript(CpsScript s, ExpressionConditional c) {
+     ExpressionConditionalScript(CpsScript s, ExpressionConditional c) {
         super(s, c)
     }
 
     @Override
-    public boolean evaluate() {
+     boolean evaluate() {
         Object retVal = null
         String block = describable.block
         Closure closureBlock = describable.closureBlock

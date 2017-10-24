@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * An individual pair of a {@link ModelASTKey} and a {@link ModelASTMethodArg}
  *
@@ -22,7 +24,7 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     }
 
     @Override
-    public void validate(ModelValidator validator) {
+    public void validate(@Nonnull ModelValidator validator) {
         key.validate(validator);
         value.validate(validator);
     }

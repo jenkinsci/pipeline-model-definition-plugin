@@ -83,14 +83,13 @@ import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.util.concurrent.TimeUnit
 
-// TODO: Prune like mad once we have step-in-groovy and don't need these static whitelisted wrapper methods.
 /**
  * Utility methods for use primarily in CPS-transformed code to avoid excessive global whitelisting.
  *
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Utils {
+class Utils {
 
     /**
      * Get the value for this name. First, check the script's properties, then parameters, and finally use the default
@@ -124,7 +123,7 @@ public class Utils {
         Map<String, CredentialWrapper> m = [:]
         environment.each {k, v ->
             if (v instanceof  CredentialWrapper) {
-                m["${k}"] = v;
+                m["${k}"] = v
             }
         }
         return m
@@ -157,7 +156,7 @@ public class Utils {
             boolean apply(@Nullable FlowNode input) {
                 return input != null &&
                     input instanceof BlockEndNode &&
-                    input.getStartNode().equals(startNode)
+                    input.getStartNode() == startNode
             }
         }
     }
@@ -169,7 +168,7 @@ public class Utils {
                 if (input != null) {
                     if (input instanceof StepStartNode &&
                         ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
-                        (stageName == null || input.displayName?.equals(stageName))) {
+                        (stageName == null || input.displayName == stageName)) {
                         // This is a true stage.
                         return true
                     } else if (input.getAction(LabelAction.class) != null &&
@@ -185,7 +184,7 @@ public class Utils {
         }
     }
 
-    public static String stringToSHA1(String s) {
+    static String stringToSHA1(String s) {
         return DigestUtils.sha1Hex(s)
     }
 
@@ -193,7 +192,7 @@ public class Utils {
      * Prints a log message to the Jenkins log, bypassing the echo step.
      * @param s The message to log
      */
-    public static void logToTaskListener(String s) {
+    static void logToTaskListener(String s) {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
@@ -209,7 +208,7 @@ public class Utils {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
 
-        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner();
+        LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner()
 
         FlowNode stageNode = execution.currentHeads.find { h ->
             scanner.findFirstMatch(h, isStageWithOptionalName())
@@ -388,7 +387,7 @@ public class Utils {
      * @param c The closure to wrap.
      */
     @Whitelisted
-    public static StepsBlock createStepsBlock(Closure c) {
+    static StepsBlock createStepsBlock(Closure c) {
         // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
         StepsBlock wrapper = new StepsBlock()
         wrapper.setClosure(c)
@@ -396,7 +395,7 @@ public class Utils {
         return wrapper
     }
 
-    public static boolean validEnvIdentifier(String i) {
+    static boolean validEnvIdentifier(String i) {
         if (!SourceVersion.isIdentifier(i)) {
             return false
         } else if (!i.matches("[a-zA-Z_]+[a-zA-Z0-9_]*")) {
@@ -553,11 +552,11 @@ public class Utils {
                 j.addProperty(p)
             }
 
-            bc.commit();
+            bc.commit()
             // Add the action tracking what we added (or empty otherwise)
             j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
         } finally {
-            bc.abort();
+            bc.abort()
         }
     }
 
@@ -676,8 +675,8 @@ public class Utils {
     /**
      * Obtains the source text of the given {@link org.codehaus.groovy.ast.ASTNode}.
      */
-    public static String getSourceTextForASTNode(@Nonnull ASTNode n, @Nonnull SourceUnit sourceUnit) {
-        def result = new StringBuilder();
+    static String getSourceTextForASTNode(@Nonnull ASTNode n, @Nonnull SourceUnit sourceUnit) {
+        def result = new StringBuilder()
         int beginLine = n.getLineNumber()
         int endLine = n.getLastLineNumber()
         int beginLineColumn = n.getColumnNumber()
@@ -697,19 +696,19 @@ public class Utils {
             }
         }
         for (int x = beginLine; x <= endLine; x++) {
-            String line = sourceUnit.source.getLine(x, null);
+            String line = sourceUnit.source.getLine(x, null)
             if (line == null)
-                throw new AssertionError("Unable to get source line"+x);
+                throw new AssertionError("Unable to get source line"+x)
 
             if (x == endLine) {
-                line = line.substring(0, endLineLastColumn - 1);
+                line = line.substring(0, endLineLastColumn - 1)
             }
             if (x == beginLine) {
-                line = line.substring(beginLineColumn - 1);
+                line = line.substring(beginLineColumn - 1)
             }
-            result.append(line).append('\n');
+            result.append(line).append('\n')
         }
 
-        return result.toString().trim();
+        return result.toString().trim()
     }
 }

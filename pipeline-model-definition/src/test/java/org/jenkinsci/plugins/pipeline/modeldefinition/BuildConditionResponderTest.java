@@ -40,6 +40,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Andrew Bayer
@@ -79,15 +80,13 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
         WorkflowJob job = b.getParent();
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeChanged"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        WorkflowRun b2 = j.buildAndAssertSuccess(job);
         j.assertLogContains("[Pipeline] { (foo)", b2);
         j.assertLogContains("hello", b2);
         j.assertLogContains("I CHANGED", b2);
 
         // Now make sure we don't get any alert this time.
-        WorkflowRun b3 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b3));
+        WorkflowRun b3 = j.buildAndAssertSuccess(job);
         j.assertLogContains("[Pipeline] { (foo)", b3);
         j.assertLogContains("hello", b3);
         j.assertLogNotContains("I CHANGED", b3);
@@ -174,6 +173,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 "}\n", true));
 
         QueueTaskFuture<WorkflowRun> queueTaskFuture = job.scheduleBuild2(0);
+        assertNotNull(queueTaskFuture);
         WorkflowRun run = queueTaskFuture.getStartCondition().get();
         CpsFlowExecution execution = (CpsFlowExecution) run.getExecutionPromise().get();
 

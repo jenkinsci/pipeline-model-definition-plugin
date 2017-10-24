@@ -202,8 +202,7 @@ public class OptionsTest extends AbstractModelDefTest {
         assertNotNull(job.getProperty(BuildDiscarderProperty.class));
 
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        j.buildAndAssertSuccess(job);
 
         assertNull(job.getProperty(BuildDiscarderProperty.class));
     }
@@ -219,8 +218,7 @@ public class OptionsTest extends AbstractModelDefTest {
         job.addProperty(new DisableConcurrentBuildsJobProperty());
 
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        j.buildAndAssertSuccess(job);
 
         assertNull(job.getProperty(BuildDiscarderProperty.class));
 
@@ -304,7 +302,7 @@ public class OptionsTest extends AbstractModelDefTest {
 
         // run the job
         QueueTaskFuture<WorkflowRun> f = job.scheduleBuild2(0);
-
+        assertNotNull(f);
         // wait up to 10 seconds, fail test on timeout (see livelock described in JENKINS-46403)
         try {
             j.waitUntilNoActivityUpTo(10_000);

@@ -32,7 +32,6 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Extension

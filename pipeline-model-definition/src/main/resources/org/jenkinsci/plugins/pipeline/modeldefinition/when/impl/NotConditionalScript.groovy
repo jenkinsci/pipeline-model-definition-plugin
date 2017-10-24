@@ -31,12 +31,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
 class NotConditionalScript extends DeclarativeStageConditionalScript<NotConditional> {
-    public NotConditionalScript(CpsScript s, NotConditional c) {
+     NotConditionalScript(CpsScript s, NotConditional c) {
         super(s, c)
     }
 
     @Override
-    public boolean evaluate() {
+     boolean evaluate() {
         DeclarativeStageConditional child = describable.child
         DeclarativeStageConditionalScript nestedScript = (DeclarativeStageConditionalScript)child?.getScript(script)
 

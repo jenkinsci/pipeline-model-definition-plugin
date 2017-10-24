@@ -57,18 +57,18 @@ class JSONParser implements Parser {
 
     private GroovyShell testShell
 
-    public JSONParser(JsonTree tree) {
+    JSONParser(JsonTree tree) {
         this.jsonTree = tree
         this.errorCollector = new JSONErrorCollector()
         this.validator = new ModelValidatorImpl(this.errorCollector)
         this.testShell = new GroovyShell()
     }
 
-    public @CheckForNull ModelASTPipelineDef parse() {
-        return parse(jsonTree);
+    @CheckForNull ModelASTPipelineDef parse() {
+        return parse(jsonTree)
     }
 
-    public @CheckForNull ModelASTPipelineDef parse(JsonTree json) {
+    @CheckForNull ModelASTPipelineDef parse(JsonTree json) {
         ModelASTPipelineDef pipelineDef = new ModelASTPipelineDef(json)
 
         try {
@@ -140,7 +140,7 @@ class JSONParser implements Parser {
     }
 
 
-    public @CheckForNull ModelASTStages parseStages(JsonTree j) {
+    @CheckForNull ModelASTStages parseStages(JsonTree j) {
         ModelASTStages stages = new ModelASTStages(j)
 
         j.node.eachWithIndex { JsonNode entry, int i ->
@@ -150,7 +150,7 @@ class JSONParser implements Parser {
         return stages
     }
 
-    public @CheckForNull ModelASTStage parseStage(JsonTree j) {
+    @CheckForNull ModelASTStage parseStage(JsonTree j) {
         ModelASTStage stage = new ModelASTStage(j)
 
         stage.name = j.node.get("name").asText()
@@ -190,7 +190,7 @@ class JSONParser implements Parser {
 
     }
 
-    public @CheckForNull ModelASTBranch parseBranch(JsonTree j) {
+    @CheckForNull ModelASTBranch parseBranch(JsonTree j) {
         ModelASTBranch branch = new ModelASTBranch(j)
         branch.name = j.node.get("name").asText()
 
@@ -202,7 +202,7 @@ class JSONParser implements Parser {
         return branch
     }
 
-    public @CheckForNull ModelASTWhen parseWhen(JsonTree j) {
+    @CheckForNull ModelASTWhen parseWhen(JsonTree j) {
         ModelASTWhen when = new ModelASTWhen(j)
 
         JsonTree conditionsTree = j.append(JsonPointer.of("conditions"))
@@ -214,7 +214,7 @@ class JSONParser implements Parser {
         return when
     }
 
-    public @CheckForNull ModelASTLibraries parseLibraries(JsonTree j) {
+    @CheckForNull ModelASTLibraries parseLibraries(JsonTree j) {
         ModelASTLibraries l = new ModelASTLibraries(j)
 
         JsonTree libsTree = j.append(JsonPointer.of("libraries"))
@@ -226,7 +226,7 @@ class JSONParser implements Parser {
         return l
     }
 
-    public @CheckForNull ModelASTOptions parseOptions(JsonTree j) {
+    @CheckForNull ModelASTOptions parseOptions(JsonTree j) {
         ModelASTOptions options = new ModelASTOptions(j)
 
         JsonTree optionsTree = j.append(JsonPointer.of("options"))
@@ -242,7 +242,7 @@ class JSONParser implements Parser {
         return options
     }
 
-    public @CheckForNull ModelASTTriggers parseTriggers(JsonTree j) {
+    @CheckForNull ModelASTTriggers parseTriggers(JsonTree j) {
         ModelASTTriggers triggers = new ModelASTTriggers(j)
 
         JsonTree triggersTree = j.append(JsonPointer.of("triggers"))
@@ -258,7 +258,7 @@ class JSONParser implements Parser {
         return triggers
     }
 
-    public @CheckForNull ModelASTBuildParameters parseBuildParameters(JsonTree j) {
+    @CheckForNull ModelASTBuildParameters parseBuildParameters(JsonTree j) {
         ModelASTBuildParameters params = new ModelASTBuildParameters(j)
 
         JsonTree paramsTree = j.append(JsonPointer.of("parameters"))
@@ -274,7 +274,7 @@ class JSONParser implements Parser {
         return params
     }
 
-    public @CheckForNull parseKeyValueOrMethodCallPair(JsonTree j) {
+    @CheckForNull parseKeyValueOrMethodCallPair(JsonTree j) {
         ModelASTKeyValueOrMethodCallPair pair = new ModelASTKeyValueOrMethodCallPair(j)
 
         // Passing the whole thing to parseKey to capture the JSONObject the "key" is in.
@@ -295,7 +295,7 @@ class JSONParser implements Parser {
         return pair
     }
 
-    public @CheckForNull ModelASTMethodCall parseMethodCall(JsonTree o) {
+    @CheckForNull ModelASTMethodCall parseMethodCall(JsonTree o) {
         ModelASTMethodCall meth = new ModelASTMethodCall(o)
 
         if (o.node.isObject()) {
@@ -335,7 +335,7 @@ class JSONParser implements Parser {
         return meth
     }
 
-    public @CheckForNull ModelASTInternalFunctionCall parseInternalFunctionCall(JsonTree o) {
+    @CheckForNull ModelASTInternalFunctionCall parseInternalFunctionCall(JsonTree o) {
         ModelASTInternalFunctionCall func = new ModelASTInternalFunctionCall(o)
 
         if (o.node.isObject()) {
@@ -369,10 +369,10 @@ class JSONParser implements Parser {
         return func
     }
 
-    public @CheckForNull ModelASTStep parseStep(JsonTree j) {
+    @CheckForNull ModelASTStep parseStep(JsonTree j) {
         if (j.node.has("children")) {
             return parseTreeStep(j)
-        } else if (j.node.get("name")?.asText()?.equals("script")) {
+        } else if (j.node.get("name")?.asText() == "script") {
             return parseScriptBlock(j)
         } else {
             ModelASTStep step = new ModelASTStep(j)
@@ -383,7 +383,7 @@ class JSONParser implements Parser {
         }
     }
 
-    public @CheckForNull ModelASTWhenContent parseWhenContent(JsonTree j) {
+    @CheckForNull ModelASTWhenContent parseWhenContent(JsonTree j) {
         if (j.node.has("children")) {
             ModelASTWhenCondition condition = new ModelASTWhenCondition(j)
             condition.name = j.node.get("name").asText()
@@ -395,7 +395,7 @@ class JSONParser implements Parser {
                 condition.children.add(parseWhenContent(children.append(JsonPointer.of(i))))
             }
             return condition
-        } else if (j.node.get("name")?.asText()?.equals("expression")) {
+        } else if (j.node.get("name")?.asText() == "expression") {
             return parseWhenExpression(j)
         } else {
             ModelASTWhenCondition condition = new ModelASTWhenCondition(j)
@@ -406,7 +406,7 @@ class JSONParser implements Parser {
         }
     }
 
-    public @CheckForNull ModelASTArgumentList parseArgumentList(JsonTree o) {
+    @CheckForNull ModelASTArgumentList parseArgumentList(JsonTree o) {
         ModelASTArgumentList argList
         if (o.node.isArray()) {
 
@@ -454,15 +454,14 @@ class JSONParser implements Parser {
         return argList
     }
 
-    public @CheckForNull ModelASTKey parseKey(JsonTree o) {
+    @CheckForNull ModelASTKey parseKey(JsonTree o) {
         ModelASTKey key = new ModelASTKey(o)
 
         key.key = o.node?.asText()
         return key
     }
 
-    public @CheckForNull ModelASTValue parseValue(JsonTree o) {
-        ModelASTValue val = null
+    @CheckForNull ModelASTValue parseValue(JsonTree o) {
         if (o.node.get("isLiteral").asBoolean()) {
             if (o.node.get("value").isBoolean()) {
                 val = ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)
@@ -488,24 +487,24 @@ class JSONParser implements Parser {
             }
         }
 
-        return val;
+        return val
     }
 
-    public @CheckForNull ModelASTScriptBlock parseScriptBlock(JsonTree j) {
+    @CheckForNull ModelASTScriptBlock parseScriptBlock(JsonTree j) {
         ModelASTScriptBlock scriptBlock = new ModelASTScriptBlock(j)
         scriptBlock.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
 
         return scriptBlock
     }
 
-    public @CheckForNull ModelASTWhenExpression parseWhenExpression(JsonTree j) {
+    @CheckForNull ModelASTWhenExpression parseWhenExpression(JsonTree j) {
         ModelASTWhenExpression scriptBlock = new ModelASTWhenExpression(j)
         scriptBlock.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
 
         return scriptBlock
     }
 
-    public @CheckForNull ModelASTTreeStep parseTreeStep(JsonTree j) {
+    @CheckForNull ModelASTTreeStep parseTreeStep(JsonTree j) {
         ModelASTTreeStep step = new ModelASTTreeStep(j)
         step.name = j.node.get("name").asText()
         step.args = parseArgumentList(j.append(JsonPointer.of("arguments")))
@@ -518,7 +517,7 @@ class JSONParser implements Parser {
         return step
     }
 
-    public @CheckForNull ModelASTBuildCondition parseBuildCondition(JsonTree j) {
+    @CheckForNull ModelASTBuildCondition parseBuildCondition(JsonTree j) {
         ModelASTBuildCondition condition = new ModelASTBuildCondition(j)
 
         condition.condition = j.node.get("condition").asText()
@@ -527,18 +526,18 @@ class JSONParser implements Parser {
         return condition
     }
 
-    public @CheckForNull ModelASTPostBuild parsePostBuild(JsonTree j) {
+    @CheckForNull ModelASTPostBuild parsePostBuild(JsonTree j) {
         ModelASTPostBuild postBuild = new ModelASTPostBuild(j)
         return parseBuildConditionResponder(j, postBuild)
     }
 
-    public @CheckForNull ModelASTPostStage parsePostStage(JsonTree j) {
+    @CheckForNull ModelASTPostStage parsePostStage(JsonTree j) {
         ModelASTPostStage post = new ModelASTPostStage(j)
         return parseBuildConditionResponder(j, post)
     }
 
     @Nonnull
-    public <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(JsonTree j, R responder) {
+    <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(JsonTree j, R responder) {
         JsonTree conds = j.append(JsonPointer.of("conditions"))
         conds.node.eachWithIndex { JsonNode entry, int i ->
             responder.conditions.add(parseBuildCondition(conds.append(JsonPointer.of(i))))
@@ -546,7 +545,7 @@ class JSONParser implements Parser {
         return responder
     }
 
-    public @CheckForNull ModelASTEnvironment parseEnvironment(JsonTree j) {
+    @CheckForNull ModelASTEnvironment parseEnvironment(JsonTree j) {
         ModelASTEnvironment environment = new ModelASTEnvironment(j)
 
         j.node.eachWithIndex { JsonNode entry, int i ->
@@ -570,7 +569,7 @@ class JSONParser implements Parser {
         return environment
     }
 
-    public @CheckForNull ModelASTTools parseTools(JsonTree j) {
+    @CheckForNull ModelASTTools parseTools(JsonTree j) {
         ModelASTTools tools = new ModelASTTools(j)
 
         j.node.eachWithIndex { JsonNode entry, int i ->
@@ -585,7 +584,7 @@ class JSONParser implements Parser {
         return tools
     }
 
-    public @CheckForNull ModelASTClosureMap parseClosureMap(JsonTree j) {
+    @CheckForNull ModelASTClosureMap parseClosureMap(JsonTree j) {
         ModelASTClosureMap map = new ModelASTClosureMap(j)
 
         j.node.eachWithIndex { JsonNode entry, int i ->
@@ -607,7 +606,7 @@ class JSONParser implements Parser {
         return map
     }
 
-    public @CheckForNull ModelASTAgent parseAgent(JsonTree j) {
+    @CheckForNull ModelASTAgent parseAgent(JsonTree j) {
         ModelASTAgent agent = new ModelASTAgent(j)
 
         agent.agentType = new ModelASTKey(j.append(JsonPointer.of("type")))
@@ -642,7 +641,6 @@ class JSONParser implements Parser {
     private String processingMessageToError(ProcessingMessage pm) {
         JsonNode jsonNode = pm.asJson()
 
-        String location = jsonNode.get("instance").get("pointer").asText()
         if (jsonNode.has("keyword")) {
             if (jsonNode.get("keyword").asText() == "required") {
                 String missingProps = jsonNode.get('missing').elements().collect { "'${it.asText()}'" }.join(", ")

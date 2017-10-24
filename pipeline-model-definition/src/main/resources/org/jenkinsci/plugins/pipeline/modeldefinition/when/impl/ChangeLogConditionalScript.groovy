@@ -42,7 +42,7 @@ class ChangeLogConditionalScript extends AbstractChangelogConditionalScript<Chan
         try {
             gitChangeSetClass = Class.forName("hudson.plugins.git.GitChangeSet")
         } catch (ClassNotFoundException cnfe) {
-            gitChangeSetClass = null;
+            gitChangeSetClass = null
         }
     }
 

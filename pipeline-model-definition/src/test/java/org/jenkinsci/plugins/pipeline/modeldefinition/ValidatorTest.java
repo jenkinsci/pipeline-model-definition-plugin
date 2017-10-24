@@ -28,7 +28,6 @@ import jenkins.model.OptionalJobProperty;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
@@ -708,6 +707,7 @@ public class ValidatorTest extends AbstractModelDefTest {
         @Symbol("testProperty")
         public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
             @Override
+            @Nonnull
             public String getDisplayName() {
                 return "Test job property to be rejected by a validator contributor.";
             }

@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     }
 
     @Override
-    public void validate(ModelValidator validator) {
+    public void validate(@Nonnull ModelValidator validator) {
         // Nothing to immediately validate here
         if (value != null) {
             value.validate(validator);

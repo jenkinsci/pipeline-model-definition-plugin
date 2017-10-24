@@ -38,7 +38,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Root implements Serializable {
+class Root implements Serializable {
     Agent agent
 
     Stages stages

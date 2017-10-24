@@ -16,7 +16,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  */
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
-    private Map<ModelASTKey, ModelASTValue> arguments = new LinkedHashMap<ModelASTKey, ModelASTValue>();
+    private Map<ModelASTKey, ModelASTValue> arguments = new LinkedHashMap<>();
 
     public ModelASTNamedArgumentList(Object sourceLocation) {
         super(sourceLocation);
@@ -64,7 +64,7 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {
             entry.getKey().validate(validator);
             entry.getValue().validate(validator);

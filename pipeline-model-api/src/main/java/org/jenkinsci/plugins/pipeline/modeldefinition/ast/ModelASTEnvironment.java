@@ -6,6 +6,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents a block of "foo = 'bar'" assignments to environment variables, corresponding to {@code Environment}.
  *
@@ -32,7 +34,7 @@ public final class ModelASTEnvironment extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry : variables.entrySet()) {
             entry.getKey().validate(validator);

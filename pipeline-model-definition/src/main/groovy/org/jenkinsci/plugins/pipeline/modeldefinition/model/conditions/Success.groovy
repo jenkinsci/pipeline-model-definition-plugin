@@ -35,16 +35,16 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  * @author Andrew Bayer
  */
 @Extension(ordinal=600d) @Symbol("success")
-public class Success extends BuildCondition {
+class Success extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
+    boolean meetsCondition(WorkflowRun r) {
         return r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS)
     }
 
     @Override
-    public String getDescription() {
+    String getDescription() {
         return Messages.Success_Description()
     }
 
-    public static final long serialVersionUID = 1L
+    static final long serialVersionUID = 1L
 }

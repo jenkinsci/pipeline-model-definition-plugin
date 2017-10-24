@@ -27,6 +27,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Code expression {@link ModelASTStage} will be executed or not.
  */
@@ -36,7 +38,7 @@ public class ModelASTWhenExpression extends AbstractModelASTCodeBlock implements
     }
 
     @Override
-    public void validate(ModelValidator validator) {
+    public void validate(@Nonnull ModelValidator validator) {
         // no-op - we don't do validation of script blocks
     }
 }

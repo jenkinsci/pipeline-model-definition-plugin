@@ -29,6 +29,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,7 +87,7 @@ public class ModelASTWhen extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (ModelASTWhenContent c : conditions) {
             c.validate(validator);

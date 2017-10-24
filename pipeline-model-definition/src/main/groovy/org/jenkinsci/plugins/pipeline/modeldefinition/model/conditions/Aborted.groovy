@@ -35,16 +35,16 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  * @author Andrew Bayer
  */
 @Extension(ordinal=800d) @Symbol("aborted")
-public class Aborted extends BuildCondition {
+class Aborted extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() != null && r.getResult().equals(Result.ABORTED)
+    boolean meetsCondition(WorkflowRun r) {
+        return r.getResult() != null && r.getResult() == Result.ABORTED
     }
 
     @Override
-    public String getDescription() {
+    String getDescription() {
         return Messages.Aborted_Description()
     }
 
-    public static final long serialVersionUID = 1L
+    static final long serialVersionUID = 1L
 }

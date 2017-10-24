@@ -36,7 +36,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Libraries implements Serializable {
+class Libraries implements Serializable {
     List<String> libs = []
 
     @Whitelisted

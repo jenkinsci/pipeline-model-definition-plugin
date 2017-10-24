@@ -29,14 +29,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineScript<DockerPipelineFromDockerfile> {
+class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineScript<DockerPipelineFromDockerfile> {
 
-    public DockerPipelineFromDockerfileScript(CpsScript s, DockerPipelineFromDockerfile a) {
+    DockerPipelineFromDockerfileScript(CpsScript s, DockerPipelineFromDockerfile a) {
         super(s, a)
     }
 
     @Override
-    public Closure runImage(Closure body) {
+    Closure runImage(Closure body) {
         return {
             def img = null
             if (!Utils.withinAStage()) {

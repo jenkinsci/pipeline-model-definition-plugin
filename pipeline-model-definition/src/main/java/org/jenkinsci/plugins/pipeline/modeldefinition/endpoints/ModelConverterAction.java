@@ -97,7 +97,7 @@ public class ModelConverterAction implements RootAction {
 
                 ModelASTPipelineDef pipelineDef = parser.parse();
 
-                if (!collectErrors(result, parser.getErrorCollector())) {
+                if (pipelineDef != null && !collectErrors(result, parser.getErrorCollector())) {
                     try {
                         Converter.scriptToPipelineDef(pipelineDef.toPrettyGroovy());
                         result.accumulate("result", "success");

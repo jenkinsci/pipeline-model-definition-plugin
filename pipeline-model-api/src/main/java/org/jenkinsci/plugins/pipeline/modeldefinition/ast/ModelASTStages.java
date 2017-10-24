@@ -7,13 +7,15 @@ import java.util.UUID;
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents the collection of {@code Stage}s to be executed in the build. Corresponds to {@code Stages}.
  *
  * @author Andrew Bayer
  */
 public final class ModelASTStages extends ModelASTElement {
-    private List<ModelASTStage> stages = new ArrayList<ModelASTStage>();
+    private List<ModelASTStage> stages = new ArrayList<>();
     private final UUID uuid;
 
     public ModelASTStages(Object sourceLocation) {
@@ -31,7 +33,7 @@ public final class ModelASTStages extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validate(validator, false);
     }
 

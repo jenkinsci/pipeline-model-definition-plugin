@@ -68,7 +68,7 @@ public class ASTSchema implements RootAction {
      * Get the Pipeline Config AST JSON schema.
      *
      * @return the schema in {@link JsonSchema} form.
-     * @throws ProcessingException
+     * @throws ProcessingException if there are issues reading the schema
      */
     public static JsonSchema getJSONSchema() throws ProcessingException {
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();

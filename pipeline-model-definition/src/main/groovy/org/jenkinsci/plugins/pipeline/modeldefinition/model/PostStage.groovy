@@ -31,7 +31,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
  * @author Robert Sandell &lt;rsandell@cloudbees.com&gt;.
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class PostStage  extends AbstractBuildConditionResponder<PostStage> {
+class PostStage extends AbstractBuildConditionResponder<PostStage> {
     @Whitelisted
     PostStage(Map<String,StepsBlock> m) {
         super(m)

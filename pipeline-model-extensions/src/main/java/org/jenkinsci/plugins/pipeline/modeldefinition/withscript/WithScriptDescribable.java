@@ -53,7 +53,7 @@ public abstract class WithScriptDescribable<T extends WithScriptDescribable<T>> 
         if (c == null)
             throw new IllegalStateException("Expected to be called from CpsThread");
 
-        Class clz = null;
+        Class clz;
         try {
             clz = cpsScript.getClass().getClassLoader().loadClass(getDescriptor().getScriptClass());
         } catch (ClassNotFoundException e) {

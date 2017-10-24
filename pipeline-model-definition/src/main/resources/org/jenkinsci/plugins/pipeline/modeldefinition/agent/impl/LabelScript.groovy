@@ -30,14 +30,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class LabelScript extends DeclarativeAgentScript<Label> {
+class LabelScript extends DeclarativeAgentScript<Label> {
 
-    public LabelScript(CpsScript s, Label a) {
+    LabelScript(CpsScript s, Label a) {
         super(s, a)
     }
 
     @Override
-    public Closure run(Closure body) {
+    Closure run(Closure body) {
         return {
             try {
                 script.node(describable?.label) {

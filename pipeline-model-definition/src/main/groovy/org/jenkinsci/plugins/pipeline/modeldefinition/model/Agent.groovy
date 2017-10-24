@@ -45,7 +45,7 @@ import javax.annotation.CheckForNull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Agent extends MappedClosure<Object,Agent> implements Serializable {
+class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
     @Whitelisted
     Agent(Map<String,Object> inMap) {
@@ -53,7 +53,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
     }
 
     @Deprecated
-    public DeclarativeAgent getDeclarativeAgent(Object context) {
+    DeclarativeAgent getDeclarativeAgent(Object context) {
         return getDeclarativeAgent(null, context)
     }
 
@@ -62,7 +62,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
      *
      * @return The instantiated declarative agent or null if not found.
      */
-    public DeclarativeAgent getDeclarativeAgent(@CheckForNull Root root, Object context) {
+    DeclarativeAgent getDeclarativeAgent(@CheckForNull Root root, Object context) {
         String foundSymbol = findSymbol()
         if (foundSymbol != null) {
             DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.byName(foundSymbol)
@@ -113,7 +113,7 @@ public class Agent extends MappedClosure<Object,Agent> implements Serializable {
         return sym
     }
 
-    public boolean hasAgent() {
+    boolean hasAgent() {
         DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }

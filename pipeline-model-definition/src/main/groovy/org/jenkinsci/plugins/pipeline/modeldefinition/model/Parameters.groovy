@@ -43,7 +43,7 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Parameters implements Serializable {
+class Parameters implements Serializable {
     private static final Object CACHE_KEY = new Object()
 
     private static final LoadingCache<Object,Map<String,String>> parameterTypeCache =
@@ -52,11 +52,11 @@ public class Parameters implements Serializable {
     List<ParameterDefinition> parameters = []
 
     @Whitelisted
-    public Parameters(List<ParameterDefinition> params) {
+    Parameters(List<ParameterDefinition> params) {
         this.parameters = params
     }
 
-    public List<ParameterDefinition> getParameters() {
+    List<ParameterDefinition> getParameters() {
         return parameters
     }
 
@@ -66,7 +66,7 @@ public class Parameters implements Serializable {
      *
      * @return A map of valid parameter type keys to their actual type IDs.
      */
-    public static Map<String,String> getAllowedParameterTypes() {
+    static Map<String,String> getAllowedParameterTypes() {
         return parameterTypeCache.get(CACHE_KEY)
     }
 
@@ -76,7 +76,7 @@ public class Parameters implements Serializable {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the parameter types cache.
      */
-    public static String typeForKey(@Nonnull String key) {
+    static String typeForKey(@Nonnull String key) {
         return getAllowedParameterTypes().get(key)
     }
 }

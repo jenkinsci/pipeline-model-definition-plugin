@@ -43,10 +43,10 @@ import javax.annotation.Nonnull
  *
  * @author Andrew Bayer
  */
-public class ModelInterpreter implements Serializable {
+class ModelInterpreter implements Serializable {
     private CpsScript script
 
-    public ModelInterpreter(CpsScript script) {
+    ModelInterpreter(CpsScript script) {
         this.script = script
     }
 
@@ -139,8 +139,7 @@ public class ModelInterpreter implements Serializable {
     def getParallelStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage,
                           boolean skippedForFailure, boolean skippedForUnstable, boolean skippedForWhen) {
         def parallelStages = [:]
-        for (int i = 0; i < thisStage.parallel.stages.size(); i++) {
-            Stage parallelStage = thisStage.parallel.getStages().get(i)
+        thisStage?.parallel?.stages?.each { parallelStage ->
             if (skippedForFailure) {
                 parallelStages.put(parallelStage.name, {
                     script.stage(parallelStage.name) {
@@ -257,7 +256,7 @@ public class ModelInterpreter implements Serializable {
             try {
                 body.call()
             } catch (MissingContextVariableException e) {
-                if (FilePath.class.equals(e.type) || Launcher.class.equals(e.type)) {
+                if (FilePath.class == e.type || Launcher.class == e.type) {
                     if (!agent.hasAgent()) {
                         script.error(Messages.ModelInterpreter_NoNodeContext())
                     } else {
@@ -311,10 +310,10 @@ public class ModelInterpreter implements Serializable {
         
         if (environment != null) {
             try {
-                RunWrapper currentBuild = script.getProperty("currentBuild")
+                RunWrapper currentBuild = (RunWrapper)script.getProperty("currentBuild")
                 Utils.getCredsFromResolver(environment, script).each { k, v ->
                     String id = (String) v.call()
-                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild);
+                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild)
                     creds.put(k, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
                 }
             } catch (MissingMethodException e) {
@@ -397,7 +396,7 @@ public class ModelInterpreter implements Serializable {
             Closure v = (Closure)l.get(1)
             String toolVer = v.call()
 
-            String toolPath = script.tool(name: toolVer, type: Tools.typeForKey(k))
+            script.tool(name: toolVer, type: Tools.typeForKey(k))
 
             toolEnv.addAll(script.envVarsForTool(toolId: Tools.typeForKey(k), toolVersion: toolVer))
         }
