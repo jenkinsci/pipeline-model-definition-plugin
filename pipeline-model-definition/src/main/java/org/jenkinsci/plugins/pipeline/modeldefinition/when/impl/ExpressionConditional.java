@@ -89,7 +89,7 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
                     if (block != null) {
                         return GeneralUtils.callX(ClassHelper.make(DescriptorImpl.class),
                                 "instanceFromClosure",
-                                new ArgumentListExpression(block.body)
+                                new ArgumentListExpression(block.getBody())
                         );
                     }
                 }
