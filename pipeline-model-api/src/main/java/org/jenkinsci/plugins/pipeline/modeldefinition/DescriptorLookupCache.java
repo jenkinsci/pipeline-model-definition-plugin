@@ -115,15 +115,12 @@ public class DescriptorLookupCache {
     }
 
     public synchronized Descriptor<? extends Describable> lookupFunction(String n, @CheckForNull Class<? extends Describable> describable) {
-        if (describable == null) {
+        if (n == null) {
+            return null;
+        } else if (describable == null) {
             if (!describableMap.containsKey(n)) {
-                try {
-                    Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(Describable.class, n);
-                    describableMap.put(n, d);
-                } catch (NullPointerException e) {
-                    describableMap.put(n, null);
-                }
-
+                Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(Describable.class, n);
+                describableMap.put(n, d);
             }
 
             return describableMap.get(n);
