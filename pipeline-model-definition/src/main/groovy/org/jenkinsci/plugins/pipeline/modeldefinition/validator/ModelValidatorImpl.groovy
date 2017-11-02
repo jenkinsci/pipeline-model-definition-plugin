@@ -50,6 +50,7 @@ import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
+import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -386,10 +387,26 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (Jenkins.getInstance() != null) {
-            Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
             DescribableModel<? extends Describable> model
-            if (desc != null) {
-                model = lookup.modelForFunctionFirstThenStep(meth.name)
+
+            List<Class<? extends Describable>> parentDescribables = Utils.parentsForMethodCall(meth)
+
+            if (!parentDescribables.isEmpty()) {
+                model = parentDescribables.collect { p ->
+                    Descriptor fromParent = lookup.lookupFunctionFirstThenStep(meth.name, p)
+                    if (fromParent != null) {
+                        def m = lookup.modelForFunctionFirstThenStep(meth.name, p)
+                        return m
+                    } else {
+                        return null
+                    }
+                }.find { it != null }
+            } else {
+                Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
+
+                if (desc != null) {
+                    model = lookup.modelForFunctionFirstThenStep(meth.name)
+                }
             }
 
             if (model != null) {
