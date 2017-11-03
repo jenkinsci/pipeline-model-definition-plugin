@@ -37,6 +37,7 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+import javax.annotation.CheckForNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -80,14 +81,24 @@ public class DescriptorLookupCache {
     }
 
     public synchronized DescribableModel<? extends Describable> modelForDescribable(String n) {
-        if (!describableModelMap.containsKey(n)) {
-            final Descriptor<? extends Describable> function = lookupFunction(n);
+        return modelForDescribable(n, null);
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForDescribable(String n, @CheckForNull Class<? extends Describable> describable) {
+        if (describable == null) {
+            if (!describableModelMap.containsKey(n)) {
+                final Descriptor<? extends Describable> function = lookupFunction(n);
+                Class<? extends Describable> c = (function == null ? null : function.clazz);
+                describableModelMap.put(n, c != null ? new DescribableModel<>(c) : null);
+            }
+
+            return describableModelMap.get(n);
+        } else {
+            // TODO: Cache models for parent describables too
+            final Descriptor<? extends Describable> function = lookupFunction(n, describable);
             Class<? extends Describable> c = (function == null ? null : function.clazz);
-            describableModelMap.put(n, c != null ? new DescribableModel<>(c) : null);
+            return c != null ? new DescribableModel<>(c) : null;
         }
-
-
-        return describableModelMap.get(n);
     }
 
     public synchronized StepDescriptor lookupStepDescriptor(String n) {
@@ -100,50 +111,71 @@ public class DescriptorLookupCache {
     }
 
     public synchronized Descriptor<? extends Describable> lookupFunction(String n) {
-        if (!describableMap.containsKey(n)) {
-            try {
+        return lookupFunction(n, null);
+    }
+
+    public synchronized Descriptor<? extends Describable> lookupFunction(String n, @CheckForNull Class<? extends Describable> describable) {
+        if (n == null) {
+            return null;
+        } else if (describable == null) {
+            if (!describableMap.containsKey(n)) {
                 Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(Describable.class, n);
                 describableMap.put(n, d);
-            } catch (NullPointerException e) {
-                describableMap.put(n, null);
             }
 
+            return describableMap.get(n);
+        } else {
+            // TODO: Switch to caching when we're looking up specific describables
+            return SymbolLookup.get().findDescriptor(describable, n);
         }
-
-
-        return describableMap.get(n);
     }
 
     public synchronized Descriptor<? extends Describable> lookupStepFirstThenFunction(String name) {
-        return lookupStepDescriptor(name) != null ? lookupStepDescriptor(name) : lookupFunction(name);
+        return lookupStepFirstThenFunction(name, null);
     }
 
     public synchronized Descriptor<? extends Describable> lookupFunctionFirstThenStep(String name) {
-        return lookupFunction(name) != null ? lookupFunction(name) : lookupStepDescriptor(name);
+        return lookupFunctionFirstThenStep(name, null);
     }
 
     public synchronized DescribableModel<? extends Describable> modelForStepFirstThenFunction(String name) {
+        return modelForStepFirstThenFunction(name, null);
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForFunctionFirstThenStep(String name) {
+        return modelForFunctionFirstThenStep(name, null);
+    }
+
+    public synchronized Descriptor<? extends Describable> lookupStepFirstThenFunction(String name, Class<? extends Describable> describable) {
+        return lookupStepDescriptor(name) != null ? lookupStepDescriptor(name) : lookupFunction(name, describable);
+    }
+
+    public synchronized Descriptor<? extends Describable> lookupFunctionFirstThenStep(String name, Class<? extends Describable> describable) {
+        return lookupFunction(name, describable) != null ? lookupFunction(name, describable) : lookupStepDescriptor(name);
+    }
+
+    public synchronized DescribableModel<? extends Describable> modelForStepFirstThenFunction(String name, Class<? extends Describable> describable) {
         Descriptor<? extends Describable> desc = lookupStepDescriptor(name);
         DescribableModel<? extends Describable> model = null;
 
         if (desc != null) {
             model = modelForStep(name);
         } else {
-            desc = lookupFunction(name);
+            desc = lookupFunction(name, describable);
             if (desc != null) {
-                model = modelForDescribable(name);
+                model = modelForDescribable(name, describable);
             }
         }
 
         return model;
     }
 
-    public synchronized DescribableModel<? extends Describable> modelForFunctionFirstThenStep(String name) {
-        Descriptor<? extends Describable> desc = lookupFunction(name);
+    public synchronized DescribableModel<? extends Describable> modelForFunctionFirstThenStep(String name, Class<? extends Describable> describable) {
+        Descriptor<? extends Describable> desc = lookupFunction(name, describable);
         DescribableModel<? extends Describable> model = null;
 
         if (desc != null) {
-            model = modelForDescribable(name);
+            model = modelForDescribable(name, describable);
         } else {
             desc = lookupStepDescriptor(name);
             if (desc != null) {

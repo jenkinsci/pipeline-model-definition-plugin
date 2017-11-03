@@ -770,4 +770,12 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelParser_ExpectedWhen())
                 .go();
     }
+
+    @Issue("JENKINS-47781")
+    @Test
+    public void specificDescribableMatch() throws Exception {
+        expectError("specificDescribableMatch")
+                .logContains(Messages.ModelValidatorImpl_InvalidStepParameter("upstreamWhat", "upstreamProjects"))
+                .go();
+    }
 }
