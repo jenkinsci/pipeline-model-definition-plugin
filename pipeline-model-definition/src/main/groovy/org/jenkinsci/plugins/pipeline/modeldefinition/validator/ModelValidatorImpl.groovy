@@ -108,7 +108,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        return validateFromContributors(post, valid)
+        return valid
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildCondition buildCondition) {
