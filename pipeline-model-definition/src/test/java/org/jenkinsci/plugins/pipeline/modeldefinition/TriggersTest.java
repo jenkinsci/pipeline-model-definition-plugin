@@ -135,4 +135,14 @@ public class TriggersTest extends AbstractModelDefTest {
         assertNotNull(t);
         assertTrue(t instanceof SCMTrigger);
     }
+
+    @Issue("JENKINS-47780")
+    @Test
+    public void actualTriggerCorrectScope() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleTriggers");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        expect("actualTriggerCorrectScope")
+                .go();
+    }
 }
