@@ -91,12 +91,12 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
 
     @CheckForNull
     public String validateElement(@Nonnull ModelASTPostBuild postBuild, @CheckForNull FlowExecution execution) {
-        return null;
+        return validateElement((ModelASTBuildConditionsContainer) postBuild, execution);
     }
 
     @CheckForNull
     public String validateElement(@Nonnull ModelASTPostStage post, @CheckForNull FlowExecution execution) {
-        return null;
+        return validateElement((ModelASTBuildConditionsContainer) post, execution);
     }
 
     @CheckForNull
@@ -146,17 +146,17 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
 
     @CheckForNull
     public String validateElement(@Nonnull ModelASTOption jobProperty, @CheckForNull FlowExecution execution) {
-        return null;
+        return validateElement((ModelASTMethodCall) jobProperty, execution);
     }
 
     @CheckForNull
     public String validateElement(@Nonnull ModelASTTrigger trigger, @CheckForNull FlowExecution execution) {
-        return null;
+        return validateElement((ModelASTMethodCall) trigger, execution);
     }
 
     @CheckForNull
     public String validateElement(@Nonnull ModelASTBuildParameter buildParameter, @CheckForNull FlowExecution execution) {
-        return null;
+        return validateElement((ModelASTMethodCall) buildParameter, execution);
     }
 
     @CheckForNull
