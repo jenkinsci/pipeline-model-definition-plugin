@@ -696,6 +696,16 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-47814")
+    @Test
+    public void optionValidatorContributor() throws Exception {
+        TestDupeContributor.count = 0;
+        expectError("optionValidatorContributor")
+                .logContains("validate option 1")
+                .logNotContains("validate option 2")
+                .go();
+    }
+
     @TestExtension
     public static class TestDupeContributor extends DeclarativeValidatorContributor {
         public static int count = 0;
@@ -704,6 +714,12 @@ public class ValidatorTest extends AbstractModelDefTest {
         public String validateElement(@Nonnull ModelASTPostBuild postBuild, @CheckForNull FlowExecution execution) {
             count++;
             return "validate " + count;
+        }
+
+        @Override
+        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
+            count++;
+            return "validate option " + count;
         }
     }
 

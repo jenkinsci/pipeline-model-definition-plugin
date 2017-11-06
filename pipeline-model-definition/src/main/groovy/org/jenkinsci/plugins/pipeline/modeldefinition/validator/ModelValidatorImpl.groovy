@@ -465,7 +465,7 @@ class ModelValidatorImpl implements ModelValidator {
                 }
             }
         }
-        return validateFromContributors(meth, valid)
+        return valid
     }
 
     public boolean validateElement(@Nonnull ModelASTOptions opts) {
