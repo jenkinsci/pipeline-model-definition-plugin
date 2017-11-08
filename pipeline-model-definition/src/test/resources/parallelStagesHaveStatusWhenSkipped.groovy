@@ -25,42 +25,22 @@
 pipeline {
     agent none
     stages {
+        stage("bar") {
+            steps {
+                error "Fail out"
+            }
+        }
         stage("foo") {
             parallel {
                 stage("first") {
                     steps {
-                        error "First branch"
-                    }
-                    post {
-                        failure {
-                            echo "FIRST BRANCH FAILED"
-                        }
+                        echo "First branch"
                     }
                 }
                 stage("second") {
                     steps {
                         echo "Second branch"
                     }
-                    post {
-                        always {
-                            echo "SECOND BRANCH POST"
-                        }
-                    }
-                }
-                stage("third") {
-                    when {
-                        expression {
-                            return false
-                        }
-                    }
-                    steps {
-                        echo "Third branch"
-                    }
-                }
-            }
-            post {
-                failure {
-                    echo "FOO STAGE FAILED"
                 }
             }
         }
