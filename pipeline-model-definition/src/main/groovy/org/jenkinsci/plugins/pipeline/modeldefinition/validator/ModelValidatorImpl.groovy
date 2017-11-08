@@ -108,7 +108,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        return validateFromContributors(post, valid)
+        return valid
     }
 
     public boolean validateElement(@Nonnull ModelASTBuildCondition buildCondition) {
@@ -465,7 +465,11 @@ class ModelValidatorImpl implements ModelValidator {
                 }
             }
         }
-        return validateFromContributors(meth, valid)
+        if (meth.class == ModelASTMethodCall.class) {
+            return validateFromContributors(meth, valid)
+        } else {
+            return valid
+        }
     }
 
     public boolean validateElement(@Nonnull ModelASTOptions opts) {
@@ -717,7 +721,7 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
-        boolean contributorsValid = DeclarativeValidatorContributor.all().every { contributor ->
+        boolean contributorsValid = DeclarativeValidatorContributor.all().collect { contributor ->
             String error
             if (!(element instanceof ModelASTStage)) {
                 error = contributor.validateElement(element, getExecution())
@@ -730,7 +734,7 @@ class ModelValidatorImpl implements ModelValidator {
             } else {
                 return true
             }
-        }
+        }.every { it }
         if (isValid) {
             return contributorsValid
         } else {
