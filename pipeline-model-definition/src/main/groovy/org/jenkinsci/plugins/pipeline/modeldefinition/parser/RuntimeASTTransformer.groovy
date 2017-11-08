@@ -26,7 +26,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.JobProperty
+import hudson.model.ParameterDefinition
 import hudson.model.Run
+import hudson.triggers.Trigger
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.*
@@ -542,7 +544,7 @@ class RuntimeASTTransformer {
                 if (o.getSourceLocation() instanceof Statement) {
                     MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
                     if (expr != null) {
-                        optsMap.addMapEntryExpression(constX(o.name), methodCallToDescribable(expr))
+                        optsMap.addMapEntryExpression(constX(o.name), methodCallToDescribable(expr, DeclarativeOption.class))
                     }
                 }
             }
@@ -564,7 +566,7 @@ class RuntimeASTTransformer {
             }
 
             return ctorX(ClassHelper.make(Options.class),
-                args(transformListOfDescribables(jobProps), optsMap, wrappersMap))
+                args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
         }
 
         return constX(null)
@@ -578,7 +580,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformParameters(@CheckForNull ModelASTBuildParameters original) {
-        return transformDescribableContainer(original, original?.parameters, Parameters.class)
+        return transformDescribableContainer(original, original?.parameters, Parameters.class, ParameterDefinition.class)
     }
 
     /**
@@ -774,7 +776,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
-        return transformDescribableContainer(original, original?.triggers, Triggers.class)
+        return transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class)
     }
 
 }
