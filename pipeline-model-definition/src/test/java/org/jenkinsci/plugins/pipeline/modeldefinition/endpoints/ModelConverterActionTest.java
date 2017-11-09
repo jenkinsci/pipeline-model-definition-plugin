@@ -238,7 +238,7 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertNotNull(topErrors);
         assertEquals(1, topErrors.size());
 
-        String expectedError = Messages.ModelValidatorImpl_CompilationErrorInCodeBlock("script");
+        String expectedError = Messages.ModelValidatorImpl_CompilationErrorInCodeBlock("script", "unexpected token: ");
 
         assertTrue("Errors array (" + topErrors.toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedErrorInJSON(topErrors, expectedError));

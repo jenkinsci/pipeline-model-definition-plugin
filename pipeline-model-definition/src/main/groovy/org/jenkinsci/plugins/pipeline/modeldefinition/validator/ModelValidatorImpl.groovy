@@ -32,8 +32,8 @@ import hudson.tools.ToolDescriptor
 import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
-import org.codehaus.groovy.control.CompilationFailedException
 import org.codehaus.groovy.control.CompilationUnit
+import org.codehaus.groovy.control.MultipleCompilationErrorsException
 import org.codehaus.groovy.control.Phases
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
@@ -368,8 +368,13 @@ class ModelValidatorImpl implements ModelValidator {
             cu.addSource(step.name, codeBlock)
             try {
                 cu.compile(Phases.PARSING)
-            } catch (CompilationFailedException e) {
-                errorCollector.error(step, Messages.ModelValidatorImpl_CompilationErrorInCodeBlock(step.name))
+            } catch (MultipleCompilationErrorsException e) {
+                int errCnt = e.getErrorCollector().getErrorCount()
+                List<String> compErrors = []
+                for (int i = 0; i < errCnt; i++) {
+                    compErrors.add(e.getErrorCollector().getSyntaxError(i).getOriginalMessage())
+                }
+                errorCollector.error(step, Messages.ModelValidatorImpl_CompilationErrorInCodeBlock(step.name, compErrors.join(", ")))
                 return false
             }
             return true

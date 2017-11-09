@@ -111,6 +111,6 @@ public class JSONValidationTest extends BaseParserLoaderTest {
     @Issue("JENKINS-46854")
     @Test
     public void quoteRoundTripping() throws Exception {
-        findErrorInJSON(Messages.ModelValidatorImpl_CompilationErrorInCodeBlock("script"), "quoteRoundTripping");
+        findErrorInJSON(Messages.ModelValidatorImpl_CompilationErrorInCodeBlock("script", "unexpected char: '''"), "quoteRoundTripping");
     }
 }
