@@ -107,4 +107,10 @@ public class JSONValidationTest extends BaseParserLoaderTest {
         findErrorInJSON(Messages.ModelParser_BareDollarCurly("${env.BUILD_NUMBER}"), "bareDollarCurly");
         findErrorInJSON(Messages.ModelParser_BareDollarCurly("${FOO}"), "bareDollarCurly");
     }
+
+    @Issue("JENKINS-46854")
+    @Test
+    public void quoteRoundTripping() throws Exception {
+        findErrorInJSON(Messages.ModelValidatorImpl_CompilationErrorInCodeBlock("script"), "quoteRoundTripping");
+    }
 }

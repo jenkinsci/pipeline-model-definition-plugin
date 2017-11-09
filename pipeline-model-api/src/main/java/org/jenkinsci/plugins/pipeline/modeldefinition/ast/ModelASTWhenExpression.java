@@ -37,6 +37,6 @@ public class ModelASTWhenExpression extends AbstractModelASTCodeBlock implements
 
     @Override
     public void validate(ModelValidator validator) {
-        // no-op - we don't do validation of script blocks
+        validator.validateElement(this);
     }
 }

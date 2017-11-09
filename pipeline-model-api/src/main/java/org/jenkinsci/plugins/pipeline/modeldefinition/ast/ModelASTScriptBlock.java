@@ -14,6 +14,6 @@ public class ModelASTScriptBlock extends AbstractModelASTCodeBlock {
 
     @Override
     public void validate(final ModelValidator validator) {
-        // no-op - we don't do validation of script blocks
+        validator.validateElement(this);
     }
 }
