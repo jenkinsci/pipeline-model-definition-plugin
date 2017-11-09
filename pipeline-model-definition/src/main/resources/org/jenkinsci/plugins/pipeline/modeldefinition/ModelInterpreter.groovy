@@ -177,6 +177,7 @@ public class ModelInterpreter implements Serializable {
 
     def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage = null) {
         return {
+            def thisError = null
             script.stage(thisStage.name) {
                 try {
                     if (firstError != null) {
@@ -228,9 +229,13 @@ public class ModelInterpreter implements Serializable {
                     if (firstError == null) {
                         firstError = e
                     }
+                    thisError = e
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
-                    if (thisStage.parallel != null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                    // JENKINS-47928: Do not run if the error was not thrown from this stage
+                    if (thisError != null &&
+                            thisStage.parallel != null &&
+                            root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
