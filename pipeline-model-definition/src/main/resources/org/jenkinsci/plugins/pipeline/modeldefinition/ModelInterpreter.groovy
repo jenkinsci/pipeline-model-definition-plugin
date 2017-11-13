@@ -139,8 +139,8 @@ public class ModelInterpreter implements Serializable {
     def getParallelStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage,
                           boolean skippedForFailure, boolean skippedForUnstable, boolean skippedForWhen) {
         def parallelStages = [:]
-        for (int i = 0; i < thisStage.parallel.stages.size(); i++) {
-            Stage parallelStage = thisStage.parallel.getStages().get(i)
+
+        thisStage.parallel.stages.each { parallelStage ->
             if (skippedForFailure) {
                 parallelStages.put(parallelStage.name, {
                     script.stage(parallelStage.name) {
@@ -520,7 +520,7 @@ public class ModelInterpreter implements Serializable {
             // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
             // to actually instantiate the conditional now, via a closure.
             return instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class).every {
-                it.getScript(script).evaluate()
+                it?.getScript(script)?.evaluate()
             }
         }
     }

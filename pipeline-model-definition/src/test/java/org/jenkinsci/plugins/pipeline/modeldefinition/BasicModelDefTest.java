@@ -90,6 +90,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
+        s.setNumExecutors(10);
         s.setLabelString("some-label docker");
     }
 
@@ -1233,6 +1234,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertTrue(parentTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
         assertEquals(StageStatus.getSkippedForFailure(),
                 parentTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+    }
+
+    @Issue("JENKINS-46597")
+    @Test
+    public void parallelStagesShoudntTriggerNSE() throws Exception {
+        expect("parallelStagesShouldntTriggerNSE")
+                .logContains("ninth branch")
+                .go();
     }
 
 }
