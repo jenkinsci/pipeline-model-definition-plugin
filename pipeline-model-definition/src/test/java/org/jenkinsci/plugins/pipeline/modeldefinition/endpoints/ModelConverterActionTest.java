@@ -238,11 +238,9 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertNotNull(topErrors);
         assertEquals(1, topErrors.size());
 
-        JSONObject jenkinsfileErrors = topErrors.getJSONObject(0).getJSONObject("jenkinsfileErrors");
+        String expectedError = Messages.ModelValidatorImpl_CompilationErrorInCodeBlock("script", "unexpected token: ");
 
-        assertNotNull(jenkinsfileErrors);
-        String expectedError = "unexpected token: } @ line 8, column 9.";
-
-        assertTrue(foundExpectedErrorInJSON(jenkinsfileErrors.getJSONArray("errors"), expectedError));
+        assertTrue("Errors array (" + topErrors.toString(2) + ") didn't contain expected error '" + expectedError + "'",
+                foundExpectedErrorInJSON(topErrors, expectedError));
     }
 }

@@ -32,6 +32,9 @@ import hudson.tools.ToolDescriptor
 import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
+import org.codehaus.groovy.control.CompilationUnit
+import org.codehaus.groovy.control.MultipleCompilationErrorsException
+import org.codehaus.groovy.control.Phases
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
@@ -50,7 +53,6 @@ import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
-import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
 /**
@@ -359,7 +361,22 @@ class ModelValidatorImpl implements ModelValidator {
     private boolean validateStep(ModelASTStep step, DescribableModel<? extends Describable> model, Descriptor desc) {
 
         if (step instanceof AbstractModelASTCodeBlock) {
-            // No validation needed for code blocks like expression and script
+            // Verify that the code block can be parsed - we'll still get garbage for errors around class imports, etc,
+            // but you can't do that from the editor anyway.
+            String codeBlock = step.codeBlockAsString()
+            CompilationUnit cu = new CompilationUnit()
+            cu.addSource(step.name, codeBlock)
+            try {
+                cu.compile(Phases.PARSING)
+            } catch (MultipleCompilationErrorsException e) {
+                int errCnt = e.getErrorCollector().getErrorCount()
+                List<String> compErrors = []
+                for (int i = 0; i < errCnt; i++) {
+                    compErrors.add(e.getErrorCollector().getSyntaxError(i).getOriginalMessage())
+                }
+                errorCollector.error(step, Messages.ModelValidatorImpl_CompilationErrorInCodeBlock(step.name, compErrors.join(", ")))
+                return false
+            }
             return true
         } else {
             return validateDescribable(step, step.name, step.args, model, lookup.stepTakesClosure(desc))
@@ -375,7 +392,7 @@ class ModelValidatorImpl implements ModelValidator {
             Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
             DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
-            if (model != null) {
+            if (model != null || step instanceof AbstractModelASTCodeBlock) {
                 valid = validateStep(step, model, desc)
             }
         }

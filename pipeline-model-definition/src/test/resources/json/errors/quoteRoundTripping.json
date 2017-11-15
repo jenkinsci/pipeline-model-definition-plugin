@@ -1,0 +1,64 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "Each of these takes ten seconds",
+    "parallel":     [
+      {
+        "name": "first",
+        "branches": [        {
+          "name": "default",
+          "steps":           [
+            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "First branch"
+                }
+              }]
+            },
+            {
+              "name": "script",
+              "arguments": [              {
+                "key": "scriptBlock",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "sh 'for i in `seq 1 10`; do echo \"Sleeping 1S\"; sleep 1;' done'"
+                }
+              }]
+            }
+          ]
+        }]
+      },
+      {
+        "name": "second",
+        "branches": [        {
+          "name": "default",
+          "steps":           [
+            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "Second branch"
+                }
+              }]
+            },
+            {
+              "name": "script",
+              "arguments": [              {
+                "key": "scriptBlock",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "sh 'for i in `seq 1 10`; do echo \"Sleeping 1S\"; sleep 1; done'"
+                }
+              }]
+            }
+          ]
+        }]
+      }
+    ]
+  }],
+  "agent": {"type": "any"}
+}}
