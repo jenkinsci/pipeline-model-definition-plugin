@@ -75,7 +75,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.36.1</version>
+        <version>2.41</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -332,7 +332,7 @@
   </build>
 
   <properties>
-    <jenkins.version>2.7.1</jenkins.version>
+    <jenkins.version>2.7.3</jenkins.version>
     <java.level>7</java.level>
     <groovy.version>2.4.7</groovy.version>
     <concurrency>0.5C</concurrency>
