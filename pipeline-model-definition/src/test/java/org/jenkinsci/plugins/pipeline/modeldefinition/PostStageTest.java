@@ -122,6 +122,13 @@ public class PostStageTest extends AbstractModelDefTest {
                 .logNotContains("Required context class hudson.FilePath is missing").go();
     }
 
+    @Issue("JENKINS-47928")
+    @Test
+    public void parallelParentPostFailure() throws Exception {
+        expect(Result.FAILURE, "parallelParentPostFailure")
+                .logNotContains("PARALLEL STAGE POST").go();
+    }
+
     @Override
     protected ExpectationsBuilder expect(String resource) {
         return super.expect("postStage", resource);
