@@ -1,9 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?jelly escape-by-default='true'?>
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2016, CloudBees, Inc.
+  ~ Copyright (c) 2017, CloudBees, Inc.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +22,7 @@
   ~ THE SOFTWARE.
   -->
 
-<j:jelly xmlns:j="jelly:core">
-    <p>
-        The <code>skipDefaultCheckout</code> option disables the standard, automatic <code>checkout scm</code> before the first
-        stage. If specified and SCM checkout is desired, it will need to be explicitly included.
-    </p>
-</j:jelly>
+<p>
+    The string to look for in the list of changed files. Can be a wildcard, using
+    <a href='http://ant.apache.org/manual/Types/fileset.html'>Ant-style globs</a>.
+</p>
