@@ -108,7 +108,7 @@ public class OptionsTest extends AbstractModelDefTest {
         WorkflowJob p = b.getParent();
 
         // We test for skipDefaultCheckout() in the Jenkinsfile itself by verifying that Jenkinsfile isn't in the workspace
-        
+
         // Job properties
         BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
         assertNotNull(bdp);
@@ -332,5 +332,17 @@ public class OptionsTest extends AbstractModelDefTest {
         expect(Result.FAILURE, "retryOptions")
                 .logContains("Retrying")
                 .go();
+    }
+
+    @Issue("JENKINS-48115")
+    @Test
+    public void disableConcurrentBuilds() throws Exception {
+        WorkflowRun b = expect("disableConcurrentBuilds")
+                .go();
+        WorkflowJob p = b.getParent();
+
+        DisableConcurrentBuildsJobProperty prop = p.getProperty(DisableConcurrentBuildsJobProperty.class);
+        assertNotNull(prop);
+
     }
 }
