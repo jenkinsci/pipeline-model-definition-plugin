@@ -423,9 +423,7 @@ class ASTParserUtils {
         StepDescriptor stepDesc = lookupCache.lookupStepDescriptor(methodName)
         // This is the case where we've got a wrapper in options
         if (stepDesc != null ||
-            (funcDesc != null &&
-                // Deal with cases like jira-steps that claim to be metasteps without any metastep arguments!
-                StepDescriptor.metaStepsOf(methodName)?.first()?.metaStepArgumentType != Object.class)) {
+            (funcDesc != null && !StepDescriptor.metaStepsOf(methodName)?.isEmpty())) {
             MapExpression m = new MapExpression()
             m.addMapEntryExpression(constX("name"), constX(methodName))
             m.addMapEntryExpression(constX("args"), argsMap(methArgs))
