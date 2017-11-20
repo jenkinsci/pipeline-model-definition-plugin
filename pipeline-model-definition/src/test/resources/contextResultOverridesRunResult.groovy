@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,32 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-
-/**
- * A {@link BuildCondition} for matching unstable builds.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=500d) @Symbol("unstable")
-public class Unstable extends BuildCondition {
-    @Override
-    public boolean meetsCondition(WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return (execResult != null && execResult.equals(Result.UNSTABLE)) ||
-            (r.getResult() != null && r.getResult().equals(Result.UNSTABLE))
+pipeline {
+    agent any
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
-
-    @Override
-    public String getDescription() {
-        return Messages.Unstable_Description()
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: 'junitResult.xml'
+        }
+        success {
+            echo "MOST DEFINITELY FINISHED"
+        }
+        unstable {
+            echo "I AM UNSTABLE"
+        }
     }
-
-    public static final long serialVersionUID = 1L
 }
+
+
+
