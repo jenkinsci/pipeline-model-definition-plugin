@@ -47,7 +47,8 @@ public class Changed extends BuildCondition {
         }
         // If the current build's result isn't null (i.e., it's got a specified status), and it's different than the
         // previous build's result, we're changed.
-        else if ((execResult != null && prev.getResult() != execResult) || prev.getResult() != r.getResult()) {
+        else if ((execResult != null && prev.getResult() != execResult) ||
+            (r.getResult() != null && prev.getResult() != r.getResult())) {
             return true
         }
         // If the current build's result is null and the previous build's result is not SUCCESS, we're changed.
