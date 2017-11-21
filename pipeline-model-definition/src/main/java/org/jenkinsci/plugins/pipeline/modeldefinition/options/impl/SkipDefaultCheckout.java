@@ -36,8 +36,8 @@ public class SkipDefaultCheckout extends DeclarativeOption {
     private Boolean skipDefaultCheckout;
 
     @DataBoundConstructor
-    public SkipDefaultCheckout(@Nullable Boolean s) {
-        this.skipDefaultCheckout = s;
+    public SkipDefaultCheckout(@Nullable Boolean skipDefaultCheckout) {
+        this.skipDefaultCheckout = skipDefaultCheckout;
     }
 
     public boolean isSkipDefaultCheckout() {
