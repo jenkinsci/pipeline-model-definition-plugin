@@ -422,7 +422,8 @@ class ASTParserUtils {
         Descriptor<? extends Describable> funcDesc = lookupCache.lookupFunction(methodName, descClass)
         StepDescriptor stepDesc = lookupCache.lookupStepDescriptor(methodName)
         // This is the case where we've got a wrapper in options
-        if (stepDesc != null || (funcDesc != null && !StepDescriptor.metaStepsOf(methodName).isEmpty())) {
+        if (stepDesc != null ||
+            (funcDesc != null && !StepDescriptor.metaStepsOf(methodName)?.isEmpty())) {
             MapExpression m = new MapExpression()
             m.addMapEntryExpression(constX("name"), constX(methodName))
             m.addMapEntryExpression(constX("args"), argsMap(methArgs))
