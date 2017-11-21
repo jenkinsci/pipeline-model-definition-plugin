@@ -26,44 +26,42 @@ pipeline {
     stages {
         // While there is only one stage here, you can specify as many stages as you like!
         stage("build") {
-            agent {
-                label "java"
-            }
-            steps {
-                sh 'mvn clean install -Dmaven.test.failure.ignore=true'
-            }
-            post {
-                // No matter what the build status is, run this step. There are other conditions
-                // available as well, such as "success", "failed", "unstable", and "changed".
-                always {
-                    junit '*/target/surefire-reports/*.xml'
+            parallel {
+                stage("linux") {
+                    agent {
+                        label "java"
+                    }
+                    steps {
+                        sh 'mvn clean install -Dmaven.test.failure.ignore=true'
+                    }
+                    post {
+                        // No matter what the build status is, run this step. There are other conditions
+                        // available as well, such as "success", "failed", "unstable", and "changed".
+                        always {
+                            junit '*/target/surefire-reports/*.xml'
+                        }
+                        success {
+                            archive "**/target/*.hpi"
+                            archive "**/target/site/jacoco/jacoco.xml"
+                        }
+                        unstable {
+                            archive "**/target/*.hpi"
+                            archive "**/target/site/jacoco/jacoco.xml"
+                        }
+                    }
                 }
-                success {
-                    archive "**/target/*.hpi"
-                    archive "**/target/site/jacoco/jacoco.xml"
-                }
-                unstable {
-                    archive "**/target/*.hpi"
-                    archive "**/target/site/jacoco/jacoco.xml"
-                }
-            }
-        }
-        stage("windows") {
-            when {
-                expression {
-                    // Don't actually run if we already have test failures above, so we don't overwrite them.
-                    return currentBuild.result != "UNSTABLE"
-                }
-            }
-            agent {
-                label "windows"
-            }
-            steps {
-                bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true'
-            }
-            post {
-                always {
-                    junit '*/target/surefire-reports/*.xml'
+                stage("windows") {
+                    agent {
+                        label "windows"
+                    }
+                    steps {
+                        bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true'
+                    }
+                    post {
+                        always {
+                            junit '*/target/surefire-reports/*.xml'
+                        }
+                    }
                 }
             }
         }
