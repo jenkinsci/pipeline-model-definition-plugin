@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import hudson.model.Job
 import hudson.model.JobProperty
 import hudson.model.ParameterDefinition
 import hudson.model.Run
@@ -43,6 +44,7 @@ import org.codehaus.groovy.ast.stmt.TryCatchStatement
 import org.codehaus.groovy.ast.stmt.WhileStatement
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
@@ -82,6 +84,10 @@ class RuntimeASTTransformer {
             } else {
                 action.addStages(stages)
                 run.save()
+            }
+            Job<?,?> job = run.getParent()
+            if (job.getAction(DeclarativeJobAction.class) == null) {
+                job.addAction(new DeclarativeJobAction())
             }
         }
 
