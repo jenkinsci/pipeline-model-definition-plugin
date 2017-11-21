@@ -261,6 +261,8 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>jira-steps</artifactId>
+        <!-- DO NOT CHANGE THIS. This specific version is broken in the ways that JENKINS-48115 works around, so it'd be
+        kinda hard to test without this version! -->
         <version>1.3.0</version>
         <exclusions>
           <exclusion>
