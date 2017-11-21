@@ -48,8 +48,13 @@ import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -74,6 +79,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
+import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
 
@@ -710,5 +716,18 @@ class Utils {
         }
 
         return result.toString().trim()
+    }
+
+    @Nonnull
+    static List<Class<? extends Describable>> parentsForMethodCall(@Nonnull ModelASTMethodCall meth) {
+        if (meth instanceof ModelASTTrigger) {
+            return [Trigger.class]
+        } else if (meth instanceof ModelASTBuildParameter) {
+            return [ParameterDefinition.class]
+        } else if (meth instanceof ModelASTOption) {
+            return [JobProperty.class, DeclarativeOption.class, Step.class]
+        } else {
+            return []
+        }
     }
 }

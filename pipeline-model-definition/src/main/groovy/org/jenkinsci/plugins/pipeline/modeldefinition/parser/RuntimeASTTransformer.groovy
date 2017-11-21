@@ -26,7 +26,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.JobProperty
+import hudson.model.ParameterDefinition
 import hudson.model.Run
+import hudson.triggers.Trigger
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.*
@@ -264,8 +266,19 @@ class RuntimeASTTransformer {
             if (propExpr.objectExpression instanceof VariableExpression &&
                 ((VariableExpression) propExpr.objectExpression).name == "env" &&
                     keys.contains(propExpr.propertyAsString)) {
-                // If the property this expression refers to is env.whatever, replace with the env getter.
-                body = environmentValueGetterCall(propExpr.propertyAsString)
+                if (propExpr.propertyAsString == targetVar) {
+                    // If this is the same variable we're setting, use getScriptPropOrParam, which will first try
+                    // script.getProperty(name), then script.getProperty('params').get(name).
+                    body = callX(
+                        varX("this"),
+                        constX("getScriptPropOrParam"),
+                        args(constX(propExpr.propertyAsString))
+                    )
+
+                } else {
+                    // If the property this expression refers to is env.whatever, replace with the env getter.
+                    body = environmentValueGetterCall(propExpr.propertyAsString)
+                }
             } else {
                 // Otherwise, if the property is still on a variable, translate everything
                 return propX(
@@ -529,7 +542,7 @@ class RuntimeASTTransformer {
                 if (o.getSourceLocation() instanceof Statement) {
                     MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
                     if (expr != null) {
-                        optsMap.addMapEntryExpression(constX(o.name), methodCallToDescribable(expr))
+                        optsMap.addMapEntryExpression(constX(o.name), methodCallToDescribable(expr, DeclarativeOption.class))
                     }
                 }
             }
@@ -551,7 +564,7 @@ class RuntimeASTTransformer {
             }
 
             return ctorX(ClassHelper.make(Options.class),
-                args(transformListOfDescribables(jobProps), optsMap, wrappersMap))
+                args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
         }
 
         return constX(null)
@@ -565,7 +578,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformParameters(@CheckForNull ModelASTBuildParameters original) {
-        return transformDescribableContainer(original, original?.parameters, Parameters.class)
+        return transformDescribableContainer(original, original?.parameters, Parameters.class, ParameterDefinition.class)
     }
 
     /**
@@ -761,7 +774,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
-        return transformDescribableContainer(original, original?.triggers, Triggers.class)
+        return transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class)
     }
 
 }

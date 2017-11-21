@@ -47,6 +47,16 @@ pipeline {
                         }
                     }
                 }
+                stage("third") {
+                    when {
+                        expression {
+                            return false
+                        }
+                    }
+                    steps {
+                        echo "Third branch"
+                    }
+                }
             }
             post {
                 failure {

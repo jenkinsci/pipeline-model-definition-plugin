@@ -254,17 +254,17 @@ class ASTParserUtils {
 
     /**
      * Takes a list of {@link ModelASTElement}s corresponding to {@link Describable}s (such as {@link JobProperty}s, etc),
-     * and transforms their Groovy AST nodes into AST from {@link #methodCallToDescribable(MethodCallExpression)}.
+     * and transforms their Groovy AST nodes into AST from {@link #methodCallToDescribable(MethodCallExpression,Class)}.
      */
     @Nonnull
-    static Expression transformListOfDescribables(@CheckForNull List<ModelASTElement> children) {
+    static Expression transformListOfDescribables(@CheckForNull List<ModelASTElement> children, Class<? extends Describable> descClass) {
         ListExpression descList = new ListExpression()
 
         children?.each { d ->
             if (d.sourceLocation instanceof Statement) {
                 MethodCallExpression m = matchMethodCall((Statement) d.sourceLocation)
                 if (m != null) {
-                    descList.addExpression(methodCallToDescribable(m))
+                    descList.addExpression(methodCallToDescribable(m,descClass))
                 } else {
                     throw new IllegalArgumentException("Expected a method call expression but received ${d.sourceLocation}")
                 }
@@ -282,13 +282,15 @@ class ASTParserUtils {
      * @param children The children for the original element - passed as a separate argument since the getter will
      * be different.
      * @param containerClass The class we will be instantiating, i.e., {@link Parameters} or {@link Triggers}.
+     * @param descClass the describable class we're inheriting from
      * @return The AST for instantiating the container and its contents.
      */
     static Expression transformDescribableContainer(@CheckForNull ModelASTElement original,
-                                                 @CheckForNull List<ModelASTElement> children,
-                                                 @Nonnull Class containerClass) {
+                                                    @CheckForNull List<ModelASTElement> children,
+                                                    @Nonnull Class containerClass,
+                                                    @Nonnull Class<? extends Describable> descClass) {
         if (isGroovyAST(original) && !children?.isEmpty()) {
-            return ctorX(ClassHelper.make(containerClass), args(transformListOfDescribables(children)))
+            return ctorX(ClassHelper.make(containerClass), args(transformListOfDescribables(children, descClass)))
         }
         return constX(null)
     }
@@ -308,7 +310,7 @@ class ASTParserUtils {
 
                     if (methCall != null) {
                         if (cond.children.isEmpty()) {
-                            return methodCallToDescribable(methCall)
+                            return methodCallToDescribable(methCall, null)
                         } else {
                             MapExpression argMap = new MapExpression()
                             if (parentDesc.allowedChildrenCount == 1) {
@@ -378,7 +380,7 @@ class ASTParserUtils {
                 singleArg.mapEntryExpressions.each { entry ->
                     if (entry.valueExpression instanceof MethodCallExpression) {
                         MethodCallExpression m = (MethodCallExpression) entry.valueExpression
-                        tmpMap.addMapEntryExpression(entry.keyExpression, methodCallToDescribable(m))
+                        tmpMap.addMapEntryExpression(entry.keyExpression, methodCallToDescribable(m, null))
                     } else {
                         tmpMap.addMapEntryExpression(entry)
                     }
@@ -386,7 +388,7 @@ class ASTParserUtils {
             } else {
                 if (singleArg instanceof MethodCallExpression) {
                     tmpMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
-                        methodCallToDescribable(singleArg))
+                        methodCallToDescribable(singleArg, null))
                 } else {
                     tmpMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY), singleArg)
                 }
@@ -410,16 +412,17 @@ class ASTParserUtils {
      * Transforms a {@link MethodCallExpression} into either a map of name and arguments for steps, or a call to
      * {@link Utils#instantiateDescribable(Class,Map)} that can be invoked at runtime to actually instantiated.
      * @param expr A method call.
+     * @param descClass possibly null describable parent class
      * @return The appropriate transformation, or the original expression if it didn't correspond to a Describable.
      */
     @CheckForNull
-    static Expression methodCallToDescribable(MethodCallExpression expr) {
+    static Expression methodCallToDescribable(MethodCallExpression expr, Class<? extends Describable> descClass) {
         def methodName = matchMethodName(expr)
         List<Expression> methArgs = methodCallArgs(expr)
 
         DescriptorLookupCache lookupCache = DescriptorLookupCache.getPublicCache()
 
-        Descriptor<? extends Describable> funcDesc = lookupCache.lookupFunction(methodName)
+        Descriptor<? extends Describable> funcDesc = lookupCache.lookupFunction(methodName, descClass)
         StepDescriptor stepDesc = lookupCache.lookupStepDescriptor(methodName)
         // This is the case where we've got a wrapper in options
         if (stepDesc != null || (funcDesc != null && !StepDescriptor.metaStepsOf(methodName).isEmpty())) {

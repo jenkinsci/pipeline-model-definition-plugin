@@ -90,6 +90,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
+        s.setNumExecutors(10);
         s.setLabelString("some-label docker");
     }
 
@@ -197,6 +198,21 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(endFirst);
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFirst, endFirst, null));
         assertNotNull(endFirst.getError());
+
+        FlowNode startThird = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("third"));
+        assertNotNull(startThird);
+        assertTrue(startThird instanceof BlockStartNode);
+        FlowNode endThird = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startThird));
+        assertNotNull(endThird);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startThird, endThird, null));
+
+        TagsAction thirdTags = startThird.getAction(TagsAction.class);
+        assertNotNull(thirdTags);
+        assertNotNull(thirdTags.getTags());
+        assertFalse(thirdTags.getTags().isEmpty());
+        assertTrue(thirdTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(StageStatus.getSkippedForConditional(),
+                thirdTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
 
         TagsAction nestedTags = startFirst.getAction(TagsAction.class);
         assertNotNull(nestedTags);
@@ -1168,4 +1184,76 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .hasFailureCase()
                 .go();
     }
+
+    @Issue("JENKINS-47783")
+    @Test
+    public void parallelStagesHaveStatusWhenSkipped() throws Exception {
+        WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatusWhenSkipped")
+                .logContains("[Pipeline] { (bar)",
+                        "[Pipeline] { (foo)",
+                        "[first] { (Branch: first)",
+                        "[Pipeline] [first] { (first)",
+                        "[second] { (Branch: second)",
+                        "[Pipeline] [second] { (second)")
+                .hasFailureCase()
+                .go();
+
+        FlowExecution execution = b.getExecution();
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        assertNotNull(startFoo);
+        assertTrue(startFoo instanceof BlockStartNode);
+        FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFoo));
+        assertNotNull(endFoo);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+        assertNotNull(endFoo.getError());
+
+        FlowNode startFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("first"));
+        assertNotNull(startFirst);
+        assertTrue(startFirst instanceof BlockStartNode);
+        FlowNode endFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFirst));
+        assertNotNull(endFirst);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFirst, endFirst, null));
+
+        FlowNode startSecond = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("second"));
+        assertNotNull(startSecond);
+        assertTrue(startSecond instanceof BlockStartNode);
+        FlowNode endSecond = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startSecond));
+        assertNotNull(endSecond);
+        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startSecond, endSecond, null));
+
+        TagsAction firstTags = startFirst.getAction(TagsAction.class);
+        assertNotNull(firstTags);
+        assertNotNull(firstTags.getTags());
+        assertFalse(firstTags.getTags().isEmpty());
+        assertTrue(firstTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(StageStatus.getSkippedForFailure(),
+                firstTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+
+        TagsAction secondTags = startSecond.getAction(TagsAction.class);
+        assertNotNull(secondTags);
+        assertNotNull(secondTags.getTags());
+        assertFalse(secondTags.getTags().isEmpty());
+        assertTrue(secondTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(StageStatus.getSkippedForFailure(),
+                secondTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+
+        TagsAction parentTags = startFoo.getAction(TagsAction.class);
+        assertNotNull(parentTags);
+        assertNotNull(parentTags.getTags());
+        assertFalse(parentTags.getTags().isEmpty());
+        assertTrue(parentTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(StageStatus.getSkippedForFailure(),
+                parentTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+    }
+
+    @Issue("JENKINS-46597")
+    @Test
+    public void parallelStagesShoudntTriggerNSE() throws Exception {
+        expect("parallelStagesShouldntTriggerNSE")
+                .logContains("ninth branch")
+                .go();
+    }
+
 }

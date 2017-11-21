@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,25 +20,23 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-import javax.annotation.Nonnull;
-
-/**
- * Code expression {@link ModelASTStage} will be executed or not.
- */
-public class ModelASTWhenExpression extends AbstractModelASTCodeBlock implements ModelASTWhenContent {
-    public ModelASTWhenExpression(Object sourceLocation) {
-        super(sourceLocation, "expression");
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
-
-    @Override
-    public void validate(@Nonnull ModelValidator validator) {
-        validator.validateElement(this);
+    post {
+        always {
+            echo "hi"
+        }
     }
 }
+
+
+

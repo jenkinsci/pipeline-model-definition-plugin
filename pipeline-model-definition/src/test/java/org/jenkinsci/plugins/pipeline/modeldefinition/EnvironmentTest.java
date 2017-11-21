@@ -300,4 +300,12 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("Version is BANANA")
                 .go();
     }
+
+    @Issue("JENKINS-47600")
+    @Test
+    public void environmentOverwriteReference() throws Exception {
+        expect("environmentOverwriteReference")
+                .logContains("value: first second", "value: first third")
+                .go();
+    }
 }

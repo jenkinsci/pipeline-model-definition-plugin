@@ -28,6 +28,7 @@ import jenkins.model.OptionalJobProperty;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
@@ -685,6 +686,43 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-47814")
+    @Test
+    public void postValidatorContributor() throws Exception {
+        TestDupeContributor.count = 0;
+        expectError("postValidatorContributor")
+                .logContains("validate 1")
+                .logNotContains("validate 2")
+                .go();
+    }
+
+    @Issue("JENKINS-47814")
+    @Test
+    public void optionValidatorContributor() throws Exception {
+        TestDupeContributor.count = 0;
+        expectError("optionValidatorContributor")
+                .logContains("validate option 1")
+                .logNotContains("validate option 2")
+                .go();
+    }
+
+    @TestExtension
+    public static class TestDupeContributor extends DeclarativeValidatorContributor {
+        public static int count = 0;
+
+        @Override
+        public String validateElement(@Nonnull ModelASTPostBuild postBuild, @CheckForNull FlowExecution execution) {
+            count++;
+            return "validate " + count;
+        }
+
+        @Override
+        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
+            count++;
+            return "validate option " + count;
+        }
+    }
+
     @TestExtension
     public static class RejectTestProperty extends DeclarativeValidatorContributor {
         @Override
@@ -768,6 +806,14 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void whenContainingNonCondition() throws Exception {
         expectError("whenContainingNonCondition")
                 .logContains(Messages.ModelParser_ExpectedWhen())
+                .go();
+    }
+
+    @Issue("JENKINS-47781")
+    @Test
+    public void specificDescribableMatch() throws Exception {
+        expectError("specificDescribableMatch")
+                .logContains(Messages.ModelValidatorImpl_InvalidStepParameter("upstreamWhat", "upstreamProjects"))
                 .go();
     }
 }

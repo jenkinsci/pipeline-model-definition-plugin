@@ -32,6 +32,9 @@ import hudson.tools.ToolDescriptor
 import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
 import jenkins.model.Jenkins
+import org.codehaus.groovy.control.CompilationUnit
+import org.codehaus.groovy.control.MultipleCompilationErrorsException
+import org.codehaus.groovy.control.Phases
 import org.codehaus.groovy.runtime.ScriptBytecodeAdapter
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
@@ -107,7 +110,7 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        return validateFromContributors(post, valid)
+        return valid
     }
 
     boolean validateElement(@Nonnull ModelASTBuildCondition buildCondition) {
@@ -358,7 +361,22 @@ class ModelValidatorImpl implements ModelValidator {
     private boolean validateStep(ModelASTStep step, DescribableModel<? extends Describable> model, Descriptor desc) {
 
         if (step instanceof AbstractModelASTCodeBlock) {
-            // No validation needed for code blocks like expression and script
+            // Verify that the code block can be parsed - we'll still get garbage for errors around class imports, etc,
+            // but you can't do that from the editor anyway.
+            String codeBlock = step.codeBlockAsString()
+            CompilationUnit cu = new CompilationUnit()
+            cu.addSource(step.name, codeBlock)
+            try {
+                cu.compile(Phases.PARSING)
+            } catch (MultipleCompilationErrorsException e) {
+                int errCnt = e.getErrorCollector().getErrorCount()
+                List<String> compErrors = []
+                for (int i = 0; i < errCnt; i++) {
+                    compErrors.add(e.getErrorCollector().getSyntaxError(i).getOriginalMessage())
+                }
+                errorCollector.error(step, Messages.ModelValidatorImpl_CompilationErrorInCodeBlock(step.name, compErrors.join(", ")))
+                return false
+            }
             return true
         } else {
             return validateDescribable(step, step.name, step.args, model, lookup.stepTakesClosure(desc))
@@ -374,7 +392,7 @@ class ModelValidatorImpl implements ModelValidator {
             Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
             DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
-            if (model != null) {
+            if (model != null || step instanceof AbstractModelASTCodeBlock) {
                 valid = validateStep(step, model, desc)
             }
         }
@@ -386,10 +404,26 @@ class ModelValidatorImpl implements ModelValidator {
         boolean valid = true
 
         if (Jenkins.getInstance() != null) {
-            Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
             DescribableModel<? extends Describable> model
-            if (desc != null) {
-                model = lookup.modelForFunctionFirstThenStep(meth.name)
+
+            List<Class<? extends Describable>> parentDescribables = Utils.parentsForMethodCall(meth)
+
+            if (!parentDescribables.isEmpty()) {
+                model = parentDescribables.collect { p ->
+                    Descriptor fromParent = lookup.lookupFunctionFirstThenStep(meth.name, p)
+                    if (fromParent != null) {
+                        def m = lookup.modelForFunctionFirstThenStep(meth.name, p)
+                        return m
+                    } else {
+                        return null
+                    }
+                }.find { it != null }
+            } else {
+                Descriptor desc = lookup.lookupFunctionFirstThenStep(meth.name)
+
+                if (desc != null) {
+                    model = lookup.modelForFunctionFirstThenStep(meth.name)
+                }
             }
 
             if (model != null) {
@@ -448,7 +482,11 @@ class ModelValidatorImpl implements ModelValidator {
                 }
             }
         }
-        return validateFromContributors(meth, valid)
+        if (meth.class == ModelASTMethodCall.class) {
+            return validateFromContributors(meth, valid)
+        } else {
+            return valid
+        }
     }
 
     boolean validateElement(@Nonnull ModelASTOptions opts) {
@@ -700,7 +738,7 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
-        boolean contributorsValid = DeclarativeValidatorContributor.all().every { contributor ->
+        boolean contributorsValid = DeclarativeValidatorContributor.all().collect { contributor ->
             String error
             if (!(element instanceof ModelASTStage)) {
                 error = contributor.validateElement(element, getExecution())
@@ -713,7 +751,7 @@ class ModelValidatorImpl implements ModelValidator {
             } else {
                 return true
             }
-        }
+        }.every { it }
         if (isValid) {
             return contributorsValid
         } else {

@@ -25,7 +25,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -36,15 +35,9 @@ class AnyOfConditionalScript extends DeclarativeStageConditionalScript<AnyOfCond
     }
 
     @Override
-     boolean evaluate() {
-        List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children = describable.children
-        children.each { n ->
-            DeclarativeStageConditionalScript s = (DeclarativeStageConditionalScript)n?.getScript(script)
-            if (s != null && s.evaluate()) {
-                return true
-            }
+    boolean evaluate() {
+        return describable.children.any {
+            it?.getScript(script)?.evaluate()
         }
-
-        return false
     }
 }
