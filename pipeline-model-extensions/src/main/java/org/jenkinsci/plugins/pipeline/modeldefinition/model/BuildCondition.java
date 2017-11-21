@@ -26,10 +26,15 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 import hudson.ExtensionComponent;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.model.Result;
 import org.jenkinsci.plugins.structs.SymbolLookup;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +57,16 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild();
 
         return meetsCondition(run);
+    }
+
+    @CheckForNull
+    protected Result getExecutionResult(@Nonnull WorkflowRun r) {
+        FlowExecution execution = r.getExecution();
+        if (execution instanceof CpsFlowExecution) {
+            return ((CpsFlowExecution) execution).getResult();
+        } else {
+            return r.getResult();
+        }
     }
 
     public abstract String getDescription();

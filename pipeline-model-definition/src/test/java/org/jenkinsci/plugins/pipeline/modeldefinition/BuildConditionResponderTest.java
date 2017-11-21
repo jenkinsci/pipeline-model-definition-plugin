@@ -197,4 +197,14 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
         j.assertLogContains("Job aborted due to input", run);
     }
+
+    @Issue("JENKINS-37663")
+    @Test
+    public void contextResultOverridesRunResult() throws Exception {
+        expect(Result.UNSTABLE, "contextResultOverridesRunResult")
+                .otherResource("junitResult.xml", "junitResult.xml")
+                .logContains("I AM UNSTABLE")
+                .logNotContains("MOST DEFINITELY FINISHED")
+                .go();
+    }
 }
