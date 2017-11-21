@@ -39,8 +39,7 @@ public class Failure extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         Result execResult = getExecutionResult(r)
-        return (execResult != null && execResult.equals(Result.FAILURE)) ||
-            (r.getResult() != null && r.getResult().equals(Result.FAILURE))
+        return execResult == Result.FAILURE || r.getResult() == Result.FAILURE
     }
 
     @Override

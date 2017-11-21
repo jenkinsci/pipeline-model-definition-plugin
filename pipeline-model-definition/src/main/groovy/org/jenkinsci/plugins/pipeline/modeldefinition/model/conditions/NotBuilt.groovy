@@ -39,8 +39,7 @@ public class NotBuilt extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         Result execResult = getExecutionResult(r)
-        return (execResult != null && execResult.equals(Result.NOT_BUILT)) ||
-            (r.getResult() != null && r.getResult().equals(Result.NOT_BUILT))
+        return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
     }
 
     @Override

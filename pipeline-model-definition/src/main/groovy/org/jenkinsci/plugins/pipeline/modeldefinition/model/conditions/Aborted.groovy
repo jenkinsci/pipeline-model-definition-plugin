@@ -39,8 +39,7 @@ public class Aborted extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {
         Result execResult = getExecutionResult(r)
-        return (execResult != null && execResult.equals(Result.ABORTED)) ||
-            (r.getResult() != null && r.getResult().equals(Result.ABORTED))
+        return execResult == Result.ABORTED || r.getResult() == Result.ABORTED
     }
 
     @Override
