@@ -35,6 +35,7 @@ import jenkins.model.BuildDiscarderProperty;
 import jenkins.plugins.git.GitSCMSource;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.StageStatus;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
@@ -48,6 +49,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -1244,4 +1246,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46252")
+    @Test
+    public void declarativeJobAction() throws Exception {
+        WorkflowRun r1 = expect("simplePipeline").go();
+        WorkflowJob j1 = r1.getParent();
+        assertNotNull(j1.getAction(DeclarativeJobAction.class));
+
+        WorkflowJob j2 = j.createProject(WorkflowJob.class, "nonDeclarative");
+        j2.setDefinition(new CpsFlowDefinition("echo 'hi'", true));
+        j.buildAndAssertSuccess(j2);
+        assertNull(j2.getAction(DeclarativeJobAction.class));
+    }
 }
