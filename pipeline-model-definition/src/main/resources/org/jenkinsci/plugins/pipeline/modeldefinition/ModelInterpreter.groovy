@@ -57,7 +57,7 @@ public class ModelInterpreter implements Serializable {
         if (root != null) {
             boolean postBuildRun = false
 
-            Utils.markExecutedStagesOnAction(script, root.astUUID)
+            Utils.updateRunAndJobActions(script, root.astUUID)
 
             try {
                 loadLibraries(root)

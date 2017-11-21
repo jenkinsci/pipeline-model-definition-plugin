@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,31 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
+package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
-/**
- * A {@link BuildCondition} for matching aborted builds.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=800d) @Symbol("aborted")
-public class Aborted extends BuildCondition {
-    @Override
-    public boolean meetsCondition(WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return execResult == Result.ABORTED || r.getResult() == Result.ABORTED
+import hudson.model.InvisibleAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class DeclarativeJobAction extends InvisibleAction {
+    public DeclarativeJobAction() {
     }
-
-    @Override
-    public String getDescription() {
-        return Messages.Aborted_Description()
-    }
-
-    public static final long serialVersionUID = 1L
 }

@@ -38,7 +38,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 public class NotBuilt extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() != null && r.getResult().equals(Result.NOT_BUILT)
+        Result execResult = getExecutionResult(r)
+        return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
     }
 
     @Override

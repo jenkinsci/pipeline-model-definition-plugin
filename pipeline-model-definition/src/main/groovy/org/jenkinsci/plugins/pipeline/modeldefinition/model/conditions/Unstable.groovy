@@ -38,7 +38,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 public class Unstable extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() != null && r.getResult().equals(Result.UNSTABLE)
+        Result execResult = getExecutionResult(r)
+        return execResult == Result.UNSTABLE || r.getResult() == Result.UNSTABLE
     }
 
     @Override

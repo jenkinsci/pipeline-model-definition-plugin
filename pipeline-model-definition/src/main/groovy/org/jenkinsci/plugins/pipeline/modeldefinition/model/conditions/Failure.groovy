@@ -38,7 +38,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 public class Failure extends BuildCondition {
     @Override
     public boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() != null && r.getResult().equals(Result.FAILURE)
+        Result execResult = getExecutionResult(r)
+        return execResult == Result.FAILURE || r.getResult() == Result.FAILURE
     }
 
     @Override
