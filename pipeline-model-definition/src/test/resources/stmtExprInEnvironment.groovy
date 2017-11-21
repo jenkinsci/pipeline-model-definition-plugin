@@ -50,19 +50,19 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "LIST_EXP is $LIST_EXP"'
-                sh 'echo "MAP_EXP is $MAP_EXP"'
-                // sh 'echo "BITWISE_NEGATE is $BITWISE_NEGATE"'
-                sh 'echo "BOOL_EXP is $BOOL_EXP"'
-                sh 'echo "CTOR_EXP is $CTOR_EXP"'
-                sh 'echo "CAST_EXP is $CAST_EXP"'
-                sh 'echo "PTR_EXP is $PTR_EXP"'
-                sh 'echo "AS_EXP is $AS_EXP"'
-                sh 'echo "PREFIX_EXP is $PREFIX_EXP"'
-                sh 'echo "POSTFIX_EXP is $POSTFIX_EXP"'
-                sh 'echo "RANGE_EXP is $RANGE_EXP"'
-                //sh 'echo "UNARY_EXP is $UNARY_EXP"'
+                echo "FOO is $FOO"
+                echo "LIST_EXP is $LIST_EXP"
+                echo "MAP_EXP is $MAP_EXP"
+                // echo "BITWISE_NEGATE is $BITWISE_NEGATE"
+                echo "BOOL_EXP is $BOOL_EXP"
+                echo "CTOR_EXP is $CTOR_EXP"
+                echo "CAST_EXP is $CAST_EXP"
+                echo "PTR_EXP is $PTR_EXP"
+                echo "AS_EXP is $AS_EXP"
+                echo "PREFIX_EXP is $PREFIX_EXP"
+                echo "POSTFIX_EXP is $POSTFIX_EXP"
+                echo "RANGE_EXP is $RANGE_EXP"
+                //echo "UNARY_EXP is $UNARY_EXP"
             }
         }
     }

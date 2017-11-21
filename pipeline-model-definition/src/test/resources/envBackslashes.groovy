@@ -39,10 +39,19 @@ pipeline {
                 echo "echo NESTED_BACKSLASH is ${NESTED_BACKSLASH}"
                 echo "echo HAS_TAB is ${HAS_TAB}"
                 echo "echo NESTED_HAS_TAB is ${NESTED_HAS_TAB}"
-                sh 'echo "shell SIMPLE_BACKSLASH is ${SIMPLE_BACKSLASH}"'
-                sh 'echo "shell NESTED_BACKSLASH is ${NESTED_BACKSLASH}"'
-                sh 'echo "shell HAS_TAB is ${HAS_TAB}"'
-                sh 'echo "shell NESTED_HAS_TAB is $NESTED_HAS_TAB"'
+                script {
+                    if (isUnix()) {
+                        sh 'echo "shell SIMPLE_BACKSLASH is ${SIMPLE_BACKSLASH}"'
+                        sh 'echo "shell NESTED_BACKSLASH is ${NESTED_BACKSLASH}"'
+                        sh 'echo "shell HAS_TAB is ${HAS_TAB}"'
+                        sh 'echo "shell NESTED_HAS_TAB is $NESTED_HAS_TAB"'
+                    } else {
+                        bat 'echo "shell SIMPLE_BACKSLASH is %SIMPLE_BACKSLASH%"'
+                        bat 'echo "shell NESTED_BACKSLASH is %NESTED_BACKSLASH%"'
+                        bat 'echo "shell HAS_TAB is %HAS_TAB%"'
+                        bat 'echo "shell NESTED_HAS_TAB is %NESTED_HAS_TAB%"'
+                    }
+                }
             }
         }
     }

@@ -4,12 +4,12 @@
     "branches": [    {
       "name": "default",
       "steps": [      {
-        "name": "sh",
+        "name": "script",
         "arguments": [        {
-          "key": "script",
+          "key": "scriptBlock",
           "value":           {
             "isLiteral": true,
-            "value": "echo \"THIS WORKS\""
+            "value": "if (isUnix()) {\n                        sh('echo \"THIS WORKS\"')\n                    } else {\n                        bat('echo \"THIS WORKS\"')\n                    }"
           }
         }]
       }]

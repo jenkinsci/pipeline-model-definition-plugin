@@ -37,8 +37,15 @@ pipeline {
             steps {
                 echo "TEST_VAR is ${TEST_VAR}"
                 echo "VAR_TEST is ${VAR_TEST}"
-                sh 'echo "TEST_VAR from shell is ${TEST_VAR}"'
-                sh 'echo "VAR_TEST from shell is ${VAR_TEST}"'
+                script {
+                    if (isUnix()) {
+                        sh 'echo "TEST_VAR from shell is ${TEST_VAR}"'
+                        sh 'echo "VAR_TEST from shell is ${VAR_TEST}"'
+                    } else {
+                        bat 'echo "TEST_VAR from shell is %TEST_VAR%"'
+                        bat 'echo "VAR_TEST from shell is %VAR_TEST%"'
+                    }
+                }
             }
         }
     }

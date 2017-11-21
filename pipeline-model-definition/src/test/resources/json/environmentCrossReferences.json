@@ -5,42 +5,42 @@
       "name": "default",
       "steps":       [
         {
-          "name": "sh",
+          "name": "echo",
           "arguments": [          {
-            "key": "script",
+            "key": "message",
             "value":             {
-              "isLiteral": true,
-              "value": "echo \"FOO is $FOO\""
+              "isLiteral": false,
+              "value": "\"FOO is $FOO\""
             }
           }]
         },
         {
-          "name": "sh",
+          "name": "echo",
           "arguments": [          {
-            "key": "script",
+            "key": "message",
             "value":             {
-              "isLiteral": true,
-              "value": "echo \"BAR is $BAR\""
+              "isLiteral": false,
+              "value": "\"BAR is $BAR\""
             }
           }]
         },
         {
-          "name": "sh",
+          "name": "echo",
           "arguments": [          {
-            "key": "script",
+            "key": "message",
             "value":             {
-              "isLiteral": true,
-              "value": "echo \"BAZ is $BAZ\""
+              "isLiteral": false,
+              "value": "\"BAZ is $BAZ\""
             }
           }]
         },
         {
-          "name": "sh",
+          "name": "echo",
           "arguments": [          {
-            "key": "script",
+            "key": "message",
             "value":             {
-              "isLiteral": true,
-              "value": "echo \"SPLODE is $SPLODE\""
+              "isLiteral": false,
+              "value": "\"SPLODE is $SPLODE\""
             }
           }]
         }

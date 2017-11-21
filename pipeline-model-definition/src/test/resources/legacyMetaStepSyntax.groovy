@@ -31,7 +31,13 @@ pipeline {
             steps {
                 writeFile text: 'hello world', file: 'msg.out'
                 step([$class: 'ArtifactArchiver', artifacts: 'msg.out', fingerprint: true])
-                sh('echo ONAGENT=$ONAGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo ONAGENT=$ONAGENT')
+                    } else {
+                        bat('echo ONAGENT=%ONAGENT%')
+                    }
+                }
             }
         }
     }

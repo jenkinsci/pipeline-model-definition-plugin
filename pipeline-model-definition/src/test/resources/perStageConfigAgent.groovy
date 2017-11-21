@@ -30,7 +30,13 @@ pipeline {
                 label 'some-label'
             }
             steps {
-                sh('echo ONAGENT=$ONAGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo ONAGENT=$ONAGENT')
+                    } else {
+                        bat('echo ONAGENT=%ONAGENT%')
+                    }
+                }
             }
         }
     }

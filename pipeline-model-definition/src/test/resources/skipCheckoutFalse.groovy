@@ -31,7 +31,11 @@ pipeline {
         stage("foo") {
             steps {
                 echo "hello"
-                sh "test -f Jenkinsfile"
+                script {
+                    if (!fileExists("Jenkinsfile")) {
+                        error "Jenkinsfile does not exist"
+                    }
+                }
             }
         }
     }

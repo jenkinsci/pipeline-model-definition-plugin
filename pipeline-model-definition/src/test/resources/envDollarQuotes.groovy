@@ -39,10 +39,19 @@ pipeline {
             }
 
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "BAR is $BAR"'
-                sh 'echo "BAZ is $BAZ"'
-                sh 'echo "SPLODE is $SPLODE"'
+                script {
+                    if (isUnix()) {
+                        sh 'echo "FOO is $FOO"'
+                        sh 'echo "BAR is $BAR"'
+                        sh 'echo "BAZ is $BAZ"'
+                        sh 'echo "SPLODE is $SPLODE"'
+                    } else {
+                        bat 'echo "FOO is %FOO%"'
+                        bat 'echo "BAR is %BAR%"'
+                        bat 'echo "BAZ is %BAZ%"'
+                        bat 'echo "SPLODE is %SPLODE%"'
+                    }
+                }
             }
         }
     }

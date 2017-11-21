@@ -4,12 +4,12 @@
     "branches": [    {
       "name": "default",
       "steps": [      {
-        "name": "sh",
+        "name": "script",
         "arguments": [        {
-          "key": "script",
+          "key": "scriptBlock",
           "value":           {
             "isLiteral": true,
-            "value": "echo ONAGENT=$ONAGENT"
+            "value": "if (isUnix()) {\n                        sh('echo ONAGENT=$ONAGENT')\n                    } else {\n                        bat('echo ONAGENT=%ONAGENT%')\n                    }"
           }
         }]
       }]

@@ -98,6 +98,7 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
         String prettyGroovy = origRoot.toPrettyGroovy();
         assertNotNull(prettyGroovy);
 
+        System.err.println("about to set up repo for config " + configName);
         prepRepoWithJenkinsfileFromString(prettyGroovy);
 
         executeBuild();

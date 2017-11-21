@@ -27,8 +27,9 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh("mkdir -p tmp")
-                sh('echo "<html><body><h1>HELLO</h1></body></html" > tmp/test.html')
+                dir("tmp") {
+                    writeFile file: "test.html", text: "<html><body><h1>HELLO</h1></body></html>"
+                }
                 publishHTML ([
                     allowMissing: false,
                     alwaysLinkToLastBuild: false,

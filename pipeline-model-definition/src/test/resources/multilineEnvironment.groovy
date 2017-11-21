@@ -37,8 +37,8 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh 'echo "FOO is $FOO"'
-                sh 'echo "MULTILINE is $MULTILINE"'
+                echo "FOO is $FOO"
+                echo "MULTILINE is $MULTILINE"
             }
         }
     }

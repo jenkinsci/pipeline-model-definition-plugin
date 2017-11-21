@@ -55,7 +55,7 @@ import java.util.logging.Level;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-public class DurabilityTest {
+public class DurabilityTest extends AbstractDeclarativeTest {
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
 
@@ -86,6 +86,8 @@ public class DurabilityTest {
 
     @Test
     public void survivesRestart() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
                 logger.record(CpsFlowExecution.class, Level.WARNING).capture(100);

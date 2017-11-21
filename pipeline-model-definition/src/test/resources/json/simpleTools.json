@@ -4,12 +4,12 @@
     "branches": [    {
       "name": "default",
       "steps": [      {
-        "name": "sh",
+        "name": "script",
         "arguments": [        {
-          "key": "script",
+          "key": "scriptBlock",
           "value":           {
             "isLiteral": true,
-            "value": "mvn --version"
+            "value": "if (isUnix()) {\n                        sh 'mvn --version'\n                    } else {\n                        bat 'mvn --version'\n                    }"
           }
         }]
       }]

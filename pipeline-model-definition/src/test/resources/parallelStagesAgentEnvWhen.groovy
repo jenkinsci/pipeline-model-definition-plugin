@@ -47,12 +47,12 @@ pipeline {
                         DECLARED_PER_NESTED = "declared per nested, in first branch"
                     }
                     steps {
-                        sh 'echo "First stage, ${WHICH_AGENT}"'
-                        sh 'echo "First stage, ${DO_NOT_OVERRIDE}"'
-                        sh 'echo "First stage, ${OVERRIDE_ONCE}"'
-                        sh 'echo "First stage, ${OVERRIDE_TWICE}"'
-                        sh 'echo "First stage, ${OVERRIDE_PER_NESTED}"'
-                        sh 'echo "First stage, ${DECLARED_PER_NESTED}"'
+                        echo "First stage, ${WHICH_AGENT}"
+                        echo "First stage, ${DO_NOT_OVERRIDE}"
+                        echo "First stage, ${OVERRIDE_ONCE}"
+                        echo "First stage, ${OVERRIDE_TWICE}"
+                        echo "First stage, ${OVERRIDE_PER_NESTED}"
+                        echo "First stage, ${DECLARED_PER_NESTED}"
                     }
                 }
                 stage("second") {
@@ -68,13 +68,19 @@ pipeline {
                         DECLARED_PER_NESTED = "declared per nested, in second branch"
                     }
                     steps {
-                        sh 'echo "Second stage, ${WHICH_AGENT}"'
-                        sh 'echo "Second stage, ${DO_NOT_OVERRIDE}"'
-                        sh 'echo "Second stage, ${OVERRIDE_ONCE}"'
-                        sh 'echo "Second stage, ${OVERRIDE_TWICE}"'
-                        sh 'echo "Second stage, ${OVERRIDE_PER_NESTED}"'
-                        sh 'echo "Second stage, ${DECLARED_PER_NESTED}"'
-                        sh 'mvn --version'
+                        echo "Second stage, ${WHICH_AGENT}"
+                        echo "Second stage, ${DO_NOT_OVERRIDE}"
+                        echo "Second stage, ${OVERRIDE_ONCE}"
+                        echo "Second stage, ${OVERRIDE_TWICE}"
+                        echo "Second stage, ${OVERRIDE_PER_NESTED}"
+                        echo "Second stage, ${DECLARED_PER_NESTED}"
+                        script {
+                            if (isUnix()) {
+                                sh 'mvn --version'
+                            } else {
+                                bat 'mvn --version'
+                            }
+                        }
                     }
                 }
                 stage("third") {

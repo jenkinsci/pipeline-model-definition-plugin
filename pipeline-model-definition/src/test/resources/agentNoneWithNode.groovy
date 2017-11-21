@@ -28,7 +28,13 @@ pipeline {
         stage("foo") {
             steps {
                 node('some-label') {
-                    sh('echo ONAGENT=$ONAGENT')
+                    script {
+                        if (isUnix()) {
+                            sh('echo ONAGENT=$ONAGENT')
+                        } else {
+                            bat('echo ONAGENT=%ONAGENT%')
+                        }
+                    }
                 }
             }
         }
