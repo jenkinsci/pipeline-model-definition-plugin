@@ -632,7 +632,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         FlowExecution execution = b.getExecution();
         assertNotNull(execution);
-        assertTrue(execution.getCauseOfFailure() != null);
+        assertNotNull(execution.getCauseOfFailure());
 
         Collection<FlowNode> heads = execution.getCurrentHeads();
 
@@ -653,7 +653,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         FlowExecution execution = b.getExecution();
         assertNotNull(execution);
-        assertTrue(execution.getCauseOfFailure() != null);
+        assertNotNull(execution.getCauseOfFailure());
 
         Collection<FlowNode> heads = execution.getCurrentHeads();
 

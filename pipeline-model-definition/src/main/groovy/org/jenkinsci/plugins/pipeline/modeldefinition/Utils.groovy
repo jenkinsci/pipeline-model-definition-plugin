@@ -82,6 +82,8 @@ import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.jenkinsci.plugins.workflow.support.steps.StageStep
+import org.kohsuke.accmod.Restricted
+import org.kohsuke.accmod.restrictions.NoExternalUse
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
@@ -109,6 +111,7 @@ class Utils {
         }
     }
 
+    @Restricted(NoExternalUse.class)
     static Map<String,Closure> getCredsFromResolver(Environment environment, CpsScript script) {
         if (environment != null) {
             environment.credsResolver.setScript(script)
@@ -125,6 +128,7 @@ class Utils {
      * @return A non-null but possibly empty map of strings to {@link CredentialWrapper}s
      */
     @Nonnull
+    @Restricted(NoExternalUse.class)
     static Map<String, CredentialWrapper> getLegacyEnvCredentials(@Nonnull Environment environment) {
         Map<String, CredentialWrapper> m = [:]
         environment.each {k, v ->
@@ -198,6 +202,7 @@ class Utils {
      * Prints a log message to the Jenkins log, bypassing the echo step.
      * @param s The message to log
      */
+    @Restricted(NoExternalUse.class)
     static void logToTaskListener(String s) {
         CpsThread thread = CpsThread.current()
         CpsFlowExecution execution = thread.execution
@@ -269,6 +274,7 @@ class Utils {
         return nodes
     }
 
+    @Restricted(NoExternalUse.class)
     static void markExecutedStagesOnAction(CpsScript script, String astUUID) throws Exception {
         WorkflowRun r = script.$build()
         ExecutionModelAction action = r.getAction(ExecutionModelAction.class)
@@ -311,18 +317,22 @@ class Utils {
         return getTagMetadata(SyntheticStage.class)
     }
 
+    @Restricted(NoExternalUse.class)
     static void markStageFailedAndContinued(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().failedAndContinued)
     }
 
+    @Restricted(NoExternalUse.class)
     static void markStageSkippedForFailure(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
+    @Restricted(NoExternalUse.class)
     static void markStageSkippedForUnstable(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
+    @Restricted(NoExternalUse.class)
     static void markStageSkippedForConditional(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
     }
@@ -335,6 +345,7 @@ class Utils {
      * @param excludedSymbols Optional list of symbol names to exclude from the cache.
      * @return A {@link LoadingCache} for looking up types from symbols.
      */
+    @Restricted(NoExternalUse.class)
     static generateTypeCache(Class<? extends Descriptor> type, boolean includeClassNames = false,
                              List<String> excludedSymbols = [], Closure<Boolean> filter = null) {
         return CacheBuilder.newBuilder()
@@ -384,6 +395,7 @@ class Utils {
     }
 
     @Whitelisted
+    @Restricted(NoExternalUse.class)
     static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
         DescribableModel<T> model = new DescribableModel<>(c)
         return model?.instantiate(args)
@@ -393,6 +405,7 @@ class Utils {
      * @param c The closure to wrap.
      */
     @Whitelisted
+    @Restricted(NoExternalUse.class)
     static StepsBlock createStepsBlock(Closure c) {
         // Jumping through weird hoops to get around the ejection for cases of JENKINS-26481.
         StepsBlock wrapper = new StepsBlock()
@@ -435,6 +448,7 @@ class Utils {
      * @return The list of instances. May be empty.
      */
     @Nonnull
+    @Restricted(NoExternalUse.class)
     private static <T extends Describable> List<T> instantiateList(Class<T> clazz, List<Object> toInstantiate) {
         List<T> l = []
         toInstantiate.each { t ->
@@ -463,6 +477,7 @@ class Utils {
      *   {@link UninstantiatedDescribable}s.
      * @param script
      */
+    @Restricted(NoExternalUse.class)
     static void updateJobProperties(@CheckForNull List<Object> propsOrUninstantiated,
                                     @CheckForNull List<Object> trigsOrUninstantiated,
                                     @CheckForNull List<Object> paramsOrUninstantiated,

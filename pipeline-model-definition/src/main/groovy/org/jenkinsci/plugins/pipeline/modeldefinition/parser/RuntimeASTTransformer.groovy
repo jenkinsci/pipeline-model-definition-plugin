@@ -237,6 +237,7 @@ class RuntimeASTTransformer {
      */
     @CheckForNull
     private Expression translateEnvironmentValue(String targetVar, Expression expr, Set<String> keys) {
+        Expression body = null
         if (expr instanceof ConstantExpression) {
             // If the expression is a constant, like 1, "foo", etc, just use that.
             return expr

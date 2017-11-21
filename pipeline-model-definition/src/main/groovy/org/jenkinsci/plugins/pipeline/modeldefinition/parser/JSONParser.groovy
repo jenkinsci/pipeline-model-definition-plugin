@@ -462,6 +462,7 @@ class JSONParser implements Parser {
     }
 
     @CheckForNull ModelASTValue parseValue(JsonTree o) {
+        ModelASTValue val = null
         if (o.node.get("isLiteral").asBoolean()) {
             if (o.node.get("value").isBoolean()) {
                 val = ModelASTValue.fromConstant(o.node.get("value").booleanValue(), o)

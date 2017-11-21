@@ -314,7 +314,7 @@ class ModelParser implements Parser {
                                 r.variables[key] = parseInternalFunctionCall((MethodCallExpression) exp.rightExpression)
                                 return
                             } else if (exp.rightExpression instanceof BinaryExpression) {
-                                if (((BinaryExpression)exp.rightExpression).operation.type  == Types.PLUS) {
+                                if (((BinaryExpression)exp.rightExpression).operation.type == Types.PLUS) {
                                     // This is to support JENKINS-42771, allowing `FOO = "b" + "a" + "r"` sorts of syntax.
                                     ModelASTValue envValue = envValueForStringConcat((BinaryExpression) exp.rightExpression)
                                     if (envValue != null) {
@@ -364,7 +364,7 @@ class ModelParser implements Parser {
         boolean isLiteral = true
 
         if (exp.leftExpression instanceof BinaryExpression) {
-            if (((BinaryExpression)exp.leftExpression).operation.type  == Types.PLUS) {
+            if (((BinaryExpression)exp.leftExpression).operation.type == Types.PLUS) {
                 ModelASTValue nestedString = envValueForStringConcat((BinaryExpression) exp.leftExpression)
                 if (nestedString != null) {
                     if (!appendAndIsLiteral(nestedString, builder)) {
@@ -485,7 +485,7 @@ class ModelParser implements Parser {
     @CheckForNull ModelASTStage parseStage(Statement stmt) {
         ModelASTStage stage = new ModelASTStage(stmt)
         def m = matchBlockStatement(stmt)
-        if (!m?.methodName == "stage") {
+        if (m?.methodName != "stage") {
             // Not sure of a better way to deal with this - it's a full-on parse-time failure.
             errorCollector.error(stage, Messages.ModelParser_ExpectedStage())
             return null
