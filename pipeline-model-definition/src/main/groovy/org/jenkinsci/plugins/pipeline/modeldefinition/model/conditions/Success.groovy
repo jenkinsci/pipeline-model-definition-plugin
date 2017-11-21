@@ -38,7 +38,9 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 class Success extends BuildCondition {
     @Override
     boolean meetsCondition(WorkflowRun r) {
-        return r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS)
+        Result execResult = getExecutionResult(r)
+        return (execResult == null || execResult.isBetterOrEqualTo(Result.SUCCESS)) &&
+            (r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS))
     }
 
     @Override

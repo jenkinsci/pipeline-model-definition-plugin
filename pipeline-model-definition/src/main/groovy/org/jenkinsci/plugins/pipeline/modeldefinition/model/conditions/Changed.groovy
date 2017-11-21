@@ -38,6 +38,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 class Changed extends BuildCondition {
     @Override
     boolean meetsCondition(WorkflowRun r) {
+        Result execResult = getExecutionResult(r)
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
         // If there's no previous build, we're inherently changed.
@@ -46,11 +47,13 @@ class Changed extends BuildCondition {
         }
         // If the current build's result isn't null (i.e., it's got a specified status), and it's different than the
         // previous build's result, we're changed.
-        else if (r.getResult() != null && !(prev.getResult() == r.getResult())) {
+        else if ((execResult != null && prev.getResult() != execResult) ||
+            (r.getResult() != null && prev.getResult() != r.getResult())) {
             return true
         }
         // If the current build's result is null and the previous build's result is not SUCCESS, we're changed.
-        else if (r.getResult() == null && !(prev.getResult() == Result.SUCCESS)) {
+        else if ((execResult == Result.SUCCESS && prev.getResult() != Result.SUCCESS) ||
+            (r.getResult() == null && prev.getResult() != Result.SUCCESS)) {
             return true
         }
         // And in any other condition, we're not changed, so return false.

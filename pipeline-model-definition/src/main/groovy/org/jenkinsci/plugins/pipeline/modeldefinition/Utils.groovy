@@ -33,6 +33,7 @@ import hudson.BulkChange
 import hudson.ExtensionList
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.Job
 import hudson.model.JobProperty
 import hudson.model.ParameterDefinition
 import hudson.model.ParametersDefinitionProperty
@@ -46,6 +47,7 @@ import org.codehaus.groovy.control.SourceUnit
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
 import org.jenkinsci.plugins.pipeline.SyntheticStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
@@ -275,7 +277,7 @@ class Utils {
     }
 
     @Restricted(NoExternalUse.class)
-    static void markExecutedStagesOnAction(CpsScript script, String astUUID) throws Exception {
+    static void updateRunAndJobActions(CpsScript script, String astUUID) throws Exception {
         WorkflowRun r = script.$build()
         ExecutionModelAction action = r.getAction(ExecutionModelAction.class)
         if (action != null) {
@@ -284,6 +286,10 @@ class Utils {
             }
             action.setStagesUUID(astUUID)
             r.save()
+            Job<?,?> job = r.getParent()
+            if (job.getAction(DeclarativeJobAction.class) == null) {
+                job.addAction(new DeclarativeJobAction())
+            }
         }
     }
 
