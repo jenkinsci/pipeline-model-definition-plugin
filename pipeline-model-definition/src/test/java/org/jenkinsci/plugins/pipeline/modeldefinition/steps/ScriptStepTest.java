@@ -35,6 +35,8 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
+import static org.junit.Assert.assertNotNull;
+
 public class ScriptStepTest {
 
     @ClassRule
@@ -59,6 +61,7 @@ public class ScriptStepTest {
             @Override
             public void evaluate() throws Throwable {
                 WorkflowJob p = rr.j.jenkins.getItemByFullName("p", WorkflowJob.class);
+                assertNotNull(p);
                 WorkflowRun b = p.getBuildByNumber(1);
                 SemaphoreStep.success("wait/1", null);
                 rr.j.assertBuildStatusSuccess(rr.j.waitForCompletion(b));

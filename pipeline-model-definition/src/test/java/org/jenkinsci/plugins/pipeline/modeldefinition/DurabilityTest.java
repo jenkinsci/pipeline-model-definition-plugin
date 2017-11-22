@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig;
 import org.jenkinsci.plugins.workflow.actions.WorkspaceAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -53,6 +54,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class DurabilityTest extends AbstractDeclarativeTest {
@@ -125,6 +127,7 @@ public class DurabilityTest extends AbstractDeclarativeTest {
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
                 WorkflowJob p = (WorkflowJob) story.j.jenkins.getItem("demo");
+                assertNotNull(p);
                 WorkflowRun b = p.getLastBuild();
                 SemaphoreStep.success("wait/1", null);
                 story.j.assertBuildStatusSuccess(story.j.waitForCompletion(b));
@@ -132,8 +135,10 @@ public class DurabilityTest extends AbstractDeclarativeTest {
                 story.j.assertLogContains("before=demo", b);
                 story.j.assertLogContains("ONAGENT=true", b);
                 story.j.assertLogContains("reallyAfterFoo", b);
-                FlowGraphWalker walker = new FlowGraphWalker(b.getExecution());
-                List<WorkspaceAction> actions = new ArrayList<WorkspaceAction>();
+                FlowExecution execution = b.getExecution();
+                assertNotNull(execution);
+                FlowGraphWalker walker = new FlowGraphWalker(execution);
+                List<WorkspaceAction> actions = new ArrayList<>();
                 for (FlowNode n : walker) {
                     WorkspaceAction a = n.getAction(WorkspaceAction.class);
                     if (a != null) {
@@ -141,7 +146,7 @@ public class DurabilityTest extends AbstractDeclarativeTest {
                     }
                 }
                 assertEquals(1, actions.size());
-                assertEquals(new HashSet<LabelAtom>(Arrays.asList(LabelAtom.get("remote"), LabelAtom.get("quick"))), actions.get(0).getLabels());
+                assertEquals(new HashSet<>(Arrays.asList(LabelAtom.get("remote"), LabelAtom.get("quick"))), actions.get(0).getLabels());
                 assertThat(logger.getRecords(), Matchers.hasSize(Matchers.equalTo(0)));
 
             }

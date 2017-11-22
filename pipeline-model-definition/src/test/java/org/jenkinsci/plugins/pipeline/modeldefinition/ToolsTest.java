@@ -27,7 +27,6 @@ import hudson.model.JDK;
 import hudson.model.Slave;
 import hudson.tasks.Maven;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;

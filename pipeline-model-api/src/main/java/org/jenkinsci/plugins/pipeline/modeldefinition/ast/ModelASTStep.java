@@ -14,6 +14,8 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents an individual step within any of the various blocks that can contain steps.
  *
@@ -28,7 +30,7 @@ public class ModelASTStep extends ModelASTElement {
     @Deprecated
     @Restricted(NoExternalUse.class)
     public static Map<String, String> blockedStepsBase() {
-        LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
+        LinkedHashMap<String, String> map = new LinkedHashMap<>();
         map.put("stage", Messages.ModelASTStep_BlockedSteps_Stage());
         map.put("properties", Messages.ModelASTStep_BlockedSteps_Properties());
         map.put("parallel", Messages.ModelASTStep_BlockedSteps_Parallel());
@@ -64,7 +66,7 @@ public class ModelASTStep extends ModelASTElement {
     }
 
     @Override
-    public void validate(ModelValidator validator) {
+    public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
         if (args != null) {
             args.validate(validator);

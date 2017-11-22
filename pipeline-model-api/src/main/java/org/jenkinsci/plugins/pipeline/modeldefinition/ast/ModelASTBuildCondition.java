@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents a single BuildCondition to be checked and possibly executed in either the PostBuild or
  * Notifications sections.
@@ -23,7 +25,7 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     }
 
     @Override
-    public void validate(ModelValidator validator) {
+    public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
 
         branch.validate(validator);

@@ -30,12 +30,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
 class BranchConditionalScript extends DeclarativeStageConditionalScript<BranchConditional> {
-    public BranchConditionalScript(CpsScript s, BranchConditional c) {
+     BranchConditionalScript(CpsScript s, BranchConditional c) {
         super(s, c)
     }
 
     @Override
-    public boolean evaluate() {
+     boolean evaluate() {
         return describable.branchMatches(describable.compare,
             (String)script.getProperty("env").getProperty("BRANCH_NAME"))
     }

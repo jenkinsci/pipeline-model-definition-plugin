@@ -34,17 +34,17 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  * @author Andrew Bayer
  */
 @Extension(ordinal=1000d) @Symbol("always")
-public class Always extends BuildCondition {
+class Always extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
+    boolean meetsCondition(WorkflowRun r) {
         return true
     }
 
     @Override
-    public String getDescription() {
+    String getDescription() {
         return Messages.Always_Description()
     }
 
-    public static final long serialVersionUID = 1L
+    static final long serialVersionUID = 1L
 
 }

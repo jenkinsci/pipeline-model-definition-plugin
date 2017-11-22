@@ -29,6 +29,7 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FirstParam
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.JobProperty
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.MethodNode
@@ -39,6 +40,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -61,13 +64,13 @@ class ASTParserUtils {
      * return 'foo' as a string.
      */
     static @CheckForNull String matchMethodName(MethodCallExpression exp) {
-        def lhs = exp.objectExpression;
+        def lhs = exp.objectExpression
         if (lhs instanceof VariableExpression) {
-            if (lhs.name.equals("this")) {
-                return exp.methodAsString; // getMethodAsString() returns null if the method isn't a constant
+            if (lhs.name == "this") {
+                return exp.methodAsString // getMethodAsString() returns null if the method isn't a constant
             }
         }
-        return null;
+        return null
     }
 
     // TODO: Remove or otherwise cleanup so that it's not always firing!
@@ -189,13 +192,13 @@ class ASTParserUtils {
      */
     @CheckForNull
     static BlockStatementMatch blockStatementFromExpression(@Nonnull MethodCallExpression exp) {
-        def methodName = matchMethodName(exp);
-        def args = (TupleExpression)exp.arguments;
-        int sz = args.expressions.size();
+        def methodName = matchMethodName(exp)
+        def args = (TupleExpression)exp.arguments
+        int sz = args.expressions.size()
         if (sz>0 && methodName!=null) {
-            def last = args.getExpression(sz - 1);
+            def last = args.getExpression(sz - 1)
             if (last instanceof ClosureExpression) {
-                return new BlockStatementMatch(exp,methodName,last);
+                return new BlockStatementMatch(exp,methodName,last)
             }
         }
 
@@ -207,11 +210,11 @@ class ASTParserUtils {
      */
     static BlockStatement asBlock(Statement st) {
         if (st instanceof BlockStatement) {
-            return st;
+            return st
         } else {
-            def bs = new BlockStatement();
-            bs.addStatement(st);
-            return bs;
+            def bs = new BlockStatement()
+            bs.addStatement(st)
+            return bs
         }
     }
 
@@ -220,12 +223,12 @@ class ASTParserUtils {
      */
     static @CheckForNull MethodCallExpression matchMethodCall(Statement st) {
         if (st instanceof ExpressionStatement) {
-            def exp = st.expression;
+            def exp = st.expression
             if (exp instanceof MethodCallExpression) {
-                return exp;
+                return exp
             }
         }
-        return null;
+        return null
     }
 
     /**
@@ -241,12 +244,12 @@ class ASTParserUtils {
      * return null.
      */
     static @CheckForNull BlockStatementMatch matchBlockStatement(Statement st) {
-        def whole = matchMethodCall(st);
+        def whole = matchMethodCall(st)
         if (whole!=null) {
             return blockStatementFromExpression(whole)
         }
 
-        return null;
+        return null
     }
 
     /**

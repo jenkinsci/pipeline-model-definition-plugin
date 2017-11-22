@@ -35,10 +35,4 @@ public abstract class ModelASTArgumentList extends ModelASTElement {
     }
 
     public abstract Map<String,?> argListToMap();
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
 }

@@ -28,9 +28,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class CheckoutScript implements Serializable {
+class CheckoutScript implements Serializable {
     
-    public static Closure doCheckout(CpsScript script, DeclarativeAgent agent, String customWorkspace = null, Closure body) {
+    static Closure doCheckout(CpsScript script, DeclarativeAgent agent, String customWorkspace = null, Closure body) {
         return {
             if (customWorkspace) {
                 script.ws(customWorkspace) {

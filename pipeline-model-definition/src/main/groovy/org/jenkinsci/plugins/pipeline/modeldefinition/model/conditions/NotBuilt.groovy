@@ -35,17 +35,17 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  * @author Andrew Bayer
  */
 @Extension(ordinal=400d) @Symbol("notBuilt")
-public class NotBuilt extends BuildCondition {
+class NotBuilt extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
+    boolean meetsCondition(WorkflowRun r) {
         Result execResult = getExecutionResult(r)
         return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
     }
 
     @Override
-    public String getDescription() {
+    String getDescription() {
         return Messages.NotBuilt_Description()
     }
 
-    public static final long serialVersionUID = 1L
+    static final long serialVersionUID = 1L
 }

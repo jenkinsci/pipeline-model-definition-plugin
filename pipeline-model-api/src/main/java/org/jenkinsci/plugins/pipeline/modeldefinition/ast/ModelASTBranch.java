@@ -6,6 +6,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents a branch of Pipeline steps to execute, either as part of a parallel block, or on its own.
  *
@@ -15,7 +17,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  */
 public final class ModelASTBranch extends ModelASTElement {
     private String name;
-    private List<ModelASTStep> steps = new ArrayList<ModelASTStep>();
+    private List<ModelASTStep> steps = new ArrayList<>();
 
     public ModelASTBranch(Object sourceLocation) {
         super(sourceLocation);
@@ -32,7 +34,7 @@ public final class ModelASTBranch extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (ModelASTStep step: steps) {
             step.validate(validator);

@@ -6,6 +6,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents the special case of a step that has a sub-block of further steps within it.
  *
@@ -13,7 +15,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Andrew Bayer
  */
 public class ModelASTTreeStep extends ModelASTStep {
-    private List<ModelASTStep> children = new ArrayList<ModelASTStep>();
+    private List<ModelASTStep> children = new ArrayList<>();
 
     public ModelASTTreeStep(Object sourceLocation) {
         super(sourceLocation);
@@ -29,7 +31,7 @@ public class ModelASTTreeStep extends ModelASTStep {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         super.validate(validator);
         for (ModelASTStep child : children) {
             child.validate(validator);

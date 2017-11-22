@@ -9,6 +9,8 @@ import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents the positional parameters for a step in a list of {@link ModelASTValue}s.
  *
@@ -16,7 +18,7 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
  * @author Andrew Bayer
  */
 public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
-    private List<ModelASTValue> arguments = new ArrayList<ModelASTValue>();
+    private List<ModelASTValue> arguments = new ArrayList<>();
 
     public ModelASTPositionalArgumentList(Object sourceLocation) {
         super(sourceLocation);
@@ -32,7 +34,7 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         // Nothing to validate directly
         for (ModelASTValue argument : arguments) {
             argument.validate(validator);

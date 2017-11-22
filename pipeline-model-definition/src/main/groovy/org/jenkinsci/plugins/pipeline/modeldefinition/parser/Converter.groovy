@@ -55,9 +55,9 @@ import static org.codehaus.groovy.control.Phases.CANONICALIZATION
  *
  * @author Andrew Bayer
  */
-public class Converter {
+class Converter {
 
-    public static final String PIPELINE_SCRIPT_NAME = "WorkflowScript"
+    static final String PIPELINE_SCRIPT_NAME = "WorkflowScript"
 
     /**
      * Validate provided {@link net.sf.json.JSONObject} against the JSON schema.
@@ -66,12 +66,12 @@ public class Converter {
      * @return A {@link ProcessingReport} with the results of the validation.
      * @throws ProcessingException If an error of high enough severity is detected in processing.
      */
-    public static ProcessingReport validateJSONAgainstSchema(JSONObject origJson) throws ProcessingException {
+    static ProcessingReport validateJSONAgainstSchema(JSONObject origJson) throws ProcessingException {
         return validateJSONAgainstSchema(jacksonJSONFromJSONObject(origJson))
     }
 
-    public static ProcessingReport validateJSONAgainstSchema(JsonNode jsonNode) throws ProcessingException {
-        JsonSchema schema = ASTSchema.getJSONSchema();
+    static ProcessingReport validateJSONAgainstSchema(JsonNode jsonNode) throws ProcessingException {
+        JsonSchema schema = ASTSchema.getJSONSchema()
 
         return schema.validate(jsonNode)
     }
@@ -82,11 +82,11 @@ public class Converter {
      * @param input A {@link JSONObject}
      * @return The converted {@link JsonNode}
      */
-    public static JsonNode jacksonJSONFromJSONObject(JSONObject input) {
+    static JsonNode jacksonJSONFromJSONObject(JSONObject input) {
         return JsonLoader.fromString(input.toString())
     }
 
-    public static JsonTree jsonTreeFromJSONObject(JSONObject input) {
+    static JsonTree jsonTreeFromJSONObject(JSONObject input) {
         return new SimpleJsonTree(jacksonJSONFromJSONObject(input))
     }
 
@@ -96,11 +96,11 @@ public class Converter {
      * @param src A URL pointing to a Pipeline script
      * @return the converted script
      */
-    public static ModelASTPipelineDef urlToPipelineDef(URL src) {
+    static ModelASTPipelineDef urlToPipelineDef(URL src) {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(src, new Certificate[0]),
-            getCompilationClassLoader());
+            getCompilationClassLoader())
         cu.addSource(src)
 
         return compilationUnitToPipelineDef(cu)
@@ -117,29 +117,29 @@ public class Converter {
      * @param script A string containing a Pipeline script
      * @return the converted script
      */
-    public static ModelASTPipelineDef scriptToPipelineDef(String script) {
+    static ModelASTPipelineDef scriptToPipelineDef(String script) {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
-            getCompilationClassLoader());
+            getCompilationClassLoader())
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
 
         return compilationUnitToPipelineDef(cu)
     }
 
     private static CompilerConfiguration makeCompilerConfiguration() {
-        CompilerConfiguration cc = new CompilerConfiguration();
+        CompilerConfiguration cc = new CompilerConfiguration()
 
-        ImportCustomizer ic = new ImportCustomizer();
-        ic.addStarImports(NonCPS.class.getPackage().getName());
-        ic.addStarImports("hudson.model","jenkins.model");
+        ImportCustomizer ic = new ImportCustomizer()
+        ic.addStarImports(NonCPS.class.getPackage().getName())
+        ic.addStarImports("hudson.model","jenkins.model")
         for (GroovyShellDecorator d : GroovyShellDecorator.all()) {
-            d.customizeImports(null, ic);
+            d.customizeImports(null, ic)
         }
 
-        cc.addCompilationCustomizers(ic);
+        cc.addCompilationCustomizers(ic)
 
-        return cc;
+        return cc
     }
     /**
      * Takes a {@link CompilationUnit}, copmiles it with the {@link ModelParser} injected, and returns the resulting
@@ -149,46 +149,46 @@ public class Converter {
      * @return The converted script
      */
     private static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu) {
-        final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1];
+        final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1]
 
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
-            public void call(SourceUnit source) throws CompilationFailedException {
+            void call(SourceUnit source) throws CompilationFailedException {
                 if (model[0] == null) {
-                    model[0] = new ModelParser(source).parse(true);
+                    model[0] = new ModelParser(source).parse(true)
                 }
             }
-        }, CANONICALIZATION);
+        }, CANONICALIZATION)
 
-        cu.compile(CANONICALIZATION);
+        cu.compile(CANONICALIZATION)
 
-        return model[0];
+        return model[0]
     }
 
-    public static List<ModelASTStep> scriptToPlainSteps(String script) {
+    static List<ModelASTStep> scriptToPlainSteps(String script) {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
-            getCompilationClassLoader());
+            getCompilationClassLoader())
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
 
         return compilationUnitToPlainSteps(cu)
     }
 
     private static List<ModelASTStep> compilationUnitToPlainSteps(CompilationUnit cu) {
-        final List<ModelASTStep>[] model = new List<ModelASTStep>[1];
+        final List<ModelASTStep>[] model = new List<ModelASTStep>[1]
 
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
-            public void call(SourceUnit source) throws CompilationFailedException {
+            void call(SourceUnit source) throws CompilationFailedException {
                 if (model[0] == null) {
-                    model[0] = new ModelParser(source).parsePlainSteps(source.AST);
+                    model[0] = new ModelParser(source).parsePlainSteps(source.AST)
                 }
             }
-        }, CANONICALIZATION);
+        }, CANONICALIZATION)
 
-        cu.compile(CANONICALIZATION);
+        cu.compile(CANONICALIZATION)
 
-        return model[0];
+        return model[0]
     }
 }

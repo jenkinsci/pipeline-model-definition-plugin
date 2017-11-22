@@ -4,6 +4,8 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents the parsed pipeline definition for visual pipeline editor. Corresponds to {@code Root}.
  *
@@ -57,7 +59,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     }
 
     @Override
-    public void validate(ModelValidator validator) {
+    public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
 
         if (stages != null) {

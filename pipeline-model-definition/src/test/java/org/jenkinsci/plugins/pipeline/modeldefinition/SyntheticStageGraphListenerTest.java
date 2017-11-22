@@ -84,12 +84,13 @@ public class SyntheticStageGraphListenerTest {
             @Override
             public void evaluate() throws Throwable {
                 WorkflowJob p = rr.j.jenkins.getItemByFullName("p", WorkflowJob.class);
+                assertNotNull(p);
                 WorkflowRun b = p.getBuildByNumber(1);
                 SemaphoreStep.success("wait/1", null);
                 rr.j.assertBuildStatusSuccess(rr.j.waitForCompletion(b));
                 rr.j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
                 FlowExecution execution = b.getExecution();
-
+                assertNotNull(execution);
                 Collection<FlowNode> heads = execution.getCurrentHeads();
 
                 DepthFirstScanner scanner = new DepthFirstScanner();

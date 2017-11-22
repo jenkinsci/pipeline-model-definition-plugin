@@ -50,8 +50,8 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Options implements Serializable {
-    public final static List<String> BLOCKED_PROPERTIES = ["pipelineTriggers", "parameters"]
+class Options implements Serializable {
+    final static List<String> BLOCKED_PROPERTIES = ["pipelineTriggers", "parameters"]
 
     // Transient since JobProperty isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
     // anyway.
@@ -67,15 +67,15 @@ public class Options implements Serializable {
         this.wrappers.putAll(wrappers)
     }
 
-    public List<JobProperty> getProperties() {
+    List<JobProperty> getProperties() {
         return properties
     }
 
-    public Map<String, DeclarativeOption> getOptions() {
+    Map<String, DeclarativeOption> getOptions() {
         return options
     }
 
-    public Map<String, Object> getWrappers() {
+    Map<String, Object> getWrappers() {
         return wrappers
     }
 
@@ -99,7 +99,7 @@ public class Options implements Serializable {
             }
         )
 
-    public static Map<String,String> getEligibleWrapperStepClasses() {
+    static Map<String,String> getEligibleWrapperStepClasses() {
         return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
     }
 
@@ -108,7 +108,7 @@ public class Options implements Serializable {
         this.properties = []
         this.options = [:]
         this.wrappers = [:]
-        return this;
+        return this
     }
 
     /**
@@ -117,7 +117,7 @@ public class Options implements Serializable {
      *
      * @return A map of valid option type keys to their actual type IDs.
      */
-    public static Map<String,String> getAllowedOptionTypes() {
+    static Map<String,String> getAllowedOptionTypes() {
         Map<String,String> c = propertyTypeCache.get(CACHE_KEY)
         c.putAll(optionTypeCache.get(OPTION_CACHE_KEY))
         c.putAll(getEligibleWrapperStepClasses())
@@ -130,7 +130,7 @@ public class Options implements Serializable {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the option types cache.
      */
-    public static String typeForKey(@Nonnull String key) {
+    static String typeForKey(@Nonnull String key) {
         return getAllowedOptionTypes().get(key)
     }
 }

@@ -142,6 +142,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
 
         FlowExecution execution = b.getExecution();
+        assertNotNull(execution);
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
@@ -181,6 +182,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
 
         FlowExecution execution = b.getExecution();
+        assertNotNull(execution);
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
@@ -243,6 +245,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
 
         FlowExecution execution = b.getExecution();
+        assertNotNull(execution);
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
@@ -352,6 +355,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertEquals(2, stage.getBranches().size());
 
         ModelASTBranch firstBranch = branchForName("first", stage.getBranches());
+        assertNotNull(firstBranch);
         assertNull(firstBranch.getSourceLocation());
         assertNotNull(firstBranch);
         assertEquals(1, firstBranch.getSteps().size());
@@ -384,6 +388,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         } else if (scriptStep.getArgs() instanceof ModelASTNamedArgumentList && ((ModelASTNamedArgumentList) scriptStep.getArgs()).getArguments().size() == 1) {
             scriptVal = ((ModelASTNamedArgumentList) scriptStep.getArgs()).valueForName("scriptBlock");
         }
+        assertNotNull(scriptVal);
         assertNull(scriptVal.getSourceLocation());
 
         ModelASTStep timeoutStep = secondBranch.getSteps().get(1);
@@ -586,6 +591,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         FlowExecution execution = b.getExecution();
 
+        assertNotNull(execution);
         Collection<FlowNode> heads = execution.getCurrentHeads();
 
         DepthFirstScanner scanner = new DepthFirstScanner();
@@ -608,6 +614,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         FlowExecution execution = b.getExecution();
 
+        assertNotNull(execution);
         Collection<FlowNode> heads = execution.getCurrentHeads();
 
         DepthFirstScanner scanner = new DepthFirstScanner();
@@ -625,9 +632,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logNotContains("I will be skipped", "I also will be skipped", "I have succeeded")
                 .go();
 
-        assertTrue(b.getExecution().getCauseOfFailure() != null);
-
         FlowExecution execution = b.getExecution();
+        assertNotNull(execution);
+        assertNotNull(execution.getCauseOfFailure());
 
         Collection<FlowNode> heads = execution.getCurrentHeads();
 
@@ -646,9 +653,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logNotContains("I will be skipped", "skipped for earlier failure", "I have succeeded")
                 .go();
 
-        assertTrue(b.getExecution().getCauseOfFailure() != null);
-
         FlowExecution execution = b.getExecution();
+        assertNotNull(execution);
+        assertNotNull(execution.getCauseOfFailure());
 
         Collection<FlowNode> heads = execution.getCurrentHeads();
 
@@ -740,12 +747,18 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         return new Predicate<FlowNode>() {
             @Override
             public boolean apply(FlowNode input) {
-                return (input.getDisplayName().equals(stageName) ||
-                        (input.getAction(ThreadNameAction.class) != null &&
-                                input.getAction(ThreadNameAction.class).getThreadName().equals(stageName))) &&
-                        input.getAction(TagsAction.class) != null &&
-                        input.getAction(TagsAction.class).getTagValue(tagName) != null &&
-                        input.getAction(TagsAction.class).getTagValue(tagName).equals(tagValue);
+                ThreadNameAction threadNameAction = input.getAction(ThreadNameAction.class);
+                TagsAction tagsAction = input.getAction(TagsAction.class);
+                if (input.getDisplayName().equals(stageName) ||
+                        (threadNameAction != null && threadNameAction.getThreadName().equals(stageName))) {
+                    if (tagsAction != null) {
+                        String realTagVal = tagsAction.getTagValue(tagName);
+                        if (realTagVal != null && realTagVal.equals(tagValue)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             }
         };
     }
@@ -815,8 +828,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("Hello world")
                 .go();
 
-        WorkflowRun secondRun = firstRun.getParent().scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(secondRun));
+        WorkflowRun secondRun = j.buildAndAssertSuccess(firstRun.getParent());
         ExecutionModelAction action = secondRun.getAction(ExecutionModelAction.class);
         assertNotNull(action);
         ModelASTStages stages = action.getStages();
@@ -979,7 +991,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void logActionPresentForError() throws Exception {
         WorkflowRun r = expect(Result.FAILURE, "logActionPresentForError").go();
         FlowExecution execution = r.getExecution();
-
+        assertNotNull(execution);
         Collection<FlowNode> heads = execution.getCurrentHeads();
 
         DepthFirstScanner scanner = new DepthFirstScanner();
@@ -990,7 +1002,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 return input instanceof StepAtomNode && ((StepAtomNode) input).getDescriptor() instanceof ErrorStep.DescriptorImpl;
             }
         });
-
+        assertNotNull(n);
         LogAction l = n.getAction(LogAction.class);
         assertNotNull(l);
     }

@@ -36,15 +36,15 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class JSONErrorCollector extends ErrorCollector {
+class JSONErrorCollector extends ErrorCollector {
     List<JSONErrorPair> errors
 
-    public JSONErrorCollector() {
+    JSONErrorCollector() {
         errors = []
     }
 
     @Override
-    public void error(ModelASTElement src, String message) {
+    void error(ModelASTElement src, String message) {
         JsonTree json = null
         if (src.sourceLocation instanceof JsonTree) {
             json = (JsonTree)src.sourceLocation
@@ -53,24 +53,24 @@ public class JSONErrorCollector extends ErrorCollector {
     }
 
     @Override
-    public int getErrorCount() {
+    int getErrorCount() {
         return errors.size()
     }
 
     @Override
-    public List<String> errorsAsStrings() {
+    List<String> errorsAsStrings() {
         return errors.collect { it.message }
     }
 
     @Override
-    public JSONArray asJson() {
+    JSONArray asJson() {
         JSONArray a = new JSONArray()
         errors.each { a.add(it.jsonError) }
 
         return a
     }
 
-    public static final class JSONErrorPair {
+    static final class JSONErrorPair {
         final String message
         final JsonPointer location
 
@@ -79,7 +79,7 @@ public class JSONErrorCollector extends ErrorCollector {
             this.message = message
         }
 
-        public JSONObject getJsonError() {
+        JSONObject getJsonError() {
             JSONObject o = new JSONObject()
             JSONArray a = new JSONArray()
 

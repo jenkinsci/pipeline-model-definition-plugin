@@ -30,12 +30,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
 class AllOfConditionalScript extends DeclarativeStageConditionalScript<AllOfConditional> {
-    public AllOfConditionalScript(CpsScript s, AllOfConditional c) {
+     AllOfConditionalScript(CpsScript s, AllOfConditional c) {
         super(s, c)
     }
 
     @Override
-    public boolean evaluate() {
+    boolean evaluate() {
         return describable.children.every {
             it?.getScript(script)?.evaluate()
         }

@@ -115,7 +115,7 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      * @param name The name of the descriptor
      * @param arguments A map of arguments
      * @return The instantiated {@link DeclarativeAgent} instance, or null if the name isn't found.
-     * @throws Exception
+     * @throws Exception if there are issues instantiating from the descriptor
      */
     public static @Nullable DeclarativeAgent<?> instanceForName(@Nonnull String name,
                                                              Map<String,Object> arguments) throws Exception {
@@ -134,7 +134,7 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      * @param descriptor The descriptor instance
      * @param arguments A map of arguments
      * @return The instantiated {@link DeclarativeAgent} instance.
-     * @throws Exception
+     * @throws Exception if there are issues instantiating from the descriptor
      */
     public static @Nonnull DeclarativeAgent<?> instanceForDescriptor(@Nonnull DeclarativeAgentDescriptor<?> descriptor,
                                                                    Map<String,Object> arguments) throws Exception {

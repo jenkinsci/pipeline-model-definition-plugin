@@ -40,12 +40,12 @@ public class DefaultChangeLogStrategy extends ChangeLogStrategy {
     public DefaultChangeLogStrategy() {
         try {
             githubPr = Class.forName("org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead");
-        } catch (ClassNotFoundException _) {
+        } catch (ClassNotFoundException e) {
             githubPr = null;
         }
         try {
             bitbucketPr = Class.forName("com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead");
-        } catch (ClassNotFoundException _) {
+        } catch (ClassNotFoundException e) {
             bitbucketPr = null;
         }
     }

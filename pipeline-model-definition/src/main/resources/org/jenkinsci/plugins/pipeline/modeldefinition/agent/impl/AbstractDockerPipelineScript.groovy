@@ -31,14 +31,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScri
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeDockerUtils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public abstract class AbstractDockerPipelineScript<A extends AbstractDockerAgent<A>> extends DeclarativeAgentScript<A> {
+abstract class AbstractDockerPipelineScript<A extends AbstractDockerAgent<A>> extends DeclarativeAgentScript<A> {
 
-    public AbstractDockerPipelineScript(CpsScript s, A a) {
+    AbstractDockerPipelineScript(CpsScript s, A a) {
         super(s, a)
     }
 
     @Override
-    public Closure run(Closure body) {
+    Closure run(Closure body) {
         if (describable.reuseNode && script.getContext(FilePath.class) != null) {
             return {
                 configureRegistry(body).call()

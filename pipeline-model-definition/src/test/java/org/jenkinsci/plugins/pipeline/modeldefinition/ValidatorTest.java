@@ -745,6 +745,7 @@ public class ValidatorTest extends AbstractModelDefTest {
         @Symbol("testProperty")
         public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
             @Override
+            @Nonnull
             public String getDisplayName() {
                 return "Test job property to be rejected by a validator contributor.";
             }

@@ -30,12 +30,12 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
 class AnyOfConditionalScript extends DeclarativeStageConditionalScript<AnyOfConditional> {
-    public AnyOfConditionalScript(CpsScript s, AnyOfConditional c) {
+     AnyOfConditionalScript(CpsScript s, AnyOfConditional c) {
         super(s, c)
     }
 
     @Override
-    public boolean evaluate() {
+    boolean evaluate() {
         return describable.children.any {
             it?.getScript(script)?.evaluate()
         }

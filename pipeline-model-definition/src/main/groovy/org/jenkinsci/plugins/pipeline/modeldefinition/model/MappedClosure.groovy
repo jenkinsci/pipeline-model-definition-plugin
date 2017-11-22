@@ -39,26 +39,26 @@ import groovy.transform.ToString
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements Serializable {
+abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements Serializable {
 
     Map<String,O> resultMap = [:]
 
-    public MappedClosure() {
+    MappedClosure() {
     }
 
-    public MappedClosure(Map<String,O> inMap) {
+    MappedClosure(Map<String,O> inMap) {
         this.resultMap.putAll(inMap)
     }
 
-    public O remove(String p) {
+    O remove(String p) {
         return resultMap.remove(p)
     }
 
-    public put(String k, O v) {
+    void put(String k, O v) {
         resultMap.put(k, v)
     }
 
-    public Map<String, Object> getMap() {
+    Map<String, Object> getMap() {
         def mapCopy = [:]
         mapCopy.putAll(resultMap)
         return mapCopy

@@ -6,6 +6,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents a list of {@code BuildCondition} and {@code StepsBlock} pairs to be called, depending on whether
  * the build condition is satisfied, at the end of the build or a stage.
@@ -16,7 +18,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @see ModelASTPostBuild
  */
 public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
-    private List<ModelASTBuildCondition> conditions = new ArrayList<ModelASTBuildCondition>();
+    private List<ModelASTBuildCondition> conditions = new ArrayList<>();
 
     protected ModelASTBuildConditionsContainer(Object sourceLocation) {
         super(sourceLocation);
@@ -34,7 +36,7 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (ModelASTBuildCondition condition: conditions) {
             condition.validate(validator);

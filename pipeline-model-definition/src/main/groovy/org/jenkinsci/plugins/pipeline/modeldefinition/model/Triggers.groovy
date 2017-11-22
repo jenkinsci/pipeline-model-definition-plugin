@@ -44,7 +44,7 @@ import javax.annotation.Nonnull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Triggers implements Serializable {
+class Triggers implements Serializable {
     private static final Object CACHE_KEY = new Object()
     private static final LoadingCache<Object,Map<String,String>> triggerTypeCache =
         Utils.generateTypeCache(TriggerDescriptor.class)
@@ -54,18 +54,18 @@ public class Triggers implements Serializable {
     transient List<Trigger> triggers = []
 
     @Whitelisted
-    public Triggers(List<Trigger> t) {
+    Triggers(List<Trigger> t) {
         this.triggers = t
     }
 
-    public List<Trigger> getTriggers() {
+    List<Trigger> getTriggers() {
         return triggers
     }
 
     protected Object readResolve() throws IOException {
         // Need to make sure triggers is initialized on deserialization, even if it's going to be empty.
         this.triggers = []
-        return this;
+        return this
     }
 
     /**
@@ -74,7 +74,7 @@ public class Triggers implements Serializable {
      *
      * @return A map of valid parameter type keys to their actual type IDs.
      */
-    public static Map<String,String> getAllowedTriggerTypes() {
+    static Map<String,String> getAllowedTriggerTypes() {
         return triggerTypeCache.get(CACHE_KEY)
     }
 
@@ -84,7 +84,7 @@ public class Triggers implements Serializable {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the parameter types cache.
      */
-    public static String typeForKey(@Nonnull String key) {
+    static String typeForKey(@Nonnull String key) {
         return getAllowedTriggerTypes().get(key)
     }
 }

@@ -6,6 +6,8 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents a map of tool types to tool names (i.e., the name of the configured installation). Corresponds to
  * {@code Tools}.
@@ -13,7 +15,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Andrew Bayer
  */
 public final class ModelASTTools extends ModelASTElement {
-    private Map<ModelASTKey, ModelASTValue> tools = new LinkedHashMap<ModelASTKey, ModelASTValue>();
+    private Map<ModelASTKey, ModelASTValue> tools = new LinkedHashMap<>();
 
     public ModelASTTools(Object sourceLocation) {
         super(sourceLocation);
@@ -32,7 +34,7 @@ public final class ModelASTTools extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (Map.Entry<ModelASTKey, ModelASTValue> entry : tools.entrySet()) {
             entry.getKey().validate(validator);

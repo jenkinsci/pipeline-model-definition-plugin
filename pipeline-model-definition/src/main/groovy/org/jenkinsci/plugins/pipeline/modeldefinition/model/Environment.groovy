@@ -34,7 +34,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-public class Environment implements Serializable {
+class Environment implements Serializable {
 
     private final EnvironmentResolver envResolver
     private final EnvironmentResolver credsResolver

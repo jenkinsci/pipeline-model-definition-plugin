@@ -10,6 +10,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+import javax.annotation.Nonnull;
+
 /**
  * A representation of a method call, including its name and a list of {@link ModelASTMethodArg}s.
  *
@@ -28,14 +30,14 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     @Deprecated
     @Restricted(NoExternalUse.class)
     public static Map<String, String> getBlockedSteps() {
-        Map<String, String> map = new LinkedHashMap<String, String>();
+        Map<String, String> map = new LinkedHashMap<>();
         map.put("node", Messages.ModelASTMethodCall_BlockedSteps_Node());
         map.putAll(ModelASTStep.getBlockedSteps());
         return map;
     }
 
     private String name;
-    private List<ModelASTMethodArg> args = new ArrayList<ModelASTMethodArg>();
+    private List<ModelASTMethodArg> args = new ArrayList<>();
 
     public ModelASTMethodCall(Object sourceLocation) {
         super(sourceLocation);
@@ -51,7 +53,7 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (ModelASTMethodArg arg : args) {
             arg.validate(validator);

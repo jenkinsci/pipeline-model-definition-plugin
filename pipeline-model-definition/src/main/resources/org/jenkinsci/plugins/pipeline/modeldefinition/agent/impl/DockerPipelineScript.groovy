@@ -30,14 +30,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-public class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPipeline> {
+class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPipeline> {
 
-    public DockerPipelineScript(CpsScript s, DockerPipeline a) {
+    DockerPipelineScript(CpsScript s, DockerPipeline a) {
         super(s, a)
     }
 
     @Override
-    public Closure runImage(Closure body) {
+    Closure runImage(Closure body) {
         return {
             if (!Utils.withinAStage()) {
                 script.stage(SyntheticStageNames.agentSetup()) {

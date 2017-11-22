@@ -6,13 +6,15 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * A container for one or more {@link ModelASTOption}s
  *
  * @author Andrew Bayer
  */
 public final class ModelASTOptions extends ModelASTElement {
-    private List<ModelASTOption> options = new ArrayList<ModelASTOption>();
+    private List<ModelASTOption> options = new ArrayList<>();
 
     public ModelASTOptions(Object sourceLocation) {
         super(sourceLocation);
@@ -28,7 +30,7 @@ public final class ModelASTOptions extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
         for (ModelASTOption option : options) {
             option.validate(validator);

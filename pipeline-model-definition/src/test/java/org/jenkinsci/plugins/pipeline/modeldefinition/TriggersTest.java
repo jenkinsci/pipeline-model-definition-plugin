@@ -101,8 +101,7 @@ public class TriggersTest extends AbstractModelDefTest {
         assertEquals(1, triggersJobProperty.getTriggers().size());
 
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        j.buildAndAssertSuccess(job);
 
         assertNull(job.getProperty(PipelineTriggersJobProperty.class));
     }
@@ -125,8 +124,7 @@ public class TriggersTest extends AbstractModelDefTest {
         job.addProperty(new PipelineTriggersJobProperty(newTriggers));
 
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
-        WorkflowRun b2 = job.scheduleBuild2(0).waitForStart();
-        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        j.buildAndAssertSuccess(job);
 
         PipelineTriggersJobProperty newProp = job.getProperty(PipelineTriggersJobProperty.class);
         assertNotNull(newProp);

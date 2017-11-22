@@ -57,7 +57,7 @@ class StageConditionals implements Serializable {
             }
         )
 
-    public final Closure rawClosure
+    final Closure rawClosure
 
     @Whitelisted
     StageConditionals(Closure rawClosure) {

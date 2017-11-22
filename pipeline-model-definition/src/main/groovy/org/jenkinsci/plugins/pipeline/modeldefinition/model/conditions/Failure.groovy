@@ -35,15 +35,15 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  * @author Andrew Bayer
  */
 @Extension(ordinal=700d) @Symbol("failure")
-public class Failure extends BuildCondition {
+class Failure extends BuildCondition {
     @Override
-    public boolean meetsCondition(WorkflowRun r) {
+    boolean meetsCondition(WorkflowRun r) {
         Result execResult = getExecutionResult(r)
         return execResult == Result.FAILURE || r.getResult() == Result.FAILURE
     }
 
     @Override
-    public String getDescription() {
+    String getDescription() {
         return Messages.Failure_Description()
     }
 

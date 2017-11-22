@@ -7,6 +7,8 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  * Represents an individual Stage and the {@link ModelASTBranch}s it may contain.
  *
@@ -17,7 +19,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 public final class ModelASTStage extends ModelASTElement {
     private String name;
     private ModelASTAgent agent;
-    private List<ModelASTBranch> branches = new ArrayList<ModelASTBranch>();
+    private List<ModelASTBranch> branches = new ArrayList<>();
     private ModelASTPostStage post;
     private ModelASTWhen when;
     private ModelASTTools tools;
@@ -70,7 +72,7 @@ public final class ModelASTStage extends ModelASTElement {
     }
 
     @Override
-    public void validate(final ModelValidator validator) {
+    public void validate(@Nonnull final ModelValidator validator) {
         validate(validator, false);
     }
 

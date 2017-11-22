@@ -26,6 +26,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.Nonnull;
+
 /**
  *
  * @author Andrew Bayer
@@ -35,7 +37,7 @@ public interface ModelASTMarkerInterface {
 
     Object toJSON();
 
-    void validate(ModelValidator validator);
+    void validate(@Nonnull ModelValidator validator);
 
     void removeSourceLocation();
 }

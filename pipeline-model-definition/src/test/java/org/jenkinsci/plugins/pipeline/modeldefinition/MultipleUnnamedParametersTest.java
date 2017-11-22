@@ -32,6 +32,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
+
 public class MultipleUnnamedParametersTest extends AbstractModelDefTest {
 
     // Note that we're doing this in its own class and not doing JSON validation because of the hassle of the test
@@ -67,6 +69,7 @@ public class MultipleUnnamedParametersTest extends AbstractModelDefTest {
         @Symbol("multiArgCtorProp")
         public static class MultiArgCtorPropDescriptor extends JobPropertyDescriptor {
             @Override
+            @Nonnull
             public String getDisplayName() {
                 return "Test property with multiple parameters to DataBoundConstructor";
             }
