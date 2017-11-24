@@ -180,6 +180,23 @@ class ASTParserUtils {
             s << printer(" - op: ${n.operation.toString()}", ind)
             s << printer("  - right:", ind)
             s << prettyPrint(n.rightExpression, ind)
+        } else if (n instanceof IfStatement) {
+            s << printer("- if stmt:", ind)
+            s << prettyPrint(n.booleanExpression, ind)
+            s << printer("- if block:", ind)
+            s << prettyPrint(n.ifBlock, ind)
+            if (n.elseBlock != null) {
+                s << printer("- else block:", ind)
+                s << prettyPrint(n.elseBlock, ind )
+            }
+        } else if (n instanceof TupleExpression) {
+            s << printer("- tuples:", ind)
+            n.expressions.each {
+                s << prettyPrint(it, ind)
+            }
+        } else if (n instanceof BooleanExpression) {
+            s << printer("- boolexp:", ind)
+            s << prettyPrint(n.expression, ind)
         } else {
             s << printer("- ${n}", ind)
         }

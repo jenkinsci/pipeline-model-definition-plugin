@@ -113,8 +113,23 @@ public class DurabilityTest extends AbstractDeclarativeTest {
                                 "      }\n" +
                                 "    }\n" +
                                 "    stage('bar') {\n" +
+                                "      when {\n" +
+                                "        expression {\n" +
+                                "          return true\n" +
+                                "        }\n" +
+                                "      }\n" +
                                 "      steps {\n" +
                                 "        sh('echo reallyAfterFoo')\n" +
+                                "      }\n" +
+                                "    }\n" +
+                                "    stage('baz') {\n" +
+                                "      when {\n" +
+                                "        expression {\n" +
+                                "          return false\n" +
+                                "        }\n" +
+                                "      }\n" +
+                                "      steps {\n" +
+                                "        sh('echo neverShouldReach')\n" +
                                 "      }\n" +
                                 "    }\n" +
                                 "  }\n" +
@@ -135,6 +150,7 @@ public class DurabilityTest extends AbstractDeclarativeTest {
                 story.j.assertLogContains("before=demo", b);
                 story.j.assertLogContains("ONAGENT=true", b);
                 story.j.assertLogContains("reallyAfterFoo", b);
+                story.j.assertLogNotContains("neverShouldReach", b);
                 FlowExecution execution = b.getExecution();
                 assertNotNull(execution);
                 FlowGraphWalker walker = new FlowGraphWalker(execution);
