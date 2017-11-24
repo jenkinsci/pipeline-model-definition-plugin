@@ -142,7 +142,7 @@ class ModelParser implements Parser {
     @CheckForNull ModelASTPipelineDef parse(ModuleNode src, boolean secondaryRun = false) {
         // first, quickly ascertain if this module should be parsed at all
         def pst = src.statementBlock.statements.find {
-            return isDeclarativePipelineStep(it)
+            return Utils.isDeclarativePipelineStep(it)
         }
 
         if (pst != null) {

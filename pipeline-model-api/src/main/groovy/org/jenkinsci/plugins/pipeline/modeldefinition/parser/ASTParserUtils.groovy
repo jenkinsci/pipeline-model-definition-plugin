@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
+import com.google.common.base.Predicate
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FirstParam
@@ -37,24 +38,32 @@ import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
-import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
-import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
+import org.jenkinsci.plugins.workflow.actions.LabelAction
+import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
+import org.jenkinsci.plugins.workflow.cps.CpsThread
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
+import org.jenkinsci.plugins.workflow.flow.FlowExecution
+import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.graph.StepNode
+import org.jenkinsci.plugins.workflow.graphanalysis.Filterator
+import org.jenkinsci.plugins.workflow.graphanalysis.FlowScanningUtils
+import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
+import org.kohsuke.accmod.Restricted
+import org.kohsuke.accmod.restrictions.NoExternalUse
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
+import javax.annotation.Nullable
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
 /**
- * Misc. utilities used across both {@link ModelParser} and {@link RuntimeASTTransformer}.
+ * Misc. utilities used for AST interactions.
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class ASTParserUtils {
@@ -277,11 +286,11 @@ class ASTParserUtils {
     }
 
     /**
-     * Transforms a container for describables, such as {@link Triggers}, into AST for instantation.
+     * Transforms a container for describables, such as {@code Triggers}, into AST for instantation.
      * @param original A {@link ModelASTElement} such as {@link ModelASTTriggers} or {@link ModelASTBuildParameters}
      * @param children The children for the original element - passed as a separate argument since the getter will
      * be different.
-     * @param containerClass The class we will be instantiating, i.e., {@link Parameters} or {@link Triggers}.
+     * @param containerClass The class we will be instantiating, i.e., {@code Parameters} or {@code Triggers}.
      * @param descClass the describable class we're inheriting from
      * @return The AST for instantiating the container and its contents.
      */
@@ -295,46 +304,14 @@ class ASTParserUtils {
         return constX(null)
     }
 
-    /**
-     * Transform a when condition, and its children if any exist, into instantiation AST.
-     */
-    static Expression transformWhenContentToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-        if (original instanceof ModelASTElement && isGroovyAST((ModelASTElement)original)) {
-            DeclarativeStageConditionalDescriptor parentDesc =
-                (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
-                    DeclarativeStageConditional.class, original.name)
-            if (original instanceof ModelASTWhenCondition) {
-                ModelASTWhenCondition cond = (ModelASTWhenCondition) original
-                if (cond.getSourceLocation() != null && cond.getSourceLocation() instanceof Statement) {
-                    MethodCallExpression methCall = matchMethodCall((Statement) cond.getSourceLocation())
 
-                    if (methCall != null) {
-                        if (cond.children.isEmpty()) {
-                            return methodCallToDescribable(methCall, null)
-                        } else {
-                            MapExpression argMap = new MapExpression()
-                            if (parentDesc.allowedChildrenCount == 1) {
-                                argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
-                                    transformWhenContentToRuntimeAST(cond.children.first()))
-                            } else {
-                                argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
-                                    new ListExpression(cond.children.collect { transformWhenContentToRuntimeAST(it) }))
-                            }
-                            return callX(ClassHelper.make(Utils.class),
-                                "instantiateDescribable",
-                                args(
-                                    classX(parentDesc.clazz),
-                                    argMap
-                                ))
-                        }
-                    }
-                }
-            } else if (original instanceof ModelASTWhenExpression) {
-                return parentDesc.transformToRuntimeAST(original)
-            }
-        }
-        return constX(null)
+    @Whitelisted
+    @Restricted(NoExternalUse.class)
+    static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
+        DescribableModel<T> model = new DescribableModel<>(c)
+        return model?.instantiate(args)
     }
+
 
     /**
      * Transforms the AST for a "mapped closure" - i.e., a closure of "foo 'bar'" method calls - into a
@@ -410,7 +387,7 @@ class ASTParserUtils {
 
     /**
      * Transforms a {@link MethodCallExpression} into either a map of name and arguments for steps, or a call to
-     * {@link Utils#instantiateDescribable(Class,Map)} that can be invoked at runtime to actually instantiated.
+     * {@link #instantiateDescribable(Class,Map)} that can be invoked at runtime to actually instantiated.
      * @param expr A method call.
      * @param descClass possibly null describable parent class
      * @return The appropriate transformation, or the original expression if it didn't correspond to a Describable.
@@ -435,7 +412,7 @@ class ASTParserUtils {
             // Ok, now it's a non-executable descriptor. Phew.
             Class<? extends Describable> descType = funcDesc.clazz
 
-            return callX(ClassHelper.make(Utils.class), "instantiateDescribable",
+            return callX(ClassHelper.make(ASTParserUtils.class), "instantiateDescribable",
                 args(classX(descType), argsMap(methArgs)))
         } else {
             // Not a describable at all!
@@ -452,6 +429,84 @@ class ASTParserUtils {
         return original != null && original.sourceLocation != null && original.sourceLocation instanceof ASTNode
     }
 
+    static boolean isStageNode(@Nonnull FlowNode node) {
+        if (node instanceof StepNode) {
+            StepDescriptor d = ((StepNode) node).getDescriptor();
+            return d != null && d.getFunctionName().equals("stage");
+        } else {
+            return false;
+        }
+    }
+
+    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                if (input != null) {
+                    if (input instanceof StepStartNode &&
+                        isStageNode(input) &&
+                        (stageName == null || input.displayName == stageName)) {
+                        // This is a true stage.
+                        return true
+                    } else if (input.getAction(LabelAction.class) != null &&
+                        input.getAction(ThreadNameAction.class) != null &&
+                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
+                        // This is actually a parallel block
+                        return true
+                    }
+                }
+
+                return false
+            }
+        }
+    }
+
+    static List<FlowNode> findStageFlowNodes(String stageName, FlowExecution execution = null) {
+        if (execution == null) {
+            CpsThread thread = CpsThread.current()
+            execution = thread.execution
+        }
+
+        List<FlowNode> nodes = []
+
+        ForkScanner scanner = new ForkScanner()
+
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+
+        if (stage != null) {
+            nodes.add(stage)
+
+            // Additional check needed to get the possible enclosing parallel branch for a nested stage.
+            Filterator<FlowNode> filtered = FlowScanningUtils.fetchEnclosingBlocks(stage)
+                .filter(isParallelBranchFlowNode(stageName))
+
+            filtered.each { f ->
+                if (f != null) {
+                    nodes.add(f)
+                }
+            }
+        }
+
+        return nodes
+    }
+
+    static Predicate<FlowNode> isParallelBranchFlowNode(final String stageName) {
+        return new Predicate<FlowNode>() {
+            @Override
+            boolean apply(@Nullable FlowNode input) {
+                if (input != null) {
+                    if (input.getAction(LabelAction.class) != null &&
+                        input.getAction(ThreadNameAction.class) != null &&
+                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
+                        // This is actually a parallel block
+                        return true
+                    }
+                }
+                return false
+            }
+        }
+    }
+
     static boolean blockHasMethod(BlockStatement block, String methodName) {
         if (block != null) {
             return block.statements.any {
@@ -462,26 +517,4 @@ class ASTParserUtils {
             return false
         }
     }
-
-    static boolean isDeclarativePipelineStep(Statement stmt, boolean topLevel = true) {
-        def b = matchBlockStatement(stmt)
-
-        if (b != null &&
-            b.methodName == ModelStepLoader.STEP_NAME &&
-            b.arguments.expressions.size() == 1) {
-            BlockStatement block = asBlock(b.body.code)
-            if (topLevel) {
-                // If we're in a Jenkinsfile, we want to find any pipeline block at the top-level
-                return block != null
-            } else {
-                // If we're in a shared library, filter out anything that doesn't have agent and stages method calls
-                def hasAgent = blockHasMethod(block, "agent")
-                def hasStages = blockHasMethod(block, "stages")
-                return hasAgent && hasStages
-            }
-        }
-
-        return false
-    }
-
 }

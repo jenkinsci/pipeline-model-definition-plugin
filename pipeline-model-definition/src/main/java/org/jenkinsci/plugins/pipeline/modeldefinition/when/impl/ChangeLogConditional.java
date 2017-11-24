@@ -28,8 +28,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.DeclarativeExtensionUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.accmod.Restricted;
@@ -69,7 +69,7 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeLogConditional> {
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+            return DeclarativeExtensionUtils.transformWhenContentToRuntimeAST(original);
         }
     }
 
