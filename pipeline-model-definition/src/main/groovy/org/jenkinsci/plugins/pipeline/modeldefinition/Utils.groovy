@@ -46,6 +46,7 @@ import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.SourceUnit
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.StageTagsMetadata
+import org.jenkinsci.plugins.pipeline.StageTagsUtils
 import org.jenkinsci.plugins.pipeline.SyntheticStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
@@ -57,25 +58,20 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
-import org.jenkinsci.plugins.workflow.actions.LabelAction
 import org.jenkinsci.plugins.workflow.actions.TagsAction
-import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.graph.BlockEndNode
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.graphanalysis.Filterator
-import org.jenkinsci.plugins.workflow.graphanalysis.FlowScanningUtils
-import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner
 import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
@@ -83,7 +79,6 @@ import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
-import org.jenkinsci.plugins.workflow.support.steps.StageStep
 import org.kohsuke.accmod.Restricted
 import org.kohsuke.accmod.restrictions.NoExternalUse
 
@@ -92,6 +87,10 @@ import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.util.concurrent.TimeUnit
+
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.asBlock
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.blockHasMethod
+import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.matchBlockStatement
 
 /**
  * Utility methods for use primarily in CPS-transformed code to avoid excessive global whitelisting.
@@ -173,27 +172,12 @@ class Utils {
         }
     }
 
+    /**
+     * Use {@link ASTParserUtils#isStageWithOptionalName} instead.
+     */
+    @Deprecated
     static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
-        return new Predicate<FlowNode>() {
-            @Override
-            boolean apply(@Nullable FlowNode input) {
-                if (input != null) {
-                    if (input instanceof StepStartNode &&
-                        ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
-                        (stageName == null || input.displayName == stageName)) {
-                        // This is a true stage.
-                        return true
-                    } else if (input.getAction(LabelAction.class) != null &&
-                        input.getAction(ThreadNameAction.class) != null &&
-                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
-                        // This is actually a parallel block
-                        return true
-                    }
-                }
-
-                return false
-            }
-        }
+        return ASTParserUtils.isStageWithOptionalName(stageName)
     }
 
     static String stringToSHA1(String s) {
@@ -230,50 +214,20 @@ class Utils {
         return stageNode != null
     }
 
+    /**
+     * Use {@link ASTParserUtils#isParallelBranchFlowNode} instead.
+     */
+    @Deprecated
     static Predicate<FlowNode> isParallelBranchFlowNode(final String stageName, FlowExecution execution = null) {
-        return new Predicate<FlowNode>() {
-            @Override
-            boolean apply(@Nullable FlowNode input) {
-                if (input != null) {
-                    if (input.getAction(LabelAction.class) != null &&
-                        input.getAction(ThreadNameAction.class) != null &&
-                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
-                        // This is actually a parallel block
-                        return true
-                    }
-                }
-                return false
-            }
-        }
+        return ASTParserUtils.isParallelBranchFlowNode(stageName)
     }
 
+    /**
+     * Use {@link ASTParserUtils#findStageFlowNodes} instead.
+     */
+    @Deprecated
     static List<FlowNode> findStageFlowNodes(String stageName, FlowExecution execution = null) {
-        if (execution == null) {
-            CpsThread thread = CpsThread.current()
-            execution = thread.execution
-        }
-
-        List<FlowNode> nodes = []
-
-        ForkScanner scanner = new ForkScanner()
-
-        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
-
-        if (stage != null) {
-            nodes.add(stage)
-
-            // Additional check needed to get the possible enclosing parallel branch for a nested stage.
-            Filterator<FlowNode> filtered = FlowScanningUtils.fetchEnclosingBlocks(stage)
-                .filter(isParallelBranchFlowNode(stageName))
-
-            filtered.each { f ->
-                if (f != null) {
-                    nodes.add(f)
-                }
-            }
-        }
-
-        return nodes
+        return ASTParserUtils.findStageFlowNodes(stageName, execution)
     }
 
     @Restricted(NoExternalUse.class)
@@ -311,16 +265,28 @@ class Utils {
         }
     }
 
+    /**
+     * Use @{link StageTagsUtils#getTagMetadata}
+     */
+    @Deprecated
     static <T extends StageTagsMetadata> T getTagMetadata(Class<T> c) {
-        return ExtensionList.lookup(StageTagsMetadata.class).get(c)
+        return StageTagsUtils.getTagMetadata(c)
     }
 
+    /**
+     * Use @{link StageTagsUtils#getStageStatusMetadata}
+     */
+    @Deprecated
     static StageStatus getStageStatusMetadata() {
-        return getTagMetadata(StageStatus.class)
+        return StageTagsUtils.getStageStatusMetadata()
     }
 
+    /**
+     * Use @{link StageTagsUtils#getStageStatusMetadata}
+     */
+    @Deprecated
     static SyntheticStage getSyntheticStageMetadata() {
-        return getTagMetadata(SyntheticStage.class)
+        return StageTagsUtils.getSyntheticStageMetadata()
     }
 
     @Restricted(NoExternalUse.class)
@@ -750,5 +716,27 @@ class Utils {
         } else {
             return []
         }
+    }
+
+
+    static boolean isDeclarativePipelineStep(Statement stmt, boolean topLevel = true) {
+        def b = matchBlockStatement(stmt)
+
+        if (b != null &&
+            b.methodName == ModelStepLoader.STEP_NAME &&
+            b.arguments.expressions.size() == 1) {
+            BlockStatement block = asBlock(b.body.code)
+            if (topLevel) {
+                // If we're in a Jenkinsfile, we want to find any pipeline block at the top-level
+                return block != null
+            } else {
+                // If we're in a shared library, filter out anything that doesn't have agent and stages method calls
+                def hasAgent = blockHasMethod(block, "agent")
+                def hasStages = blockHasMethod(block, "stages")
+                return hasAgent && hasStages
+            }
+        }
+
+        return false
     }
 }

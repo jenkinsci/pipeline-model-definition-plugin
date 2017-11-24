@@ -22,23 +22,21 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.parser
+package org.jenkinsci.plugins.pipeline
 
-import org.codehaus.groovy.ast.CodeVisitorSupport
-import org.codehaus.groovy.ast.stmt.ExpressionStatement
-import org.codehaus.groovy.ast.stmt.Statement
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+import hudson.ExtensionList
 
 
-class PipelineStepFinder extends CodeVisitorSupport {
-    List<Statement> pipelineSteps = []
+class StageTagsUtils {
+    static <T extends StageTagsMetadata> T getTagMetadata(Class<T> c) {
+        return ExtensionList.lookup(StageTagsMetadata.class).get(c)
+    }
 
-    @Override
-    void visitExpressionStatement(ExpressionStatement exprStmt) {
-        if (Utils.isDeclarativePipelineStep(exprStmt, false)) {
-            pipelineSteps.add(exprStmt)
-        } else {
-            super.visitExpressionStatement(exprStmt)
-        }
+    static StageStatus getStageStatusMetadata() {
+        return getTagMetadata(StageStatus.class)
+    }
+
+    static SyntheticStage getSyntheticStageMetadata() {
+        return getTagMetadata(SyntheticStage.class)
     }
 }
