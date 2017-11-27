@@ -106,4 +106,6 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
             return conditional;
         }
     }
+
+    private static final long serialVersionUID = 1L;
 }
