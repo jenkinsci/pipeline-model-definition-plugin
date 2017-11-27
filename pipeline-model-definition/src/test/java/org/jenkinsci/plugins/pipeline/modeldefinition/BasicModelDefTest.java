@@ -419,8 +419,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Test
     public void dockerGlobalVariable() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         expect("dockerGlobalVariable")
                 .logContains("[Pipeline] { (foo)", "image: ubuntu")

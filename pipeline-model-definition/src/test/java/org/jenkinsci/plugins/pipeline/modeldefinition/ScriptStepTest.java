@@ -50,8 +50,6 @@ public class ScriptStepTest extends AbstractModelDefTest {
     @Test
     public void dockerGlobalVariableInScript() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         expect("dockerGlobalVariableInScript")
                 .logContains("[Pipeline] { (foo)", "image: ubuntu")

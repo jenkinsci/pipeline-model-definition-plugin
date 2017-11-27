@@ -92,8 +92,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentDockerDontReuseNode() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         expect(Result.FAILURE, "agentDockerDontReuseNode")
                 .logContains("The answer is 42")
@@ -105,8 +103,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentInStageAutoCheckout() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         expect("agentInStageAutoCheckout")
                 .logContains("The answer is 42",
@@ -170,8 +166,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void nonExistentDockerImage() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         expect(Result.FAILURE, "nonExistentDockerImage")
                 .logContains("ERROR: script returned exit code 1",
@@ -183,8 +177,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void fromDockerfile() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("init");
@@ -202,8 +194,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void additionalDockerBuildArgs() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nARG someArg=thisArgHere\n\nRUN echo \"hi there, $someArg\" > /hi-there\n\n");
         sampleRepo.git("init");
@@ -223,8 +213,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void fromDockerfileInOtherDir() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         sampleRepo.write("subdir/Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("init");
@@ -243,8 +231,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void dirSepInDockerfileName() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         sampleRepo.write("subdir/Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("init");
@@ -262,8 +248,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void fromDockerfileNoArgs() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("init");
@@ -280,8 +264,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void fromAlternateDockerfile() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
         sampleRepo.write("Dockerfile.alternate", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("init");
         sampleRepo.git("add", "Dockerfile.alternate");
@@ -321,8 +303,6 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void dockerPullLocalImage() throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         sampleRepo.write("Dockerfile", "FROM ubuntu:14.04\n\nRUN echo 'HI THERE' > /hi-there\n\n");
         sampleRepo.git("init");
@@ -341,8 +321,6 @@ public class AgentTest extends AbstractModelDefTest {
 
     private void agentDocker(final String jenkinsfile, String... additionalLogContains) throws Exception {
         assumeDocker();
-        // Bind mounting /var on OS X doesn't work at the moment
-        onAllowedOS(PossibleOS.LINUX);
 
         List<String> logContains = new ArrayList<>();
         logContains.add("[Pipeline] { (foo)");
