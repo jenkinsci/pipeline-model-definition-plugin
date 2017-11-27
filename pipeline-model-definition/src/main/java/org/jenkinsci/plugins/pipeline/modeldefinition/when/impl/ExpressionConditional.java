@@ -50,7 +50,8 @@ import javax.annotation.CheckForNull;
 public class ExpressionConditional extends DeclarativeStageConditional<ExpressionConditional> {
     private final String block;
 
-    private Closure closureBlock;
+    // Needs to be transient to avoid potential excessive pickling - see JENKINS-48209
+    private transient Closure closureBlock;
 
     @Deprecated
     public ExpressionConditional(String block) {
@@ -105,4 +106,6 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
             return conditional;
         }
     }
+
+    private static final long serialVersionUID = 1L;
 }

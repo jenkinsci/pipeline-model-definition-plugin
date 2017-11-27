@@ -40,9 +40,13 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.jenkinsci.plugins.workflow.pickles.Pickle;
+import org.jenkinsci.plugins.workflow.support.pickles.SingleTypedPickleFactory;
+import org.jenkinsci.plugins.workflow.support.pickles.XStreamPickle;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -357,6 +361,14 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     }
 
+    @Issue("JENKINS-48209")
+    @Test
+    public void whenExprDurableTask() throws Exception {
+        expect("whenExprDurableTask")
+                .logContains("Heal it")
+                .go();
+    }
+
     private void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
         while (item != null && item.getFuture() == null) {
             Thread.sleep(200);
@@ -386,4 +398,14 @@ public class WhenStageTest extends AbstractModelDefTest {
             return false;
         }
     }
+
+    @TestExtension
+    public static class WhenConditionPickleFactory extends SingleTypedPickleFactory<DeclarativeStageConditional<?>> {
+        @Override
+        @Nonnull
+        protected Pickle pickle(DeclarativeStageConditional<?> d) {
+            return new XStreamPickle(d);
+        }
+    }
+
 }
