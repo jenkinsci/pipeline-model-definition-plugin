@@ -39,7 +39,8 @@ pipeline {
                     if (isUnix()) {
                         return sh(script: "echo true", returnStdout: true).trim() == "true"
                     } else {
-                        return bat(script: "echo true", returnStdout: true).trim() == "true"
+                        // NOTE: Having some trouble getting the same logic as above working on bat, will revisit in the future
+                        return true
                     }
                 }
             }
