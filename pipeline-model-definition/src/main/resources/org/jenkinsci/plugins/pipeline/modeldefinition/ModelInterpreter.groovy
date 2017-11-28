@@ -176,18 +176,21 @@ class ModelInterpreter implements Serializable {
 
     def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage = null) {
         return {
+            def isSkipped = false
             def thisError = null
             script.stage(thisStage.name) {
                 try {
                     if (firstError != null) {
                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
                         Utils.markStageSkippedForFailure(thisStage.name)
+                        isSkipped = true
                         if (thisStage.parallel != null) {
                             script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, true, false, false))
                         }
                     } else if (skipUnstable(root.options)) {
                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
                         Utils.markStageSkippedForUnstable(thisStage.name)
+                        isSkipped = true
                         if (thisStage.parallel != null) {
                             script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, true, false))
                         }
@@ -202,6 +205,7 @@ class ModelInterpreter implements Serializable {
                             } else {
                                 Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                 Utils.markStageSkippedForConditional(thisStage.name)
+                                isSkipped = true
                                 script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, true))
                             }
                         } else {
@@ -218,6 +222,7 @@ class ModelInterpreter implements Serializable {
                                 } else {
                                     Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                     Utils.markStageSkippedForConditional(thisStage.name)
+                                    isSkipped = true
                                 }
                             }
                         }
@@ -231,10 +236,7 @@ class ModelInterpreter implements Serializable {
                     thisError = e
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
-                    // JENKINS-47928: Do not run if the error was not thrown from this stage
-                    if (thisError != null &&
-                            thisStage.parallel != null &&
-                            root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+                    if (!isSkipped && thisStage.parallel != null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
