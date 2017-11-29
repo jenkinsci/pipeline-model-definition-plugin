@@ -37,7 +37,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class Stage implements Serializable {
+class Stage implements Serializable, ParallelContent {
 
     String name
 
@@ -53,13 +53,21 @@ class Stage implements Serializable {
 
     Environment environment
 
+    List<ParallelContent> parallelContent = []
+
     Stages parallel
 
     boolean failFast
 
-    @Whitelisted
+    @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
+        this(name, steps, agent, post, when, tools, environment, failFast, parallel?.stages)
+    }
+
+    @Whitelisted
+    Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
+          Environment environment, boolean failFast, List<ParallelContent> parallelContent) {
         this.name = name
         this.steps = steps
         this.agent = agent
@@ -67,8 +75,21 @@ class Stage implements Serializable {
         this.when = when
         this.tools = tools
         this.environment = environment
-        this.parallel = parallel
         this.failFast = failFast
+        if (parallelContent != null) {
+            this.parallelContent.addAll(parallelContent)
+        }
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.parallel != null) {
+            if (this.parallelContent == null) {
+                this.parallelContent = []
+            }
+            this.parallelContent.addAll(this.parallel.stages)
+            this.parallel = null
+        }
+        return this
     }
 
     /**

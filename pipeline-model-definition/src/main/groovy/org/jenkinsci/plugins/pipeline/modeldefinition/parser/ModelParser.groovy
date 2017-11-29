@@ -284,6 +284,32 @@ class ModelParser implements Parser {
         return r
     }
 
+    @Nonnull ModelASTParallelContent parseParallelContent(Statement stmt) {
+        def r = new ModelASTParallelStageGroup(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m?.methodName?.equals("stage")) {
+            return parseStage(stmt)
+        } else if (m?.methodName != ModelASTParallelStageGroup.ELEMENT_NAME) {
+            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+            errorCollector.error(r, Messages.ModelParser_ExpectedParallelGroup())
+            return null
+        }
+
+        def nameExp = m.getArgument(0)
+        if (nameExp==null) {
+            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+            errorCollector.error(r, Messages.ModelParser_ExpectedParallelGroupName())
+            return null
+        }
+
+        r.name = parseStringLiteral(nameExp)
+
+        r.stages = parseStages(stmt)
+
+        return r
+    }
+
     @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt)
 
@@ -555,7 +581,14 @@ class ModelParser implements Parser {
                             stage.environment = parseEnvironment(s)
                             break
                         case 'parallel':
-                            stage.parallel = parseStages(s)
+                            def parallelStmt = matchBlockStatement(s)
+                            if (parallelStmt==null) {
+                                errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
+                            } else {
+                                eachStatement(parallelStmt.body.code) {
+                                    stage.parallelContent.add(parseParallelContent(it))
+                                }
+                            }
                             break
                         case 'failFast':
                             List<Expression> args = ((TupleExpression) mc.arguments).expressions

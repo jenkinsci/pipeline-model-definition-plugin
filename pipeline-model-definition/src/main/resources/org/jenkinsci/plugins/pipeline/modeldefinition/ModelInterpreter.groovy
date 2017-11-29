@@ -70,17 +70,7 @@ class ModelInterpreter implements Serializable {
                         withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options) {
                                 toolsBlock(root.agent, root.tools) {
-                                    root.stages.stages.each { thisStage ->
-                                        try {
-                                            evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError).call()
-                                        } catch (Exception e) {
-                                            script.getProperty("currentBuild").result = Utils.getResultFromException(e)
-                                            Utils.markStageFailedAndContinued(thisStage.name)
-                                            if (firstError == null) {
-                                                firstError = e
-                                            }
-                                        }
-                                    }
+                                    firstError = evaluateSequentialStages(root, root.stages, firstError).call()
 
                                     // Execute post-build actions now that we've finished all parallel.
                                     try {
@@ -136,34 +126,64 @@ class ModelInterpreter implements Serializable {
         c.call()
     }
 
+    def evaluateSequentialStages(Root root, Stages stages, Throwable firstError) {
+        return {
+            stages.stages.each { thisStage ->
+                try {
+                    evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError).call()
+                } catch (Exception e) {
+                    script.getProperty("currentBuild").result = Utils.getResultFromException(e)
+                    Utils.markStageFailedAndContinued(thisStage.name)
+                    if (firstError == null) {
+                        firstError = e
+                    }
+                }
+            }
+
+            return firstError
+        }
+    }
+
     def getParallelStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parentStage,
                           boolean skippedForFailure, boolean skippedForUnstable, boolean skippedForWhen) {
         def parallelStages = [:]
-        thisStage?.parallel?.stages?.each { parallelStage ->
+        thisStage?.parallelContent?.each { content ->
             if (skippedForFailure) {
-                parallelStages.put(parallelStage.name, {
-                    script.stage(parallelStage.name) {
-                        Utils.logToTaskListener("Stage '${parallelStage.name}' skipped due to earlier failure(s)")
-                        Utils.markStageSkippedForFailure(parallelStage.name)
+                parallelStages.put(content.name, {
+                    script.stage(content.name) {
+                        Utils.logToTaskListener("Stage '${content.name}' skipped due to earlier failure(s)")
+                        Utils.markStageSkippedForFailure(content.name)
+                        if (content instanceof ParallelGroup) {
+                            evaluateSequentialStages(root, content.stages, firstError).call()
+                        }
                     }
                 })
             } else if (skippedForUnstable) {
-                parallelStages.put(parallelStage.name, {
-                    script.stage(parallelStage.name) {
-                        Utils.logToTaskListener("Stage '${parallelStage.name}' skipped due to earlier stage(s) marking the build as unstable")
-                        Utils.markStageSkippedForUnstable(parallelStage.name)
+                parallelStages.put(content.name, {
+                    script.stage(content.name) {
+                        Utils.logToTaskListener("Stage '${content.name}' skipped due to earlier stage(s) marking the build as unstable")
+                        Utils.markStageSkippedForUnstable(content.name)
+                        if (content instanceof ParallelGroup) {
+                            evaluateSequentialStages(root, content.stages, firstError).call()
+                        }
                     }
                 })
             } else if (skippedForWhen) {
-                parallelStages.put(parallelStage.name, {
-                    script.stage(parallelStage.name) {
-                        Utils.logToTaskListener("Stage '${parallelStage.name}' skipped due to when conditional")
-                        Utils.markStageSkippedForConditional(parallelStage.name)
+                parallelStages.put(content.name, {
+                    script.stage(content.name) {
+                        Utils.logToTaskListener("Stage '${content.name}' skipped due to when conditional")
+                        Utils.markStageSkippedForConditional(content.name)
+                        if (content instanceof ParallelGroup) {
+                            evaluateSequentialStages(root, content.stages, firstError).call()
+                        }
                     }
                 })
-            } else {
-                parallelStages.put(parallelStage.name,
-                    evaluateStage(root, thisStage.agent ?: parentAgent, parallelStage, firstError, thisStage))
+            } else if (content instanceof Stage) {
+                parallelStages.put(content.name,
+                    evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage))
+            } else if (content instanceof ParallelGroup) {
+                parallelStages.put(content.name,
+                    evaluateSequentialStages(root, content.stages, firstError))
             }
         }
         if (!parallelStages.isEmpty() && thisStage.failFast) {
@@ -182,17 +202,17 @@ class ModelInterpreter implements Serializable {
                     if (firstError != null) {
                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
                         Utils.markStageSkippedForFailure(thisStage.name)
-                        if (thisStage.parallel != null) {
+                        if (!thisStage.parallelContent.isEmpty()) {
                             script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, true, false, false))
                         }
                     } else if (skipUnstable(root.options)) {
                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
                         Utils.markStageSkippedForUnstable(thisStage.name)
-                        if (thisStage.parallel != null) {
+                        if (!thisStage.parallelContent.isEmpty()) {
                             script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, true, false))
                         }
                     } else {
-                        if (thisStage.parallel != null) {
+                        if (!thisStage.parallelContent.isEmpty()) {
                             if (evaluateWhen(thisStage.when)) {
                                 withCredentialsBlock(thisStage.environment) {
                                     withEnvBlock(thisStage.getEnvVars(script)) {
@@ -233,7 +253,7 @@ class ModelInterpreter implements Serializable {
                     // And finally, run the post stage steps if this was a parallel parent.
                     // JENKINS-47928: Do not run if the error was not thrown from this stage
                     if (thisError != null &&
-                            thisStage.parallel != null &&
+                            !thisStage.parallelContent.isEmpty() &&
                             root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)

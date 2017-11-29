@@ -646,8 +646,8 @@ class RuntimeASTTransformer {
                     transformStageConditionals(original.when),
                     transformTools(original.tools),
                     transformEnvironment(original.environment),
-                    transformStages(original.parallel),
-                    constX(original.failFast != null ? original.failFast : false)))
+                    constX(original.failFast != null ? original.failFast : false),
+                    transformParallelContent(original)))
         }
 
         return constX(null)
@@ -695,6 +695,47 @@ class RuntimeASTTransformer {
             }
 
             return ctorX(ClassHelper.make(Stages.class), args(argList))
+        }
+
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating a list of {@link ParallelContent}.
+     *
+     * @param original The parsed AST model of a stage
+     * @return The AST for a list of {@link ParallelContent}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformParallelContent(@CheckForNull ModelASTStage original) {
+        if (isGroovyAST(original) && !original.parallelContent?.isEmpty()) {
+            ListExpression argList = new ListExpression()
+            original.parallelContent.each { c ->
+                if (c instanceof ModelASTStage) {
+                    argList.addExpression(transformStage(c))
+                } else if (c instanceof ModelASTParallelStageGroup) {
+                    argList.addExpression(transformParallelGroup(c))
+                } else {
+                    argList.addExpression(constX(null))
+                }
+            }
+            return argList
+        }
+
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating {@link ParallelGroup}.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link ParallelGroup}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformParallelGroup(@CheckForNull ModelASTParallelStageGroup original) {
+        if (isGroovyAST(original) && !original.stages?.stages?.isEmpty()) {
+            return ctorX(ClassHelper.make(ParallelGroup.class),
+                args(constX(original.name), transformStages(original.stages)))
         }
 
         return constX(null)
