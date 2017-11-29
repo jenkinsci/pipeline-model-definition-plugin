@@ -172,7 +172,7 @@ class JSONParser implements Parser {
         if (j.node.has("parallel")) {
             JsonTree content = j.append(JsonPointer.of("parallel"))
             content?.node?.eachWithIndex{ JsonNode entry, int i ->
-                stage.parallelContent.add(parseParallelContent(j.append(JsonPointer.of(i))))
+                stage.parallelContent.add(parseParallelContent(content.append(JsonPointer.of(i))))
             }
         }
 
