@@ -81,7 +81,9 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
                     !c.contains("globalLibrary") &&
                     !c.contains("jsonSchemaNull") &&
                     // parallelStagesFailFast is expected to, well, fail, so skip it.
-                    !c.contains("parallelStagesFailFast")) {
+                    !c.contains("parallelStagesFailFast") &&
+                    // parallelStagesGroupsAndStages requires more agents setup than we have here, so skip.
+                    !c.contains("parallelStagesGroupsAndStages")) {
                 result.add(new Object[]{c});
             }
         }
