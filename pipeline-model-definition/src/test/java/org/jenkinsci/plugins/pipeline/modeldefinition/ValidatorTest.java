@@ -670,6 +670,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesGroupsDeepNesting() throws Exception {
+        expectError("parallelStagesGroupsDeepNesting")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+                .go();
+    }
+
     @Test
     public void parametersAndTriggersInOptions() throws Exception {
         expectError("parametersAndTriggersInOptions")
