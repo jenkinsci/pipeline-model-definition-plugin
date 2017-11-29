@@ -1063,7 +1063,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
          */
         assertEquals(Arrays.asList("7", "5", "4", "3", "2"), tailOfList(startFirst.getAllEnclosingIds()));
         assertEquals(Arrays.asList("8", "5", "4", "3", "2"), tailOfList(startInnerFirst.getAllEnclosingIds()));
-        assertEquals(Arrays.asList("8", "5", "4", "3", "2"), tailOfList(startInnerSecond.getAllEnclosingIds());
+        assertEquals(Arrays.asList("8", "5", "4", "3", "2"), tailOfList(startInnerSecond.getAllEnclosingIds()));
     }
 
     private List<String> tailOfList(List<String> l) {
