@@ -32,5 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Andrew Bayer
  */
 public interface ModelASTParallelContent extends ModelASTMarkerInterface {
+    String getName();
+
     void validate(final ModelValidator validator, boolean isNested);
 }

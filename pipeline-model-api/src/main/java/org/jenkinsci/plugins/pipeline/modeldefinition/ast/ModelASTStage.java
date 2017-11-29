@@ -36,6 +36,9 @@ public final class ModelASTStage extends ModelASTElement implements ModelASTPara
     protected Object readResolve() throws IOException {
         // If there's already a set of parallel stages defined, add that to the parallel content instead.
         if (this.parallel != null) {
+            if (this.parallelContent == null) {
+                this.parallelContent = new ArrayList<>();
+            }
             this.parallelContent.addAll(this.parallel.getStages());
             this.parallel = null;
         }
@@ -300,6 +303,7 @@ public final class ModelASTStage extends ModelASTElement implements ModelASTPara
                 ", tools=" + tools +
                 ", environment=" + environment +
                 ", failFast=" + failFast +
+                ", parallel=" + parallel +
                 ", parallelContent=" + parallelContent +
                 "}";
     }
