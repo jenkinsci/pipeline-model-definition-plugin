@@ -1055,15 +1055,19 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         - 7:  first branch start
         - 8:  second branch start
         - 9:  first stage start
-        - 11: inner-first stage start
-        - 42: inner-second stage start
+        - 11: inner-first stage start (probably)
+        - 42: inner-second stage start (probably)
 
         All three parallel stages should share 5,4,3,2.
         Sequential stages in the second branch should share 8,5,4,3,2.
          */
-        assertEquals(Arrays.asList("9", "7", "5", "4", "3", "2"), startFirst.getAllEnclosingIds());
-        assertEquals(Arrays.asList("11", "8", "5", "4", "3", "2"), startInnerFirst.getAllEnclosingIds());
-        assertEquals(Arrays.asList("42", "8", "5", "4", "3", "2"), startInnerSecond.getAllEnclosingIds());
+        assertEquals(Arrays.asList("7", "5", "4", "3", "2"), tailOfList(startFirst.getAllEnclosingIds()));
+        assertEquals(Arrays.asList("8", "5", "4", "3", "2"), tailOfList(startInnerFirst.getAllEnclosingIds()));
+        assertEquals(Arrays.asList("8", "5", "4", "3", "2"), tailOfList(startInnerSecond.getAllEnclosingIds());
+    }
+
+    private List<String> tailOfList(List<String> l) {
+        return Collections.unmodifiableList(l.subList(1, l.size()));
     }
 
     @Issue("JENKINS-46112")
