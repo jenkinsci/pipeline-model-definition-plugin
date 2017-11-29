@@ -24,10 +24,13 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+
 /**
  * A marker for classes that can be used in a {@code parallel} block.
  *
  * @author Andrew Bayer
  */
 public interface ModelASTParallelContent extends ModelASTMarkerInterface {
+    void validate(final ModelValidator validator, boolean isNested);
 }

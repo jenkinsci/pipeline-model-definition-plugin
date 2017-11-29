@@ -98,11 +98,8 @@ public final class ModelASTStage extends ModelASTElement implements ModelASTPara
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);
         }
-        if (parallel != null) {
-            parallel.validate(validator, true);
-        }
         for (ModelASTParallelContent content: parallelContent) {
-            content.validate(validator);
+            content.validate(validator, true);
         }
         if (agent != null) {
             agent.validate(validator);

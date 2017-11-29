@@ -50,6 +50,10 @@ public final class ModelASTParallelStageGroup extends ModelASTElement implements
         return o;
     }
 
+    public void validate(final ModelValidator validator, boolean isNested) {
+        validate(validator);
+    }
+
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
