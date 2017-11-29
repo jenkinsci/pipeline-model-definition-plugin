@@ -55,7 +55,8 @@ class Stage implements Serializable, ParallelContent {
 
     List<ParallelContent> parallelContent = []
 
-    Stages parallel
+    @Deprecated
+    transient Stages parallel
 
     boolean failFast
 

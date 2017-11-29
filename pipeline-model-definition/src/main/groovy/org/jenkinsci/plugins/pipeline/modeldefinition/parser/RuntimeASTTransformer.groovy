@@ -708,7 +708,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformParallelContent(@CheckForNull ModelASTStage original) {
-        if (isGroovyAST(original) && !original.parallelContent?.isEmpty()) {
+        if (isGroovyAST(original) && original?.parallelContent) {
             ListExpression argList = new ListExpression()
             original.parallelContent.each { c ->
                 if (c instanceof ModelASTStage) {
@@ -733,7 +733,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformParallelGroup(@CheckForNull ModelASTParallelStageGroup original) {
-        if (isGroovyAST(original) && !original.stages?.stages?.isEmpty()) {
+        if (isGroovyAST(original) && original?.stages?.stages) {
             return ctorX(ClassHelper.make(ParallelGroup.class),
                 args(constX(original.name), transformStages(original.stages)))
         }

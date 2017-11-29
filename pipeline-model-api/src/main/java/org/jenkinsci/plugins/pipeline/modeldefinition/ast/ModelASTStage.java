@@ -26,7 +26,8 @@ public final class ModelASTStage extends ModelASTElement implements ModelASTPara
     private ModelASTTools tools;
     private ModelASTEnvironment environment;
     private Boolean failFast;
-    private ModelASTStages parallel;
+    @Deprecated
+    private transient ModelASTStages parallel;
     private List<ModelASTParallelContent> parallelContent = new ArrayList<>();
 
     public ModelASTStage(Object sourceLocation) {
@@ -284,6 +285,11 @@ public final class ModelASTStage extends ModelASTElement implements ModelASTPara
         return parallel;
     }
 
+    @Deprecated
+    public void setParallel(ModelASTStages s) {
+        this.parallel = s;
+    }
+
     public List<ModelASTParallelContent> getParallelContent() {
         return parallelContent;
     }
@@ -303,7 +309,6 @@ public final class ModelASTStage extends ModelASTElement implements ModelASTPara
                 ", tools=" + tools +
                 ", environment=" + environment +
                 ", failFast=" + failFast +
-                ", parallel=" + parallel +
                 ", parallelContent=" + parallelContent +
                 "}";
     }
