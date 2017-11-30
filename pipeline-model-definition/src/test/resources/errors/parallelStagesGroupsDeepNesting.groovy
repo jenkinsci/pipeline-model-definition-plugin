@@ -28,23 +28,25 @@ pipeline {
         stage("foo") {
             parallel {
                 group("first-branch") {
-                    stage("first") {
-                        parallel {
-                            stage("first-and-one") {
-                                steps {
-                                    echo "This should never be reached"
+                    stages {
+                        stage("first") {
+                            parallel {
+                                stage("first-and-one") {
+                                    steps {
+                                        echo "This should never be reached"
+                                    }
                                 }
-                            }
-                            stage("first-and-two") {
-                                steps {
-                                    echo "This should also never be reached"
+                                stage("first-and-two") {
+                                    steps {
+                                        echo "This should also never be reached"
+                                    }
                                 }
                             }
                         }
-                    }
-                    stage("second") {
-                        steps {
-                            echo "Second stage"
+                        stage("second") {
+                            steps {
+                                echo "Second stage"
+                            }
                         }
                     }
                 }
