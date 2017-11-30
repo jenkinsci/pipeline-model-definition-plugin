@@ -173,11 +173,7 @@ class JSONParser implements Parser {
             if (j.node.hasNonNull("when")) {
                 g.when = parseWhen(j.append(JsonPointer.of("when")))
             }
-            g.stages = new ModelASTStages(j)
-            JsonTree stagesJson = j.append(JsonPointer.of("stages"))
-            stagesJson.node.eachWithIndex { JsonNode entry, int i ->
-                g.stages.stages.add(parseStage(stagesJson.append(JsonPointer.of(i))))
-            }
+            g.stages = parseStages(j.append(JsonPointer.of("stages")))
 
             return g
         } else {

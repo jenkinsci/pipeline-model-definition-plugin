@@ -303,7 +303,6 @@ class ModelParser implements Parser {
             return null
         }
         r.name = parseStringLiteral(nameExp)
-        r.stages = new ModelASTStages(stmt)
 
         def sectionsSeen = new HashSet<String>()
         def bodyExp = m.getArgument(1)
@@ -340,11 +339,8 @@ class ModelParser implements Parser {
                         case 'environment':
                             r.environment = parseEnvironment(s)
                             break
-                        case 'stage':
-                            ModelASTStage stage = parseStage(s)
-                            if (stage != null) {
-                                r.stages.stages.add(stage)
-                            }
+                        case 'stages':
+                            r.stages = parseStages(s)
                             break
                         default:
                             errorCollector.error(r, Messages.ModelParser_UnknownGroupSection(name))

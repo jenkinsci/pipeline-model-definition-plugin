@@ -154,7 +154,7 @@ class ModelInterpreter implements Serializable {
                         Utils.logToTaskListener("Stage '${content.name}' skipped due to earlier failure(s)")
                         Utils.markStageSkippedForFailure(content.name)
                         if (content instanceof ParallelGroup) {
-                            evaluateSequentialStages(root, content.stages, firstError).call()
+                            evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError).call()
                         }
                     }
                 })
@@ -164,7 +164,7 @@ class ModelInterpreter implements Serializable {
                         Utils.logToTaskListener("Stage '${content.name}' skipped due to earlier stage(s) marking the build as unstable")
                         Utils.markStageSkippedForUnstable(content.name)
                         if (content instanceof ParallelGroup) {
-                            evaluateSequentialStages(root, content.stages, firstError).call()
+                            evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError).call()
                         }
                     }
                 })
@@ -174,16 +174,13 @@ class ModelInterpreter implements Serializable {
                         Utils.logToTaskListener("Stage '${content.name}' skipped due to when conditional")
                         Utils.markStageSkippedForConditional(content.name)
                         if (content instanceof ParallelGroup) {
-                            evaluateSequentialStages(root, content.stages, firstError).call()
+                            evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError).call()
                         }
                     }
                 })
-            } else if (content instanceof Stage) {
+            } else {
                 parallelStages.put(content.name,
                     evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage))
-            } else if (content instanceof ParallelGroup) {
-                parallelStages.put(content.name,
-                    evaluateSequentialStages(root, content.stages, firstError))
             }
         }
         if (!parallelStages.isEmpty() && thisStage.failFast) {
@@ -250,7 +247,7 @@ class ModelInterpreter implements Serializable {
                                                     // Execute the actual stage and potential post-stage actions
                                                     executeSingleStage(root, asStage, parentAgent)
                                                 } else if (asGroup) {
-                                                    evaluateSequentialStages(root, asGroup.stages, firstError)
+                                                    evaluateSequentialStages(root, asGroup.stages, firstError).call()
                                                 }
                                             }
                                         }

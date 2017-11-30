@@ -69,7 +69,9 @@ public final class ModelASTParallelStageGroup extends AbstractModelASTParallelCo
         StringBuilder result = new StringBuilder();
         result.append(ELEMENT_NAME + "(\'").append(name.replace("'", "\\'")).append("\') {\n");
         result.append(super.toGroovy());
+        result.append("stages {\n");
         result.append(stages.toGroovy());
+        result.append("}\n");
         result.append("}\n");
         return result.toString();
     }

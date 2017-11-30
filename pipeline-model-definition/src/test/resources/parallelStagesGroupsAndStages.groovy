@@ -36,32 +36,34 @@ pipeline {
                     }
                 }
                 group("second") {
-                    stage("inner-first") {
-                        agent {
-                            label "second-agent"
-                        }
-                        tools {
-                            maven "apache-maven-3.0.1"
-                        }
-                        steps {
-                            echo "Second stage, ${WHICH_AGENT}"
-                            script {
-                                if (isUnix()) {
-                                    sh 'mvn --version'
-                                } else {
-                                    bat 'mvn --version'
+                    stages {
+                        stage("inner-first") {
+                            agent {
+                                label "second-agent"
+                            }
+                            tools {
+                                maven "apache-maven-3.0.1"
+                            }
+                            steps {
+                                echo "Second stage, ${WHICH_AGENT}"
+                                script {
+                                    if (isUnix()) {
+                                        sh 'mvn --version'
+                                    } else {
+                                        bat 'mvn --version'
+                                    }
                                 }
                             }
                         }
-                    }
-                    stage("inner-second") {
-                        when {
-                            expression {
-                                return false
+                        stage("inner-second") {
+                            when {
+                                expression {
+                                    return false
+                                }
                             }
-                        }
-                        steps {
-                            echo "WE SHOULD NEVER GET HERE"
+                            steps {
+                                echo "WE SHOULD NEVER GET HERE"
+                            }
                         }
                     }
                 }
@@ -69,7 +71,6 @@ pipeline {
         }
     }
 }
-
 
 
 
