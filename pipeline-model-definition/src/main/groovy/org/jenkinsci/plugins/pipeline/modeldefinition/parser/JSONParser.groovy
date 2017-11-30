@@ -149,12 +149,36 @@ class JSONParser implements Parser {
         return stages
     }
 
-    @CheckForNull ModelASTParallelContent parseParallelContent(JsonTree j) {
+    @CheckForNull AbstractModelASTParallelContent parseParallelContent(JsonTree j) {
         ModelASTParallelStageGroup g = new ModelASTParallelStageGroup(j)
 
         if (j.node.has("stages")) {
             g.name = j.node.get("name").asText()
-            g.stages = parseStages(j.append(JsonPointer.of("stages")))
+            if (j.node.has("agent")) {
+                g.agent = parseAgent(j.append(JsonPointer.of("agent")))
+            }
+
+            if (j.node.has("environment")) {
+                g.environment = parseEnvironment(j.append(JsonPointer.of("environment")))
+            }
+
+            if (j.node.has("tools")) {
+                g.tools = parseTools(j.append(JsonPointer.of("tools")))
+            }
+
+            if (j.node.hasNonNull("post")) {
+                g.post = parsePostStage(j.append(JsonPointer.of("post")))
+            }
+
+            if (j.node.hasNonNull("when")) {
+                g.when = parseWhen(j.append(JsonPointer.of("when")))
+            }
+            g.stages = new ModelASTStages(j)
+            JsonTree stagesJson = j.append(JsonPointer.of("stages"))
+            stagesJson.node.eachWithIndex { JsonNode entry, int i ->
+                g.stages.stages.add(parseStage(stagesJson.append(JsonPointer.of(i))))
+            }
+
             return g
         } else {
             return parseStage(j)

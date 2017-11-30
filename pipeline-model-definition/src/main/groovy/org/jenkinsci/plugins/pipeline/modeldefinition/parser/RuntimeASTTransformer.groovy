@@ -701,10 +701,10 @@ class RuntimeASTTransformer {
     }
 
     /**
-     * Generates the AST (to be CPS-transformed) for instantiating a list of {@link ParallelContent}.
+     * Generates the AST (to be CPS-transformed) for instantiating a list of {@link AbstractParallelContent}.
      *
      * @param original The parsed AST model of a stage
-     * @return The AST for a list of {@link ParallelContent}, or the constant null expression if the original
+     * @return The AST for a list of {@link AbstractParallelContent}, or the constant null expression if the original
      * cannot be transformed.
      */
     Expression transformParallelContent(@CheckForNull ModelASTStage original) {
@@ -735,7 +735,13 @@ class RuntimeASTTransformer {
     Expression transformParallelGroup(@CheckForNull ModelASTParallelStageGroup original) {
         if (isGroovyAST(original) && original?.stages?.stages) {
             return ctorX(ClassHelper.make(ParallelGroup.class),
-                args(constX(original.name), transformStages(original.stages)))
+                args(constX(original.name),
+                    transformAgent(original.agent),
+                    transformPostStage(original.post),
+                    transformStageConditionals(original.when),
+                    transformTools(original.tools),
+                    transformEnvironment(original.environment),
+                    transformStages(original.stages)))
         }
 
         return constX(null)

@@ -284,7 +284,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTParallelContent parseParallelContent(Statement stmt) {
+    @Nonnull AbstractModelASTParallelContent parseParallelContent(Statement stmt) {
         def r = new ModelASTParallelStageGroup(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -302,10 +302,56 @@ class ModelParser implements Parser {
             errorCollector.error(r, Messages.ModelParser_ExpectedParallelGroupName())
             return null
         }
-
         r.name = parseStringLiteral(nameExp)
+        r.stages = new ModelASTStages(stmt)
 
-        r.stages = parseStages(stmt)
+        def sectionsSeen = new HashSet<String>()
+        def bodyExp = m.getArgument(1)
+        if (bodyExp == null || !(bodyExp instanceof ClosureExpression)) {
+            errorCollector.error(r, Messages.ModelParser_GroupWithoutBlock())
+        } else {
+            eachStatement(((ClosureExpression)bodyExp).code) { s ->
+                def mc = matchMethodCall(s)
+                if (mc == null) {
+                    errorCollector.error(r, Messages.ModelParser_InvalidGroupSectionDefinition(getSourceText(s)))
+                } else {
+                    def name = parseMethodName(mc)
+
+                    // Here, method name is a "section" name in the "group" closure, which must be unique - other than
+                    // "stage"
+                    if (name != "stage" && !sectionsSeen.add(name)) {
+                        // Also an error that we couldn't actually detect at model evaluation time.
+                        errorCollector.error(r, Messages.Parser_MultipleOfSection(name))
+                    }
+                    // TODO: Might be able to combine some of this with the equivalent in parseStage
+                    switch (name) {
+                        case 'agent':
+                            r.agent = parseAgent(s)
+                            break
+                        case 'when':
+                            r.when = parseWhen(s)
+                            break
+                        case 'post':
+                            r.post = parsePostStage(s)
+                            break
+                        case 'tools':
+                            r.tools = parseTools(s)
+                            break
+                        case 'environment':
+                            r.environment = parseEnvironment(s)
+                            break
+                        case 'stage':
+                            ModelASTStage stage = parseStage(s)
+                            if (stage != null) {
+                                r.stages.stages.add(stage)
+                            }
+                            break
+                        default:
+                            errorCollector.error(r, Messages.ModelParser_UnknownGroupSection(name))
+                    }
+                }
+            }
+        }
 
         return r
     }

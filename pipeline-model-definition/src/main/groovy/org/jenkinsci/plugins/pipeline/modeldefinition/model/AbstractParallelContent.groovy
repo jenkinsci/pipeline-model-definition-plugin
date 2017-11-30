@@ -21,27 +21,59 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
- * Container for sequential group of stages to run in parallel with other stages or groups.
+ * An individual stage or group that can be used inside a stage's parallel block
+ *
+ * @author Andrew Bayer
  */
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class ParallelGroup extends AbstractParallelContent {
-    Stages stages
+abstract class AbstractParallelContent implements Serializable {
+
+    String name
+
+    Agent agent
+
+    PostStage post
+
+    StageConditionals when
+
+    Tools tools
+
+    Environment environment
 
     @Whitelisted
-    ParallelGroup(String name, Agent agent, PostStage post, StageConditionals when, Tools tools,
-                  Environment environment, Stages stages) {
-        super(name, agent, post, when, tools, environment)
-        this.stages = stages
+    AbstractParallelContent(String name, Agent agent, PostStage post, StageConditionals when, Tools tools,
+                            Environment environment) {
+        this.name = name
+        this.agent = agent
+        this.post = post
+        this.when = when
+        this.tools = tools
+        this.environment = environment
+    }
+
+    /**
+     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
+     * suitable for use with the withEnv step.
+     *
+     * @return a map of keys to closures.
+     */
+    Map<String,Closure> getEnvVars(CpsScript script) {
+        if (environment != null) {
+            environment.envResolver.setScript(script)
+            return environment.envResolver.closureMap
+        } else {
+            return [:]
+        }
     }
 }

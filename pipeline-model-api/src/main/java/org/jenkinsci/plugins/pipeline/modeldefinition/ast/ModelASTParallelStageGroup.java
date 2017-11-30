@@ -32,11 +32,10 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTParallelStageGroup extends ModelASTElement implements ModelASTParallelContent {
+public final class ModelASTParallelStageGroup extends AbstractModelASTParallelContent {
     public final static String ELEMENT_NAME = "group";
 
     private ModelASTStages stages;
-    private String name;
 
     public ModelASTParallelStageGroup(Object sourceLocation) {
         super(sourceLocation);
@@ -44,12 +43,12 @@ public final class ModelASTParallelStageGroup extends ModelASTElement implements
 
     @Override
     public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        o.put("name", name);
+        JSONObject o = super.toJSON();
         o.put("stages", stages != null ? stages.toJSON() : null);
         return o;
     }
 
+    @Override
     public void validate(final ModelValidator validator, boolean isNested) {
         validate(validator);
     }
@@ -57,6 +56,9 @@ public final class ModelASTParallelStageGroup extends ModelASTElement implements
     @Override
     public void validate(final ModelValidator validator) {
         validator.validateElement(this);
+
+        super.validate(validator);
+
         if (stages != null) {
             stages.validate(validator, true);
         }
@@ -66,6 +68,7 @@ public final class ModelASTParallelStageGroup extends ModelASTElement implements
     public String toGroovy() {
         StringBuilder result = new StringBuilder();
         result.append(ELEMENT_NAME + "(\'").append(name.replace("'", "\\'")).append("\') {\n");
+        result.append(super.toGroovy());
         result.append(stages.toGroovy());
         result.append("}\n");
         return result.toString();
@@ -87,19 +90,11 @@ public final class ModelASTParallelStageGroup extends ModelASTElement implements
         this.stages = stages;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     @Override
     public String toString() {
         return "ModelASTParallelStageGroup{" +
-                "name=" + name +
-                "stages=" + stages +
+                super.toString() +
+                ", stages=" + stages +
                 "}";
     }
 
@@ -117,10 +112,6 @@ public final class ModelASTParallelStageGroup extends ModelASTElement implements
 
         ModelASTParallelStageGroup that = (ModelASTParallelStageGroup) o;
 
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-
         return getStages() != null ? getStages().equals(that.getStages()) : that.getStages() == null;
 
     }
@@ -128,7 +119,6 @@ public final class ModelASTParallelStageGroup extends ModelASTElement implements
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
         result = 31 * result + (getStages() != null ? getStages().hashCode() : 0);
         return result;
     }

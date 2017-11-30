@@ -28,7 +28,7 @@ import hudson.model.ParametersDefinitionProperty;
 import jenkins.model.BuildDiscarderProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTParallelContent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.AbstractModelASTParallelContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -118,14 +118,14 @@ public class DeclarativeUpgradeTest extends AbstractDeclarativeTest {
         assertNull(parentStage.getParallel());
 
         // Make sure parentStage.parallelContent is not null and has two elements
-        List<ModelASTParallelContent> parallelContent = parentStage.getParallelContent();
+        List<AbstractModelASTParallelContent> parallelContent = parentStage.getParallelContent();
         assertNotNull(parallelContent);
         assertEquals(2, parallelContent.size());
 
         // Get the two parallel stages.
         ModelASTStage branchOne = null;
         ModelASTStage branchTwo = null;
-        for (ModelASTParallelContent s : parallelContent) {
+        for (AbstractModelASTParallelContent s : parallelContent) {
             // We don't expect to find any ModelASTParallelStageGroup here.
             assertTrue(s instanceof ModelASTStage);
             if ("branch-one".equals(s.getName())) {

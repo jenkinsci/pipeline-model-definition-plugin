@@ -456,6 +456,21 @@
         "name": {
           "type": "string"
         },
+        "agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "when": {
+          "$ref": "#/definitions/when"
+        },
+        "post": {
+          "$ref": "#/definitions/post"
+        },
+        "tools": {
+          "$ref": "#/definitions/tools"
+        },
+        "environment": {
+          "$ref": "#/definitions/environment"
+        },
         "stages": {
           "$ref": "#/definitions/stages"
         }

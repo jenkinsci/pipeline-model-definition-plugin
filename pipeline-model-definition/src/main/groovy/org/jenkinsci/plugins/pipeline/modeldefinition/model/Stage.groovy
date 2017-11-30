@@ -37,23 +37,11 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class Stage implements Serializable, ParallelContent {
-
-    String name
+class Stage extends AbstractParallelContent {
 
     StepsBlock steps
 
-    Agent agent
-
-    PostStage post
-
-    StageConditionals when
-
-    Tools tools
-
-    Environment environment
-
-    List<ParallelContent> parallelContent = []
+    List<AbstractParallelContent> parallelContent = []
 
     @Deprecated
     transient Stages parallel
@@ -68,14 +56,9 @@ class Stage implements Serializable, ParallelContent {
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
-          Environment environment, boolean failFast, List<ParallelContent> parallelContent) {
-        this.name = name
+          Environment environment, boolean failFast, List<AbstractParallelContent> parallelContent) {
+        super(name, agent, post, when, tools, environment)
         this.steps = steps
-        this.agent = agent
-        this.post = post
-        this.when = when
-        this.tools = tools
-        this.environment = environment
         this.failFast = failFast
         if (parallelContent != null) {
             this.parallelContent.addAll(parallelContent)
@@ -91,20 +74,5 @@ class Stage implements Serializable, ParallelContent {
             this.parallel = null
         }
         return this
-    }
-
-    /**
-     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
-     * suitable for use with the withEnv step.
-     *
-     * @return a map of keys to closures.
-     */
-    Map<String,Closure> getEnvVars(CpsScript script) {
-        if (environment != null) {
-            environment.envResolver.setScript(script)
-            return environment.envResolver.closureMap
-        } else {
-            return [:]
-        }
     }
 }
