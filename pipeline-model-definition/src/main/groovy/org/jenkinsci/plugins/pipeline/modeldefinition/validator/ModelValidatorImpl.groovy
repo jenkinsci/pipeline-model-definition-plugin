@@ -677,7 +677,12 @@ class ModelValidatorImpl implements ModelValidator {
 
     boolean validateElement(@Nonnull ModelASTParallelStageGroup group) {
         boolean valid = true
-        // No-op currently.
+
+        if (group.stages == null) {
+            errorCollector.error(group, Messages.ModelValidatorImpl_NoStages())
+            valid = false
+        }
+
         return validateFromContributors(group, valid)
     }
 

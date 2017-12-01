@@ -92,6 +92,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void emptyStagesInGroup() throws Exception {
+        expectError("emptyStagesInGroup")
+                .logContains(Messages.ModelValidatorImpl_NoStages())
+                .go();
+    }
+
     @Test
     public void emptyJobProperties() throws Exception {
         expectError("emptyJobProperties")
