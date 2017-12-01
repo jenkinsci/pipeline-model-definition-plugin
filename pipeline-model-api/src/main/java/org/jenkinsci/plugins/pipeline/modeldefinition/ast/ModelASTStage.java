@@ -203,6 +203,7 @@ public final class ModelASTStage extends ModelASTElement {
 
     @Override
     public void removeSourceLocation() {
+        super.removeSourceLocation();
         if (agent != null) {
             agent.removeSourceLocation();
         }
