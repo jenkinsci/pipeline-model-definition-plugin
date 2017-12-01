@@ -27,7 +27,7 @@ pipeline {
     stages {
         stage("foo") {
             parallel {
-                group("first-branch") {
+                stage("first-branch") {
                     stages {
                         stage("first") {
                             parallel {

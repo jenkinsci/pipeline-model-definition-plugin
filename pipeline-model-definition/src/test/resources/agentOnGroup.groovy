@@ -34,7 +34,7 @@ pipeline {
                         echo "Solo stage agent: ${WHICH_AGENT}"
                     }
                 }
-                group("other-agent") {
+                stage("other-agent") {
                     agent {
                         label "other-docker"
                     }

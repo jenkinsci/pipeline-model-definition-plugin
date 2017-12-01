@@ -39,7 +39,7 @@ pipeline {
                         echo "This is a solo stage. It is here."
                     }
                 }
-                group("when-group") {
+                stage("when-group") {
                     when {
                         expression {
                             echo "Should I run?"

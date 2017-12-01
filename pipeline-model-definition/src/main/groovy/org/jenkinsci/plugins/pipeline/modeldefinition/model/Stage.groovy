@@ -37,11 +37,25 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class Stage extends AbstractParallelContent {
+class Stage implements Serializable {
+
+    String name
+
+    Agent agent
+
+    PostStage post
+
+    StageConditionals when
+
+    Tools tools
+
+    Environment environment
 
     StepsBlock steps
 
-    List<AbstractParallelContent> parallelContent = []
+    Stages stages
+
+    List<Stage> parallelContent = []
 
     @Deprecated
     transient Stages parallel
@@ -51,15 +65,21 @@ class Stage extends AbstractParallelContent {
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
-        this(name, steps, agent, post, when, tools, environment, failFast, parallel?.stages)
+        this(name, steps, agent, post, when, tools, environment, failFast, parallel?.stages, null)
     }
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
-          Environment environment, boolean failFast, List<AbstractParallelContent> parallelContent) {
-        super(name, agent, post, when, tools, environment)
+          Environment environment, boolean failFast, List<Stage> parallelContent, Stages stages) {
+        this.name = name
+        this.agent = agent
+        this.post = post
+        this.when = when
+        this.tools = tools
+        this.environment = environment
         this.steps = steps
         this.failFast = failFast
+        this.stages = stages
         if (parallelContent != null) {
             this.parallelContent.addAll(parallelContent)
         }
@@ -74,5 +94,20 @@ class Stage extends AbstractParallelContent {
             this.parallel = null
         }
         return this
+    }
+
+    /**
+     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
+     * suitable for use with the withEnv step.
+     *
+     * @return a map of keys to closures.
+     */
+    Map<String,Closure> getEnvVars(CpsScript script) {
+        if (environment != null) {
+            environment.envResolver.setScript(script)
+            return environment.envResolver.closureMap
+        } else {
+            return [:]
+        }
     }
 }

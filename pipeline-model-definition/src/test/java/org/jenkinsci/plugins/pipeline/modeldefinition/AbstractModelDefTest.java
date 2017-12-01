@@ -221,7 +221,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
-        result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_BothStagesAndSteps("foo")});
+        result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
 
         // TODO: Better error messaging for these schema violations.

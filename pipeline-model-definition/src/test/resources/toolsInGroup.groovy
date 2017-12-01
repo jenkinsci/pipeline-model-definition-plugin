@@ -37,7 +37,7 @@ pipeline {
                         echo "Solo: ${getMavenVersion()}"
                     }
                 }
-                group("group") {
+                stage("group") {
                     tools {
                         maven "apache-maven-3.5.0"
                     }

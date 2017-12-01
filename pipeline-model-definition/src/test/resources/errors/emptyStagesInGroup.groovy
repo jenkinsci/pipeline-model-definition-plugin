@@ -32,8 +32,9 @@ pipeline {
                         echo "hi"
                     }
                 }
-                group("empty-group") {
-
+                stage("empty-group") {
+                    stages {
+                    }
                 }
             }
         }

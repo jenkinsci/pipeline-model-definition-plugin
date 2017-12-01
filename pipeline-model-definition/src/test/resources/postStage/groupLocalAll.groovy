@@ -34,7 +34,7 @@ pipeline {
                         echo "Hi there"
                     }
                 }
-                group("success-group") {
+                stage("success-group") {
                     stages {
                         stage("first-in-group") {
                             steps {

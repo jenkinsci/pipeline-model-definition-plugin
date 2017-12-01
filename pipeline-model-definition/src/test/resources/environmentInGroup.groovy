@@ -41,7 +41,7 @@ pipeline {
                         echo "Solo: FOO is $FOO"
                     }
                 }
-                group("group") {
+                stage("group") {
                     environment {
                         FOO = "BAR"
                     }

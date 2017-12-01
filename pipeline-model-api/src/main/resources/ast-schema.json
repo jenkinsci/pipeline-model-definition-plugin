@@ -449,53 +449,6 @@
       ],
       "additionalProperties": false
     },
-    "parallelGroup": {
-      "description": "A group of stages to run consecutively as part of a parallel stage execution",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "agent": {
-          "$ref": "#/definitions/agent"
-        },
-        "when": {
-          "$ref": "#/definitions/when"
-        },
-        "post": {
-          "$ref": "#/definitions/post"
-        },
-        "tools": {
-          "$ref": "#/definitions/tools"
-        },
-        "environment": {
-          "$ref": "#/definitions/environment"
-        },
-        "stages": {
-          "$ref": "#/definitions/stages"
-        }
-      },
-      "required": [
-        "name",
-        "stages"
-      ],
-      "additionalProperties": false
-    },
-    "parallelContent": {
-      "description": "A list of parallel content - either stages or groups of stages",
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/stage"
-          },
-          {
-            "$ref": "#/definitions/parallelGroup"
-          }
-        ]
-      }
-    },
     "stage": {
       "description": "A single Pipeline stage, with a name and either one or more branches or one or more nested stages",
       "type": "object",
@@ -528,7 +481,10 @@
           }
         },
         "parallel": {
-          "$ref": "#/definitions/parallelContent"
+          "$ref": "#/definitions/stages"
+        },
+        "stages": {
+          "$ref": "#/definitions/stages"
         }
       },
       "required": [

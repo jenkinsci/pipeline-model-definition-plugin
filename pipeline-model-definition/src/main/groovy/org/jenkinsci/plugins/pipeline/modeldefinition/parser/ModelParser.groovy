@@ -284,74 +284,6 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull AbstractModelASTParallelContent parseParallelContent(Statement stmt) {
-        def r = new ModelASTParallelStageGroup(stmt)
-
-        def m = matchBlockStatement(stmt)
-        if (m?.methodName?.equals("stage")) {
-            return parseStage(stmt)
-        } else if (m?.methodName != ModelASTParallelStageGroup.ELEMENT_NAME) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(r, Messages.ModelParser_ExpectedParallelGroup())
-            return null
-        }
-
-        def nameExp = m.getArgument(0)
-        if (nameExp==null) {
-            // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-            errorCollector.error(r, Messages.ModelParser_ExpectedParallelGroupName())
-            return null
-        }
-        r.name = parseStringLiteral(nameExp)
-
-        def sectionsSeen = new HashSet<String>()
-        def bodyExp = m.getArgument(1)
-        if (bodyExp == null || !(bodyExp instanceof ClosureExpression)) {
-            errorCollector.error(r, Messages.ModelParser_GroupWithoutBlock())
-        } else {
-            eachStatement(((ClosureExpression)bodyExp).code) { s ->
-                def mc = matchMethodCall(s)
-                if (mc == null) {
-                    errorCollector.error(r, Messages.ModelParser_InvalidGroupSectionDefinition(getSourceText(s)))
-                } else {
-                    def name = parseMethodName(mc)
-
-                    // Here, method name is a "section" name in the "group" closure, which must be unique - other than
-                    // "stage"
-                    if (name != "stage" && !sectionsSeen.add(name)) {
-                        // Also an error that we couldn't actually detect at model evaluation time.
-                        errorCollector.error(r, Messages.Parser_MultipleOfSection(name))
-                    }
-                    // TODO: Might be able to combine some of this with the equivalent in parseStage
-                    switch (name) {
-                        case 'agent':
-                            r.agent = parseAgent(s)
-                            break
-                        case 'when':
-                            r.when = parseWhen(s)
-                            break
-                        case 'post':
-                            r.post = parsePostStage(s)
-                            break
-                        case 'tools':
-                            r.tools = parseTools(s)
-                            break
-                        case 'environment':
-                            r.environment = parseEnvironment(s)
-                            break
-                        case 'stages':
-                            r.stages = parseStages(s)
-                            break
-                        default:
-                            errorCollector.error(r, Messages.ModelParser_UnknownGroupSection(name))
-                    }
-                }
-            }
-        }
-
-        return r
-    }
-
     @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt)
 
@@ -628,7 +560,7 @@ class ModelParser implements Parser {
                                 errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
                             } else {
                                 eachStatement(parallelStmt.body.code) {
-                                    stage.parallelContent.add(parseParallelContent(it))
+                                    stage.parallelContent.add(parseStage(it))
                                 }
                             }
                             break
@@ -642,6 +574,9 @@ class ModelParser implements Parser {
                             } else {
                                 stage.setFailFast((Boolean)exp.value)
                             }
+                            break
+                        case 'stages':
+                            stage.stages = parseStages(s)
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))

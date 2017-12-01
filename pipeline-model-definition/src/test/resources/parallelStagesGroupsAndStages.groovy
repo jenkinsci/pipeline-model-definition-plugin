@@ -35,7 +35,7 @@ pipeline {
                         echo "First stage, ${WHICH_AGENT}"
                     }
                 }
-                group("second") {
+                stage("second") {
                     stages {
                         stage("inner-first") {
                             agent {

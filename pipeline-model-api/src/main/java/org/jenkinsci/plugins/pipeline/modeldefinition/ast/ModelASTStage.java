@@ -17,12 +17,19 @@ import javax.annotation.Nonnull;
  * @author Andrew Bayer
  * @see ModelASTPipelineDef
  */
-public final class ModelASTStage extends AbstractModelASTParallelContent {
+public final class ModelASTStage extends ModelASTElement {
+    protected String name;
+    protected ModelASTAgent agent;
+    protected ModelASTPostStage post;
+    protected ModelASTWhen when;
+    protected ModelASTTools tools;
+    protected ModelASTEnvironment environment;
+    private ModelASTStages stages;
     private List<ModelASTBranch> branches = new ArrayList<>();
     private Boolean failFast;
     @Deprecated
     private transient ModelASTStages parallel;
-    private List<AbstractModelASTParallelContent> parallelContent = new ArrayList<>();
+    private List<ModelASTStage> parallelContent = new ArrayList<>();
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -42,11 +49,34 @@ public final class ModelASTStage extends AbstractModelASTParallelContent {
 
     @Override
     public JSONObject toJSON() {
-        JSONObject o = super.toJSON();
+        JSONObject o = new JSONObject();
+        o.accumulate("name", name);
+
+        if (agent != null) {
+            o.accumulate("agent", agent.toJSON());
+        }
+        if (when != null) {
+            o.accumulate("when", when.toJSON());
+        }
+
+        if (post != null) {
+            o.accumulate("post", post.toJSON());
+        }
+
+        if (tools != null) {
+            o.accumulate("tools", tools.toJSON());
+        }
+
+        if (environment != null) {
+            o.accumulate("environment", environment.toJSON());
+        }
+        if (stages != null) {
+            o.accumulate("stages", stages.toJSON());
+        }
         if (branches.isEmpty()) {
             if (!parallelContent.isEmpty()) {
                 final JSONArray a = new JSONArray();
-                for (AbstractModelASTParallelContent content : parallelContent) {
+                for (ModelASTStage content : parallelContent) {
                     a.add(content.toJSON());
                 }
                 o.accumulate("parallel", a);
@@ -71,16 +101,33 @@ public final class ModelASTStage extends AbstractModelASTParallelContent {
         validate(validator, false);
     }
 
-    @Override
     public void validate(final ModelValidator validator, boolean isNested) {
         validator.validateElement(this, isNested);
 
-        super.validate(validator);
+        if (agent != null) {
+            agent.validate(validator);
+        }
+        if (when != null) {
+            when.validate(validator);
+        }
+        if (post != null) {
+            post.validate(validator);
+        }
+        if (tools != null) {
+            tools.validate(validator);
+        }
+        if (environment != null) {
+            environment.validate(validator);
+        }
+
+        if (stages != null) {
+            stages.validate(validator, true);
+        }
 
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);
         }
-        for (AbstractModelASTParallelContent content: parallelContent) {
+        for (ModelASTStage content: parallelContent) {
             content.validate(validator, true);
         }
     }
@@ -90,14 +137,33 @@ public final class ModelASTStage extends AbstractModelASTParallelContent {
         StringBuilder result = new StringBuilder();
         // TODO decide if we need to support multiline names
         result.append("stage(\'").append(name.replace("'", "\\'")).append("\') {\n");
-        result.append(super.toGroovy());
+        if (agent != null) {
+            result.append(agent.toGroovy());
+        }
+        if (when != null) {
+            result.append(when.toGroovy());
+        }
+        if (tools != null) {
+            result.append(tools.toGroovy());
+        }
+        if (environment != null) {
+            result.append(environment.toGroovy());
+        }
+        if (post != null) {
+            result.append(post.toGroovy());
+        }
+        if (stages != null) {
+            result.append("stages {\n");
+            result.append(stages.toGroovy());
+            result.append("}\n");
+        }
         if (branches.isEmpty()) {
             if (failFast != null && failFast) {
                 result.append("failFast true\n");
             }
             if (!parallelContent.isEmpty()) {
                 result.append("parallel {\n");
-                for (AbstractModelASTParallelContent content : parallelContent) {
+                for (ModelASTStage content : parallelContent) {
                     result.append(content.toGroovy());
                 }
                 result.append("}\n");
@@ -137,16 +203,89 @@ public final class ModelASTStage extends AbstractModelASTParallelContent {
 
     @Override
     public void removeSourceLocation() {
-        super.removeSourceLocation();
+        if (agent != null) {
+            agent.removeSourceLocation();
+        }
+        if (when != null) {
+            when.removeSourceLocation();
+        }
+        if (post != null) {
+            post.removeSourceLocation();
+        }
+        if (tools != null) {
+            tools.removeSourceLocation();
+        }
+        if (environment != null) {
+            environment.removeSourceLocation();
+        }
+        if (stages != null) {
+            stages.removeSourceLocation();
+        }
         for (ModelASTBranch branch: branches) {
             branch.removeSourceLocation();
         }
         if (parallel != null) {
             parallel.removeSourceLocation();
         }
-        for (AbstractModelASTParallelContent content : parallelContent) {
+        for (ModelASTStage content : parallelContent) {
             content.removeSourceLocation();
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public ModelASTAgent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(ModelASTAgent agent) {
+        this.agent = agent;
+    }
+
+    public ModelASTPostStage getPost() {
+        return post;
+    }
+
+    public void setPost(ModelASTPostStage post) {
+        this.post = post;
+    }
+
+    public ModelASTWhen getWhen() {
+        return when;
+    }
+
+    public void setWhen(ModelASTWhen when) {
+        this.when = when;
+    }
+
+    public ModelASTTools getTools() {
+        return tools;
+    }
+
+    public void setTools(ModelASTTools tools) {
+        this.tools = tools;
+    }
+
+    public ModelASTEnvironment getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(ModelASTEnvironment environment) {
+        this.environment = environment;
+    }
+
+    public ModelASTStages getStages() {
+        return stages;
+    }
+
+    public void setStages(ModelASTStages stages) {
+        this.stages = stages;
     }
 
     public List<ModelASTBranch> getBranches() {
@@ -175,18 +314,24 @@ public final class ModelASTStage extends AbstractModelASTParallelContent {
         this.parallel = s;
     }
 
-    public List<AbstractModelASTParallelContent> getParallelContent() {
+    public List<ModelASTStage> getParallelContent() {
         return parallelContent;
     }
 
-    public void setParallelContent(List<AbstractModelASTParallelContent> parallelContent) {
+    public void setParallelContent(List<ModelASTStage> parallelContent) {
         this.parallelContent = parallelContent;
     }
 
     @Override
     public String toString() {
         return "ModelASTStage{" +
-                super.toString() +
+                "name='" + name + '\'' +
+                ", agent=" + agent +
+                ", when=" + when +
+                ", post=" + post +
+                ", tools=" + tools +
+                ", environment=" + environment +
+                ", stages=" + stages +
                 ", branches=" + branches +
                 ", failFast=" + failFast +
                 ", parallelContent=" + parallelContent +
@@ -207,6 +352,27 @@ public final class ModelASTStage extends AbstractModelASTParallelContent {
 
         ModelASTStage that = (ModelASTStage) o;
 
+        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
+            return false;
+        }
+        if (getAgent() != null ? !getAgent().equals(that.getAgent()) : that.getAgent() != null) {
+            return false;
+        }
+        if (getPost() != null ? !getPost().equals(that.getPost()) : that.getPost() != null) {
+            return false;
+        }
+        if (getWhen() != null ? !getWhen().equals(that.getWhen()) : that.getWhen() != null) {
+            return false;
+        }
+        if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
+            return false;
+        }
+        if (getEnvironment() != null ? !getEnvironment().equals(that.getEnvironment()) : that.getEnvironment() != null) {
+            return false;
+        }
+        if (getStages() != null ? !getStages().equals(that.getStages()) : that.getStages() != null) {
+            return false;
+        }
         if (getFailFast() != null ? !getFailFast().equals(that.getFailFast()) : that.getFailFast() != null) {
             return false;
         }
@@ -224,6 +390,13 @@ public final class ModelASTStage extends AbstractModelASTParallelContent {
     @Override
     public int hashCode() {
         int result = super.hashCode();
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getAgent() != null ? getAgent().hashCode() : 0);
+        result = 31 * result + (getWhen() != null ? getWhen().hashCode() : 0);
+        result = 31 * result + (getPost() != null ? getPost().hashCode() : 0);
+        result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
+        result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
+        result = 31 * result + (getStages() != null ? getStages().hashCode() : 0);
         result = 31 * result + (getBranches() != null ? getBranches().hashCode() : 0);
         result = 31 * result + (getFailFast() != null ? getFailFast().hashCode() : 0);
         result = 31 * result + (getParallel() != null ? getParallel().hashCode() : 0);

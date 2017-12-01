@@ -635,6 +635,17 @@ class ModelValidatorImpl implements ModelValidator {
 
     boolean validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
         boolean valid = true
+        def stepsStagesParallelCount = 0
+        if (!stage.branches.isEmpty()) {
+            stepsStagesParallelCount += 1
+        }
+        if (!stage.parallelContent.isEmpty()) {
+            stepsStagesParallelCount += 1
+        }
+        if (stage.stages != null) {
+            stepsStagesParallelCount += 1
+        }
+
         if (isNested && (stage.branches.size() > 1 || !stage.parallelContent?.isEmpty())) {
             ModelASTElement errorElement
             if (!stage.parallelContent.isEmpty()) {
@@ -649,10 +660,10 @@ class ModelValidatorImpl implements ModelValidator {
             }
             errorCollector.error(errorElement, Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
             valid = false
-        } else if (!stage.branches.isEmpty() && !stage.parallelContent.isEmpty()) {
-            errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))
+        } else if (stepsStagesParallelCount > 1) {
+            errorCollector.error(stage, Messages.ModelValidatorImpl_TwoOfStepsStagesParallel(stage.name))
             valid = false
-        } else if (stage.branches.isEmpty() && stage.parallelContent.isEmpty()) {
+        } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
         } else if (!stage.parallelContent.isEmpty()) {
@@ -673,17 +684,6 @@ class ModelValidatorImpl implements ModelValidator {
         }
 
         return validateFromContributors(stage, valid, isNested)
-    }
-
-    boolean validateElement(@Nonnull ModelASTParallelStageGroup group) {
-        boolean valid = true
-
-        if (group.stages == null) {
-            errorCollector.error(group, Messages.ModelValidatorImpl_NoStages())
-            valid = false
-        }
-
-        return validateFromContributors(group, valid)
     }
 
     boolean validateElement(@Nonnull ModelASTStages stages) {

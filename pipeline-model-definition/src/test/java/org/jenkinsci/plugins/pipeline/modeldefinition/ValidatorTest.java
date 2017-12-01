@@ -666,7 +666,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void parallelStagesAndSteps() throws Exception {
         expectError("parallelStagesAndSteps")
-                .logContains(Messages.ModelValidatorImpl_BothStagesAndSteps("foo"))
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
                 .go();
     }
 

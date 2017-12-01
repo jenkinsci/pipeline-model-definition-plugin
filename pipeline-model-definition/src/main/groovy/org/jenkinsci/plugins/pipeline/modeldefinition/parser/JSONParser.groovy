@@ -149,38 +149,6 @@ class JSONParser implements Parser {
         return stages
     }
 
-    @CheckForNull AbstractModelASTParallelContent parseParallelContent(JsonTree j) {
-        ModelASTParallelStageGroup g = new ModelASTParallelStageGroup(j)
-
-        if (j.node.has("stages")) {
-            g.name = j.node.get("name").asText()
-            if (j.node.has("agent")) {
-                g.agent = parseAgent(j.append(JsonPointer.of("agent")))
-            }
-
-            if (j.node.has("environment")) {
-                g.environment = parseEnvironment(j.append(JsonPointer.of("environment")))
-            }
-
-            if (j.node.has("tools")) {
-                g.tools = parseTools(j.append(JsonPointer.of("tools")))
-            }
-
-            if (j.node.hasNonNull("post")) {
-                g.post = parsePostStage(j.append(JsonPointer.of("post")))
-            }
-
-            if (j.node.hasNonNull("when")) {
-                g.when = parseWhen(j.append(JsonPointer.of("when")))
-            }
-            g.stages = parseStages(j.append(JsonPointer.of("stages")))
-
-            return g
-        } else {
-            return parseStage(j)
-        }
-    }
-
     @CheckForNull ModelASTStage parseStage(JsonTree j) {
         ModelASTStage stage = new ModelASTStage(j)
 
@@ -192,7 +160,7 @@ class JSONParser implements Parser {
         if (j.node.has("parallel")) {
             JsonTree content = j.append(JsonPointer.of("parallel"))
             content?.node?.eachWithIndex{ JsonNode entry, int i ->
-                stage.parallelContent.add(parseParallelContent(content.append(JsonPointer.of(i))))
+                stage.parallelContent.add(parseStage(content.append(JsonPointer.of(i))))
             }
         }
 
@@ -201,6 +169,9 @@ class JSONParser implements Parser {
             stage.branches.add(parseBranch(branches.append(JsonPointer.of(i))))
         }
 
+        if (j.node.has("stages")) {
+            stage.stages = parseStages(j.append(JsonPointer.of("stages")))
+        }
         if (j.node.has("failFast") && (stage.branches.size() > 1 || j.node.has("parallel")))  {
             stage.failFast = j.node.get("failFast")?.asBoolean()
         }
