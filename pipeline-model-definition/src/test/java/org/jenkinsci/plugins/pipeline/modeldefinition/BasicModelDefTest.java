@@ -1356,4 +1356,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.buildAndAssertSuccess(j2);
         assertNull(j2.getAction(DeclarativeJobAction.class));
     }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void topLevelStageGroup() throws Exception {
+        expect("topLevelStageGroup")
+                .logContains("[Pipeline] { (foo)",
+                        "In stage bar in group foo",
+                        "In stage baz in group foo")
+                .go();
+    }
 }

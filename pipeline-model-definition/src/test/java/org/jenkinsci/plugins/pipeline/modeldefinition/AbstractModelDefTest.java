@@ -166,7 +166,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "when/changelog/changeset",
             "backslashReductionInEnv",
             "parallelStagesFailFast",
-            "parallelStagesGroupsAndStages"
+            "parallelStagesGroupsAndStages",
+            "topLevelStageGroup",
+            "agentOnGroup"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -222,7 +224,13 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
         result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"parallelStagesAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"parallelStepsAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"parallelStagesStepsAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
+        result.add(new Object[]{"parallelStagesDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"parallelStagesAndGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"topLevelStageGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
 
         // TODO: Better error messaging for these schema violations.
         result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});

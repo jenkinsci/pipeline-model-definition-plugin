@@ -678,6 +678,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41334")
+    @Test
+    public void topLevelStageGroupsDeepNesting() throws Exception {
+        expectError("topLevelStageGroupsDeepNesting")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+                .go();
+    }
+
     @Issue("JENKINS-46809")
     @Test
     public void parallelStagesGroupsDeepNesting() throws Exception {
@@ -830,6 +838,30 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void specificDescribableMatch() throws Exception {
         expectError("specificDescribableMatch")
                 .logContains(Messages.ModelValidatorImpl_InvalidStepParameter("upstreamWhat", "upstreamProjects"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesAndGroups() throws Exception {
+        expectError("parallelStagesAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStepsAndGroups() throws Exception {
+        expectError("parallelStepsAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesStepsAndGroups() throws Exception {
+        expectError("parallelStagesStepsAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
                 .go();
     }
 }

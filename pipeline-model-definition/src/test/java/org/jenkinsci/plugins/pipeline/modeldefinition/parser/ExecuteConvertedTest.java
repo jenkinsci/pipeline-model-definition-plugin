@@ -28,6 +28,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.Slave;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import net.sf.json.JSONObject;
@@ -53,12 +54,19 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
     private String configName;
 
     private static DumbSlave s;
+    private static Slave s2;
 
     @BeforeClass
     public static void setUpAgentAndCreds() throws Exception {
         s = j.createOnlineSlave();
         s.setLabelString("some-label docker here");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+                new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
+
+        s2 = j.createOnlineSlave();
+        s2.setLabelString("other-docker");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+                new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second")));
 
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
 
