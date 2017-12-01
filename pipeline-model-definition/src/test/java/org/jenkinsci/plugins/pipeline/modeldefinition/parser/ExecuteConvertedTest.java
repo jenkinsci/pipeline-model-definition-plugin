@@ -62,6 +62,7 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
         s.setLabelString("some-label docker here");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
                 new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
+        s.setNumExecutors(2);
 
         s2 = j.createOnlineSlave();
         s2.setLabelString("other-docker");

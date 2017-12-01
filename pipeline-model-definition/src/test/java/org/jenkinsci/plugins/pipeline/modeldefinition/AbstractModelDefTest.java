@@ -229,7 +229,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"parallelStagesStepsAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
         result.add(new Object[]{"parallelStagesDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
-        result.add(new Object[]{"parallelStagesAndGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"parallelStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
         result.add(new Object[]{"topLevelStageGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
 
         // TODO: Better error messaging for these schema violations.
