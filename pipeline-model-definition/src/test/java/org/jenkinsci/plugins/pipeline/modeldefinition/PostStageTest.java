@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.Result;
 import hudson.model.Slave;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -131,12 +132,20 @@ public class PostStageTest extends AbstractModelDefTest {
         expect("withAgentNoneAndAgentAny")
                 .logNotContains("Required context class hudson.FilePath is missing").go();
     }
-
+    
     @Issue("JENKINS-47928")
     @Test
     public void parallelParentPostFailure() throws Exception {
         expect(Result.FAILURE, "parallelParentPostFailure")
                 .logNotContains("PARALLEL STAGE POST").go();
+    }
+
+    @Issue("JENKINS-48266")
+    @Test
+    public void postAfterParallel() throws Exception {
+        expect("postAfterParallel")
+                .logContains("Post ran")
+                .go();
     }
 
     @Override

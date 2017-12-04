@@ -257,7 +257,7 @@ class ModelInterpreter implements Serializable {
                                 Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                 Utils.markStageSkippedForConditional(thisStage.name)
                                 isSkipped = true
-                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, true))
+                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, true))
                             }
                         } else {
                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
