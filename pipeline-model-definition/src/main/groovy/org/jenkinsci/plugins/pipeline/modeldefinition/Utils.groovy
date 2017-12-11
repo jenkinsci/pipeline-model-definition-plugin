@@ -54,6 +54,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
@@ -276,6 +277,17 @@ class Utils {
         return nodes
     }
 
+    /**
+     * Check if this run was caused by a restart.
+     */
+    @Whitelisted
+    static boolean isRestartedRun(CpsScript script) {
+        WorkflowRun r = script.$build()
+        RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
+
+        return cause != null
+    }
+
     @Restricted(NoExternalUse.class)
     static void updateRunAndJobActions(CpsScript script, String astUUID) throws Exception {
         WorkflowRun r = script.$build()
@@ -293,7 +305,7 @@ class Utils {
         }
     }
 
-    private static void markStageWithTag(String stageName, String tagName, String tagValue) {
+    static void markStageWithTag(String stageName, String tagName, String tagValue) {
         List<FlowNode> matched = findStageFlowNodes(stageName)
 
         matched.each { currentNode ->
@@ -749,5 +761,18 @@ class Utils {
         } else {
             return []
         }
+    }
+
+    /**
+     * Get the stage we're restarting at, if this build is a restarted one in the first place.
+     * @param script The script from ModelInterpreter
+     * @return The name of the stage we're restarting at, if defined, and null otherwise.
+     */
+    static String getRestartedStage(@Nonnull CpsScript script) {
+        WorkflowRun r = script.$build()
+
+        RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
+
+        return cause?.originStage
     }
 }

@@ -656,10 +656,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(execution);
         assertNotNull(execution.getCauseOfFailure());
 
-        Collection<FlowNode> heads = execution.getCurrentHeads();
-
-        DepthFirstScanner scanner = new DepthFirstScanner();
-
         // foo didn't fail at all.
         List<FlowNode> fooStages = Utils.findStageFlowNodes("foo", execution);
         assertNotNull(fooStages);
@@ -1039,13 +1035,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(endInnerSecond);
         assertEquals(GenericStatus.NOT_EXECUTED, StatusAndTiming.computeChunkStatus(b, null, startInnerSecond, endInnerSecond, null));
 
-        TagsAction innerSecondTags = startInnerSecond.getAction(TagsAction.class);
-        assertNotNull(innerSecondTags);
-        assertNotNull(innerSecondTags.getTags());
-        assertFalse(innerSecondTags.getTags().isEmpty());
-        assertTrue(innerSecondTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
-        assertEquals(StageStatus.getSkippedForConditional(),
-                innerSecondTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+        assertTrue(StageStatus.isSkippedStageForReason(startInnerSecond, StageStatus.getSkippedForConditional()));
 
         /*
         Relevant FlowNode ids:
@@ -1308,30 +1298,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNotNull(endSecond);
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startSecond, endSecond, null));
 
-        TagsAction firstTags = startFirst.getAction(TagsAction.class);
-        assertNotNull(firstTags);
-        assertNotNull(firstTags.getTags());
-        assertFalse(firstTags.getTags().isEmpty());
-        assertTrue(firstTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
-        assertEquals(StageStatus.getSkippedForFailure(),
-                firstTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
-
-        TagsAction secondTags = startSecond.getAction(TagsAction.class);
-        assertNotNull(secondTags);
-        assertNotNull(secondTags.getTags());
-        assertFalse(secondTags.getTags().isEmpty());
-        assertTrue(secondTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
-        assertEquals(StageStatus.getSkippedForFailure(),
-                secondTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
-
-        TagsAction parentTags = startFoo.getAction(TagsAction.class);
-        assertNotNull(parentTags);
-        assertNotNull(parentTags.getTags());
-        assertFalse(parentTags.getTags().isEmpty());
-        assertTrue(parentTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
-        assertEquals(StageStatus.getSkippedForFailure(),
-                parentTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
-    }
+        assertTrue(StageStatus.isSkippedStageForReason(startFirst, StageStatus.getSkippedForFailure()));
+        assertTrue(StageStatus.isSkippedStageForReason(startSecond, StageStatus.getSkippedForFailure()));
+        assertTrue(StageStatus.isSkippedStageForReason(startFirst, StageStatus.getSkippedForFailure()));
+        }
 
     @Issue("JENKINS-46597")
     @Test
