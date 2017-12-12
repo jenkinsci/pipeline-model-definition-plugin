@@ -666,7 +666,7 @@ class ModelValidatorImpl implements ModelValidator {
         } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (!stage.parallelContent.isEmpty() || stage.stages) {
+        } else if (!stage.parallelContent.isEmpty()) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false

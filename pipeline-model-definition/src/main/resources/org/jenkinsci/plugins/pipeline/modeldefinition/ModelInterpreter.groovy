@@ -245,32 +245,31 @@ class ModelInterpreter implements Serializable {
                         if (thisStage?.parallelContent) {
                             script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, true, false))
                         }
-                    } else if (thisStage?.parallelContent || thisStage?.stages) {
-                            if (evaluateWhen(thisStage.when)) {
-                                withCredentialsBlock(thisStage.environment) {
-                                    withEnvBlock(thisStage.getEnvVars(script)) {
-                                        if (thisStage?.parallelContent) {
-                                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, false))
-                                        } else if (thisStage?.stages) {
-                                            // TODO: We've got proper evaluation of skipped nested stages over in #228 - may want to tweeze that apart and bring that here.
-                                            evaluateSequentialStages(root, thisStage.stages, firstError, thisStage).call()
-                                        }
-                                    }
+                    } else if (thisStage?.parallelContent) {
+                        if (evaluateWhen(thisStage.when)) {
+                            withCredentialsBlock(thisStage.environment) {
+                                withEnvBlock(thisStage.getEnvVars(script)) {
+                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, false))
                                 }
-                            } else {
-                                Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                Utils.markStageSkippedForConditional(thisStage.name)
-                                isSkipped = true
-                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, true))
                             }
                         } else {
+                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                            Utils.markStageSkippedForConditional(thisStage.name)
+                            isSkipped = true
+                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, true))
+                        }
+                    } else {
                         inDeclarativeAgent(thisStage, root, thisStage.agent) {
                             if (evaluateWhen(thisStage.when)) {
                                 withCredentialsBlock(thisStage.environment) {
                                     withEnvBlock(thisStage.getEnvVars(script)) {
                                         toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                            // Execute the actual stage and potential post-stage actions
-                                            executeSingleStage(root, thisStage, parentAgent)
+                                            if (thisStage?.stages) {
+                                                evaluateSequentialStages(root, thisStage.stages, firstError, thisStage).call()
+                                            } else {
+                                                // Execute the actual stage and potential post-stage actions
+                                                executeSingleStage(root, thisStage, parentAgent)
+                                            }
                                         }
                                     }
                                 }
