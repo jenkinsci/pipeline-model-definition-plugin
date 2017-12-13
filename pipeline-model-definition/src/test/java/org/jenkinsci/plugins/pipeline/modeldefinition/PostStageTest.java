@@ -148,6 +148,18 @@ public class PostStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void postInParallelAndSequential() throws Exception {
+        expect("postInParallelAndSequential")
+                .logContains("Post Nested 1 ran",
+                        "Post Nested 2 ran",
+                        "Post Child 2 ran",
+                        "Post ran")
+                .go();
+        
+    }
+
     @Override
     protected ExpectationsBuilder expect(String resource) {
         return super.expect("postStage", resource);
