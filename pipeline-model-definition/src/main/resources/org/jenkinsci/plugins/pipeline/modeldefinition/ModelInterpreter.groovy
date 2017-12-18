@@ -29,6 +29,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -68,7 +69,7 @@ class ModelInterpreter implements Serializable {
                 inDeclarativeAgent(root, root, root.agent) {
                     withCredentialsBlock(root.environment) {
                         withEnvBlock(root.getEnvVars(script)) {
-                            inWrappers(root.options) {
+                            inWrappers(root.options?.wrappers) {
                                 toolsBlock(root.tools, root.agent, null) {
                                     firstError = evaluateSequentialStages(root, root.stages, firstError, null).call()
 
@@ -231,52 +232,54 @@ class ModelInterpreter implements Serializable {
             
             script.stage(thisStage.name) {
                 try {
-                    if (firstError != null) {
-                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
-                        Utils.markStageSkippedForFailure(thisStage.name)
-                        isSkipped = true
-                        if (thisStage?.parallelContent) {
-                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, true, false, false))
-                        }
-                    } else if (skipUnstable(root.options)) {
-                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
-                        Utils.markStageSkippedForUnstable(thisStage.name)
-                        isSkipped = true
-                        if (thisStage?.parallelContent) {
-                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, true, false))
-                        }
-                    } else if (thisStage?.parallelContent) {
-                        if (evaluateWhen(thisStage.when)) {
-                            withCredentialsBlock(thisStage.environment) {
-                                withEnvBlock(thisStage.getEnvVars(script)) {
-                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, false))
-                                }
-                            }
-                        } else {
-                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                            Utils.markStageSkippedForConditional(thisStage.name)
+                    inWrappers(thisStage.options?.wrappers) {
+                        if (firstError != null) {
+                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
+                            Utils.markStageSkippedForFailure(thisStage.name)
                             isSkipped = true
-                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, true))
-                        }
-                    } else {
-                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                            if (thisStage?.parallelContent) {
+                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, true, false, false))
+                            }
+                        } else if (skipUnstable(root.options?.options)) {
+                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
+                            Utils.markStageSkippedForUnstable(thisStage.name)
+                            isSkipped = true
+                            if (thisStage?.parallelContent) {
+                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, true, false))
+                            }
+                        } else if (thisStage?.parallelContent) {
                             if (evaluateWhen(thisStage.when)) {
                                 withCredentialsBlock(thisStage.environment) {
                                     withEnvBlock(thisStage.getEnvVars(script)) {
-                                        toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                            if (thisStage?.stages) {
-                                                evaluateSequentialStages(root, thisStage.stages, firstError, thisStage).call()
-                                            } else {
-                                                // Execute the actual stage and potential post-stage actions
-                                                executeSingleStage(root, thisStage, parentAgent)
-                                            }
-                                        }
+                                        script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, false))
                                     }
                                 }
                             } else {
                                 Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                 Utils.markStageSkippedForConditional(thisStage.name)
                                 isSkipped = true
+                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, false, false, true))
+                            }
+                        } else {
+                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                if (evaluateWhen(thisStage.when)) {
+                                    withCredentialsBlock(thisStage.environment) {
+                                        withEnvBlock(thisStage.getEnvVars(script)) {
+                                            toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                if (thisStage?.stages) {
+                                                    evaluateSequentialStages(root, thisStage.stages, firstError, thisStage).call()
+                                                } else {
+                                                    // Execute the actual stage and potential post-stage actions
+                                                    executeSingleStage(root, thisStage, parentAgent)
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                    Utils.markStageSkippedForConditional(thisStage.name)
+                                    isSkipped = true
+                                }
                             }
                         }
                     }
@@ -331,9 +334,14 @@ class ModelInterpreter implements Serializable {
         }.call()
     }
 
+    @Deprecated
     boolean skipUnstable(Options options) {
+        return skipUnstable(options?.options)
+    }
+
+    boolean skipUnstable(Map<String,DeclarativeOption> options) {
         return script.getProperty("currentBuild").result == "UNSTABLE" &&
-            options?.options?.get("skipStagesAfterUnstable") != null
+            options?.get("skipStagesAfterUnstable") != null
     }
 
     /**
@@ -498,16 +506,21 @@ class ModelInterpreter implements Serializable {
         }
     }
 
+    @Deprecated
+    def inWrappers(Options options, Closure body) {
+        return inWrappers(options?.wrappers, body)
+    }
+
     /**
      * Executes the given closure inside 0 or more wrapper blocks if appropriate
-     * @param options The options configuration we're executing in
+     * @param wrappers A map of wrapper names to wrappers
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def inWrappers(Options options, Closure body) {
-        if (options?.wrappers != null) {
+    def inWrappers(Map<String,Object> wrappers, Closure body) {
+        if (wrappers != null) {
             return {
-                recursiveWrappers(options.wrappers.keySet().toList(), options.wrappers, body)
+                recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
             }.call()
         } else {
             return {

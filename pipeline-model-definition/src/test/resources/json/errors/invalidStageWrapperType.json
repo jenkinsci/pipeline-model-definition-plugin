@@ -1,0 +1,26 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "options": {"options": [    {
+      "name": "echo",
+      "arguments": [      {
+        "isLiteral": true,
+        "value": "I am not eligble"
+      }]
+    }]},
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": true,
+            "value": "hello"
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent": {"type": "none"}
+}}

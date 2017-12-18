@@ -176,6 +176,11 @@ class JSONParser implements Parser {
             stage.failFast = j.node.get("failFast")?.asBoolean()
         }
 
+        if (j.node.has("options")) {
+            stage.options = parseOptions(j.append(JsonPointer.of("options")))
+            stage.options.inStage = true
+        }
+
         if (j.node.has("environment")) {
             stage.environment = parseEnvironment(j.append(JsonPointer.of("environment")))
         }

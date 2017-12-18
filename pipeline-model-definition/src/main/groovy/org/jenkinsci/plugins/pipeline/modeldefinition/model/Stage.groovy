@@ -62,15 +62,17 @@ class Stage implements Serializable {
 
     boolean failFast
 
+    StageOptions options
+
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
-        this(name, steps, agent, post, when, tools, environment, failFast, parallel?.stages, null)
+        this(name, steps, agent, post, when, tools, environment, failFast, parallel?.stages, null, null)
     }
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
-          Environment environment, boolean failFast, List<Stage> parallelContent, Stages stages) {
+          Environment environment, boolean failFast, List<Stage> parallelContent, Stages stages, StageOptions options) {
         this.name = name
         this.agent = agent
         this.post = post
@@ -83,6 +85,7 @@ class Stage implements Serializable {
         if (parallelContent != null) {
             this.parallelContent.addAll(parallelContent)
         }
+        this.options = options
     }
 
     protected Object readResolve() throws IOException {

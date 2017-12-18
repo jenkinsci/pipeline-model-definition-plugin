@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
@@ -862,6 +863,30 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void parallelStagesStepsAndGroups() throws Exception {
         expectError("parallelStagesStepsAndGroups")
                 .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void invalidStageWrapperType() throws Exception {
+        expectError("invalidStageWrapperType")
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", StageOptions.getAllowedOptionTypes().keySet()))
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void jobPropertyInStageOptions() throws Exception {
+        expectError("jobPropertyInStageOptions")
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "buildDiscarder", StageOptions.getAllowedOptionTypes().keySet()))
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void invalidOptionInStage() throws Exception {
+        expectError("invalidOptionInStage")
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "skipStagesAfterUnstable", StageOptions.getAllowedOptionTypes().keySet()))
                 .go();
     }
 }

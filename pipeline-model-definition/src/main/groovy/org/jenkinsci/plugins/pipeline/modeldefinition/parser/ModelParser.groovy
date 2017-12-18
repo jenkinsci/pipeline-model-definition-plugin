@@ -548,6 +548,10 @@ class ModelParser implements Parser {
                         case 'post':
                             stage.post = parsePostStage(s)
                             break
+                        case 'options':
+                            stage.options = parseOptions(s)
+                            stage.options.inStage = true
+                            break
                         case 'tools':
                             stage.tools = parseTools(s)
                             break

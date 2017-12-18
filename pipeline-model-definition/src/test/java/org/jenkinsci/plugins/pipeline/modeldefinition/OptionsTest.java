@@ -343,4 +343,24 @@ public class OptionsTest extends AbstractModelDefTest {
         assertNotNull(prop);
 
     }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void stageWrapper() throws Exception {
+        expect("stageWrapper")
+                .logContains("[Pipeline] { (foo)",
+                        "[Pipeline] timeout",
+                        "hello")
+                .logNotContains("[Pipeline] { (Post Actions)")
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void skipCheckoutInStage() throws Exception {
+        expect("skipCheckoutInStage")
+                .logContains("[Pipeline] { (foo)",
+                        "hello")
+                .go();
+    }
 }
