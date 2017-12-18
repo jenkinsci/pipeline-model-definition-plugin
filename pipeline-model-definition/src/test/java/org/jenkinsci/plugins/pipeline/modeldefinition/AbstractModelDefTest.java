@@ -41,6 +41,7 @@ import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -165,7 +166,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "when/changelog/changelog",
             "when/changelog/changeset",
             "backslashReductionInEnv",
-            "parallelStagesFailFast"
+            "parallelStagesFailFast",
+            "stageWrapper"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -210,6 +212,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         // That resulted in multiArgCtorProp sometimes showing up in the list of valid options, but not always. We still have the full test in
         // ValidatorTest#invalidWrapperType that does use the full message, though.
         result.add(new Object[]{"invalidWrapperType", "Invalid option type \"echo\". Valid option types:"});
+        result.add(new Object[]{"invalidStageWrapperType", "Invalid option type \"echo\". Valid option types:"});
 
         result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes)});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});

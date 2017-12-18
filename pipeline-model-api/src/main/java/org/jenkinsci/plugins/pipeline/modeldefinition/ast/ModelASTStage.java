@@ -26,6 +26,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTEnvironment environment;
     private Boolean failFast;
     private ModelASTStages parallel;
+    private ModelASTOptions options;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -67,6 +68,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (environment != null) {
             o.accumulate("environment", environment.toJSON());
         }
+        if (options != null) {
+            o.accumulate("options", options.toJSON());
+        }
 
         return o;
     }
@@ -99,6 +103,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (environment != null) {
             environment.validate(validator);
         }
+        if (options != null) {
+            options.validate(validator);
+        }
     }
 
     @Override
@@ -117,6 +124,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (environment != null) {
             result.append(environment.toGroovy());
+        }
+        if (options != null) {
+            result.append(options.toGroovy());
         }
         if (branches.isEmpty() && parallel != null) {
             if (failFast != null && failFast) {
@@ -185,6 +195,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (environment != null) {
             environment.removeSourceLocation();
+        }
+        if (options != null) {
+            options.removeSourceLocation();
         }
     }
 
@@ -260,6 +273,14 @@ public final class ModelASTStage extends ModelASTElement {
         this.parallel = s;
     }
 
+    public ModelASTOptions getOptions() {
+        return options;
+    }
+
+    public void setOptions(ModelASTOptions options) {
+        this.options = options;
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
@@ -272,6 +293,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", environment=" + environment +
                 ", failFast=" + failFast +
                 ", parallel=" + parallel +
+                ", options=" + options +
                 "}";
     }
 
@@ -301,17 +323,19 @@ public final class ModelASTStage extends ModelASTElement {
         if (getWhen() != null ? !getWhen().equals(that.getWhen()) : that.getWhen() != null) {
             return false;
         }
-
-        if (getFailFast() != null ? !getFailFast().equals(that.getFailFast()) : that.getFailFast() != null) {
-            return false;
-        }
-        if (getParallel() != null ? !getParallel().equals(that.getParallel()) : that.getParallel() != null) {
-            return false;
-        }
         if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
             return false;
         }
         if (getEnvironment() != null ? !getEnvironment().equals(that.getEnvironment()) : that.getEnvironment() != null) {
+            return false;
+        }
+        if (getOptions() != null ? !getOptions().equals(that.getOptions()) : that.getOptions() != null) {
+            return false;
+        }
+        if (getFailFast() != null ? !getFailFast().equals(that.getFailFast()) : that.getFailFast() != null) {
+            return false;
+        }
+        if (getParallel() != null ? !getParallel().equals(that.getParallel()) : that.getParallel() != null) {
             return false;
         }
         return getBranches() != null ? getBranches().equals(that.getBranches()) : that.getBranches() == null;
@@ -330,6 +354,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getFailFast() != null ? getFailFast().hashCode() : 0);
         result = 31 * result + (getParallel() != null ? getParallel().hashCode() : 0);
+        result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         return result;
     }
 }

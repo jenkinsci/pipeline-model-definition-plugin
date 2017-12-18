@@ -57,9 +57,17 @@ class Stage implements Serializable {
 
     boolean failFast
 
-    @Whitelisted
+    StageOptions options
+
+    @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
+        this(name, steps, agent, post, when, tools, environment, failFast, parallel, null)
+    }
+
+    @Whitelisted
+    Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
+          Environment environment, boolean failFast, Stages parallel, StageOptions options) {
         this.name = name
         this.steps = steps
         this.agent = agent
@@ -69,6 +77,7 @@ class Stage implements Serializable {
         this.environment = environment
         this.parallel = parallel
         this.failFast = failFast
+        this.options = options
     }
 
     /**

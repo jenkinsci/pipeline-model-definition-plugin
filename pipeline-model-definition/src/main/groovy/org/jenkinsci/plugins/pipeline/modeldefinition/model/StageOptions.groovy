@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,53 +22,36 @@
  * THE SOFTWARE.
  */
 
-
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
 import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import hudson.FilePath
-import hudson.Launcher
-import hudson.model.JobProperty
-import hudson.model.JobPropertyDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.Nonnull
 
+
 /**
- * Container for job options.
+ * Container for stage options.
  *
  * @author Andrew Bayer
  */
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class Options implements Serializable {
-    final static List<String> BLOCKED_PROPERTIES = ["pipelineTriggers", "parameters"]
-
-    // Transient since JobProperty isn't serializable. Doesn't really matter since we're in trouble if we get interrupted
-    // anyway.
-    transient List<JobProperty> properties = []
-    transient Map<String, DeclarativeOption> options = [:]
-    transient Map<String, Object> wrappers = [:]
+class StageOptions implements Serializable {
+    private Map<String, DeclarativeOption> options = [:]
+    private Map<String, Object> wrappers = [:]
 
     @Whitelisted
-    Options(@Nonnull List<JobProperty> properties, @Nonnull Map<String, DeclarativeOption> options,
-            @Nonnull Map<String, Object> wrappers) {
-        this.properties.addAll(properties)
+    StageOptions(@Nonnull Map<String, DeclarativeOption> options, @Nonnull Map<String, Object> wrappers) {
         this.options.putAll(options)
         this.wrappers.putAll(wrappers)
-    }
-
-    List<JobProperty> getProperties() {
-        return properties
     }
 
     Map<String, DeclarativeOption> getOptions() {
@@ -79,42 +62,6 @@ class Options implements Serializable {
         return wrappers
     }
 
-    private static final Object OPTION_CACHE_KEY = new Object()
-    private static final Object CACHE_KEY = new Object()
-    private static final Object WRAPPER_STEPS_KEY = new Object()
-
-    private static final LoadingCache<Object,Map<String,String>> propertyTypeCache =
-        Utils.generateTypeCache(JobPropertyDescriptor.class, false, BLOCKED_PROPERTIES)
-
-    private static final LoadingCache<Object,Map<String,String>> optionTypeCache =
-        Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [])
-
-    private static final LoadingCache<Object,Map<String,String>> wrapperStepsTypeCache  =
-        Utils.generateTypeCache(StepDescriptor.class, false, [],
-            { StepDescriptor s ->
-                return s.takesImplicitBlockArgument() &&
-                    !(s.getFunctionName() in BlockedStepsAndMethodCalls.blockedInMethodCalls().keySet()) &&
-                    !(Launcher.class in s.getRequiredContext()) &&
-                    !(FilePath.class in s.getRequiredContext())
-            }
-        )
-
-    static Map<String,String> getEligibleWrapperStepClasses() {
-        return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
-    }
-
-    static Map<String,String> getEligibleDeclarativeOptionTypeClasses() {
-        return optionTypeCache.get(optionTypeCache)
-    }
-
-    protected Object readResolve() throws IOException {
-        // Need to make sure options is initialized on deserialization, even if it's going to be empty.
-        this.properties = []
-        this.options = [:]
-        this.wrappers = [:]
-        return this
-    }
-
     /**
      * Get a map of allowed option type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
      * option, use that as the key. If the option type is a wrapper, use the step name as the key. Otherwise, use the class name.
@@ -122,9 +69,9 @@ class Options implements Serializable {
      * @return A map of valid option type keys to their actual type IDs.
      */
     static Map<String,String> getAllowedOptionTypes() {
-        Map<String,String> c = propertyTypeCache.get(CACHE_KEY)
-        c.putAll(optionTypeCache.get(OPTION_CACHE_KEY))
-        c.putAll(getEligibleWrapperStepClasses())
+        Map<String,String> c = [:]
+        c.putAll(stageOptionTypeCache.get(STAGE_OPTION_CACHE_KEY))
+        c.putAll(Options.getEligibleWrapperStepClasses())
         return c.sort()
     }
 
@@ -137,4 +84,13 @@ class Options implements Serializable {
     static String typeForKey(@Nonnull String key) {
         return getAllowedOptionTypes().get(key)
     }
+
+    private static final Object STAGE_OPTION_CACHE_KEY = new Object()
+
+    private static final LoadingCache<Object,Map<String,String>> stageOptionTypeCache =
+        Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [],
+            { DeclarativeOptionDescriptor d ->
+                return d.canUseInStage()
+            })
 }
+

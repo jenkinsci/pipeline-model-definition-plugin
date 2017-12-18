@@ -29,6 +29,7 @@ import groovy.transform.ToString
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -76,15 +77,19 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
 
-            boolean doCheckout = false
+            boolean doCheckout = true
+            Map<String,DeclarativeOption> options = [:]
+
             if (context instanceof Root) {
                 a.setInStage(false)
-            } else {
+                options = ((Root)context).options?.options
+            } else if (context instanceof Stage) {
                 a.setInStage(true)
+                options = ((Stage)context).options?.options
             }
-            if (root != null) {
-                SkipDefaultCheckout skip = (SkipDefaultCheckout) root?.options?.options?.get("skipDefaultCheckout")
-                if (!skip?.isSkipDefaultCheckout()) {
+            if (options != null && !options.isEmpty()) {
+                SkipDefaultCheckout skip = (SkipDefaultCheckout) options.get("skipDefaultCheckout")
+                if (skip?.isSkipDefaultCheckout()) {
                     doCheckout = true
                 }
             }

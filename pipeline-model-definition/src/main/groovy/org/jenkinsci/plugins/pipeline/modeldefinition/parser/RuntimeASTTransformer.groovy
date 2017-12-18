@@ -528,8 +528,10 @@ class RuntimeASTTransformer {
             SymbolLookup symbolLookup = SymbolLookup.get()
 
             original.options.each { o ->
-                if (symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
-                    jobProps.add(o)
+                if (!original.inStage) {
+                    if (symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
+                        jobProps.add(o)
+                    }
                 } else if (symbolLookup.findDescriptor(DeclarativeOption.class, o.name) != null) {
                     options.add(o)
                 } else if (StepDescriptor.byFunctionName(o.name) != null) {
@@ -564,8 +566,12 @@ class RuntimeASTTransformer {
                 }
             }
 
-            return ctorX(ClassHelper.make(Options.class),
-                args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
+            if (original.inStage) {
+                return ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
+            } else {
+                return ctorX(ClassHelper.make(Options.class),
+                    args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
+            }
         }
 
         return constX(null)
@@ -646,8 +652,9 @@ class RuntimeASTTransformer {
                     transformStageConditionals(original.when),
                     transformTools(original.tools),
                     transformEnvironment(original.environment),
+                    constX(original.failFast != null ? original.failFast : false),
                     transformStages(original.parallel),
-                    constX(original.failFast != null ? original.failFast : false)))
+                    transformOptions(original.options)))
         }
 
         return constX(null)
