@@ -79,18 +79,22 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
             boolean doCheckout = true
             Map<String,DeclarativeOption> options = [:]
+            if (root?.options?.options) {
+                options.putAll(root?.options?.options)
+            }
 
             if (context instanceof Root) {
                 a.setInStage(false)
-                options = ((Root)context).options?.options
             } else if (context instanceof Stage) {
                 a.setInStage(true)
-                options = ((Stage)context).options?.options
+                if (((Stage)context).options?.options) {
+                    options.putAll(((Stage) context).options?.options)
+                }
             }
-            if (options != null && !options.isEmpty()) {
+            if (!options.isEmpty()) {
                 SkipDefaultCheckout skip = (SkipDefaultCheckout) options.get("skipDefaultCheckout")
                 if (skip?.isSkipDefaultCheckout()) {
-                    doCheckout = true
+                    doCheckout = false
                 }
             }
             a.setDoCheckout(doCheckout)

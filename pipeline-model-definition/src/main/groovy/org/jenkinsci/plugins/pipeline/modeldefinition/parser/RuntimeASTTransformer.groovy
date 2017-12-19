@@ -528,10 +528,8 @@ class RuntimeASTTransformer {
             SymbolLookup symbolLookup = SymbolLookup.get()
 
             original.options.each { o ->
-                if (!original.inStage) {
-                    if (symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
-                        jobProps.add(o)
-                    }
+                if (!original.inStage && symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
+                    jobProps.add(o)
                 } else if (symbolLookup.findDescriptor(DeclarativeOption.class, o.name) != null) {
                     options.add(o)
                 } else if (StepDescriptor.byFunctionName(o.name) != null) {

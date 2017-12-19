@@ -104,7 +104,7 @@ class Options implements Serializable {
     }
 
     static Map<String,String> getEligibleDeclarativeOptionTypeClasses() {
-        return optionTypeCache.get(optionTypeCache)
+        return optionTypeCache.get(OPTION_CACHE_KEY)
     }
 
     protected Object readResolve() throws IOException {
@@ -123,7 +123,7 @@ class Options implements Serializable {
      */
     static Map<String,String> getAllowedOptionTypes() {
         Map<String,String> c = propertyTypeCache.get(CACHE_KEY)
-        c.putAll(optionTypeCache.get(OPTION_CACHE_KEY))
+        c.putAll(getEligibleDeclarativeOptionTypeClasses())
         c.putAll(getEligibleWrapperStepClasses())
         return c.sort()
     }
