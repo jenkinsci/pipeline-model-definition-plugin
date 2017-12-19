@@ -583,6 +583,16 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(params, valid)
     }
 
+    boolean validateElement(@Nonnull ModelASTStageInput input) {
+        boolean valid = true
+        if (input.message == null) {
+            errorCollector.error(input, Messages.ModelValidatorImpl_MissingInputMessage())
+            valid = false
+        }
+
+        return validateFromContributors(input, valid)
+    }
+
     boolean validateElement(@Nonnull ModelASTOption opt) {
         boolean valid = true
 

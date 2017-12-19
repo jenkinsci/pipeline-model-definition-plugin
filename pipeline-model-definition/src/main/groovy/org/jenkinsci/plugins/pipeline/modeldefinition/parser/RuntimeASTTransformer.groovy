@@ -652,10 +652,38 @@ class RuntimeASTTransformer {
                     transformEnvironment(original.environment),
                     constX(original.failFast != null ? original.failFast : false),
                     transformStages(original.parallel),
-                    transformOptions(original.options)))
+                    transformOptions(original.options),
+                    transformStageInput(original.input)))
         }
 
         return constX(null)
+    }
+
+    Expression transformStageInput(@CheckForNull ModelASTStageInput original) {
+        if (isGroovyAST(original)) {
+            Expression paramsExpr = constX(null)
+            if (!original.parameters.isEmpty()) {
+                paramsExpr = transformListOfDescribables(original.parameters, ParameterDefinition.class)
+            }
+            return ctorX(ClassHelper.make(StageInput.class),
+                args(valueOrNull(original.message),
+                    valueOrNull(original.id),
+                    valueOrNull(original.ok),
+                    valueOrNull(original.submitter),
+                    valueOrNull(original.submitterParameter),
+                    paramsExpr))
+        }
+        return constX(null)
+    }
+
+    private Expression valueOrNull(@CheckForNull ModelASTValue value) {
+        if (value == null) {
+            return constX(null)
+        } else if (value.sourceLocation instanceof Expression) {
+            return (Expression)value.sourceLocation
+        } else {
+            return constX(null)
+        }
     }
 
     /**

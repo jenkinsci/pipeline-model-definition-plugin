@@ -80,6 +80,8 @@ public class ExecuteConvertedTest extends AbstractModelDefTest {
             if (!c.equals("agentDocker") &&
                     !c.contains("globalLibrary") &&
                     !c.contains("jsonSchemaNull") &&
+                    // input stuff doesn't work without actually submitting input.
+                    !c.contains("simpleInput") &&
                     // parallelStagesFailFast is expected to, well, fail, so skip it.
                     !c.contains("parallelStagesFailFast")) {
                 result.add(new Object[]{c});

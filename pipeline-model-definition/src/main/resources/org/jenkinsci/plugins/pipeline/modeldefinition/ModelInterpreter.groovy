@@ -198,33 +198,37 @@ class ModelInterpreter implements Serializable {
                             }
                         } else {
                             if (thisStage.parallel != null) {
-                                if (evaluateWhen(thisStage.when)) {
-                                    withCredentialsBlock(thisStage.environment) {
-                                        withEnvBlock(thisStage.getEnvVars(script)) {
-                                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, false))
-                                        }
-                                    }
-                                } else {
-                                    Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                    Utils.markStageSkippedForConditional(thisStage.name)
-                                    isSkipped = true
-                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, true))
-                                }
-                            } else {
-                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                stageInput(thisStage.input) {
                                     if (evaluateWhen(thisStage.when)) {
                                         withCredentialsBlock(thisStage.environment) {
                                             withEnvBlock(thisStage.getEnvVars(script)) {
-                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
-                                                    // Execute the actual stage and potential post-stage actions
-                                                    executeSingleStage(root, thisStage, parentAgent)
-                                                }
+                                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, false))
                                             }
                                         }
                                     } else {
                                         Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
                                         Utils.markStageSkippedForConditional(thisStage.name)
                                         isSkipped = true
+                                        script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, true))
+                                    }
+                                }
+                            } else {
+                                stageInput(thisStage.input) {
+                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                        if (evaluateWhen(thisStage.when)) {
+                                            withCredentialsBlock(thisStage.environment) {
+                                                withEnvBlock(thisStage.getEnvVars(script)) {
+                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
+                                                        // Execute the actual stage and potential post-stage actions
+                                                        executeSingleStage(root, thisStage, parentAgent)
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                            Utils.markStageSkippedForConditional(thisStage.name)
+                                            isSkipped = true
+                                        }
                                     }
                                 }
                             }
@@ -251,6 +255,39 @@ class ModelInterpreter implements Serializable {
             }
         }
     }
+
+    def stageInput(StageInput input, Closure body) {
+        if (input != null)  {
+            return {
+                def submitted = script.input(message: input.message, id: input.id, ok: input.ok, submitter: input.submitter,
+                    submitterParameter: input.submitterParameter, parameters: input.parameters)
+                if (input.parameters.isEmpty() && input.submitterParameter == null) {
+                    // No parameters, so just proceed
+                    body.call()
+                } else {
+                    def inputEnv = []
+                    if (submitted instanceof Map) {
+                        // Multiple parameters!
+                        inputEnv = submitted.collect { k, v -> "${k}=${v}" }
+                    } else if (input.submitterParameter != null) {
+                        // Single parameter, it's the submitter.
+                        inputEnv = ["${input.submitterParameter}=${submitted}"]
+                    } else if (input.parameters.size() == 1) {
+                        // One defined parameter, so we know its name.
+                        inputEnv = ["${input.parameters.first().name}=${submitted}"]
+                    }
+                    script.withEnv(inputEnv) {
+                        body.call()
+                    }
+                }
+            }.call()
+        } else {
+            return {
+                body.call()
+            }.call()
+        }
+    }
+
     /**
      * Execute the given body closure while watching for errors that will specifically show up when there's an attempt to
      * run a step that needs a node context but doesn't have one.

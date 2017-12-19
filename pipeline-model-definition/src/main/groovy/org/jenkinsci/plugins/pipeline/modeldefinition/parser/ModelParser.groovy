@@ -552,6 +552,9 @@ class ModelParser implements Parser {
                             stage.options = parseOptions(s)
                             stage.options.inStage = true
                             break
+                        case 'input':
+                            stage.input = parseInput(s)
+                            break
                         case 'tools':
                             stage.tools = parseTools(s)
                             break
@@ -579,6 +582,63 @@ class ModelParser implements Parser {
             }
         }
         return stage
+    }
+
+    ModelASTStageInput parseInput(Statement statement) {
+        ModelASTStageInput input = new ModelASTStageInput(statement)
+
+        def m = matchBlockStatement(statement)
+        if (m == null) {
+            errorCollector.error(input, Messages.ModelParser_ExpectedBlockFor("input"))
+            return input
+        }
+        def fieldsSeen = new HashSet()
+        eachStatement(m.body.code) { s ->
+            def mc = matchMethodCall(s)
+            if (mc == null) {
+                errorCollector.error(input, Messages.ModelParser_InvalidSectionDefinition(getSourceText(s)))
+            } else {
+                def name = parseMethodName(mc)
+                def k = parseKey(mc.method)
+
+                if (!fieldsSeen.add(name)) {
+                    // Also an error that we couldn't actually detect at model evaluation time.
+                    errorCollector.error(input, Messages.Parser_MultipleOfSection(name))
+                }
+                List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                if (args.isEmpty()) {
+                    errorCollector.error(k, Messages.ModelParser_NoArgForField(name))
+                } else if (args.size() > 1) {
+                    errorCollector.error(k, Messages.ModelParser_TooManyArgsForField(name))
+                } else {
+                    switch (name) {
+                        case 'message':
+                            input.message = parseArgument(args[0])
+                            break
+                        case 'id':
+                            input.id = parseArgument(args[0])
+                            break
+                        case 'ok':
+                            input.ok = parseArgument(args[0])
+                            break
+                        case 'submitter':
+                            input.submitter = parseArgument(args[0])
+                            break
+                        case 'submitterParameter':
+                            input.submitterParameter = parseArgument(args[0])
+                            break
+                        case 'parameters':
+                            ModelASTBuildParameters params = parseBuildParameters(s)
+                            input.parameters.addAll(params?.parameters)
+                            break
+                        default:
+                            errorCollector.error(k, Messages.ModelParser_InvalidSectionDefinition(getSourceText(s)))
+                    }
+
+                }
+            }
+        }
+        return input
     }
 
     ModelASTWhen parseWhen(Statement statement) {

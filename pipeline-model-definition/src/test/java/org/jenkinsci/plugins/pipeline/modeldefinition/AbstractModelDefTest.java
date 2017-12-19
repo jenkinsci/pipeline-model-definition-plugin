@@ -167,7 +167,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "when/changelog/changeset",
             "backslashReductionInEnv",
             "parallelStagesFailFast",
-            "stageWrapper"
+            "stageWrapper",
+            "simpleInput"
     );
 
     public static Iterable<Object[]> configsWithErrors() {

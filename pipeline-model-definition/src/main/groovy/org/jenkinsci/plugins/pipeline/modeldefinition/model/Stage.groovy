@@ -59,15 +59,17 @@ class Stage implements Serializable {
 
     StageOptions options
 
+    StageInput input
+
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
-        this(name, steps, agent, post, when, tools, environment, failFast, parallel, null)
+        this(name, steps, agent, post, when, tools, environment, failFast, parallel, null, null)
     }
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
-          Environment environment, boolean failFast, Stages parallel, StageOptions options) {
+          Environment environment, boolean failFast, Stages parallel, StageOptions options, StageInput input) {
         this.name = name
         this.steps = steps
         this.agent = agent
@@ -78,6 +80,7 @@ class Stage implements Serializable {
         this.parallel = parallel
         this.failFast = failFast
         this.options = options
+        this.input = input
     }
 
     /**
