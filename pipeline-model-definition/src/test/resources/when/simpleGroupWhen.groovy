@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,33 +22,44 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
-
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.annotation.Nullable;
-
-public class SkipDefaultCheckout extends DeclarativeOption {
-    private Boolean skipDefaultCheckout;
-
-    @DataBoundConstructor
-    public SkipDefaultCheckout(@Nullable Boolean skipDefaultCheckout) {
-        this.skipDefaultCheckout = skipDefaultCheckout;
+pipeline {
+    agent {
+        label "here"
     }
-
-    public boolean isSkipDefaultCheckout() {
-        return skipDefaultCheckout == null || skipDefaultCheckout;
-    }
-
-    @Extension @Symbol("skipDefaultCheckout")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-        @Override
-        public boolean canUseInStage() {
-            return true;
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            parallel {
+                stage("solo") {
+                    steps {
+                        echo "This is a solo stage. It is here."
+                    }
+                }
+                stage("when-group") {
+                    when {
+                        expression {
+                            echo "Should I run?"
+                            return env.RUN_GROUP == "RUN"
+                        }
+                    }
+                    stages {
+                        stage("first-in-group") {
+                            steps {
+                                echo "World"
+                            }
+                        }
+                        stage("second-in-group") {
+                            steps {
+                                echo "Heal it"
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

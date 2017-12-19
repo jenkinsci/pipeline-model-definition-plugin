@@ -548,6 +548,10 @@ class ModelParser implements Parser {
                         case 'post':
                             stage.post = parsePostStage(s)
                             break
+                        case 'options':
+                            stage.options = parseOptions(s)
+                            stage.options.inStage = true
+                            break
                         case 'tools':
                             stage.tools = parseTools(s)
                             break
@@ -555,7 +559,14 @@ class ModelParser implements Parser {
                             stage.environment = parseEnvironment(s)
                             break
                         case 'parallel':
-                            stage.parallel = parseStages(s)
+                            def parallelStmt = matchBlockStatement(s)
+                            if (parallelStmt==null) {
+                                errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
+                            } else {
+                                eachStatement(parallelStmt.body.code) {
+                                    stage.parallelContent.add(parseStage(it))
+                                }
+                            }
                             break
                         case 'failFast':
                             List<Expression> args = ((TupleExpression) mc.arguments).expressions
@@ -567,6 +578,9 @@ class ModelParser implements Parser {
                             } else {
                                 stage.setFailFast((Boolean)exp.value)
                             }
+                            break
+                        case 'stages':
+                            stage.stages = parseStages(s)
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))

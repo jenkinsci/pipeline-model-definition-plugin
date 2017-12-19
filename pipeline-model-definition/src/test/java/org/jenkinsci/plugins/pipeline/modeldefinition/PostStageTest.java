@@ -91,6 +91,16 @@ public class PostStageTest extends AbstractModelDefTest {
 
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void withGroupAllLocalSuccess() throws Exception {
+        env(s).set();
+        expect(Result.SUCCESS, "groupLocalAll").logContains(ALL_LOCAL_ALWAYS)
+                .logContains("All is well", "MOST DEFINITELY FINISHED", "I HAVE CHANGED")
+                .logNotContains("I WAS ABORTED", "I FAILED", "I AM UNSTABLE").go();
+
+    }
+
     @Test
     public void withAllLocalChanged() throws Exception {
         env(s).set();
@@ -136,6 +146,18 @@ public class PostStageTest extends AbstractModelDefTest {
         expect("postAfterParallel")
                 .logContains("Post ran")
                 .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void postInParallelAndSequential() throws Exception {
+        expect("postInParallelAndSequential")
+                .logContains("Post Nested 1 ran",
+                        "Post Nested 2 ran",
+                        "Post Child 2 ran",
+                        "Post ran")
+                .go();
+        
     }
 
     @Override

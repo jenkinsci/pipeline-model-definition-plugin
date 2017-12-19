@@ -44,6 +44,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -500,6 +501,20 @@ class ModelValidatorImpl implements ModelValidator {
                 errorCollector.error(opts, Messages.ModelValidatorImpl_DuplicateOptionName(bn))
                 valid = false
             }
+            // Validate that the option is allowed for its context.
+            opts.options.findAll { it.name != null }.each { opt ->
+                if (opts.inStage && StageOptions.typeForKey(opt.name) == null) {
+                    errorCollector.error(opt,
+                        Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name,
+                            StageOptions.getAllowedOptionTypes().keySet()))
+                    valid = false
+                } else if (Options.typeForKey(opt.name) == null) {
+                    errorCollector.error(opt,
+                        Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name,
+                            Options.getAllowedOptionTypes().keySet()))
+                    valid = false
+                }
+            }
         }
 
         return validateFromContributors(opts, valid)
@@ -573,10 +588,6 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (opt.name == null) {
             // Validation failed at compilation time so move on.
-        } else if (Options.typeForKey(opt.name) == null) {
-            errorCollector.error(opt,
-                Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name, Options.getAllowedOptionTypes().keySet()))
-            valid = false
         } else if (opt.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
             && !opt.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
             errorCollector.error(opt, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())
@@ -635,22 +646,38 @@ class ModelValidatorImpl implements ModelValidator {
 
     boolean validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
         boolean valid = true
-        if (isNested && (stage.branches.size() > 1 || stage.parallel != null)) {
+        def stepsStagesParallelCount = 0
+        if (!stage.branches.isEmpty()) {
+            stepsStagesParallelCount += 1
+        }
+        if (!stage.parallelContent.isEmpty()) {
+            stepsStagesParallelCount += 1
+        }
+        if (stage.stages != null) {
+            stepsStagesParallelCount += 1
+        }
+
+        if (isNested && (stage.branches.size() > 1 || !stage.parallelContent?.isEmpty())) {
             ModelASTElement errorElement
-            if (stage.parallel != null) {
-                errorElement = stage.parallel
+            if (!stage.parallelContent.isEmpty()) {
+                def firstParallel = stage.parallelContent.first()
+                if (firstParallel instanceof ModelASTElement) {
+                    errorElement = firstParallel
+                } else {
+                    errorElement = stage
+                }
             } else {
                 errorElement = stage.branches.first()
             }
             errorCollector.error(errorElement, Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
             valid = false
-        } else if (!stage.branches.isEmpty() && stage.parallel != null) {
-            errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))
+        } else if (stepsStagesParallelCount > 1) {
+            errorCollector.error(stage, Messages.ModelValidatorImpl_TwoOfStepsStagesParallel(stage.name))
             valid = false
-        } else if (stage.branches.isEmpty() && stage.parallel == null) {
+        } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (stage.parallel != null) {
+        } else if (!stage.parallelContent.isEmpty()) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false

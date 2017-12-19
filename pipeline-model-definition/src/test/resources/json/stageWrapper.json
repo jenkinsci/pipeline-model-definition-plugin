@@ -1,0 +1,38 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "options": {"options": [    {
+      "name": "timeout",
+      "arguments":       [
+        {
+          "key": "time",
+          "value":           {
+            "isLiteral": true,
+            "value": 5
+          }
+        },
+        {
+          "key": "unit",
+          "value":           {
+            "isLiteral": true,
+            "value": "MINUTES"
+          }
+        }
+      ]
+    }]},
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": true,
+            "value": "hello"
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent": {"type": "none"}
+}}

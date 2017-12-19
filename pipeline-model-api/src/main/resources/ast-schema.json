@@ -474,6 +474,9 @@
         "environment": {
           "$ref": "#/definitions/environment"
         },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
         "branches": {
           "type": "array",
           "items": {
@@ -481,6 +484,9 @@
           }
         },
         "parallel": {
+          "$ref": "#/definitions/stages"
+        },
+        "stages": {
           "$ref": "#/definitions/stages"
         }
       },

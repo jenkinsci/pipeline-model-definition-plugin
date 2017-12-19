@@ -1,0 +1,81 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "parallel":     [
+      {
+        "name": "solo",
+        "branches": [        {
+          "name": "default",
+          "steps": [          {
+            "name": "echo",
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": false,
+                "value": "\"Solo stage agent: ${WHICH_AGENT}\""
+              }
+            }]
+          }]
+        }]
+      },
+      {
+        "name": "other-agent",
+        "agent":         {
+          "type": "label",
+          "argument":           {
+            "isLiteral": true,
+            "value": "other-docker"
+          }
+        },
+        "stages":         [
+          {
+            "name": "first-other",
+            "branches": [            {
+              "name": "default",
+              "steps": [              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": false,
+                    "value": "\"First other stage agent: ${WHICH_AGENT}\""
+                  }
+                }]
+              }]
+            }]
+          },
+          {
+            "name": "second-other",
+            "agent":             {
+              "type": "label",
+              "argument":               {
+                "isLiteral": true,
+                "value": "some-label"
+              }
+            },
+            "branches": [            {
+              "name": "default",
+              "steps": [              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": false,
+                    "value": "\"Second other stage agent: ${WHICH_AGENT}\""
+                  }
+                }]
+              }]
+            }]
+          }
+        ]
+      }
+    ]
+  }],
+  "agent":   {
+    "type": "label",
+    "argument":     {
+      "isLiteral": true,
+      "value": "some-label"
+    }
+  }
+}}

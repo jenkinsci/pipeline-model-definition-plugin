@@ -369,6 +369,16 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void simpleGroupWhen() throws Exception {
+        env(s).put("RUN_GROUP", "NOPE").set();
+        ExpectationsBuilder expect = expect("when", "simpleGroupWhen").runFromRepo(false);
+        expect.logContains("One", "Hello", "Should I run?", "Two").logNotContains("World").go();
+        env(s).put("RUN_GROUP", "RUN").set();
+        expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Should I run?", "Two", "World").go();
+    }
+
     private void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
         while (item != null && item.getFuture() == null) {
             Thread.sleep(200);

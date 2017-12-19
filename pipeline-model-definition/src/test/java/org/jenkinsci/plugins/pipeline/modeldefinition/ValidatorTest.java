@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
@@ -88,6 +89,14 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void emptyStages() throws Exception {
         expectError("emptyStages")
+                .logContains(Messages.ModelValidatorImpl_NoStages())
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void emptyStagesInGroup() throws Exception {
+        expectError("emptyStagesInGroup")
                 .logContains(Messages.ModelValidatorImpl_NoStages())
                 .go();
     }
@@ -658,7 +667,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void parallelStagesAndSteps() throws Exception {
         expectError("parallelStagesAndSteps")
-                .logContains(Messages.ModelValidatorImpl_BothStagesAndSteps("foo"))
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
                 .go();
     }
 
@@ -666,6 +675,22 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void parallelStagesDeepNesting() throws Exception {
         expectError("parallelStagesDeepNesting")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+                .go();
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void topLevelStageGroupsDeepNesting() throws Exception {
+        expectError("topLevelStageGroupsDeepNesting")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesGroupsDeepNesting() throws Exception {
+        expectError("parallelStagesGroupsDeepNesting")
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
     }
@@ -814,6 +839,54 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void specificDescribableMatch() throws Exception {
         expectError("specificDescribableMatch")
                 .logContains(Messages.ModelValidatorImpl_InvalidStepParameter("upstreamWhat", "upstreamProjects"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesAndGroups() throws Exception {
+        expectError("parallelStagesAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStepsAndGroups() throws Exception {
+        expectError("parallelStepsAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesStepsAndGroups() throws Exception {
+        expectError("parallelStagesStepsAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void invalidStageWrapperType() throws Exception {
+        expectError("invalidStageWrapperType")
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "echo", StageOptions.getAllowedOptionTypes().keySet()))
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void jobPropertyInStageOptions() throws Exception {
+        expectError("jobPropertyInStageOptions")
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "buildDiscarder", StageOptions.getAllowedOptionTypes().keySet()))
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void invalidOptionInStage() throws Exception {
+        expectError("invalidOptionInStage")
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "skipStagesAfterUnstable", StageOptions.getAllowedOptionTypes().keySet()))
                 .go();
     }
 }

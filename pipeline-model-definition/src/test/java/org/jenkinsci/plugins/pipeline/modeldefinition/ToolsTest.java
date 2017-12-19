@@ -84,6 +84,22 @@ public class ToolsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void toolsInGroup() throws Exception {
+        Maven.MavenInstallation maven350 = ToolInstallations.configureMaven35();
+
+        Maven.MavenInstallation maven301 = ToolInstallations.configureMaven3();
+
+        j.jenkins.getDescriptorByType(Maven.DescriptorImpl.class).setInstallations(maven350, maven301);
+
+        expect("toolsInGroup")
+                .logContains("Solo: Apache Maven 3.0.1",
+                        "First in group: Apache Maven 3.5.0",
+                        "Second in group: Apache Maven 3.0.1")
+                .go();
+    }
+
     @Test
     public void buildPluginParentPOM() throws Exception {
 
