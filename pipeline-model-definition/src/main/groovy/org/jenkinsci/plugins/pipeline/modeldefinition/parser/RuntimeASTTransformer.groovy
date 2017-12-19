@@ -653,13 +653,13 @@ class RuntimeASTTransformer {
                     constX(original.failFast != null ? original.failFast : false),
                     transformStages(original.parallel),
                     transformOptions(original.options),
-                    transformStageInput(original.input)))
+                    transformStageInput(original.input, original.name)))
         }
 
         return constX(null)
     }
 
-    Expression transformStageInput(@CheckForNull ModelASTStageInput original) {
+    Expression transformStageInput(@CheckForNull ModelASTStageInput original, String stageName) {
         if (isGroovyAST(original)) {
             Expression paramsExpr = constX(null)
             if (!original.parameters.isEmpty()) {
@@ -667,7 +667,7 @@ class RuntimeASTTransformer {
             }
             return ctorX(ClassHelper.make(StageInput.class),
                 args(valueOrNull(original.message),
-                    valueOrNull(original.id),
+                    valueOrNull(original.id, stageName),
                     valueOrNull(original.ok),
                     valueOrNull(original.submitter),
                     valueOrNull(original.submitterParameter),
@@ -676,13 +676,11 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    private Expression valueOrNull(@CheckForNull ModelASTValue value) {
-        if (value == null) {
-            return constX(null)
-        } else if (value.sourceLocation instanceof Expression) {
+    private Expression valueOrNull(@CheckForNull ModelASTValue value, Object defaultValue = null) {
+        if (value?.sourceLocation instanceof Expression) {
             return (Expression)value.sourceLocation
         } else {
-            return constX(null)
+            return constX(defaultValue)
         }
     }
 

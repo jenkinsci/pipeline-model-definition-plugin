@@ -67,11 +67,14 @@ public final class ModelASTStageInput extends ModelASTElement {
             o.accumulate("submitterParameter", submitterParameter.toJSON());
         }
         if (!parameters.isEmpty()) {
+            final JSONObject p = new JSONObject();
             final JSONArray a = new JSONArray();
             for (ModelASTBuildParameter parameter : parameters) {
                 a.add(parameter.toJSON());
             }
-            o.accumulate("parameters", a);
+            // Redundancy due to how we parse parameters in JSON. This makes top-level and input parameters JSON consistent.
+            p.accumulate("parameters", a);
+            o.accumulate("parameters", p);
         }
         return o;
     }

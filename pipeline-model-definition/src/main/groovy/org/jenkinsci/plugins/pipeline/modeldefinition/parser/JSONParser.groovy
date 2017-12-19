@@ -154,7 +154,6 @@ class JSONParser implements Parser {
         ModelASTStage stage = new ModelASTStage(j)
 
         stage.name = j.node.get("name").asText()
-
         if (j.node.has("agent")) {
             stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
@@ -178,9 +177,6 @@ class JSONParser implements Parser {
 
         if (j.node.has("input")) {
             stage.input = parseInput(j.append(JsonPointer.of("input")))
-            if (stage.input.id == null) {
-                stage.input.id = ModelASTValue.fromConstant(stage.name, null)
-            }
         }
 
         if (j.node.has("environment")) {

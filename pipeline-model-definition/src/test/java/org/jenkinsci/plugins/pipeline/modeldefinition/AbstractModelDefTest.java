@@ -123,7 +123,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simplePipeline",
             "agentAny",
-            "agentDocker",
             "agentLabel",
             "agentNoneWithNode",
             "metaStepSyntax",
@@ -154,7 +153,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "parallelPipelineWithSpaceInBranch",
             "parallelPipelineQuoteEscaping",
             "nestedTreeSteps",
-            "jsonSchemaNull",
             "inCustomWorkspace",
             "whenNot",
             "whenOr",
@@ -166,9 +164,15 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "when/changelog/changelog",
             "when/changelog/changeset",
             "backslashReductionInEnv",
-            "parallelStagesFailFast",
-            "stageWrapper",
-            "simpleInput"
+            "stageWrapper"
+    );
+
+    public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(
+            "simpleInput",
+            "parametersInInput",
+            "agentDocker",
+            "jsonSchemaNull",
+            "parallelStagesFailFast"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
