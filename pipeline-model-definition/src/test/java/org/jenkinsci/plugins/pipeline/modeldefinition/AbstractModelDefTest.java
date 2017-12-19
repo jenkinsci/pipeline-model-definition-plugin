@@ -134,7 +134,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "simplePostBuild",
             "simpleTools",
             "legacyMetaStepSyntax",
-            "globalLibrarySuccess",
             "perStageConfigAgent",
             "simpleJobProperties",
             "simpleTriggers",
@@ -171,6 +170,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "simpleInput",
             "parametersInInput",
             "agentDocker",
+            "globalLibrarySuccess",
             "jsonSchemaNull",
             "parallelStagesFailFast"
     );
