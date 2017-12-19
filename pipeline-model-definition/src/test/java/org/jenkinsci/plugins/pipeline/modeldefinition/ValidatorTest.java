@@ -841,4 +841,37 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelValidatorImpl_InvalidSectionType("option", "skipStagesAfterUnstable", StageOptions.getAllowedOptionTypes().keySet()))
                 .go();
     }
+
+    @Issue("JENKINS-48379")
+    @Test
+    public void inputWithoutMessage() throws Exception {
+        expectError("inputWithoutMessage")
+                .logContains(Messages.ModelValidatorImpl_MissingInputMessage())
+                .go();
+    }
+
+    @Issue("JENKINS-48379")
+    @Test
+    public void invalidInputSection() throws Exception {
+        expectError("invalidInputSection")
+                .logContains(Messages.ModelParser_InvalidInputField("banana"))
+                .go();
+    }
+
+    @Issue("JENKINS-48379")
+    @Test
+    public void duplicateInputFields() throws Exception {
+        expectError("duplicateInputFields")
+                .logContains(Messages.Parser_MultipleOfSection("message"))
+                .go();
+    }
+
+    @Issue("JENKINS-48379")
+    @Test
+    public void invalidParameterTypeInInput() throws Exception {
+        expectError("invalidParameterTypeInInput")
+                .logContains(Messages.ModelValidatorImpl_InvalidSectionType("parameter", "bananaParam",
+                        Parameters.getAllowedParameterTypes().keySet()))
+                .go();
+    }
 }

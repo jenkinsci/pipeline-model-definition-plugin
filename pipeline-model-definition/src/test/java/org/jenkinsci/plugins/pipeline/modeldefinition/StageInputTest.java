@@ -205,7 +205,6 @@ public class StageInputTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         wc.login("alice");
         HtmlPage page = wc.getPage(b, a.getUrlName());
-        HtmlForm form = page.getFormByName(is.getId());
         j.submit(page.getFormByName(is.getId()), "proceed");
         assertEquals(0, a.getExecutions().size());
         q.get();

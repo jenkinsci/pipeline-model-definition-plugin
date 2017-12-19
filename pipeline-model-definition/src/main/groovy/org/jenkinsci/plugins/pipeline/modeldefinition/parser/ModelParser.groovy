@@ -632,7 +632,7 @@ class ModelParser implements Parser {
                             input.parameters.addAll(params?.parameters)
                             break
                         default:
-                            errorCollector.error(k, Messages.ModelParser_InvalidSectionDefinition(getSourceText(s)))
+                            errorCollector.error(k, Messages.ModelParser_InvalidInputField(name))
                     }
 
                 }
