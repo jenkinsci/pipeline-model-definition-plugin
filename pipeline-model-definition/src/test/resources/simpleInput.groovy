@@ -28,7 +28,6 @@ pipeline {
         stage("foo") {
             input {
                 message "Continue?"
-                id "simple-input"
             }
             steps {
                 echo "hello"

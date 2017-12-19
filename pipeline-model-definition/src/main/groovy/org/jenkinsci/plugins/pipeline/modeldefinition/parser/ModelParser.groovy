@@ -554,6 +554,9 @@ class ModelParser implements Parser {
                             break
                         case 'input':
                             stage.input = parseInput(s)
+                            if (stage.input.id == null) {
+                                stage.input.id = ModelASTValue.fromConstant(stage.name, null)
+                            }
                             break
                         case 'tools':
                             stage.tools = parseTools(s)

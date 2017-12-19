@@ -65,7 +65,7 @@ public class StageInputTest extends AbstractModelDefTest {
         InputAction a = b.getAction(InputAction.class);
         assertEquals(1, a.getExecutions().size());
 
-        InputStepExecution is = a.getExecution("Simple-input");
+        InputStepExecution is = a.getExecution("Foo");
         assertEquals("Continue?", is.getInput().getMessage());
         assertEquals(0, is.getInput().getParameters().size());
         assertNull(is.getInput().getSubmitter());

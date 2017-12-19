@@ -18,10 +18,6 @@
       "message":       {
         "isLiteral": true,
         "value": "Continue?"
-      },
-      "id":       {
-        "isLiteral": true,
-        "value": "simple-input"
       }
     }
   }],

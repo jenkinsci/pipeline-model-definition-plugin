@@ -178,6 +178,9 @@ class JSONParser implements Parser {
 
         if (j.node.has("input")) {
             stage.input = parseInput(j.append(JsonPointer.of("input")))
+            if (stage.input.id == null) {
+                stage.input.id = ModelASTValue.fromConstant(stage.name, null)
+            }
         }
 
         if (j.node.has("environment")) {
