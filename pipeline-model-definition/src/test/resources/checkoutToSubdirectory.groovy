@@ -32,7 +32,6 @@ pipeline {
             steps {
                 echo "hello"
                 dir("subdir") {
-                    sh "ls -la"
                     script {
                         if (!fileExists("Jenkinsfile")) {
                             error "Jenkinsfile does not exist"
