@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,35 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 
-class AnyScript extends DeclarativeAgentScript<Any> {
+public class CheckoutToSubdirectory extends DeclarativeOption {
+    private String subdirectory;
 
-    AnyScript(CpsScript s, Any a) {
-        super(s, a)
+    @DataBoundConstructor
+    public CheckoutToSubdirectory(@Nullable String subdirectory) {
+        this.subdirectory = subdirectory;
     }
 
-    @Override
-    Closure run(Closure body) {
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null])
-        l.copyFlags(describable)
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
+    @CheckForNull
+    public String getSubdirectory() {
+        return subdirectory;
+    }
+
+    @Extension @Symbol("checkoutToSubdirectory")
+    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+        @Override
+        public boolean canUseInStage() {
+            return true;
         }
     }
 }

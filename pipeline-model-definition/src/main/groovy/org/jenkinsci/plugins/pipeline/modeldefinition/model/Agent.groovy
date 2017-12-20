@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.CheckoutToSubdirectory
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -95,6 +96,11 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
                 SkipDefaultCheckout skip = (SkipDefaultCheckout) options.get("skipDefaultCheckout")
                 if (skip?.isSkipDefaultCheckout()) {
                     doCheckout = false
+                }
+
+                CheckoutToSubdirectory subdir = (CheckoutToSubdirectory) options.get("checkoutToSubdirectory")
+                if (subdir?.subdirectory != null && subdir?.subdirectory != "") {
+                    a.setSubdirectory(subdir.subdirectory)
                 }
             }
             a.setDoCheckout(doCheckout)

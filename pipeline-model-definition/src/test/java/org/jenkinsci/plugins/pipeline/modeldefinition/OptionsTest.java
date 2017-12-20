@@ -158,6 +158,15 @@ public class OptionsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-44277")
+    @Test
+    public void checkoutToSubdirectory() throws Exception {
+        expect("checkoutToSubdirectory")
+                .logContains("[Pipeline] { (foo)",
+                        "hello")
+                .go();
+    }
+
     @Test
     public void simpleWrapper() throws Exception {
         expect("simpleWrapper")
