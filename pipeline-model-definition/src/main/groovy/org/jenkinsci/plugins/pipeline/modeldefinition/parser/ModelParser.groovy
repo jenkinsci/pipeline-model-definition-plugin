@@ -582,6 +582,8 @@ class ModelParser implements Parser {
                 } else {
                     w.conditions.add(parseWhenContent(s))
                 }
+            } else {
+                errorCollector.error(new ModelASTWhenCondition(statement), Messages.ModelParser_ExpectedWhen())
             }
         }
 
@@ -1204,7 +1206,7 @@ class ModelParser implements Parser {
                                 ConstantExpression exp = castOrNull(ConstantExpression.class, e.valueExpression)
                                 if (exp == null || !(exp.value instanceof Boolean)) {
                                     errorCollector.error(new ModelASTKey(e.keyExpression),
-                                        Messages.ModelParser_ExpectedFailFast())
+                                        Messages.ModelParser_ExpectedBoolean("failFast"))
                                 } else {
                                     failFast = exp.value
                                 }
