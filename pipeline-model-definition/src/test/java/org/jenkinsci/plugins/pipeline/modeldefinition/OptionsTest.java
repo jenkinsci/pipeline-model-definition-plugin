@@ -24,6 +24,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
+import com.cloudbees.plugins.credentials.BaseCredentials;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.Job;
 import hudson.model.JobProperty;
@@ -34,10 +40,14 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.LogRotator;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
+import hudson.util.Secret;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
@@ -372,4 +382,93 @@ public class OptionsTest extends AbstractModelDefTest {
                         "hello")
                 .go();
     }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void withCredentialsWrapper() throws Exception {
+        final String credentialsId = "creds";
+        final String username = "bob";
+        final String passphrase = "s3cr3t";
+        final String keyContent = "the-key";
+        SSHUserPrivateKey c = new DummyPrivateKey(credentialsId, username, passphrase, keyContent);
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), c);
+
+        expect("withCredentialsWrapper")
+                .archives("userPass.txt", username + ":" + passphrase)
+                .archives("key.txt", keyContent)
+                .go();
+    }
+
+    @Issue("JENKINS-48380")
+    @Test
+    public void withCredentialsStageWrapper() throws Exception {
+        final String credentialsId = "creds";
+        final String username = "bob";
+        final String passphrase = "s3cr3t";
+        final String keyContent = "the-key";
+        SSHUserPrivateKey c = new DummyPrivateKey(credentialsId, username, passphrase, keyContent);
+        CredentialsProvider.lookupStores(j.jenkins).iterator().next().addCredentials(Domain.global(), c);
+
+        expect("withCredentialsStageWrapper")
+                .logContains("THEUSER is null")
+                .archives("userPass.txt", username + ":" + passphrase)
+                .archives("key.txt", keyContent)
+                .go();
+    }
+
+    private static class DummyPrivateKey extends BaseCredentials implements SSHUserPrivateKey, Serializable {
+
+        private final String id;
+        private final String user;
+        private final Secret passphrase;
+        private final String keyContent;
+
+        DummyPrivateKey(String id, String user, String passphrase, final String keyContent) {
+            this.id = id;
+            this.user = user;
+            this.passphrase = Secret.fromString(passphrase);
+            this.keyContent = keyContent;
+        }
+
+        @NonNull
+        @Override
+        public String getId() {
+            return id;
+        }
+
+        @NonNull
+        @Override
+        public String getPrivateKey() {
+            return keyContent;
+        }
+
+        @Override
+        public Secret getPassphrase() {
+            return passphrase;
+        }
+
+        @NonNull
+        @Override
+        public List<String> getPrivateKeys() {
+            return Arrays.asList(keyContent);
+        }
+
+        @NonNull
+        @Override
+        public String getUsername() {
+            return user;
+        }
+
+        @NonNull
+        @Override
+        public String getDescription() {
+            return "";
+        }
+
+        @Override
+        public CredentialsScope getScope() {
+            return CredentialsScope.GLOBAL;
+        }
+    }
+
 }
