@@ -181,22 +181,22 @@ class ModelInterpreter implements Serializable {
             def thisError = null
             script.stage(thisStage.name) {
                 try {
-                    inWrappers(thisStage.options?.wrappers) {
-                        if (firstError != null) {
-                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
-                            Utils.markStageSkippedForFailure(thisStage.name)
-                            isSkipped = true
-                            if (thisStage.parallel != null) {
-                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, true, false, false))
-                            }
-                        } else if (skipUnstable(root.options)) {
-                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
-                            Utils.markStageSkippedForUnstable(thisStage.name)
-                            isSkipped = true
-                            if (thisStage.parallel != null) {
-                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, true, false))
-                            }
-                        } else {
+                    if (firstError != null) {
+                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier failure(s)")
+                        Utils.markStageSkippedForFailure(thisStage.name)
+                        isSkipped = true
+                        if (thisStage.parallel != null) {
+                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, true, false, false))
+                        }
+                    } else if (skipUnstable(root.options)) {
+                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to earlier stage(s) marking the build as unstable")
+                        Utils.markStageSkippedForUnstable(thisStage.name)
+                        isSkipped = true
+                        if (thisStage.parallel != null) {
+                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, true, false))
+                        }
+                    } else {
+                        inWrappers(thisStage.options?.wrappers) {
                             if (thisStage.parallel != null) {
                                 stageInput(thisStage.input) {
                                     if (evaluateWhen(thisStage.when)) {
