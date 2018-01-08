@@ -737,6 +737,10 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(agent, valid)
     }
 
+    boolean validateElement(@Nonnull ModelASTValue value) {
+        return validateFromContributors(value, true)
+    }
+    
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
         boolean contributorsValid = DeclarativeValidatorContributor.all().collect { contributor ->
             String error

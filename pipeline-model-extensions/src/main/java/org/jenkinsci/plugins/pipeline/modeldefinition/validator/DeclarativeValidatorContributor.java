@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -186,6 +187,11 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
 
     @CheckForNull
     public String validateElement(@Nonnull ModelASTInternalFunctionCall call, @CheckForNull FlowExecution execution) {
+        return null;
+    }
+
+    @CheckForNull
+    public String validateElement(@Nonnull ModelASTValue value, @CheckForNull FlowExecution execution) {
         return null;
     }
 
