@@ -87,7 +87,7 @@ pipeline {
                         }
                     }
                 }
-                stage("windows-2.89.2") {
+                stage("windows-newer-core") {
                     agent {
                         label "windows"
                     }
