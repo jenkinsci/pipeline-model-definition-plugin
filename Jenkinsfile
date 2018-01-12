@@ -20,7 +20,6 @@ pipeline {
     environment {
         GIT_COMMITTER_NAME = "jenkins"
         GIT_COMMITTER_EMAIL = "jenkins@jenkins.io"
-        NEWER_CORE_VERSION = "2.89.2"
     }
     
 
@@ -57,42 +56,6 @@ pipeline {
                     }
                     steps {
                         bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true'
-                    }
-                    post {
-                        always {
-                            junit '*/target/surefire-reports/*.xml'
-                        }
-                    }
-                }
-                stage("linux-newer-core") {
-                    agent {
-                        label "java"
-                    }
-                    steps {
-                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"
-                    }
-                    post {
-                        // No matter what the build status is, run this step. There are other conditions
-                        // available as well, such as "success", "failed", "unstable", and "changed".
-                        always {
-                            junit '*/target/surefire-reports/*.xml'
-                        }
-                        success {
-                            archive "**/target/*.hpi"
-                            archive "**/target/site/jacoco/jacoco.xml"
-                        }
-                        unstable {
-                            archive "**/target/*.hpi"
-                            archive "**/target/site/jacoco/jacoco.xml"
-                        }
-                    }
-                }
-                stage("windows-newer-core") {
-                    agent {
-                        label "windows"
-                    }
-                    steps {
-                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         always {
