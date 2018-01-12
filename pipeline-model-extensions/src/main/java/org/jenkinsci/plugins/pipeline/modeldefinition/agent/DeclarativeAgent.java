@@ -30,6 +30,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScrip
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
  *
@@ -38,6 +40,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsThread;
 public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
     protected boolean inStage;
     protected boolean doCheckout;
+    protected String subdirectory;
 
     @Override
     public WithScriptScript getScript(CpsScript cpsScript) throws Exception {
@@ -64,6 +67,20 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
 
     public boolean isDoCheckout() {
         return doCheckout;
+    }
+
+    public void setSubdirectory(String subdirectory) {
+        this.subdirectory = subdirectory;
+    }
+
+    public String getSubdirectory() {
+        return subdirectory;
+    }
+
+    public void copyFlags(@Nonnull DeclarativeAgent a) {
+        setInStage(a.isInStage());
+        setDoCheckout(a.isDoCheckout());
+        setSubdirectory(a.getSubdirectory());
     }
 
     public boolean hasScmContext(CpsScript script) {

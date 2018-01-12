@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
  */
 public final class ModelASTOptions extends ModelASTElement {
     private List<ModelASTOption> options = new ArrayList<>();
+    private boolean inStage = false;
 
     public ModelASTOptions(Object sourceLocation) {
         super(sourceLocation);
@@ -63,10 +64,19 @@ public final class ModelASTOptions extends ModelASTElement {
         this.options = options;
     }
 
+    public boolean isInStage() {
+        return inStage;
+    }
+
+    public void setInStage(boolean inStage) {
+        this.inStage = inStage;
+    }
+
     @Override
     public String toString() {
         return "ModelASTOptions{" +
                 "options=" + options +
+                ",inStage=" + inStage +
                 "}";
     }
 
@@ -84,6 +94,9 @@ public final class ModelASTOptions extends ModelASTElement {
 
         ModelASTOptions that = (ModelASTOptions) o;
 
+        if (!isInStage() == that.isInStage()) {
+            return false;
+        }
         return getOptions() != null ? getOptions().equals(that.getOptions()) : that.getOptions() == null;
 
     }
@@ -92,6 +105,7 @@ public final class ModelASTOptions extends ModelASTElement {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
+        result = 31 * result + (isInStage() ? 1: 0);
         return result;
     }
 }

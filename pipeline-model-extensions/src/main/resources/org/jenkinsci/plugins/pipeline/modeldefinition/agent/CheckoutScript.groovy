@@ -28,6 +28,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
+import javax.annotation.Nonnull
+
 class CheckoutScript implements Serializable {
     
     static Closure doCheckout(CpsScript script, DeclarativeAgent agent, String customWorkspace = null, Closure body) {
@@ -45,14 +47,15 @@ class CheckoutScript implements Serializable {
     private static Closure checkoutAndRun(CpsScript script, DeclarativeAgent agent, Closure body) {
         return {
             def checkoutMap = [:]
+
             if (agent.isDoCheckout() && agent.hasScmContext(script)) {
-                if (!agent.inStage) {
-                    script.stage(SyntheticStageNames.checkout()) {
-                        checkoutMap.putAll(script.checkout(script.scm) ?: [:])
+                String subDir = agent.subdirectory
+                if (subDir != null && subDir != "") {
+                    script.dir(subDir) {
+                        checkoutMap.putAll(performCheckout(script, agent))
                     }
                 } else {
-                    // No stage when we're in a nested stage already
-                    checkoutMap.putAll(script.checkout(script.scm) ?: [:])
+                    checkoutMap.putAll(performCheckout(script, agent))
                 }
             }
             if (checkoutMap) {
@@ -64,5 +67,18 @@ class CheckoutScript implements Serializable {
             }
         }
     }
-    
+
+    private static Map performCheckout(CpsScript script, DeclarativeAgent agent) {
+        def checkoutMap = [:]
+        if (!agent.inStage) {
+            script.stage(SyntheticStageNames.checkout()) {
+                checkoutMap.putAll(script.checkout(script.scm) ?: [:])
+            }
+        } else {
+            // No stage when we're in a nested stage already
+            checkoutMap.putAll(script.checkout(script.scm) ?: [:])
+        }
+
+        return checkoutMap
+    }
 }

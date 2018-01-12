@@ -43,6 +43,13 @@ public abstract class DeclarativeOptionDescriptor extends Descriptor<Declarative
     }
 
     /**
+     * If true, this option can be used in stages and is relevant there.
+     */
+    public boolean canUseInStage() {
+        return false;
+    }
+
+    /**
      * Get all {@link DeclarativeOptionDescriptor}s.
      *
      * @return a list of all {@link DeclarativeOptionDescriptor}s registered.`

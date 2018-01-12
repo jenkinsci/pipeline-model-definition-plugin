@@ -112,6 +112,10 @@ class Options implements Serializable {
         return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
     }
 
+    static Map<String,String> getEligibleDeclarativeOptionTypeClasses() {
+        return optionTypeCache.get(OPTION_CACHE_KEY)
+    }
+
     protected Object readResolve() throws IOException {
         // Need to make sure options is initialized on deserialization, even if it's going to be empty.
         this.properties = []
@@ -128,7 +132,7 @@ class Options implements Serializable {
      */
     static Map<String,String> getAllowedOptionTypes() {
         Map<String,String> c = propertyTypeCache.get(CACHE_KEY)
-        c.putAll(optionTypeCache.get(OPTION_CACHE_KEY))
+        c.putAll(getEligibleDeclarativeOptionTypeClasses())
         c.putAll(getEligibleWrapperStepClasses())
         return c.sort()
     }

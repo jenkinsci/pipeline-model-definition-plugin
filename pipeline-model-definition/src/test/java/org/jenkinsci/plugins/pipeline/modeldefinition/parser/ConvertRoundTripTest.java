@@ -52,6 +52,9 @@ public class ConvertRoundTripTest extends BaseParserLoaderTest {
         for (String c : AbstractModelDefTest.SHOULD_PASS_CONFIGS) {
             result.add(new Object[]{c});
         }
+        for (String c : AbstractModelDefTest.CONVERT_ONLY_SHOULD_PASS_CONFIGS) {
+            result.add(new Object[]{c});
+        }
 
         return result;
     }

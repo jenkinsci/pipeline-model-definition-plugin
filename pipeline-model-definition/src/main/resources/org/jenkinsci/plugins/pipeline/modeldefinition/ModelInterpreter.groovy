@@ -29,6 +29,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
@@ -68,7 +69,7 @@ class ModelInterpreter implements Serializable {
                 inDeclarativeAgent(root, root, root.agent) {
                     withCredentialsBlock(root.environment) {
                         withEnvBlock(root.getEnvVars(script)) {
-                            inWrappers(root.options) {
+                            inWrappers(root.options?.wrappers) {
                                 toolsBlock(root.agent, root.tools) {
                                     root.stages.stages.each { thisStage ->
                                         try {
@@ -195,51 +196,58 @@ class ModelInterpreter implements Serializable {
                             script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, true, false))
                         }
                     } else {
-                        if (thisStage.parallel != null) {
-                            if (evaluateWhen(thisStage.when)) {
-                                withCredentialsBlock(thisStage.environment) {
-                                    withEnvBlock(thisStage.getEnvVars(script)) {
-                                        script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, false))
+                        inWrappers(thisStage.options?.wrappers) {
+                            if (thisStage.parallel != null) {
+                                stageInput(thisStage.input) {
+                                    if (evaluateWhen(thisStage.when)) {
+                                        withCredentialsBlock(thisStage.environment) {
+                                            withEnvBlock(thisStage.getEnvVars(script)) {
+                                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, false))
+                                            }
+                                        }
+                                    } else {
+                                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                        Utils.markStageSkippedForConditional(thisStage.name)
+                                        isSkipped = true
+                                        script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, true))
                                     }
                                 }
                             } else {
-                                Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                Utils.markStageSkippedForConditional(thisStage.name)
-                                isSkipped = true
-                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, parentStage, false, false, true))
-                            }
-                        } else {
-                            def stageBody = {
-                                withCredentialsBlock(thisStage.environment) {
-                                    withEnvBlock(thisStage.getEnvVars(script)) {
-                                        toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
-                                            // Execute the actual stage and potential post-stage actions
-                                            executeSingleStage(root, thisStage, parentAgent)
+                                stageInput(thisStage.input) {
+                                    def stageBody = {
+                                        withCredentialsBlock(thisStage.environment) {
+                                            withEnvBlock(thisStage.getEnvVars(script)) {
+                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
+                                                    // Execute the actual stage and potential post-stage actions
+                                                    executeSingleStage(root, thisStage, parentAgent)
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                            }
-                            // If beforeAgent is true, evaluate the when before entering the agent.
-                            boolean whenPassed = false
-                            if (thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent) {
-                                whenPassed = evaluateWhen(thisStage.when)
-                                if (whenPassed) {
-                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                        stageBody.call()
+
+                                    // If beforeAgent is true, evaluate the when before entering the agent.
+                                    boolean whenPassed = false
+                                    if (thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent) {
+                                        whenPassed = evaluateWhen(thisStage.when)
+                                        if (whenPassed) {
+                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                stageBody.call()
+                                            }
+                                        }
+                                    } else {
+                                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                            whenPassed = evaluateWhen(thisStage.when)
+                                            if (whenPassed) {
+                                                stageBody.call()
+                                            }
+                                        }
+                                    }
+                                    if (!whenPassed) {
+                                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                        Utils.markStageSkippedForConditional(thisStage.name)
+                                        isSkipped = true
                                     }
                                 }
-                            } else {
-                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                    whenPassed = evaluateWhen(thisStage.when)
-                                    if (whenPassed) {
-                                        stageBody.call()
-                                    }
-                                }
-                            }
-                            if (!whenPassed) {
-                                Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                Utils.markStageSkippedForConditional(thisStage.name)
-                                isSkipped = true
                             }
                         }
                     }
@@ -264,6 +272,39 @@ class ModelInterpreter implements Serializable {
             }
         }
     }
+
+    def stageInput(StageInput input, Closure body) {
+        if (input != null)  {
+            return {
+                def submitted = script.input(message: input.message, id: input.id, ok: input.ok, submitter: input.submitter,
+                    submitterParameter: input.submitterParameter, parameters: input.parameters)
+                if (input.parameters.isEmpty() && input.submitterParameter == null) {
+                    // No parameters, so just proceed
+                    body.call()
+                } else {
+                    def inputEnv = []
+                    if (submitted instanceof Map) {
+                        // Multiple parameters!
+                        inputEnv = submitted.collect { k, v -> "${k}=${v}" }
+                    } else if (input.submitterParameter != null) {
+                        // Single parameter, it's the submitter.
+                        inputEnv = ["${input.submitterParameter}=${submitted}"]
+                    } else if (input.parameters.size() == 1) {
+                        // One defined parameter, so we know its name.
+                        inputEnv = ["${input.parameters.first().name}=${submitted}"]
+                    }
+                    script.withEnv(inputEnv) {
+                        body.call()
+                    }
+                }
+            }.call()
+        } else {
+            return {
+                body.call()
+            }.call()
+        }
+    }
+
     /**
      * Execute the given body closure while watching for errors that will specifically show up when there's an attempt to
      * run a step that needs a node context but doesn't have one.
@@ -292,9 +333,14 @@ class ModelInterpreter implements Serializable {
         }.call()
     }
 
+    @Deprecated
     boolean skipUnstable(Options options) {
+        return skipUnstable(options?.options)
+    }
+
+    boolean skipUnstable(Map<String,DeclarativeOption> options) {
         return script.getProperty("currentBuild").result == "UNSTABLE" &&
-            options?.options?.get("skipStagesAfterUnstable") != null
+            options?.get("skipStagesAfterUnstable") != null
     }
 
     /**
@@ -448,16 +494,21 @@ class ModelInterpreter implements Serializable {
         }
     }
 
+    @Deprecated
+    def inWrappers(Options options, Closure body) {
+        return inWrappers(options?.wrappers, body)
+    }
+
     /**
      * Executes the given closure inside 0 or more wrapper blocks if appropriate
-     * @param options The options configuration we're executing in
+     * @param wrappers A map of wrapper names to wrappers
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def inWrappers(Options options, Closure body) {
-        if (options?.wrappers != null) {
+    def inWrappers(Map<String,Object> wrappers, Closure body) {
+        if (wrappers != null) {
             return {
-                recursiveWrappers(options.wrappers.keySet().toList(), options.wrappers, body)
+                recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
             }.call()
         } else {
             return {

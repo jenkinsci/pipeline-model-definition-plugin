@@ -29,6 +29,8 @@ import groovy.transform.ToString
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.CheckoutToSubdirectory
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -76,16 +78,29 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
             DeclarativeAgent a = DeclarativeAgentDescriptor.instanceForDescriptor(foundDescriptor, argMap)
 
-            boolean doCheckout = false
+            boolean doCheckout = true
+            Map<String,DeclarativeOption> options = [:]
+            if (root?.options?.options) {
+                options.putAll(root?.options?.options)
+            }
+
             if (context instanceof Root) {
                 a.setInStage(false)
-            } else {
+            } else if (context instanceof Stage) {
                 a.setInStage(true)
+                if (((Stage)context).options?.options) {
+                    options.putAll(((Stage) context).options?.options)
+                }
             }
-            if (root != null) {
-                SkipDefaultCheckout skip = (SkipDefaultCheckout) root?.options?.options?.get("skipDefaultCheckout")
-                if (!skip?.isSkipDefaultCheckout()) {
-                    doCheckout = true
+            if (!options.isEmpty()) {
+                SkipDefaultCheckout skip = (SkipDefaultCheckout) options.get("skipDefaultCheckout")
+                if (skip?.isSkipDefaultCheckout()) {
+                    doCheckout = false
+                }
+
+                CheckoutToSubdirectory subdir = (CheckoutToSubdirectory) options.get("checkoutToSubdirectory")
+                if (subdir?.subdirectory != null && subdir?.subdirectory != "") {
+                    a.setSubdirectory(subdir.subdirectory)
                 }
             }
             a.setDoCheckout(doCheckout)

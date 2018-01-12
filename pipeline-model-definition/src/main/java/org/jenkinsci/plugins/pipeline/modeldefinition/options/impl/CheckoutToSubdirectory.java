@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,21 +30,23 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 
-public class SkipDefaultCheckout extends DeclarativeOption {
-    private Boolean skipDefaultCheckout;
+public class CheckoutToSubdirectory extends DeclarativeOption {
+    private String subdirectory;
 
     @DataBoundConstructor
-    public SkipDefaultCheckout(@Nullable Boolean skipDefaultCheckout) {
-        this.skipDefaultCheckout = skipDefaultCheckout;
+    public CheckoutToSubdirectory(@Nullable String subdirectory) {
+        this.subdirectory = subdirectory;
     }
 
-    public boolean isSkipDefaultCheckout() {
-        return skipDefaultCheckout == null || skipDefaultCheckout;
+    @CheckForNull
+    public String getSubdirectory() {
+        return subdirectory;
     }
 
-    @Extension @Symbol("skipDefaultCheckout")
+    @Extension @Symbol("checkoutToSubdirectory")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
         @Override
         public boolean canUseInStage() {

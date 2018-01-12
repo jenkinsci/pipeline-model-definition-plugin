@@ -528,7 +528,7 @@ class RuntimeASTTransformer {
             SymbolLookup symbolLookup = SymbolLookup.get()
 
             original.options.each { o ->
-                if (symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
+                if (!original.inStage && symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
                     jobProps.add(o)
                 } else if (symbolLookup.findDescriptor(DeclarativeOption.class, o.name) != null) {
                     options.add(o)
@@ -564,8 +564,12 @@ class RuntimeASTTransformer {
                 }
             }
 
-            return ctorX(ClassHelper.make(Options.class),
-                args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
+            if (original.inStage) {
+                return ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
+            } else {
+                return ctorX(ClassHelper.make(Options.class),
+                    args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
+            }
         }
 
         return constX(null)
@@ -646,11 +650,38 @@ class RuntimeASTTransformer {
                     transformStageConditionals(original.when),
                     transformTools(original.tools),
                     transformEnvironment(original.environment),
+                    constX(original.failFast != null ? original.failFast : false),
                     transformStages(original.parallel),
-                    constX(original.failFast != null ? original.failFast : false)))
+                    transformOptions(original.options),
+                    transformStageInput(original.input, original.name)))
         }
 
         return constX(null)
+    }
+
+    Expression transformStageInput(@CheckForNull ModelASTStageInput original, String stageName) {
+        if (isGroovyAST(original)) {
+            Expression paramsExpr = constX(null)
+            if (!original.parameters.isEmpty()) {
+                paramsExpr = transformListOfDescribables(original.parameters, ParameterDefinition.class)
+            }
+            return ctorX(ClassHelper.make(StageInput.class),
+                args(valueOrNull(original.message),
+                    valueOrNull(original.id, stageName),
+                    valueOrNull(original.ok),
+                    valueOrNull(original.submitter),
+                    valueOrNull(original.submitterParameter),
+                    paramsExpr))
+        }
+        return constX(null)
+    }
+
+    private Expression valueOrNull(@CheckForNull ModelASTValue value, Object defaultValue = null) {
+        if (value?.sourceLocation instanceof Expression) {
+            return (Expression)value.sourceLocation
+        } else {
+            return constX(defaultValue)
+        }
     }
 
     /**

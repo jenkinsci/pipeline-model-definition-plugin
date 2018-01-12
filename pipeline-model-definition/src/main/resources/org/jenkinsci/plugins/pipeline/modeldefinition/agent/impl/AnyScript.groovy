@@ -37,8 +37,7 @@ class AnyScript extends DeclarativeAgentScript<Any> {
     @Override
     Closure run(Closure body) {
         Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null])
-        l.inStage = describable.inStage
-        l.doCheckout = describable.doCheckout
+        l.copyFlags(describable)
         LabelScript labelScript = (LabelScript) l.getScript(script)
         return labelScript.run {
             body.call()

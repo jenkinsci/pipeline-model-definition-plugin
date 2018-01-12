@@ -154,7 +154,6 @@ class JSONParser implements Parser {
         ModelASTStage stage = new ModelASTStage(j)
 
         stage.name = j.node.get("name").asText()
-
         if (j.node.has("agent")) {
             stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
@@ -169,6 +168,15 @@ class JSONParser implements Parser {
 
         if (j.node.has("failFast") && (stage.branches.size() > 1 || j.node.has("parallel")))  {
             stage.failFast = j.node.get("failFast")?.asBoolean()
+        }
+
+        if (j.node.has("options")) {
+            stage.options = parseOptions(j.append(JsonPointer.of("options")))
+            stage.options.inStage = true
+        }
+
+        if (j.node.has("input")) {
+            stage.input = parseInput(j.append(JsonPointer.of("input")))
         }
 
         if (j.node.has("environment")) {
@@ -188,6 +196,33 @@ class JSONParser implements Parser {
         }
         return stage
 
+    }
+
+    @CheckForNull ModelASTStageInput parseInput(JsonTree j) {
+        ModelASTStageInput input = new ModelASTStageInput(j)
+
+        if (j.node.has("message")) {
+            input.message = parseValue(j.append(JsonPointer.of("message")))
+        }
+        if (j.node.has("id")) {
+            input.id = parseValue(j.append(JsonPointer.of("id")))
+        }
+        if (j.node.has("ok")) {
+            input.id = parseValue(j.append(JsonPointer.of("ok")))
+        }
+        if (j.node.has("submitter")) {
+            input.submitter = parseValue(j.append(JsonPointer.of("submitter")))
+        }
+        if (j.node.has("submitterParameter")) {
+            input.submitterParameter = parseValue(j.append(JsonPointer.of("submitterParameter")))
+        }
+        if (j.node.has("parameters")) {
+            ModelASTBuildParameters p = parseBuildParameters(j.append(JsonPointer.of("parameters")))
+            if (p != null) {
+                input.parameters.addAll(p.parameters)
+            }
+        }
+        return input
     }
 
     @CheckForNull ModelASTBranch parseBranch(JsonTree j) {

@@ -44,6 +44,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
@@ -500,6 +501,20 @@ class ModelValidatorImpl implements ModelValidator {
                 errorCollector.error(opts, Messages.ModelValidatorImpl_DuplicateOptionName(bn))
                 valid = false
             }
+            // Validate that the option is allowed for its context.
+            opts.options.findAll { it.name != null }.each { opt ->
+                if (opts.inStage && StageOptions.typeForKey(opt.name) == null) {
+                    errorCollector.error(opt,
+                        Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name,
+                            StageOptions.getAllowedOptionTypes().keySet()))
+                    valid = false
+                } else if (Options.typeForKey(opt.name) == null) {
+                    errorCollector.error(opt,
+                        Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name,
+                            Options.getAllowedOptionTypes().keySet()))
+                    valid = false
+                }
+            }
         }
 
         return validateFromContributors(opts, valid)
@@ -568,15 +583,21 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(params, valid)
     }
 
+    boolean validateElement(@Nonnull ModelASTStageInput input) {
+        boolean valid = true
+        if (input.message == null) {
+            errorCollector.error(input, Messages.ModelValidatorImpl_MissingInputMessage())
+            valid = false
+        }
+
+        return validateFromContributors(input, valid)
+    }
+
     boolean validateElement(@Nonnull ModelASTOption opt) {
         boolean valid = true
 
         if (opt.name == null) {
             // Validation failed at compilation time so move on.
-        } else if (Options.typeForKey(opt.name) == null) {
-            errorCollector.error(opt,
-                Messages.ModelValidatorImpl_InvalidSectionType("option", opt.name, Options.getAllowedOptionTypes().keySet()))
-            valid = false
         } else if (opt.args.any { it instanceof ModelASTKeyValueOrMethodCallPair }
             && !opt.args.every { it instanceof ModelASTKeyValueOrMethodCallPair }) {
             errorCollector.error(opt, Messages.ModelValidatorImpl_MixedNamedAndUnnamedParameters())

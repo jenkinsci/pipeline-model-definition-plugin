@@ -452,6 +452,34 @@
       ],
       "additionalProperties": false
     },
+    "input": {
+      "description": "An input prompt for a stage",
+      "type": "object",
+      "properties": {
+        "message": {
+          "$ref": "#/definitions/rawArgument"
+        },
+        "id": {
+          "$ref": "#/definitions/rawArgument"
+        },
+        "ok": {
+          "$ref": "#/definitions/rawArgument"
+        },
+        "submitter": {
+          "$ref": "#/definitions/rawArgument"
+        },
+        "submitterParameter": {
+          "$ref": "#/definitions/rawArgument"
+        },
+        "parameters": {
+          "$ref": "#/definitions/parameters"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "additionalProperties": false
+    },
     "stage": {
       "description": "A single Pipeline stage, with a name and either one or more branches or one or more nested stages",
       "type": "object",
@@ -476,6 +504,12 @@
         },
         "environment": {
           "$ref": "#/definitions/environment"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "input": {
+          "$ref": "#/definitions/input"
         },
         "branches": {
           "type": "array",

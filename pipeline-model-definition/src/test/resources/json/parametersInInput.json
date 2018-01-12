@@ -1,0 +1,83 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": false,
+            "value": "\"Would I like to eat a ${fruit}? ${flag}\""
+          }
+        }]
+      }]
+    }],
+    "input":     {
+      "message":       {
+        "isLiteral": true,
+        "value": "Continue?"
+      },
+      "id":       {
+        "isLiteral": true,
+        "value": "simple-input"
+      },
+      "parameters": {"parameters":       [
+        {
+          "name": "booleanParam",
+          "arguments":           [
+            {
+              "key": "defaultValue",
+              "value":               {
+                "isLiteral": true,
+                "value": true
+              }
+            },
+            {
+              "key": "description",
+              "value":               {
+                "isLiteral": true,
+                "value": ""
+              }
+            },
+            {
+              "key": "name",
+              "value":               {
+                "isLiteral": true,
+                "value": "flag"
+              }
+            }
+          ]
+        },
+        {
+          "name": "string",
+          "arguments":           [
+            {
+              "key": "defaultValue",
+              "value":               {
+                "isLiteral": true,
+                "value": "banana"
+              }
+            },
+            {
+              "key": "description",
+              "value":               {
+                "isLiteral": true,
+                "value": ""
+              }
+            },
+            {
+              "key": "name",
+              "value":               {
+                "isLiteral": true,
+                "value": "fruit"
+              }
+            }
+          ]
+        }
+      ]}
+    }
+  }],
+  "agent": {"type": "none"}
+}}
