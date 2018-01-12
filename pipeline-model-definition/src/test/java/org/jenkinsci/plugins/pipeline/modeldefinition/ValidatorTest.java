@@ -254,7 +254,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void parallelPipelineWithInvalidFailFast() throws Exception {
         expectError("parallelPipelineWithInvalidFailFast")
-                .logContains(Messages.ModelParser_ExpectedFailFast())
+                .logContains(Messages.ModelParser_ExpectedBoolean("failFast"))
                 .go();
     }
 

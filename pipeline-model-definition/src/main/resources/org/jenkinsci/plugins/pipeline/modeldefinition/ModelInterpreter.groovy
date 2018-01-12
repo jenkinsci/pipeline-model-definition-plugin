@@ -214,21 +214,38 @@ class ModelInterpreter implements Serializable {
                                 }
                             } else {
                                 stageInput(thisStage.input) {
-                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                        if (evaluateWhen(thisStage.when)) {
-                                            withCredentialsBlock(thisStage.environment) {
-                                                withEnvBlock(thisStage.getEnvVars(script)) {
-                                                    toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
-                                                        // Execute the actual stage and potential post-stage actions
-                                                        executeSingleStage(root, thisStage, parentAgent)
-                                                    }
+                                    def stageBody = {
+                                        withCredentialsBlock(thisStage.environment) {
+                                            withEnvBlock(thisStage.getEnvVars(script)) {
+                                                toolsBlock(thisStage.agent ?: root.agent, thisStage.tools, root) {
+                                                    // Execute the actual stage and potential post-stage actions
+                                                    executeSingleStage(root, thisStage, parentAgent)
                                                 }
                                             }
-                                        } else {
-                                            Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
-                                            Utils.markStageSkippedForConditional(thisStage.name)
-                                            isSkipped = true
                                         }
+                                    }
+
+                                    // If beforeAgent is true, evaluate the when before entering the agent.
+                                    boolean whenPassed = false
+                                    if (thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent) {
+                                        whenPassed = evaluateWhen(thisStage.when)
+                                        if (whenPassed) {
+                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                stageBody.call()
+                                            }
+                                        }
+                                    } else {
+                                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                            whenPassed = evaluateWhen(thisStage.when)
+                                            if (whenPassed) {
+                                                stageBody.call()
+                                            }
+                                        }
+                                    }
+                                    if (!whenPassed) {
+                                        Utils.logToTaskListener("Stage '${thisStage.name}' skipped due to when conditional")
+                                        Utils.markStageSkippedForConditional(thisStage.name)
+                                        isSkipped = true
                                     }
                                 }
                             }

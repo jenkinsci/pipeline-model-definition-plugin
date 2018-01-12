@@ -240,6 +240,10 @@ class JSONParser implements Parser {
     @CheckForNull ModelASTWhen parseWhen(JsonTree j) {
         ModelASTWhen when = new ModelASTWhen(j)
 
+        if (j.node.has("beforeAgent")) {
+            when.beforeAgent = j.node.get("beforeAgent")?.asBoolean()
+        }
+
         JsonTree conditionsTree = j.append(JsonPointer.of("conditions"))
         conditionsTree.node.eachWithIndex { JsonNode entry, int i ->
             JsonTree condTree = conditionsTree.append(JsonPointer.of(i))

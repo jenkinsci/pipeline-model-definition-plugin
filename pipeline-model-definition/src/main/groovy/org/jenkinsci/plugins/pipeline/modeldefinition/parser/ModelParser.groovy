@@ -565,15 +565,7 @@ class ModelParser implements Parser {
                             stage.parallel = parseStages(s)
                             break
                         case 'failFast':
-                            List<Expression> args = ((TupleExpression) mc.arguments).expressions
-
-                            ConstantExpression exp = castOrNull(ConstantExpression.class, args[0])
-                            if (exp == null || !(exp.value instanceof Boolean)) {
-                                errorCollector.error(new ModelASTKey(mc.method),
-                                    Messages.ModelParser_ExpectedFailFast())
-                            } else {
-                                stage.setFailFast((Boolean)exp.value)
-                            }
+                            stage.setFailFast(parseBooleanMethod(mc))
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
@@ -646,10 +638,34 @@ class ModelParser implements Parser {
         BlockStatement block = asBlock(stepsBlock.body.code)
         ModelASTWhen w = new ModelASTWhen(statement)
         block.statements.each { s ->
-            w.conditions.add(parseWhenContent(s))
+            def mc = matchMethodCall(s)
+            if (mc != null) {
+                def name = parseMethodName(mc)
+                if (name == "beforeAgent") {
+                    w.beforeAgent = parseBooleanMethod(mc)
+                } else {
+                    w.conditions.add(parseWhenContent(s))
+                }
+            } else {
+                errorCollector.error(new ModelASTWhenCondition(statement), Messages.ModelParser_ExpectedWhen())
+            }
         }
 
         return w
+    }
+
+    Boolean parseBooleanMethod(MethodCallExpression mc) {
+        List<Expression> args = ((TupleExpression) mc.arguments).expressions
+        def name = parseMethodName(mc)
+
+        ConstantExpression exp = castOrNull(ConstantExpression.class, args[0])
+        if (exp == null || !(exp.value instanceof Boolean)) {
+            errorCollector.error(new ModelASTKey(mc.method),
+                Messages.ModelParser_ExpectedBoolean(name))
+            return null
+        } else {
+            return (Boolean)exp.value
+        }
     }
 
     /**
@@ -1254,7 +1270,7 @@ class ModelParser implements Parser {
                                 ConstantExpression exp = castOrNull(ConstantExpression.class, e.valueExpression)
                                 if (exp == null || !(exp.value instanceof Boolean)) {
                                     errorCollector.error(new ModelASTKey(e.keyExpression),
-                                        Messages.ModelParser_ExpectedFailFast())
+                                        Messages.ModelParser_ExpectedBoolean("failFast"))
                                 } else {
                                     failFast = exp.value
                                 }

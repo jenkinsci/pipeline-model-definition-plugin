@@ -99,6 +99,15 @@ class Options implements Serializable {
             }
         )
 
+    /**
+     * Invalidate our type caches.
+     */
+    static void invalidateCaches() {
+        wrapperStepsTypeCache.invalidateAll()
+        propertyTypeCache.invalidateAll()
+        optionTypeCache.invalidateAll()
+    }
+
     static Map<String,String> getEligibleWrapperStepClasses() {
         return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
     }

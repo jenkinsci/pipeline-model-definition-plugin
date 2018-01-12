@@ -48,12 +48,16 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Extension point for contributing additional {@link ModelASTElement} validation checks to {@link ModelValidator} runs.
@@ -74,9 +78,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
     
+    @Nonnull
+    public final List<String> validateElementAll(@Nonnull ModelASTElement element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTAgent agent, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTAgent element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -84,9 +108,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTBranch element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTBuildConditionsContainer container, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTBuildConditionsContainer element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -94,9 +138,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return validateElement((ModelASTBuildConditionsContainer) postBuild, execution);
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTPostBuild element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTPostStage post, @CheckForNull FlowExecution execution) {
         return validateElement((ModelASTBuildConditionsContainer) post, execution);
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTPostStage element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -104,9 +168,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTBuildCondition element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTEnvironment environment, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTEnvironment element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -114,9 +198,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTTools element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTStep step, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTStep element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -124,9 +228,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTWhen element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTMethodCall methodCall, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTMethodCall element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -134,9 +258,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTOptions element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTTriggers triggers, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTTriggers element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -144,9 +288,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTBuildParameters element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTOption jobProperty, @CheckForNull FlowExecution execution) {
         return validateElement((ModelASTMethodCall) jobProperty, execution);
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTOption element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -154,14 +318,44 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return validateElement((ModelASTMethodCall) trigger, execution);
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTTrigger element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTBuildParameter buildParameter, @CheckForNull FlowExecution execution) {
         return validateElement((ModelASTMethodCall) buildParameter, execution);
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTBuildParameter element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+        
     @CheckForNull
     public String validateElement(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTPipelineDef element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -169,9 +363,29 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTStage element, boolean isNested,
+                                                 @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, isNested, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
     @CheckForNull
     public String validateElement(@Nonnull ModelASTStages stages, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTStages element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     @CheckForNull
@@ -179,14 +393,59 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTLibraries element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTWhenCondition condition, @CheckForNull FlowExecution execution) {
         return null;
     }
 
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTWhenCondition element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
     @CheckForNull
     public String validateElement(@Nonnull ModelASTInternalFunctionCall call, @CheckForNull FlowExecution execution) {
         return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTInternalFunctionCall element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
+    @CheckForNull
+    public String validateElement(@Nonnull ModelASTValue value, @CheckForNull FlowExecution execution) {
+        return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTValue element, @CheckForNull FlowExecution execution) {
+        String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
     }
 
     /**

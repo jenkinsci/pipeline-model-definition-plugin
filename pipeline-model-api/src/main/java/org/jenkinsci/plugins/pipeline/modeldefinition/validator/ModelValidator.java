@@ -47,6 +47,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
 
@@ -99,4 +100,6 @@ public interface ModelValidator {
     boolean validateElement(ModelASTInternalFunctionCall call);
 
     boolean validateElement(ModelASTStageInput input);
+
+    boolean validateElement(ModelASTValue value);
 }

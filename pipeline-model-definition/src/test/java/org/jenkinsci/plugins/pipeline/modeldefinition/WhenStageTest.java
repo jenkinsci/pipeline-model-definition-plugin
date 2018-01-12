@@ -369,6 +369,30 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-44461")
+    @Test
+    public void whenBeforeAgentTrue() throws Exception {
+        expect("whenBeforeAgentTrue")
+                .logContains("Heal it")
+                .go();
+    }
+
+    @Issue("JENKINS-44461")
+    @Test
+    public void whenBeforeAgentFalse() throws Exception {
+        expect("whenBeforeAgentFalse")
+                .logContains("Heal it")
+                .go();
+    }
+
+    @Issue("JENKINS-44461")
+    @Test
+    public void whenBeforeAgentUnspecified() throws Exception {
+        expect("whenBeforeAgentUnspecified")
+                .logContains("Heal it")
+                .go();
+    }
+
     private void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
         while (item != null && item.getFuture() == null) {
             Thread.sleep(200);

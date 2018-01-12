@@ -40,6 +40,8 @@ public class ModelASTWhen extends ModelASTElement {
 
     private List<ModelASTWhenContent> conditions = new ArrayList<>();
 
+    private Boolean beforeAgent;
+
     public ModelASTWhen(Object sourceLocation) {
         super(sourceLocation);
     }
@@ -52,18 +54,35 @@ public class ModelASTWhen extends ModelASTElement {
         this.conditions = conditions;
     }
 
+    public Boolean getBeforeAgent() {
+        return beforeAgent;
+    }
+
+    public void setBeforeAgent(Boolean beforeAgent) {
+        this.beforeAgent = beforeAgent;
+    }
+
     @Override
     public Object toJSON() {
+        final JSONObject o = new JSONObject();
         final JSONArray a = new JSONArray();
         for (ModelASTWhenContent c : conditions) {
             a.add(c.toJSON());
         }
-        return new JSONObject().accumulate("conditions", a);
+        o.accumulate("conditions", a);
+
+        if (beforeAgent != null) {
+            o.accumulate("beforeAgent", beforeAgent);
+        }
+        return o;
     }
 
     @Override
     public String toGroovy() {
         StringBuilder result = new StringBuilder("when {\n");
+        if (beforeAgent != null && beforeAgent) {
+            result.append("beforeAgent true\n");
+        }
         for (ModelASTWhenContent c : conditions) {
             result.append(c.toGroovy()).append("\n");
         }
@@ -83,6 +102,7 @@ public class ModelASTWhen extends ModelASTElement {
     public String toString() {
         return "ModelASTWhen{" +
                 "conditions=" + conditions +
+                ", beforeAgent=" + beforeAgent +
                 "}";
     }
 

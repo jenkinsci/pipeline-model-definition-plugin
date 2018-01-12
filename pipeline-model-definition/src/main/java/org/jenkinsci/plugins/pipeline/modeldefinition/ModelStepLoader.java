@@ -24,6 +24,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
@@ -57,6 +60,16 @@ public class ModelStepLoader extends GlobalVariable {
                 .loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter")
                 .getConstructor(CpsScript.class)
                 .newInstance(script);
+    }
+
+    /**
+     * Make sure we've invalidated the option type caches due to potential race conditions with their population.
+     * Because we're using {@link Initializer}, we need this to be triggered in an {@link Extension}, so here is as good
+     * a place as any.
+     */
+    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
+    public static void invalidateOptionTypeCaches() {
+        Options.invalidateCaches();
     }
 
 }

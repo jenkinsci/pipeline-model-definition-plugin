@@ -58,9 +58,17 @@ class StageConditionals implements Serializable {
         )
 
     final Closure rawClosure
+    final Boolean beforeAgent
 
+    @Deprecated
     @Whitelisted
     StageConditionals(Closure rawClosure) {
+        this(rawClosure, null)
+    }
+
+    @Whitelisted
+    StageConditionals(Closure rawClosure, Boolean beforeAgent) {
         this.rawClosure = rawClosure
+        this.beforeAgent = beforeAgent
     }
 }
