@@ -1,0 +1,57 @@
+{"pipeline": {
+  "stages":   [
+    {
+      "name": "One",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Hello"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Two",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "script",
+          "arguments": [          {
+            "key": "scriptBlock",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"World\"\n                    echo \"Heal it\""
+            }
+          }]
+        }]
+      }],
+      "agent":       {
+        "type": "label",
+        "argument":         {
+          "isLiteral": true,
+          "value": "here"
+        }
+      },
+      "when":       {
+        "conditions": [        {
+          "name": "expression",
+          "arguments": [          {
+            "key": "scriptBlock",
+            "value":             {
+              "isLiteral": true,
+              "value": "return getContext(hudson.FilePath) == null"
+            }
+          }]
+        }],
+        "beforeAgent": true
+      }
+    }
+  ],
+  "agent": {"type": "none"}
+}}

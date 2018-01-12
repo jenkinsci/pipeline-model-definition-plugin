@@ -412,6 +412,9 @@
       "description": "Conditions to evaluate whether the stage should run or not",
       "type": "object",
       "properties": {
+        "beforeAgent": {
+          "type": "boolean"
+        },
         "conditions": {
           "type": "array",
           "minItems": 1,

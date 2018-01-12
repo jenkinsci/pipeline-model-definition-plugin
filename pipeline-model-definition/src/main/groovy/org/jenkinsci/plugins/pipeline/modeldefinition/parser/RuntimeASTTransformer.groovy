@@ -675,7 +675,8 @@ class RuntimeASTTransformer {
             }
 
             return ctorX(ClassHelper.make(StageConditionals.class),
-                args(closureX(block(returnS(closList)))))
+                args(closureX(block(returnS(closList))),
+                    constX(original.beforeAgent != null ? original.beforeAgent : false)))
         }
         return constX(null)
     }

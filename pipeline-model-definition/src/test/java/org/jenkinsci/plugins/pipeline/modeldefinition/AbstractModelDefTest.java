@@ -158,6 +158,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "whenNot",
             "whenOr",
             "whenAnd",
+            "whenBeforeAgentTrue",
             "usernamePassword",
             "environmentCrossReferences",
             "nestedParallelStages",
