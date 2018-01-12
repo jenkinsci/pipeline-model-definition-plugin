@@ -362,7 +362,7 @@
     <jenkins.version>2.7.3</jenkins.version>
     <java.level>7</java.level>
     <groovy.version>2.4.7</groovy.version>
-    <concurrency>0.5C</concurrency>
+    <concurrency>0.25C</concurrency>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
   </properties>
 
