@@ -737,16 +737,22 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(agent, valid)
     }
 
+    boolean validateElement(@Nonnull ModelASTValue value) {
+        return validateFromContributors(value, true)
+    }
+
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
         boolean contributorsValid = DeclarativeValidatorContributor.all().collect { contributor ->
-            String error
+            List<String> errors
             if (!(element instanceof ModelASTStage)) {
-                error = contributor.validateElement(element, getExecution())
+                errors = contributor.validateElementAll(element, getExecution())
             } else {
-                error = contributor.validateElement((ModelASTStage)element, isNested, getExecution())
+                errors = contributor.validateElementAll((ModelASTStage)element, isNested, getExecution())
             }
-            if (error != null) {
-                errorCollector.error(element, error)
+            if (!errors.isEmpty()) {
+                errors.each { err ->
+                    errorCollector.error(element, err)
+                }
                 return false
             } else {
                 return true

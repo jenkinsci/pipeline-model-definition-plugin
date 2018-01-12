@@ -24,6 +24,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
+
+import javax.annotation.Nonnull;
 
 /**
  * Represents the value in a key/value pair, as used in {@link ModelASTEnvironment}, {@link ModelASTNamedArgumentList} and elsewhere.
@@ -64,6 +67,11 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
      */
     public Object getValue() {
         return value;
+    }
+
+    @Override
+    public void validate(@Nonnull final ModelValidator validator) {
+        validator.validateElement(this);
     }
 
     @Override
