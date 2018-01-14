@@ -57,11 +57,13 @@ class Root implements Serializable {
 
     Libraries libraries
 
+    Axes axes
+
     final String astUUID
 
     @Whitelisted
     Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
-         Triggers triggers, Parameters parameters, Libraries libraries, String astUUID) {
+         Triggers triggers, Parameters parameters, Libraries libraries, Axes axes, String astUUID) {
         this.agent = agent
         this.stages = stages
         this.post = post
@@ -71,6 +73,7 @@ class Root implements Serializable {
         this.triggers = triggers
         this.parameters = parameters
         this.libraries = libraries
+        this.axes = axes
         this.astUUID = astUUID
     }
 

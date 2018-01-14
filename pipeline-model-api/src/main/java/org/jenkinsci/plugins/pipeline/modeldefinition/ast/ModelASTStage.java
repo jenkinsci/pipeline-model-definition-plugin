@@ -28,6 +28,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTStages parallel;
     private ModelASTOptions options;
     private ModelASTStageInput input;
+    private ModelASTAxes axes;
 
     public ModelASTStage(Object sourceLocation) {
         super(sourceLocation);
@@ -76,6 +77,10 @@ public final class ModelASTStage extends ModelASTElement {
             o.accumulate("input", input.toJSON());
         }
 
+        if (axes != null) {
+            o.accumulate("axes", axes.toJSON());
+        }
+
         return o;
     }
 
@@ -112,6 +117,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (input != null) {
             input.validate(validator);
+	}
+        if (axes != null) {
+            axes.validate(validator);
         }
     }
 
@@ -128,6 +136,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (tools != null) {
             result.append(tools.toGroovy());
+        }
+        if (axes != null) {
+            result.append(axes.toGroovy());
         }
         if (environment != null) {
             result.append(environment.toGroovy());
@@ -203,6 +214,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (tools != null) {
             tools.removeSourceLocation();
         }
+        if (axes != null) {
+            axes.removeSourceLocation();
+        }
         if (environment != null) {
             environment.removeSourceLocation();
         }
@@ -262,6 +276,14 @@ public final class ModelASTStage extends ModelASTElement {
         this.tools = tools;
     }
 
+    public ModelASTAxes getAxes() {
+        return axes;
+    }
+
+    public void setAxes(ModelASTAxes axes) {
+        this.axes = axes;
+    }
+
     public ModelASTEnvironment getEnvironment() {
         return environment;
     }
@@ -316,6 +338,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", parallel=" + parallel +
                 ", options=" + options +
                 ", input=" + input +
+                ", axes=" + axes +
                 "}";
     }
 
@@ -363,6 +386,12 @@ public final class ModelASTStage extends ModelASTElement {
         if (getParallel() != null ? !getParallel().equals(that.getParallel()) : that.getParallel() != null) {
             return false;
         }
+        if (getAxes() != null ? !getAxes().equals(that.getAxes()) : that.getAxes() != null) {
+            return false;
+        }
+        if (getEnvironment() != null ? !getEnvironment().equals(that.getEnvironment()) : that.getEnvironment() != null) {
+            return false;
+        }
         return getBranches() != null ? getBranches().equals(that.getBranches()) : that.getBranches() == null;
 
     }
@@ -381,6 +410,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getParallel() != null ? getParallel().hashCode() : 0);
         result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         result = 31 * result + (getInput() != null ? getInput().hashCode() : 0);
+        result = 31 * result + (getAxes() != null ? getAxes().hashCode() : 0);
         return result;
     }
 }

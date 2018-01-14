@@ -204,6 +204,10 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(t, valid)
     }
 
+    boolean validateElement(ModelASTAxes modelASTAxes) {
+        return validateFromContributors(modelASTAxes, true)
+    }
+
     boolean validateElement(ModelASTWhen when) {
         boolean valid = true
         if (when.conditions.isEmpty()) {

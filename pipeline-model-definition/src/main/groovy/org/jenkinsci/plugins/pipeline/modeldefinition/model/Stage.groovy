@@ -55,6 +55,8 @@ class Stage implements Serializable {
 
     Stages parallel
 
+    Axes axes
+
     boolean failFast
 
     StageOptions options
@@ -69,7 +71,7 @@ class Stage implements Serializable {
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
-          Environment environment, boolean failFast, Stages parallel, StageOptions options, StageInput input) {
+          Environment environment, boolean failFast, Stages parallel, StageOptions options, StageInput input, Axes axes) {
         this.name = name
         this.steps = steps
         this.agent = agent
@@ -78,6 +80,7 @@ class Stage implements Serializable {
         this.tools = tools
         this.environment = environment
         this.parallel = parallel
+        this.axes = axes
         this.failFast = failFast
         this.options = options
         this.input = input

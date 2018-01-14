@@ -22,6 +22,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTBuildParameters parameters;
     private ModelASTTriggers triggers;
     private ModelASTLibraries libraries;
+    private ModelASTAxes axes;
 
     public ModelASTPipelineDef(Object sourceLocation) {
         super(sourceLocation);
@@ -35,6 +36,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         a.put("environment", environment != null ? environment.toJSON() : null);
         a.put("agent", agent != null ? agent.toJSON() : null);
         a.put("tools", tools != null ? tools.toJSON() : null);
+        a.put("axes", axes != null ? axes.toJSON() : null);
         if (options != null && !options.getOptions().isEmpty()) {
             a.put("options", options.toJSON());
         } else {
@@ -89,6 +91,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (libraries != null) {
             libraries.validate(validator);
         }
+        if (axes != null) {
+            axes.validate(validator);
+        }
     }
 
     @Override
@@ -108,6 +113,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         }
         if (tools != null) {
             result.append(tools.toGroovy());
+        }
+        if (axes != null) {
+            result.append(axes.toGroovy());
         }
         if (environment != null) {
             result.append(environment.toGroovy());
@@ -189,6 +197,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (tools != null) {
             tools.removeSourceLocation();
         }
+        if (axes != null) {
+            axes.removeSourceLocation();
+        }
         if (options != null) {
             options.removeSourceLocation();
         }
@@ -252,6 +263,14 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         this.tools = tools;
     }
 
+    public void setAxes(ModelASTAxes axes) {
+        this.axes = axes;
+    }
+
+    public ModelASTAxes getAxes() {
+        return axes;
+    }
+
     public ModelASTOptions getOptions() {
         return options;
     }
@@ -289,6 +308,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 ", parameters=" + parameters +
                 ", triggers=" + triggers +
                 ", libraries=" + libraries +
+                ", axes=" + axes +
                 "}";
     }
 
@@ -323,6 +343,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (getTools() != null ? !getTools().equals(that.getTools()) : that.getTools() != null) {
             return false;
         }
+        if (getAxes() != null ? !getAxes().equals(that.getAxes()) : that.getAxes() != null) {
+            return false;
+        }
         if (getOptions() != null
                 ? !getOptions().equals(that.getOptions())
                 : that.getOptions() != null) {
@@ -346,6 +369,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result = 31 * result + (getEnvironment() != null ? getEnvironment().hashCode() : 0);
         result = 31 * result + (getAgent() != null ? getAgent().hashCode() : 0);
         result = 31 * result + (getTools() != null ? getTools().hashCode() : 0);
+        result = 31 * result + (getAxes() != null ? getAxes().hashCode() : 0);
         result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getTriggers() != null ? getTriggers().hashCode() : 0);

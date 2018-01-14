@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTStages extends ModelASTElement {
+public final class ModelASTStages extends ModelASTElement{
     private List<ModelASTStage> stages = new ArrayList<>();
     private final UUID uuid;
 

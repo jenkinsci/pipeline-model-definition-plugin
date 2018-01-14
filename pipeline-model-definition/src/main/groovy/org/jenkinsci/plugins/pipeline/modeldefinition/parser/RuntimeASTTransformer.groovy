@@ -186,6 +186,7 @@ class RuntimeASTTransformer {
             // Filter for only the desired value type - ModelASTValue for env vars, ModelASTInternalFunctionCall for
             // credentials.
             if (v instanceof ModelASTElement && valueType.isInstance(v) && v.sourceLocation != null) {
+                println(v.sourceLocation.class)
                 if (v.sourceLocation instanceof Expression) {
                     Expression toTransform = (Expression)v.sourceLocation
 
@@ -608,6 +609,47 @@ class RuntimeASTTransformer {
         return transformBuildConditionsContainer(original, PostStage.class)
     }
 
+
+    /**
+     * Generates the axes combinations
+     *
+     * @param axes The incoming axes
+     * @param ret The resulting combinations
+     * @return The resulting combinations.
+     */
+    List GeneratePermutations(Map axes){
+        List<Map<String,String>> ret = []
+        if (axes.size() == 0)
+            return ret
+        else {
+            axes.each { k, v ->
+                if( ret.size() == 0)
+                    v.each { i ->
+                        Map<String,String> r2 = [:]
+                        r2[k.key] = i.value
+                        ret.push(r2)
+                    }
+                else {
+                    List<Map<String,String>> newRet = []
+                    ret.each { m ->
+                        v.each { i ->
+                            Map<String,String> n = [:]
+                            m.each {k1, v1 ->
+                                n[k1] = v1
+                            }
+                            n[k.key] = i.value
+                            newRet.push(n)
+                        }
+                    }
+                    ret = newRet
+                }
+            }
+        }
+        return ret
+    }
+
+
+
     /**
      * Generates the AST (to be CPS-transformed) for instantiating {@link Root}.
      *
@@ -617,6 +659,63 @@ class RuntimeASTTransformer {
      */
     Expression transformRoot(@CheckForNull ModelASTPipelineDef original) {
         if (isGroovyAST(original)) {
+
+            // do stuff to multiplicate out the axis, should there be any...
+
+            if(original.axes != null){
+                List ret = GeneratePermutations(original.axes.getaxes())
+
+                def newStages = new ModelASTStages(original.sourceLocation)
+                newStages.stages = []
+
+                def useParallel = false
+
+                if(useParallel) {
+                    //this chokes but the dump when rerun works, go figure
+                    original.stages.stages.each { st ->
+                        def newStage = new ModelASTStage(original.sourceLocation)
+                        newStage.name = st.name
+                        newStage.parallel = []
+
+                        ret.each { a ->
+                            def s = st.clone()
+                            s.name = a.toMapString() + ' ' + s.name
+                            newStage.parallel.stages << s
+                        }
+                        newStages.stages << newStage
+                    }
+                } else {
+                    original.stages.stages.each { st ->
+                        ret.each { a ->
+                            ModelASTStage s = st.clone()
+                            s.axes = null
+
+                            if (!st.environment)
+                                s.environment = new ModelASTEnvironment(original.sourceLocation)
+                            else {
+                                s.environment = st.environment.clone()
+                                s.environment.variables = s.environment.variables.clone()
+                            }
+                            a.each { k,v ->
+                                ConstantExpression ss = new ConstantExpression(v)
+                                ModelASTKey newKey = new ModelASTKey(ss)
+                                //ModelASTValue newValue = ModelASTValue.fromGString("'${v}'", original.sourceLocation)
+                                ModelASTValue newValue = ModelASTValue.fromConstant(v, ss)
+                                newKey.key = k
+
+                                s.environment.variables[newKey] = newValue
+                            }
+                            s.name = a.toMapString() + ' ' + s.name
+                            newStages.stages << s
+                        }
+                    }
+                }
+                original.stages = newStages
+                original.axes = null
+            }
+
+            println(original.toGroovy())
+
             return ctorX(ClassHelper.make(Root.class),
                 args(transformAgent(original.agent),
                     transformStages(original.stages),
@@ -627,6 +726,7 @@ class RuntimeASTTransformer {
                     transformTriggers(original.triggers),
                     transformParameters(original.parameters),
                     transformLibraries(original.libraries),
+                    transformAxes(original.axes),
                     constX(original.stages.getUuid().toString())))
         }
 
@@ -653,6 +753,7 @@ class RuntimeASTTransformer {
                     constX(original.failFast != null ? original.failFast : false),
                     transformStages(original.parallel),
                     transformOptions(original.options),
+                    transformAxes(original.axes),
                     transformStageInput(original.input, original.name)))
         }
 
@@ -797,6 +898,30 @@ class RuntimeASTTransformer {
                 }
             }
             return ctorX(ClassHelper.make(Tools.class), args(toolsMap))
+        }
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating {@link Axes}.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link Axes}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformAxes(@CheckForNull ModelASTAxes original) {
+        if (isGroovyAST(original) && !original.axes?.isEmpty()) {
+            MapExpression axesMap = new MapExpression()
+            original.axes.each { k, v ->
+                if (v.sourceLocation != null && v.sourceLocation instanceof Expression) {
+                    if (v.sourceLocation instanceof ClosureExpression) {
+                        axesMap.addMapEntryExpression(constX(k.key), (ClosureExpression) v.sourceLocation)
+                    } else {
+                        axesMap.addMapEntryExpression(constX(k.key), closureX(block(returnS((Expression) v.sourceLocation))))
+                    }
+                }
+            }
+            return ctorX(ClassHelper.make(Axes.class), args(axesMap))
         }
         return constX(null)
     }

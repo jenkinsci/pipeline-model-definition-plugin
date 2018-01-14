@@ -254,6 +254,9 @@ class ModelParser implements Parser {
                     case 'postBuild':
                         errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedPostBuild())
                         break
+                    case 'axes':
+                        r.axes = parseAxes(stmt)
+                        break
                     default:
                         // We need to check for unknowns here.
                         errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
@@ -495,6 +498,43 @@ class ModelParser implements Parser {
         return r
     }
 
+    @Nonnull ModelASTAxes parseAxes(Statement stmt) {
+        //Probably want to support axis1 = ['a','b','c'] rather than axis1('a','b','c')
+        def r = new ModelASTAxes(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m==null) {
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("axes"))
+            return r
+        } else {
+            eachStatement(m.body.code) { s ->
+                def mc = matchMethodCall(s)
+                if (mc == null) {
+                    // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+                    errorCollector.error(r, Messages.ModelParser_ExpectedAxes())
+                } else {
+                    def axsKey = parseKey(mc.method)
+
+                    List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                    if (args.isEmpty()) {
+                        errorCollector.error(axsKey, Messages.ModelParser_NoArgForAxis(axsKey.key))
+                    } else {
+                        r.axes[axsKey] = []
+
+                        args.each { a ->
+                            if (!(a instanceof ConstantExpression) && !(a instanceof GStringExpression)) {
+                                errorCollector.error(m, Messages.ModelParser_InvalidInternalFunctionArg())
+                            } else {
+                                r.axes[axsKey] << parseArgument(a)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return r
+    }
+
     @CheckForNull ModelASTStage parseStage(Statement stmt) {
         ModelASTStage stage = new ModelASTStage(stmt)
         def m = matchBlockStatement(stmt)
@@ -570,6 +610,9 @@ class ModelParser implements Parser {
                             break
                         case 'tools':
                             stage.tools = parseTools(s)
+                            break
+                        case 'axes':
+                            stage.axes = parseAxes(s)
                             break
                         case 'environment':
                             stage.environment = parseEnvironment(s)
