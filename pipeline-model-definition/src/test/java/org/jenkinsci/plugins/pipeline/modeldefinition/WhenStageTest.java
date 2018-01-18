@@ -197,60 +197,7 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Test
-    public void whenChangesetPR() throws Exception {
-        //TODO JENKINS-46086 First time build "always" skips the changelog when git, not when mock
 
-        MockSCMController controller = MockSCMController.create();
-        controller.createRepository("repoX");
-        controller.createBranch("repoX", "master");
-        final int num = controller.openChangeRequest("repoX", "master");
-        final String crNum = "change-request/" + num;
-        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/changelog/changeset").getBytes());
-
-        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
-        project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverChangeRequests())));
-
-        waitFor(project.scheduleBuild2(0));
-        j.waitUntilNoActivity();
-        assertThat(project.getItems(), not(empty()));
-
-        final WorkflowJob job = project.getItems().iterator().next();
-        final WorkflowRun build = job.getLastBuild();
-        assertNotNull(build);
-        j.assertLogContains("Hello", build);
-        j.assertLogContains("Stage 'Two' skipped due to when conditional", build);
-        j.assertLogNotContains("JS World", build);
-
-        controller.addFile("repoX", crNum,
-                "files",
-                "webapp/js/somecode.js", "//fake file".getBytes());
-
-        waitFor(project.scheduleBuild2(0));
-        j.waitUntilNoActivity();
-        final WorkflowRun build2 = job.getLastBuild();
-        assertThat(build2, not(equalTo(build)));
-
-        j.assertLogContains("Hello", build2);
-        j.assertLogContains("JS World", build2);
-        j.assertLogNotContains("Stage 'Two' skipped due to when conditional", build2);
-        j.assertLogNotContains("Warning, empty changelog", build2);
-
-        controller.addFile("repoX", crNum,
-                "file",
-                "dontcare.txt", "empty".getBytes());
-
-        waitFor(project.scheduleBuild2(0));
-        j.waitUntilNoActivity();
-        final WorkflowRun build3 = job.getLastBuild();
-        assertThat(build3, not(equalTo(build2)));
-
-        j.assertLogContains("Hello", build3);
-        j.assertLogContains("JS World", build3);
-        j.assertLogContains("Examining changelog from all builds of this change request", build3);
-        j.assertLogNotContains("Stage 'Two' skipped due to when conditional", build3);
-        j.assertLogNotContains("Warning, empty changelog", build3);
-    }
 
     @Test
     public void whenChangelog() throws Exception {
@@ -393,7 +340,7 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
-    private void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
+    public static void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
         while (item != null && item.getFuture() == null) {
             Thread.sleep(200);
         }
