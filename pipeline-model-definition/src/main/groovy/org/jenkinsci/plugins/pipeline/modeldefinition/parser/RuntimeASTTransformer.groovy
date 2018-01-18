@@ -749,8 +749,9 @@ class RuntimeASTTransformer {
                 if (stepsMethod != null) {
                     BlockStatementMatch stepsMatch = matchBlockStatement(stepsMethod)
                     if (stepsMatch != null) {
+                        ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
                         return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                            args(stepsMatch.body))
+                            args(transformedBody))
                     }
                 }
             }
@@ -769,8 +770,9 @@ class RuntimeASTTransformer {
     Expression transformStepsFromBuildCondition(@CheckForNull ModelASTBuildCondition original) {
         if (isGroovyAST(original)) {
             BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
+            ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
             return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                args(condMatch.body))
+                args(transformedBody))
         }
         return constX(null)
     }
