@@ -152,6 +152,7 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
         if (step instanceof ModelASTTreeStep) {
             TupleExpression originalArgs = (TupleExpression) methodCall.getArguments();
             ArgumentListExpression newArgs = new ArgumentListExpression();
+            // Technically we can't get here if there 0 expressions, so the loop below is safe.
             for (int i = 0; i < originalArgs.getExpressions().size() - 1; i++) {
                 newArgs.addExpression(originalArgs.getExpression(i));
             }
