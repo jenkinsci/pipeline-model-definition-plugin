@@ -42,6 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*;
@@ -57,47 +58,31 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
             ModelASTBranch branch = stage.getBranches().get(0);
             body.setCode(handleBranch(branch));
         } else {
-            // Parallel case - multiple branches yay. Let's do some safety checks, though.
-            Statement stmt = body.getCode();
-            // Make sure we've got a block.
-            if (stmt instanceof BlockStatement) {
-                BlockStatement block = (BlockStatement)stmt;
-                // Make sure that block has one statement and that one statement is an expression
-                if (block.getStatements().size() == 1 && block.getStatements().get(0) instanceof ExpressionStatement) {
-                    ExpressionStatement exprStmt = (ExpressionStatement) block.getStatements().get(0);
-                    // Make sure the expression in there is a method call.
-                    if (exprStmt.getExpression() instanceof MethodCallExpression) {
-                        MethodCallExpression methExpr = (MethodCallExpression) exprStmt.getExpression();
-                        // Make sure the method is "parallel", the receiver is "this", and the arguments are a tuple
-                        if ("parallel".equals(methExpr.getMethodAsString()) &&
-                                methExpr.getReceiver() instanceof VariableExpression &&
-                                "this".equals(((VariableExpression) methExpr.getReceiver()).getName()) &&
-                                methExpr.getArguments() instanceof TupleExpression) {
-                            TupleExpression parallelArgs = (TupleExpression)methExpr.getArguments();
+            // Parallel case - multiple branches yay.
+            MethodCallExpression methExpr = getParallelMethod(body.getCode());
+            if (methExpr != null) {
+                TupleExpression parallelArgs = (TupleExpression)methExpr.getArguments();
 
-                            // Make sure the arguments consist of a single entry in a tuple, and that single entry is a map.
-                            if (parallelArgs.getExpressions().size() == 1 &&
-                                    parallelArgs.getExpression(0) instanceof MapExpression) {
-                                MapExpression newParallelMap = new MapExpression();
+                // Make sure the arguments consist of a single entry in a tuple, and that single entry is a map.
+                if (parallelArgs.getExpressions().size() == 1 &&
+                        parallelArgs.getExpression(0) instanceof MapExpression) {
+                    MapExpression newParallelMap = new MapExpression();
 
-                                for (ModelASTBranch b : stage.getBranches()) {
-                                    newParallelMap.addMapEntryExpression(constX(b.getName()), closureX(handleBranch(b)));
-                                }
-
-                                body.setCode(
-                                        block(
-                                                stmt(
-                                                        callX(
-                                                                varX("this"),
-                                                                constX("parallel"),
-                                                                args(newParallelMap)
-                                                        )
-                                                )
-                                        )
-                                );
-                            }
-                        }
+                    for (ModelASTBranch b : stage.getBranches()) {
+                        newParallelMap.addMapEntryExpression(constX(b.getName()), closureX(handleBranch(b)));
                     }
+
+                    body.setCode(
+                            block(
+                                    stmt(
+                                            callX(
+                                                    varX("this"),
+                                                                constX("parallel"),
+                                                    args(newParallelMap)
+                                            )
+                                    )
+                            )
+                    );
                 }
             }
         }
@@ -145,13 +130,15 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
      */
     @Nonnull
     public final MethodCallExpression handleStep(@Nonnull ModelASTStep step, @Nonnull MethodCallExpression methodCall) {
+        // No transformation inside script blocks.
         if (step instanceof AbstractModelASTCodeBlock) {
             return methodCall;
         }
 
-        if (step instanceof ModelASTTreeStep) {
-            TupleExpression originalArgs = (TupleExpression) methodCall.getArguments();
+        TupleExpression originalArgs = (TupleExpression) methodCall.getArguments();
+        if (step instanceof ModelASTTreeStep && originalArgs.getExpressions().size() > 0) {
             ArgumentListExpression newArgs = new ArgumentListExpression();
+
             // Technically we can't get here if there 0 expressions, so the loop below is safe.
             for (int i = 0; i < originalArgs.getExpressions().size() - 1; i++) {
                 newArgs.addExpression(originalArgs.getExpression(i));
@@ -175,6 +162,31 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
 
     @Nonnull
     public abstract MethodCallExpression transformStep(@Nonnull ModelASTStep step, @Nonnull MethodCallExpression methodCall);
+
+    @CheckForNull
+    private MethodCallExpression getParallelMethod(@Nonnull Statement stmt) {
+        // Make sure we've got a block.
+        if (stmt instanceof BlockStatement) {
+            BlockStatement block = (BlockStatement)stmt;
+            // Make sure that block has one statement and that one statement is an expression
+            if (block.getStatements().size() == 1 && block.getStatements().get(0) instanceof ExpressionStatement) {
+                ExpressionStatement exprStmt = (ExpressionStatement) block.getStatements().get(0);
+                // Make sure the expression in there is a method call.
+                if (exprStmt.getExpression() instanceof MethodCallExpression) {
+                    MethodCallExpression methExpr = (MethodCallExpression) exprStmt.getExpression();
+                    // Make sure the method is "parallel", the receiver is "this", and the arguments are a tuple
+                    if ("parallel".equals(methExpr.getMethodAsString()) &&
+                            methExpr.getReceiver() instanceof VariableExpression &&
+                            "this".equals(((VariableExpression) methExpr.getReceiver()).getName()) &&
+                            methExpr.getArguments() instanceof TupleExpression) {
+                        return methExpr;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Get all {@link StepRuntimeTransformerContributor}s.
