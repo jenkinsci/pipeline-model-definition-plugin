@@ -22,8 +22,9 @@
   ~ THE SOFTWARE.
   ~
   -->
+
 <p>
-    Execute the stage if the <code>TAG_NAME</code> variable matches the given <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
-    If an empty pattern is provided the stage will execute if the <code>TAG_NAME</code> variable exists.
+    Execute the stage if the <code>TAG_NAME</code> variable exists, i.e. the build is building a tag.
+    Same as if using <code>tag</code> with an empty pattern.
     Only works in Multibranch.
 </p>
