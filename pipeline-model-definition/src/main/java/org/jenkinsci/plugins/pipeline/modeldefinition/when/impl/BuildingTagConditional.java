@@ -23,39 +23,38 @@
  *
  */
 
-pipeline {
-    agent {
-        label "here"
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
+
+import hudson.Extension;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
+public class BuildingTagConditional extends TagConditional {
+
+    @DataBoundConstructor
+    public BuildingTagConditional() {
+        super(null);
     }
-    stages {
-        stage("One") {
-            steps {
-                echo "Hello"
-                sh "env | sort"
-            }
-        }
-        stage("Two") {
-            when {
-                buildingTag()
-            }
-            steps {
-                script {
-                    echo "World"
-                    echo "Heal it"
-                }
 
-            }
+    @Extension
+    @Symbol("buildingTag")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TagConditional> {
+        @Override
+        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
-        stage("Three") {
-            when {
-                tag "release-*"
-            }
-            steps {
-                script {
-                    echo "release it"
-                }
 
-            }
+        @Nonnull
+        @Override
+        public String getScriptClass() {
+            return TagConditional.class.getName() + "Script";
         }
     }
 }

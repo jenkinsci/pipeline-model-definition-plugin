@@ -206,7 +206,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertTrue(startThird instanceof BlockStartNode);
         FlowNode endThird = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startThird));
         assertNotNull(endThird);
-        assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startThird, endThird, null));
+        assertEquals(GenericStatus.NOT_EXECUTED, StatusAndTiming.computeChunkStatus(b, null, startThird, endThird, null));
 
         TagsAction thirdTags = startThird.getAction(TagsAction.class);
         assertNotNull(thirdTags);

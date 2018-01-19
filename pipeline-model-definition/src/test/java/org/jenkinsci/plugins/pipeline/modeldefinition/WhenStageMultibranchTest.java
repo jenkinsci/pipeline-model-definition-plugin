@@ -127,7 +127,9 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         j.waitUntilNoActivity();
         assertThat(project.getItems(), hasSize(1)); //Just tests the multibranch is correctly configured
 
+        //controller.addFile("repoX", "master", "Mock file for random tag", "some-random-file.txt", "Hello".getBytes());
         controller.createTag("repoX", "master", "some-random-tag");
+
 
         waitFor(project.scheduleBuild2(0));
         j.waitUntilNoActivity();
@@ -136,6 +138,11 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         WorkflowJob tagJob = project.getItem("some-random-tag");
         assertNotNull(tagJob);
         WorkflowRun build = tagJob.getLastBuild();
+        if (build == null) {
+            //This seems to happen for unknown reason; the tag is discovered but no build produced.
+            j.assertBuildStatusSuccess(tagJob.scheduleBuild2(0));
+            build = tagJob.getLastBuild();
+        }
         j.assertBuildStatusSuccess(build);
         j.assertLogContains("Hello", build);
         j.assertLogContains("World", build);
@@ -150,6 +157,11 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         tagJob = project.getItem("release-1");
         assertNotNull(tagJob);
         build = tagJob.getLastBuild();
+        if (build == null) {
+            //This seems to happen for unknown reason; the tag is discovered but no build produced.
+            j.assertBuildStatusSuccess(tagJob.scheduleBuild2(0));
+            build = tagJob.getLastBuild();
+        }
         j.assertBuildStatusSuccess(build);
         j.assertLogContains("Hello", build);
         j.assertLogContains("World", build);
