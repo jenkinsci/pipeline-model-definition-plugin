@@ -874,4 +874,12 @@ public class ValidatorTest extends AbstractModelDefTest {
                         Parameters.getAllowedParameterTypes().keySet()))
                 .go();
     }
+
+    @Issue("JENKINS-49070")
+    @Test
+    public void bigIntegerFailure() throws Exception {
+        expectError("bigIntegerFailure")
+                .logContains(Messages.ModelParser_BigIntegerValue())
+                .go();
+    }
 }

@@ -38,6 +38,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument;
@@ -1268,4 +1269,52 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         j.buildAndAssertSuccess(j2);
         assertNull(j2.getAction(DeclarativeJobAction.class));
     }
+
+    @Issue("JENKINS-49070")
+    @Test
+    public void bigDecimalConverts() throws Exception {
+        WorkflowRun b = expect("bigDecimalConverts").go();
+
+        ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
+        assertNotNull(action);
+        ModelASTStages stages = action.getStages();
+        assertNull(stages.getSourceLocation());
+        assertNotNull(stages);
+
+        assertEquals(1, stages.getStages().size());
+
+        ModelASTStage stage = stages.getStages().get(0);
+        assertNull(stage.getSourceLocation());
+        assertNotNull(stage);
+
+        assertEquals(1, stage.getBranches().size());
+
+        ModelASTBranch firstBranch = branchForName("default", stage.getBranches());
+        assertNotNull(firstBranch);
+        assertNull(firstBranch.getSourceLocation());
+        assertNotNull(firstBranch);
+        assertEquals(1, firstBranch.getSteps().size());
+        ModelASTStep firstStep = firstBranch.getSteps().get(0);
+        assertNull(firstStep.getSourceLocation());
+        assertEquals("junit", firstStep.getName());
+        assertTrue(firstStep.getArgs() instanceof ModelASTNamedArgumentList);
+        ModelASTNamedArgumentList args = (ModelASTNamedArgumentList)firstStep.getArgs();
+
+        ModelASTValue val = null;
+        for (ModelASTKey k : args.getArguments().keySet()) {
+            if (k.getKey().equals("healthScaleFactor")) {
+                val = args.getArguments().get(k);
+            }
+        }
+
+        assertNotNull(val);
+
+        Object realVal = val.getValue();
+
+        assertTrue(realVal instanceof Double);
+
+        assertEquals(new Double("1.0"), realVal);
+
+    }
+
 }
