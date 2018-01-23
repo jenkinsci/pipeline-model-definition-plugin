@@ -27,6 +27,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Slave;
 import jenkins.branch.BranchSource;
+import jenkins.scm.impl.mock.MockChangeRequestFlags;
+import jenkins.scm.impl.mock.MockRepositoryFlags;
 import jenkins.scm.impl.mock.MockSCMController;
 import jenkins.scm.impl.mock.MockSCMDiscoverBranches;
 import jenkins.scm.impl.mock.MockSCMDiscoverChangeRequests;
@@ -38,6 +40,9 @@ import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -166,6 +171,90 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         j.assertLogContains("Hello", build);
         j.assertLogContains("World", build);
         j.assertLogContains("release it", build);
+    }
+
+    @Test
+    public void whenBuildingChange() throws Exception {
+        MockSCMController controller = MockSCMController.create();
+        controller.createRepository("repo", MockRepositoryFlags.FORKABLE);
+        controller.createBranch("repo", "master");
+        controller.addFile("repo", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenBuildingChange").getBytes());
+        int id = controller.openChangeRequest("repo", "master");
+        controller.addFile("repo", "change-request/" + id, "mbopalua", "cr" + id + ".txt", "hello".getBytes());
+        controller.cloneBranch("repo", "master", "release-2");
+        controller.addFile("repo", "release-2", "second release", "rel.txt", "rel".getBytes());
+        id = controller.openChangeRequest("repo", "release-2", MockChangeRequestFlags.FORK);
+        controller.addFile("repo", "change-request/" + id, "change release notes", "cr" + id + ".txt", "hello".getBytes());
+        //controller.setUrl("repo", "http://hax0r.com/repo/"); //TODO jenkins.scm.impl.mock.MockSCMController.Repository.url is not used in MockSCMController (yet)
+
+        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
+        project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repo", new MockSCMDiscoverBranches(), new MockSCMDiscoverChangeRequests())));
+
+        waitFor(project.scheduleBuild2(0));
+        j.waitUntilNoActivity();
+
+        assertThat(project.getItems(), hasSize(4)); //Just tests the multibranch is correctly configured
+        final WorkflowJob master = project.getItem("master");
+        WorkflowRun build = master.getLastBuild();
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Stage 'IsChange' skipped due to when conditional", build);
+        j.assertLogNotContains("World", build);
+        j.assertLogNotContains("From CR branch", build);
+        j.assertLogNotContains("From urlX example", build);
+        j.assertLogNotContains("Author is a cool guy", build);
+        j.assertLogNotContains("Author displays coolness", build);
+        j.assertLogNotContains("Author has a cool job", build);
+        j.assertLogNotContains("Author is probably a robot", build);
+
+        WorkflowJob crJob = project.getItem("CR-1");
+        assertNotNull(crJob);
+        WorkflowRun run = crJob.getLastBuild();
+        assertNotNull(run);
+        j.assertBuildStatusSuccess(run);
+        j.assertLogContains("Hello", run);
+        j.assertLogContains("World", run);
+        j.assertLogContains("From CR branch", run);
+        j.assertLogContains("From urlX example", run);
+        j.assertLogContains("Author is a cool guy", run);
+        j.assertLogContains("Author displays coolness", run);
+        j.assertLogContains("Author has a cool job", run);
+        j.assertLogContains("Author is probably a robot", run);
+        j.assertLogContains("AuthorX is nice", run);
+        j.assertLogContains("AuthorX displays coolness", run);
+
+        //controller.closeChangeRequest("repo", id);
+
+
+        crJob = project.getItem("CR-2");
+        assertNotNull(crJob);
+        run = crJob.getLastBuild();
+        assertNotNull(run);
+        j.assertBuildStatusSuccess(run);
+        j.assertLogContains("Hello", run);
+        j.assertLogContains("World", run);
+        j.assertLogContains("Target release", run);
+        j.assertLogContains("From origin fork", run);
+
+        j.assertLogNotContains("Id is in the tens", run);
+        j.assertLogNotContains("We are in the tens", run);
+        //TODO validate title whenever the mock API allows
+
+        while (id < 10) {
+            id = controller.openChangeRequest("repo", "master");
+        }
+
+        waitFor(project.scheduleBuild2(0));
+        j.waitUntilNoActivity();
+
+        crJob = project.getItem("CR-10");
+        assertNotNull(crJob);
+        run = crJob.getLastBuild();
+        assertNotNull(run);
+        j.assertBuildStatusSuccess(run);
+
+        j.assertLogContains("Id is in the tens", run);
+        j.assertLogContains("We are in the tens", run);
+
     }
 
 

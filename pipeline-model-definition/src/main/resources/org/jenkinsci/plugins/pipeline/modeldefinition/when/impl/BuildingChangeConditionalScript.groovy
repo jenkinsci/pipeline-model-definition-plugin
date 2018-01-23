@@ -23,32 +23,20 @@
  *
  */
 
-pipeline {
-    agent {
-        label "here"
+package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
+
+import hudson.EnvVars
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
+import org.jenkinsci.plugins.workflow.cps.CpsScript
+
+class BuildingChangeConditionalScript extends DeclarativeStageConditionalScript<BuildingChangeConditional> {
+
+    BuildingChangeConditionalScript(CpsScript s, BuildingChangeConditional c) {
+        super(s, c)
     }
-    stages {
-        stage("One") {
-            steps {
-                echo "Hello"
-            }
-        }
-        stage("Two") {
-            when {
-                buildingTag()
-            }
-            steps {
-                echo "World"
-                echo "Heal it"
-            }
-        }
-        stage("Three") {
-            when {
-                tag "release-*"
-            }
-            steps {
-                echo "release it"
-            }
-        }
+
+    @Override
+    boolean evaluate() {
+        return describable.matches(script.getProperty("env").getEnvironment() as EnvVars)
     }
 }

@@ -1,0 +1,95 @@
+<!--
+  ~ The MIT License
+  ~
+  ~ Copyright (c) 2018, CloudBees, Inc.
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in
+  ~ all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  ~ THE SOFTWARE.
+  ~
+  -->
+<p>
+    Executes the stage if the current build is for a change request
+    <em>(a.k.a. <strong>Pull Request</strong> on GitHub and Bitbucket, <strong>Merge Request</strong> on GitLab or <strong>Change</strong> in Gerrit etc.)</em>.
+</p>
+<p>
+    Similar as for <code>branch</code> and <code>tag</code> it checks the values of the <code>CHANGE_*</code> environment variables set by the branch-api plugin,
+    you can check the values of those via individual parameters. If more than one parameter is specified, then all of the parameters must match.
+</p>
+<p>
+    Using no parameters i.e. <code>when { buildingChange() }</code> it will just check that <code>CHANGE_ID</code> is available and has a value.
+</p>
+<strong>Parameters:</strong>
+<p>
+    <strong>id</strong><br/>
+    <code>CHANGE_ID</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+</p>
+<p>
+    <strong>target</strong><br/>
+    <code>CHANGE_TARGET</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+    The name of the target branch.
+</p>
+<p>
+    <strong>branch</strong><br/>
+    <code>CHANGE_BRANCH</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+    The name of the actual head on the source control system which may or may not be different from
+    <code>BRANCH_NAME</code>. For example in GitHub or Bitbucket this would have the name of the origin branch
+    whereas <code>BRANCH_NAME</code> would be something like <code>PR-24</code>.
+</p>
+<p>
+    <strong>fork</strong><br/>
+    <code>CHANGE_FORK</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+    The name of the fork if the change originates from one.
+</p>
+<p>
+    <strong>urlX</strong><br/>
+    <code>CHANGE_URL</code> using <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regular Expression</a>.
+    The url to the change.
+</p>
+<p>
+    <strong>title</strong><br/>
+    <code>CHANGE_TITLE</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+</p>
+<p>
+    <strong>titleX</strong><br/>
+    <code>CHANGE_TITLE</code> using <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regular Expression</a>.
+</p>
+<p>
+    <strong>author</strong><br/>
+    <code>CHANGE_AUTHOR</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+</p>
+<p>
+    <strong>authorX</strong><br/>
+    <code>CHANGE_AUTHOR</code> using <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regular Expression</a>.
+</p>
+<p>
+    <strong>authorDisplayName</strong><br/>
+    <code>CHANGE_AUTHOR_DISPLAY_NAME</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+</p>
+<p>
+    <strong>authorDisplayNameX</strong><br/>
+    <code>CHANGE_AUTHOR_DISPLAY_NAME</code> using <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regular Expression</a>.
+</p>
+<p>
+    <strong>authorEmail</strong><br/>
+    <code>CHANGE_AUTHOR_EMAIL</code> using <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+</p>
+<p>
+    <strong>authorEmailX</strong><br/>
+    <code>CHANGE_AUTHOR_EMAIL</code> using <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regular Expression</a>.
+</p>
+
