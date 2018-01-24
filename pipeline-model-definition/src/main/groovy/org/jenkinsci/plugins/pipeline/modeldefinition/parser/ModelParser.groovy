@@ -1171,8 +1171,10 @@ class ModelParser implements Parser {
             } else if (val instanceof BigInteger) {
                 if (val > Long.MAX_VALUE || val < Long.MIN_VALUE) {
                     errorCollector.error(ModelASTValue.fromConstant(-1, e), Messages.ModelParser_BigIntegerValue())
+                    val = -1
+                } else {
+                    val = val.longValue()
                 }
-                val = -1
             }
             return ModelASTValue.fromConstant(val, e)
         }
