@@ -1311,8 +1311,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         Object realVal = val.getValue();
 
-        assertTrue(realVal instanceof Double);
-
         assertEquals(new Double("1.0"), realVal);
 
     }
