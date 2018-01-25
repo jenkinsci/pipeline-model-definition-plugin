@@ -511,7 +511,10 @@ class ModelValidatorImpl implements ModelValidator {
 
     boolean validateElement(@Nonnull ModelASTOptions opts) {
         boolean valid = true
-        if (opts.options.isEmpty()) {
+        // TODO: If this pans out, want to find a way to validate var/call.
+        if (opts.optionsCall != null || opts.optionsVar != null) {
+            valid = true
+        } else if (opts.options.isEmpty()) {
             errorCollector.error(opts, Messages.ModelValidatorImpl_EmptySection("options"))
             valid = false
         } else {

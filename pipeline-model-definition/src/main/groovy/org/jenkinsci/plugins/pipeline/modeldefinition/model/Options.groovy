@@ -33,6 +33,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.JobProperty
 import hudson.model.JobPropertyDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
@@ -65,6 +66,18 @@ class Options implements Serializable {
         this.properties.addAll(properties)
         this.options.putAll(options)
         this.wrappers.putAll(wrappers)
+    }
+
+    @Whitelisted
+    Options(@Nonnull Object obj) {
+        if (obj instanceof Options) {
+            Options original = (Options) obj
+            this.properties.addAll(original.properties)
+            this.options.putAll(original.options)
+            this.wrappers.putAll(original.wrappers)
+        } else {
+            throw new IllegalArgumentException(Messages.ModelInterpreter_InvalidDirectiveArgument(this.class, obj.class))
+        }
     }
 
     List<JobProperty> getProperties() {

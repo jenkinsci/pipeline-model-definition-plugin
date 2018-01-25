@@ -28,6 +28,7 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
@@ -53,6 +54,19 @@ class StageOptions implements Serializable {
         this.options.putAll(options)
         this.wrappers.putAll(wrappers)
     }
+
+    @Whitelisted
+    StageOptions(@Nonnull Object obj) {
+        if (obj instanceof StageOptions) {
+            StageOptions original = (StageOptions) obj
+            this.options.putAll(original.options)
+            this.wrappers.putAll(original.wrappers)
+        } else {
+            throw new IllegalArgumentException(Messages.ModelInterpreter_InvalidDirectiveArgument(this.class, obj.class))
+        }
+    }
+
+
 
     Map<String, DeclarativeOption> getOptions() {
         return options

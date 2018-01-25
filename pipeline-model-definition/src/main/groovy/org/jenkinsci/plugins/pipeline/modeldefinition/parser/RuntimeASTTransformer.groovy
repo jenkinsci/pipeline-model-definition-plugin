@@ -30,6 +30,7 @@ import hudson.model.ParameterDefinition
 import hudson.model.Run
 import hudson.triggers.Trigger
 import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -520,55 +521,67 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformOptions(@CheckForNull ModelASTOptions original) {
-        if (isGroovyAST(original) && !original.options.isEmpty()) {
-            List<ModelASTOption> jobProps = new ArrayList<>()
-            List<ModelASTOption> options = new ArrayList<>()
-            List<ModelASTOption> wrappers = new ArrayList<>()
-
-            SymbolLookup symbolLookup = SymbolLookup.get()
-
-            original.options.each { o ->
-                if (!original.inStage && symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
-                    jobProps.add(o)
-                } else if (symbolLookup.findDescriptor(DeclarativeOption.class, o.name) != null) {
-                    options.add(o)
-                } else if (StepDescriptor.byFunctionName(o.name) != null) {
-                    wrappers.add(o)
-                }
+        if (isGroovyAST(original)) {
+            ClassNode optsClass
+            if (original.inStage) {
+                optsClass = ClassHelper.make(StageOptions.class)
+            } else {
+                optsClass = ClassHelper.make(Options.class)
             }
-            MapExpression optsMap = new MapExpression()
-            MapExpression wrappersMap = new MapExpression()
+            if (!original.options.isEmpty()) {
+                List<ModelASTOption> jobProps = new ArrayList<>()
+                List<ModelASTOption> options = new ArrayList<>()
+                List<ModelASTOption> wrappers = new ArrayList<>()
 
-            options.each { o ->
-                if (o.getSourceLocation() instanceof Statement) {
-                    MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
-                    if (expr != null) {
-                        optsMap.addMapEntryExpression(constX(o.name), methodCallToDescribable(expr, DeclarativeOption.class))
+                SymbolLookup symbolLookup = SymbolLookup.get()
+
+                original.options.each { o ->
+                    if (!original.inStage && symbolLookup.findDescriptor(JobProperty.class, o.name) != null) {
+                        jobProps.add(o)
+                    } else if (symbolLookup.findDescriptor(DeclarativeOption.class, o.name) != null) {
+                        options.add(o)
+                    } else if (StepDescriptor.byFunctionName(o.name) != null) {
+                        wrappers.add(o)
                     }
                 }
-            }
-            wrappers.each { w ->
-                if (w.getSourceLocation() instanceof Statement) {
-                    MethodCallExpression expr = matchMethodCall((Statement) w.getSourceLocation())
-                    if (expr != null) {
-                        List<Expression> methArgs = methodCallArgs(expr)
-                        if (methArgs.size() == 1) {
-                            wrappersMap.addMapEntryExpression(constX(w.name), methArgs.get(0))
-                        } else if (methArgs.size() > 1) {
-                            ListExpression argList = new ListExpression(methArgs)
-                            wrappersMap.addMapEntryExpression(constX(w.name), argList)
-                        } else {
-                            wrappersMap.addMapEntryExpression(constX(w.name), constX(null))
+                MapExpression optsMap = new MapExpression()
+                MapExpression wrappersMap = new MapExpression()
+
+                options.each { o ->
+                    if (o.getSourceLocation() instanceof Statement) {
+                        MethodCallExpression expr = matchMethodCall((Statement) o.getSourceLocation())
+                        if (expr != null) {
+                            optsMap.addMapEntryExpression(constX(o.name), methodCallToDescribable(expr, DeclarativeOption.class))
                         }
                     }
                 }
-            }
+                wrappers.each { w ->
+                    if (w.getSourceLocation() instanceof Statement) {
+                        MethodCallExpression expr = matchMethodCall((Statement) w.getSourceLocation())
+                        if (expr != null) {
+                            List<Expression> methArgs = methodCallArgs(expr)
+                            if (methArgs.size() == 1) {
+                                wrappersMap.addMapEntryExpression(constX(w.name), methArgs.get(0))
+                            } else if (methArgs.size() > 1) {
+                                ListExpression argList = new ListExpression(methArgs)
+                                wrappersMap.addMapEntryExpression(constX(w.name), argList)
+                            } else {
+                                wrappersMap.addMapEntryExpression(constX(w.name), constX(null))
+                            }
+                        }
+                    }
+                }
 
-            if (original.inStage) {
-                return ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
-            } else {
-                return ctorX(ClassHelper.make(Options.class),
-                    args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
+                if (original.inStage) {
+                    return ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
+                } else {
+                    return ctorX(ClassHelper.make(Options.class),
+                        args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
+                }
+            } else if (original.optionsVar != null) {
+                return ctorX(optsClass, args(original.optionsVar))
+            } else if (original.optionsCall != null) {
+                return ctorX(optsClass, args(original.optionsCall))
             }
         }
 

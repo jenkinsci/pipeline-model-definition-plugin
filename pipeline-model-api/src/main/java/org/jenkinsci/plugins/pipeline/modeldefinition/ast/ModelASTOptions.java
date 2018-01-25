@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -16,6 +18,8 @@ import javax.annotation.Nonnull;
 public final class ModelASTOptions extends ModelASTElement {
     private List<ModelASTOption> options = new ArrayList<>();
     private boolean inStage = false;
+    private transient VariableExpression optionsVar;
+    private transient MethodCallExpression optionsCall;
 
     public ModelASTOptions(Object sourceLocation) {
         super(sourceLocation);
@@ -71,6 +75,23 @@ public final class ModelASTOptions extends ModelASTElement {
     public void setInStage(boolean inStage) {
         this.inStage = inStage;
     }
+
+    public VariableExpression getOptionsVar() {
+        return optionsVar;
+    }
+
+    public void setOptionsVar(VariableExpression optionsVar) {
+        this.optionsVar = optionsVar;
+    }
+
+    public MethodCallExpression getOptionsCall() {
+        return optionsCall;
+    }
+
+    public void setOptionsCall(MethodCallExpression optionsCall) {
+        this.optionsCall = optionsCall;
+    }
+
 
     @Override
     public String toString() {

@@ -31,8 +31,6 @@ import hudson.model.Run
 import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.GroovyCodeVisitor
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -49,6 +47,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -700,8 +699,27 @@ class ModelParser implements Parser {
         def o = new ModelASTOptions(stmt)
         def m = matchBlockStatement(stmt)
         if (m == null) {
-            errorCollector.error(o, Messages.ModelParser_ExpectedBlockFor("options"))
-            return o
+            def mc = matchMethodCall(stmt)
+            if (mc == null) {
+                errorCollector.error(o, Messages.ModelParser_ExpectedBlockFor("options"))
+                return o
+            }
+            List<Expression> args = ((TupleExpression) mc.arguments).expressions
+            if (args.isEmpty() || args.size() > 1) {
+                errorCollector.error(o, Messages.ModelParser_WrongArgsForDirective("options", Options.class))
+                return o
+            }
+
+            Expression a = args.get(0)
+
+            if (a instanceof VariableExpression) {
+                o.optionsVar = a
+            } else if (a instanceof MethodCallExpression) {
+                o.optionsCall = a
+            } else {
+                errorCollector.error(o, Messages.ModelParser_WrongArgsForDirective("options", Options.class))
+                return o
+            }
         } else {
             eachStatement(m.body.code) { s ->
                 o.options.add(parseOption(s))

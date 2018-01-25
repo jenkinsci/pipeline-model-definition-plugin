@@ -799,7 +799,7 @@ public class ValidatorTest extends AbstractModelDefTest {
         expectError("nonBlockSections")
                 .logContains(Messages.ModelParser_ExpectedBlockFor("environment"),
                         Messages.ModelParser_ExpectedBlockFor("libraries"),
-                        Messages.ModelParser_ExpectedBlockFor("options"),
+                        Messages.ModelParser_WrongArgsForDirective("options", Options.class),
                         Messages.ModelParser_ExpectedBlockFor("triggers"),
                         Messages.ModelParser_ExpectedBlockFor("parameters"),
                         Messages.ModelParser_ExpectedBlockFor("tools"))
@@ -925,4 +925,35 @@ public class ValidatorTest extends AbstractModelDefTest {
         }
     }
 
+    @Issue("JENKINS-49135")
+    @Test
+    public void invalidOptionsObject() throws Exception {
+        expectError("invalidOptionsObject")
+                .logContains(Messages.ModelInterpreter_InvalidDirectiveArgument(Options.class, String.class))
+                .go();
+    }
+
+    @Issue("JENKINS-49135")
+    @Test
+    public void invalidOptionsMethodCall() throws Exception {
+        expectError("invalidOptionsMethodCall")
+                .logContains(Messages.ModelInterpreter_InvalidDirectiveArgument(Options.class, String.class))
+                .go();
+    }
+
+    @Issue("JENKINS-49135")
+    @Test
+    public void optionsEmptyArgs() throws Exception {
+        expectError("optionsEmptyArgs")
+                .logContains(Messages.ModelParser_WrongArgsForDirective("options", Options.class))
+                .go();
+    }
+
+    @Issue("JENKINS-49135")
+    @Test
+    public void optionsInvalidExpression() throws Exception {
+        expectError("optionsInvalidExpression")
+                .logContains(Messages.ModelParser_WrongArgsForDirective("options", Options.class))
+                .go();
+    }
 }
