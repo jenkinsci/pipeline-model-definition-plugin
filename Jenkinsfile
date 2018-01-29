@@ -20,7 +20,7 @@ pipeline {
     environment {
         GIT_COMMITTER_NAME = "jenkins"
         GIT_COMMITTER_EMAIL = "jenkins@jenkins.io"
-        NEWER_CORE_VERSION = "2.103"
+        NEWER_CORE_VERSION = "2.89.3"
     }
     
 
