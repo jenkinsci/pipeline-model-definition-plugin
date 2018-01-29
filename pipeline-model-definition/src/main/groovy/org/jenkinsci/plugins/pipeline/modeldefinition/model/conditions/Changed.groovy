@@ -41,24 +41,17 @@ class Changed extends BuildCondition {
         Result execResult = getExecutionResult(r)
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
+
+        // Get the *worst* result of either the execution or the run. If the run's result is null, that's effectively
+        // SUCCESS.
+        Result runResult = execResult.combine(r.getResult() ?: Result.SUCCESS)
+
         // If there's no previous build, we're inherently changed.
         if (prev == null) {
             return true
-        }
-        // If the current build's result isn't null (i.e., it's got a specified status), and it's different than the
-        // previous build's result, we're changed.
-        else if ((execResult != null && prev.getResult() != execResult) ||
-            (r.getResult() != null && prev.getResult() != r.getResult())) {
-            return true
-        }
-        // If the current build's result is null and the previous build's result is not SUCCESS, we're changed.
-        else if ((execResult == Result.SUCCESS && prev.getResult() != Result.SUCCESS) ||
-            (r.getResult() == null && prev.getResult() != Result.SUCCESS)) {
-            return true
-        }
-        // And in any other condition, we're not changed, so return false.
-        else {
-            return false
+        } else {
+            // Otherwise, compare the combined execution/run result to the previous result.
+            return runResult != prev.getResult()
         }
     }
 
