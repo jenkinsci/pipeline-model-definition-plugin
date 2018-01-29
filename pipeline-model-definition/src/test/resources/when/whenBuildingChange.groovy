@@ -32,7 +32,6 @@ pipeline {
         stage("One") {
             steps {
                 echo "Hello"
-                sh "env | sort"
             }
         }
         stage("IsChange") {
