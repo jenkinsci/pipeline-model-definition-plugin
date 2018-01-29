@@ -207,4 +207,28 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 .logNotContains("MOST DEFINITELY FINISHED")
                 .go();
     }
+
+    @Issue("JENKINS-48752")
+    @Test
+    public void changedAndNotSuccess() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("postOnChangeFailed");
+        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
+        j.assertLogContains("[Pipeline] { (foo)", b);
+        j.assertLogContains("I FAILED", b);
+
+        WorkflowJob job = b.getParent();
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeUnstable"), true));
+        WorkflowRun b2 = j.assertBuildStatus(Result.UNSTABLE, j.waitForCompletion(job.scheduleBuild2(0).get()));
+        j.assertLogContains("[Pipeline] { (foo)", b2);
+        j.assertLogContains("hello", b2);
+        j.assertLogContains("I CHANGED", b2);
+
+        // Now make sure we don't get any alert this time.
+        WorkflowRun b3 = j.assertBuildStatus(Result.UNSTABLE, j.waitForCompletion(job.scheduleBuild2(0).get()));
+        j.assertLogContains("[Pipeline] { (foo)", b3);
+        j.assertLogContains("hello", b3);
+        j.assertLogNotContains("I CHANGED", b3);
+        j.assertLogNotContains("I FAILED", b3);
+    }
+
 }
