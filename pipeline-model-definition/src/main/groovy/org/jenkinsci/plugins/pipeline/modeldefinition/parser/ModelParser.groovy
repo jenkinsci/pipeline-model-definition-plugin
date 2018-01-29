@@ -1165,7 +1165,18 @@ class ModelParser implements Parser {
      */
     protected ModelASTValue parseArgument(Expression e) {
         if (e instanceof ConstantExpression) {
-            return ModelASTValue.fromConstant(e.value, e)
+            Object val = e.value
+            if (val instanceof BigDecimal) {
+                val = val.doubleValue()
+            } else if (val instanceof BigInteger) {
+                if (val > Long.MAX_VALUE || val < Long.MIN_VALUE) {
+                    errorCollector.error(ModelASTValue.fromConstant(-1, e), Messages.ModelParser_BigIntegerValue())
+                    val = -1
+                } else {
+                    val = val.longValue()
+                }
+            }
+            return ModelASTValue.fromConstant(val, e)
         }
         if (e instanceof GStringExpression) {
             String rawSrc = getSourceText(e)
