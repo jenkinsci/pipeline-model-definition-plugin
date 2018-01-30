@@ -70,6 +70,14 @@ import java.util.List;
  * Each method should return a string containing the error message if validation fails, and null otherwise.
  */
 public abstract class DeclarativeValidatorContributor implements ExtensionPoint {
+
+    /**
+     * Implementations default to not optional. Can be overridden.
+     */
+    public boolean isOptional() {
+        return false;
+    }
+
     /**
      * Fallback for any unknown element type. Always returns true, cannot be overridden.
      */
