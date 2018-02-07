@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDesc
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -92,14 +93,26 @@ class ModelParser implements Parser {
 
     private final Run<?,?> build
 
+    @Deprecated
     ModelParser(SourceUnit sourceUnit) {
-        this(sourceUnit, null)
+        this(sourceUnit, [], null)
     }
 
+    @Deprecated
     ModelParser(SourceUnit sourceUnit, @CheckForNull FlowExecution execution) {
+        this(sourceUnit, [], execution)
+    }
+
+    ModelParser(SourceUnit sourceUnit, @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators) {
+        this(sourceUnit, enabledOptionalValidators, null)
+    }
+
+    ModelParser(SourceUnit sourceUnit,
+                @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+                @CheckForNull FlowExecution execution) {
         this.sourceUnit = sourceUnit
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
-        this.validator = new ModelValidatorImpl(errorCollector, execution)
+        this.validator = new ModelValidatorImpl(errorCollector, enabledOptionalValidators, execution)
         this.lookup = DescriptorLookupCache.getPublicCache()
         Queue.Executable executable = null
         if (execution != null) {

@@ -26,22 +26,28 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.slaves.DumbSlave;
 import jenkins.model.OptionalJobProperty;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.groovy.control.MultipleCompilationErrorsException;
+import org.hamcrest.Matchers;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -49,10 +55,17 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+import java.util.Collections;
+
+import static org.junit.Assert.assertNotNull;
+
 /**
  * @author Andrew Bayer
  */
 public class ValidatorTest extends AbstractModelDefTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     private static DumbSlave s;
 
@@ -882,4 +895,34 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelParser_BigIntegerValue())
                 .go();
     }
+
+    @Test
+    public void enableOptionalValidator() throws Exception {
+        String script = pipelineSourceFromResources("simplePipeline");
+
+        assertNotNull(Converter.scriptToPipelineDef(script));
+
+        thrown.expect(MultipleCompilationErrorsException.class);
+        thrown.expectMessage(Matchers.containsString("Echo is banned"));
+        Converter.scriptToPipelineDef(script, Collections.<Class<? extends DeclarativeValidatorContributor>>singletonList(RejectEchoStep.class));
+    }
+
+    @TestExtension
+    public static class RejectEchoStep extends DeclarativeValidatorContributor {
+        @CheckForNull
+        @Override
+        public String validateElement(@Nonnull ModelASTStep step, @CheckForNull FlowExecution execution) {
+            if (step.getName() != null && step.getName().equals("echo")) {
+                return "Echo is banned";
+            }
+
+            return null;
+        }
+
+        @Override
+        public boolean isOptional() {
+            return true;
+        }
+    }
+
 }

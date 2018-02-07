@@ -41,6 +41,7 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
 import org.jenkinsci.plugins.pipeline.modeldefinition.ASTSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
 
@@ -94,16 +95,18 @@ class Converter {
      * Converts a script at a given URL into {@link ModelASTPipelineDef}
      *
      * @param src A URL pointing to a Pipeline script
+     * @param enabledOptionalValidators A list of optional validator classes that should be enabled. Defaults to empty.
      * @return the converted script
      */
-    static ModelASTPipelineDef urlToPipelineDef(URL src) {
+    static ModelASTPipelineDef urlToPipelineDef(URL src,
+                                                final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(src, new Certificate[0]),
             getCompilationClassLoader())
         cu.addSource(src)
 
-        return compilationUnitToPipelineDef(cu)
+        return compilationUnitToPipelineDef(cu, enabledOptionalValidators)
     }
 
     private static GroovyClassLoader getCompilationClassLoader() {
@@ -115,16 +118,18 @@ class Converter {
      * Converts a string containing a Pipeline script into {@link ModelASTPipelineDef}
      *
      * @param script A string containing a Pipeline script
+     * @param enabledOptionalValidators A list of optional validator classes that should be enabled. Defaults to empty.
      * @return the converted script
      */
-    static ModelASTPipelineDef scriptToPipelineDef(String script) {
+    static ModelASTPipelineDef scriptToPipelineDef(String script,
+                                                   final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
             getCompilationClassLoader())
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
 
-        return compilationUnitToPipelineDef(cu)
+        return compilationUnitToPipelineDef(cu, enabledOptionalValidators)
     }
 
     private static CompilerConfiguration makeCompilerConfiguration() {
@@ -141,21 +146,24 @@ class Converter {
 
         return cc
     }
+
     /**
      * Takes a {@link CompilationUnit}, copmiles it with the {@link ModelParser} injected, and returns the resulting
      * {@link ModelASTPipelineDef}
      *
      * @param cu {@link CompilationUnit} assembled by another method.
+     * @param enabledOptionalValidators A list of optional validator classes that should be enabled. Defaults to empty.
      * @return The converted script
      */
-    private static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu) {
+    private static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu,
+                                                                    final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1]
 
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
             void call(SourceUnit source) throws CompilationFailedException {
                 if (model[0] == null) {
-                    model[0] = new ModelParser(source).parse(true)
+                    model[0] = new ModelParser(source, enabledOptionalValidators).parse(true)
                 }
             }
         }, CANONICALIZATION)
@@ -165,24 +173,26 @@ class Converter {
         return model[0]
     }
 
-    static List<ModelASTStep> scriptToPlainSteps(String script) {
+    static List<ModelASTStep> scriptToPlainSteps(String script,
+                                                 final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         CompilationUnit cu = new CompilationUnit(
             makeCompilerConfiguration(),
             new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
             getCompilationClassLoader())
         cu.addSource(PIPELINE_SCRIPT_NAME, script)
 
-        return compilationUnitToPlainSteps(cu)
+        return compilationUnitToPlainSteps(cu, enabledOptionalValidators)
     }
 
-    private static List<ModelASTStep> compilationUnitToPlainSteps(CompilationUnit cu) {
+    private static List<ModelASTStep> compilationUnitToPlainSteps(CompilationUnit cu,
+                                                                  final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         final List<ModelASTStep>[] model = new List<ModelASTStep>[1]
 
         cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
             @Override
             void call(SourceUnit source) throws CompilationFailedException {
                 if (model[0] == null) {
-                    model[0] = new ModelParser(source).parsePlainSteps(source.AST)
+                    model[0] = new ModelParser(source, enabledOptionalValidators).parsePlainSteps(source.AST)
                 }
             }
         }, CANONICALIZATION)
