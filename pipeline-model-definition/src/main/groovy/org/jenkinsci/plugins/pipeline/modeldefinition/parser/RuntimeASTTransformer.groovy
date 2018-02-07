@@ -107,12 +107,20 @@ class RuntimeASTTransformer {
         if (isGroovyAST(original) && !original.conditions.isEmpty()) {
             MapExpression nameToSteps = new MapExpression()
             original.conditions.each { cond ->
-                Expression steps = transformStepsFromBuildCondition(cond)
+                Expression steps = transformStepsFromBranchHolder(cond)
                 if (steps != null) {
                     nameToSteps.addMapEntryExpression(constX(cond.condition), steps)
                 }
             }
-            return ctorX(ClassHelper.make(container), args(nameToSteps))
+            MapExpression whenToSteps = new MapExpression()
+            original.whenConditions.each { cond ->
+                Expression steps = transformStepsFromBranchHolder(cond)
+                if (steps != null) {
+                    whenToSteps.addMapEntryExpression(transformStageConditionals(cond.when), steps)
+                }
+
+            }
+            return ctorX(ClassHelper.make(container), args(nameToSteps, whenToSteps))
         }
         return constX(null)
     }
@@ -767,10 +775,10 @@ class RuntimeASTTransformer {
      * @return A method call of {@link Utils#createStepsBlock(Closure)}, or a constant null expression if the original
      * is null.
      */
-    Expression transformStepsFromBuildCondition(@CheckForNull ModelASTBuildCondition original) {
-        if (isGroovyAST(original)) {
+    Expression transformStepsFromBranchHolder(@CheckForNull ModelASTBranchHolder original) {
+        if (original instanceof ModelASTElement && isGroovyAST(original)) {
             BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
-            ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
+            ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformBranchHolder(original, condMatch.body)
             return callX(ClassHelper.make(Utils.class), "createStepsBlock",
                 args(transformedBody))
         }

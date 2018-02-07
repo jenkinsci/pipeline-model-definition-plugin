@@ -435,21 +435,42 @@
       ],
       "additionalProperties": false
     },
+    "postWhenCondition": {
+      "description": "A when condition and block of steps to run if the when condition is satisfied, to be used in post sections",
+      "type": "object",
+      "properties": {
+        "when": {
+          "$ref": "#/definitions/when"
+        },
+        "branch": {
+          "$ref": "#/definitions/branch"
+        }
+      },
+      "required": [
+        "condition",
+        "branch"
+      ],
+      "additionalProperties": false
+    },
     "post": {
       "description": "An array of build conditions with blocks of steps to run if those conditions are satisfied at the end of the build while still on the image/node the build ran on",
       "type": "object",
       "properties": {
         "conditions": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "items": {
             "$ref": "#/definitions/buildCondition"
           }
+        },
+        "whenConditions": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/definitions/postWhenCondition"
+          }
         }
       },
-      "required": [
-        "conditions"
-      ],
       "additionalProperties": false
     },
     "input": {

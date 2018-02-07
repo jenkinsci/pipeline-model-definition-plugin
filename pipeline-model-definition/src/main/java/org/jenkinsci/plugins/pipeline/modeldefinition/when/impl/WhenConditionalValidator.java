@@ -26,6 +26,8 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
+import hudson.model.Result;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
@@ -38,12 +40,25 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import static hudson.model.Result.ABORTED;
+import static hudson.model.Result.FAILURE;
+import static hudson.model.Result.NOT_BUILT;
+import static hudson.model.Result.SUCCESS;
+import static hudson.model.Result.UNSTABLE;
+
 @Extension
 public class WhenConditionalValidator extends DeclarativeValidatorContributor {
+    // TODO: This exists in Result#getNames() but isn't public, which is annoying.
+    private static final List<String> allResultNames = Arrays.asList(SUCCESS.toString(),
+            UNSTABLE.toString(),
+            FAILURE.toString(),
+            NOT_BUILT.toString(),
+            ABORTED.toString());
 
     @CheckForNull
     @Override
@@ -59,6 +74,25 @@ public class WhenConditionalValidator extends DeclarativeValidatorContributor {
                 } catch (PatternSyntaxException e) {
                     return Messages.WhenConditionalValidator_changelog_badPattern(pattern, e.getMessage());
                 }
+            }
+        } else if (condition.getName().equals("status")) {
+            if (condition.getArgs() instanceof ModelASTNamedArgumentList) {
+                ModelASTNamedArgumentList args = (ModelASTNamedArgumentList) condition.getArgs();
+                if (args.getArguments().size() > 1) {
+                    return Messages.WhenConditionalValidator_StatusCondition_TooManyParameters();
+                }
+
+                ModelASTValue status = args.valueForName("status");
+                if (status != null) {
+                    if (!status.isLiteral() ||
+                            !(status.getValue() instanceof String) ||
+                            !(allResultNames.contains(status.getValue()))) {
+                        return Messages.WhenConditionalValidator_StatusCondition_InvalidStatusValue(status.getValue(),
+                                StringUtils.join(allResultNames, ", "));
+                    }
+                }
+            } else {
+                return Messages.WhenConditionalValidator_StatusCondition_TooFewParameters();
             }
         }
 

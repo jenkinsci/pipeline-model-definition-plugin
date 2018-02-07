@@ -1101,13 +1101,70 @@ class ModelParser implements Parser {
             errorCollector.error(responder, Messages.ModelParser_ExpectedBlock())
         } else {
             eachStatement(m.body.code) {
-                ModelASTBuildCondition bc = parseBuildCondition(it)
-                if (bc.condition != null && bc.branch != null) {
-                    responder.conditions.add(bc)
+                def condBlock = matchBlockStatement(it)
+                if (condBlock == null) {
+                    errorCollector.error(responder, Messages.ModelParser_ExpectedBlock())
+                } else {
+                    if (condBlock.methodName == "condition") {
+                        ModelASTPostWhenCondition pwc = parsePostWhenCondition(it)
+                        if (pwc.when != null && pwc.branch != null) {
+                            responder.whenConditions.add(pwc)
+                        }
+                    } else {
+                        ModelASTBuildCondition bc = parseBuildCondition(it)
+                        if (bc.condition != null && bc.branch != null) {
+                            responder.conditions.add(bc)
+                        }
+                    }
                 }
             }
         }
         return responder
+    }
+
+    @Nonnull ModelASTPostWhenCondition parsePostWhenCondition(Statement st) {
+        ModelASTPostWhenCondition pwc = new ModelASTPostWhenCondition(st)
+        def m = matchBlockStatement(st)
+        if (m == null) {
+            errorCollector.error(pwc, Messages.ModelParser_ExpectedBlock())
+        } else {
+            def fieldsSeen = new HashSet()
+            eachStatement(m.body.code) { s ->
+                def mc = matchMethodCall(s)
+                if (mc == null) {
+                    errorCollector.error(pwc, Messages.ModelParser_InvalidSectionDefinition(getSourceText(s)))
+                } else {
+                    def name = parseMethodName(mc)
+                    def k = parseKey(mc.method)
+
+                    if (!fieldsSeen.add(name)) {
+                        // Also an error that we couldn't actually detect at model evaluation time.
+                        errorCollector.error(pwc, Messages.Parser_MultipleOfSection(name))
+                    }
+                    List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                    if (args.isEmpty()) {
+                        errorCollector.error(k, Messages.ModelParser_NoArgForField(name))
+                    } else if (args.size() > 1) {
+                        errorCollector.error(k, Messages.ModelParser_TooManyArgsForField(name))
+                    } else {
+                        switch (name) {
+                            case 'when':
+                                pwc.when = parseWhen(s)
+                                break
+                            case 'steps':
+                                def stepsBlock = matchBlockStatement(s)
+                                BlockStatement block = asBlock(stepsBlock.body.code)
+                                pwc.branch = parseBranch("default", block)
+                                break
+                            default:
+                                errorCollector.error(k, Messages.ModelParser_InvalidPostWhenConditionField(name))
+                        }
+                    }
+                }
+            }
+        }
+
+        return pwc
     }
 
     @Nonnull ModelASTBuildCondition parseBuildCondition(Statement st) {

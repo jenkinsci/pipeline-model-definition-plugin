@@ -31,18 +31,20 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>>
-    extends MappedClosure<StepsBlock,T> {
+abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionResponder<T>> implements Serializable {
+    private Map<String,StepsBlock> conditions
+    private Map<StageConditionals,StepsBlock> whenConditions
 
-    AbstractBuildConditionResponder(Map<String,StepsBlock> m) {
-        super(m)
+    AbstractBuildConditionResponder(Map<String,StepsBlock> conditions, Map<StageConditionals,StepsBlock> whenConditions) {
+        this.conditions = conditions
+        this.whenConditions = whenConditions
     }
 
     Closure closureForSatisfiedCondition(String conditionName, Object runWrapperObj) {
-        if (getMap().containsKey(conditionName)) {
+        if (conditions.containsKey(conditionName)) {
             BuildCondition condition = BuildCondition.getConditionMethods().get(conditionName)
             if (condition != null && condition.meetsCondition(runWrapperObj)) {
-                return ((StepsBlock)getMap().get(conditionName)).getClosure()
+                return ((StepsBlock)conditions.get(conditionName)).getClosure()
             }
         }
 
@@ -53,7 +55,11 @@ abstract class AbstractBuildConditionResponder<T extends AbstractBuildConditionR
         Map<String,BuildCondition> conditions = BuildCondition.getConditionMethods()
 
         return BuildCondition.orderedConditionNames.any { conditionName ->
-            getMap().containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
+            conditions.containsKey(conditionName) && conditions.get(conditionName).meetsCondition(runWrapperObj)
         }
+    }
+
+    Map<StageConditionals,StepsBlock> getWhenConditions() {
+        return whenConditions
     }
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,20 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-/**
- * Conditions and step blocks to be run after the stages but before the notifications, depending on build status.
- *
- * @author Andrew Bayer
- */
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class PostBuild extends AbstractBuildConditionResponder<PostBuild> {
-    @Whitelisted
-    PostBuild(Map<String,StepsBlock> m, Map<StageConditionals,StepsBlock> w) {
-        super(m, w)
-    }
+public interface ModelASTBranchHolder extends ModelASTMarkerInterface {
+    ModelASTBranch getBranch();
 }

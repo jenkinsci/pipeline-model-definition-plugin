@@ -19,6 +19,7 @@ import javax.annotation.Nonnull;
  */
 public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
     private List<ModelASTBuildCondition> conditions = new ArrayList<>();
+    private List<ModelASTPostWhenCondition> whenConditions = new ArrayList<>();
 
     protected ModelASTBuildConditionsContainer(Object sourceLocation) {
         super(sourceLocation);
@@ -28,11 +29,18 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
+        JSONObject o = new JSONObject();
         final JSONArray a = new JSONArray();
         for (ModelASTBuildCondition condition: conditions) {
             a.add(condition.toJSON());
         }
-        return new JSONObject().accumulate("conditions", a);
+        o.accumulate("conditions", a);
+        final JSONArray w = new JSONArray();
+        for (ModelASTPostWhenCondition whenCondition : whenConditions) {
+            w.add(whenCondition.toJSON());
+        }
+        o.accumulate("whenConditions", w);
+        return o;
     }
 
     @Override
@@ -40,6 +48,9 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
         validator.validateElement(this);
         for (ModelASTBuildCondition condition: conditions) {
             condition.validate(validator);
+        }
+        for (ModelASTPostWhenCondition w : whenConditions) {
+            w.validate(validator);
         }
         super.validate(validator);
     }
@@ -51,6 +62,9 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
         for (ModelASTBuildCondition condition : conditions) {
             result.append(condition.toGroovy()).append('\n');
         }
+        for (ModelASTPostWhenCondition w : whenConditions) {
+            result.append(w.toGroovy()).append("\n");
+        }
         result.append("}\n");
         return result.toString();
     }
@@ -60,6 +74,9 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
         super.removeSourceLocation();
         for (ModelASTBuildCondition condition : conditions) {
             condition.removeSourceLocation();
+        }
+        for (ModelASTPostWhenCondition w : whenConditions) {
+            w.removeSourceLocation();
         }
     }
 
@@ -71,10 +88,19 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
         this.conditions = conditions;
     }
 
+    public List<ModelASTPostWhenCondition> getWhenConditions() {
+        return whenConditions;
+    }
+
+    public void setWhenConditions(List<ModelASTPostWhenCondition> whenConditions) {
+        this.whenConditions = whenConditions;
+    }
+
     @Override
     public String toString() {
         return "ModelASTBuildConditionsContainer{" +
                 "conditions=" + conditions +
+                ", whenConditions=" + whenConditions +
                 "}";
     }
 
@@ -92,6 +118,9 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
 
         ModelASTBuildConditionsContainer that = (ModelASTBuildConditionsContainer) o;
 
+        if (getWhenConditions() != null ? !getWhenConditions().equals(that.getWhenConditions()) : that.getWhenConditions() != null) {
+            return false;
+        }
         return getConditions() != null ? getConditions().equals(that.getConditions()) : that.getConditions() == null;
 
     }
@@ -100,6 +129,7 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
     public int hashCode() {
         int result = super.hashCode();
         result = 31 * result + (getConditions() != null ? getConditions().hashCode() : 0);
+        result = 31 * result + (getWhenConditions() != null ? getWhenConditions().hashCode() : 0);
         return result;
     }
 }

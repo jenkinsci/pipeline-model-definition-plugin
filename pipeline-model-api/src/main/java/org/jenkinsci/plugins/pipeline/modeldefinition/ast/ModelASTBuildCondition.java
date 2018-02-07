@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTBuildCondition extends ModelASTElement {
+public final class ModelASTBuildCondition extends ModelASTElement implements ModelASTBranchHolder {
     private String condition;
     private ModelASTBranch branch;
 

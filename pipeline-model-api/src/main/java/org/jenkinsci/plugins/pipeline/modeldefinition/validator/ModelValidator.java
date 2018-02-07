@@ -40,6 +40,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostWhenCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStageInput;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
@@ -102,4 +103,6 @@ public interface ModelValidator {
     boolean validateElement(ModelASTStageInput input);
 
     boolean validateElement(ModelASTValue value);
+
+    boolean validateElement(ModelASTPostWhenCondition condition);
 }

@@ -566,6 +566,14 @@ class JSONParser implements Parser {
         return condition
     }
 
+    @CheckForNull ModelASTPostWhenCondition parsePostWhenCondition(JsonTree j) {
+        ModelASTPostWhenCondition condition = new ModelASTPostWhenCondition(j)
+        condition.when = parseWhen(j.append(JsonPointer.of("when")))
+        condition.branch = parseBranch(j.append(JsonPointer.of("branch")))
+
+        return condition
+    }
+
     @CheckForNull ModelASTPostBuild parsePostBuild(JsonTree j) {
         ModelASTPostBuild postBuild = new ModelASTPostBuild(j)
         return parseBuildConditionResponder(j, postBuild)
@@ -582,6 +590,12 @@ class JSONParser implements Parser {
         conds.node.eachWithIndex { JsonNode entry, int i ->
             responder.conditions.add(parseBuildCondition(conds.append(JsonPointer.of(i))))
         }
+
+        JsonTree whens = j.append(JsonPointer.of("whenConditions"))
+        whens.node.eachWithIndex { JsonNode entry, int i ->
+            responder.whenConditions.add(parsePostWhenCondition(conds.append(JsonPointer.of(i))))
+        }
+
         return responder
     }
 

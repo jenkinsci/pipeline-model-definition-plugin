@@ -33,7 +33,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class PostStage extends AbstractBuildConditionResponder<PostStage> {
     @Whitelisted
-    PostStage(Map<String,StepsBlock> m) {
-        super(m)
+    PostStage(Map<String,StepsBlock> m, Map<StageConditionals,StepsBlock> w) {
+        super(m, w)
     }
 }

@@ -260,9 +260,13 @@ class ModelInterpreter implements Serializable {
                     thisError = e
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
-                    if (!isSkipped && thisStage.parallel != null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
-                        Utils.logToTaskListener("Post stage")
-                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
+                    if (!isSkipped && thisStage.parallel != null) {
+                        List<Closure> satisfiedPostConditions = getSatisfiedPostConditions(thisStage.post)
+                        boolean hasLegacy = thisStage.post?.satisfiedConditions(script.getProperty("currentBuild"))
+                        if (!satisfiedPostConditions.isEmpty() || hasLegacy) {
+                            Utils.logToTaskListener("Post stage")
+                            firstError = runPostConditions(thisStage.post, satisfiedPostConditions, thisStage.agent ?: parentAgent, firstError, thisStage.name)
+                        }
                     }
                 }
 
@@ -570,9 +574,11 @@ class ModelInterpreter implements Serializable {
             }
         } finally {
             // And finally, run the post stage steps.
-            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+            List<Closure> satisfiedPostConditions = getSatisfiedPostConditions(thisStage.post)
+            boolean hasLegacy = thisStage.post?.satisfiedConditions(script.getProperty("currentBuild"))
+            if (!satisfiedPostConditions.isEmpty() || hasLegacy) {
                 Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
+                stageError = runPostConditions(thisStage.post, satisfiedPostConditions, thisStage.agent ?: parentAgent, stageError, thisStage.name)
             }
         }
 
@@ -626,9 +632,11 @@ class ModelInterpreter implements Serializable {
      */
     def executePostBuild(Root root) throws Throwable {
         Throwable stageError = null
-        if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"))) {
+        List<Closure> satisfiedPostConditions = getSatisfiedPostConditions(root.post)
+        boolean hasLegacy = root.post?.satisfiedConditions(script.getProperty("currentBuild"))
+        if (!satisfiedPostConditions.isEmpty() || hasLegacy) {
             script.stage(SyntheticStageNames.postBuild()) {
-                stageError = runPostConditions(root.post, root.agent, stageError)
+                stageError = runPostConditions(root.post, satisfiedPostConditions, root.agent, stageError)
             }
         }
 
@@ -637,8 +645,24 @@ class ModelInterpreter implements Serializable {
         }
     }
 
+    List<Closure> getSatisfiedPostConditions(AbstractBuildConditionResponder responder) {
+        List<Closure> satisfied = new ArrayList<>()
+
+        // Get the satisfied newer when-style conditions
+        responder?.whenConditions?.each { when, stepsBlock ->
+            if (evaluateWhen(when)) {
+                satisfied.add(stepsBlock.closure)
+            }
+        }
+
+        return satisfied
+    }
+
     /**
      * Actually does the execution of post actions, both post-stage and post-build.
+     *
+     * Deprecated in favor of list of closures, but left in to not break running builds.
+     *
      * @param responder The {@link AbstractBuildConditionResponder} we're pulling conditions from.
      * @param agentContext The {@link Agent} context we're running in.
      * @param stageError Any existing error from earlier parts of the stage we're in, or null.
@@ -669,6 +693,39 @@ class ModelInterpreter implements Serializable {
         }
 
         return stageError
+    }
+
+    /**
+     * Actually does the execution of post actions, both post-stage and post-build.
+     * @param responder The {@link AbstractBuildConditionResponder} we're pulling conditions from.
+     * @param blocks The list of satisfied closures to execute.
+     * @param agentContext The {@link Agent} context we're running in.
+     * @param stageError Any existing error from earlier parts of the stage we're in, or null.
+     * @param stageName Optional - the name of the stage we're running in, so we can mark it as failed if needed.
+     * @return The stageError, which, if null when passed in and an error is hit, will be set to the first error encountered.
+     */
+    def runPostConditions(AbstractBuildConditionResponder responder,
+                          @Nonnull List<Closure> blocks,
+                          Agent agentContext,
+                          Throwable stageError,
+                          String stageName = null) {
+        blocks.each { c ->
+            try {
+                catchRequiredContextForNode(agentContext) {
+                    delegateAndExecute(c)
+                }
+            } catch (Exception e) {
+                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
+                if (stageName != null) {
+                    Utils.markStageFailedAndContinued(stageName)
+                }
+                if (stageError == null) {
+                    stageError = e
+                }
+            }
+        }
+
+        return runPostConditions(responder, agentContext, stageError, stageName)
     }
 
     /**

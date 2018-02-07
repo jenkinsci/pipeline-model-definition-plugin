@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.AbstractModelASTCodeBlock;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranchHolder;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
@@ -93,9 +94,19 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Construct the new {@link ClosureExpression} for the given build condition.
      */
+    @Deprecated
     @Nonnull
     public final ClosureExpression handleBuildCondition(@Nonnull ModelASTBuildCondition condition, @Nonnull ClosureExpression body) {
         body.setCode(handleBranch(condition.getBranch()));
+        return body;
+    }
+
+    /**
+     * Construct the new {@link ClosureExpression} for the given branch holder.
+     */
+    @Nonnull
+    public final ClosureExpression handleBranchHolder(@Nonnull ModelASTBranchHolder holder, @Nonnull ClosureExpression body) {
+        body.setCode(handleBranch(holder.getBranch()));
         return body;
     }
 
@@ -212,11 +223,25 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Apply step transformation to the given build condition for all {@link StepRuntimeTransformerContributor}s.
      */
+    @Deprecated
     @Nonnull
     public static ClosureExpression transformBuildCondition(@Nonnull ModelASTBuildCondition condition,
                                                             @Nonnull ClosureExpression body) {
         for (StepRuntimeTransformerContributor c : all()) {
             body = c.handleBuildCondition(condition, body);
+        }
+
+        return body;
+    }
+
+    /**
+     * Apply step transformation to the given branch holder for all {@link StepRuntimeTransformerContributor}s.
+     */
+    @Nonnull
+    public static ClosureExpression transformBranchHolder(@Nonnull ModelASTBranchHolder holder,
+                                                          @Nonnull ClosureExpression body) {
+        for (StepRuntimeTransformerContributor c : all()) {
+            body = c.handleBranchHolder(holder, body);
         }
 
         return body;

@@ -42,6 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostWhenCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
@@ -441,6 +442,21 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
     @Nonnull
     public List<String> validateElementAll(@Nonnull ModelASTValue element, @CheckForNull FlowExecution execution) {
         String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
+    @CheckForNull
+    public String validateElement(@Nonnull ModelASTPostWhenCondition postWhenCondition, @CheckForNull FlowExecution execution) {
+        return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull ModelASTPostWhenCondition postWhenCondition, @CheckForNull FlowExecution execution) {
+        String r = validateElement(postWhenCondition, execution);
         List<String> result = new ArrayList<>();
         if (r != null) {
             result.add(r);

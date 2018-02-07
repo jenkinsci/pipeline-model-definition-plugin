@@ -762,6 +762,21 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(value, true)
     }
 
+    boolean validateElement(@Nonnull ModelASTPostWhenCondition postWhen) {
+        boolean valid = true
+
+        if (postWhen.when == null) {
+            errorCollector.error(postWhen, Messages.ModelValidatorImpl_PostWhenConditionMissingDirective("when"))
+            valid = false
+        }
+        if (postWhen.branch == null) {
+            errorCollector.error(postWhen, Messages.ModelValidatorImpl_PostWhenConditionMissingDirective("steps"))
+            valid = false
+        }
+
+        return validateFromContributors(postWhen, valid)
+    }
+
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
         boolean contributorsValid = DeclarativeValidatorContributor.all().collect { contributor ->
             List<String> errors
