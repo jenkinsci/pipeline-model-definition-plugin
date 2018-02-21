@@ -28,6 +28,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineScript<DockerPipelineFromDockerfile> {
 
@@ -74,7 +75,8 @@ class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineScript<Do
         return {
             def dockerfilePath = describable.getDockerfilePath(script.isUnix())
             try {
-                def hash = Utils.stringToSHA1(script.readFile("${dockerfilePath}"))
+                RunWrapper runWrapper = (RunWrapper)script.getProperty("currentBuild")
+                def hash = Utils.stringToSHA1("${runWrapper.fullProjectName}\n${script.readFile("${dockerfilePath}")}")
                 def imgName = "${hash}"
                 def additionalBuildArgs = describable.getAdditionalBuildArgs() ? " ${describable.additionalBuildArgs}" : ""
                 script.sh "docker build -t ${imgName}${additionalBuildArgs} -f \"${dockerfilePath}\" \"${describable.getActualDir()}\""
