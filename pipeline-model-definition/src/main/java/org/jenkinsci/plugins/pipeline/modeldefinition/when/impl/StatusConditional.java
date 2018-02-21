@@ -118,10 +118,13 @@ public class StatusConditional extends DeclarativeStageConditional<StatusConditi
         FlowExecution execution = r.getExecution();
         if (execution instanceof CpsFlowExecution) {
             return ((CpsFlowExecution) execution).getResult();
-        } else if (r.getResult() != null) {
-            return r.getResult();
         } else {
-            return Result.SUCCESS;
+            Result result = r.getResult();
+            if (result == null) {
+                result = Result.SUCCESS;
+            }
+
+            return result;
         }
     }
 
