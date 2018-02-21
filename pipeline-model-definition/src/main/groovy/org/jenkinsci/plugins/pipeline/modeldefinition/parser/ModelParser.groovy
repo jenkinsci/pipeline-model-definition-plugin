@@ -1103,7 +1103,7 @@ class ModelParser implements Parser {
             eachStatement(m.body.code) {
                 def condBlock = matchBlockStatement(it)
                 if (condBlock == null) {
-                    errorCollector.error(responder, Messages.ModelParser_ExpectedBlock())
+                    errorCollector.error(responder, Messages.ModelParser_InvalidBuildCondition(BuildCondition.getOrderedConditionNames()))
                 } else {
                     if (condBlock.methodName == "condition") {
                         ModelASTPostWhenCondition pwc = parsePostWhenCondition(it)

@@ -184,7 +184,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         result.add(new Object[]{"emptyStages", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"emptyEnvironment", Messages.JSONParser_TooFewItems(0, 1)});
-        result.add(new Object[]{"emptyPostBuild", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"emptyPostBuild", Messages.ModelValidatorImpl_EmptySection("post")});
 
         result.add(new Object[]{"rejectStageInSteps", Messages.ModelValidatorImpl_BlockedStep("stage",
                 BlockedStepsAndMethodCalls.blockedInSteps().get("stage"))});

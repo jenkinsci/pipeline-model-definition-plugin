@@ -30,7 +30,7 @@ pipeline {
             parallel {
                 stage("linux") {
                     agent {
-                        label "java"
+                        label "highmem"
                     }
                     steps {
                         sh 'mvn clean install -Dmaven.test.failure.ignore=true'
@@ -66,7 +66,7 @@ pipeline {
                 }
                 stage("linux-newer-core") {
                     agent {
-                        label "java"
+                        label "highmem"
                     }
                     steps {
                         sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"

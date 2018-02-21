@@ -29,7 +29,9 @@
           }]
         }]
       }
-    }]}
+    }],
+      "whenConditions": []
+    }
   }],
   "agent": {"type": "none"}
 }}

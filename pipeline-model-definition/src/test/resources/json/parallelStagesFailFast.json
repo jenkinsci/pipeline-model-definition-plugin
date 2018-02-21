@@ -60,7 +60,9 @@
               }]
             }]
           }
-        }]}
+        }],
+          "whenConditions": []
+        }
       }
     ],
     "failFast": true
