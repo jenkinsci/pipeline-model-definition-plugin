@@ -49,9 +49,9 @@ import java.io.File;
 
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
-import static org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.BuildingChangeConditional.Names.*;
+import static org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.ChangeRequestConditional.Names.*;
 
-public class BuildingChangeConditional extends DeclarativeStageConditional<BuildingChangeConditional> {
+public class ChangeRequestConditional extends DeclarativeStageConditional<ChangeRequestConditional> {
 
     private String id;
     private String target;
@@ -68,7 +68,7 @@ public class BuildingChangeConditional extends DeclarativeStageConditional<Build
     private String authorEmailX;
 
     @DataBoundConstructor
-    public BuildingChangeConditional() {
+    public ChangeRequestConditional() {
     }
 
     /**
@@ -290,8 +290,8 @@ public class BuildingChangeConditional extends DeclarativeStageConditional<Build
     }
 
     @Extension
-    @Symbol("buildingChange")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<BuildingChangeConditional> {
+    @Symbol("changeRequest")
+    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeRequestConditional> {
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

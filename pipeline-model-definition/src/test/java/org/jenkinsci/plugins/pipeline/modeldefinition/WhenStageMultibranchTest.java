@@ -174,11 +174,11 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void whenBuildingChange() throws Exception {
+    public void whenChangeRequest() throws Exception {
         MockSCMController controller = MockSCMController.create();
         controller.createRepository("repo", MockRepositoryFlags.FORKABLE);
         controller.createBranch("repo", "master");
-        controller.addFile("repo", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenBuildingChange").getBytes());
+        controller.addFile("repo", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenChangeRequest").getBytes());
         int id = controller.openChangeRequest("repo", "master");
         controller.addFile("repo", "change-request/" + id, "mbopalua", "cr" + id + ".txt", "hello".getBytes());
         controller.cloneBranch("repo", "master", "release-2");

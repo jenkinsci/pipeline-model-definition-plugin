@@ -29,9 +29,9 @@ import hudson.EnvVars
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-class BuildingChangeConditionalScript extends DeclarativeStageConditionalScript<BuildingChangeConditional> {
+class ChangeRequestConditionalScript extends DeclarativeStageConditionalScript<ChangeRequestConditional> {
 
-    BuildingChangeConditionalScript(CpsScript s, BuildingChangeConditional c) {
+    ChangeRequestConditionalScript(CpsScript s, ChangeRequestConditional c) {
         super(s, c)
     }
 

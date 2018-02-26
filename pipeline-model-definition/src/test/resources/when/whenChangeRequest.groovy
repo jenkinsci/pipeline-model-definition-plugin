@@ -36,7 +36,7 @@ pipeline {
         }
         stage("IsChange") {
             when {
-                buildingChange()
+                changeRequest()
             }
             steps {
                 echo "World"
@@ -44,7 +44,7 @@ pipeline {
         }
         stage("ChangeId") {
             when {
-                buildingChange id: "1?"
+                changeRequest id: "1?"
             }
             steps {
                 echo "Id is in the tens"
@@ -52,7 +52,7 @@ pipeline {
         }
         stage("ChangeAndBranch") {
             when {
-                buildingChange id: "1?", branch: "CR-1?"
+                changeRequest id: "1?", branch: "CR-1?"
             }
             steps {
                 echo "We are in the tens"
@@ -60,7 +60,7 @@ pipeline {
         }
         stage("ChangeTarget") {
             when {
-                buildingChange target: "release-*"
+                changeRequest target: "release-*"
             }
             steps {
                 echo "Target release"
@@ -68,7 +68,7 @@ pipeline {
         }
         stage("ChangeBranch") {
             when {
-                buildingChange branch: "CR-*"
+                changeRequest branch: "CR-*"
             }
             steps {
                 echo "From CR branch"
@@ -76,7 +76,7 @@ pipeline {
         }
         stage("ChangeFork") {
             when {
-                buildingChange fork: "fork"
+                changeRequest fork: "fork"
             }
             steps {
                 echo "From origin fork"
@@ -84,7 +84,7 @@ pipeline {
         }
         stage("ChangeUrlX") {
             when {
-                buildingChange urlX: ".*example.*"
+                changeRequest urlX: ".*example.*"
             }
             steps {
                 echo "From urlX example"
@@ -92,7 +92,7 @@ pipeline {
         }
         stage("ChangeTitle") {
             when {
-                buildingChange title: "*regression*"
+                changeRequest title: "*regression*"
             }
             steps {
                 echo "title names a regression"
@@ -100,7 +100,7 @@ pipeline {
         }
         stage("ChangeTitleX") {
             when {
-                buildingChange titleX: ".*regression.*"
+                changeRequest titleX: ".*regression.*"
             }
             steps {
                 echo "titleX names a regression"
@@ -108,7 +108,7 @@ pipeline {
         }
         stage("ChangeAuthor") {
             when {
-                buildingChange author: "Bob*"
+                changeRequest author: "Bob*"
             }
             steps {
                 echo "Author is a cool guy"
@@ -116,7 +116,7 @@ pipeline {
         }
         stage("ChangeAuthorX") {
             when {
-                buildingChange authorX: "bob.*"
+                changeRequest authorX: "bob.*"
             }
             steps {
                 echo "AuthorX is nice"
@@ -124,7 +124,7 @@ pipeline {
         }
         stage("ChangeAuthorDisplayName") {
             when {
-                buildingChange authorDisplayName: "Bob*"
+                changeRequest authorDisplayName: "Bob*"
             }
             steps {
                 echo "Author displays coolness"
@@ -132,7 +132,7 @@ pipeline {
         }
         stage("ChangeAuthorDisplayNameX") {
             when {
-                buildingChange authorDisplayNameX: "Bob.*"
+                changeRequest authorDisplayNameX: "Bob.*"
             }
             steps {
                 echo "AuthorX displays coolness"
@@ -140,7 +140,7 @@ pipeline {
         }
         stage("ChangeAuthorEmail") {
             when {
-                buildingChange authorEmail: "*@example.com"
+                changeRequest authorEmail: "*@example.com"
             }
             steps {
                 echo "Author has a cool job"
@@ -148,7 +148,7 @@ pipeline {
         }
         stage("ChangeAuthorEmailX") {
             when {
-                buildingChange authorEmailX: "[a-z\\.]+@example.com"
+                changeRequest authorEmailX: "[a-z\\.]+@example.com"
             }
             steps {
                 echo "Author is probably a robot"
