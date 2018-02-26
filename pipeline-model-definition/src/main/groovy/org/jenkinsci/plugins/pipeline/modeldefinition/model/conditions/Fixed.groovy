@@ -34,7 +34,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
  *
  * @author Andrew Bayer
  */
-@Extension(ordinal=900d) @Symbol("fixed")
+@Extension(ordinal=890d) @Symbol("fixed")
 class Fixed extends BuildCondition {
     @Override
     boolean meetsCondition(WorkflowRun r) {
