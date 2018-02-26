@@ -35,6 +35,9 @@ pipeline {
         changed {
             echo "I CHANGED"
         }
+        fixed {
+            echo "I AM FIXED"
+        }
         failure {
             echo "I FAILED"
         }

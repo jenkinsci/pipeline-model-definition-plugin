@@ -35,6 +35,9 @@ pipeline {
         changed {
             echo "I CHANGED"
         }
+        regression {
+            echo "I REGRESSED"
+        }
         failure {
             echo "I FAILED"
         }
