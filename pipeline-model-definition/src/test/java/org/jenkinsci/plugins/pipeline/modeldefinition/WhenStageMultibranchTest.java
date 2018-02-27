@@ -171,6 +171,25 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         j.assertLogContains("Hello", build);
         j.assertLogContains("World", build);
         j.assertLogContains("release it", build);
+        j.assertLogContains("Digit release", build);
+
+        controller.createTag("repoX", "master", "release-master");
+
+        waitFor(project.scheduleBuild2(0));
+        j.waitUntilNoActivity();
+        assertThat(project.getItems(), hasSize(4)); //Just tests the multibranch is correctly configured
+
+        tagJob = project.getItem("release-master");
+        assertNotNull(tagJob);
+        build = tagJob.getLastBuild();
+        if (build == null) {
+            //This seems to happen for unknown reason; the tag is discovered but no build produced.
+            j.assertBuildStatusSuccess(tagJob.scheduleBuild2(0));
+            build = tagJob.getLastBuild();
+        }
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("release it", build);
+        j.assertLogNotContains("Digit release", build);
     }
 
     @Test

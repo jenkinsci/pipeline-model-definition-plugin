@@ -34,37 +34,56 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 import java.io.File;
 
 public class TagConditional extends DeclarativeStageConditional<TagConditional> {
-    private final String compare;
+    private final String pattern;
+    private String comparator;
 
     @DataBoundConstructor
-    public TagConditional(String compare) {
-        this.compare = compare;
+    public TagConditional(String pattern) {
+        this.pattern = pattern;
     }
 
-    public String getCompare() {
-        return compare;
+    public String getPattern() {
+        return pattern;
+    }
+
+    /**
+     * The {@link Comparator} to use.
+     * @return the name of the comparator or null if default.
+     */
+    public String getComparator() {
+        return comparator;
+    }
+
+    @DataBoundSetter
+    public void setComparator(String comparator) {
+        final Comparator c = Comparator.get(comparator, null);
+        //TODO validation
+        if (c != null) {
+            this.comparator = c.name();
+        } else {
+            this.comparator = null;
+        }
     }
 
     public boolean tagMatches(String actualTag) {
         if (StringUtils.isEmpty(actualTag)) {
             return false; //This is no tag build.
         }
-        if (StringUtils.isEmpty(compare) && StringUtils.isNotEmpty(actualTag)) {
+        if (StringUtils.isEmpty(pattern) && StringUtils.isNotEmpty(actualTag)) {
             return true; //This is a tag build and user doesn't care what the name is
         }
 
-        // Replace the Git directory separator character (always '/')
-        // with the platform specific directory separator before
-        // invoking Ant's platform specific path matching.
-        String safeCompare = compare.replace('/', File.separatorChar);
-        String safeName = actualTag.replace('/', File.separatorChar);
-        return SelectorUtils.matchPath(safeCompare, safeName, false);
+        Comparator c = Comparator.get(comparator, Comparator.GLOB);
+
+        return c.compare(pattern, actualTag);
     }
 
     @Extension

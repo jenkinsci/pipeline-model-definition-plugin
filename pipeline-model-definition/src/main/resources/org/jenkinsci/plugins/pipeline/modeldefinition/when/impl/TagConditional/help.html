@@ -27,3 +27,16 @@
     If an empty pattern is provided the stage will execute if the <code>TAG_NAME</code> variable exists.
     Only works in Multibranch.
 </p>
+<strong>Optional Parameter:</strong>
+<p>
+    <strong>comparator</strong><br/>
+    What way to compare the pattern specified to the actual value.
+    <!-- TODO Update when new Comparators are added-->
+    Possible values are
+<ul>
+    <li><strong>EQUALS</strong> - A plain string comparison</li>
+    <li><strong>GLOB</strong> - <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a></li>
+    <li><strong>REGEXP</strong> - <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regular Expression</a></li>
+</ul>
+If not specified <strong>GLOB</strong> will be used as default.
+</p>

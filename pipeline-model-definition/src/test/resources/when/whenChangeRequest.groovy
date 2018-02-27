@@ -44,7 +44,7 @@ pipeline {
         }
         stage("ChangeId") {
             when {
-                changeRequest id: "1?"
+                changeRequest id: "1?", comparator: "GLOB"
             }
             steps {
                 echo "Id is in the tens"
@@ -52,7 +52,7 @@ pipeline {
         }
         stage("ChangeAndBranch") {
             when {
-                changeRequest id: "1?", branch: "CR-1?"
+                changeRequest id: "1?", branch: "CR-1?", comparator: "GLOB"
             }
             steps {
                 echo "We are in the tens"
@@ -60,7 +60,7 @@ pipeline {
         }
         stage("ChangeTarget") {
             when {
-                changeRequest target: "release-*"
+                changeRequest target: "release-*", comparator: "GLOB"
             }
             steps {
                 echo "Target release"
@@ -68,7 +68,7 @@ pipeline {
         }
         stage("ChangeBranch") {
             when {
-                changeRequest branch: "CR-*"
+                changeRequest branch: "CR-*", comparator: "GLOB"
             }
             steps {
                 echo "From CR branch"
@@ -84,7 +84,7 @@ pipeline {
         }
         stage("ChangeUrlX") {
             when {
-                changeRequest urlX: ".*example.*"
+                changeRequest url: ".*example.*", comparator: "REGEXP"
             }
             steps {
                 echo "From urlX example"
@@ -92,7 +92,7 @@ pipeline {
         }
         stage("ChangeTitle") {
             when {
-                changeRequest title: "*regression*"
+                changeRequest title: "*regression*", comparator: "GLOB"
             }
             steps {
                 echo "title names a regression"
@@ -100,7 +100,7 @@ pipeline {
         }
         stage("ChangeTitleX") {
             when {
-                changeRequest titleX: ".*regression.*"
+                changeRequest title: ".*regression.*", comparator: "REGEXP"
             }
             steps {
                 echo "titleX names a regression"
@@ -108,7 +108,7 @@ pipeline {
         }
         stage("ChangeAuthor") {
             when {
-                changeRequest author: "Bob*"
+                changeRequest author: "Bob*", comparator: "GLOB"
             }
             steps {
                 echo "Author is a cool guy"
@@ -116,7 +116,7 @@ pipeline {
         }
         stage("ChangeAuthorX") {
             when {
-                changeRequest authorX: "bob.*"
+                changeRequest author: "bob.*", comparator: "REGEXP"
             }
             steps {
                 echo "AuthorX is nice"
@@ -124,7 +124,7 @@ pipeline {
         }
         stage("ChangeAuthorDisplayName") {
             when {
-                changeRequest authorDisplayName: "Bob*"
+                changeRequest authorDisplayName: "Bob*", comparator: "GLOB"
             }
             steps {
                 echo "Author displays coolness"
@@ -132,7 +132,7 @@ pipeline {
         }
         stage("ChangeAuthorDisplayNameX") {
             when {
-                changeRequest authorDisplayNameX: "Bob.*"
+                changeRequest authorDisplayName: "Bob.*", comparator: "REGEXP"
             }
             steps {
                 echo "AuthorX displays coolness"
@@ -140,7 +140,7 @@ pipeline {
         }
         stage("ChangeAuthorEmail") {
             when {
-                changeRequest authorEmail: "*@example.com"
+                changeRequest authorEmail: "bob@example.com" //No comparator so should default to String.equals
             }
             steps {
                 echo "Author has a cool job"
@@ -148,7 +148,7 @@ pipeline {
         }
         stage("ChangeAuthorEmailX") {
             when {
-                changeRequest authorEmailX: "[a-z\\.]+@example.com"
+                changeRequest authorEmail: "[a-z\\.]+@example.com", comparator: "REGEXP"
             }
             steps {
                 echo "Author is probably a robot"
