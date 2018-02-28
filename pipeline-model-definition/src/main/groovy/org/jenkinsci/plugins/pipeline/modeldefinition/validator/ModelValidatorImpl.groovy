@@ -67,13 +67,32 @@ import javax.annotation.Nonnull
 class ModelValidatorImpl implements ModelValidator {
 
     private final ErrorCollector errorCollector
+    private final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = new ArrayList<>()
     private transient DescriptorLookupCache lookup
     private transient FlowExecution execution
+    private transient List<DeclarativeValidatorContributor> validatorContributors
 
-    ModelValidatorImpl(ErrorCollector e, FlowExecution execution = null) {
+    ModelValidatorImpl(@Nonnull ErrorCollector e, FlowExecution execution = null) {
+        this(e, [], execution)
+    }
+
+    ModelValidatorImpl(@Nonnull ErrorCollector e,
+                       @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+                       FlowExecution execution = null) {
         this.errorCollector = e
+        this.enabledOptionalValidators.addAll(enabledOptionalValidators)
         this.execution = execution
         this.lookup = DescriptorLookupCache.getPublicCache()
+    }
+
+    private List<DeclarativeValidatorContributor> getContributors() {
+        if (validatorContributors == null) {
+            validatorContributors = DeclarativeValidatorContributor.all().findAll { c ->
+                !c.isOptional() || c.class in enabledOptionalValidators
+            }
+        }
+
+        return validatorContributors
     }
 
     DescriptorLookupCache getLookup() {
@@ -763,7 +782,7 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
-        boolean contributorsValid = DeclarativeValidatorContributor.all().collect { contributor ->
+        boolean contributorsValid = getContributors().collect { contributor ->
             List<String> errors
             if (!(element instanceof ModelASTStage)) {
                 errors = contributor.validateElementAll(element, getExecution())

@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDesc
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
@@ -92,14 +93,26 @@ class ModelParser implements Parser {
 
     private final Run<?,?> build
 
+    @Deprecated
     ModelParser(SourceUnit sourceUnit) {
-        this(sourceUnit, null)
+        this(sourceUnit, [], null)
     }
 
+    @Deprecated
     ModelParser(SourceUnit sourceUnit, @CheckForNull FlowExecution execution) {
+        this(sourceUnit, [], execution)
+    }
+
+    ModelParser(SourceUnit sourceUnit, @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators) {
+        this(sourceUnit, enabledOptionalValidators, null)
+    }
+
+    ModelParser(SourceUnit sourceUnit,
+                @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+                @CheckForNull FlowExecution execution) {
         this.sourceUnit = sourceUnit
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
-        this.validator = new ModelValidatorImpl(errorCollector, execution)
+        this.validator = new ModelValidatorImpl(errorCollector, enabledOptionalValidators, execution)
         this.lookup = DescriptorLookupCache.getPublicCache()
         Queue.Executable executable = null
         if (execution != null) {
@@ -1165,7 +1178,18 @@ class ModelParser implements Parser {
      */
     protected ModelASTValue parseArgument(Expression e) {
         if (e instanceof ConstantExpression) {
-            return ModelASTValue.fromConstant(e.value, e)
+            Object val = e.value
+            if (val instanceof BigDecimal) {
+                val = val.doubleValue()
+            } else if (val instanceof BigInteger) {
+                if (val > Long.MAX_VALUE || val < Long.MIN_VALUE) {
+                    errorCollector.error(ModelASTValue.fromConstant(-1, e), Messages.ModelParser_BigIntegerValue())
+                    val = -1
+                } else {
+                    val = val.longValue()
+                }
+            }
+            return ModelASTValue.fromConstant(val, e)
         }
         if (e instanceof GStringExpression) {
             String rawSrc = getSourceText(e)

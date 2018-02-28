@@ -340,6 +340,16 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-49226")
+    @Test
+    public void whenEquals() throws Exception {
+        env(s).put("SECOND_STAGE", "NOPE").set();
+        ExpectationsBuilder expect = expect("when", "whenEquals").runFromRepo(false);
+        expect.logContains("One", "Hello", "Two").logNotContains("World").go();
+        env(s).put("SECOND_STAGE", "RUN").set();
+        expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Two", "World").go();
+    }
+
     public static void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
         while (item != null && item.getFuture() == null) {
             Thread.sleep(200);
