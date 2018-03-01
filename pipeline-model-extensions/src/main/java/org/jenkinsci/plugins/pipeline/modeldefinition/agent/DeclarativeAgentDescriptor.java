@@ -24,13 +24,17 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionList;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeAgentOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -106,6 +110,20 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      * @return The corresponding descriptor or null if not found.
      */
     public static @Nullable DeclarativeAgentDescriptor byName(@Nonnull String name) {
+        return byName(name, null);
+    }
+
+    public static @Nullable DeclarativeAgentDescriptor byName(@Nonnull String name, @CheckForNull Map<String, DeclarativeOption> options) {
+
+        if (options != null) {
+            for (DeclarativeOption option : options.values()) {
+                if (option instanceof DeclarativeAgentOption) {
+                    final DeclarativeAgentDescriptor descriptor = ((DeclarativeAgentOption) option).getDeclarativeAgentDescriptor(name);
+                    if (descriptor != null) return descriptor;
+                }
+            }
+        }
+
         return (DeclarativeAgentDescriptor) SymbolLookup.get().findDescriptor(DeclarativeAgent.class, name);
     }
 
