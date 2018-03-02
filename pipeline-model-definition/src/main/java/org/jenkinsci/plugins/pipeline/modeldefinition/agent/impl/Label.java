@@ -25,13 +25,18 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
+import hudson.Util;
+import hudson.util.FormValidation;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class Label extends DeclarativeAgent<Label> {
@@ -60,5 +65,18 @@ public class Label extends DeclarativeAgent<Label> {
 
     @Extension(ordinal = -800) @Symbol({"label","node"})
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Run on an agent matching a label";
+        }
+
+        public FormValidation doCheckLabel(@QueryParameter String label) {
+            if (StringUtils.isEmpty(Util.fixEmptyAndTrim(label))) {
+                return FormValidation.error("Label is required.");
+            } else {
+                return FormValidation.ok();
+            }
+        }
     }
 }

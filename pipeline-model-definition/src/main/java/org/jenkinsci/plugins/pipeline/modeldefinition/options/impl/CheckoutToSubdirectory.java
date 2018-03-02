@@ -31,6 +31,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionD
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class CheckoutToSubdirectory extends DeclarativeOption {
@@ -48,6 +49,12 @@ public class CheckoutToSubdirectory extends DeclarativeOption {
 
     @Extension @Symbol("checkoutToSubdirectory")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Check out SCM to a subdirectory of the workspace";
+        }
+
         @Override
         public boolean canUseInStage() {
             return true;

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The MIT License
+
+Copyright 2016 CloudBees, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:local="local">
+    <l:header/>
+    <l:side-panel>
+        <l:tasks>
+            <d:taglib uri="local">
+                <d:tag name="taskWithTarget"> <!-- TODO cannot use l:task since that does not support target -->
+                    <div class="task">
+                        <a href="${href}" class="task-icon-link" target="${target}"><l:icon class="${icon}" style="width: 24px; height: 24px; margin: 2px;"/></a>
+                        <st:nbsp/>
+                        <a href="${href}" class="task-link" target="${target}">${title}</a>
+                    </div>
+                </d:tag>
+            </d:taglib>
+            <l:task href=".." icon="icon-up icon-md" title="${%Back}"/>
+            <l:task href="../pipeline-syntax" icon="icon-gear2 icon-md" title="${%Snippet Generator}"/>
+            <l:task href="../pipeline-syntax/html" icon="icon-help icon-md" title="${%Step Reference}"/>
+            <l:task href="../pipeline-syntax/globals" icon="icon-help icon-md" title="${%Global Variables Reference}"/>
+            <local:taskWithTarget href="https://jenkins.io/doc/pipeline/" icon="icon-help icon-md" target="_blank" title="${%Online Documentation}"/>
+        </l:tasks>
+    </l:side-panel>
+</j:jelly>

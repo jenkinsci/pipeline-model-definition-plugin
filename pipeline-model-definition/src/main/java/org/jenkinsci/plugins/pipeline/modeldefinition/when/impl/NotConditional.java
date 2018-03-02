@@ -34,6 +34,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 /**
  * Inverted match of a stage condition
@@ -53,6 +54,12 @@ public class NotConditional extends DeclarativeStageConditional<NotConditional> 
     @Extension
     @Symbol("not")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<NotConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if the nested condition is false";
+        }
+
         @Override
         public int getAllowedChildrenCount() {
             return 1;

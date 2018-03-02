@@ -35,6 +35,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -62,6 +63,12 @@ public class EqualsConditional extends DeclarativeStageConditional<EqualsConditi
     @Extension
     @Symbol("equals")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EqualsConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if two values are equal";
+        }
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,30 +22,29 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
+package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
+import hudson.ExtensionList;
+import hudson.model.Descriptor;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
+public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extends Descriptor<T> {
+    @Nonnull
+    public abstract String getName();
 
-public class None extends DeclarativeAgent<None> {
+    @Nonnull
+    public abstract String getDisplayName();
 
-    @DataBoundConstructor
-    public None() {
+    @Nonnull
+    public abstract List<Descriptor> getDescriptors();
 
+    @Nonnull
+    public static ExtensionList<DirectiveDescriptor> all() {
+        return ExtensionList.lookup(DirectiveDescriptor.class);
     }
 
-    @Extension(ordinal = -1000) @Symbol("none")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor<None> {
-        @Override
-        @Nonnull
-        public String getDisplayName() {
-            return "Don't run on an agent";
-        }
-    }
+    @Nonnull
+    public abstract String toGroovy(@Nonnull T directive);
 }

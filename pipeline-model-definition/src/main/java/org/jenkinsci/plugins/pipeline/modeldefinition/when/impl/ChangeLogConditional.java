@@ -37,6 +37,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 /**
@@ -67,6 +68,12 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
     @Extension
     @Symbol("changelog")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeLogConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if a commit message in the changelog matches";
+        }
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

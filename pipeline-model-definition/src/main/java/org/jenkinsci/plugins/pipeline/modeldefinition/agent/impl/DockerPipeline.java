@@ -25,11 +25,15 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
+import hudson.Util;
+import hudson.util.FormValidation;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
 
@@ -57,5 +61,18 @@ public class DockerPipeline extends AbstractDockerAgent<DockerPipeline> {
 
     @Extension(ordinal = 1000) @Symbol("docker")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<DockerPipeline> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Run inside a Docker container";
+        }
+
+        public FormValidation doCheckImage(@QueryParameter String image) {
+            if (StringUtils.isEmpty(Util.fixEmptyAndTrim(image))) {
+                return FormValidation.error("Image is required.");
+            } else {
+                return FormValidation.ok();
+            }
+        }
     }
 }

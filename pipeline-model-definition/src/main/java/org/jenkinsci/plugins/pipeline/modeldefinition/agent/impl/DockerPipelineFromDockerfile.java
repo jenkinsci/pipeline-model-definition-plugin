@@ -106,5 +106,10 @@ public class DockerPipelineFromDockerfile extends AbstractDockerAgent<DockerPipe
 
     @Extension(ordinal = 999) @Symbol("dockerfile")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<DockerPipelineFromDockerfile> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Build a Dockerfile and run in a container using that image";
+        }
     }
 }

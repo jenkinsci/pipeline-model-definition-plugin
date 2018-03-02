@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.File;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -73,6 +74,12 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
     @Extension
     @Symbol("branch")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<BranchConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if the current branch matches a pattern";
+        }
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

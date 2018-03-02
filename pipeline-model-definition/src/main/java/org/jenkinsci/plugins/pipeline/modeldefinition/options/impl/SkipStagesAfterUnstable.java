@@ -30,6 +30,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
+
 public class SkipStagesAfterUnstable extends DeclarativeOption {
 
     @DataBoundConstructor
@@ -39,6 +41,10 @@ public class SkipStagesAfterUnstable extends DeclarativeOption {
 
     @Extension @Symbol("skipStagesAfterUnstable")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Skip execution of further stages once the build has become unstable";
+        }
     }
 }

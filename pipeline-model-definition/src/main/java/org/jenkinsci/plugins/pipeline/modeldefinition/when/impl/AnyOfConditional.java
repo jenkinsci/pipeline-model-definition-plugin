@@ -34,6 +34,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -48,6 +49,12 @@ public class AnyOfConditional extends AbstractConditionalWithChildren<AnyOfCondi
     @Extension
     @Symbol("anyOf")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AnyOfConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if any of the nested conditions are true";
+        }
+
         @Override
         public int getAllowedChildrenCount() {
             return -1;
