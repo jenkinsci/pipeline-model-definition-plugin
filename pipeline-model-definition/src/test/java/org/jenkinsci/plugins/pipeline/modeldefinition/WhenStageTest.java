@@ -28,6 +28,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import hudson.Functions;
 import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.Slave;
@@ -47,6 +48,7 @@ import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.jenkinsci.plugins.workflow.pickles.Pickle;
 import org.jenkinsci.plugins.workflow.support.pickles.SingleTypedPickleFactory;
 import org.jenkinsci.plugins.workflow.support.pickles.XStreamPickle;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -401,6 +403,20 @@ public class WhenStageTest extends AbstractModelDefTest {
         expect.logContains("One", "Hello", "Two").logNotContains("World").go();
         env(s).put("SECOND_STAGE", "RUN").set();
         expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Two", "World").go();
+    }
+
+    @Test
+    public void whenWindows() throws Exception {
+        Assume.assumeTrue(Functions.isWindows());
+        ExpectationsBuilder expect = expect("when", "whenWindows").runFromRepo(false);
+        expect.logContains("Hello Windows").logNotContains("rest of world").go();
+    }
+
+    @Test
+    public void whenNotWindows() throws Exception {
+        Assume.assumeFalse(Functions.isWindows());
+        ExpectationsBuilder expect = expect("when", "whenWindows").runFromRepo(false);
+        expect.logContains("Hello rest of world").logNotContains("Hello Windows").go();
     }
 
     private void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
