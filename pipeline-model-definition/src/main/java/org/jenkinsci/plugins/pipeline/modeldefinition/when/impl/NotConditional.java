@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import com.google.common.collect.ImmutableList;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
@@ -35,6 +36,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Inverted match of a stage condition
@@ -49,6 +51,12 @@ public class NotConditional extends DeclarativeStageConditional<NotConditional> 
 
     public DeclarativeStageConditional<? extends DeclarativeStageConditional> getChild() {
         return child;
+    }
+
+    @Override
+    @Nonnull
+    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
+        return ImmutableList.of(child);
     }
 
     @Extension

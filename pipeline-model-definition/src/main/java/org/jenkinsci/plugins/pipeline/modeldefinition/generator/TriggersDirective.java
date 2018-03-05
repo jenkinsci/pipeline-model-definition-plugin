@@ -29,6 +29,7 @@ import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
@@ -37,7 +38,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class TriggersDirective extends AbstractDirective<TriggersDirective> {
     private List<Trigger> triggers = new ArrayList<>();
@@ -71,14 +75,10 @@ public class TriggersDirective extends AbstractDirective<TriggersDirective> {
         @Override
         @Nonnull
         public List<Descriptor> getDescriptors() {
-            List<Descriptor> descriptors = new ArrayList<>();
-            for (TriggerDescriptor td : ExtensionList.lookup(TriggerDescriptor.class)) {
-                if (!SymbolLookup.getSymbolValue(td).isEmpty()) {
-                    descriptors.add(td);
-                }
-            }
-
-            return descriptors;
+            return ExtensionList.lookup(TriggerDescriptor.class).stream()
+                    .filter(d -> DirectiveDescriptor.symbolForDescriptor(d) != null)
+                    .sorted(Comparator.comparing(d -> DirectiveDescriptor.symbolForDescriptor(d)))
+                    .collect(Collectors.toList());
         }
 
         @Override

@@ -86,6 +86,14 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
             return "Execute the stage if a Scripted Pipeline expression evaluates as true";
         }
 
+        /**
+         * ExpressionConditional has no form equivalent without jumping through some hoops, so...
+         */
+        @Override
+        public boolean inDirectiveGenerator() {
+            return false;
+        }
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             if (original != null && original instanceof ModelASTWhenExpression) {

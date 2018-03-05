@@ -32,6 +32,7 @@ import hudson.Launcher;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.JobPropertyDescriptor;
+import hudson.triggers.TriggerDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
@@ -45,8 +46,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class OptionsDirective extends AbstractDirective<OptionsDirective> {
     public static final List<String> ADDITIONAL_BLOCKED_STEPS = ImmutableList.of("script", "ws", "withEnv", "withCredentials",
@@ -116,7 +119,10 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
                 }
             }
 
-            return descriptors;
+            return descriptors.stream()
+                    .filter(d -> DirectiveDescriptor.symbolForDescriptor(d) != null)
+                    .sorted(Comparator.comparing(d -> DirectiveDescriptor.symbolForDescriptor(d)))
+                    .collect(Collectors.toList());
         }
 
         @Override

@@ -47,17 +47,23 @@ import java.util.regex.Pattern;
  */
 public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogConditional> {
 
-    private Pattern pattern;
+    private Pattern asPattern;
     private Pattern multiLinePattern;
+    private String pattern;
 
     @DataBoundConstructor
     public ChangeLogConditional(String pattern) {
-        this.pattern = Pattern.compile(pattern);
+        this.pattern = pattern;
+        this.asPattern = Pattern.compile(pattern);
         this.multiLinePattern = Pattern.compile(expandForMultiLine(pattern),
                 Pattern.MULTILINE | Pattern.DOTALL);
     }
 
-    public Pattern getPattern() {
+    public Pattern getAsPattern() {
+        return asPattern;
+    }
+
+    public String getPattern() {
         return pattern;
     }
 

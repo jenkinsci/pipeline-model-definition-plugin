@@ -26,9 +26,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
+import org.jenkinsci.plugins.structs.SymbolLookup;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Set;
 
 public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extends Descriptor<T> {
     @Nonnull
@@ -47,4 +49,14 @@ public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extend
 
     @Nonnull
     public abstract String toGroovy(@Nonnull T directive);
+
+    public static String symbolForDescriptor(@Nonnull Descriptor d) {
+        Set<String> symbols = SymbolLookup.getSymbolValue(d);
+
+        if (symbols.isEmpty()) {
+            return null;
+        } else {
+            return symbols.iterator().next();
+        }
+    }
 }

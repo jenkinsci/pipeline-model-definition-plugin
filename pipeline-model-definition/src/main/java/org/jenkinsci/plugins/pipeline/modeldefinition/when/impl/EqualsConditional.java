@@ -32,31 +32,28 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Stage condition based on object equality.
  */
 public class EqualsConditional extends DeclarativeStageConditional<EqualsConditional> {
-    private final Object expected;
-    private final Object actual;
+    private final String expected;
+    private final String actual;
 
     @DataBoundConstructor
-    public EqualsConditional(Object expected, Object actual) {
+    public EqualsConditional(String expected, String actual) {
         this.expected = expected;
         this.actual = actual;
     }
 
-    public Object getActual() {
+    public String getActual() {
         return actual;
     }
 
-    public Object getExpected() {
+    public String getExpected() {
         return expected;
     }
 

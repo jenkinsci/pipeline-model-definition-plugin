@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -38,6 +39,8 @@ public abstract class AbstractConditionalWithChildren<C extends AbstractConditio
         this.children = children;
     }
 
+    @Override
+    @Nonnull
     public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
         return children;
     }

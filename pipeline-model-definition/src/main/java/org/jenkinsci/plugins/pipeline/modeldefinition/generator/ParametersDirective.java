@@ -28,6 +28,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.model.ParameterDefinition;
+import hudson.triggers.TriggerDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
@@ -36,7 +37,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ParametersDirective extends AbstractDirective<ParametersDirective> {
     private List<ParameterDefinition> parameters = new ArrayList<>();
@@ -70,14 +73,10 @@ public class ParametersDirective extends AbstractDirective<ParametersDirective> 
         @Override
         @Nonnull
         public List<Descriptor> getDescriptors() {
-            List<Descriptor> descriptors = new ArrayList<>();
-            for (ParameterDefinition.ParameterDescriptor td : ExtensionList.lookup(ParameterDefinition.ParameterDescriptor.class)) {
-                if (!SymbolLookup.getSymbolValue(td).isEmpty()) {
-                    descriptors.add(td);
-                }
-            }
-
-            return descriptors;
+            return ExtensionList.lookup(ParameterDefinition.ParameterDescriptor.class).stream()
+                    .filter(d -> DirectiveDescriptor.symbolForDescriptor(d) != null)
+                    .sorted(Comparator.comparing(d -> DirectiveDescriptor.symbolForDescriptor(d)))
+                    .collect(Collectors.toList());
         }
 
         @Override

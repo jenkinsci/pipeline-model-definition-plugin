@@ -70,7 +70,7 @@ public class AgentDirective extends AbstractDirective<AgentDirective> {
         @Nonnull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
-            for (DeclarativeAgentDescriptor td : ExtensionList.lookup(DeclarativeAgentDescriptor.class)) {
+            for (DeclarativeAgentDescriptor td : DeclarativeAgentDescriptor.all()) {
                 if (!SymbolLookup.getSymbolValue(td).isEmpty()) {
                     descriptors.add(td);
                 }
@@ -109,7 +109,7 @@ public class AgentDirective extends AbstractDirective<AgentDirective> {
                         result.append("}");
                     }
                     result.append("\n");
-                    return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+                    return ModelASTPipelineDef.toIndentedGroovy(result.toString() + "\n");
                 }
             }
 

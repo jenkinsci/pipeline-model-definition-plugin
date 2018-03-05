@@ -36,9 +36,12 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Base descriptor for {@link DeclarativeStageConditional}.
@@ -54,6 +57,13 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         return 0;
     }
 
+    /**
+     * Whether this conditional can be rendered in the Directive Generator. Defaults to true.
+     */
+    public boolean inDirectiveGenerator() {
+        return true;
+    }
+
     public abstract Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original);
 
     /**
@@ -61,12 +71,13 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
      *
      * @return a list of all {@link DeclarativeStageConditionalDescriptor}s registered.`
      */
-    public static ExtensionList<DeclarativeStageConditionalDescriptor> all() {
-        return ExtensionList.lookup(DeclarativeStageConditionalDescriptor.class);
+    public static List<DeclarativeStageConditionalDescriptor> all() {
+        ExtensionList<DeclarativeStageConditionalDescriptor> descs = ExtensionList.lookup(DeclarativeStageConditionalDescriptor.class);
+        return descs.stream().sorted(Comparator.comparing(DeclarativeStageConditionalDescriptor::getName)).collect(Collectors.toList());
     }
 
     public static List<String> allNames() {
-        ExtensionList<DeclarativeStageConditionalDescriptor> all = all();
+        List<DeclarativeStageConditionalDescriptor> all = all();
         List<String> names = new ArrayList<>(all.size());
         for (DeclarativeStageConditionalDescriptor descriptor : all) {
             names.add(descriptor.getName());
