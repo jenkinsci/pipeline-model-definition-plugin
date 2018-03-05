@@ -40,20 +40,20 @@ import javax.annotation.Nonnull;
  * Stage condition based on object equality.
  */
 public class EqualsConditional extends DeclarativeStageConditional<EqualsConditional> {
-    private final String expected;
-    private final String actual;
+    private final Object expected;
+    private final Object actual;
 
     @DataBoundConstructor
-    public EqualsConditional(String expected, String actual) {
+    public EqualsConditional(Object expected, Object actual) {
         this.expected = expected;
         this.actual = actual;
     }
 
-    public String getActual() {
+    public Object getActual() {
         return actual;
     }
 
-    public String getExpected() {
+    public Object getExpected() {
         return expected;
     }
 
@@ -66,6 +66,12 @@ public class EqualsConditional extends DeclarativeStageConditional<EqualsConditi
             return "Execute the stage if two values are equal";
         }
 
+        @Override
+        public boolean inDirectiveGenerator() {
+            // TODO: Figure out how to get Stapler to not barf on form->instance for a String as the value but Object as the field type.
+            return false;
+        }
+        
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
