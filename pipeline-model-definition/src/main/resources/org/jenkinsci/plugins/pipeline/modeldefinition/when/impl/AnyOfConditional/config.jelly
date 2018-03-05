@@ -27,7 +27,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:dg="/org/jenkinsci/plugins/pipeline/modeldefinition/generator/DirectiveGenerator">
     <f:section title="${descriptor.displayName}">
         <f:block>
-            <j:invokeStatic var="conditionals" className="org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor" method="all" />
+            <j:invokeStatic var="conditionals" className="org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor" method="forGenerator" />
             <dg:symbol-hetero-list name="children" items="${instance.children}" descriptors="${conditionals}"
                                    hasHeader="true" oneEach="true" />
         </f:block>

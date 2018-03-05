@@ -36,7 +36,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -58,10 +57,12 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
     }
 
     /**
-     * Whether this conditional can be rendered in the Directive Generator. Defaults to true.
+     * Whether this conditional can be rendered in the Directive Generator. Defaults to whether there's a config page -
+     * which we determine by checking to see if {@link #getConfigPage()} returns something other than its default "config.jelly".
+     * It will if there's an actual config.jelly or config.groovy either for this class or an ancestor.
      */
     public boolean inDirectiveGenerator() {
-        return true;
+        return !"config.jelly".equals(getConfigPage());
     }
 
     public abstract Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original);
@@ -74,6 +75,10 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
     public static List<DeclarativeStageConditionalDescriptor> all() {
         ExtensionList<DeclarativeStageConditionalDescriptor> descs = ExtensionList.lookup(DeclarativeStageConditionalDescriptor.class);
         return descs.stream().sorted(Comparator.comparing(DeclarativeStageConditionalDescriptor::getName)).collect(Collectors.toList());
+    }
+
+    public static List<DeclarativeStageConditionalDescriptor> forGenerator() {
+        return all().stream().filter(DeclarativeStageConditionalDescriptor::inDirectiveGenerator).collect(Collectors.toList());
     }
 
     public static List<String> allNames() {

@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -51,12 +52,16 @@ public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extend
     public abstract String toGroovy(@Nonnull T directive);
 
     public static String symbolForDescriptor(@Nonnull Descriptor d) {
-        Set<String> symbols = SymbolLookup.getSymbolValue(d);
-
-        if (symbols.isEmpty()) {
-            return null;
+        if (d instanceof StepDescriptor) {
+            return ((StepDescriptor) d).getFunctionName();
         } else {
-            return symbols.iterator().next();
+            Set<String> symbols = SymbolLookup.getSymbolValue(d);
+
+            if (symbols.isEmpty()) {
+                return null;
+            } else {
+                return symbols.iterator().next();
+            }
         }
     }
 }

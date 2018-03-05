@@ -27,7 +27,7 @@
     <f:block>
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#triggers" target="_blank">the online documentation</a>
         for more information on the <code>triggers</code> directive.
+        <dg:symbol-hetero-list name="triggers" items="${instance.triggers}" descriptors="${descriptor.getDescriptors()}"
+                               hasHeader="true" oneEach="true" />
     </f:block>
-    <dg:symbol-hetero-list name="triggers" items="${instance.triggers}" descriptors="${descriptor.getDescriptors()}"
-                           hasHeader="true" oneEach="true" />
 </j:jelly>

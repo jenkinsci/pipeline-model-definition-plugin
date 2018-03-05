@@ -35,6 +35,7 @@ import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,7 +68,8 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
         @Override
         @Nonnull
         public List<Descriptor> getDescriptors() {
-            return DeclarativeStageConditionalDescriptor.all().stream().filter(DeclarativeStageConditionalDescriptor::inDirectiveGenerator).collect(Collectors.toList());
+            // For some reason, returning forGenerator directly won't cast from DeclarativeStageConditionalDescriptor to Descriptor. Fun.
+            return new ArrayList<>(DeclarativeStageConditionalDescriptor.forGenerator());
         }
 
         @Override

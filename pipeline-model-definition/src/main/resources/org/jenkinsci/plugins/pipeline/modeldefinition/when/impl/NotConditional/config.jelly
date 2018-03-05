@@ -24,7 +24,7 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
-    <j:invokeStatic var="conditionals" className="org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor" method="all" />
+    <j:invokeStatic var="conditionals" className="org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor" method="forGenerator" />
     <f:dropdownList name="child" title="${descriptor.displayName}" help="${descriptor.getHelpFile('child')}">
         <j:forEach var="d" items="${conditionals}" varStatus="loop">
             <f:dropdownListBlock value="${loop.index}" title="${d.name}: ${d.displayName}"

@@ -32,7 +32,6 @@ import hudson.Launcher;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.JobPropertyDescriptor;
-import hudson.triggers.TriggerDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
@@ -133,7 +132,7 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
                 if (d instanceof Step) {
                     String origGroovy = Snippetizer.object2Groovy(d);
                     // Need to remove the block bit since we're cheating.
-                    result.append(origGroovy.substring(0, origGroovy.length() - "{\n    // some block\n}".length()));
+                    result.append(origGroovy.substring(0, origGroovy.length() - " {\n    // some block\n}".length()));
                     result.append("\n");
                 } else {
                     result.append(Snippetizer.object2Groovy(UninstantiatedDescribable.from(d)));
