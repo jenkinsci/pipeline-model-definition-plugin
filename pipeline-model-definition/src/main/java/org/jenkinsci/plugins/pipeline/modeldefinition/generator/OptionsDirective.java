@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import com.google.common.collect.ImmutableList;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -44,12 +45,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 public class OptionsDirective extends AbstractDirective<OptionsDirective> {
-    public static final List<String> ADDITIONAL_BLOCKED_STEPS = Arrays.asList("script", "ws", "withEnv", "withCredentials",
+    public static final List<String> ADDITIONAL_BLOCKED_STEPS = ImmutableList.of("script", "ws", "withEnv", "withCredentials",
             "withContext", "waitUntil", "catchError");
 
     private List<Describable> options = new ArrayList<>();

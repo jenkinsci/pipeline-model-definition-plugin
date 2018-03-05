@@ -89,8 +89,7 @@ public class DirectiveGenerator implements RootAction, DescriptorByNameOwner {
     }
 
     @Restricted(DoNotUse.class) // for stapler
-    public @CheckForNull
-    Item getItem(StaplerRequest req) {
+    public @CheckForNull Item getItem(StaplerRequest req) {
         return req.findAncestorObject(Item.class);
     }
 
