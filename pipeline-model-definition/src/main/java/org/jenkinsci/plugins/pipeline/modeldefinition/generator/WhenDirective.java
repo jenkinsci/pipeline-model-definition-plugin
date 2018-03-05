@@ -25,21 +25,17 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.Extension;
-import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
-import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class WhenDirective extends AbstractDirective<WhenDirective> {
@@ -65,7 +61,7 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
         @Override
         @Nonnull
         public String getDisplayName() {
-            return "When Stage Condition";
+            return "When Condition";
         }
 
         @Override

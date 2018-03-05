@@ -178,7 +178,7 @@ public class DirectiveGenerator implements RootAction, DescriptorByNameOwner {
     public static class LocalAction extends DirectiveGenerator {
 
         @Override public String getDisplayName() {
-            return "Declarative Directive Generator";
+            return "Declarative Directives";
         }
 
         public String getIconClassName() {

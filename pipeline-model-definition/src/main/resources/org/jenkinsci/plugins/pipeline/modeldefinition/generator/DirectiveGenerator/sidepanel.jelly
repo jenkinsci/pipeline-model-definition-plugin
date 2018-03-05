@@ -41,7 +41,8 @@ THE SOFTWARE.
             <l:task href="../pipeline-syntax" icon="icon-gear2 icon-md" title="${%Snippet Generator}"/>
             <l:task href="../pipeline-syntax/html" icon="icon-help icon-md" title="${%Step Reference}"/>
             <l:task href="../pipeline-syntax/globals" icon="icon-help icon-md" title="${%Global Variables Reference}"/>
-            <local:taskWithTarget href="https://jenkins.io/doc/pipeline/" icon="icon-help icon-md" target="_blank" title="${%Online Documentation}"/>
+            <local:taskWithTarget href="https://jenkins.io/doc/pipeline/syntax/" icon="icon-help icon-md" target="_blank" title="${%Directives Online Documentation}"/>
+            <local:taskWithTarget href="https://jenkins.io/doc/pipeline/" icon="icon-help icon-md" target="_blank" title="${%Pipeline Online Documentation}"/>
         </l:tasks>
     </l:side-panel>
 </j:jelly>

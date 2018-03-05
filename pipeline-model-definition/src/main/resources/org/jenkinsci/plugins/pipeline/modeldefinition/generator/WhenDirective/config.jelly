@@ -24,6 +24,10 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
+    <f:block>
+        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#when" target="_blank">the online documentation</a>
+        for more information on the <code>when</code> directive.
+    </f:block>
     <f:dropdownList name="conditional" title="${descriptor.displayName}" help="${descriptor.getHelpFile('conditional')}">
         <j:forEach var="d" items="${descriptor.getDescriptors()}" varStatus="loop">
             <f:dropdownListBlock value="${loop.index}" title="${d.name}: ${d.displayName}"

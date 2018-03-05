@@ -24,10 +24,10 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:dg="/org/jenkinsci/plugins/pipeline/modeldefinition/generator/DirectiveGenerator">
-    <f:section title="${descriptor.displayName}">
-        <f:block>
-            <dg:symbol-hetero-list name="triggers" items="${instance.triggers}" descriptors="${descriptor.getDescriptors()}"
-                                   hasHeader="true" oneEach="true" />
-        </f:block>
-    </f:section>
+    <f:block>
+        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#triggers" target="_blank">the online documentation</a>
+        for more information on the <code>triggers</code> directive.
+    </f:block>
+    <dg:symbol-hetero-list name="triggers" items="${instance.triggers}" descriptors="${descriptor.getDescriptors()}"
+                           hasHeader="true" oneEach="true" />
 </j:jelly>

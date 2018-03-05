@@ -31,7 +31,15 @@
             <f:form name="config">
                 <f:section title="${%Overview}"/>
                 <f:block>
-                    Something here.
+                    The <b>Directive Generator</b> allows you to generate the Pipeline code for a Declarative Pipeline
+                    directive, such as <code>agent</code>, <code>options</code>, <code>when</code>, and more. Choose the
+                    directive you're interested in from the dropdown, and then choose the contents of the directive from
+                    the new form. Once you've filled out the form with the choices and values you want for your directive,
+                    click <b>Generate Declarative Directive</b> and the Pipeline code will appear in the box below. You
+                    can copy that code directly into the <code>pipeline</code> block in your <code>Jenkinsfile</code>,
+                    for top-level directives, or into a <code>stage</code> block for stage directives. See
+                    <a href="https://jenkins.io/doc/pipeline/syntax/" target="_blank">the online syntax documentation</a>
+                    for more information on directives.
                 </f:block>
                 <f:section title="${%Directives}"/>
                 <!-- Similar to f:dropdownDescriptorSelector, but adds fallback content to block, and JENKINS-25130 adds per-selection help: -->
@@ -66,7 +74,7 @@
                 </f:dropdownList>
                 <j:set var="id" value="${h.generateId()}"/>
                 <f:block>
-                    <input type="button" value="${%Generate Pipeline Script}" onclick="handlePrototype_${id}(); return false" class="submit-button primary"/>
+                    <input type="button" value="${%Generate Declarative Directive}" onclick="handlePrototype_${id}(); return false" class="submit-button primary"/>
                     <f:textarea id="prototypeText_${id}" readonly="true" style="margin-top: 10px" />
                     <script>
                         function handlePrototype_${id}() {

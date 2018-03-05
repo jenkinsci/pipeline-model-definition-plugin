@@ -24,6 +24,10 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
+    <f:block>
+        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#input" target="_blank">the online documentation</a>
+        for more information on the <code>input</code> directive.
+    </f:block>
     <j:set var="instance" value="${null}" />
     <st:include from="${descriptor.inputDescriptor}" page="${descriptor.inputDescriptor.configPage}" />
 </j:jelly>

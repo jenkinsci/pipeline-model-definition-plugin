@@ -71,7 +71,7 @@ public class EqualsConditional extends DeclarativeStageConditional<EqualsConditi
             // TODO: Figure out how to get Stapler to not barf on form->instance for a String as the value but Object as the field type.
             return false;
         }
-        
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
