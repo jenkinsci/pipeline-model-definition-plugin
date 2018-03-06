@@ -389,8 +389,23 @@ public class DirectiveGeneratorTest {
         ToolsDirective tools = new ToolsDirective(Collections.singletonList(new ToolsDirective.SymbolAndName("maven::::apache-maven-3.0.1")));
 
         assertGenerateDirective(tools, "tools {\n" +
-        "  maven 'apache-maven-3.0.1'\n" +
-        "}");
+                "  maven 'apache-maven-3.0.1'\n" +
+                "}");
+    }
+
+    @Test
+    public void libraries() throws Exception {
+        List<LibrariesDirective.NameAndVersion> libList = new ArrayList<>();
+        libList.add(new LibrariesDirective.NameAndVersion("first-lib"));
+        LibrariesDirective.NameAndVersion second = new LibrariesDirective.NameAndVersion("second-lib");
+        second.setVersion("master");
+        libList.add(second);
+        LibrariesDirective libs = new LibrariesDirective(libList);
+
+        assertGenerateDirective(libs, "libraries {\n" +
+                "  lib('first-lib')\n" +
+                "  lib('second-lib@master')\n" +
+                "}");
     }
 
     /**
