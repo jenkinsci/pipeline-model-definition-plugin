@@ -118,7 +118,7 @@ public class DirectiveGenerator extends Snippetizer {
         return result.toString();
     }
 
-    @Restricted(DoNotUse.class)  // For stapler
+    @Restricted(NoExternalUse.class)  // For jelly and internal use
     public static String getSymbolForDescriptor(Descriptor d) {
         if (d instanceof StepDescriptor) {
             return ((StepDescriptor) d).getFunctionName();
