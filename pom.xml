@@ -86,7 +86,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.46-20180302.151015-1</version>
+        <version>2.46-20180306.165033-2</version> <!-- TODO: Update to release -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>

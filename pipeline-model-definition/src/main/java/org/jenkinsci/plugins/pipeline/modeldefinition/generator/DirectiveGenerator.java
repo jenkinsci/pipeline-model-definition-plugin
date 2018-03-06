@@ -28,10 +28,8 @@ import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Action;
 import hudson.model.Descriptor;
-import hudson.model.DescriptorByNameOwner;
 import hudson.model.Item;
 import hudson.model.Job;
-import hudson.model.RootAction;
 import jenkins.model.Jenkins;
 import jenkins.model.TransientActionFactory;
 import net.sf.json.JSONObject;
@@ -39,6 +37,7 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
+import org.jenkinsci.plugins.workflow.cps.SnippetizerLink;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -48,7 +47,6 @@ import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,7 +57,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Extension
-public class DirectiveGenerator implements RootAction, DescriptorByNameOwner {
+public class DirectiveGenerator extends Snippetizer {
+    private static final Logger LOGGER = Logger.getLogger(DirectiveGenerator.class.getName());
 
     public static final String ACTION_URL = "directive-generator";
 
@@ -70,27 +69,9 @@ public class DirectiveGenerator implements RootAction, DescriptorByNameOwner {
         return ACTION_URL;
     }
 
-    @Override public String getIconFileName() {
-        return null;
-    }
-
-    @Override public String getDisplayName() {
-        // Do not want to add to main Jenkins sidepanel.
-        return null;
-    }
-
-    @Override public Descriptor getDescriptorByName(String id) {
-        return Jenkins.getActiveInstance().getDescriptorByName(id);
-    }
-
     @Nonnull
     public List<DirectiveDescriptor> getDirectives() {
         return DirectiveDescriptor.all();
-    }
-
-    @Restricted(DoNotUse.class) // for stapler
-    public @CheckForNull Item getItem(StaplerRequest req) {
-        return req.findAncestorObject(Item.class);
     }
 
     @Restricted(DoNotUse.class) // accessed via REST API
@@ -113,7 +94,7 @@ public class DirectiveGenerator implements RootAction, DescriptorByNameOwner {
             String groovy = descriptor.toGroovy((AbstractDirective)o);
             return HttpResponses.plainText(groovy);
         } catch (UnsupportedOperationException x) {
-            Logger.getLogger(CpsFlowExecution.class.getName()).log(Level.WARNING, "failed to render " + json, x);
+            LOGGER.log(Level.WARNING, "failed to render " + json, x);
             return HttpResponses.plainText(x.getMessage());
         }
     }
@@ -161,7 +142,7 @@ public class DirectiveGenerator implements RootAction, DescriptorByNameOwner {
         @Override public Collection<? extends Action> createFor(Job target) {
             // TODO probably want an API for FlowExecutionContainer or something
             if (target.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob") && target.hasPermission(Item.EXTENDED_READ)) {
-                return Collections.singleton(new DirectiveGenerator.LocalAction());
+                return Collections.singleton(new DirectiveGenerator());
             } else {
                 return Collections.emptySet();
             }
@@ -169,22 +150,45 @@ public class DirectiveGenerator implements RootAction, DescriptorByNameOwner {
 
     }
 
-    /**
-     * May be added to various contexts to offer the Pipeline Groovy link where it is appropriate.
-     * To use, define a {@link TransientActionFactory} of some kind of {@link Item}.
-     * If the target {@link Item#hasPermission} {@link Item#EXTENDED_READ},
-     * return one {@link LocalAction}. Otherwise return an empty set.
-     */
-    public static class LocalAction extends DirectiveGenerator {
-
-        @Override public String getDisplayName() {
-            return "Declarative Directives";
+    @Extension(ordinal = 950L)
+    public static class DeclarativeDirectivesLink extends SnippetizerLink {
+        @Override
+        @Nonnull
+        public String getUrl() {
+            return "../" + ACTION_URL;
         }
 
-        public String getIconClassName() {
-            return "icon-help";
+        @Override
+        @Nonnull
+        public String getIcon() {
+            return "icon-gear2 icon-md";
         }
 
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return Messages.DirectiveGenerator_DeclarativeDirectivesLink_displayName();
+        }
+    }
+
+    @Extension(ordinal = 925L)
+    public static class DeclarativeOnlineDocsLink extends SnippetizerLink {
+        @Override
+        @Nonnull
+        public String getUrl() {
+            return "https://jenkins.io/doc/pipeline/syntax/";
+        }
+
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return Messages.DirectiveGenerator_DeclarativeOnlineDocsLink_displayName();
+        }
+
+        @Override
+        public boolean inNewWindow() {
+            return true;
+        }
     }
 
 }
