@@ -408,6 +408,19 @@ public class DirectiveGeneratorTest {
                 "}");
     }
 
+    @Test
+    public void environment() throws Exception {
+        List<EnvironmentDirective.NameAndValue> envList = new ArrayList<>();
+        envList.add(new EnvironmentDirective.NameAndValue("BOB", "steve"));
+        envList.add(new EnvironmentDirective.NameAndValue("WHAT", "${BOB} says hi"));
+        EnvironmentDirective env = new EnvironmentDirective(envList);
+
+        assertGenerateDirective(env, "environment {\n" +
+                "  BOB = \"steve\"\n" +
+                "  WHAT = \"${BOB} says hi\"\n" +
+                "}");
+    }
+
     /**
      * Tests a form submitting part of the generator.
      *
