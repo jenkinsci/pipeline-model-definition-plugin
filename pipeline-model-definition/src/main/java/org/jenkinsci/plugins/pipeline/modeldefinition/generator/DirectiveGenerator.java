@@ -155,7 +155,7 @@ public class DirectiveGenerator extends Snippetizer {
         @Override
         @Nonnull
         public String getUrl() {
-            return "../" + ACTION_URL;
+            return ACTION_URL;
         }
 
         @Override

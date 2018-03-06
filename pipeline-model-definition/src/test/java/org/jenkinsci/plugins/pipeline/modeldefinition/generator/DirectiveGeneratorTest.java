@@ -60,9 +60,12 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.steps.TimeoutStep;
 import org.jenkinsci.plugins.workflow.util.StaplerReferer;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.ToolInstallations;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -77,6 +80,11 @@ import static org.junit.Assert.assertEquals;
 public class DirectiveGeneratorTest {
     @ClassRule
     public static JenkinsRule r = new JenkinsRule();
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        ToolInstallations.configureMaven3();
+    }
 
     @Test
     public void simpleInput() throws Exception {
@@ -374,6 +382,15 @@ public class DirectiveGeneratorTest {
                 "  skipDefaultCheckout true\n" +
                 "  timeout(time: 10, unit: 'HOURS')\n" +
                 "}");
+    }
+
+    @Test
+    public void tools() throws Exception {
+        ToolsDirective tools = new ToolsDirective(Collections.singletonList(new ToolsDirective.SymbolAndName("maven::::apache-maven-3.0.1")));
+
+        assertGenerateDirective(tools, "tools {\n" +
+        "  maven 'apache-maven-3.0.1'\n" +
+        "}");
     }
 
     /**
