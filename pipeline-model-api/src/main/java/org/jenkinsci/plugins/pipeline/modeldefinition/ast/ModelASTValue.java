@@ -115,47 +115,60 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
     }
 
     public static ModelASTValue fromConstant(final Object o, Object sourceLocation) {
-        return new ModelASTValue(sourceLocation, o) {
-            @Override
-            public boolean isLiteral() {
-                return true;
-            }
-
-            @Override
-            public String toGroovy() {
-                if (getValue() instanceof String) {
-                    String str = (String) getValue();
-                    str = str.replace("\\", "\\\\");
-                    if (str.indexOf('\n') == -1) {
-                        return "'" + (str.replace("'", "\\'")) + "'";
-                    } else {
-                        return "'''" + (str.replace("'", "\\'")) + "'''";
-                    }
-                } else if (getValue() != null) {
-                    return getValue().toString();
-                } else {
-                    return null;
-                }
-            }
-        };
+        return new ConstantValue(sourceLocation, o);
     }
 
     public static ModelASTValue fromGString(final String gstring, Object sourceLocation) {
-        return new ModelASTValue(sourceLocation, gstring) {
-            @Override
-            public boolean isLiteral() {
-                return false;
-            }
+        return new GStringValue(sourceLocation, gstring);
+    }
 
-            @Override
-            public String toGroovy() {
-                String gstring = (String)getValue();
-                if (gstring.startsWith("${") && gstring.endsWith("}")) {
-                    return gstring.substring(2, gstring.length() - 1);
+    public static final class ConstantValue extends ModelASTValue {
+        ConstantValue(Object sourceLocation, Object v) {
+            super(sourceLocation, v);
+        }
+
+        @Override
+        public boolean isLiteral() {
+            return true;
+        }
+
+        @Override
+        public String toGroovy() {
+            if (getValue() instanceof String) {
+                String str = (String) getValue();
+                str = str.replace("\\", "\\\\");
+                if (str.indexOf('\n') == -1) {
+                    return "'" + (str.replace("'", "\\'")) + "'";
                 } else {
-                    return gstring;
+                    return "'''" + (str.replace("'", "\\'")) + "'''";
                 }
+            } else if (getValue() != null) {
+                return getValue().toString();
+            } else {
+                return null;
             }
-        };
+        }
+    }
+
+    public static final class GStringValue extends ModelASTValue {
+        GStringValue(Object sourceLocation, Object v) {
+            super(sourceLocation, v);
+        }
+
+        @Override
+        public boolean isLiteral() {
+            return false;
+        }
+
+        @Override
+        public String toGroovy() {
+            String gstring = (String)getValue();
+            if (gstring.startsWith("${") && gstring.endsWith("}")) {
+                return gstring.substring(2, gstring.length() - 1);
+            } else {
+                return gstring;
+            }
+        }
+
     }
 }
