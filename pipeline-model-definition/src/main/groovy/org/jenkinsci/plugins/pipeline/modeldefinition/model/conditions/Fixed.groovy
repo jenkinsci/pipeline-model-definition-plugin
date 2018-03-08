@@ -29,6 +29,8 @@ import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
+import javax.annotation.Nonnull
+
 /**
  * A {@link BuildCondition} for matching builds where the previous build was not SUCCESS but the current build is.
  *
@@ -37,20 +39,19 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 @Extension(ordinal=890d) @Symbol("fixed")
 class Fixed extends BuildCondition {
     @Override
-    boolean meetsCondition(WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
 
         // Get the *worst* result of either the execution or the run. If the run's result is null, that's effectively
         // SUCCESS.
-        Result runResult = execResult.combine(r.getResult() ?: Result.SUCCESS)
+        Result runResult = combineResults(r)
 
         // If there's no previous build, we can't exactly be fixed, can we?
         if (prev == null) {
             return false
         } else {
-            return runResult == Result.SUCCESS && prev.getResult() != Result.SUCCESS
+            return runResult == Result.SUCCESS && prev.getResult() in [Result.FAILURE, Result.UNSTABLE]
         }
     }
 

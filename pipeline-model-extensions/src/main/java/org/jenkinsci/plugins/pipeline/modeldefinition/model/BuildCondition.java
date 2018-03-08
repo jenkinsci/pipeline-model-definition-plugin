@@ -50,13 +50,23 @@ import java.util.Set;
  */
 public abstract class BuildCondition implements Serializable, ExtensionPoint {
 
-    public abstract boolean meetsCondition(WorkflowRun r);
+    public abstract boolean meetsCondition(@Nonnull WorkflowRun r);
 
     public boolean meetsCondition(Object runWrapperObj) {
         RunWrapper runWrapper = (RunWrapper)runWrapperObj;
         WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild();
 
         return meetsCondition(run);
+    }
+
+    @Nonnull
+    protected final Result combineResults(@Nonnull WorkflowRun run) {
+        Result execResult = getExecutionResult(run);
+        if (execResult == null) {
+            return Result.SUCCESS;
+        } else {
+            return execResult.combine(run.getResult() != null ? run.getResult() : Result.SUCCESS);
+        }
     }
 
     @CheckForNull

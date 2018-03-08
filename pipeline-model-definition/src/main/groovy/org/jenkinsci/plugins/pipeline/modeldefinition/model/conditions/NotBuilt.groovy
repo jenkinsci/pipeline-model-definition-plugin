@@ -29,6 +29,8 @@ import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
+import javax.annotation.Nonnull
+
 /**
  * A {@link BuildCondition} for matching unbuilt builds, such as those stopped by milestones.
  *
@@ -37,7 +39,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 @Extension(ordinal=400d) @Symbol("notBuilt")
 class NotBuilt extends BuildCondition {
     @Override
-    boolean meetsCondition(WorkflowRun r) {
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
         Result execResult = getExecutionResult(r)
         return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
     }
