@@ -122,7 +122,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
         return new GStringValue(sourceLocation, gstring);
     }
 
-    public static final class ConstantValue extends ModelASTValue {
+    private static final class ConstantValue extends ModelASTValue {
         ConstantValue(Object sourceLocation, Object v) {
             super(sourceLocation, v);
         }
@@ -150,7 +150,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
         }
     }
 
-    public static final class GStringValue extends ModelASTValue {
+    private static final class GStringValue extends ModelASTValue {
         GStringValue(Object sourceLocation, Object v) {
             super(sourceLocation, v);
         }
