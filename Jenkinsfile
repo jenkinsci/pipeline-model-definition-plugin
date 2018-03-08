@@ -11,7 +11,7 @@ pipeline {
 
     // Set log rotation, timeout and timestamps in the console
     options {
-        buildDiscarder(logRotator(numToKeepStr:'20'))
+        buildDiscarder(logRotator(numToKeepStr:'10'))
         timestamps()
         timeout(time: 90, unit: 'MINUTES')
     }
