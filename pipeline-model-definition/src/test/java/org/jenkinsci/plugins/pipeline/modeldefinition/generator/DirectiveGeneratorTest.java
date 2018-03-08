@@ -71,6 +71,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -421,6 +422,20 @@ public class DirectiveGeneratorTest {
                 "}");
     }
 
+    @Test
+    public void post() throws Exception {
+        PostDirective post = new PostDirective(Arrays.asList("always", "unstable"));
+
+        assertGenerateDirective(post, "post {\n" +
+                "  always {\n" +
+                "    // One or more steps need to be included within each condition's block.\n" +
+                "  }\n" +
+                "  unstable {\n" +
+                "    // One or more steps need to be included within each condition's block.\n" +
+                "  }\n" +
+                "}");
+    }
+    
     /**
      * Tests a form submitting part of the generator.
      *
