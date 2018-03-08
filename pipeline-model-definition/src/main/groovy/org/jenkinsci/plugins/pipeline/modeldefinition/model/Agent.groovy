@@ -105,7 +105,7 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
                     a.setSubdirectory(subdir.subdirectory)
                 }
                 if (a instanceof AbstractDockerAgent) {
-                    ContainerPerStage containerPerStage = (ContainerPerStage) options.get("containerPerStage")
+                    ContainerPerStage containerPerStage = (ContainerPerStage) options.get("newContainerPerStage")
                     if (containerPerStage != null) {
                         if (context instanceof Root) {
                             // If we're on the root, make sure we switch to basically just doing a label

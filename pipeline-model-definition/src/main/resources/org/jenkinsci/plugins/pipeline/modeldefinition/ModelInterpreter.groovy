@@ -486,7 +486,7 @@ class ModelInterpreter implements Serializable {
     def inDeclarativeAgent(Object context, Root root, Agent agent, Closure body) {
         if (agent == null
             && root.agent.getDeclarativeAgent(root, root) instanceof AbstractDockerAgent
-            && root.options?.options?.get("containerPerStage") != null) {
+            && root.options?.options?.get("newContainerPerStage") != null) {
             agent = root.agent
         }
         if (agent == null) {

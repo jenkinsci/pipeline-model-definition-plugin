@@ -30,7 +30,7 @@ pipeline {
         }
     }
     options {
-        containerPerStage()
+        newContainerPerStage()
     }
     stages {
         stage("foo") {
