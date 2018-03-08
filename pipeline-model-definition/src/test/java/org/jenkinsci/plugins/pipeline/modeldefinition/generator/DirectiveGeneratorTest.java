@@ -435,7 +435,7 @@ public class DirectiveGeneratorTest {
                 "  }\n" +
                 "}");
     }
-    
+
     /**
      * Tests a form submitting part of the generator.
      *
