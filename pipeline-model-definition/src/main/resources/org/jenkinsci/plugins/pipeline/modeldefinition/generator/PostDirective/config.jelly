@@ -30,8 +30,7 @@
         <f:entry title="${%Conditions}" help="${descriptor.getHelpPage()}">
             <j:forEach var="c" items="${descriptor.getPossibleConditions()}">
                 <div>
-                    <input type="checkbox" name="conditions" id="${c.getKey()}" json="${c.getKey()}" value="${c.getKey()}"/>
-                    <label for="${c.getKey()}">${c.getValue()}</label>
+                    <input type="checkbox" name="conditions" json="${c.getKey()}" value="${c.getKey()}">${c.getValue()}</input>
                 </div>
             </j:forEach>
         </f:entry>
