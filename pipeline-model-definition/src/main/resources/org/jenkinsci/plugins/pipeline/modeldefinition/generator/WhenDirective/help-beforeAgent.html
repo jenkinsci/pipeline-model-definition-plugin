@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
@@ -22,24 +21,6 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
   -->
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
-    <f:block>
-        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#when" target="_blank">the online documentation</a>
-        for more information on the <code>when</code> directive.
-    </f:block>
-    <f:dropdownList name="conditional" title="${descriptor.displayName}" help="${descriptor.getHelpFile('conditional')}">
-        <j:forEach var="d" items="${descriptor.getDescriptors()}" varStatus="loop">
-            <f:dropdownListBlock value="${loop.index}" title="${d.name}: ${d.displayName}"
-                                 selected="false" staplerClass="${d.clazz.name}" lazy="d,it">
-                <l:ajax>
-                    <j:set var="instance" value="${null}" />
-                    <st:include from="${d}" page="${d.configPage}" optional="true" />
-                </l:ajax>
-            </f:dropdownListBlock>
-        </j:forEach>
-    </f:dropdownList>
-    <f:entry field="beforeAgent" title="${%Evaluate Before Agent}">
-        <f:checkbox/>
-    </f:entry>
-</j:jelly>
+<div>
+    Evaluate the <code>when</code> condition before entering this stage's <code>agent</code>, if any.
+</div>

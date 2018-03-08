@@ -41,14 +41,20 @@ import java.util.stream.Collectors;
 
 public class WhenDirective extends AbstractDirective<WhenDirective> {
     private DeclarativeStageConditional conditional;
+    private boolean beforeAgent;
 
     @DataBoundConstructor
-    public WhenDirective(DeclarativeStageConditional conditional) {
+    public WhenDirective(DeclarativeStageConditional conditional, boolean beforeAgent) {
         this.conditional = conditional;
+        this.beforeAgent = beforeAgent;
     }
 
     public DeclarativeStageConditional getConditional() {
         return conditional;
+    }
+
+    public boolean isBeforeAgent() {
+        return beforeAgent;
     }
 
     @Extension
@@ -83,6 +89,9 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
                     result.append("when {\n");
 
                     result.append(conditionalToGroovy(directive.conditional));
+                    if (directive.isBeforeAgent()) {
+                        result.append("beforeAgent true\n");
+                    }
                     result.append("}\n");
                     return ModelASTPipelineDef.toIndentedGroovy(result.toString());
                 }
