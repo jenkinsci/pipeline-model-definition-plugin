@@ -28,10 +28,14 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
 public abstract class AbstractDirective<T extends AbstractDirective<T>> extends AbstractDescribableImpl<T> {
-    public String toGroovy() {
+    public final String toGroovy(boolean indent) {
         Descriptor d = getDescriptor();
         if (d instanceof DirectiveDescriptor) {
-            return ((DirectiveDescriptor) d).toGroovy(this);
+            if (indent) {
+                return ((DirectiveDescriptor) d).toIndentedGroovy(this);
+            } else {
+                return ((DirectiveDescriptor) d).toGroovy(this);
+            }
         } else {
             return "// Not a valid descriptor";
         }

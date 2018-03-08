@@ -35,7 +35,6 @@ import jenkins.model.TransientActionFactory;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerLink;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -91,7 +90,7 @@ public class DirectiveGenerator extends Snippetizer {
             return HttpResponses.plainText(Functions.printThrowable(x));
         }
         try {
-            String groovy = descriptor.toGroovy((AbstractDirective)o);
+            String groovy = descriptor.toIndentedGroovy((AbstractDirective)o);
             return HttpResponses.plainText(groovy);
         } catch (UnsupportedOperationException x) {
             LOGGER.log(Level.WARNING, "failed to render " + json, x);

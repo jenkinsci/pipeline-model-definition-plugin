@@ -118,7 +118,7 @@ public class ToolsDirective extends AbstractDirective<ToolsDirective> {
             }
             result.append("}\n");
 
-            return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+            return result.toString();
         }
     }
 

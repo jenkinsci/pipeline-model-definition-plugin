@@ -102,7 +102,7 @@ public class PostDirective extends AbstractDirective<PostDirective> {
             }
             result.append("}\n");
 
-            return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+            return result.toString();
         }
     }
 }

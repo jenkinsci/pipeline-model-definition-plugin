@@ -84,7 +84,7 @@ public class EnvironmentDirective extends AbstractDirective<EnvironmentDirective
             }
             result.append("}\n");
 
-            return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+            return result.toString();
         }
 
         public String getEnvHelp(String field) {

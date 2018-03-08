@@ -90,7 +90,7 @@ public class TriggersDirective extends AbstractDirective<TriggersDirective> {
                 result.append("\n");
             }
             result.append("}\n");
-            return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+            return result.toString();
         }
     }
 }

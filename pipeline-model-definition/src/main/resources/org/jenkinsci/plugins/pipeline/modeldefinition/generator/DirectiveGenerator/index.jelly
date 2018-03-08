@@ -46,12 +46,14 @@
                 <j:set var="item" value="${it.getItem(request)}"/>
                 <d:taglib uri="local">
                     <d:tag name="listDirectives">
+                        <j:set var="inStage" value="false"/>
                         <j:forEach var="descriptor" items="${directives}">
-                            <f:dropdownListBlock title="${descriptor.name}: ${descriptor.displayName}" staplerClass="${descriptor.clazz.name}" lazy="descriptor,item">
+                            <f:dropdownListBlock title="${descriptor.name}: ${descriptor.displayName}" staplerClass="${descriptor.clazz.name}" lazy="descriptor,item,inStage">
                                 <l:ajax>
                                     <j:set var="it" value="${item}"/>
                                     <j:set var="instance" value="${null}"/>
                                     <j:set var="help" value="${descriptor.helpFile}"/>
+                                    <j:set var="inStage" value="false"/>
                                     <j:if test="${help != null}">
                                         <tr>
                                             <td colspan="3"/>

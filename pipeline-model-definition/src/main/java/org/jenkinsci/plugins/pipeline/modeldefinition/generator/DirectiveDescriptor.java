@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 
@@ -50,6 +51,11 @@ public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extend
 
     @Nonnull
     public abstract String toGroovy(@Nonnull T directive);
+
+    @Nonnull
+    public final String toIndentedGroovy(@Nonnull T directive) {
+        return ModelASTPipelineDef.toIndentedGroovy(toGroovy(directive));
+    }
 
     public static String symbolForDescriptor(@Nonnull Descriptor d) {
         if (d instanceof StepDescriptor) {

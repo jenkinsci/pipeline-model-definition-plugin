@@ -109,7 +109,7 @@ public class AgentDirective extends AbstractDirective<AgentDirective> {
                         result.append("}");
                     }
                     result.append("\n");
-                    return ModelASTPipelineDef.toIndentedGroovy(result.toString() + "\n");
+                    return result.toString();
                 }
             }
 

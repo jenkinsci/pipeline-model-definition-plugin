@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
@@ -22,12 +21,6 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
   -->
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:dg="/org/jenkinsci/plugins/pipeline/modeldefinition/generator/DirectiveGenerator">
-    <f:block>
-        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#options" target="_blank">the online documentation</a>
-        for more information on the <code>options</code> directive.
-        <dg:symbol-hetero-list name="options" items="${instance.options}" descriptors="${descriptor.getDescriptorsForContext(inStage == 'true')}"
-                               hasHeader="true" oneEach="true" />
-    </f:block>
-</j:jelly>
+<div>
+    What this stage contains - steps or parallel.
+</div>

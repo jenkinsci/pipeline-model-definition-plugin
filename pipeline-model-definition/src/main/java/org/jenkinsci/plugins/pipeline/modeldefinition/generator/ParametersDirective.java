@@ -88,8 +88,7 @@ public class ParametersDirective extends AbstractDirective<ParametersDirective> 
                 result.append("\n");
             }
             result.append("}\n");
-            return ModelASTPipelineDef.toIndentedGroovy(result.toString());
-
+            return result.toString();
         }
     }
 }

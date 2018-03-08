@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -85,6 +86,13 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
         @Override
         @Nonnull
         public List<Descriptor> getDescriptors() {
+            System.err.println("IN REG DESC");
+            return getDescriptorsForContext(false);
+        }
+
+        @Nonnull
+        public List<Descriptor> getDescriptorsForContext(boolean inStage) {
+            System.err.println("CALLED WITH " + inStage);
             List<Descriptor> descriptors = new ArrayList<>();
 
             for (Descriptor d : ExtensionList.lookup(JobPropertyDescriptor.class)) {
@@ -96,15 +104,17 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
                             blockedSymbol = true;
                         }
                     }
-                    if (!blockedSymbol) {
+                    if (!blockedSymbol && !inStage) {
                         descriptors.add(d);
                     }
                 }
             }
 
-            for (Descriptor d : ExtensionList.lookup(DeclarativeOptionDescriptor.class)) {
+            for (DeclarativeOptionDescriptor d : ExtensionList.lookup(DeclarativeOptionDescriptor.class)) {
                 if (!SymbolLookup.getSymbolValue(d).isEmpty()) {
-                    descriptors.add(d);
+                    if (!inStage || d.canUseInStage()) {
+                        descriptors.add(d);
+                    }
                 }
             }
 
@@ -118,6 +128,7 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
                 }
             }
 
+            System.err.println("DESC IS " + descriptors);
             return descriptors.stream()
                     .filter(d -> DirectiveDescriptor.symbolForDescriptor(d) != null)
                     .sorted(Comparator.comparing(d -> DirectiveDescriptor.symbolForDescriptor(d)))
@@ -140,7 +151,7 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
                 }
             }
             result.append("}\n");
-            return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+            return result.toString();
         }
     }
 }

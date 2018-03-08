@@ -25,9 +25,21 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:dg="/org/jenkinsci/plugins/pipeline/modeldefinition/generator/DirectiveGenerator">
     <f:block>
-        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#options" target="_blank">the online documentation</a>
-        for more information on the <code>options</code> directive.
-        <dg:symbol-hetero-list name="options" items="${instance.options}" descriptors="${descriptor.getDescriptorsForContext(inStage == 'true')}"
-                               hasHeader="true" oneEach="true" />
+        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#stage" target="_blank">the online documentation</a>
+        for more information on the <code>stage</code> directive.
+        <f:entry field="name" title="${%Stage Name}">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="">
+            <f:radio name="contentType" value="0" title="${%This stage will contain steps}" checked="true" />
+        </f:entry>
+        <f:entry title="">
+            <f:radio name="contentType" value="1" title="${%This stage will contain parallel stages}" checked="false"/>
+        </f:entry>
+        <f:entry field="directives">
+            <j:set var="inStage" value="true"/>
+            <f:hetero-list name="directives" items="${instance.directives}" descriptors="${descriptor.getDescriptors()}"
+                           hasHeader="true" oneEach="true" capture="inStage"/>
+        </f:entry>
     </f:block>
 </j:jelly>

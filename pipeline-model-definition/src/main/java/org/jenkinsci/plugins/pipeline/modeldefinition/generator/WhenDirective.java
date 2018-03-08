@@ -93,11 +93,11 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
                         result.append("beforeAgent true\n");
                     }
                     result.append("}\n");
-                    return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+                    return result.toString();
                 }
             }
 
-            return "// No valid agent defined\n";
+            return "// No valid when condition defined\n";
         }
 
 

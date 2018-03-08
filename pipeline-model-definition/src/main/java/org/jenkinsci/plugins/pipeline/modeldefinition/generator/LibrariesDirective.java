@@ -86,7 +86,7 @@ public class LibrariesDirective extends AbstractDirective<LibrariesDirective> {
             }
             result.append("}\n");
 
-            return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+            return result.toString();
         }
 
         public String getLibHelp(String field) {

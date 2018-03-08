@@ -438,6 +438,75 @@ public class DirectiveGeneratorTest {
                 "}");
     }
 
+    @Test
+    public void simpleStage() throws Exception {
+        StageDirective stage = new StageDirective(Collections.emptyList(), "bob", 0);
+
+        assertGenerateDirective(stage, "stage('bob') {\n" +
+                "  steps {\n" +
+                "    // One or more steps need to be included within the steps block.\n" +
+                "  }\n" +
+                "}");
+    }
+
+    @Test
+    public void simpleParallelStage() throws Exception {
+        StageDirective stage = new StageDirective(Collections.emptyList(), "bob", 1);
+
+        assertGenerateDirective(stage, "stage('bob') {\n" +
+                "  parallel {\n" +
+                "    // One or more stages need to be included within the parallel block.\n" +
+                "  }\n" +
+                "}");
+    }
+
+    @Test
+    public void stageWithDirectives() throws Exception {
+        ToolsDirective tools = new ToolsDirective(Collections.singletonList(new ToolsDirective.SymbolAndName("maven::::apache-maven-3.0.1")));
+        List<EnvironmentDirective.NameAndValue> envList = new ArrayList<>();
+        envList.add(new EnvironmentDirective.NameAndValue("BOB", "steve"));
+        envList.add(new EnvironmentDirective.NameAndValue("WHAT", "${BOB} says hi"));
+        EnvironmentDirective env = new EnvironmentDirective(envList);
+        PostDirective post = new PostDirective(Arrays.asList("always", "unstable"));
+        List<DeclarativeStageConditional<?>> nested = new ArrayList<>();
+        nested.add(new BranchConditional("that-branch"));
+        nested.add(new BranchConditional("this-branch"));
+        WhenDirective when = new WhenDirective(new AllOfConditional(nested), false);
+        AgentDirective agent = new AgentDirective(new DockerPipeline("some-image"));
+
+        StageDirective stage = new StageDirective(Arrays.asList(agent, when, env, tools, post), "bob", 0);
+
+        assertGenerateDirective(stage, "stage('bob') {\n" +
+                "  steps {\n" +
+                "    // One or more steps need to be included within the steps block.\n" +
+                "  }\n\n" +
+                "  agent {\n" +
+                "    docker 'some-image'\n" +
+                "  }\n\n" +
+                "  when {\n" +
+                "    allOf {\n" +
+                "      branch 'that-branch'\n" +
+                "      branch 'this-branch'\n" +
+                "    }\n" +
+                "  }\n\n" +
+                "  environment {\n" +
+                "    BOB = \"steve\"\n" +
+                "    WHAT = \"${BOB} says hi\"\n" +
+                "  }\n\n" +
+                "  tools {\n" +
+                "    maven 'apache-maven-3.0.1'\n" +
+                "  }\n\n" +
+                "  post {\n" +
+                "    always {\n" +
+                "      // One or more steps need to be included within each condition's block.\n" +
+                "    }\n" +
+                "    unstable {\n" +
+                "      // One or more steps need to be included within each condition's block.\n" +
+                "    }\n" +
+                "  }\n" +
+                "}");
+    }
+
     /**
      * Tests a form submitting part of the generator.
      *
@@ -448,7 +517,7 @@ public class DirectiveGeneratorTest {
      */
     private void assertGenerateDirective(@Nonnull AbstractDirective desc, @Nonnull String responseText) throws Exception {
         // First, make sure the expected response text actually matches the toGroovy for the directive.
-        assertEquals(desc.toGroovy(), responseText);
+        assertEquals(desc.toGroovy(true), responseText);
 
         // Then submit the form with the appropriate JSON (we generate it from the directive, but it matches the form JSON exactly)
         JenkinsRule.WebClient wc = r.createWebClient();

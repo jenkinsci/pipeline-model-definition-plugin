@@ -157,12 +157,12 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 if (r.startsWith("}") || r.startsWith(")") || r.startsWith("]")) {
                     indentCount--;
                 }
-
-                result.append(indent(indentCount)).append(r);
+                if (!StringUtils.isEmpty(r)) {
+                    result.append(indent(indentCount)).append(r);
+                }
                 if (r.endsWith("{") || r.endsWith("(") || r.endsWith("[")) {
                     indentCount++;
                 }
-
             }
 
             int index = r.indexOf("\'\'\'");

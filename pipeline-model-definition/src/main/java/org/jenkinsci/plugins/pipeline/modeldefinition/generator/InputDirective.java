@@ -161,7 +161,7 @@ public class InputDirective extends AbstractDirective<InputDirective> {
                     result.append("}\n");
                 }
                 result.append("}\n");
-                return ModelASTPipelineDef.toIndentedGroovy(result.toString());
+                return result.toString();
             }
 
             return "// Input not defined\n";
