@@ -111,14 +111,10 @@ public abstract class ModelASTElement implements Cloneable {
     }
 
     @Override
-    public Object clone()
-    {
-        try
-        {
+    public Object clone() {
+        try {
             return super.clone();
-        }
-        catch( CloneNotSupportedException e )
-        {
+        } catch( CloneNotSupportedException e ) {
             return null;
         }
     }

@@ -186,7 +186,6 @@ class RuntimeASTTransformer {
             // Filter for only the desired value type - ModelASTValue for env vars, ModelASTInternalFunctionCall for
             // credentials.
             if (v instanceof ModelASTElement && valueType.isInstance(v) && v.sourceLocation != null) {
-                println(v.sourceLocation.class)
                 if (v.sourceLocation instanceof Expression) {
                     Expression toTransform = (Expression)v.sourceLocation
 

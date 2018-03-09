@@ -37,16 +37,10 @@ import javax.annotation.Nonnull
  * A map of axis types to axis name (i.e., specific installation's configured name) to install and add to the path and
  * environment for the build.
  *
- * @author Andrew Bayer
+ * @author Jeremy Marshall
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class Axes extends MappedClosure<Closure,Axes> implements Serializable {
-
-//    private static final Object CACHE_KEY = new Object()
-
-//    private static final LoadingCache<Object,Map<String,String>> axisTypeCache =
-//        Utils.generateTypeCache(axisDescriptor.class, true)
-
     @Whitelisted
     Axes(Map<String,Closure> inMap) {
         resultMap = inMap
@@ -68,24 +62,4 @@ class Axes extends MappedClosure<Closure,Axes> implements Serializable {
             [k, v]
         }
     }
-
-//    /**
-//     * Get a map of allowed axis type keys to their actual type ID. If a {@link Symbol} is on the descriptor for a given
-//     * axis, use that as the key. Otherwise, use the class name.
-//     *
-//     * @return A map of valid axis type keys to their actual type IDs.
-//     */
-//    static Map<String,String> getAllowedaxisTypes() {
-//        return axisTypeCache.get(CACHE_KEY)
-//    }
-//
-//    /**
-//     * Given a axis type key, get the actual type ID.
-//     *
-//     * @param key The key to look up.
-//     * @return The type ID for that key, if it's in the axis types cache.
-//     */
-//    static String typeForKey(@Nonnull String key) {
-//        return getAllowedaxisTypes().get(key)
-//    }
 }
