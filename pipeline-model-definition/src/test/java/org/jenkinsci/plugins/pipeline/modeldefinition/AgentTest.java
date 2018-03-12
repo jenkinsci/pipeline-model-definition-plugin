@@ -89,6 +89,18 @@ public class AgentTest extends AbstractModelDefTest {
         agentDocker("agentDockerReuseNode");
     }
 
+    @Issue("JENKINS-49558")
+    @Test
+    public void agentDockerContainerPerStage() throws Exception {
+        agentDocker("agentDockerContainerPerStage");
+    }
+
+    @Issue("JENKINS-49558")
+    @Test
+    public void agentDockerWithoutContainerPerStage() throws Exception {
+        agentDocker("agentDockerWithoutContainerPerStage");
+    }
+
     @Test
     public void agentDockerDontReuseNode() throws Exception {
         assumeDocker();

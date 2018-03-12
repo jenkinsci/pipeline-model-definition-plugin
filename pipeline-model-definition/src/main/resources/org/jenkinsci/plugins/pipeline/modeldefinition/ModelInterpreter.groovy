@@ -28,6 +28,7 @@ import com.cloudbees.groovy.cps.impl.CpsClosure
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -483,6 +484,11 @@ class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def inDeclarativeAgent(Object context, Root root, Agent agent, Closure body) {
+        if (agent == null
+            && root.agent.getDeclarativeAgent(root, root) instanceof AbstractDockerAgent
+            && root.options?.options?.get("newContainerPerStage") != null) {
+            agent = root.agent
+        }
         if (agent == null) {
             return {
                 body.call()

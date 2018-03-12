@@ -36,6 +36,7 @@ public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> exte
     protected String registryCredentialsId;
     protected String customWorkspace;
     protected boolean reuseNode;
+    protected boolean containerPerStageRoot;
 
     public @Nullable
     String getRegistryUrl() {
@@ -91,5 +92,14 @@ public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> exte
     @DataBoundSetter
     public void setArgs(String args) {
         this.args = args;
+    }
+
+    public boolean isContainerPerStageRoot() {
+        return containerPerStageRoot;
+    }
+
+    @DataBoundSetter
+    public void setContainerPerStageRoot(boolean containerPerStageRoot) {
+        this.containerPerStageRoot = containerPerStageRoot;
     }
 }
