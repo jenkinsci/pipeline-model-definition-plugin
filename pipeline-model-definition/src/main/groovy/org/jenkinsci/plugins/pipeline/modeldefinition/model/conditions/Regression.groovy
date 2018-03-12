@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,22 +32,35 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import javax.annotation.Nonnull
 
 /**
- * A {@link BuildCondition} for matching unbuilt builds, such as those stopped by milestones.
+ * A {@link BuildCondition} for matching builds where the previous build was better than the current build.
  *
  * @author Andrew Bayer
  */
-@Extension(ordinal=400d) @Symbol("notBuilt")
-class NotBuilt extends BuildCondition {
+@Extension(ordinal=880d) @Symbol("regression")
+class Regression extends BuildCondition {
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
+        // Only look at the previous completed build.
+        WorkflowRun prev = r.getPreviousCompletedBuild()
+
+        // Get the *worst* result of either the execution or the run. If the run's result is null, that's effectively
+        // SUCCESS.
+        Result runResult = combineResults(r)
+
+        // If there's no previous build, we can't exactly be regressing, can we?
+        if (prev == null) {
+            return false
+        } else {
+            return runResult.isWorseThan(prev.getResult())
+        }
     }
 
     @Override
     String getDescription() {
-        return Messages.NotBuilt_Description()
+        return Messages.Regression_Description()
     }
 
+
     static final long serialVersionUID = 1L
+
 }
