@@ -31,9 +31,9 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-class DockerAgentScript extends DeclarativeAgentScript<DockerAgent> {
+class DockerAgentScript extends DeclarativeAgentScript<ContainerAgent> {
 
-    DockerAgentScript(CpsScript s, DockerAgent dockerAgent) {
+    DockerAgentScript(CpsScript s, ContainerAgent dockerAgent) {
         super(s, dockerAgent)
     }
 
@@ -41,7 +41,7 @@ class DockerAgentScript extends DeclarativeAgentScript<DockerAgent> {
     @Override
     Closure run(Closure body) {
 
-        // TODO based on configuration switch to a kubernetes agent implementation
+        // TODO where to get the target dockerHost ?
 
         return {
             script.dockerNode(dockerHost: "unix://var/run/docker.sock", image: describable.image,

@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.config;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Run;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.ContainerAgentProvider;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
@@ -44,6 +45,11 @@ public abstract class DockerPropertiesProvider implements ExtensionPoint {
 
     @CheckForNull
     public abstract String getLabel(@Nullable Run run);
+
+    @CheckForNull
+    public ContainerAgentProvider getProvider(@Nullable Run run) {
+        return null;
+    }
 
     public static ExtensionList<DockerPropertiesProvider> all() {
         return ExtensionList.lookup(DockerPropertiesProvider.class);

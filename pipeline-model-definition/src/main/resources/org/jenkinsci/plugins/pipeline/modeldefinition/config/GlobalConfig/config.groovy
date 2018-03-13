@@ -33,4 +33,8 @@ f.section(title:_("Pipeline Model Definition")) {
         f.textbox()
     }
     f.property(field: "registry")
+
+    f.entry(title:_("Container Agent Provider")) {
+        f.hetero_radio(field: "provider", descriptors: descriptor.providers)
+    }
 }

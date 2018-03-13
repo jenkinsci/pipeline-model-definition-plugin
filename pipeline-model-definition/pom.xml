@@ -141,6 +141,12 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -156,6 +162,12 @@
       <groupId>org.jenkinsci.plugins</groupId>
       <artifactId>pipeline-model-declarative-agent</artifactId>
       <version>1.1.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.jenkins.docker</groupId>
+      <artifactId>docker-plugin</artifactId>
+      <version>1.2-SNAPSHOT</version>
     </dependency>
 
     <!-- TEST deps -->
@@ -264,6 +276,19 @@
       <scope>test</scope>
     </dependency>
 
+
+    <!-- fix for upper bound dependencies -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>docker-commons</artifactId>
+      <version>1.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>durable-task</artifactId>
+      <version>1.16</version>
+    </dependency>
+    
   </dependencies>
 
   <properties>

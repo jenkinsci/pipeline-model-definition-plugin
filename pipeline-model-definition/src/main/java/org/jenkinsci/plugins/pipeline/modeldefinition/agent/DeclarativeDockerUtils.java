@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.model.Run;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.ContainerAgentProvider;
 import org.jenkinsci.plugins.pipeline.modeldefinition.config.DockerPropertiesProvider;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
@@ -119,5 +120,16 @@ public class DeclarativeDockerUtils {
             }
             return null;
         }
+    }
+
+    public static ContainerAgentProvider getProvider() {
+        Run<?,?> r = currentRun();
+        for (DockerPropertiesProvider provider : DockerPropertiesProvider.all()) {
+            final ContainerAgentProvider p = provider.getProvider(r);
+            if (p != null) {
+                return p;
+            }
+        }
+        return null;
     }
 }

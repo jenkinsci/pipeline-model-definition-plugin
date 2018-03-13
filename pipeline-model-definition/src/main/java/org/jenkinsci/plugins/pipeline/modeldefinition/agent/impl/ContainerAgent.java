@@ -25,43 +25,43 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
-import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeAgentOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeDockerUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-public class DockerAgentVersionOption extends DeclarativeOption implements DeclarativeAgentOption {
+public class ContainerAgent extends DeclarativeAgent<ContainerAgent> {
 
-    private String version;
+    private final String image;
+
+    private String registryCredentials;
 
     @DataBoundConstructor
-    public DockerAgentVersionOption(String version) {
-        this.version = version;
+    public ContainerAgent(@Nonnull String image) {
+        this.image = image;
     }
 
-    @CheckForNull
-    @Override
-    public DeclarativeAgentDescriptor getDeclarativeAgentDescriptor(String name) {
-        if ("docker".equals(name) && "2".equals(version))
-            return (DeclarativeAgentDescriptor) Jenkins.getInstance().getDescriptor(DockerAgent.class);
-
-        return null;
+    @DataBoundSetter
+    public void setRegistryCredentials(String registryCredentials) {
+        this.registryCredentials = registryCredentials;
     }
 
-    @Extension
-    @Symbol("dockerPipelineVersion")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+    @Extension(ordinal = 1000, optional = true) @Symbol("container")
+    public static class DescriptorImpl extends DeclarativeAgentDescriptor<ContainerAgent> {
+
+        @Nonnull
         @Override
-        public boolean canUseInStage() {
-            return false;
+        public String getScriptClass() {
+            final ContainerAgentProvider provider = DeclarativeDockerUtils.getProvider();
+            return provider != null ? provider.getScriptClass() : DockerContainerAgentProvider.SCRIPT;
         }
     }
+
 }

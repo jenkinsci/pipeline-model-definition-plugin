@@ -29,16 +29,22 @@ import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.Util;
+import hudson.model.Descriptor;
 import hudson.model.Run;
 import jenkins.model.GlobalConfiguration;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.ContainerAgentProvider;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.DockerContainerAgentProvider;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * The system config.
@@ -49,6 +55,7 @@ import javax.annotation.Nullable;
 public class GlobalConfig extends GlobalConfiguration {
     private String dockerLabel;
     private DockerRegistryEndpoint registry;
+    private ContainerAgentProvider provider;
 
     public GlobalConfig() {
         load();
@@ -72,6 +79,19 @@ public class GlobalConfig extends GlobalConfiguration {
         this.registry = registry;
     }
 
+    public ContainerAgentProvider getProvider() {
+        return provider != null ? provider : new DockerContainerAgentProvider();
+    }
+
+    @DataBoundSetter
+    public void setProvider(ContainerAgentProvider provider) {
+        this.provider = provider;
+    }
+
+    public List<Descriptor> getProviders() {
+        return (List) Jenkins.getInstance().getDescriptorList(ContainerAgentProvider.class);
+    }
+
     @Override
     public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
         req.bindJSON(this, json);
@@ -82,7 +102,7 @@ public class GlobalConfig extends GlobalConfiguration {
     public static GlobalConfig get() {
         return ExtensionList.lookup(GlobalConfiguration.class).get(GlobalConfig.class);
     }
-
+    
     @Extension(ordinal = -10000) //Last one to be asked
     public static final class GlobalConfigDockerPropertiesProvider extends DockerPropertiesProvider {
         @Inject
@@ -109,6 +129,12 @@ public class GlobalConfig extends GlobalConfiguration {
             } else {
                 return null;
             }
+        }
+
+        @CheckForNull
+        @Override
+        public ContainerAgentProvider getProvider(@Nullable Run run) {
+            return config.provider;
         }
     }
 }
