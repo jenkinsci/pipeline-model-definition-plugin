@@ -1,0 +1,12 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="">
+
+    <f:entry title="${%Image}" field="image">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry field="registryCredentials" title="Registry credentials">
+        <c:select/>
+    </f:entry>
+
+</j:jelly>

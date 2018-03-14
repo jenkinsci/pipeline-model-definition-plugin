@@ -25,10 +25,15 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
+import hudson.model.Item;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeDockerUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -55,6 +60,14 @@ public class ContainerAgent extends DeclarativeAgent<ContainerAgent> {
 
     @Extension(ordinal = 1000, optional = true) @Symbol("container")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<ContainerAgent> {
+
+        private ListBoxModel doFillRegistryCredentialsItems(@AncestorInPath Item item) {
+            final DockerRegistryEndpoint.DescriptorImpl descriptor =
+                    (DockerRegistryEndpoint.DescriptorImpl)
+                            Jenkins.getInstance().getDescriptorOrDie(DockerRegistryEndpoint.class);
+            return descriptor.doFillCredentialsIdItems(item);
+        }
+
 
         @Nonnull
         @Override
