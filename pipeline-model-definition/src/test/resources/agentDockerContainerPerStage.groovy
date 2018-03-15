@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,33 +21,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-
-import javax.annotation.Nonnull
-
-/**
- * A {@link BuildCondition} for matching unbuilt builds, such as those stopped by milestones.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=400d) @Symbol("notBuilt")
-class NotBuilt extends BuildCondition {
-    @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
+pipeline {
+    agent {
+        docker {
+            image "httpd:2.4.12"
+            label "docker"
+        }
     }
-
-    @Override
-    String getDescription() {
-        return Messages.NotBuilt_Description()
+    options {
+        newContainerPerStage()
     }
+    stages {
+        stage("foo") {
+            steps {
+                sh 'ls -la'
+                sh 'echo "The answer is 42"'
+                sh 'echo "${NODE_NAME}" > tmp.txt'
+                sh 'echo $HOSTNAME > host.txt'
+            }
+        }
+        stage("bar") {
+            steps {
+                sh 'test -f Jenkinsfile'
+                sh 'test -f tmp.txt'
+                script {
+                    def oldHn = readFile('host.txt')
+                    def newHn = sh(script:'echo $HOSTNAME', returnStdout:true)
+                    if (oldHn == newHn) {
+                        error("HOSTNAMES SHOULD NOT MATCH")
+                    }
+                }
+            }
 
-    static final long serialVersionUID = 1L
+        }
+    }
 }
+
+
+

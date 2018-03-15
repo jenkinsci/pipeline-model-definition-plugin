@@ -11,7 +11,7 @@ pipeline {
 
     // Set log rotation, timeout and timestamps in the console
     options {
-        buildDiscarder(logRotator(numToKeepStr:'20'))
+        buildDiscarder(logRotator(numToKeepStr:'10'))
         timestamps()
         timeout(time: 90, unit: 'MINUTES')
     }
@@ -30,7 +30,7 @@ pipeline {
             parallel {
                 stage("linux") {
                     agent {
-                        label "java"
+                        label "highmem"
                     }
                     steps {
                         sh 'mvn clean install -Dmaven.test.failure.ignore=true'
@@ -66,7 +66,7 @@ pipeline {
                 }
                 stage("linux-newer-core") {
                     agent {
-                        label "java"
+                        label "highmem"
                     }
                     steps {
                         sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"

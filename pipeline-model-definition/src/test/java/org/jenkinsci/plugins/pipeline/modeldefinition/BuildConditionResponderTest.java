@@ -77,6 +77,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("I FAILED", b);
+        j.assertLogNotContains("I REGRESSED", b);
 
         WorkflowJob job = b.getParent();
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeChanged"), true));
@@ -84,6 +85,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertLogContains("[Pipeline] { (foo)", b2);
         j.assertLogContains("hello", b2);
         j.assertLogContains("I CHANGED", b2);
+        j.assertLogContains("I AM FIXED", b2);
 
         // Now make sure we don't get any alert this time.
         WorkflowRun b3 = j.buildAndAssertSuccess(job);
@@ -91,6 +93,15 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertLogContains("hello", b3);
         j.assertLogNotContains("I CHANGED", b3);
         j.assertLogNotContains("I FAILED", b3);
+        j.assertLogNotContains("I AM FIXED", b3);
+
+        // And one more time for regression
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeFailed"), true));
+        WorkflowRun b4 = job.scheduleBuild2(0).waitForStart();
+        j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b4));
+        j.assertLogContains("[Pipeline] { (foo)", b4);
+        j.assertLogContains("I FAILED", b4);
+        j.assertLogContains("I REGRESSED", b4);
     }
 
     @Test

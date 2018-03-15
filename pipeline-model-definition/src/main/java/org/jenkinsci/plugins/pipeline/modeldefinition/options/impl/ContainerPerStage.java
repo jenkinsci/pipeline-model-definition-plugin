@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,33 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
+package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
-import javax.annotation.Nonnull
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-/**
- * A {@link BuildCondition} for matching unbuilt builds, such as those stopped by milestones.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=400d) @Symbol("notBuilt")
-class NotBuilt extends BuildCondition {
-    @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
+public class ContainerPerStage extends DeclarativeOption {
+
+    @DataBoundConstructor
+    public ContainerPerStage() {}
+
+    @Extension @Symbol("newContainerPerStage")
+    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+
     }
-
-    @Override
-    String getDescription() {
-        return Messages.NotBuilt_Description()
-    }
-
-    static final long serialVersionUID = 1L
 }
