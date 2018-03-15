@@ -25,29 +25,24 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
+import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
-class DockerAgentScript extends DeclarativeAgentScript<ContainerAgent> {
+class ContainerAgentScript extends DeclarativeAgentScript<ContainerAgent> {
 
-    DockerAgentScript(CpsScript s, ContainerAgent dockerAgent) {
+    ContainerAgentScript(CpsScript s, ContainerAgent agent) {
         super(s, dockerAgent)
     }
 
-
     @Override
     Closure run(Closure body) {
-
-        // TODO where to get the target dockerHost ?
-
         return {
-            script.dockerNode(dockerHost: "unix://var/run/docker.sock", image: describable.image,
-                              credentialsId: describable.registryCredentials) {
-                body.call()
-            }
+            script.error("'container' agent type require an implementation plugin to be installed, typically docker-plugin.")
+            script.getProperty("currentBuild").result = Result.FAILURE
         }
     }
 }

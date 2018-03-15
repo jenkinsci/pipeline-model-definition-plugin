@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig;
 import org.junit.Test;
 
 /**
@@ -9,10 +10,13 @@ import org.junit.Test;
 public class ContainerAgentTest extends AbstractModelDefTest {
 
     @Test
-    public void agent() throws Exception {
-        assumeDocker();
+    public void none() throws Exception {
+
+        final GlobalConfig config = j.jenkins.getExtensionList(GlobalConfig.class).get(0);
+        config.setProvider(null);
+
         expect("agentContainer")
-                .logContains("Apache Maven 3.5.0")
+                .logContains("require an implementationx")
                 .go();
     }
 }

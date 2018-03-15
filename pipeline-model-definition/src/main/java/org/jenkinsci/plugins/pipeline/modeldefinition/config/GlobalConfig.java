@@ -38,7 +38,6 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.ContainerAgentProvider;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.DockerContainerAgentProvider;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -80,7 +79,7 @@ public class GlobalConfig extends GlobalConfiguration {
     }
 
     public ContainerAgentProvider getProvider() {
-        return provider != null ? provider : new DockerContainerAgentProvider();
+        return provider;
     }
 
     @DataBoundSetter
@@ -134,7 +133,7 @@ public class GlobalConfig extends GlobalConfiguration {
         @CheckForNull
         @Override
         public ContainerAgentProvider getProvider(@Nullable Run run) {
-            return config.provider;
+            return config.getProvider();
         }
     }
 }

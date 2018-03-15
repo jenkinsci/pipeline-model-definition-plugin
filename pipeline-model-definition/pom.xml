@@ -66,6 +66,18 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
 
     </plugins>
   </build>
@@ -162,12 +174,6 @@
       <groupId>org.jenkinsci.plugins</groupId>
       <artifactId>pipeline-model-declarative-agent</artifactId>
       <version>1.1.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.jenkins.docker</groupId>
-      <artifactId>docker-plugin</artifactId>
-      <version>1.2-20180315.105250-1</version>
     </dependency>
 
     <!-- TEST deps -->

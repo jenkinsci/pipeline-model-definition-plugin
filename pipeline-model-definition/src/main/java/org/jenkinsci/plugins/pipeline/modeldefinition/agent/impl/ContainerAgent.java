@@ -73,7 +73,7 @@ public class ContainerAgent extends DeclarativeAgent<ContainerAgent> {
         @Override
         public String getScriptClass() {
             final ContainerAgentProvider provider = DeclarativeDockerUtils.getProvider();
-            return provider != null ? provider.getScriptClass() : DockerContainerAgentProvider.SCRIPT;
+            return provider != null ? provider.getScriptClass() : "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.ContainerAgentScript";
         }
     }
 

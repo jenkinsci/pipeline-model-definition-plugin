@@ -5,9 +5,8 @@ import hudson.model.Describable;
 
 /**
  * Provider for ContainerAgent, to adapt agent description to actual container launcher on infrastructure using adequate API.
- * {@link DockerContainerAgentProvider} provides a default implementation for this based on docker-plugin, but other
- * docker-related plugins (like kubernetes-plugin) can also implement this extension point and offer equivalent
- * containerized agent provisioning using specific API.
+ * a thrid-party plugins (docker-plugin or kubernetes-plugin) can implement this extension point and offer containerized
+ * agent provisioning using infrastructure specific API.
  *
  * @author <a href="mailto:nicolas.deloof@gmail.com">Nicolas De Loof</a>
  */
