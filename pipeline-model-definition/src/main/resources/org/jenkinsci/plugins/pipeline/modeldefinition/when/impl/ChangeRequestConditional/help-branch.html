@@ -22,8 +22,11 @@
   ~ THE SOFTWARE.
   ~
   -->
+
 <p>
-    Execute the stage if the <code>TAG_NAME</code> variable matches the given pattern.
-    If an empty pattern is provided the stage will execute if the <code>TAG_NAME</code> variable exists.
-    Only works in Multibranch.
+    <strong>branch</strong><br/>
+    <code>CHANGE_BRANCH</code>
+    The name of the actual head on the source control system which may or may not be different from
+    <code>BRANCH_NAME</code>. For example in GitHub or Bitbucket this would have the name of the origin branch
+    whereas <code>BRANCH_NAME</code> would be something like <code>PR-24</code>.
 </p>

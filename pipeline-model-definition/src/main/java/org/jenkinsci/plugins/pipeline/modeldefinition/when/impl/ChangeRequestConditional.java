@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.util.ListBoxModel;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadOrigin;
 import jenkins.scm.api.metadata.ContributorMetadataAction;
@@ -251,6 +252,10 @@ public class ChangeRequestConditional extends DeclarativeStageConditional<Change
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+        }
+
+        public ListBoxModel doFillComparatorItems() {
+            return Comparator.getSelectOptions(true, Comparator.EQUALS);
         }
     }
 

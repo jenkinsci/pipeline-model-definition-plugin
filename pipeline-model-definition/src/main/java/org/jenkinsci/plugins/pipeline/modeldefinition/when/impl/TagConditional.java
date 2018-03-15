@@ -26,6 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
+import hudson.util.ListBoxModel;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -92,6 +93,10 @@ public class TagConditional extends DeclarativeStageConditional<TagConditional> 
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+        }
+
+        public ListBoxModel doFillComparatorItems() {
+            return Comparator.getSelectOptions(true, Comparator.GLOB);
         }
     }
 }

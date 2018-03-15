@@ -22,8 +22,11 @@
   ~ THE SOFTWARE.
   ~
   -->
+
 <p>
-    Execute the stage if the <code>TAG_NAME</code> variable matches the given pattern.
-    If an empty pattern is provided the stage will execute if the <code>TAG_NAME</code> variable exists.
-    Only works in Multibranch.
+    The pattern to compare the actual value with.
+</p>
+<p>
+    If <code>comparator</code> is not specified it will be evaluated as an <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
+    E.g: **/release-*
 </p>

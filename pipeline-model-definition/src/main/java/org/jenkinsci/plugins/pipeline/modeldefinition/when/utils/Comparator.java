@@ -25,8 +25,11 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.utils;
 
+import hudson.util.ListBoxModel;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.types.selectors.SelectorUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
+import org.jvnet.localizer.Localizable;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -40,7 +43,7 @@ public enum Comparator {
     /**
      * ANT style "glob" pattern.
      */
-    GLOB {
+    GLOB(Messages._Comparator_GLOB_DisplayName()) {
         @Override
         public boolean compare(@Nonnull String pattern, String actual) {
             actual = defaultIfBlank(actual, "");
@@ -54,7 +57,7 @@ public enum Comparator {
     /**
      * Regular expression
      */
-    REGEXP {
+    REGEXP(Messages._Comparator_REGEXP_DisplayName()) {
         @Override
         public boolean compare(@Nonnull String pattern, String actual) {
             actual = defaultIfBlank(actual, "");
@@ -65,13 +68,23 @@ public enum Comparator {
     /**
      * String equals
      */
-    EQUALS {
+    EQUALS(Messages._Comparator_EQUALS_DisplayName()) {
         @Override
         public boolean compare(@Nonnull String pattern, String actual) {
             actual = defaultIfBlank(actual, "");
             return actual.equals(pattern);
         }
     };
+
+    private final Localizable displayName;
+
+    private Comparator(Localizable displayName) {
+        this.displayName = displayName;
+    }
+
+    public Localizable getDisplayName() {
+        return displayName;
+    }
 
     /**
      * Compare the two strings
@@ -91,5 +104,21 @@ public enum Comparator {
             }
         }
         return defaultValue;
+    }
+
+    public static ListBoxModel getSelectOptions(boolean emptySelection, Comparator top) {
+        ListBoxModel model = new ListBoxModel();
+        if (emptySelection) {
+            model.add("");
+        }
+        if (top != null) {
+            model.add(top.getDisplayName().toString(), top.name());
+        }
+        for (Comparator comparator : Comparator.values()) {
+            if (comparator != top) {
+                model.add(comparator.getDisplayName().toString(), comparator.name());
+            }
+        }
+        return model;
     }
 }
