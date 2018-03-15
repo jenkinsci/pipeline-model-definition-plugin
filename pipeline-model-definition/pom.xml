@@ -167,7 +167,7 @@
     <dependency>
       <groupId>io.jenkins.docker</groupId>
       <artifactId>docker-plugin</artifactId>
-      <version>1.2-SNAPSHOT</version>
+      <version>1.2-20180315.105250-1</version>
     </dependency>
 
     <!-- TEST deps -->
