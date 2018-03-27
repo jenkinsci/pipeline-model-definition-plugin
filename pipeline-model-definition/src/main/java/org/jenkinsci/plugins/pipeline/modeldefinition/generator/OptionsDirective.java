@@ -86,13 +86,11 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
         @Override
         @Nonnull
         public List<Descriptor> getDescriptors() {
-            System.err.println("IN REG DESC");
             return getDescriptorsForContext(false);
         }
 
         @Nonnull
         public List<Descriptor> getDescriptorsForContext(boolean inStage) {
-            System.err.println("CALLED WITH " + inStage);
             List<Descriptor> descriptors = new ArrayList<>();
 
             for (Descriptor d : ExtensionList.lookup(JobPropertyDescriptor.class)) {
@@ -128,7 +126,6 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
                 }
             }
 
-            System.err.println("DESC IS " + descriptors);
             return descriptors.stream()
                     .filter(d -> DirectiveDescriptor.symbolForDescriptor(d) != null)
                     .sorted(Comparator.comparing(d -> DirectiveDescriptor.symbolForDescriptor(d)))
