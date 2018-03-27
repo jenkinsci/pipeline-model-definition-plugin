@@ -87,7 +87,10 @@ class Options implements Serializable {
         Utils.generateTypeCache(JobPropertyDescriptor.class, false, BLOCKED_PROPERTIES)
 
     private static final LoadingCache<Object,Map<String,String>> optionTypeCache =
-        Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [])
+        Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [],
+            { DeclarativeOptionDescriptor d ->
+                return !d.isStageOnly()
+            })
 
     private static final LoadingCache<Object,Map<String,String>> wrapperStepsTypeCache  =
         Utils.generateTypeCache(StepDescriptor.class, false, [],
