@@ -106,6 +106,17 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void environmentInGroup() throws Exception {
+        expect("environmentInGroup")
+                .logContains("[Pipeline] { (foo)",
+                        "Solo: FOO is BAZ",
+                        "First in group: FOO is BAR",
+                        "Second in group: FOO is BAH")
+                .go();
+    }
+
     @Issue("JENKINS-41748")
     @Test
     public void environmentCrossReferences() throws Exception {

@@ -675,22 +675,38 @@ class ModelValidatorImpl implements ModelValidator {
 
     boolean validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
         boolean valid = true
-        if (isNested && (stage.branches.size() > 1 || stage.parallel != null)) {
+        def stepsStagesParallelCount = 0
+        if (!stage.branches.isEmpty()) {
+            stepsStagesParallelCount += 1
+        }
+        if (!stage.parallelContent.isEmpty()) {
+            stepsStagesParallelCount += 1
+        }
+        if (stage.stages != null) {
+            stepsStagesParallelCount += 1
+        }
+
+        if (isNested && (stage.branches.size() > 1 || !stage.parallelContent?.isEmpty())) {
             ModelASTElement errorElement
-            if (stage.parallel != null) {
-                errorElement = stage.parallel
+            if (!stage.parallelContent.isEmpty()) {
+                def firstParallel = stage.parallelContent.first()
+                if (firstParallel instanceof ModelASTElement) {
+                    errorElement = firstParallel
+                } else {
+                    errorElement = stage
+                }
             } else {
                 errorElement = stage.branches.first()
             }
             errorCollector.error(errorElement, Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
             valid = false
-        } else if (!stage.branches.isEmpty() && stage.parallel != null) {
-            errorCollector.error(stage, Messages.ModelValidatorImpl_BothStagesAndSteps(stage.name))
+        } else if (stepsStagesParallelCount > 1) {
+            errorCollector.error(stage, Messages.ModelValidatorImpl_TwoOfStepsStagesParallel(stage.name))
             valid = false
-        } else if (stage.branches.isEmpty() && stage.parallel == null) {
+        } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (stage.parallel != null) {
+        } else if (!stage.parallelContent.isEmpty()) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false

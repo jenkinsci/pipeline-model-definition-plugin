@@ -651,9 +651,10 @@ class RuntimeASTTransformer {
                     transformTools(original.tools),
                     transformEnvironment(original.environment),
                     constX(original.failFast != null ? original.failFast : false),
-                    transformStages(original.parallel),
                     transformOptions(original.options),
-                    transformStageInput(original.input, original.name)))
+                    transformStageInput(original.input, original.name),
+                    transformParallelContent(original),
+                    transformStages(original.stages)))
         }
 
         return constX(null)
@@ -727,6 +728,29 @@ class RuntimeASTTransformer {
             }
 
             return ctorX(ClassHelper.make(Stages.class), args(argList))
+        }
+
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating a list of {@link Stage}s.
+     *
+     * @param original The parsed AST model of a stage
+     * @return The AST for a list of {@link Stage}s, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformParallelContent(@CheckForNull ModelASTStage original) {
+        if (isGroovyAST(original) && original?.parallelContent) {
+            ListExpression argList = new ListExpression()
+            original.parallelContent.each { c ->
+                if (c instanceof ModelASTStage) {
+                    argList.addExpression(transformStage(c))
+                } else {
+                    argList.addExpression(constX(null))
+                }
+            }
+            return argList
         }
 
         return constX(null)

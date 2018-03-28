@@ -519,6 +519,9 @@
         },
         "parallel": {
           "$ref": "#/definitions/stages"
+        },
+        "stages": {
+          "$ref": "#/definitions/stages"
         }
       },
       "required": [
