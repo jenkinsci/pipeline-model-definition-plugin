@@ -84,7 +84,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         final WorkflowRun build = job.getLastBuild();
         assertNotNull(build);
         j.assertLogContains("Hello", build);
-        j.assertLogContains("Stage 'Two' skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
         j.assertLogNotContains("JS World", build);
 
         controller.addFile("repoX", crNum,
@@ -98,7 +98,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build2);
         j.assertLogContains("JS World", build2);
-        j.assertLogNotContains("Stage 'Two' skipped due to when conditional", build2);
+        j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build2);
         j.assertLogNotContains("Warning, empty changelog", build2);
 
         controller.addFile("repoX", crNum,
@@ -113,7 +113,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         j.assertLogContains("Hello", build3);
         j.assertLogContains("JS World", build3);
         j.assertLogContains("Examining changelog from all builds of this change request", build3);
-        j.assertLogNotContains("Stage 'Two' skipped due to when conditional", build3);
+        j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build3);
         j.assertLogNotContains("Warning, empty changelog", build3);
     }
 
@@ -216,7 +216,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         final WorkflowJob master = project.getItem("master");
         WorkflowRun build = master.getLastBuild();
         j.assertBuildStatusSuccess(build);
-        j.assertLogContains("Stage 'IsChange' skipped due to when conditional", build);
+        j.assertLogContains("Stage \"IsChange\" skipped due to when conditional", build);
         j.assertLogNotContains("World", build);
         j.assertLogNotContains("From CR branch", build);
         j.assertLogNotContains("From urlX example", build);
