@@ -41,7 +41,7 @@
         "key": "args",
         "value":         {
           "isLiteral": true,
-          "value": "-v /tmp:/tmp -p 80:80"
+          "value": "-v /tmp:/tmp"
         }
       }
     ]

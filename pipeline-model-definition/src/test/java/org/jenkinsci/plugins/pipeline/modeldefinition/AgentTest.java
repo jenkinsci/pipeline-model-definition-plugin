@@ -81,7 +81,7 @@ public class AgentTest extends AbstractModelDefTest {
 
     @Test
     public void agentDocker() throws Exception {
-        agentDocker("agentDocker", "-v /tmp:/tmp -p 80:80");
+        agentDocker("agentDocker", "-v /tmp:/tmp");
     }
 
     @Test
@@ -198,7 +198,7 @@ public class AgentTest extends AbstractModelDefTest {
         expect("fromDockerfile")
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
-                        "-v /tmp:/tmp -p 8000:8000",
+                        "-v /tmp:/tmp",
                         "HI THERE")
                 .go();
     }
@@ -215,7 +215,7 @@ public class AgentTest extends AbstractModelDefTest {
         expect("additionalDockerBuildArgs")
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
-                        "-v /tmp:/tmp -p 8000:8000",
+                        "-v /tmp:/tmp",
                         "hi there, thisOtherArg")
                 .logNotContains("hi there, thisArgHere")
                 .go();
@@ -234,7 +234,7 @@ public class AgentTest extends AbstractModelDefTest {
         expect("fromDockerfileInOtherDir")
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
-                        "-v /tmp:/tmp -p 8000:8000",
+                        "-v /tmp:/tmp",
                         "HI THERE")
                 .go();
     }
@@ -252,7 +252,7 @@ public class AgentTest extends AbstractModelDefTest {
         expect("fromDockerfileInOtherDir")
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
-                        "-v /tmp:/tmp -p 8000:8000",
+                        "-v /tmp:/tmp",
                         "HI THERE")
                 .go();
     }
@@ -284,7 +284,7 @@ public class AgentTest extends AbstractModelDefTest {
         expect("fromAlternateDockerfile")
                 .logContains("[Pipeline] { (foo)",
                         "The answer is 42",
-                        "-v /tmp:/tmp -p 8000:8000",
+                        "-v /tmp:/tmp",
                         "HI THERE")
                 .go();
     }
@@ -324,7 +324,7 @@ public class AgentTest extends AbstractModelDefTest {
         expect("dockerPullLocalImage")
                 .logContains("[Pipeline] { (in built image)",
                         "The answer is 42",
-                        "-v /tmp:/tmp -p 8000:8000",
+                        "-v /tmp:/tmp",
                         "HI THERE",
                         "Maven home: /usr/share/maven")
                 .go();

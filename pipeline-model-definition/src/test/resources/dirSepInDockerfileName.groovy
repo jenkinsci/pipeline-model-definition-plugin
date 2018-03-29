@@ -26,7 +26,7 @@ pipeline {
     agent {
         dockerfile {
             filename "subdir/Dockerfile"
-            args "-v /tmp:/tmp -p 8000:8000"
+            args "-v /tmp:/tmp"
         }
     }
     stages {
