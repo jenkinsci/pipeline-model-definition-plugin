@@ -37,12 +37,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StageDirective extends AbstractDirective<StageDirective> {
+    public enum StageContentType {
+        STEPS,
+        PARALLEL;
+
+        public String getName() {
+            // TODO: This could probably be easier, but I wanted to use a localized string and couldn't think of anything better.
+            if (this == STEPS) {
+                return Messages.StageDirective_Steps_name();
+            } else if (this == PARALLEL) {
+                return Messages.StageDirective_Parallel_name();
+            } else {
+                return "(unknown)";
+            }
+        }
+    }
+
     private List<AbstractDirective> directives = new ArrayList<>();
     private String name;
-    private int contentType;
+    private StageContentType contentType;
 
     @DataBoundConstructor
-    public StageDirective(List<AbstractDirective> directives, @Nonnull String name, int contentType) {
+    public StageDirective(List<AbstractDirective> directives, @Nonnull String name, StageContentType contentType) {
         if (directives != null) {
             this.directives.addAll(directives);
         }
@@ -57,9 +73,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
 
     /**
      * What the content of this stage is - currently steps or parallel
-     * @return 0 for steps, 1 for parallel.
      */
-    public int getContentType() {
+    public StageContentType getContentType() {
         return contentType;
     }
 
@@ -111,12 +126,12 @@ public class StageDirective extends AbstractDirective<StageDirective> {
             StringBuilder result = new StringBuilder("stage(");
             result.append("'").append(directive.name).append("') {\n");
             switch (directive.contentType) {
-                case 0:
+                case STEPS:
                     result.append("steps {\n");
                     result.append("// One or more steps need to be included within the steps block.\n");
                     result.append("}\n");
                     break;
-                case 1:
+                case PARALLEL:
                     result.append("parallel {\n");
                     result.append("// One or more stages need to be included within the parallel block.\n");
                     result.append("}\n");

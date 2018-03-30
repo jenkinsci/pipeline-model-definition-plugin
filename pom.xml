@@ -86,7 +86,12 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.46-20180306.165033-2</version> <!-- TODO: Update to release -->
+        <version>2.46-20180330.184501-3</version> <!-- TODO: Update to release -->
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>script-security</artifactId>
+        <version>1.42</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -380,7 +385,7 @@
   </build>
 
   <properties>
-    <jenkins.version>2.60.3</jenkins.version>
+    <jenkins.version>2.62</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.7</groovy.version>
     <concurrency>1</concurrency>
