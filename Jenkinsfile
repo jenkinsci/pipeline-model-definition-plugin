@@ -39,7 +39,7 @@ pipeline {
                         // No matter what the build status is, run this step. There are other conditions
                         // available as well, such as "success", "failed", "unstable", and "changed".
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                         success {
                             archive "**/target/*.hpi"
@@ -60,7 +60,7 @@ pipeline {
                     }
                     post {
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                     }
                 }
@@ -75,7 +75,7 @@ pipeline {
                         // No matter what the build status is, run this step. There are other conditions
                         // available as well, such as "success", "failed", "unstable", and "changed".
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                         success {
                             archive "**/target/*.hpi"
@@ -96,7 +96,7 @@ pipeline {
                     }
                     post {
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                     }
                 }
