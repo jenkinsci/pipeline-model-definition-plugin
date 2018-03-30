@@ -24,35 +24,17 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
-import com.google.common.collect.ImmutableList;
 import hudson.Extension;
-import hudson.ExtensionList;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.Describable;
 import hudson.model.Descriptor;
-import hudson.model.JobPropertyDescriptor;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
-import org.jenkinsci.plugins.structs.SymbolLookup;
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
-import org.jenkinsci.plugins.workflow.cps.Snippetizer;
-import org.jenkinsci.plugins.workflow.steps.Step;
-import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class StageDirective extends AbstractDirective<StageDirective> {
     private List<AbstractDirective> directives = new ArrayList<>();

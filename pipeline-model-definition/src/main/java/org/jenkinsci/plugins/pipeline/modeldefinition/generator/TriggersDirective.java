@@ -29,9 +29,6 @@ import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
-import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -40,7 +37,6 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TriggersDirective extends AbstractDirective<TriggersDirective> {

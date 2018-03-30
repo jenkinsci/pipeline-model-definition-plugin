@@ -29,7 +29,6 @@ import hudson.model.Descriptor;
 import hudson.model.ParameterDefinition;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;

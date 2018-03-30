@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.Extension;
 import hudson.model.Descriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;

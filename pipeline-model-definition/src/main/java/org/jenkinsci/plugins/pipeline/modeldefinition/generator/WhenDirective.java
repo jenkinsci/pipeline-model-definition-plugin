@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.Extension;
 import hudson.model.Descriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
@@ -37,7 +36,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class WhenDirective extends AbstractDirective<WhenDirective> {
     private DeclarativeStageConditional conditional;
