@@ -440,7 +440,7 @@ public class DirectiveGeneratorTest {
 
     @Test
     public void simpleStage() throws Exception {
-        StageDirective stage = new StageDirective(Collections.emptyList(), "bob", 0);
+        StageDirective stage = new StageDirective(Collections.emptyList(), "bob", StageDirective.StageContentType.STEPS);
 
         assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  steps {\n" +
@@ -451,7 +451,7 @@ public class DirectiveGeneratorTest {
 
     @Test
     public void simpleParallelStage() throws Exception {
-        StageDirective stage = new StageDirective(Collections.emptyList(), "bob", 1);
+        StageDirective stage = new StageDirective(Collections.emptyList(), "bob", StageDirective.StageContentType.PARALLEL);
 
         assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  parallel {\n" +
@@ -474,7 +474,7 @@ public class DirectiveGeneratorTest {
         WhenDirective when = new WhenDirective(new AllOfConditional(nested), false);
         AgentDirective agent = new AgentDirective(new DockerPipeline("some-image"));
 
-        StageDirective stage = new StageDirective(Arrays.asList(agent, when, env, tools, post), "bob", 0);
+        StageDirective stage = new StageDirective(Arrays.asList(agent, when, env, tools, post), "bob", StageDirective.StageContentType.STEPS);
 
         assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  steps {\n" +
