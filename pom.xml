@@ -385,6 +385,7 @@
     <groovy.version>2.4.7</groovy.version>
     <concurrency>1</concurrency>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
+    <jenkins.test.timeout>360</jenkins.test.timeout>
   </properties>
 
   <repositories>
