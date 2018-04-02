@@ -85,6 +85,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     public static JenkinsRule j = new JenkinsRule();
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
+    @Rule
+    public TimeoutPerTestRule timeoutRule = new TimeoutPerTestRule();
 
     protected static String legalAgentTypes = "";
 
@@ -96,6 +98,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     @BeforeClass
     public static void setUpPreClass() throws Exception {
+        // Disable the timeout on the ClassRule, because it applies across the whole class, not individual tests.
+        j.timeout = 0;
+
         List<String> agentTypes = new ArrayList<>();
 
         for (DeclarativeAgentDescriptor d : j.jenkins.getExtensionList(DeclarativeAgentDescriptor.class)) {
