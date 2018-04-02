@@ -33,7 +33,7 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh 'mvn clean install -Dmaven.test.failure.ignore=true'
+                        sh 'mvn clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=360'
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
@@ -69,7 +69,7 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"
+                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=360 -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
