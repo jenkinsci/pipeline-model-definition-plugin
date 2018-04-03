@@ -56,7 +56,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true'
+                        bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djenkins.test.timeout=360'
                     }
                     post {
                         always {
@@ -92,7 +92,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"
+                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.test.timeout=360 -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         always {
