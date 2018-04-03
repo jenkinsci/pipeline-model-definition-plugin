@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,31 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-pipeline {
-    agent none
-    stages {
-        stage("foo") {
-            steps {
-                echo "hello"
-            }
-        }
+import hudson.Extension
+import org.jenkinsci.Symbol
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
+
+import javax.annotation.Nonnull
+
+/**
+ * A {@link BuildCondition} for matching all builds regardless of status, running *after* all other conditions.
+ *
+ * @author Andrew Bayer
+ */
+@Extension(ordinal=-10000d) @Symbol("cleanup")
+class Cleanup extends BuildCondition {
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return true
     }
-    post {
-        always {
-            error "I AM FAILING NOW"
-        }
-        success {
-            echo "MOST DEFINITELY FINISHED"
-        }
-        failure {
-            echo "I FAILED"
-        }
-        cleanup {
-            echo "I RAN ANYWAY"
-        }
+
+    @Override
+    String getDescription() {
+        return Messages.Finally_Description()
     }
+
+    static final long serialVersionUID = 1L
+
 }
-
-
-
