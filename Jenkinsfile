@@ -33,13 +33,13 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh 'mvn clean install -Dmaven.test.failure.ignore=true'
+                        sh 'mvn clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=360'
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
                         // available as well, such as "success", "failed", "unstable", and "changed".
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                         success {
                             archive "**/target/*.hpi"
@@ -56,11 +56,11 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true'
+                        bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djenkins.test.timeout=360'
                     }
                     post {
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                     }
                 }
@@ -69,13 +69,13 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"
+                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=360 -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
                         // available as well, such as "success", "failed", "unstable", and "changed".
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                         success {
                             archive "**/target/*.hpi"
@@ -92,11 +92,11 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.version=${NEWER_CORE_VERSION}"
+                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.test.timeout=360 -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         always {
-                            junit '*/target/surefire-reports/*.xml'
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
                         }
                     }
                 }

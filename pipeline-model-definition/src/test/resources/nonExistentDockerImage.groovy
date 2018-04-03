@@ -26,7 +26,7 @@ pipeline {
     agent {
         docker {
             image "httpdIDontExist:2.4.12"
-            args "-v /tmp:/tmp -p 80:80"
+            args "-v /tmp:/tmp"
         }
     }
     stages {

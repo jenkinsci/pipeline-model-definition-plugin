@@ -31,7 +31,7 @@ pipeline {
         docker {
             label "thisspec"
             image "httpd:2.4.12"
-            args "-v /tmp:/tmp -p 80:80"
+            args "-v /tmp:/tmp"
         }
     }
     stages {
