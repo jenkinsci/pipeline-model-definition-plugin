@@ -303,4 +303,20 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertLogNotContains("I FAILED", run1);
 
     }
+
+    @Issue("JENKINS-44993")
+    @Test
+    public void failureInPostBlock() throws Exception {
+        expect(Result.FAILURE, "failureInPostBlock")
+                .logContains("[Pipeline] { (foo)",
+                        "hello",
+                        "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
+                        "I FAILED",
+                        "Error when executing failure post condition",
+                        "Error when executing always post condition",
+                        "No such property: otherUndefined for class",
+                        "No such property: undefined for class")
+                .logNotContains("MOST DEFINITELY FINISHED")
+                .go();
+    }
 }
