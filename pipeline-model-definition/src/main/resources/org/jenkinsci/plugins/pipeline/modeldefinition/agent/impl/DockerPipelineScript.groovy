@@ -39,7 +39,7 @@ class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPipeline> 
     @Override
     Closure runImage(Closure body) {
         return {
-            if (!Utils.withinAStage()) {
+            if (!Utils.withinAStage() && describable.alwaysPull) {
                 script.stage(SyntheticStageNames.agentSetup()) {
                     try {
                         script.getProperty("docker").image(describable.image).pull()
