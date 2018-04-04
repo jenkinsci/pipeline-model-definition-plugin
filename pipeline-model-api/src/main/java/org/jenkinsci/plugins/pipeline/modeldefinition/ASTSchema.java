@@ -26,14 +26,23 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.Extension;
 import hudson.model.RootAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirectiveDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.node.ObjectNode;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.ProcessingException;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.load.URIManager;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.main.JsonSchema;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.main.JsonSchemaFactory;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Endpoint for exposing the AST JSON schema.
@@ -60,8 +69,31 @@ public class ASTSchema implements RootAction {
     }
 
     @SuppressWarnings("unused")
-    public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        rsp.serveFile(req, getClass().getResource("/ast-schema.json"));
+    public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        rsp.setContentType("application/json;charset=UTF-8");
+        try (OutputStream os = rsp.getOutputStream()) {
+            ObjectMapper mapper = new ObjectMapper();
+            Object json = mapper.readValue(getSchemaAsJSON().toString(), Object.class);
+            mapper.writeValue(os, json);
+            os.flush();
+        }
+    }
+
+    private static JsonNode getSchemaAsJSON() throws IOException {
+        JsonNode baseSchema = JsonLoader.fromResource("/ast-schema.json");
+
+        if (baseSchema != null && baseSchema.get("definitions").isObject()) {
+            JsonNode definitions = baseSchema.get("definitions");
+            if (definitions.isObject()) {
+                for (DeclarativeDirectiveDescriptor desc : DeclarativeDirectiveDescriptor.all()) {
+                    ((ObjectNode)definitions).put(desc.getName(), desc.getSchema());
+                }
+            }
+            if (!(baseSchema.get("definitions").equals(definitions))) {
+                ((ObjectNode)baseSchema).put("definitions", definitions);
+            }
+        }
+        return baseSchema;
     }
 
     /**
@@ -70,9 +102,9 @@ public class ASTSchema implements RootAction {
      * @return the schema in {@link JsonSchema} form.
      * @throws ProcessingException if there are issues reading the schema
      */
-    public static JsonSchema getJSONSchema() throws ProcessingException {
+    public static JsonSchema getJSONSchema() throws ProcessingException, IOException {
         final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        return factory.getJsonSchema("resource:/ast-schema.json");
+        return factory.getJsonSchema(getSchemaAsJSON());
     }
 
 }

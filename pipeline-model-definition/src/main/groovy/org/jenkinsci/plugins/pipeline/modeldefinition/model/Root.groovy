@@ -59,9 +59,18 @@ class Root implements Serializable {
 
     final String astUUID
 
-    @Whitelisted
+    Map<String,DeclarativeDirectiveRuntime> additionalDirectives
+
+    @Deprecated
     Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
          Triggers triggers, Parameters parameters, Libraries libraries, String astUUID) {
+        this(agent, stages, post, environment, tools, options, triggers, parameters, libraries, astUUID, [:])
+    }
+
+    @Whitelisted
+    Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
+         Triggers triggers, Parameters parameters, Libraries libraries, String astUUID,
+         Map<String, DeclarativeDirectiveRuntime> additionalDirectives) {
         this.agent = agent
         this.stages = stages
         this.post = post
@@ -72,6 +81,7 @@ class Root implements Serializable {
         this.parameters = parameters
         this.libraries = libraries
         this.astUUID = astUUID
+        this.additionalDirectives = additionalDirectives
     }
 
     /**

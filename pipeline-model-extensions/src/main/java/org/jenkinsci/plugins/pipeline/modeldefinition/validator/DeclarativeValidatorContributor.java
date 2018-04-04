@@ -51,6 +51,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
 import javax.annotation.CheckForNull;
@@ -449,6 +450,21 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
     @Nonnull
     public List<String> validateElementAll(@Nonnull ModelASTValue element, @CheckForNull FlowExecution execution) {
         String r = validateElement(element, execution);
+        List<String> result = new ArrayList<>();
+        if (r != null) {
+            result.add(r);
+        }
+        return result;
+    }
+
+    @CheckForNull
+    public String validateElement(@Nonnull DeclarativeDirective directive, @CheckForNull FlowExecution execution) {
+        return null;
+    }
+
+    @Nonnull
+    public List<String> validateElementAll(@Nonnull DeclarativeDirective directive, @CheckForNull FlowExecution execution) {
+        String r = validateElement(directive, execution);
         List<String> result = new ArrayList<>();
         if (r != null) {
             result.add(r);

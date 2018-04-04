@@ -66,6 +66,8 @@ class Stage implements Serializable {
 
     StageInput input
 
+    Map<String,DeclarativeDirectiveRuntime> additionalDirectives
+
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
@@ -78,10 +80,17 @@ class Stage implements Serializable {
         this(name, steps, agent, post, when, tools, environment, failFast, options, input, parallel?.stages, null)
     }
 
-    @Whitelisted
+    @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, boolean failFast, StageOptions options, StageInput input,
           List<Stage> parallelContent, Stages stages) {
+        this(name, steps, agent, post, when, tools, environment, failFast, options, input, parallelContent, stages, [:])
+    }
+
+    @Whitelisted
+    Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
+          Environment environment, boolean failFast, StageOptions options, StageInput input, List<Stage> parallelContent,
+          Stages stages, Map<String,DeclarativeDirectiveRuntime> additionalDirectives) {
         this.name = name
         this.agent = agent
         this.post = post
@@ -96,6 +105,7 @@ class Stage implements Serializable {
         if (parallelContent != null) {
             this.parallelContent.addAll(parallelContent)
         }
+        this.additionalDirectives = additionalDirectives
     }
 
     protected Object readResolve() throws IOException {

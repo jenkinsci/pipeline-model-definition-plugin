@@ -31,8 +31,6 @@ import hudson.model.Run
 import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.GroovyCodeVisitor
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -48,6 +46,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDesc
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirectiveDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
@@ -93,6 +93,10 @@ class ModelParser implements Parser {
 
     private final Run<?,?> build
 
+    private final Map<String,DeclarativeDirectiveDescriptor> topLevelAdditionalDirectives = [:]
+
+    private final Map<String,DeclarativeDirectiveDescriptor> stageAdditionalDirectives = [:]
+
     @Deprecated
     ModelParser(SourceUnit sourceUnit) {
         this(sourceUnit, [], null)
@@ -122,6 +126,15 @@ class ModelParser implements Parser {
             this.build = (Run) executable
         } else {
             this.build = null
+        }
+
+        DeclarativeDirectiveDescriptor.all().each { d ->
+            if (d.allowedAtTopLevel) {
+                topLevelAdditionalDirectives.put(d.name, d)
+            }
+            if (d.allowedInStage) {
+                stageAdditionalDirectives.put(d.name, d)
+            }
         }
     }
 
@@ -255,9 +268,24 @@ class ModelParser implements Parser {
                         errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedPostBuild())
                         break
                     default:
-                        // We need to check for unknowns here.
-                        errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
+                        if (topLevelAdditionalDirectives.containsKey(name)) {
+                            DeclarativeDirective d = parseAdditionalDirective(stmt, topLevelAdditionalDirectives.get(name))
+                            if (d != null) {
+                                r.additionalDirectives.add(d)
+                            }
+                        } else {
+                            // We need to check for unknowns here.
+                            errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
+                        }
                 }
+            }
+        }
+
+        List<DeclarativeDirective> additionalDirectives = r.additionalDirectives
+
+        additionalDirectives.each { d ->
+            if (d instanceof DeclarativeDirective.Preprocessor) {
+                r = d.process(r)
             }
         }
 
@@ -541,7 +569,7 @@ class ModelParser implements Parser {
                             BlockStatement block = asBlock(stepsBlock.body.code)
 
                             // Handle parallel as a special case
-                            if (block.statements.size()==1) {
+                            if (block.statements.size() == 1) {
                                 def parallel = matchParallel(block.statements[0])
 
                                 if (parallel != null) {
@@ -594,7 +622,14 @@ class ModelParser implements Parser {
                             stage.stages = parseStages(s)
                             break
                         default:
-                            errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
+                            if (stageAdditionalDirectives.containsKey(name)) {
+                                DeclarativeDirective d = parseAdditionalDirective(s, stageAdditionalDirectives.get(name))
+                                if (d != null) {
+                                    stage.additionalDirectives.add(d)
+                                }
+                            } else {
+                                errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
+                            }
                     }
                 }
             }
@@ -1225,6 +1260,15 @@ class ModelParser implements Parser {
         }
 
         return val
+    }
+
+    /**
+     * Parse a {@link Statement} as a specific {@link DeclarativeDirective} extension.
+     */
+    @CheckForNull
+    DeclarativeDirective parseAdditionalDirective(@Nonnull Statement st,
+                                                  @Nonnull DeclarativeDirectiveDescriptor directiveDescriptor) {
+        return directiveDescriptor.parseDirectiveFromGroovy(st)
     }
 
     protected String parseStringLiteral(Expression exp) {

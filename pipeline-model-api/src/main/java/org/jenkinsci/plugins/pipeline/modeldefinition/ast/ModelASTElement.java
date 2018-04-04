@@ -36,7 +36,7 @@ public abstract class ModelASTElement {
      */
     private Object sourceLocation;
 
-    ModelASTElement(Object sourceLocation) {
+    protected ModelASTElement(Object sourceLocation) {
         this.sourceLocation = sourceLocation;
     }
 

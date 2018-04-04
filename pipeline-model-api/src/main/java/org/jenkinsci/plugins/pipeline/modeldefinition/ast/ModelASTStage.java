@@ -6,6 +6,7 @@ import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -29,6 +30,7 @@ public final class ModelASTStage extends ModelASTElement {
     private Boolean failFast;
     private ModelASTOptions options;
     private ModelASTStageInput input;
+    private List<DeclarativeDirective> additionalDirectives = new ArrayList<>();
 
     @Deprecated
     private transient ModelASTStages parallel;
@@ -102,6 +104,14 @@ public final class ModelASTStage extends ModelASTElement {
             o.accumulate("failFast", failFast);
         }
 
+        if (!additionalDirectives.isEmpty()) {
+            JSONObject directives = new JSONObject();
+            for (DeclarativeDirective d : additionalDirectives) {
+                directives.put(d.getDescriptor().getName(), d.toJSON());
+            }
+            o.put("additionalDirectives", directives);
+        }
+
         return o;
     }
 
@@ -143,6 +153,9 @@ public final class ModelASTStage extends ModelASTElement {
         for (ModelASTStage content : parallelContent) {
             content.validate(validator, true);
         }
+        for (DeclarativeDirective d : additionalDirectives) {
+            d.validate(validator, true);
+        }
     }
 
     @Override
@@ -167,9 +180,6 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (input != null) {
             result.append(input.toGroovy());
-        }
-        if (post != null) {
-            result.append(post.toGroovy());
         }
         if (stages != null) {
             result.append("stages {\n");
@@ -215,6 +225,14 @@ public final class ModelASTStage extends ModelASTElement {
             result.append("}\n");
         }
 
+        for (DeclarativeDirective d : additionalDirectives) {
+            result.append(d.toGroovy());
+        }
+
+        if (post != null) {
+            result.append(post.toGroovy());
+        }
+
         result.append("}\n");
 
         return result.toString();
@@ -255,6 +273,10 @@ public final class ModelASTStage extends ModelASTElement {
         }
         for (ModelASTStage content : parallelContent) {
             content.removeSourceLocation();
+        }
+
+        for (DeclarativeDirective d : additionalDirectives) {
+            d.removeSourceLocation();
         }
     }
 
@@ -364,6 +386,15 @@ public final class ModelASTStage extends ModelASTElement {
         this.parallelContent = parallelContent;
     }
 
+    @Nonnull
+    public List<DeclarativeDirective> getAdditionalDirectives() {
+        return additionalDirectives;
+    }
+
+    public void setAdditionalDirectives(List<DeclarativeDirective> additionalDirectives) {
+        this.additionalDirectives.addAll(additionalDirectives);
+    }
+
     @Override
     public String toString() {
         return "ModelASTStage{" +
@@ -380,6 +411,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", options=" + options +
                 ", input=" + input +
                 ", parallelContent=" + parallelContent +
+                ", additionalDirectives=" + additionalDirectives +
                 "}";
     }
 
@@ -434,8 +466,11 @@ public final class ModelASTStage extends ModelASTElement {
                 : that.getParallelContent() != null) {
             return false;
         }
-        return getBranches() != null ? getBranches().equals(that.getBranches()) : that.getBranches() == null;
+        if (getBranches() != null ? !getBranches().equals(that.getBranches()) : that.getBranches() != null) {
+            return false;
+        }
 
+        return getAdditionalDirectives().equals(that.getAdditionalDirectives());
     }
 
     @Override
@@ -454,6 +489,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         result = 31 * result + (getInput() != null ? getInput().hashCode() : 0);
         result = 31 * result + (getParallelContent() != null ? getParallelContent().hashCode() : 0);
+        result = 31 * result + additionalDirectives.hashCode();
         return result;
     }
 }

@@ -42,6 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions
@@ -795,6 +796,10 @@ class ModelValidatorImpl implements ModelValidator {
 
     boolean validateElement(@Nonnull ModelASTValue value) {
         return validateFromContributors(value, true)
+    }
+
+    boolean validateElement(@Nonnull DeclarativeDirective directive, boolean inStage) {
+        return validateFromContributors(directive, true, inStage)
     }
 
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
