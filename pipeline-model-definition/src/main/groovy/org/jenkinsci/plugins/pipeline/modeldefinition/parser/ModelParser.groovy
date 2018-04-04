@@ -83,19 +83,19 @@ class ModelParser implements Parser {
     /**
      * Represents the source file being processed.
      */
-    private final SourceUnit sourceUnit
+    protected final SourceUnit sourceUnit
 
-    private final ModelValidator validator
+    protected final ModelValidator validator
 
-    private final ErrorCollector errorCollector
+    protected final ErrorCollector errorCollector
 
-    private final DescriptorLookupCache lookup
+    protected final DescriptorLookupCache lookup
 
-    private final Run<?,?> build
+    protected final Run<?,?> build
 
-    private final Map<String,DeclarativeDirectiveDescriptor> topLevelAdditionalDirectives = [:]
+    protected final Map<String,DeclarativeDirectiveDescriptor> topLevelAdditionalDirectives = [:]
 
-    private final Map<String,DeclarativeDirectiveDescriptor> stageAdditionalDirectives = [:]
+    protected final Map<String,DeclarativeDirectiveDescriptor> stageAdditionalDirectives = [:]
 
     @Deprecated
     ModelParser(SourceUnit sourceUnit) {
@@ -199,7 +199,7 @@ class ModelParser implements Parser {
         return null // no 'pipeline', so this doesn't apply
     }
 
-    private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
+    protected @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst)
 
         def pipelineBlock = matchBlockStatement(pst)
@@ -400,7 +400,7 @@ class ModelParser implements Parser {
      * assuming no errors were encountered on the various subexpressions, in which case it will return null.
      */
     @CheckForNull
-    private ModelASTValue envValueForStringConcat(@Nonnull BinaryExpression exp) {
+    protected ModelASTValue envValueForStringConcat(@Nonnull BinaryExpression exp) {
         StringBuilder builder = new StringBuilder()
         boolean isLiteral = true
 
@@ -436,7 +436,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
+    protected boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
         if (e instanceof ConstantExpression || e instanceof GStringExpression) {
             ModelASTValue val = parseArgument(e)
             return appendAndIsLiteral(val, builder)
@@ -446,7 +446,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
+    protected boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
         if (val == null) {
             return true
         } else if (!val.isLiteral()) {
@@ -1039,7 +1039,7 @@ class ModelParser implements Parser {
     }
 
 
-    private ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
+    protected ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
         if (Jenkins.getInstance() != null && origArgs instanceof ModelASTSingleArgument) {
             ModelASTValue singleArgValue = ((ModelASTSingleArgument)origArgs).value
             ModelASTNamedArgumentList namedArgs = new ModelASTNamedArgumentList(origArgs.sourceLocation)
@@ -1073,7 +1073,7 @@ class ModelParser implements Parser {
         return parseCodeBlockInternal(st, new ModelASTScriptBlock(st), "Script")
     }
 
-    private <T extends AbstractModelASTCodeBlock> T parseCodeBlockInternal(Statement st, T scriptBlock, String pronoun) {
+    protected <T extends AbstractModelASTCodeBlock> T parseCodeBlockInternal(Statement st, T scriptBlock, String pronoun) {
         // TODO: Probably error out for cases with parameters?
         def bs = matchBlockStatement(st)
         if (bs != null) {
@@ -1185,14 +1185,14 @@ class ModelParser implements Parser {
         return b
     }
 
-    private ModelASTKey parseKey(Expression e) {
+    protected ModelASTKey parseKey(Expression e) {
         ModelASTKey key = new ModelASTKey(e)
         key.setKey(parseStringLiteral(e))
 
         return key
     }
 
-    private ModelASTArgumentList parseArgumentList(List<Expression> args) {
+    protected ModelASTArgumentList parseArgumentList(List<Expression> args) {
         switch (args.size()) {
         case 0:
             return new ModelASTNamedArgumentList(null)  // no arguments
