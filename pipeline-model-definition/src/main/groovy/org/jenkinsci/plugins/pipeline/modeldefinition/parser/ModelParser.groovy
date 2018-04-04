@@ -172,7 +172,7 @@ class ModelParser implements Parser {
         }
 
         if (pst != null) {
-            return parsePipelineStep(pst, secondaryRun)
+            return parseValidateAndTransformPipeline(pst, secondaryRun)
         } else {
             // Look for the pipeline step inside methods named call.
             MethodNode callMethod = src.methods.find { it.name == "call" }
@@ -183,7 +183,7 @@ class ModelParser implements Parser {
 
                 if (!pipelineSteps.isEmpty()) {
                     List<ModelASTPipelineDef> pipelineDefs = pipelineSteps.collect { p ->
-                        return parsePipelineStep(p, secondaryRun)
+                        return parseValidateAndTransformPipeline(p, secondaryRun)
                     }
                     // Even if there are multiple pipeline blocks, just return the first one - this return value is only
                     // used in a few places: tests, where there will only ever be one, and linting/converting, which also
@@ -197,6 +197,40 @@ class ModelParser implements Parser {
         // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
         src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
         return null // no 'pipeline', so this doesn't apply
+    }
+
+    @CheckForNull ModelASTPipelineDef parseValidateAndTransformPipeline(Statement pst, boolean secondaryRun = false) {
+        ModelASTPipelineDef pipelineDef = parsePipelineStep(pst, secondaryRun)
+
+        if (pipelineDef != null) {
+            def pipelineBlock = matchBlockStatement(pst)
+
+            List<DeclarativeDirective> additionalDirectives = pipelineDef.additionalDirectives
+
+            additionalDirectives.each { d ->
+                if (d instanceof DeclarativeDirective.Preprocessor) {
+                    pipelineDef = d.process(pipelineDef)
+                }
+            }
+
+            pipelineDef.validate(validator)
+
+            // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
+            astDebugLog {
+                "Model as JSON: ${pipelineDef.toJSON().toString(2)}"
+            }
+            // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
+            // are no errors.
+            if (!secondaryRun && errorCollector.errorCount == 0) {
+                pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(pipelineDef, build)
+                // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
+                astDebugLog {
+                    "Transformed runtime AST: ${-> prettyPrint(pipelineBlock.whole.arguments)}"
+                }
+            }
+        }
+
+        return pipelineDef
     }
 
     protected @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
@@ -278,30 +312,6 @@ class ModelParser implements Parser {
                             errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
                         }
                 }
-            }
-        }
-
-        List<DeclarativeDirective> additionalDirectives = r.additionalDirectives
-
-        additionalDirectives.each { d ->
-            if (d instanceof DeclarativeDirective.Preprocessor) {
-                r = d.process(r)
-            }
-        }
-
-        r.validate(validator)
-
-        // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
-        astDebugLog {
-            "Model as JSON: ${r.toJSON().toString(2)}"
-        }
-        // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
-        // are no errors.
-        if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(r, build)
-            // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
-            astDebugLog {
-                "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"
             }
         }
 
