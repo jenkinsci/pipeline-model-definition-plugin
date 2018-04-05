@@ -30,6 +30,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
+
 
 public class Any extends DeclarativeAgent<Any> {
 
@@ -39,5 +41,10 @@ public class Any extends DeclarativeAgent<Any> {
 
     @Extension(ordinal = -900) @Symbol("any")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Any> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Run on any agent";
+        }
     }
 }

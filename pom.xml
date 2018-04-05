@@ -86,7 +86,12 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.41</version>
+        <version>2.46</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>script-security</artifactId>
+        <version>1.42</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -96,7 +101,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-api</artifactId>
-        <version>2.24</version>
+        <version>2.25</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -157,12 +162,12 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-support</artifactId>
-        <version>2.14</version>
+        <version>2.17</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-support</artifactId>
-        <version>2.14</version>
+        <version>2.17</version>
         <classifier>tests</classifier>
       </dependency>
       <dependency>
@@ -237,7 +242,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>structs</artifactId>
-        <version>1.10</version>
+        <version>1.14</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -380,8 +385,8 @@
   </build>
 
   <properties>
-    <jenkins.version>2.7.3</jenkins.version>
-    <java.level>7</java.level>
+    <jenkins.version>2.62</jenkins.version>
+    <java.level>8</java.level>
     <groovy.version>2.4.7</groovy.version>
     <concurrency>1</concurrency>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>

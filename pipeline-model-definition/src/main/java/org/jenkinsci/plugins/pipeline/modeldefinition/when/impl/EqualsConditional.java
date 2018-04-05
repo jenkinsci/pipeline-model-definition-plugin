@@ -32,11 +32,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import javax.annotation.Nonnull;
 
 /**
  * Stage condition based on object equality.
@@ -62,6 +60,18 @@ public class EqualsConditional extends DeclarativeStageConditional<EqualsConditi
     @Extension
     @Symbol("equals")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EqualsConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if two values are equal";
+        }
+
+        @Override
+        public boolean inDirectiveGenerator() {
+            // TODO: Figure out how to get Stapler to not barf on form->instance for a String as the value but Object as the field type.
+            return false;
+        }
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

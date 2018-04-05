@@ -67,6 +67,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.jcabi.matchers.RegexMatchers.containsPattern;
 import static org.hamcrest.Matchers.equalTo;
@@ -104,7 +105,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                 agentTypes.add(symbol);
             }
         }
-        legalAgentTypes = "[" + StringUtils.join(agentTypes, ", ") + "]";
+        legalAgentTypes = "[" + StringUtils.join(agentTypes.stream().sorted().collect(Collectors.toList()), ", ") + "]";
     }
 
     private static String symbolFromDescriptor(Descriptor d) {
@@ -212,7 +213,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("'steps'")});
         result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
 
-        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]")});
+        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, docker, dockerfile, label, none, otherField]")});
 
         // Not using the full message here due to issues with the test extension in MultipleUnnamedParametersTest bleeding over in some situations.
         // That resulted in multiArgCtorProp sometimes showing up in the list of valid options, but not always. We still have the full test in
@@ -225,7 +226,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]")});
         result.add(new Object[]{"notificationsSectionRemoved", "additional properties are not allowed"});
         result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
-                "allOf, anyOf, branch, buildingTag, changelog, changeRequest, changeset, environment, equals, expression, not, tag")});
+                "allOf, anyOf, branch, buildingTag, changeRequest, changelog, changeset, environment, equals, expression, not, tag")});
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});

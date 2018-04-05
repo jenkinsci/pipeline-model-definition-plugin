@@ -42,6 +42,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 /**
  * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
@@ -79,6 +80,19 @@ public class ExpressionConditional extends DeclarativeStageConditional<Expressio
     @Extension
     @Symbol("expression")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ExpressionConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if a Scripted Pipeline expression evaluates as true";
+        }
+
+        /**
+         * ExpressionConditional has no form equivalent without jumping through some hoops, so...
+         */
+        @Override
+        public boolean inDirectiveGenerator() {
+            return false;
+        }
 
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {

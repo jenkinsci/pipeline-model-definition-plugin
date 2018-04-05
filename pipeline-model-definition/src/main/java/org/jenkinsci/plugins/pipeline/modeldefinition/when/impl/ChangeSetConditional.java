@@ -36,6 +36,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 /**
  * Conditional that checks the affected file paths recorded in the changelog.
@@ -69,6 +70,12 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
     @Extension
     @Symbol("changeset")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeSetConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if the changeset contains a file matching a pattern";
+        }
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

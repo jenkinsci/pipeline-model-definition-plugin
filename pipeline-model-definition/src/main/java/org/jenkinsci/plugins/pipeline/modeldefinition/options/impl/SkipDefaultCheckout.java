@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class SkipDefaultCheckout extends DeclarativeOption {
@@ -46,6 +47,12 @@ public class SkipDefaultCheckout extends DeclarativeOption {
 
     @Extension @Symbol("skipDefaultCheckout")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Skip the default automatic checkout whenever entering a new agent";
+        }
+
         @Override
         public boolean canUseInStage() {
             return true;
