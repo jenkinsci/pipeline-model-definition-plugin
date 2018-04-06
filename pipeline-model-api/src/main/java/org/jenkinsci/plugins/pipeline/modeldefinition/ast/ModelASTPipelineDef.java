@@ -16,7 +16,7 @@ import java.util.List;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-public final class ModelASTPipelineDef extends ModelASTElement {
+public class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTStages stages;
     private ModelASTPostBuild postBuild;
     private ModelASTEnvironment environment;

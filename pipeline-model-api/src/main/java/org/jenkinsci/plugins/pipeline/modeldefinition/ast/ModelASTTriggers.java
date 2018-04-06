@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTTriggers extends ModelASTElement {
+public class ModelASTTriggers extends ModelASTElement {
     private List<ModelASTTrigger> triggers = new ArrayList<>();
 
     public ModelASTTriggers(Object sourceLocation) {

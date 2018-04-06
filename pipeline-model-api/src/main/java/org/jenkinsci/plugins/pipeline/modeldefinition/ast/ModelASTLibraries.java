@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTLibraries extends ModelASTElement {
+public class ModelASTLibraries extends ModelASTElement {
     private List<ModelASTValue> libs = new ArrayList<>();
 
     public ModelASTLibraries(Object sourceLocation) {

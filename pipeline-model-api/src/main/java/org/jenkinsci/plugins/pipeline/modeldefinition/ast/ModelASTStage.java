@@ -18,9 +18,9 @@ import javax.annotation.Nonnull;
  * @author Andrew Bayer
  * @see ModelASTPipelineDef
  */
-public final class ModelASTStage extends ModelASTElement {
-    protected String name;
-    protected ModelASTAgent agent;
+public class ModelASTStage extends ModelASTElement {
+    private String name;
+    private ModelASTAgent agent;
     protected ModelASTPostStage post;
     protected ModelASTWhen when;
     protected ModelASTTools tools;

@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTOptions extends ModelASTElement {
+public class ModelASTOptions extends ModelASTElement {
     private List<ModelASTOption> options = new ArrayList<>();
     private boolean inStage = false;
 

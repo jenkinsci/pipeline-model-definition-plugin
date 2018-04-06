@@ -15,7 +15,7 @@ import javax.annotation.Nonnull;
  * @author Andrew Bayer
  * @see ModelASTStage#branches
  */
-public final class ModelASTBranch extends ModelASTElement {
+public class ModelASTBranch extends ModelASTElement {
     private String name;
     private List<ModelASTStep> steps = new ArrayList<>();
 
