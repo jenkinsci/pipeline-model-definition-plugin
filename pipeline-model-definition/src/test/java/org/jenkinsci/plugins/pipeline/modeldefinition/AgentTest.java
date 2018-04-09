@@ -341,6 +341,13 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void agentAnyAsBlock() throws Exception {
+        expect("agentAnyAsBlock")
+                .logContains("[Pipeline] { (foo)", "THIS WORKS")
+                .go();
+    }
+
     private void agentDocker(final String jenkinsfile, String... additionalLogContains) throws Exception {
         assumeDocker();
 
