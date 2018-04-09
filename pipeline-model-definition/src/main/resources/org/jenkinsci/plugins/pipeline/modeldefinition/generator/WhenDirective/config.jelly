@@ -34,6 +34,7 @@
                                  selected="false" staplerClass="${d.clazz.name}" lazy="d,it">
                 <l:ajax>
                     <j:set var="instance" value="${null}" />
+                    <j:set var="descriptor" value="${d}" />
                     <st:include from="${d}" page="${d.configPage}" optional="true" />
                 </l:ajax>
             </f:dropdownListBlock>

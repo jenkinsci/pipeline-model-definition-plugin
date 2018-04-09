@@ -91,6 +91,11 @@ public class TagConditional extends DeclarativeStageConditional<TagConditional> 
     @Symbol("tag")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TagConditional> {
         @Override
+        public String getDisplayName() {
+            return "Execute this stage if the build is running against an SCM tag matching the given pattern";
+        }
+
+        @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }

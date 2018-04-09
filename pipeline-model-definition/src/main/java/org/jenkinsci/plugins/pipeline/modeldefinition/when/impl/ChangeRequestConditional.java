@@ -250,6 +250,11 @@ public class ChangeRequestConditional extends DeclarativeStageConditional<Change
     @Symbol("changeRequest")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeRequestConditional> {
         @Override
+        public String getDisplayName() {
+            return "Execute the stage if the build is on a change request";
+        }
+
+        @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
