@@ -39,5 +39,7 @@ public interface ModelASTMarkerInterface {
 
     void validate(@Nonnull ModelValidator validator);
 
+    Object getSourceLocation();
+
     void removeSourceLocation();
 }

@@ -29,7 +29,7 @@ import net.sf.json.JSONObject;
 import org.codehaus.groovy.ast.ASTNode;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-public abstract class ModelASTElement {
+public abstract class ModelASTElement implements ModelASTMarkerInterface {
     /**
      * The sourceLocation is a reference to whatever section of the original source we're parsed from corresponds to this
      * element. When parsed from Pipeline Script, it's an {@link ASTNode}, and when parsed from JSON, it's a {@link JSONObject}.
