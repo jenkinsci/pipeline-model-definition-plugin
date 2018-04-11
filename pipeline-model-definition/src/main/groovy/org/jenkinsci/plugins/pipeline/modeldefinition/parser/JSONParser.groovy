@@ -57,11 +57,11 @@ class JSONParser implements Parser {
 
     JsonTree jsonTree
 
-    private GroovyShell testShell
+    protected GroovyShell testShell
 
-    private final Map<String,DeclarativeDirectiveDescriptor> topLevelAdditionalDirectives = [:]
+    protected final Map<String,DeclarativeDirectiveDescriptor> topLevelAdditionalDirectives = [:]
 
-    private final Map<String,DeclarativeDirectiveDescriptor> stageAdditionalDirectives = [:]
+    protected final Map<String,DeclarativeDirectiveDescriptor> stageAdditionalDirectives = [:]
 
     JSONParser(JsonTree tree) {
         this.jsonTree = tree
@@ -98,6 +98,25 @@ class JSONParser implements Parser {
             errorCollector.error(pipelineDef, e.message)
             return pipelineDef
         }
+
+        pipelineDef = parsePipeline(json)
+
+        List<DeclarativeDirective> additionalDirectives = pipelineDef.additionalDirectives
+
+        additionalDirectives.each { d ->
+            if (d instanceof DeclarativeDirective.Preprocessor) {
+                pipelineDef = d.process(pipelineDef)
+            }
+        }
+
+        pipelineDef.validate(validator)
+
+        return pipelineDef
+    }
+
+    @CheckForNull
+    ModelASTPipelineDef parsePipeline(JsonTree json) {
+        ModelASTPipelineDef pipelineDef = new ModelASTPipelineDef(json)
 
         def sectionsSeen = new HashSet()
 
@@ -149,17 +168,6 @@ class JSONParser implements Parser {
                         errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(sectionName))
                 }
             }
-
-            List<DeclarativeDirective> additionalDirectives = pipelineDef.additionalDirectives
-
-            additionalDirectives.each { d ->
-                if (d instanceof DeclarativeDirective.Preprocessor) {
-                    pipelineDef = d.process(pipelineDef)
-                }
-            }
-
-            pipelineDef.validate(validator)
-
         } else {
             errorCollector.error(pipelineDef, Messages.JSONParser_MissingPipelineRoot())
         }
@@ -713,7 +721,7 @@ class JSONParser implements Parser {
         return descriptor.parseDirectiveFromJSON(j)
     }
 
-    private JsonTree treeFromProcessingMessage(JsonTree json, ProcessingMessage pm) {
+    protected JsonTree treeFromProcessingMessage(JsonTree json, ProcessingMessage pm) {
         JsonNode jsonNode = pm.asJson()
 
         String location = jsonNode.get("instance").get("pointer").asText()
@@ -725,7 +733,7 @@ class JSONParser implements Parser {
         }
     }
 
-    private String processingMessageToError(ProcessingMessage pm) {
+    protected String processingMessageToError(ProcessingMessage pm) {
         JsonNode jsonNode = pm.asJson()
 
         if (jsonNode.has("keyword")) {
