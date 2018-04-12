@@ -89,9 +89,9 @@ public abstract class DeclarativeDirectiveDescriptor<D extends DeclarativeDirect
         }
     }
 
-    public abstract DeclarativeDirective parseDirectiveFromGroovy(Statement st);
+    public abstract D parseDirectiveFromGroovy(Statement st);
 
-    public abstract DeclarativeDirective parseDirectiveFromJSON(JsonTree json);
+    public abstract D parseDirectiveFromJSON(JsonTree json);
 
     /**
      * Get all {@link DeclarativeDirectiveDescriptor}s.
