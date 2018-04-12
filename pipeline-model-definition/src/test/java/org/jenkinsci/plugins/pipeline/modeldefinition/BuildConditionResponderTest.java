@@ -254,7 +254,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 "        stage('foo') {\n" +
                 "            steps {\n" +
                 "                echo 'hello'\n" +
-                "                semaphore 'wait'\n" +
+                "                semaphore 'wait-again'\n" +
                 "                sh 'sleep 15'\n" +
                 "            }\n" +
                 "        }\n" +
@@ -270,8 +270,8 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 "}\n", true));
 
         WorkflowRun run1 = job.scheduleBuild2(0).waitForStart();
-        SemaphoreStep.waitForStart("wait/1", run1);
-        SemaphoreStep.success("wait/1", null);
+        SemaphoreStep.waitForStart("wait-again/1", run1);
+        SemaphoreStep.success("wait-again/1", null);
         Thread.sleep(1000);
         run1.doStop();
 
