@@ -42,4 +42,6 @@ public interface ModelASTMarkerInterface {
     Object getSourceLocation();
 
     void removeSourceLocation();
+
+    void setSourceLocation(Object sourceLocation);
 }
