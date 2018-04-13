@@ -84,12 +84,12 @@ public abstract class DeclarativeValidatorContributor implements ExtensionPoint 
      * Fallback for any unknown element type. Always returns true, cannot be overridden.
      */
     @CheckForNull
-    public final String validateElement(@Nonnull ModelASTMarkerInterface element, @CheckForNull FlowExecution execution) {
+    public final String validateElement(@Nonnull ModelASTElement element, @CheckForNull FlowExecution execution) {
         return null;
     }
     
     @Nonnull
-    public final List<String> validateElementAll(@Nonnull ModelASTMarkerInterface element, @CheckForNull FlowExecution execution) {
+    public final List<String> validateElementAll(@Nonnull ModelASTElement element, @CheckForNull FlowExecution execution) {
         String r = validateElement(element, execution);
         List<String> result = new ArrayList<>();
         if (r != null) {
