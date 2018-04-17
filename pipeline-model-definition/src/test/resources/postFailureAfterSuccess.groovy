@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,34 +21,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-
-import javax.annotation.Nonnull
-
-/**
- * A {@link BuildCondition} for matching failed builds.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=500d) @Symbol("failure")
-class Failure extends BuildCondition {
-    @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return execResult != Result.ABORTED &&
-            (execResult == Result.FAILURE || r.getResult() == Result.FAILURE)
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
+            }
+        }
     }
-
-    @Override
-    String getDescription() {
-        return Messages.Failure_Description()
+    post {
+        success {
+            error "I AM FAILING NOW"
+        }
+        failure {
+            echo "I FAILED"
+        }
     }
-
-    public static final long serialVersionUID = 1L
 }
+
+
+
