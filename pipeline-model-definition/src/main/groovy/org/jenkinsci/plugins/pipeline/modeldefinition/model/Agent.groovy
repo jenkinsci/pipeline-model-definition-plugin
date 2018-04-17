@@ -131,7 +131,7 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
      */
     private String findSymbol() {
         String sym = null
-        DeclarativeAgentDescriptor.all().each { d ->
+        DeclarativeAgentDescriptor.allSorted().each { d ->
             SymbolLookup.getSymbolValue(d)?.each { s ->
                 if (getMap().containsKey(s) && sym == null) {
                     sym = s
