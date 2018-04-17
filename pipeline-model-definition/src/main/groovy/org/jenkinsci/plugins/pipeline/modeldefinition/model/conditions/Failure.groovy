@@ -41,7 +41,8 @@ class Failure extends BuildCondition {
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r) {
         Result execResult = getExecutionResult(r)
-        return execResult == Result.FAILURE || r.getResult() == Result.FAILURE
+        return execResult != Result.ABORTED &&
+            (execResult == Result.FAILURE || r.getResult() == Result.FAILURE)
     }
 
     @Override

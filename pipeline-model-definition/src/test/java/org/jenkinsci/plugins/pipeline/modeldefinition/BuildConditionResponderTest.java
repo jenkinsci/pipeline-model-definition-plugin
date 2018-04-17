@@ -242,4 +242,44 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertLogNotContains("I FAILED", b3);
     }
 
+    @Issue("JENKINS-50652")
+    @Test
+    public void abortedShouldNotTriggerFailure() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
+        job.setDefinition(new CpsFlowDefinition("" +
+                "pipeline {\n" +
+                "    agent any\n" +
+                "    stages {\n" +
+                "        stage('foo') {\n" +
+                "            steps {\n" +
+                "                echo 'hello'\n" +
+                "                semaphore 'wait-again'\n" +
+                "                sh 'sleep 15'\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "    post {\n" +
+                "        aborted {\n" +
+                "            echo 'I AM ABORTED'\n" +
+                "        }\n" +
+                "        failure {\n" +
+                "            echo 'I FAILED'\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n", true));
+
+        WorkflowRun run1 = job.scheduleBuild2(0).waitForStart();
+        SemaphoreStep.waitForStart("wait-again/1", run1);
+        SemaphoreStep.success("wait-again/1", null);
+        Thread.sleep(1000);
+        run1.doStop();
+
+        j.assertBuildStatus(Result.ABORTED, j.waitForCompletion(run1));
+
+        j.assertLogContains("I AM ABORTED", run1);
+
+        j.assertLogNotContains("I FAILED", run1);
+
+    }
 }
