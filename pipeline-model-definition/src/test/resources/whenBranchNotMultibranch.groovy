@@ -24,6 +24,11 @@
 
 pipeline {
     agent any
+    environment {
+        // In a CI build of the plugin, BRANCH_NAME is getting set for the build itself, so the tests pick it up too.
+        // Override that by nulling it out.
+        BRANCH_NAME ""
+    }
     stages {
         stage("One") {
             steps {
