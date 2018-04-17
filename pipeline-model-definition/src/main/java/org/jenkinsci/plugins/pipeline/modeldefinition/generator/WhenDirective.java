@@ -29,13 +29,16 @@ import hudson.model.Descriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class WhenDirective extends AbstractDirective<WhenDirective> {
     private DeclarativeStageConditional conditional;
@@ -81,12 +84,29 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
         public String toGroovy(@Nonnull WhenDirective directive) {
             if (directive.conditional != null) {
                 UninstantiatedDescribable ud = UninstantiatedDescribable.from(directive.conditional);
-                DescribableModel model = ud.getModel();
+                DescribableModel<? extends DeclarativeStageConditional> model = ud.getModel();
                 if (model != null) {
+                    Map<String,Object> args = new HashMap<>();
+                    // Hack to null out non-required fields for UI prettiness.
+                    for (String argKey : ud.getArguments().keySet()) {
+                        DescribableParameter p = model.getParameter(argKey);
+                        if (p == null ||
+                                p.isRequired() ||
+                                !(String.class.equals(p.getErasedType())) ||
+                                !ud.getArguments().get(argKey).equals("")) {
+                            args.put(argKey, ud.getArguments().get(argKey));
+                        }
+                    }
+
                     StringBuilder result = new StringBuilder();
                     result.append("when {\n");
 
-                    result.append(conditionalToGroovy(directive.conditional));
+                    try {
+                        result.append(conditionalToGroovy(model.instantiate(args)));
+                    } catch (Exception e) {
+                        result.append("// ERROR TRANSLATING CONDITIONAL: ").append(e).append("\n");
+                    }
+
                     if (directive.isBeforeAgent()) {
                         result.append("beforeAgent true\n");
                     }

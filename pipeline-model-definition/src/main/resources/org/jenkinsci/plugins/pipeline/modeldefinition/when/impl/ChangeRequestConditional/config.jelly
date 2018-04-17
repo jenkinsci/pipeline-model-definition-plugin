@@ -25,34 +25,36 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry field="comparator" title="Comparator">
-        <f:select/>
-    </f:entry>
-    <f:entry field="id" title="Id">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="target" title="Target">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="branch" title="Branch">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="fork" title="Fork">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="url" title="Url">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="title" title="Title">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="author" title="Author">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="authorDisplayName" title="Author Display name">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="authorEmail" title="Author E-Mail">
-        <f:textbox/>
-    </f:entry>
+    <f:advanced>
+        <f:entry field="comparator" title="Comparator">
+            <f:select />
+        </f:entry>
+        <f:entry field="id" title="Id">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="target" title="Target">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="branch" title="Branch">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="fork" title="Fork">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="url" title="Url">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="title" title="Title">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="author" title="Author">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="authorDisplayName" title="Author Display name">
+            <f:textbox/>
+        </f:entry>
+        <f:entry field="authorEmail" title="Author E-Mail">
+            <f:textbox/>
+        </f:entry>
+    </f:advanced>
 </j:jelly>
