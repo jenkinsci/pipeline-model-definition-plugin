@@ -51,9 +51,9 @@ public final class ModelASTAgent extends ModelASTElement {
                 Map<ModelASTKey, ModelASTMethodArg> vars = ((ModelASTClosureMap) variables).getVariables();
                 // Don't actually switch to "agent any" if there are any additional options besides the label.
                 if (vars.size() == 1) {
-                    for (ModelASTKey argKey : vars.keySet()) {
-                        if (argKey.getKey().equals("label")) {
-                            ModelASTMethodArg argValue = vars.get(argKey);
+                    for (Map.Entry<ModelASTKey,ModelASTMethodArg> entry : vars.entrySet()) {
+                        if (entry.getKey().getKey().equals("label")) {
+                            ModelASTMethodArg argValue = entry.getValue();
                             if (argValue instanceof ModelASTValue && ((ModelASTValue) argValue).getValue().equals("")) {
                                 return true;
                             }
