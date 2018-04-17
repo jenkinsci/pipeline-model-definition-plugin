@@ -735,7 +735,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         Map<String, DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
 
-        List<String> orderedNames = DeclarativeAgentDescriptor.all().collect { it.name }
+        List<String> orderedNames = DeclarativeAgentDescriptor.allSorted().collect { it.name }
         String typeName = agent.agentType?.key
 
         if (typeName == null) {

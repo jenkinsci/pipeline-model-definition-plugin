@@ -36,7 +36,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AgentDirective extends AbstractDirective<AgentDirective> {
     private DeclarativeAgent agent;
@@ -68,7 +70,9 @@ public class AgentDirective extends AbstractDirective<AgentDirective> {
         @Nonnull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
-            for (DeclarativeAgentDescriptor td : DeclarativeAgentDescriptor.all()) {
+            List<DeclarativeAgentDescriptor> descs = DeclarativeAgentDescriptor.all().stream()
+                    .sorted(Comparator.comparing(DeclarativeAgentDescriptor::getName)).collect(Collectors.toList());
+            for (DeclarativeAgentDescriptor td : descs) {
                 if (!SymbolLookup.getSymbolValue(td).isEmpty()) {
                     descriptors.add(td);
                 }
