@@ -49,9 +49,8 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      *
      * @return a list of all {@link DeclarativeAgentDescriptor}s registered.`
      */
-    public static List<DeclarativeAgentDescriptor> all() {
-        ExtensionList<DeclarativeAgentDescriptor> descs = ExtensionList.lookup(DeclarativeAgentDescriptor.class);
-        return descs.stream().sorted(Comparator.comparing(DeclarativeAgentDescriptor::getName)).collect(Collectors.toList());
+    public static ExtensionList<DeclarativeAgentDescriptor> all() {
+        return ExtensionList.lookup(DeclarativeAgentDescriptor.class);
     }
 
     /**
