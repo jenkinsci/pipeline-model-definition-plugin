@@ -66,7 +66,8 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                         "hello",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
                         "I AM FAILING NOW",
-                        "I FAILED")
+                        "I FAILED",
+                        "I RAN ANYWAY")
                 .logNotContains("MOST DEFINITELY FINISHED")
                 .go();
     }
