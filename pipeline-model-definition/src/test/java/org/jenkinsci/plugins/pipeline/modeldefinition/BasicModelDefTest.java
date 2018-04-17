@@ -1051,13 +1051,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Ignore("This breaks on PCT, so re-enable when we depend on newer core than 2.60")
     @Issue("JENKINS-45198")
     @Test
     public void scmEnvVars() throws Exception {
-        // The change to support checkout scm returning a map and that map being added to the environment works fine with
-        // older core etc, but just doesn't do anything, since checkout scm isn't returning anything yet. But with newer
-        // core, etc, it'll Just Work.
         expect("scmEnvVars")
                 // workflow-scm-step 2.6+, git 3.3.1+
                 .logNotContains("GIT_COMMIT is null")

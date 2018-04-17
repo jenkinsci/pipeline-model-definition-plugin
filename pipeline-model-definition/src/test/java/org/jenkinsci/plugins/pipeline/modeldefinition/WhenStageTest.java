@@ -350,6 +350,15 @@ public class WhenStageTest extends AbstractModelDefTest {
         expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Two", "World").go();
     }
 
+    @Issue("JENKINS-50815")
+    @Test
+    public void whenBranchNotMultibranch() throws Exception {
+        expect("whenBranchNotMultibranch")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+
     public static void waitFor(Queue.Item item) throws InterruptedException, ExecutionException {
         while (item != null && item.getFuture() == null) {
             Thread.sleep(200);
