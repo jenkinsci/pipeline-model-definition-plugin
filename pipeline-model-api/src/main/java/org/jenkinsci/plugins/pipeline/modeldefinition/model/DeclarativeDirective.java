@@ -26,12 +26,15 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Run;
 import jenkins.model.Jenkins;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 public abstract class DeclarativeDirective<D extends DeclarativeDirective<D>> extends ModelASTElement implements Describable<D> {
@@ -68,7 +71,9 @@ public abstract class DeclarativeDirective<D extends DeclarativeDirective<D>> ex
             super(sourceLocation);
         }
 
-        public abstract ModelASTPipelineDef process(@Nonnull ModelASTPipelineDef pipelineDef);
+        public abstract ModelASTPipelineDef process(@Nonnull ModelASTPipelineDef pipelineDef,
+                                                    @Nonnull ErrorCollector errorCollector,
+                                                    @CheckForNull Run<?,?> build);
     }
 
 }

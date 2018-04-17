@@ -209,7 +209,7 @@ class ModelParser implements Parser {
 
             additionalDirectives.each { d ->
                 if (d instanceof DeclarativeDirective.Preprocessor) {
-                    pipelineDef = d.process(pipelineDef)
+                    pipelineDef = d.process(pipelineDef, errorCollector, build)
                 }
             }
 
