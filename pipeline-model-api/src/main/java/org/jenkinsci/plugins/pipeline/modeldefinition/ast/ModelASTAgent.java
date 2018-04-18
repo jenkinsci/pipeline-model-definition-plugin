@@ -44,7 +44,7 @@ public final class ModelASTAgent extends ModelASTElement {
 
     private boolean isEmptyStringLabelAgent() {
         if (agentType.getKey().equals("label") || agentType.getKey().equals("node")) {
-            if (variables instanceof ModelASTValue && ((ModelASTValue) variables).getValue().equals("")) {
+            if (variables instanceof ModelASTValue && "".equals(((ModelASTValue) variables).getValue())) {
                 return true;
             }
             if (variables instanceof ModelASTClosureMap) {
