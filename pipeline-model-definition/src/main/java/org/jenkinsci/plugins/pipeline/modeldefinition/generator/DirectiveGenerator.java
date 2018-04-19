@@ -30,6 +30,7 @@ import hudson.model.Action;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Job;
+import jenkins.branch.OrganizationFolder;
 import jenkins.model.Jenkins;
 import jenkins.model.TransientActionFactory;
 import net.sf.json.JSONObject;
@@ -37,6 +38,9 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerLink;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.multibranch.AbstractWorkflowMultiBranchProjectFactory;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -132,15 +136,58 @@ public class DirectiveGenerator extends Snippetizer {
     }
 
     @Restricted(DoNotUse.class)
-    @Extension public static class PerJobAdder extends TransientActionFactory<Job> {
+    @Extension
+    public static class PerWorkflowJobAdder extends TransientActionFactory<WorkflowJob> {
 
-        @Override public Class<Job> type() {
-            return Job.class;
+        @Override
+        public Class<WorkflowJob> type() {
+            return WorkflowJob.class;
         }
 
-        @Override public Collection<? extends Action> createFor(Job target) {
-            // TODO probably want an API for FlowExecutionContainer or something
-            if (target.getClass().getName().equals("org.jenkinsci.plugins.workflow.job.WorkflowJob") && target.hasPermission(Item.EXTENDED_READ)) {
+        @Override
+        @Nonnull
+        public Collection<? extends Action> createFor(@Nonnull WorkflowJob target) {
+            if (target.hasPermission(Item.EXTENDED_READ)) {
+                return Collections.singleton(new DirectiveGenerator());
+            } else {
+                return Collections.emptySet();
+            }
+        }
+    }
+
+    @Restricted(DoNotUse.class)
+    @Extension
+    public static class PerOrgFolderAdder extends TransientActionFactory<OrganizationFolder> {
+
+        @Override
+        public Class<OrganizationFolder> type() {
+            return OrganizationFolder.class;
+        }
+
+        @Override
+        @Nonnull
+        public Collection<? extends Action> createFor(@Nonnull OrganizationFolder target) {
+            if (target.getProjectFactories().get(AbstractWorkflowMultiBranchProjectFactory.class) != null && target.hasPermission(Item.EXTENDED_READ)) {
+                return Collections.singleton(new DirectiveGenerator());
+            } else {
+                return Collections.emptySet();
+            }
+        }
+    }
+
+    @Restricted(DoNotUse.class)
+    @Extension
+    public static class PerMultiBranchFolderAdder extends TransientActionFactory<WorkflowMultiBranchProject> {
+
+        @Override
+        public Class<WorkflowMultiBranchProject> type() {
+            return WorkflowMultiBranchProject.class;
+        }
+
+        @Override
+        @Nonnull
+        public Collection<? extends Action> createFor(@Nonnull WorkflowMultiBranchProject target) {
+            if (target.hasPermission(Item.EXTENDED_READ)) {
                 return Collections.singleton(new DirectiveGenerator());
             } else {
                 return Collections.emptySet();
