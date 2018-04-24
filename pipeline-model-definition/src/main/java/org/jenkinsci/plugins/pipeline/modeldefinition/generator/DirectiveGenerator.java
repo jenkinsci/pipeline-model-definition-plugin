@@ -175,7 +175,7 @@ public class DirectiveGenerator extends Snippetizer {
         @Override
         @Nonnull
         public String getUrl() {
-            return "https://jenkins.io/doc/pipeline/syntax/";
+            return "https://jenkins.io/doc/book/pipeline/syntax/";
         }
 
         @Override
