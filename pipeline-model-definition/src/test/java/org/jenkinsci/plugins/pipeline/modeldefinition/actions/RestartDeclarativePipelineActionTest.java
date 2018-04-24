@@ -706,7 +706,4 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         j.assertLogContains("This should only run on restart", b2);
         j.assertLogNotContains("This shouldn't show up on second run", b2);
     }
-
-    // TEST TODOS:
-    // TODO: How can we test for no execution on the origin run?
 }
