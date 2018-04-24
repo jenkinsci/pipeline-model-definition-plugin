@@ -36,7 +36,7 @@ import javax.annotation.Nonnull
  *
  * @author Andrew Bayer
  */
-@Extension(ordinal=500d) @Symbol("unstable")
+@Extension(ordinal=600d) @Symbol("unstable")
 class Unstable extends BuildCondition {
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r) {

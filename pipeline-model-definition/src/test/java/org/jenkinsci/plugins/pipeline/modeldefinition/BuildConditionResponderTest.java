@@ -72,6 +72,26 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-50645")
+    @Test
+    public void postFailureAfterSuccess() throws Exception {
+        // NOTE: Not checking log in order because "I AM FAILING NOW" doesn't actually show up until the end of the Pipeline.
+        // That's expected/normal behavior for the error step.
+        expect(Result.FAILURE, "postFailureAfterSuccess")
+                .logContains("I AM FAILING NOW", "I FAILED")
+                .go();
+    }
+
+    @Issue("JENKINS-50645")
+    @Test
+    public void postFailureAfterUnstable() throws Exception {
+        // NOTE: Not checking log in order because "I AM FAILING NOW" doesn't actually show up until the end of the Pipeline.
+        // That's expected/normal behavior for the error step.
+        expect(Result.FAILURE, "postFailureAfterUnstable")
+                .logContains("I AM FAILING NOW", "I FAILED")
+                .go();
+    }
+
     @Test
     public void postOnChanged() throws Exception {
         WorkflowRun b = getAndStartNonRepoBuild("postOnChangeFailed");

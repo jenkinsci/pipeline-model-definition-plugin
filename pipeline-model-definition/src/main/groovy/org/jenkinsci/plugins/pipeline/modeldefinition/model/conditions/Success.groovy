@@ -36,7 +36,7 @@ import javax.annotation.Nonnull
  *
  * @author Andrew Bayer
  */
-@Extension(ordinal=600d) @Symbol("success")
+@Extension(ordinal=700d) @Symbol("success")
 class Success extends BuildCondition {
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r) {
