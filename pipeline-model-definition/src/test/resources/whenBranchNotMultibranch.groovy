@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,30 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-
-class BranchConditionalScript extends DeclarativeStageConditionalScript<BranchConditional> {
-     BranchConditionalScript(CpsScript s, BranchConditional c) {
-        super(s, c)
+pipeline {
+    agent any
+    environment {
+        // In a CI build of the plugin, BRANCH_NAME is getting set for the build itself, so the tests pick it up too.
+        // Override that by nulling it out.
+        BRANCH_NAME = ""
     }
-
-    @Override
-     boolean evaluate() {
-        String branchName = (String)script.getProperty("env").getProperty("BRANCH_NAME")
-        if (branchName == null || branchName == "") {
-            // fall back to GIT_LOCAL_BRANCH - note that GIT_BRANCH will have the remote on it, while BRANCH_NAME doesn't.
-            branchName = (String)script.getProperty("env").getProperty("GIT_LOCAL_BRANCH")
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
         }
-        return describable.branchMatches(describable.compare, branchName)
+        stage("Two") {
+            when {
+                branch "master"
+            }
+            steps {
+                script {
+                    echo "World"
+                    echo "Heal it"
+                }
+
+            }
+        }
     }
 }
