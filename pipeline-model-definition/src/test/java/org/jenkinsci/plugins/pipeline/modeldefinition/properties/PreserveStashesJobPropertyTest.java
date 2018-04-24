@@ -109,5 +109,4 @@ public class PreserveStashesJobPropertyTest extends AbstractModelDefTest {
         // We shouldn't be keeping any stashes, since the build count isn't greater than 0.
         assertTrue(StashManager.stashesOf(r).isEmpty());
     }
-
 }
