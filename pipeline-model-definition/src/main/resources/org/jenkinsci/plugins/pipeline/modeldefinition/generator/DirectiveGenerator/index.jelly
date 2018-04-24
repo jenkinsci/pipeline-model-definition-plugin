@@ -38,7 +38,7 @@
                     click <b>Generate Declarative Directive</b> and the Pipeline code will appear in the box below. You
                     can copy that code directly into the <code>pipeline</code> block in your <code>Jenkinsfile</code>,
                     for top-level directives, or into a <code>stage</code> block for stage directives. See
-                    <a href="https://jenkins.io/doc/pipeline/syntax/" target="_blank">the online syntax documentation</a>
+                    <a href="https://jenkins.io/doc/book/pipeline/syntax/" target="_blank">the online syntax documentation</a>
                     for more information on directives.
                 </f:block>
                 <f:section title="${%Directives}"/>
