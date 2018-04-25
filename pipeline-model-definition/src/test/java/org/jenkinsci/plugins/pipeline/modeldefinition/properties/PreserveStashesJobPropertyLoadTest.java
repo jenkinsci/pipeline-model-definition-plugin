@@ -85,6 +85,7 @@ public class PreserveStashesJobPropertyLoadTest extends AbstractDeclarativeTest 
                             story.j.buildAndAssertSuccess(p);
                         } catch (Exception e) {
                             // This will never happen.
+                            assert false;
                         }
                     }
                 }));

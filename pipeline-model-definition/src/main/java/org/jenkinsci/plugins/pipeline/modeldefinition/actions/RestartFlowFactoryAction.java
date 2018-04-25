@@ -67,7 +67,6 @@ public class RestartFlowFactoryAction extends InvisibleAction implements CpsFlow
         if (original instanceof FlowExecutionOwner.Executable) {
             FlowExecutionOwner originalOwner = ((FlowExecutionOwner.Executable) original).asFlowExecutionOwner();
             try {
-                // TODO: Need to add logic for stashes and a copier for environment, maybe.
                 for (FlowCopier copier : ExtensionList.lookup(FlowCopier.class)) {
                     copier.copy(originalOwner, owner);
                 }

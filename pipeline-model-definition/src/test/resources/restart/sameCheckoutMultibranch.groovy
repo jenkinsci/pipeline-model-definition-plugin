@@ -43,11 +43,6 @@ pipeline {
             }
         }
         stage('post-restart') {
-            when {
-                expression {
-                    !fileExists("newFile")
-                }
-            }
             steps {
                 echo "Now we're post-restart"
             }

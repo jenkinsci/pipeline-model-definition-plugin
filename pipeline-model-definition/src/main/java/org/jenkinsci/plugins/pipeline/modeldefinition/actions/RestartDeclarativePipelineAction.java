@@ -198,8 +198,6 @@ public class RestartDeclarativePipelineAction implements Action {
         @Override
         @Nonnull
         public Collection<? extends Action> createFor(@Nonnull WorkflowRun run) {
-            // TODO: Can't actually check if any other actions are present, on the run or on its parent, so I can't verify
-            // this is a Declarative run here. If I try, I end up in an infinite loop. Need to think on this.
             return Collections.<Action>singleton(new RestartDeclarativePipelineAction(run));
         }
     }
