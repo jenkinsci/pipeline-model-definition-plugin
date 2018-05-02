@@ -29,6 +29,7 @@ import hudson.Util;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.CauseAction;
+import hudson.model.Failure;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.Run;
@@ -121,7 +122,7 @@ public class RestartDeclarativePipelineAction implements Action {
         try {
             run(stageName);
         } catch (IllegalStateException ise) {
-            throw HttpResponses.error(SC_CONFLICT, ise);
+            throw new Failure("Failure restarting from stage: " + ise);
         }
 
         rsp.sendRedirect("../.."); // back to WorkflowJob; new build might not start instantly so cannot redirect to it
