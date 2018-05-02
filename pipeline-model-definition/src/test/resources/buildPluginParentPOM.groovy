@@ -1,6 +1,6 @@
 pipeline {
     tools {
-        maven "apache-maven-3.1.0"
+        maven "apache-maven-3.5.0"
         jdk "default"
     }
 
