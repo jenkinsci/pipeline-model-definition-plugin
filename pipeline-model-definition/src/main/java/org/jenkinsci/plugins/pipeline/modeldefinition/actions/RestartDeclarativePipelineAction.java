@@ -34,7 +34,6 @@ import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.util.FormValidation;
-import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.model.TransientActionFactory;
@@ -61,9 +60,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_CONFLICT;
 
 public class RestartDeclarativePipelineAction implements Action {
 
