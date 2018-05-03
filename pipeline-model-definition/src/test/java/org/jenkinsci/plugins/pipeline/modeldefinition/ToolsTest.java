@@ -86,11 +86,7 @@ public class ToolsTest extends AbstractModelDefTest {
 
     @Test
     public void buildPluginParentPOM() throws Exception {
-
-        Maven.MavenInstallation mvn = configureDefaultMaven("apache-maven-3.1.0", Maven.MavenInstallation.MAVEN_30);
-
-        Maven.MavenInstallation m3 = new Maven.MavenInstallation("apache-maven-3.1.0", mvn.getHome(), JenkinsRule.NO_PROPERTIES);
-        j.jenkins.getDescriptorByType(Maven.DescriptorImpl.class).setInstallations(m3);
+        Maven.MavenInstallation maven350 = ToolInstallations.configureMaven35();
         JDK[] jdks = j.jenkins.getDescriptorByType(JDK.DescriptorImpl.class).getInstallations();
         JDK thisJdk = null;
         for (JDK j : jdks) {
@@ -103,7 +99,7 @@ public class ToolsTest extends AbstractModelDefTest {
         expect("buildPluginParentPOM")
                 .logContains("[Pipeline] { (build)",
                         "[INFO] BUILD SUCCESS",
-                        "M2_HOME: " + m3.getHome(),
+                        "M2_HOME: " + maven350.getHome(),
                         "JAVA_HOME: " + thisJdk.getHome())
                 .go();
     }
