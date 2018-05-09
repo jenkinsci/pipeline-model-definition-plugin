@@ -64,6 +64,7 @@ import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.LabelAction
+import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -305,7 +306,7 @@ class Utils {
         }
     }
 
-    static void markStageWithTag(String stageName, String tagName, String tagValue) {
+    static void markStageWithTag(String stageName, String tagName, String tagValue, boolean isRestart = false) {
         List<FlowNode> matched = findStageFlowNodes(stageName)
 
         matched.each { currentNode ->
@@ -318,6 +319,10 @@ class Utils {
                 } else if (tagsAction.getTagValue(tagName) == null) {
                     tagsAction.addTag(tagName, tagValue)
                     currentNode.save()
+                }
+
+                if (isRestart) {
+                    currentNode.addAction(new NotExecutedNodeAction())
                 }
             }
         }

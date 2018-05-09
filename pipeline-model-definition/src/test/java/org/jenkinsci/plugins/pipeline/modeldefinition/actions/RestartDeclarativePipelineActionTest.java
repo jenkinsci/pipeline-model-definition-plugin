@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
+import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -157,6 +158,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertNotNull(firstRunFirstStageNodes);
         assertFalse(firstRunFirstStageNodes.isEmpty());
         FlowNode firstRunFirstStageStart = firstRunFirstStageNodes.get(0);
+        assertNull(firstRunFirstStageStart.getAction(NotExecutedNodeAction.class));
         assertFalse(stageStatusPredicate("skip-on-restart", StageStatus.getSkippedForRestart()).apply(firstRunFirstStageStart));
         assertFalse(stageStatusPredicate("skip-on-restart", StageStatus.getSkippedForFailure()).apply(firstRunFirstStageStart));
         assertFalse(stageStatusPredicate("skip-on-restart", StageStatus.getFailedAndContinued()).apply(firstRunFirstStageStart));
@@ -166,6 +168,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertNotNull(firstRunSecondStageNodes);
         assertFalse(firstRunSecondStageNodes.isEmpty());
         FlowNode firstRunSecondStageStart = firstRunSecondStageNodes.get(0);
+        assertNull(firstRunSecondStageStart.getAction(NotExecutedNodeAction.class));
         assertFalse(stageStatusPredicate("restart", StageStatus.getSkippedForRestart()).apply(firstRunSecondStageStart));
         assertFalse(stageStatusPredicate("restart", StageStatus.getSkippedForFailure()).apply(firstRunSecondStageStart));
         assertTrue(stageStatusPredicate("restart", StageStatus.getFailedAndContinued()).apply(firstRunSecondStageStart));
@@ -175,6 +178,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertNotNull(firstRunThirdStageNodes);
         assertFalse(firstRunThirdStageNodes.isEmpty());
         FlowNode firstRunThirdStageStart = firstRunThirdStageNodes.get(0);
+        assertNull(firstRunThirdStageStart.getAction(NotExecutedNodeAction.class));
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getSkippedForRestart()).apply(firstRunThirdStageStart));
         assertTrue(stageStatusPredicate("post-restart", StageStatus.getSkippedForFailure()).apply(firstRunThirdStageStart));
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getFailedAndContinued()).apply(firstRunThirdStageStart));
@@ -221,6 +225,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertNotNull(secondRunFirstStageNodes);
         assertFalse(secondRunFirstStageNodes.isEmpty());
         FlowNode secondRunFirstStageStart = secondRunFirstStageNodes.get(0);
+        assertNotNull(secondRunFirstStageStart.getAction(NotExecutedNodeAction.class));
         assertTrue(stageStatusPredicate("skip-on-restart", StageStatus.getSkippedForRestart()).apply(secondRunFirstStageStart));
         assertFalse(stageStatusPredicate("skip-on-restart", StageStatus.getSkippedForFailure()).apply(secondRunFirstStageStart));
         assertFalse(stageStatusPredicate("skip-on-restart", StageStatus.getFailedAndContinued()).apply(secondRunFirstStageStart));
@@ -230,6 +235,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertNotNull(secondRunSecondStageNodes);
         assertFalse(secondRunSecondStageNodes.isEmpty());
         FlowNode secondRunSecondStageStart = secondRunSecondStageNodes.get(0);
+        assertNull(secondRunSecondStageStart.getAction(NotExecutedNodeAction.class));
         assertFalse(stageStatusPredicate("restart", StageStatus.getSkippedForRestart()).apply(secondRunSecondStageStart));
         assertFalse(stageStatusPredicate("restart", StageStatus.getSkippedForFailure()).apply(secondRunSecondStageStart));
         assertFalse(stageStatusPredicate("restart", StageStatus.getFailedAndContinued()).apply(secondRunSecondStageStart));
@@ -239,6 +245,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertNotNull(secondRunThirdStageNodes);
         assertFalse(secondRunThirdStageNodes.isEmpty());
         FlowNode secondRunThirdStageStart = secondRunThirdStageNodes.get(0);
+        assertNull(secondRunThirdStageStart.getAction(NotExecutedNodeAction.class));
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getSkippedForRestart()).apply(secondRunThirdStageStart));
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getSkippedForFailure()).apply(secondRunThirdStageStart));
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getFailedAndContinued()).apply(secondRunThirdStageStart));

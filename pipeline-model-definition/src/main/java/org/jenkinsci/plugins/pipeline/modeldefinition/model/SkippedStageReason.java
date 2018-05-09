@@ -36,6 +36,10 @@ public abstract class SkippedStageReason implements Serializable {
         this.stageName = stageName;
     }
 
+    public boolean isNotExecutedNode() {
+        return false;
+    }
+
     @Nonnull
     public abstract String getMessage();
 
@@ -139,6 +143,11 @@ public abstract class SkippedStageReason implements Serializable {
 
         public String getRestartedStage() {
             return restartedStage;
+        }
+
+        @Override
+        public boolean isNotExecutedNode() {
+            return true;
         }
 
         @Override

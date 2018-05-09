@@ -349,7 +349,7 @@ class ModelInterpreter implements Serializable {
                   Stage parentStage) {
         return {
             Utils.logToTaskListener(reason.message)
-            Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
+            Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus, reason.isNotExecutedNode())
             if (thisStage?.parallelContent) {
                 script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, reason))
             } else if (thisStage?.stages != null) {
