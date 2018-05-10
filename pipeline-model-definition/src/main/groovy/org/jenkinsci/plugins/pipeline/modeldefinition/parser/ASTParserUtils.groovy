@@ -480,6 +480,12 @@ class ASTParserUtils {
         }
     }
 
+    static boolean isDeclarativePipeline(ModuleNode src) {
+        return src.statementBlock.statements.any {
+            return isDeclarativePipelineStep(it)
+        }
+    }
+
     static boolean isDeclarativePipelineStep(Statement stmt, boolean topLevel = true) {
         def b = matchBlockStatement(stmt)
 
