@@ -35,7 +35,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
         assertFalse(msg.contains("Exception")); // we don't want stack trace please
     }
 
-    @Issue("JENKINS-41118")
+    @Issue({"JENKINS-41118","JENKINS-43016"})
     @Test
     public void labelWithOptionsBecomesNode() throws Exception {
         ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/inRelativeCustomWorkspace.groovy"));
@@ -61,6 +61,35 @@ public class ModelParserTest extends BaseParserLoaderTest {
         assertNotNull("Pipeline null for inRelativeCustomWorkspace", nodeRoot);
 
         assertEquals(nodeRoot, newRoot);
+    }
+
+    @Issue("JENKINS-43016")
+    @Test
+    public void labelWithEmptyStringBecomesAny() throws Exception {
+        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/agentLabelEmptyString.groovy"));
+
+        assertNotNull(origRoot);
+
+        JSONObject origJson = origRoot.toJSON();
+        assertNotNull(origJson);
+
+        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
+        ModelASTPipelineDef newRoot = jp.parse();
+
+        assertEquals(getJSONErrorReport(jp, "agentLabelEmptyString"), 0, jp.getErrorCollector().getErrorCount());
+        assertNotNull("Pipeline null for agentLabelEmptyString", newRoot);
+
+        JSONObject anyJson = JSONObject.fromObject(fileContentsFromResources("json/agentAny.json"));
+
+        JSONParser anyParser = new JSONParser(Converter.jsonTreeFromJSONObject(anyJson));
+        ModelASTPipelineDef anyRoot = anyParser.parse();
+
+        assertEquals(getJSONErrorReport(anyParser, "agentAny"),
+                0, anyParser.getErrorCollector().getErrorCount());
+        assertNotNull("Pipeline null for agentAny", anyRoot);
+
+        assertEquals(anyRoot, newRoot);
+
     }
 
     @Test
