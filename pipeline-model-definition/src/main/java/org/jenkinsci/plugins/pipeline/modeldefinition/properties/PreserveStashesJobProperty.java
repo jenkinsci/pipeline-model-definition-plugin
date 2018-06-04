@@ -66,8 +66,8 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
     @Extension @Symbol("preserveStashes")
     public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
         public FormValidation doCheckBuildCount(@QueryParameter int value) {
-            if (value < 1) {
-                return FormValidation.error("Must be greater than 0");
+            if (value < 0) {
+                return FormValidation.error("Must be greater than or equal to 0");
             } else {
                 return FormValidation.ok();
             }
@@ -85,7 +85,6 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
                 PreserveStashesJobProperty prop = j.getProperty(PreserveStashesJobProperty.class);
                 if (prop != null) {
                     int bc = prop.getBuildCount();
-                    // Being particularly defensive just to be safe.
                     if (bc > 0) {
                         for (WorkflowRun recentRun : j.getBuilds().completedOnly().limit(bc)) {
                             if (recentRun != null && recentRun.equals(r)) {
