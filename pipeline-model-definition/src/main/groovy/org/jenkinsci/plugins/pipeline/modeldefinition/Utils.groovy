@@ -328,6 +328,12 @@ class Utils {
         }
     }
 
+    static boolean stageHasStatusOf(@Nonnull String stageName, @Nonnull FlowExecution execution, @Nonnull String status) {
+        return findStageFlowNodes(stageName, execution).every { n ->
+            return n.getAction(TagsAction.class)?.getTagValue(StageStatus.TAG_NAME) == status
+        }
+    }
+
     static <T extends StageTagsMetadata> T getTagMetadata(Class<T> c) {
         return ExtensionList.lookup(StageTagsMetadata.class).get(c)
     }

@@ -35,8 +35,11 @@
                 </p>
                 <f:form action="restart" method="POST" name="restart">
                     <f:entry field="stageName" title="Stage Name">
-                        <!-- TODO: Help! -->
-                        <f:textarea checkUrl="'${it.checkUrl}?value='+encodeURIComponent(this.value)"/>
+                        <select name="stageName">
+                            <j:forEach var="stage" items="${it.rebuildableStages}">
+                                <f:option value="${stage}">${stage}</f:option>
+                            </j:forEach>
+                        </select>
                     </f:entry>
                     <f:bottomButtonBar>
                         <f:submit value="Run"/>

@@ -24,10 +24,9 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTextArea;
+import com.gargoylesoftware.htmlunit.html.HtmlSelect;
 import hudson.model.BooleanParameterValue;
 import hudson.model.Item;
 import hudson.model.ParametersAction;
@@ -60,13 +59,17 @@ import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.Matchers.is;
 import static org.jenkinsci.plugins.pipeline.modeldefinition.BasicModelDefTest.stageStatusPredicate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
@@ -189,11 +192,11 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertNotNull(action);
         assertTrue(action.isRestartEnabled());
 
-        HtmlPage page = j.createWebClient().getPage(original, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        // We should be able to restart skip-on-restart and restart, but not post-restart
+        List<String> restartableStages = action.getRebuildableStages();
+        assertThat(restartableStages, is(Arrays.asList("skip-on-restart", "restart")));
+
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -249,30 +252,6 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getSkippedForRestart()).apply(secondRunThirdStageStart));
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getSkippedForFailure()).apply(secondRunThirdStageStart));
         assertFalse(stageStatusPredicate("post-restart", StageStatus.getFailedAndContinued()).apply(secondRunThirdStageStart));
-    }
-
-    @Issue("JENKINS-45455")
-    @Test
-    public void notPresentStageNameSubmit() throws Exception {
-        WorkflowRun original = expect(Result.FAILURE, "restart", "simpleRestart")
-                .logContains("Odd numbered build, failing",
-                        "This shouldn't show up on second run")
-                .go();
-
-        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
-        HtmlPage page = j.createWebClient().getPage(original, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("not-present");
-        Thread.sleep(500);
-
-        HtmlElement element = (HtmlElement)form.getByXPath("//textarea/following::tr[@class='validation-error-area']/*[2]").get(0);
-
-        assertEquals(Messages.RestartDeclarativePipelineAction_StageNameNotPresent("not-present", original.getFullDisplayName()),
-                element.getTextContent());
     }
 
     @Issue("JENKINS-45455")
@@ -443,15 +422,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(failing));
 
-        RestartDeclarativePipelineAction action = failing.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
-        HtmlPage page = j.createWebClient().getPage(failing, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        HtmlPage redirect = restartFromStageInUI(failing, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -485,15 +456,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         sampleRepo.git("add", "newFile");
         sampleRepo.git("commit", "--message=later");
 
-        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
-        HtmlPage page = j.createWebClient().getPage(original, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -529,15 +492,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         sampleRepo.git("add", "newFile");
         sampleRepo.git("commit", "--message=later");
 
-        RestartDeclarativePipelineAction action = b1.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
-        HtmlPage page = j.createWebClient().getPage(b1, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        HtmlPage redirect = restartFromStageInUI(b1, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -560,15 +515,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
         WorkflowJob p = original.getParent();
 
-        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
-        HtmlPage page = j.createWebClient().getPage(original, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -589,15 +536,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
         WorkflowJob p = original.getParent();
 
-        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
-        HtmlPage page = j.createWebClient().getPage(original, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -645,20 +584,12 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         ChangeLogSet.Entry failingEntry = failingChanges.iterator().next();
         assertNotNull(failingEntry);
 
-        RestartDeclarativePipelineAction action = failing.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
         // Make another commit
         sampleRepo.write("otherNewFile", "exists");
         sampleRepo.git("add", "otherNewFile");
         sampleRepo.git("commit", "--message=poof");
 
-        HtmlPage page = j.createWebClient().getPage(failing, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        HtmlPage redirect = restartFromStageInUI(failing, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -693,15 +624,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
         WorkflowJob p = original.getParent();
 
-        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
-        assertNotNull(action);
-        assertTrue(action.isRestartEnabled());
-
-        HtmlPage page = j.createWebClient().getPage(original, action.getUrlName());
-        HtmlForm form = page.getFormByName("restart");
-        HtmlTextArea text = form.getTextAreaByName("_.stageName");
-        text.setText("restart");
-        HtmlPage redirect = j.submit(form);
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
 
         assertNotNull(redirect);
         assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
@@ -712,5 +635,17 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         j.assertBuildStatusSuccess(b2);
         j.assertLogContains("This should only run on restart", b2);
         j.assertLogNotContains("This shouldn't show up on second run", b2);
+    }
+
+    private HtmlPage restartFromStageInUI(@Nonnull WorkflowRun original, @Nonnull String stageName) throws Exception {
+        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
+        assertNotNull(action);
+        assertTrue(action.isRestartEnabled());
+
+        HtmlPage page = j.createWebClient().getPage(original, action.getUrlName());
+        HtmlForm form = page.getFormByName("restart");
+        HtmlSelect select = form.getSelectByName("stageName");
+        select.getOptionByValue(stageName).setSelected(true);
+        return j.submit(form);
     }
 }

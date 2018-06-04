@@ -39,6 +39,8 @@ import jenkins.model.ParameterizedJobMixIn;
 import jenkins.model.TransientActionFactory;
 import net.sf.json.JSONObject;
 import org.acegisecurity.AccessDeniedException;
+import org.jenkinsci.plugins.pipeline.StageStatus;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
@@ -75,7 +77,7 @@ public class RestartDeclarativePipelineAction implements Action {
 
     @Override public String getIconFileName() {
         // TODO: Needs an icon.
-        return null;
+        return isRestartEnabled() ? "redo.png" : null;
     }
 
     @Override public String getUrlName() {
@@ -126,11 +128,16 @@ public class RestartDeclarativePipelineAction implements Action {
 
     public List<String> getRebuildableStages() {
         List<String> stages = new ArrayList<>();
-        ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
-        if (execAction != null) {
-            if (execAction.getStages() != null) {
-                for (ModelASTStage s : execAction.getStages().getStages()) {
-                    stages.add(s.getName());
+        FlowExecution execution = getExecution();
+        if (execution != null) {
+            ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
+            if (execAction != null) {
+                if (execAction.getStages() != null) {
+                    for (ModelASTStage s : execAction.getStages().getStages()) {
+                        if (!Utils.stageHasStatusOf(s.getName(), execution, StageStatus.getSkippedForFailure())) {
+                            stages.add(s.getName());
+                        }
+                    }
                 }
             }
         }

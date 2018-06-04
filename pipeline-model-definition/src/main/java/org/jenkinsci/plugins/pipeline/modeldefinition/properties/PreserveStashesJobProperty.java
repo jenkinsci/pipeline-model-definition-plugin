@@ -65,6 +65,12 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
 
     @Extension @Symbol("preserveStashes")
     public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Preserve stashes from completed builds";
+        }
+
         public FormValidation doCheckBuildCount(@QueryParameter int value) {
             if (value < 0) {
                 return FormValidation.error("Must be greater than or equal to 0");
