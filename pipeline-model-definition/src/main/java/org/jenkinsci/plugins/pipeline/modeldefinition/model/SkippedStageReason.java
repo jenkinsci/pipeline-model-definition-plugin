@@ -94,8 +94,7 @@ public abstract class SkippedStageReason implements Serializable {
         @Override
         @Nonnull
         public String getStageStatus() {
-            // TODO: This should ideally be getSkippedForUnstable(), but Blue Ocean needs to be aware of that.
-            return StageStatus.getSkippedForFailure();
+            return StageStatus.getSkippedForUnstable();
         }
 
         @Override
