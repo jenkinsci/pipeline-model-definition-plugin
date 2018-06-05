@@ -30,7 +30,6 @@ pipeline {
     stages {
         stage('stash') {
             steps {
-                markerAdder()
                 writeFile(file: 'stash-test', text: 'stashing test')
                 stash(name: 'stash-test', includes: 'stash-test')
                 script {
