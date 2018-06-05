@@ -31,7 +31,8 @@
             <j:if test="${it.restartEnabled}">
                 <h1>Restart ${it.owner.displayName} from Stage</h1>
                 <p>
-                    <j:out value="Help text to go here"/>
+                    <j:out value="${%A completed Declarative Pipeline run can be restarted, starting at the beginning of any top-level stage which ran in the original
+    build.}"/>
                 </p>
                 <f:form action="restart" method="POST" name="restart">
                     <f:entry field="stageName" title="Stage Name">
