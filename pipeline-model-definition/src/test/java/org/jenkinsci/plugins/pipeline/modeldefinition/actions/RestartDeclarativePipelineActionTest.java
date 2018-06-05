@@ -37,7 +37,6 @@ import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 import hudson.security.ACL;
 import hudson.security.AuthorizationStrategy;
-import hudson.security.GlobalMatrixAuthorizationStrategy;
 import hudson.security.SecurityRealm;
 import jenkins.branch.BranchSource;
 import jenkins.model.Jenkins;
@@ -58,6 +57,7 @@ import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProjectTest
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
@@ -90,13 +90,11 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
         try {
             j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
-            GlobalMatrixAuthorizationStrategy gmas = new GlobalMatrixAuthorizationStrategy();
-            // Set up an administrator, and three developer users with varying levels of access.
-            gmas.add(Jenkins.ADMINISTER, "admin");
-            gmas.add(Jenkins.READ, "dev1");
-            gmas.add(Item.BUILD, "dev1"); // implies REPLAY
-            gmas.add(Jenkins.READ, "dev2");
-            j.jenkins.setAuthorizationStrategy(gmas);
+            MockAuthorizationStrategy auth = new MockAuthorizationStrategy()
+                    .grant(Jenkins.ADMINISTER).everywhere().to("admin")
+                    .grant(Item.BUILD).everywhere().to("dev1")
+                    .grant(Jenkins.READ).everywhere().to("dev1", "dev2");
+            j.jenkins.setAuthorizationStrategy(auth);
             WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "restartDisabled");
             p.setDefinition(new CpsFlowDefinition(
                     "pipeline {\n" +
