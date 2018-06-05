@@ -134,7 +134,8 @@ public class RestartDeclarativePipelineAction implements Action {
             if (execAction != null) {
                 if (execAction.getStages() != null) {
                     for (ModelASTStage s : execAction.getStages().getStages()) {
-                        if (!Utils.stageHasStatusOf(s.getName(), execution, StageStatus.getSkippedForFailure())) {
+                        if (!Utils.stageHasStatusOf(s.getName(), execution,
+                                StageStatus.getSkippedForFailure(), StageStatus.getSkippedForUnstable())) {
                             stages.add(s.getName());
                         }
                     }

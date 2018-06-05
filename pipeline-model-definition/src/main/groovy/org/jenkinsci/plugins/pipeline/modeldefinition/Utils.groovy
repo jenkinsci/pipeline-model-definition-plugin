@@ -328,9 +328,9 @@ class Utils {
         }
     }
 
-    static boolean stageHasStatusOf(@Nonnull String stageName, @Nonnull FlowExecution execution, @Nonnull String status) {
+    static boolean stageHasStatusOf(@Nonnull String stageName, @Nonnull FlowExecution execution, @Nonnull String... statuses) {
         return findStageFlowNodes(stageName, execution).every { n ->
-            return n.getAction(TagsAction.class)?.getTagValue(StageStatus.TAG_NAME) == status
+            return statuses.contains(n.getAction(TagsAction.class)?.getTagValue(StageStatus.TAG_NAME))
         }
     }
 
