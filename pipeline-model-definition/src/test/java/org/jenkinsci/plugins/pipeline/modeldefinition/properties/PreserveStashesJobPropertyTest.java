@@ -59,20 +59,15 @@ public class PreserveStashesJobPropertyTest extends AbstractModelDefTest {
         WorkflowJob p = r.getParent();
         assertNotNull(p);
 
-        // Build 10 times to make sure get 11 total builds.
-        for (int i = 0; i < 10; i++) {
-            j.buildAndAssertSuccess(p);
-        }
+        j.buildAndAssertSuccess(p);
 
         // Now that we've run 11 builds, the first one shouldn't have a stash any more.
         assertTrue(StashManager.stashesOf(r).isEmpty());
 
-        // And builds 2..11 should all still have stashes.
-        for (int i = 2; i < 12; i++) {
-            WorkflowRun laterRun = p.getBuildByNumber(i);
-            assertNotNull(laterRun);
-            assertFalse(StashManager.stashesOf(laterRun).isEmpty());
-        }
+        // And build 2 should still have stashes.
+        WorkflowRun laterRun = p.getBuildByNumber(2);
+        assertNotNull(laterRun);
+        assertFalse(StashManager.stashesOf(laterRun).isEmpty());
     }
 
     @Issue("JENKINS-45455")

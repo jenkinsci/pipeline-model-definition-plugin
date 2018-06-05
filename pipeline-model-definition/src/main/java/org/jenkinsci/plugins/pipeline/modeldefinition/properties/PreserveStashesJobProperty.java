@@ -47,7 +47,7 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
 
     private static final Logger LOGGER = Logger.getLogger(PreserveStashesJobProperty.class.getName());
 
-    private int buildCount = 10;
+    private int buildCount = 1;
 
     @DataBoundConstructor
     public PreserveStashesJobProperty() {
