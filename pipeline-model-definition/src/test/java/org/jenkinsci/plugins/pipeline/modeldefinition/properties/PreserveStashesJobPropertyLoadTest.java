@@ -36,6 +36,7 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.RunLoadCounter;
 
 import java.util.concurrent.Callable;
 
@@ -75,10 +76,10 @@ public class PreserveStashesJobPropertyLoadTest extends AbstractDeclarativeTest 
             public void evaluate() throws Throwable {
                 WorkflowJob p = (WorkflowJob)story.j.jenkins.getItem("stashWithLoadCount");
                 assertNotNull(p);
-                PipelineRunLoadCounter.prepare(p);
+                RunLoadCounter.prepare(p);
 
                 // PreserveStashesJobProperty.StashClearingListener and .SaveStashes shouldn't trigger a full load.
-                assertEquals(0, PipelineRunLoadCounter.countLoads(p, new Runnable() {
+                assertEquals(0, RunLoadCounter.countLoads(p, new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -92,7 +93,7 @@ public class PreserveStashesJobPropertyLoadTest extends AbstractDeclarativeTest 
 
                 // This is here largely to demonstrate that we do still do loads. We're using countLoads so as not to
                 // blow up later when we check stashes.
-                assertEquals(2, PipelineRunLoadCounter.countLoads(p, new Runnable() {
+                assertEquals(1, RunLoadCounter.countLoads(p, new Runnable() {
                     @Override
                     public void run() {
                         p.getLastFailedBuild().getNumber();
