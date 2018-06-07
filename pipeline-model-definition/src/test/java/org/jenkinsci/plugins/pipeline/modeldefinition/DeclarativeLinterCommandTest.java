@@ -29,6 +29,7 @@ import hudson.model.Item;
 import hudson.model.User;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.cli.DeclarativeLinterCommand;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

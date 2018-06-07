@@ -126,7 +126,7 @@ public class RestartDeclarativePipelineAction implements Action {
         rsp.sendRedirect("../.."); // back to WorkflowJob; new build might not start instantly so cannot redirect to it
     }
 
-    public List<String> getRebuildableStages() {
+    public List<String> getRestartableStages() {
         List<String> stages = new ArrayList<>();
         FlowExecution execution = getExecution();
         if (execution != null) {
@@ -154,7 +154,7 @@ public class RestartDeclarativePipelineAction implements Action {
         if (s == null || s.equals("")) {
             return FormValidation.error(Messages.RestartDeclarativePipelineAction_NullStageName());
         }
-        if (!getRebuildableStages().contains(s)) {
+        if (!getRestartableStages().contains(s)) {
             return FormValidation.error(Messages.RestartDeclarativePipelineAction_StageNameNotPresent(s, run.getFullDisplayName()));
         }
         return FormValidation.ok();
@@ -178,7 +178,7 @@ public class RestartDeclarativePipelineAction implements Action {
             throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_OriginWasNotDeclarative(run.getFullDisplayName()));
         }
 
-        if (!getRebuildableStages().contains(stageName)) {
+        if (!getRestartableStages().contains(stageName)) {
             throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_StageNameNotPresent(stageName, run.getFullDisplayName()));
         }
         List<Action> actions = new ArrayList<>();

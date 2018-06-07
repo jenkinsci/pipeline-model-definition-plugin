@@ -191,7 +191,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertTrue(action.isRestartEnabled());
 
         // We should be able to restart skip-on-restart and restart, but not post-restart
-        List<String> restartableStages = action.getRebuildableStages();
+        List<String> restartableStages = action.getRestartableStages();
         assertThat(restartableStages, is(Arrays.asList("skip-on-restart", "restart")));
 
         HtmlPage redirect = restartFromStageInUI(original, "restart");
