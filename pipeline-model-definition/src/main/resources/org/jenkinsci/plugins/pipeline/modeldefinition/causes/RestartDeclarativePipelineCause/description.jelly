@@ -26,6 +26,6 @@
 <j:jelly xmlns:j="jelly:core">
     <j:set var="b" value="${it.originalBuild}"/>
     <j:if test="${b != null}">
-        <span>${%restarted_from_build(it.originStage, rootURL, b.url, b.displayName)}</span>
+        <span>${%restarted_from_build(it.originStage, rootURL, b.url, h.escape(b.displayName))}</span>
     </j:if>
 </j:jelly>

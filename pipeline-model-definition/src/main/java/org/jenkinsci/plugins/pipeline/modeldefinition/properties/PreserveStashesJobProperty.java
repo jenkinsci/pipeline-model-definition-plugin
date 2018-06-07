@@ -47,6 +47,8 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
 
     private static final Logger LOGGER = Logger.getLogger(PreserveStashesJobProperty.class.getName());
 
+    private static final int MAX_SAVED_STASHES = 50;
+
     private int buildCount = 1;
 
     @DataBoundConstructor
@@ -74,6 +76,8 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
         public FormValidation doCheckBuildCount(@QueryParameter int value) {
             if (value < 0) {
                 return FormValidation.error("Must be greater than or equal to 0");
+            } else if (value > 50) {
+                return FormValidation.error("Must be 50 or less");
             } else {
                 return FormValidation.ok();
             }
@@ -112,8 +116,8 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
                 WorkflowJob j = ((WorkflowRun) r).getParent();
                 PreserveStashesJobProperty prop = j.getProperty(PreserveStashesJobProperty.class);
                 if (prop != null && prop.getBuildCount() > 0) {
-                    // TODO: Determine if this is overzealous. Might need to ape log rotation more closely.
-                    for (WorkflowRun build : j.getBuilds().completedOnly()) {
+                    // The "+1" is to ensure that we look at one more than the maximum possible number of builds with saved stashes.
+                    for (WorkflowRun build : j.getBuilds().completedOnly().limit(MAX_SAVED_STASHES + 1)) {
                         try {
                             StashManager.maybeClearAll(build);
                         } catch (IOException x) {
