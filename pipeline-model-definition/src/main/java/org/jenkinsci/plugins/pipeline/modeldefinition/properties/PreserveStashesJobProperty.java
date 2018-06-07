@@ -31,6 +31,12 @@ import hudson.model.listeners.RunListener;
 import hudson.util.FormValidation;
 import jenkins.model.OptionalJobProperty;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKeyValueOrMethodCallPair;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodArg;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.StashManager;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -38,6 +44,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -62,6 +69,9 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
 
     @DataBoundSetter
     public void setBuildCount(int buildCount) {
+        if (buildCount > MAX_SAVED_STASHES) {
+            throw new IllegalArgumentException("buildCount must be between 1 and " + MAX_SAVED_STASHES);
+        }
         this.buildCount = buildCount;
     }
 
@@ -126,6 +136,32 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
                     }
                 }
             }
+        }
+    }
+
+    @Extension
+    public static class ValidatorImpl extends DeclarativeValidatorContributor {
+        @Override
+        @CheckForNull
+        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
+            if (option.getName() != null && option.getName().equals("preserveStashes")) {
+                for (ModelASTMethodArg arg : option.getArgs()) {
+                    if (arg instanceof ModelASTKeyValueOrMethodCallPair) {
+                        ModelASTKeyValueOrMethodCallPair namedArg = (ModelASTKeyValueOrMethodCallPair)arg;
+                        if (namedArg.getKey().getKey().equals("buildCount")) {
+                            if (namedArg.getValue() instanceof ModelASTValue && ((ModelASTValue)namedArg.getValue()).getValue() instanceof Integer) {
+                                Integer v = (Integer)((ModelASTValue)namedArg.getValue()).getValue();
+
+                                if (v < 1 || v > 50) {
+                                    return Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

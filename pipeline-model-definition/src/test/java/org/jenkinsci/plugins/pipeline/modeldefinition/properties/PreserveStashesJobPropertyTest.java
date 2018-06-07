@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.properties;
 
+import hudson.model.Result;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.workflow.flow.StashManager;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -99,9 +100,18 @@ public class PreserveStashesJobPropertyTest extends AbstractModelDefTest {
     @Issue("JENKINS-45455")
     @Test
     public void stashWithNegativePropertyValue() throws Exception {
-        WorkflowRun r = expect("properties", "stashWithNegativePropertyValue")
+        WorkflowRun r = expect(Result.FAILURE, "properties", "stashWithNegativePropertyValue")
+                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount())
                 .go();
-        // We shouldn't be keeping any stashes, since the build count isn't greater than 0.
+        assertTrue(StashManager.stashesOf(r).isEmpty());
+    }
+
+    @Issue("JENKINS-45455")
+    @Test
+    public void stashWithExcessPropertyValue() throws Exception {
+        WorkflowRun r = expect(Result.FAILURE, "properties", "stashWithExcessPropertyValue")
+                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount())
+                .go();
         assertTrue(StashManager.stashesOf(r).isEmpty());
     }
 }
