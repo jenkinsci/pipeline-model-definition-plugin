@@ -512,7 +512,7 @@ class ModelInterpreter implements Serializable {
             } else {
                 toolEnv = actualToolsInstall(toolsList)
             }
-            System.err.println("TOOL ENV: ${toolEnv}")
+
             return {
                 script.withEnv(toolEnv) {
                     body.call()

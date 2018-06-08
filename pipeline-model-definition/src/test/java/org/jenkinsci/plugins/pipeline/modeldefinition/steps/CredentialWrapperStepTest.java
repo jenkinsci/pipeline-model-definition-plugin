@@ -213,4 +213,13 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("cred1.txt", mixedEnvCred1Secret)
                 .go();
     }
+
+    @Test
+    public void credentialsInGroup() throws Exception {
+        expect("credentialsInGroup")
+                .archives("cred1.txt", mixedEnvCred1Secret)
+                .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P)
+                .archives("cred3.txt", mixedEnvCred3Secret)
+                .go();
+    }
 }
