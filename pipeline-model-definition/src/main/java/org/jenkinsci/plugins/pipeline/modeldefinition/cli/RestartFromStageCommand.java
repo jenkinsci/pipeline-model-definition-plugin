@@ -54,7 +54,7 @@ public class RestartFromStageCommand extends CLICommand {
 
     @Override
     protected int run() throws Exception {
-        Run<?,?> run = number == 0 ? job.getLastBuild() : job.getBuildByNumber(number);
+        Run<?,?> run = number <= 0 ? job.getLastBuild() : job.getBuildByNumber(number);
         if (run == null) {
             throw new AbortException("No such build");
         }

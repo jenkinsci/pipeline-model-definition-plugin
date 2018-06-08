@@ -66,14 +66,14 @@ public class RestartFlowFactoryAction extends InvisibleAction implements CpsFlow
         boolean origSandbox = true;
         if (original instanceof FlowExecutionOwner.Executable) {
             FlowExecutionOwner originalOwner = ((FlowExecutionOwner.Executable) original).asFlowExecutionOwner();
-            try {
-                for (FlowCopier copier : ExtensionList.lookup(FlowCopier.class)) {
-                    copier.copy(originalOwner, owner);
-                }
-            } catch (InterruptedException x) {
-                throw new IOException("Failed to copy metadata", x);
-            }
             if (originalOwner != null) {
+                try {
+                    for (FlowCopier copier : ExtensionList.lookup(FlowCopier.class)) {
+                        copier.copy(originalOwner, owner);
+                    }
+                } catch (InterruptedException x) {
+                    throw new IOException("Failed to copy metadata", x);
+                }
                 FlowExecution origExecution = originalOwner.getOrNull();
                 if (origExecution instanceof CpsFlowExecution) {
                     origScript = ((CpsFlowExecution) origExecution).getScript();
