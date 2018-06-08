@@ -36,7 +36,7 @@
                 <f:form action="restart" method="POST" name="restart">
                     <f:entry field="stageName" title="Stage Name">
                         <select name="stageName">
-                            <j:forEach var="stage" items="${it.rebuildableStages}">
+                            <j:forEach var="stage" items="${it.restartableStages}">
                                 <f:option value="${stage}">${stage}</f:option>
                             </j:forEach>
                         </select>
