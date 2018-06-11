@@ -972,4 +972,12 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
                 .go();
     }
+
+    @Issue("JENKINS-51828")
+    @Test
+    public void incorrectNestedStagesNPE() throws Exception {
+        expectError("incorrectNestedStagesNPE")
+                .logContains(Messages.ModelParser_ExpectedStage())
+                .go();
+    }
 }
