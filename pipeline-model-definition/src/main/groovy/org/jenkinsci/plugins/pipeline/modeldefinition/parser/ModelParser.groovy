@@ -580,7 +580,10 @@ class ModelParser implements Parser {
                                 errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
                             } else {
                                 eachStatement(parallelStmt.body.code) {
-                                    stage.parallelContent.add(parseStage(it))
+                                    ModelASTStage parallelStage = parseStage(it)
+                                    if (parallelStage != null) {
+                                        stage.parallelContent.add(parallelStage)
+                                    }
                                 }
                             }
                             break
