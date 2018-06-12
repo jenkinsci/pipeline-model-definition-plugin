@@ -39,7 +39,8 @@ import java.util.List;
 public class StageDirective extends AbstractDirective<StageDirective> {
     public enum StageContentType {
         STEPS,
-        PARALLEL;
+        PARALLEL,
+        STAGES;
 
         public String getName() {
             // TODO: This could probably be easier, but I wanted to use a localized string and couldn't think of anything better.
@@ -47,6 +48,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
                 return Messages.StageDirective_Steps_name();
             } else if (this == PARALLEL) {
                 return Messages.StageDirective_Parallel_name();
+            } else if (this == STAGES) {
+                return Messages.StageDirective_Stages_name();
             } else {
                 return "(unknown)";
             }
@@ -134,6 +137,11 @@ public class StageDirective extends AbstractDirective<StageDirective> {
                 case PARALLEL:
                     result.append("parallel {\n");
                     result.append("// One or more stages need to be included within the parallel block.\n");
+                    result.append("}\n");
+                    break;
+                case STAGES:
+                    result.append("stages {\n");
+                    result.append("// One or more stages need to be included within the stages block.\n");
                     result.append("}\n");
                     break;
                 default:

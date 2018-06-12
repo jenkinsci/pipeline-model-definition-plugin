@@ -64,6 +64,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
 
@@ -456,6 +457,18 @@ public class DirectiveGeneratorTest {
         assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  parallel {\n" +
                 "    // One or more stages need to be included within the parallel block.\n" +
+                "  }\n" +
+                "}");
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void simpleSequentialStage() throws Exception {
+        StageDirective stage = new StageDirective(Collections.emptyList(), "bob", StageDirective.StageContentType.STAGES);
+
+        assertGenerateDirective(stage, "stage('bob') {\n" +
+                "  stages {\n" +
+                "    // One or more stages need to be included within the stages block.\n" +
                 "  }\n" +
                 "}");
     }
