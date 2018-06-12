@@ -101,7 +101,7 @@ public class PreserveStashesJobPropertyTest extends AbstractModelDefTest {
     @Test
     public void stashWithNegativePropertyValue() throws Exception {
         WorkflowRun r = expect(Result.FAILURE, "properties", "stashWithNegativePropertyValue")
-                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount())
+                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount(PreserveStashesJobProperty.MAX_SAVED_STASHES))
                 .go();
         assertTrue(StashManager.stashesOf(r).isEmpty());
     }
@@ -110,7 +110,7 @@ public class PreserveStashesJobPropertyTest extends AbstractModelDefTest {
     @Test
     public void stashWithExcessPropertyValue() throws Exception {
         WorkflowRun r = expect(Result.FAILURE, "properties", "stashWithExcessPropertyValue")
-                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount())
+                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount(PreserveStashesJobProperty.MAX_SAVED_STASHES))
                 .go();
         assertTrue(StashManager.stashesOf(r).isEmpty());
     }

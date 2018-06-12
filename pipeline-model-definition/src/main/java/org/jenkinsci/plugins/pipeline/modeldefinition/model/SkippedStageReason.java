@@ -29,6 +29,10 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
 
+/**
+ * Used to mark why a stage was skipped for internal purposes, allowing us to abstract away handling of skipped stages
+ * without needing chains of if/else or cases to get the different behaviors.
+ */
 public abstract class SkippedStageReason implements Serializable {
     protected String stageName;
 

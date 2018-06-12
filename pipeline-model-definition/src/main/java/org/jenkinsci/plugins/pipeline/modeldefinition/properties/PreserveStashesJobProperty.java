@@ -54,7 +54,7 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
 
     private static final Logger LOGGER = Logger.getLogger(PreserveStashesJobProperty.class.getName());
 
-    private static final int MAX_SAVED_STASHES = 50;
+    public static final int MAX_SAVED_STASHES = 50;
 
     private int buildCount = 1;
 
@@ -86,8 +86,8 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
         public FormValidation doCheckBuildCount(@QueryParameter int value) {
             if (value < 0) {
                 return FormValidation.error("Must be greater than or equal to 0");
-            } else if (value > 50) {
-                return FormValidation.error("Must be 50 or less");
+            } else if (value > MAX_SAVED_STASHES) {
+                return FormValidation.error("Must be " + MAX_SAVED_STASHES + " or less");
             } else {
                 return FormValidation.ok();
             }
@@ -152,8 +152,8 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
                             if (namedArg.getValue() instanceof ModelASTValue && ((ModelASTValue)namedArg.getValue()).getValue() instanceof Integer) {
                                 Integer v = (Integer)((ModelASTValue)namedArg.getValue()).getValue();
 
-                                if (v < 1 || v > 50) {
-                                    return Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount();
+                                if (v < 1 || v > MAX_SAVED_STASHES) {
+                                    return Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount(MAX_SAVED_STASHES);
                                 }
                             }
                         }
