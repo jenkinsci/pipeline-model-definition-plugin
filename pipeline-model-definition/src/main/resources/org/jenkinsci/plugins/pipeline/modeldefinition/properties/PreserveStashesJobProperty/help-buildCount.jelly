@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
@@ -22,7 +23,11 @@
   ~ THE SOFTWARE.
   -->
 
-<div>
-    The number of most recent builds whose <code>stash</code>es should be preserved. Must be between 1 and 50.
-    Defaults to 1 if unspecified.
-</div>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <j:getStatic var="maxCount" className="org.jenkinsci.plugins.pipeline.modeldefinition.properties.PreserveStashesJobProperty" field="MAX_SAVED_STASHES" />
+    <div>
+        The number of most recent builds whose <code>stash</code>es should be preserved. Must be between 1 and ${maxCount}.
+        Defaults to 1 if unspecified.
+    </div>
+</j:jelly>
