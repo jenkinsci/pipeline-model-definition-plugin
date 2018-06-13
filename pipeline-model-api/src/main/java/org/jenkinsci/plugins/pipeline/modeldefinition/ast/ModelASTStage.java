@@ -140,7 +140,7 @@ public final class ModelASTStage extends ModelASTElement {
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);
         }
-        for (ModelASTStage content: parallelContent) {
+        for (ModelASTStage content : parallelContent) {
             content.validate(validator, true);
         }
     }

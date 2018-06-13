@@ -576,7 +576,7 @@ class ModelParser implements Parser {
                             break
                         case 'parallel':
                             def parallelStmt = matchBlockStatement(s)
-                            if (parallelStmt==null) {
+                            if (parallelStmt == null) {
                                 errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
                             } else {
                                 eachStatement(parallelStmt.body.code) {

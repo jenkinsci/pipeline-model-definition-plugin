@@ -159,7 +159,7 @@ class ModelInterpreter implements Serializable {
      * Get the map to pass to the parallel step of nested stages to run in parallel for the given stage.
      *
      * @param root The root of the Declarative model
-     * @param parentAgent The parent agent definition, which can be null
+     * @param parentAgent The parent agent definition. Can be null.
      * @param thisStage The current stage we'll look in for parallel stages
      * @param firstError An error that's already occurred earlier in the build. Can be null.
      * @param skippedForFailure True if thisStage is already skipped for failure
