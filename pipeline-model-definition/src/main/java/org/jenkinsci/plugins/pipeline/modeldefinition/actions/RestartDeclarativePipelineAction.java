@@ -76,7 +76,7 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     @Override public String getIconFileName() {
-        return isRestartEnabled() ? "restart-stage.png" : null;
+        return isRestartEnabled() ? "plugin/pipeline-model-definition/images/24x24/restart-stage.png" : null;
     }
 
     @Override public String getUrlName() {
