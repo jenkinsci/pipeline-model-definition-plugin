@@ -76,8 +76,7 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     @Override public String getIconFileName() {
-        // TODO: Needs an icon.
-        return isRestartEnabled() ? "redo.png" : null;
+        return isRestartEnabled() ? "restart-stage.png" : null;
     }
 
     @Override public String getUrlName() {
