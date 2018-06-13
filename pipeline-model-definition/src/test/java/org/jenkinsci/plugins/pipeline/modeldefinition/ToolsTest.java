@@ -114,7 +114,7 @@ public class ToolsTest extends AbstractModelDefTest {
 
         expect("buildPluginParentPOM")
                 .logContains("[Pipeline] { (build)",
-                        "[INFO] BUILD SUCCESS",
+                        "BUILD SUCCESS",
                         "M2_HOME: " + maven350.getHome(),
                         "JAVA_HOME: " + thisJdk.getHome())
                 .go();
