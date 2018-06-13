@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,13 +22,15 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition;
+package org.jenkinsci.plugins.pipeline.modeldefinition.cli;
 
 import hudson.cli.CLICommandInvoker;
 import hudson.model.Item;
 import hudson.model.User;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.cli.DeclarativeLinterCommand;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

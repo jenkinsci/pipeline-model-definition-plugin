@@ -1,7 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2016, CloudBees, Inc.
+  ~ Copyright (c) 2017, CloudBees, Inc.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -22,24 +23,11 @@
   ~ THE SOFTWARE.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.jenkinsci.plugins</groupId>
-    <artifactId>pipeline-model-parent</artifactId>
-    <version>1.3-SNAPSHOT</version>
-  </parent>
-
-  <artifactId>pipeline-stage-tags-metadata</artifactId>
-  <packaging>hpi</packaging>
-  <name>Pipeline: Stage Tags Metadata</name>
-  <description>Library plugin for Pipeline stage tag metadata</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-api</artifactId>
-    </dependency>
-  </dependencies>
-</project>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <j:getStatic var="maxCount" className="org.jenkinsci.plugins.pipeline.modeldefinition.properties.PreserveStashesJobProperty" field="MAX_SAVED_STASHES" />
+    <div>
+        The number of most recent builds whose <code>stash</code>es should be preserved. Must be between 1 and ${maxCount}.
+        Defaults to 1 if unspecified.
+    </div>
+</j:jelly>
