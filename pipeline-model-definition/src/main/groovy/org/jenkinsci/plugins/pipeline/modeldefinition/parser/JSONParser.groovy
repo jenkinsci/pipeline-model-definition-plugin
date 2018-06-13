@@ -139,7 +139,6 @@ class JSONParser implements Parser {
         return pipelineDef
     }
 
-
     @CheckForNull ModelASTStages parseStages(JsonTree j) {
         ModelASTStages stages = new ModelASTStages(j)
 
@@ -158,7 +157,10 @@ class JSONParser implements Parser {
             stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
         if (j.node.has("parallel")) {
-            stage.parallel = parseStages(j.append(JsonPointer.of("parallel")))
+            JsonTree content = j.append(JsonPointer.of("parallel"))
+            content?.node?.eachWithIndex{ JsonNode entry, int i ->
+                stage.parallelContent.add(parseStage(content.append(JsonPointer.of(i))))
+            }
         }
 
         JsonTree branches = j.append(JsonPointer.of("branches"))
@@ -166,6 +168,9 @@ class JSONParser implements Parser {
             stage.branches.add(parseBranch(branches.append(JsonPointer.of(i))))
         }
 
+        if (j.node.has("stages")) {
+            stage.stages = parseStages(j.append(JsonPointer.of("stages")))
+        }
         if (j.node.has("failFast") && (stage.branches.size() > 1 || j.node.has("parallel")))  {
             stage.failFast = j.node.get("failFast")?.asBoolean()
         }

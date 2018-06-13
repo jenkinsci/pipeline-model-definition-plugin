@@ -575,10 +575,23 @@ class ModelParser implements Parser {
                             stage.environment = parseEnvironment(s)
                             break
                         case 'parallel':
-                            stage.parallel = parseStages(s)
+                            def parallelStmt = matchBlockStatement(s)
+                            if (parallelStmt == null) {
+                                errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
+                            } else {
+                                eachStatement(parallelStmt.body.code) {
+                                    ModelASTStage parallelStage = parseStage(it)
+                                    if (parallelStage != null) {
+                                        stage.parallelContent.add(parallelStage)
+                                    }
+                                }
+                            }
                             break
                         case 'failFast':
                             stage.setFailFast(parseBooleanMethod(mc))
+                            break
+                        case 'stages':
+                            stage.stages = parseStages(s)
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))

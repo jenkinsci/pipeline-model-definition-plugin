@@ -106,6 +106,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void emptyStagesInGroup() throws Exception {
+        expectError("emptyStagesInGroup")
+                .logContains(Messages.ModelValidatorImpl_NoStages())
+                .go();
+    }
+
     @Test
     public void emptyJobProperties() throws Exception {
         expectError("emptyJobProperties")
@@ -672,7 +680,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void parallelStagesAndSteps() throws Exception {
         expectError("parallelStagesAndSteps")
-                .logContains(Messages.ModelValidatorImpl_BothStagesAndSteps("foo"))
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
                 .go();
     }
 
@@ -680,6 +688,22 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void parallelStagesDeepNesting() throws Exception {
         expectError("parallelStagesDeepNesting")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+                .go();
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void topLevelStageGroupsDeepNesting() throws Exception {
+        expectError("topLevelStageGroupsDeepNesting")
+                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesGroupsDeepNesting() throws Exception {
+        expectError("parallelStagesGroupsDeepNesting")
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
     }
@@ -925,4 +949,35 @@ public class ValidatorTest extends AbstractModelDefTest {
         }
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesAndGroups() throws Exception {
+        expectError("parallelStagesAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStepsAndGroups() throws Exception {
+        expectError("parallelStepsAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesStepsAndGroups() throws Exception {
+        expectError("parallelStagesStepsAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+    @Issue("JENKINS-51828")
+    @Test
+    public void incorrectNestedStagesNPE() throws Exception {
+        expectError("incorrectNestedStagesNPE")
+                .logContains(Messages.ModelParser_ExpectedStage())
+                .go();
+    }
 }

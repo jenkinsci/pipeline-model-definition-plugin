@@ -981,8 +981,96 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "[second] Apache Maven 3.0.1")
                 .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
+    }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void parallelStagesGroupsAndStages() throws Exception {
+        Slave s = j.createOnlineSlave();
+        s.setLabelString("first-agent");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
 
+        Slave s2 = j.createOnlineSlave();
+        s2.setLabelString("second-agent");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
+
+        WorkflowRun b = expect("parallelStagesGroupsAndStages")
+                .logContains("[Pipeline] { (foo)",
+                        "[first] { (Branch: first)",
+                        "[second] { (Branch: second)",
+                        "First stage, first agent",
+                        "[Pipeline] [second] { (inner-first)",
+                        "Second stage, second agent",
+                        // Console log still shows [branch] (output), not [stage] (output), sadly.
+                        "[second] Apache Maven 3.0.1",
+                        "[Pipeline] [second] { (inner-second)")
+                .logNotContains("WE SHOULD NEVER GET HERE")
+                .go();
+
+        FlowExecution execution = b.getExecution();
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        assertNotNull(startFoo);
+        assertTrue(startFoo instanceof BlockStartNode);
+        FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFoo));
+        assertNotNull(endFoo);
+        assertEquals(GenericStatus.SUCCESS, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
+        assertNull(endFoo.getError());
+
+        FlowNode startFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("first"));
+        assertNotNull(startFirst);
+        assertTrue(startFirst instanceof BlockStartNode);
+        FlowNode endFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFirst));
+        assertNotNull(endFirst);
+        assertEquals(GenericStatus.SUCCESS, StatusAndTiming.computeChunkStatus(b, null, startFirst, endFirst, null));
+
+        FlowNode startInnerFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("inner-first"));
+        assertNotNull(startInnerFirst);
+        assertTrue(startInnerFirst instanceof BlockStartNode);
+        FlowNode endInnerFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startInnerFirst));
+        assertNotNull(endInnerFirst);
+        assertEquals(GenericStatus.SUCCESS, StatusAndTiming.computeChunkStatus(b, null, startInnerFirst, endInnerFirst, null));
+
+        FlowNode startInnerSecond = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("inner-second"));
+        assertNotNull(startInnerSecond);
+        assertTrue(startInnerSecond instanceof BlockStartNode);
+        FlowNode endInnerSecond = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startInnerSecond));
+        assertNotNull(endInnerSecond);
+        assertEquals(GenericStatus.NOT_EXECUTED, StatusAndTiming.computeChunkStatus(b, null, startInnerSecond, endInnerSecond, null));
+
+        TagsAction innerSecondTags = startInnerSecond.getAction(TagsAction.class);
+        assertNotNull(innerSecondTags);
+        assertNotNull(innerSecondTags.getTags());
+        assertFalse(innerSecondTags.getTags().isEmpty());
+        assertTrue(innerSecondTags.getTags().containsKey(Utils.getStageStatusMetadata().getTagName()));
+        assertEquals(StageStatus.getSkippedForConditional(),
+                innerSecondTags.getTags().get(Utils.getStageStatusMetadata().getTagName()));
+
+        /*
+        Relevant FlowNode ids:
+        - 2:  FlowStartNode
+        - 3:  foo stage start
+        - 4:  foo stage body
+        - 5:  parallel start
+        - 7:  first branch start
+        - 8:  second branch start
+        - 9:  first stage start
+        - 11: second stage start
+        - 12: second stage body
+        - 14: inner-first stage start (probably)
+        - 44: inner-second stage start (probably)
+
+        All three parallel stages should share 5,4,3,2.
+        Sequential stages in the second branch should share 8,5,4,3,2.
+         */
+        assertEquals(Arrays.asList("7", "5", "4", "3", "2"), tailOfList(startFirst.getAllEnclosingIds()));
+        assertEquals(Arrays.asList("12", "11", "8", "5", "4", "3", "2"), tailOfList(startInnerFirst.getAllEnclosingIds()));
+        assertEquals(Arrays.asList("12", "11", "8", "5", "4", "3", "2"), tailOfList(startInnerSecond.getAllEnclosingIds()));
+    }
+
+    private List<String> tailOfList(List<String> l) {
+        return Collections.unmodifiableList(l.subList(1, l.size()));
     }
 
     @Issue("JENKINS-46112")
@@ -1311,4 +1399,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void topLevelStageGroup() throws Exception {
+        expect("topLevelStageGroup")
+                .logContains("[Pipeline] { (foo)",
+                        "In stage bar in group foo",
+                        "In stage baz in group foo")
+                .go();
+    }
 }
