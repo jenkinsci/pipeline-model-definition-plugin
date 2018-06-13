@@ -42,6 +42,9 @@ pipeline {
             echo "I FAILED"
             echo "SOME ${otherUndefined} VAR"
         }
+        cleanup {
+            echo "CLEANUP RAN"
+        }
     }
 }
 

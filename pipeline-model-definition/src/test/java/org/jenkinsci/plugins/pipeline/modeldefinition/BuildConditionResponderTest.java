@@ -138,7 +138,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     public void buildConditionOrdering() throws Exception {
         expect("buildConditionOrdering")
                 .logContains("[Pipeline] { (foo)", "hello")
-                .inLogInOrder("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")
+                .logContainsInOrder("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")
                 .go();
     }
 
@@ -312,6 +312,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                         "hello",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
                         "I FAILED",
+                        "CLEANUP RAN",
                         "Error when executing failure post condition",
                         "Error when executing always post condition",
                         "No such property: otherUndefined for class",
