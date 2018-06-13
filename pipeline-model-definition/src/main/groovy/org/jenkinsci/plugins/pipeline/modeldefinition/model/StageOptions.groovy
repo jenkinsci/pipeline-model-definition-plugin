@@ -90,7 +90,7 @@ class StageOptions implements Serializable {
     private static final LoadingCache<Object,Map<String,String>> stageOptionTypeCache =
         Utils.generateTypeCache(DeclarativeOptionDescriptor.class, false, [],
             { DeclarativeOptionDescriptor d ->
-                return d.canUseInStage()
+                return d.canUseInStage() || d.isStageOnly()
             })
 }
 

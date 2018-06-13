@@ -108,7 +108,7 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
 
             for (DeclarativeOptionDescriptor d : ExtensionList.lookup(DeclarativeOptionDescriptor.class)) {
                 if (!SymbolLookup.getSymbolValue(d).isEmpty()) {
-                    if (!inStage || d.canUseInStage()) {
+                    if ((!inStage && !d.isStageOnly()) || d.canUseInStage()) {
                         descriptors.add(d);
                     }
                 }
