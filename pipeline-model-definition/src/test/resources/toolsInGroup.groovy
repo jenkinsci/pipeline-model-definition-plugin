@@ -72,5 +72,7 @@ def getMavenVersion() {
         mvnOut = bat(script:'mvn --version',returnStdout:true)
     }
 
-    return mvnOut.split(/\n/).find { it.startsWith("Apache Maven") }?.trim()
+    def matcher = (mvnOut.split(/\n/).find { it.contains("Apache Maven") }?.trim() =~ /.*(Apache Maven .*?) \(/)
+
+    return matcher[0].size() > 1 ? matcher[0][1] : null
 }
