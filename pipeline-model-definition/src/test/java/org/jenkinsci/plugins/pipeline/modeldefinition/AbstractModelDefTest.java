@@ -41,7 +41,6 @@ import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -377,7 +376,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
         private boolean hasFailureCause;
-        private List<String> inLogInOrder;
+        private List<String> logContainsInOrder;
         private List<Matcher<Run>> buildMatchers;
 
         private ExpectationsBuilder(String resourceParent, String resource) {
@@ -397,8 +396,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             return this;
         }
 
-        public ExpectationsBuilder inLogInOrder(String... msgsInOrder) {
-            this.inLogInOrder = Arrays.asList(msgsInOrder);
+        public ExpectationsBuilder logContainsInOrder(String... msgsInOrder) {
+            this.logContainsInOrder = Arrays.asList(msgsInOrder);
             return this;
         }
 
@@ -508,9 +507,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             if (hasFailureCause) {
                 assertNotNull(run.getExecution().getCauseOfFailure());
             }
-            if (inLogInOrder != null && !inLogInOrder.isEmpty()) {
+            if (logContainsInOrder != null && !logContainsInOrder.isEmpty()) {
                 String buildLog = JenkinsRule.getLog(run);
-                assertThat(buildLog, stringContainsInOrder(inLogInOrder));
+                assertThat(buildLog, stringContainsInOrder(logContainsInOrder));
             }
 
             for (Matcher<Run> matcher : buildMatchers) {

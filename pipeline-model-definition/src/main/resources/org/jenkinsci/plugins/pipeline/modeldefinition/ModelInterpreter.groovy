@@ -41,6 +41,8 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
+import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
+
 /**
  * CPS-transformed code for actually performing the build.
  *
@@ -735,6 +737,8 @@ class ModelInterpreter implements Serializable {
                 if (stageName != null) {
                     Utils.markStageFailedAndContinued(stageName)
                 }
+                Utils.logToTaskListener("Error when executing ${conditionName} post condition:")
+                Utils.logToTaskListener(getFullStackTrace(e))
                 if (stageError == null) {
                     stageError = e
                 }
