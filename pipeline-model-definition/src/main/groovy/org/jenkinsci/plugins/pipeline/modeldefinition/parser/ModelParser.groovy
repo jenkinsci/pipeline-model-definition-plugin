@@ -1278,7 +1278,7 @@ class ModelParser implements Parser {
     @CheckForNull
     DeclarativeDirective parseAdditionalDirective(@Nonnull Statement st,
                                                   @Nonnull DeclarativeDirectiveDescriptor directiveDescriptor) {
-        return directiveDescriptor.parseDirectiveFromGroovy(st)
+        return directiveDescriptor.parseDirectiveFromGroovy(st, sourceUnit)
     }
 
     protected String parseStringLiteral(Expression exp) {

@@ -27,9 +27,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.control.SourceUnit;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree;
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -89,7 +91,7 @@ public abstract class DeclarativeDirectiveDescriptor<D extends DeclarativeDirect
         }
     }
 
-    public abstract D parseDirectiveFromGroovy(Statement st);
+    public abstract D parseDirectiveFromGroovy(Statement st, SourceUnit sourceUnit);
 
     public abstract D parseDirectiveFromJSON(JsonTree json);
 
