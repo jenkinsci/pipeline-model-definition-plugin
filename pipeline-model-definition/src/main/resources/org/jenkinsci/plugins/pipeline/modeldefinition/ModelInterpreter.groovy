@@ -256,7 +256,12 @@ class ModelInterpreter implements Serializable {
                                             withEnvBlock(thisStage.getEnvVars(script)) {
                                                 toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
                                                     if (thisStage?.stages) {
-                                                        evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
+                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
+
+                                                        // Propagate any possible error from the sequential stages as if it were an error thrown directly.
+                                                        if (nestedError != null) {
+                                                            throw nestedError
+                                                        }
                                                     } else {
                                                         // Execute the actual stage and potential post-stage actions
                                                         executeSingleStage(root, thisStage, parentAgent)
