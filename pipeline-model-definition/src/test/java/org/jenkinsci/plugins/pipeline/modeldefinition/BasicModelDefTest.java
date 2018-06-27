@@ -1378,4 +1378,12 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "In stage baz in group foo")
                 .go();
     }
+
+    @Issue("JENKINS-51962")
+    @Test
+    public void failureInFirstOfSequential() throws Exception {
+        expect(Result.FAILURE, "failureInFirstOfSequential")
+                .logNotContains("Executing stage B")
+                .go();
+    }
 }
