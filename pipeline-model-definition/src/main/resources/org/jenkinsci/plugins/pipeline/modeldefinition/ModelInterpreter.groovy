@@ -148,29 +148,37 @@ class ModelInterpreter implements Serializable {
     def evaluateSequentialStages(Root root, Stages stages, Throwable firstError, Stage parent, String restartedStageName,
                                  SkippedStageReason skippedReason) {
         return {
-            boolean skippedForRestart = restartedStageName != null
-            stages.stages.each { thisStage ->
-                if (skippedForRestart) {
-                    // Check if we're skipping for restart but are now on the stage we're supposed to restart on.
-                    if (thisStage.name == restartedStageName) {
-                        // If so, set skippedForRestart to false, and if the skippedReason is for restart, wipe that out too.
-                        skippedForRestart = false
-                        if (skippedReason instanceof SkippedStageReason.Restart) {
-                            skippedReason = null
+            try {
+                boolean skippedForRestart = restartedStageName != null
+                stages.stages.each { thisStage ->
+                    if (skippedForRestart) {
+                        // Check if we're skipping for restart but are now on the stage we're supposed to restart on.
+                        if (thisStage.name == restartedStageName) {
+                            // If so, set skippedForRestart to false, and if the skippedReason is for restart, wipe that out too.
+                            skippedForRestart = false
+                            if (skippedReason instanceof SkippedStageReason.Restart) {
+                                skippedReason = null
+                            }
+                        } else {
+                            // If we skipped for restart and this isn't the restarted name, create a new reason.
+                            skippedReason = new SkippedStageReason.Restart(thisStage.name, restartedStageName)
                         }
-                    } else {
-                        // If we skipped for restart and this isn't the restarted name, create a new reason.
-                        skippedReason = new SkippedStageReason.Restart(thisStage.name, restartedStageName)
+                    }
+                    try {
+                        evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason).call()
+                    } catch (Exception e) {
+                        script.getProperty("currentBuild").result = Utils.getResultFromException(e)
+                        Utils.markStageFailedAndContinued(thisStage.name)
+                        if (firstError == null) {
+                            firstError = e
+                        }
                     }
                 }
-                try {
-                    evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason).call()
-                } catch (Exception e) {
-                    script.getProperty("currentBuild").result = Utils.getResultFromException(e)
-                    Utils.markStageFailedAndContinued(thisStage.name)
-                    if (firstError == null) {
-                        firstError = e
-                    }
+            } finally {
+                // And finally, run the post stage steps if this was a parallel parent.
+                if (skippedReason == null && parent != null && root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"))) {
+                    Utils.logToTaskListener("Post stage")
+                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name)
                 }
             }
 
@@ -307,7 +315,7 @@ class ModelInterpreter implements Serializable {
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
                     if (skippedReason == null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild")) &&
-                        (thisStage?.parallelContent || thisStage?.stages)) {
+                        thisStage?.parallelContent) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }

@@ -320,4 +320,10 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 .logNotContains("MOST DEFINITELY FINISHED")
                 .go();
     }
+
+    @Issue("JENKINS-52084")
+    @Test
+    public void sequentialPostNode() throws Exception {
+        expect("sequentialPostNode").go();
+    }
 }
