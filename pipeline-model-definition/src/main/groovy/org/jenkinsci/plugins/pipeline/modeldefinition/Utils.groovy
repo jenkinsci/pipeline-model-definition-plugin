@@ -75,6 +75,7 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.graph.BlockEndNode
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner
 import org.jenkinsci.plugins.workflow.graphanalysis.Filterator
 import org.jenkinsci.plugins.workflow.graphanalysis.FlowScanningUtils
 import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner
@@ -306,7 +307,7 @@ class Utils {
         }
     }
 
-    static void markStageWithTag(String stageName, String tagName, String tagValue, boolean isRestart = false) {
+    static void markStageWithTag(String stageName, String tagName, String tagValue) {
         List<FlowNode> matched = findStageFlowNodes(stageName)
 
         matched.each { currentNode ->
@@ -320,10 +321,43 @@ class Utils {
                     tagsAction.addTag(tagName, tagValue)
                     currentNode.save()
                 }
+            }
+        }
+    }
 
-                if (isRestart) {
-                    currentNode.addAction(new NotExecutedNodeAction())
+    static void markStartAndEndNodesInStageAsNotExecuted(String stageName, FlowExecution execution = null) {
+        if (execution == null) {
+            CpsThread thread = CpsThread.current()
+            execution = thread.execution
+        }
+
+        List<BlockStartNode> nodes = []
+
+        ForkScanner scanner = new ForkScanner()
+
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+
+        if (stage != null && stage instanceof BlockStartNode) {
+            nodes.add(stage)
+
+            // Additional check needed to get the possible enclosing parallel branch for a nested stage.
+            Filterator<FlowNode> filtered = FlowScanningUtils.fetchEnclosingBlocks(stage)
+                .filter(isParallelBranchFlowNode(stageName))
+
+            filtered.each { f ->
+                if (f != null && f instanceof BlockStartNode) {
+                    nodes.add(f)
                 }
+            }
+        }
+
+        DepthFirstScanner depthFirstScanner = new DepthFirstScanner()
+
+        nodes.each { n ->
+            n.addAction(new NotExecutedNodeAction())
+            FlowNode endNode =  depthFirstScanner.findFirstMatch(execution.currentHeads, null, endNodeForStage(n))
+            if (endNode != null) {
+                endNode.addAction(new NotExecutedNodeAction())
             }
         }
     }

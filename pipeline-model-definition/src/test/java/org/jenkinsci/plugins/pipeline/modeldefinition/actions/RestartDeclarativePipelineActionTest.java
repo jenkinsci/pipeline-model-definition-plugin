@@ -47,13 +47,18 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
 import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProjectTest;
+import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
+import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -220,6 +225,9 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         FlowExecution secondExecution = b2.getExecution();
         assertNotNull(secondExecution);
         assertNull(secondExecution.getCauseOfFailure());
+
+        // Make sure that skip-on-restart is marked as not executed.
+        assertStageIsNotExecuted("skip-on-restart", b2, secondExecution);
 
         // skip-on-restart was skipped for restart.
         List<FlowNode> secondRunFirstStageNodes = Utils.findStageFlowNodes("skip-on-restart", secondExecution);
@@ -635,6 +643,93 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         j.assertLogNotContains("This shouldn't show up on second run", b2);
     }
 
+    @Issue("JENKINS-52261")
+    @Test
+    public void skippedParallelStagesMarkedNotExecuted() throws Exception {
+        WorkflowRun original = expect(Result.FAILURE, "restart", "skippedParallelStagesMarkedNotExecuted")
+                .logContains("Odd numbered build, failing",
+                        "This shouldn't show up on second run",
+                        "This also shouldn't show up on second run")
+                .go();
+
+        FlowExecution firstExecution = original.getExecution();
+        assertNotNull(firstExecution);
+        assertNotNull(firstExecution.getCauseOfFailure());
+
+        WorkflowJob p = original.getParent();
+
+        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
+        assertNotNull(action);
+        assertTrue(action.isRestartEnabled());
+
+        // We should be able to restart skip-on-restart and restart, but not post-restart
+        List<String> restartableStages = action.getRestartableStages();
+        assertThat(restartableStages, is(Arrays.asList("skip-on-restart", "restart")));
+
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
+
+        assertNotNull(redirect);
+        assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
+
+        j.waitUntilNoActivity();
+        WorkflowRun b2 = p.getBuildByNumber(2);
+        assertNotNull(b2);
+        j.assertBuildStatusSuccess(b2);
+        j.assertLogContains("Even numbered build, success", b2);
+        j.assertLogContains("Stage \"skip-on-restart\" skipped due to this build restarting at stage \"restart\"", b2);
+        j.assertLogContains("Now we're post-restart", b2);
+        j.assertLogNotContains("This shouldn't show up on second run", b2);
+        j.assertLogNotContains("This also shouldn't show up on second run", b2);
+
+        RestartDeclarativePipelineCause cause = b2.getCause(RestartDeclarativePipelineCause.class);
+        assertNotNull(cause);
+        assertEquals(original, cause.getOriginal());
+        assertEquals("restart", cause.getOriginStage());
+        // Note that I'm using the fully qualified name for the cause Messages class so that I don't have to change things
+        // if I ever want to test something from other Messages.
+        assertEquals(org.jenkinsci.plugins.pipeline.modeldefinition.causes.Messages.RestartedDeclarativePipelineCause_ShortDescription(1, "restart"),
+                cause.getShortDescription());
+
+        FlowExecution secondExecution = b2.getExecution();
+        assertNotNull(secondExecution);
+        assertNull(secondExecution.getCauseOfFailure());
+
+        // Make sure skip-on-restart, first-parallel, and second-parallel are all seen by the status API as not executed
+        assertStageIsNotExecuted("skip-on-restart", b2, secondExecution);
+        assertStageIsNotExecuted("first-parallel", b2, secondExecution);
+        assertStageIsNotExecuted("second-parallel", b2, secondExecution);
+
+        // skip-on-restart was skipped for restart.
+        List<FlowNode> secondRunFirstStageNodes = Utils.findStageFlowNodes("skip-on-restart", secondExecution);
+        assertNotNull(secondRunFirstStageNodes);
+        assertFalse(secondRunFirstStageNodes.isEmpty());
+        FlowNode secondRunFirstStageStart = secondRunFirstStageNodes.get(secondRunFirstStageNodes.size() - 1);
+        assertNotNull(secondRunFirstStageStart.getAction(NotExecutedNodeAction.class));
+        assertTrue(stageStatusPredicate("skip-on-restart", StageStatus.getSkippedForRestart()).apply(secondRunFirstStageStart));
+        assertFalse(stageStatusPredicate("skip-on-restart", StageStatus.getSkippedForFailure()).apply(secondRunFirstStageStart));
+        assertFalse(stageStatusPredicate("skip-on-restart", StageStatus.getFailedAndContinued()).apply(secondRunFirstStageStart));
+
+        // first-parallel was skipped for restart.
+        List<FlowNode> secondRunFirstParallelNodes = Utils.findStageFlowNodes("first-parallel", secondExecution);
+        assertNotNull(secondRunFirstParallelNodes);
+        assertFalse(secondRunFirstParallelNodes.isEmpty());
+        FlowNode secondRunFirstParallelStart = secondRunFirstParallelNodes.get(secondRunFirstParallelNodes.size() - 1);
+        assertNotNull(secondRunFirstParallelStart.getAction(NotExecutedNodeAction.class));
+        assertTrue(stageStatusPredicate("first-parallel", StageStatus.getSkippedForRestart()).apply(secondRunFirstParallelStart));
+        assertFalse(stageStatusPredicate("first-parallel", StageStatus.getSkippedForFailure()).apply(secondRunFirstParallelStart));
+        assertFalse(stageStatusPredicate("first-parallel", StageStatus.getFailedAndContinued()).apply(secondRunFirstParallelStart));
+
+        // second-parallel was skipped for restart.
+        List<FlowNode> secondRunSecondParallelNodes = Utils.findStageFlowNodes("second-parallel", secondExecution);
+        assertNotNull(secondRunSecondParallelNodes);
+        assertFalse(secondRunSecondParallelNodes.isEmpty());
+        FlowNode secondRunSecondParallelStart = secondRunSecondParallelNodes.get(secondRunSecondParallelNodes.size() - 1);
+        assertNotNull(secondRunSecondParallelStart.getAction(NotExecutedNodeAction.class));
+        assertTrue(stageStatusPredicate("second-parallel", StageStatus.getSkippedForRestart()).apply(secondRunSecondParallelStart));
+        assertFalse(stageStatusPredicate("second-parallel", StageStatus.getSkippedForFailure()).apply(secondRunSecondParallelStart));
+        assertFalse(stageStatusPredicate("second-parallel", StageStatus.getFailedAndContinued()).apply(secondRunSecondParallelStart));
+    }
+
     private HtmlPage restartFromStageInUI(@Nonnull WorkflowRun original, @Nonnull String stageName) throws Exception {
         RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
         assertNotNull(action);
@@ -645,5 +740,16 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         HtmlSelect select = form.getSelectByName("stageName");
         select.getOptionByValue(stageName).setSelected(true);
         return j.submit(form);
+    }
+
+    private void assertStageIsNotExecuted(@Nonnull String stageName, @Nonnull WorkflowRun run, @Nonnull FlowExecution execution) {
+        List<FlowNode> heads = execution.getCurrentHeads();
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        FlowNode startStage = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName(stageName));
+        assertNotNull(startStage);
+        assertTrue(startStage instanceof BlockStartNode);
+        FlowNode endStage = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startStage));
+        assertNotNull(endStage);
+        assertEquals(GenericStatus.NOT_EXECUTED, StatusAndTiming.computeChunkStatus(run, null, startStage, endStage, null));
     }
 }
