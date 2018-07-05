@@ -25,14 +25,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
 import hudson.Extension;
+import hudson.ExtensionPoint;
 import hudson.Util;
-import hudson.model.Action;
-import hudson.model.Cause;
-import hudson.model.CauseAction;
-import hudson.model.Failure;
-import hudson.model.Item;
-import hudson.model.Queue;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
@@ -43,6 +38,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageRestartResult;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
@@ -52,6 +48,7 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
@@ -63,6 +60,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+@ExportedBean
 public class RestartDeclarativePipelineAction implements Action {
 
     private final Run run;
@@ -105,6 +103,29 @@ public class RestartDeclarativePipelineAction implements Action {
                 run.hasPermission(Item.BUILD) &&
                 run.getParent().isBuildable() &&
                 getExecution() != null;
+    }
+
+    public Api getApi() {
+        return new Api(this);
+    }
+
+    @Restricted(DoNotUse.class)
+    public StageRestartResult doRestartStage(@QueryParameter String stageName) {
+        StageRestartResult restartResult = new StageRestartResult("success", true);
+
+        if (!isRestartEnabled()) {
+            restartResult.setSuccess(false);
+            restartResult.setMessage("not allowed to restart");
+        } else {
+            try {
+                run(stageName);
+            } catch (IllegalStateException ise) {
+                restartResult.setSuccess(false);
+                restartResult.setMessage("Failure restarting from stage: " + ise);
+            }
+        }
+
+        return restartResult;
     }
 
     @Restricted(DoNotUse.class)
