@@ -48,8 +48,10 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
+import org.kohsuke.stapler.json.JsonResponse;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -95,6 +97,7 @@ public class RestartDeclarativePipelineAction implements Action {
         return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null;
     }
 
+    @Exported
     public boolean isRestartEnabled() {
         ExecutionModelAction executionModelAction = run.getAction(ExecutionModelAction.class);
 
@@ -110,22 +113,17 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     @Restricted(DoNotUse.class)
-    public StageRestartResult doRestartStage(@QueryParameter String stageName) {
-        StageRestartResult restartResult = new StageRestartResult("success", true);
-
+    @JsonResponse
+    public void doRestartPipeline(@QueryParameter String stageName) {
         if (!isRestartEnabled()) {
-            restartResult.setSuccess(false);
-            restartResult.setMessage("not allowed to restart");
-        } else {
-            try {
-                run(stageName);
-            } catch (IllegalStateException ise) {
-                restartResult.setSuccess(false);
-                restartResult.setMessage("Failure restarting from stage: " + ise);
-            }
+            throw new AccessDeniedException("not allowed to restart"); // AccessDeniedException2 requires us to look up the specific Permission
         }
 
-        return restartResult;
+        try {
+            run(stageName);
+        } catch (IllegalStateException ise) {
+            throw new Failure("Failure restarting from stage: " + ise);
+        }
     }
 
     @Restricted(DoNotUse.class)
@@ -146,6 +144,7 @@ public class RestartDeclarativePipelineAction implements Action {
         rsp.sendRedirect("../.."); // back to WorkflowJob; new build might not start instantly so cannot redirect to it
     }
 
+    @Exported
     public List<String> getRestartableStages() {
         List<String> stages = new ArrayList<>();
         FlowExecution execution = getExecution();
