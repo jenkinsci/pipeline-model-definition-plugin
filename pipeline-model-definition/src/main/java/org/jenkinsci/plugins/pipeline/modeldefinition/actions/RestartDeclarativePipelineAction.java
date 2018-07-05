@@ -72,7 +72,7 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     @Override public String getDisplayName() {
-        return "Restart from Stage";
+        return Messages.Restart_from_Stage();
     }
 
     @Override public String getIconFileName() {
