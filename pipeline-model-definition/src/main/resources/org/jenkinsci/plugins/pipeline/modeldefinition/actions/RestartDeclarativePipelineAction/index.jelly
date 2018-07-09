@@ -25,7 +25,7 @@
   -->
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
-    <l:layout title="Restart ${it.owner.displayName} from Stage" norefresh="true">
+    <l:layout title="${%restart_from_stage(it.owner.displayName)}" norefresh="true">
         <st:include page="sidepanel.jelly" it="${it.owner}"/>
         <l:main-panel>
             <j:if test="${it.restartEnabled}">
@@ -34,7 +34,7 @@
                     <j:out value="${description}"/>
                 </p>
                 <f:form action="restart" method="POST" name="restart">
-                    <f:entry field="stageName" title="Stage Name">
+                    <f:entry field="stageName" title="${%Stage Name}">
                         <select name="stageName">
                             <j:forEach var="stage" items="${it.restartableStages}">
                                 <f:option value="${stage}">${stage}</f:option>
@@ -42,7 +42,7 @@
                         </select>
                     </f:entry>
                     <f:bottomButtonBar>
-                        <f:submit value="Run"/>
+                        <f:submit value="${%Run}"/>
                     </f:bottomButtonBar>
                 </f:form>
             </j:if>
