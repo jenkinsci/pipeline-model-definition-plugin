@@ -173,6 +173,9 @@ class ModelInterpreter implements Serializable {
                             firstError = e
                         }
                     }
+                    if (skippedForRestart) {
+                        Utils.markStartAndEndNodesInStageAsNotExecuted(thisStage.name)
+                    }
                 }
             } finally {
                 // And finally, run the post stage steps if this was a parallel parent.
@@ -364,9 +367,13 @@ class ModelInterpreter implements Serializable {
                   Stage parentStage) {
         return {
             Utils.logToTaskListener(reason.message)
-            Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus, reason.isNotExecutedNode())
+            Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
             if (thisStage?.parallelContent) {
-                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, reason))
+                Map<String,Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
+                script.parallel(parallelToSkip)
+                if (reason instanceof SkippedStageReason.Restart) {
+                    parallelToSkip.keySet().each { k -> Utils.markStartAndEndNodesInStageAsNotExecuted(k) }
+                }
             } else if (thisStage?.stages != null) {
                 String restartedStage = null
                 if (reason instanceof SkippedStageReason.Restart) {
