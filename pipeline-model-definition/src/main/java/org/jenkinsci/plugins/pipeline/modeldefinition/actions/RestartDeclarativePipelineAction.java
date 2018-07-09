@@ -25,10 +25,11 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
 import hudson.Extension;
-import hudson.ExtensionPoint;
 import hudson.Util;
 import hudson.model.*;
+import hudson.model.Queue;
 import hudson.util.FormValidation;
+import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.model.TransientActionFactory;
@@ -45,6 +46,8 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -57,10 +60,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @ExportedBean
 public class RestartDeclarativePipelineAction implements Action {
@@ -112,9 +112,32 @@ public class RestartDeclarativePipelineAction implements Action {
         return new Api(this);
     }
 
-    @Restricted(DoNotUse.class)
+    @Restricted(NoExternalUse.class)
     @JsonResponse
-    public void doRestartPipeline(@QueryParameter String stageName) {
+    public HttpResponse doRestartPipeline(@QueryParameter String stageName) {
+        Map<String, String> result = new HashMap<>();
+        result.put("success", "false");
+
+        if (isRestartEnabled()) {
+            try {
+                run(stageName);
+
+                result.put("success", "true");
+                result.put("message", "ok");
+            } catch (IllegalStateException ise) {
+                result.put("message", "Failure restarting from stage: " + ise);
+            }
+        } else {
+            result.put("message", "not allowed to restart");
+        }
+
+        return HttpResponses.okJSON(result);
+    }
+
+    @RequirePOST
+    public StageRestartResult doRestartStage(@QueryParameter String stageName) {
+        StageRestartResult restartResult = new StageRestartResult("success", true);
+
         if (!isRestartEnabled()) {
             throw new AccessDeniedException("not allowed to restart"); // AccessDeniedException2 requires us to look up the specific Permission
         }
