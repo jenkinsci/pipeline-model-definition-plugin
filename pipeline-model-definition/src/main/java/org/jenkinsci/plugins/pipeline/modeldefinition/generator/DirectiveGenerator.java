@@ -155,6 +155,9 @@ public class DirectiveGenerator extends Snippetizer {
         }
     }
 
+    /*
+    TODO: Get rid of NoExternalUse restriction on OrganizationFolder, because that's silly and will make a lot of plugin builds fail.
+
     @Restricted(DoNotUse.class)
     @Extension
     public static class PerOrgFolderAdder extends TransientActionFactory<OrganizationFolder> {
@@ -174,6 +177,7 @@ public class DirectiveGenerator extends Snippetizer {
             }
         }
     }
+    */
 
     @Restricted(DoNotUse.class)
     @Extension
