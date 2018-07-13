@@ -24,9 +24,13 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
+import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.BooleanParameterValue;
 import hudson.model.Item;
 import hudson.model.ParametersAction;
@@ -38,6 +42,8 @@ import hudson.scm.ChangeLogSet;
 import hudson.security.ACL;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.SecurityRealm;
+import hudson.security.csrf.CrumbIssuer;
+import hudson.util.RunList;
 import jenkins.branch.BranchSource;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMSource;
@@ -46,6 +52,8 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
+import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader;
 import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -62,9 +70,12 @@ import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import javax.annotation.Nonnull;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -646,11 +657,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
     @Issue("JENKINS-52261")
     @Test
     public void skippedParallelStagesMarkedNotExecuted() throws Exception {
-        WorkflowRun original = expect(Result.FAILURE, "restart", "skippedParallelStagesMarkedNotExecuted")
-                .logContains("Odd numbered build, failing",
-                        "This shouldn't show up on second run",
-                        "This also shouldn't show up on second run")
-                .go();
+        WorkflowRun original = expect(Result.FAILURE, "restart", "skippedParallelStagesMarkedNotExecuted").logContains("Odd numbered build, failing", "This shouldn't show up on second run", "This also shouldn't show up on second run").go();
 
         FlowExecution firstExecution = original.getExecution();
         assertNotNull(firstExecution);
@@ -687,8 +694,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertEquals("restart", cause.getOriginStage());
         // Note that I'm using the fully qualified name for the cause Messages class so that I don't have to change things
         // if I ever want to test something from other Messages.
-        assertEquals(org.jenkinsci.plugins.pipeline.modeldefinition.causes.Messages.RestartedDeclarativePipelineCause_ShortDescription(1, "restart"),
-                cause.getShortDescription());
+        assertEquals(org.jenkinsci.plugins.pipeline.modeldefinition.causes.Messages.RestartedDeclarativePipelineCause_ShortDescription(1, "restart"), cause.getShortDescription());
 
         FlowExecution secondExecution = b2.getExecution();
         assertNotNull(secondExecution);
@@ -728,6 +734,57 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertTrue(stageStatusPredicate("second-parallel", StageStatus.getSkippedForRestart()).apply(secondRunSecondParallelStart));
         assertFalse(stageStatusPredicate("second-parallel", StageStatus.getSkippedForFailure()).apply(secondRunSecondParallelStart));
         assertFalse(stageStatusPredicate("second-parallel", StageStatus.getFailedAndContinued()).apply(secondRunSecondParallelStart));
+    }
+
+    @Test
+    public void testDoRestartPipeline() throws Exception {
+        String jobName = "simplePipeline";
+        WorkflowRun r = expect(jobName).go();
+        j.waitUntilNoActivity();
+
+        JenkinsRule.WebClient client = j.createWebClient();
+
+        WebRequest request = new WebRequest(new URL(client.getContextPath() + r.getUrl() + "restart/restartPipeline"));
+        request.setHttpMethod(HttpMethod.POST);
+
+        NameValuePair stageName = new NameValuePair("stageName", "foo");
+
+        // put param
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(stageName);
+
+        CrumbIssuer crumbIssuer = j.jenkins.getCrumbIssuer();
+        if(crumbIssuer != null) {
+            params.add(new NameValuePair(crumbIssuer.getDescriptor().getCrumbRequestField(), crumbIssuer.getCrumb(null)));
+        }
+
+        request.setRequestParameters(params);
+
+        Page page = client.getPage(request);
+
+        // check response
+        String response = page.getWebResponse().getContentAsString();
+        JsonNode json = JsonLoader.fromString(response);
+        assertEquals(json.get("status").asText(), "ok");
+        assertTrue(json.get("data").get("success").asBoolean());
+
+        // check we got actually execute
+        j.waitUntilNoActivity();
+        RunList<WorkflowRun> builds = r.getParent().getBuilds();
+        assertEquals(builds.getLastBuild().getNumber(), 2);
+
+        // test not exists stageName
+        params.remove(stageName);
+        stageName = new NameValuePair("stageName", "foo-not");
+        params.add(stageName);
+
+        page = client.getPage(request);
+
+        // check response with invalid request
+        response = page.getWebResponse().getContentAsString();
+        json = JsonLoader.fromString(response);
+        assertEquals(json.get("status").asText(), "ok");
+        assertFalse(json.get("data").get("success").asBoolean());
     }
 
     private HtmlPage restartFromStageInUI(@Nonnull WorkflowRun original, @Nonnull String stageName) throws Exception {
