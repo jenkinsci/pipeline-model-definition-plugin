@@ -39,7 +39,6 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageRestartResult;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
@@ -54,7 +53,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
-import org.kohsuke.stapler.json.JsonResponse;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -113,35 +111,6 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     @Restricted(NoExternalUse.class)
-<<<<<<< 1b6969f129d5e472d4a2d12b0ee05ea705e42a88
-    @JsonResponse
-    public HttpResponse doRestartPipeline(@QueryParameter String stageName) {
-        Map<String, String> result = new HashMap<>();
-        result.put("success", "false");
-
-        if (isRestartEnabled()) {
-            try {
-                run(stageName);
-
-                result.put("success", "true");
-                result.put("message", "ok");
-            } catch (IllegalStateException ise) {
-                result.put("message", "Failure restarting from stage: " + ise);
-            }
-        } else {
-            result.put("message", "not allowed to restart");
-        }
-
-        return HttpResponses.okJSON(result);
-    }
-
-    @RequirePOST
-    public StageRestartResult doRestartStage(@QueryParameter String stageName) {
-        StageRestartResult restartResult = new StageRestartResult("success", true);
-
-        if (!isRestartEnabled()) {
-            throw new AccessDeniedException("not allowed to restart"); // AccessDeniedException2 requires us to look up the specific Permission
-=======
     @RequirePOST
     public HttpResponse doRestartPipeline(@QueryParameter String stageName) {
         Map<String, String> result = new HashMap<>();
@@ -158,7 +127,6 @@ public class RestartDeclarativePipelineAction implements Action {
             }
         } else {
             result.put("message", "not allowed to restart");
->>>>>>> add test code
         }
 
         return HttpResponses.okJSON(result);
