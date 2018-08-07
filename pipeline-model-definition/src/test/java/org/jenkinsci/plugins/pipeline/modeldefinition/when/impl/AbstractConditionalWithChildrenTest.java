@@ -15,9 +15,9 @@ public class AbstractConditionalWithChildrenTest {
     @Test
     public void conditionalWithChildrenNotNull() {
     	AbstractConditionalWithChildren<AllOfConditional> allOfConditional = new AllOfConditional(null);
-    	List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> alOfChildren = allOfConditional.getChildren();
-		assertNotNull(alOfChildren);
-    	assertTrue(alOfChildren.isEmpty());
+    	List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> allOfChildren = allOfConditional.getChildren();
+		assertNotNull(allOfChildren);
+    	assertTrue(allOfChildren.isEmpty());
     	
     	AbstractConditionalWithChildren<AnyOfConditional> anyOfConditional = new AnyOfConditional(null);
     	List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> anyOfChildren = anyOfConditional.getChildren();
