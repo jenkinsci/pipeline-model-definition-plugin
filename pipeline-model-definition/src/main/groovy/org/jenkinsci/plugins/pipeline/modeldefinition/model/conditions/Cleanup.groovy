@@ -44,7 +44,7 @@ class Cleanup extends BuildCondition {
 
     @Override
     String getDescription() {
-        return Messages.Finally_Description()
+        return Messages.Cleanup_Description()
     }
 
     static final long serialVersionUID = 1L
