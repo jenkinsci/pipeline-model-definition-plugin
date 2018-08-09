@@ -56,6 +56,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.BranchConditiona
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.ChangeLogConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.ChangeSetConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.EnvironmentConditional;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.IsRestartedRunConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.NotConditional;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.DescribableParameter;
@@ -529,6 +530,15 @@ public class DirectiveGeneratorTest {
                 "      // One or more steps need to be included within each condition's block.\n" +
                 "    }\n" +
                 "  }\n" +
+                "}");
+    }
+
+    @Issue("JENKINS-51932")
+    @Test
+    public void whenIsRestartedRun() throws Exception {
+        WhenDirective when = new WhenDirective(new IsRestartedRunConditional(), false);
+        assertGenerateDirective(when, "when {\n" +
+                "  isRestartedRun()\n" +
                 "}");
     }
 
