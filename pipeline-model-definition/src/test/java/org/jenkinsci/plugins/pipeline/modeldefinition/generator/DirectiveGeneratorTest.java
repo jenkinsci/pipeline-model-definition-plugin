@@ -28,6 +28,7 @@ import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import hudson.ExtensionList;
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.Describable;
 import hudson.model.ParameterDefinition;
@@ -46,6 +47,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.DockerPipelineF
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.Label;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.AllOfConditional;
@@ -78,6 +80,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class DirectiveGeneratorTest {
     @ClassRule
@@ -86,6 +89,15 @@ public class DirectiveGeneratorTest {
     @BeforeClass
     public static void setUp() throws Exception {
         ToolInstallations.configureMaven3();
+    }
+
+    @Issue("JENKINS-51027")
+    @Test
+    public void buildConditionsHaveDescriptions() throws Exception {
+        PostDirective.DescriptorImpl descriptor = r.jenkins.getDescriptorByType(PostDirective.DescriptorImpl.class);
+        assertNotNull(descriptor);
+        List<BuildCondition> conditions = ExtensionList.lookup(BuildCondition.class);
+        assertEquals(conditions.size(), descriptor.getPossibleConditions().size());
     }
 
     @Test
