@@ -83,7 +83,7 @@ class ModelInterpreter implements Serializable {
                                     try {
                                         postBuildRun = true
                                         executePostBuild(root)
-                                    } catch (Exception e) {
+                                    } catch (Throwable e) {
                                         if (firstError == null) {
                                             firstError = e
                                         }
@@ -98,7 +98,7 @@ class ModelInterpreter implements Serializable {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // Catch any errors that may have been thrown outside of the parallel proper and make sure we set
                 // firstError accordingly.
                 if (firstError == null) {
@@ -109,7 +109,7 @@ class ModelInterpreter implements Serializable {
                 if (!postBuildRun) {
                     try {
                         executePostBuild(root)
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         if (firstError == null) {
                             firstError = e
                         }
@@ -166,7 +166,7 @@ class ModelInterpreter implements Serializable {
                     }
                     try {
                         evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason).call()
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                         Utils.markStageFailedAndContinued(thisStage.name)
                         if (firstError == null) {
@@ -308,7 +308,7 @@ class ModelInterpreter implements Serializable {
                             }
                         }
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     script.getProperty("currentBuild").result = Result.FAILURE
                     Utils.markStageFailedAndContinued(thisStage.name)
                     if (firstError == null) {
@@ -657,7 +657,7 @@ class ModelInterpreter implements Serializable {
             catchRequiredContextForNode(thisStage.agent ?: parentAgent) {
                 delegateAndExecute(thisStage.steps.closure)
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             script.getProperty("currentBuild").result = Utils.getResultFromException(e)
             Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
@@ -752,7 +752,7 @@ class ModelInterpreter implements Serializable {
                         delegateAndExecute(c)
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                 if (stageName != null) {
                     Utils.markStageFailedAndContinued(stageName)
