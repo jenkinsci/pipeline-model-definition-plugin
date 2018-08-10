@@ -34,6 +34,7 @@ import hudson.model.BooleanParameterDefinition;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.StringParameterDefinition;
 import hudson.model.queue.QueueTaskFuture;
@@ -41,6 +42,7 @@ import hudson.tasks.LogRotator;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
 import hudson.util.Secret;
+import jenkins.branch.RateLimitBranchProperty;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 
@@ -60,10 +62,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class OptionsTest extends AbstractModelDefTest {
@@ -415,6 +421,34 @@ public class OptionsTest extends AbstractModelDefTest {
                 .archives("userPass.txt", username + ":" + passphrase)
                 .archives("key.txt", keyContent)
                 .go();
+    }
+
+    @Issue("JENKINS-50561")
+    @Test
+    public void rateLimitBuilds() throws Exception {
+        WorkflowRun b = expect("rateLimitBuilds")
+                .go();
+        WorkflowJob p = b.getParent();
+
+        RateLimitBranchProperty.JobPropertyImpl prop = p.getProperty(RateLimitBranchProperty.JobPropertyImpl.class);
+        assertNotNull(prop);
+        assertEquals(1, prop.getCount());
+        assertEquals("day", prop.getDurationName());
+        assertFalse(prop.isUserBoost());
+
+        QueueTaskFuture<WorkflowRun> inQueue = p.scheduleBuild2(0);
+
+        while (!Queue.getInstance().contains(p)) {
+            Thread.yield();
+        }
+
+        Queue.getInstance().maintain();
+        Queue.Item queued = Queue.getInstance().getItem(p);
+        assertThat(queued.isBlocked(), is(true));
+        assertThat(queued.getCauseOfBlockage().getShortDescription().toLowerCase(),
+                containsString("throttle"));
+
+        inQueue.cancel(true);
     }
 
     private static class DummyPrivateKey extends BaseCredentials implements SSHUserPrivateKey, Serializable {
