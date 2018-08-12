@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,30 +20,30 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
+ *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
-
-import javax.annotation.Nonnull;
-
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * Match all of a list of stage conditions
- */
-public abstract class AbstractConditionalWithChildren<C extends AbstractConditionalWithChildren<C>> extends DeclarativeStageConditional<C> {
-    private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children;
-
-    public AbstractConditionalWithChildren(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
-        this.children = children != null ? children : new ArrayList<>();
+pipeline {
+    agent {
+        label "here"
     }
+    stages {
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                allOf {
+                }
+            }
+            steps {
+                script {
+                    echo "World"
+                }
 
-    @Override
-    @Nonnull
-    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
-        return children;
+            }
+        }
     }
 }
