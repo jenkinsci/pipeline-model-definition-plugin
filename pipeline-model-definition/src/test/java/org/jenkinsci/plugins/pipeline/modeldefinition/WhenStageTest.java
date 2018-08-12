@@ -103,6 +103,12 @@ public class WhenStageTest extends AbstractModelDefTest {
         expect(Result.FAILURE, "when", "whenEmpty").runFromRepo(false)
                 .logContains(Messages.ModelValidatorImpl_EmptyWhen()).logNotContains("Two", "World").go();
     }
+    
+    @Test
+    public void whenAllOfEmpty() throws Exception {
+        ExpectationsBuilder expect = expect("when", "allOfEmpty").runFromRepo(false);
+        expect.logContains("Hello", "World").go();
+    }
 
     @Test
     public void toJson() throws IOException {
