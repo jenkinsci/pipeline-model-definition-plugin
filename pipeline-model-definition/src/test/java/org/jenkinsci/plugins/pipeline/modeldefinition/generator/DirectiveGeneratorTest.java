@@ -285,6 +285,16 @@ public class DirectiveGeneratorTest {
                 "  }\n" +
                 "}");
     }
+    
+    @Test
+    public void whenAllOfEmpty() throws Exception {
+        WhenDirective when = new WhenDirective(new AllOfConditional(null), false);
+
+        assertGenerateDirective(when, "when {\n" +
+                "  allOf {\n" +
+                "  }\n" +
+                "}");
+    }
 
     @Test
     public void whenDeepNested() throws Exception {

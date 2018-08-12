@@ -106,8 +106,8 @@ public class WhenStageTest extends AbstractModelDefTest {
     
     @Test
     public void whenAllOfEmpty() throws Exception {
-        ExpectationsBuilder expect = expect("when", "allOfEmpty").runFromRepo(false);
-        expect.logContains("Hello", "World").go();
+        ExpectationsBuilder expect = expect(Result.FAILURE, "when", "allOfEmpty").runFromRepo(false);
+        expect.logContains(Messages.ModelValidatorImpl_NestedWhenWithoutChildren("allOf")).logNotContains("Hello", "World").go();
     }
 
     @Test
