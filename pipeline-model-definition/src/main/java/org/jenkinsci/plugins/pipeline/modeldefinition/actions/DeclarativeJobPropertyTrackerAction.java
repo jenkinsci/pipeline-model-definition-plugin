@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -45,7 +46,7 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
     private final Set<String> jobProperties = new HashSet<>();
     private final Set<String> triggers = new HashSet<>();
     private final Set<String> parameters = new HashSet<>();
-    private final Set<String> options = new HashSet<>();
+    private Set<String> options = new HashSet<>();
 
     @Deprecated
     public DeclarativeJobPropertyTrackerAction(@CheckForNull List<JobProperty> rawJobProperties,
@@ -78,6 +79,14 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
                 options.add(o.getDescriptor().getName());
             }
         }
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.options == null) {
+            this.options = new HashSet<>();
+        }
+
+        return this;
     }
 
     /**
