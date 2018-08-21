@@ -634,9 +634,8 @@ class Utils {
             } else {
                 String quietPeriodName = Jenkins.getActiveInstance().getDescriptorByType(QuietPeriod.DescriptorImpl.class)?.getName()
                 // If the quiet period was set by the previous build, wipe it out.
-                System.err.println("options: ${previousOptions}")
                 if (quietPeriodName != null && previousOptions.contains(quietPeriodName)) {
-                    j.setQuietPeriod(0)
+                    j.setQuietPeriod(Jenkins.getActiveInstance().getQuietPeriod())
                 }
             }
 
