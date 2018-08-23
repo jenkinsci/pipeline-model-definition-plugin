@@ -409,7 +409,7 @@ public class OptionsTest extends AbstractModelDefTest {
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
         j.buildAndAssertSuccess(job);
 
-        assertEquals(0, job.getQuietPeriod());
+        assertEquals(j.jenkins.getQuietPeriod(), job.getQuietPeriod());
     }
 
     @Issue("JENKINS-48380")
