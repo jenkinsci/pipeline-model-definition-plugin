@@ -39,7 +39,7 @@ import javax.annotation.Nonnull
 @Extension(ordinal=600d) @Symbol("unstable")
 class Unstable extends BuildCondition {
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context = null, Throwable error = null) {
         Result execResult = getExecutionResult(r)
         return execResult == Result.UNSTABLE || r.getResult() == Result.UNSTABLE
     }

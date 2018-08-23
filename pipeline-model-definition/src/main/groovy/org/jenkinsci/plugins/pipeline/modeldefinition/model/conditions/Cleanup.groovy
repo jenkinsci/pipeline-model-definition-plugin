@@ -38,7 +38,7 @@ import javax.annotation.Nonnull
 @Extension(ordinal=-10000d) @Symbol("cleanup")
 class Cleanup extends BuildCondition {
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context = null, Throwable error = null) {
         return true
     }
 
