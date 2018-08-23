@@ -38,8 +38,14 @@ import javax.annotation.Nonnull
  */
 @Extension(ordinal=880d) @Symbol("regression")
 class Regression extends BuildCondition {
+    @Deprecated
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r, Object context = null, Throwable error = null) {
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return meetsCondition(r, null, null)
+    }
+
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
 

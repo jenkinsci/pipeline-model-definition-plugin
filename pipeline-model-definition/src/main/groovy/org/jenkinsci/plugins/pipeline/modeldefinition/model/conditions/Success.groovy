@@ -39,8 +39,14 @@ import javax.annotation.Nonnull
  */
 @Extension(ordinal=700d) @Symbol("success")
 class Success extends BuildCondition {
+    @Deprecated
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r, Object context = null, Throwable error = null) {
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return meetsCondition(r, null, null)
+    }
+
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
         Result execResult = getExecutionResult(r)
         if (context instanceof Stage && (execResult == Result.FAILURE || r.getResult() == Result.FAILURE)) {
             return error == null

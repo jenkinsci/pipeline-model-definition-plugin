@@ -38,8 +38,14 @@ import javax.annotation.Nonnull
  */
 @Extension(ordinal=800d) @Symbol("aborted")
 class Aborted extends BuildCondition {
+    @Deprecated
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r, Object context = null, Throwable error = null) {
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return meetsCondition(r, null, null)
+    }
+
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
         Result execResult = getExecutionResult(r)
         return execResult == Result.ABORTED || r.getResult() == Result.ABORTED
     }

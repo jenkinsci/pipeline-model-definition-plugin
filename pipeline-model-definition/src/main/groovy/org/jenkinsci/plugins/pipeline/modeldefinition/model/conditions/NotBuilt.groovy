@@ -38,8 +38,14 @@ import javax.annotation.Nonnull
  */
 @Extension(ordinal=400d) @Symbol("notBuilt")
 class NotBuilt extends BuildCondition {
+    @Deprecated
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r, Object context = null, Throwable error = null) {
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return meetsCondition(r, null, null)
+    }
+
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
         Result execResult = getExecutionResult(r)
         return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT
     }
