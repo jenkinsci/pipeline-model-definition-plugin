@@ -326,4 +326,16 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     public void sequentialPostNode() throws Exception {
         expect("sequentialPostNode").go();
     }
+
+    @Issue("JENKINS-51383")
+    @Test
+    public void postSuccessNoSuchMethodError() throws Exception {
+        expect(Result.FAILURE, "postSuccessNoSuchMethodError")
+                .logContains("[Pipeline] { (foo)",
+                        "before missing")
+                .logNotContains("MOST DEFINITELY FINISHED",
+                        "after missing")
+                .go();
+    }
+
 }

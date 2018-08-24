@@ -492,7 +492,7 @@ class Utils {
      * @param e The exception.
      * @return The result.
      */
-    static Result getResultFromException(Exception e) {
+    static Result getResultFromException(Throwable e) {
         if (e instanceof FlowInterruptedException) {
             return ((FlowInterruptedException)e).result
         } else {
