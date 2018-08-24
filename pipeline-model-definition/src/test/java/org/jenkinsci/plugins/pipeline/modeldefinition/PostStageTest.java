@@ -174,11 +174,13 @@ public class PostStageTest extends AbstractModelDefTest {
                         "Found failure in Child 1",
                         "Found success in Nested 2",
                         "Found success in Child 2",
-                        "Found failure in Child 3")
+                        "Found failure in Child 3",
+                        "Parallel parent failure")
                 .logNotContains("Found success in Child 1",
                         "Found failure in Nested 2",
                         "Found failure in Child 2",
-                        "Found success in Child 3")
+                        "Found success in Child 3",
+                        "Parallel parent success")
                 .go();
     }
 

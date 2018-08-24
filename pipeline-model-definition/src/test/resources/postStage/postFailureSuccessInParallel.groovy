@@ -103,6 +103,12 @@ pipeline {
                 always {
                     echo 'Post ran'
                 }
+                success {
+                    echo "Parallel parent success"
+                }
+                failure {
+                    echo "Parallel parent failure"
+                }
             }
         }
     }
