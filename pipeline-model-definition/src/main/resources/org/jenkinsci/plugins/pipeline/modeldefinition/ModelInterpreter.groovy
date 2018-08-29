@@ -787,6 +787,6 @@ class ModelInterpreter implements Serializable {
      * @param root The root context we're running in
      */
     def executeProperties(Root root) {
-        Utils.updateJobProperties(root.options?.properties, root.triggers?.triggers, root.parameters?.parameters, script)
+        Utils.updateJobProperties(root.options?.properties, root.triggers?.triggers, root.parameters?.parameters, root.options?.options, script)
     }
 }

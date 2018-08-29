@@ -235,7 +235,7 @@ public class OptionsTest extends AbstractModelDefTest {
         WorkflowJob job = b.getParent();
         assertNotNull(job.getProperty(BuildDiscarderProperty.class));
         job.addProperty(new DisableConcurrentBuildsJobProperty());
-
+        job.setQuietPeriod(15);
         job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
         j.buildAndAssertSuccess(job);
 
@@ -251,6 +251,7 @@ public class OptionsTest extends AbstractModelDefTest {
         }
 
         assertEquals(1, externalPropCount);
+        assertEquals(15, job.getQuietPeriod());
     }
 
     @Issue("JENKINS-44809")
@@ -382,6 +383,33 @@ public class OptionsTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "hello")
                 .go();
+    }
+
+    @Issue("JENKINS-51227")
+    @Test
+    public void quietPeriod() throws Exception {
+        WorkflowRun b = expect("quietPeriod")
+                .logContains("hello")
+                .go();
+
+        WorkflowJob p = b.getParent();
+        assertNotNull(p);
+        assertEquals(15, p.getQuietPeriod());
+    }
+
+    @Issue("JENKINS-51227")
+    @Test
+    public void quietPeriodRemoved() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("quietPeriod");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        assertEquals(15, job.getQuietPeriod());
+
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("propsTriggersParamsRemoved"), true));
+        j.buildAndAssertSuccess(job);
+
+        assertEquals(j.jenkins.getQuietPeriod(), job.getQuietPeriod());
     }
 
     @Issue("JENKINS-48380")

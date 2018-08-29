@@ -39,6 +39,7 @@ import hudson.model.ParameterDefinition
 import hudson.model.ParametersDefinitionProperty
 import hudson.model.Result
 import hudson.triggers.Trigger
+import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -58,6 +59,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativeP
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.QuietPeriod
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -524,6 +526,15 @@ class Utils {
         return l
     }
 
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    static void updateJobProperties(@CheckForNull List<Object> propsOrUninstantiated,
+                                    @CheckForNull List<Object> trigsOrUninstantiated,
+                                    @CheckForNull List<Object> paramsOrUninstantiated,
+                                    @Nonnull CpsScript script) {
+        updateJobProperties(propsOrUninstantiated, trigsOrUninstantiated, paramsOrUninstantiated, null, script)
+    }
+
     /**
      * Given the values from {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Options#getProperties()},
      * {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers#getTriggers()}, and
@@ -537,16 +548,20 @@ class Utils {
      *   {@link UninstantiatedDescribable}s.
      * @param paramsOrUninstantiated Newly-defined parameters, potentially a mix of {@link ParameterDefinition}s and
      *   {@link UninstantiatedDescribable}s.
+     * @param optionsOrUninstantiated Newly-defined Declarative options, potentially a mix of {@link DeclarativeOption}s and
+     *   {@link UninstantiatedDescribable}s.
      * @param script
      */
     @Restricted(NoExternalUse.class)
     static void updateJobProperties(@CheckForNull List<Object> propsOrUninstantiated,
                                     @CheckForNull List<Object> trigsOrUninstantiated,
                                     @CheckForNull List<Object> paramsOrUninstantiated,
+                                    @CheckForNull Map<String,DeclarativeOption> optionsOrUninstantiated,
                                     @Nonnull CpsScript script) {
-        List<JobProperty> rawJobProperties = instantiateList(JobProperty.class, propsOrUninstantiated)
-        List<Trigger> rawTriggers = instantiateList(Trigger.class, trigsOrUninstantiated)
-        List<ParameterDefinition> rawParameters = instantiateList(ParameterDefinition.class, paramsOrUninstantiated)
+        List<JobProperty> rawJobProperties = instantiateList(JobProperty.class, propsOrUninstantiated ?: [])
+        List<Trigger> rawTriggers = instantiateList(Trigger.class, trigsOrUninstantiated ?: [])
+        List<ParameterDefinition> rawParameters = instantiateList(ParameterDefinition.class, paramsOrUninstantiated ?: [])
+        List<DeclarativeOption> rawOptions = optionsOrUninstantiated != null ? optionsOrUninstantiated.values().asList() : []
 
         WorkflowRun r = script.$build()
         WorkflowJob j = r.getParent()
@@ -558,6 +573,7 @@ class Utils {
         Set<String> previousProperties = new HashSet<>()
         Set<String> previousTriggers = new HashSet<>()
         Set<String> previousParameters = new HashSet<>()
+        Set<String> previousOptions = new HashSet<>()
 
         // First, use the action from the job if it's present.
         DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
@@ -573,6 +589,7 @@ class Utils {
             previousProperties.addAll(previousAction.getJobProperties())
             previousTriggers.addAll(previousAction.getTriggers())
             previousParameters.addAll(previousAction.getParameters())
+            previousOptions.addAll(previousAction.getOptions())
         }
 
         List<JobProperty> jobPropertiesToApply = []
@@ -610,6 +627,18 @@ class Utils {
 
         BulkChange bc = new BulkChange(j)
         try {
+            // Check if QuietPeriod option is specified
+            QuietPeriod quietPeriod = (QuietPeriod) rawOptions.find { it instanceof QuietPeriod }
+            if (quietPeriod != null) {
+                j.setQuietPeriod(quietPeriod.quietPeriod)
+            } else {
+                String quietPeriodName = Jenkins.getActiveInstance().getDescriptorByType(QuietPeriod.DescriptorImpl.class)?.getName()
+                // If the quiet period was set by the previous build, wipe it out.
+                if (quietPeriodName != null && previousOptions.contains(quietPeriodName)) {
+                    j.setQuietPeriod(Jenkins.getActiveInstance().getQuietPeriod())
+                }
+            }
+
             // Remove the triggers/parameters properties regardless.
             j.removeProperty(PipelineTriggersJobProperty.class)
             j.removeProperty(ParametersDefinitionProperty.class)
@@ -637,7 +666,7 @@ class Utils {
 
             bc.commit()
             // Add the action tracking what we added (or empty otherwise)
-            j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
+            j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters, rawOptions))
         } finally {
             bc.abort()
         }
