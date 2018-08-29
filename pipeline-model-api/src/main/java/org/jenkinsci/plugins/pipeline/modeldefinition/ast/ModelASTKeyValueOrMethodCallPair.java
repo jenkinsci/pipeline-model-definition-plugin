@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement implements ModelASTMethodArg {
+public class ModelASTKeyValueOrMethodCallPair extends ModelASTElement implements ModelASTMethodArg {
     private ModelASTKey key;
     private ModelASTMethodArg value;
 

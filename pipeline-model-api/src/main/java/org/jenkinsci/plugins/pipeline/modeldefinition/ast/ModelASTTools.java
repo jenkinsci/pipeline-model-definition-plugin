@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTTools extends ModelASTElement {
+public class ModelASTTools extends ModelASTElement {
     private Map<ModelASTKey, ModelASTValue> tools = new LinkedHashMap<>();
 
     public ModelASTTools(Object sourceLocation) {

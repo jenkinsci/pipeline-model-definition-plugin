@@ -17,7 +17,7 @@ import javax.annotation.Nonnull;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
+public class ModelASTPositionalArgumentList extends ModelASTArgumentList {
     private List<ModelASTValue> arguments = new ArrayList<>();
 
     public ModelASTPositionalArgumentList(Object sourceLocation) {

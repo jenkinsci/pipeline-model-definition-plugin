@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTPostBuild extends ModelASTBuildConditionsContainer {
+public class ModelASTPostBuild extends ModelASTBuildConditionsContainer {
     public ModelASTPostBuild(Object sourceLocation) {
         super(sourceLocation);
     }

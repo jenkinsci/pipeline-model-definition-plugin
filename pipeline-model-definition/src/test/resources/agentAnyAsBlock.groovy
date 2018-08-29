@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,26 +22,24 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-import javax.annotation.Nonnull;
-
-/**
- *
- * @author Andrew Bayer
- */
-public interface ModelASTMarkerInterface {
-    String toGroovy();
-
-    Object toJSON();
-
-    void validate(@Nonnull ModelValidator validator);
-
-    Object getSourceLocation();
-
-    void removeSourceLocation();
-
-    void setSourceLocation(Object sourceLocation);
+pipeline {
+    agent {
+        any true
+    }
+    stages {
+        stage("foo") {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh('echo "THIS WORKS"')
+                    } else {
+                        bat('echo "THIS WORKS"')
+                    }
+                }
+            }
+        }
+    }
 }
+
+
+

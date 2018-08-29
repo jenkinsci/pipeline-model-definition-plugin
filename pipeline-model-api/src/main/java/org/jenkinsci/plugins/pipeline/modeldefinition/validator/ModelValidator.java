@@ -50,6 +50,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTriggers;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhen;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective;
 
 
 public interface ModelValidator {
@@ -102,4 +103,6 @@ public interface ModelValidator {
     boolean validateElement(ModelASTStageInput input);
 
     boolean validateElement(ModelASTValue value);
+
+    boolean validateElement(DeclarativeDirective directive, boolean inStage);
 }

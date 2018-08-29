@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTStageInput extends ModelASTElement {
+public class ModelASTStageInput extends ModelASTElement {
     private List<ModelASTBuildParameter> parameters = new ArrayList<>();
     private ModelASTValue message;
     private ModelASTValue id;

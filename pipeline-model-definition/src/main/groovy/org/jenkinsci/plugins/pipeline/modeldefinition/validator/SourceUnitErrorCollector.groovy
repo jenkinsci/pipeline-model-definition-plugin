@@ -32,6 +32,7 @@ import org.codehaus.groovy.control.messages.Message
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage
 import org.codehaus.groovy.syntax.SyntaxException
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTElement
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMarkerInterface
 
 /**
  * Error collector for parsing from Groovy.
@@ -61,6 +62,11 @@ class SourceUnitErrorCollector extends ErrorCollector {
 
     @Override
     void error(ModelASTElement src, String message) {
+        error((ModelASTMarkerInterface)src, message)
+    }
+
+    @Override
+    void error(ModelASTMarkerInterface src, String message) {
         // TODO: Being defensive here - better ideas?
         ASTNode loc = new ASTNode()
 

@@ -1,10 +1,14 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents the parsed pipeline definition for visual pipeline editor. Corresponds to {@code Root}.
@@ -12,7 +16,7 @@ import javax.annotation.Nonnull;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-public final class ModelASTPipelineDef extends ModelASTElement {
+public class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTStages stages;
     private ModelASTPostBuild postBuild;
     private ModelASTEnvironment environment;
@@ -22,6 +26,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     private ModelASTBuildParameters parameters;
     private ModelASTTriggers triggers;
     private ModelASTLibraries libraries;
+    private List<DeclarativeDirective> additionalDirectives = new ArrayList<>();
 
     public ModelASTPipelineDef(Object sourceLocation) {
         super(sourceLocation);
@@ -54,6 +59,13 @@ public final class ModelASTPipelineDef extends ModelASTElement {
             a.put("libraries", libraries.toJSON());
         } else {
             a.put("libraries", null);
+        }
+        if (!additionalDirectives.isEmpty()) {
+            JSONObject directives = new JSONObject();
+            for (DeclarativeDirective d : additionalDirectives) {
+                directives.put(d.getDescriptor().getName(), d.toJSON());
+            }
+            a.put("additionalDirectives", directives);
         }
         return new JSONObject().accumulate("pipeline", a);
     }
@@ -89,6 +101,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (libraries != null) {
             libraries.validate(validator);
         }
+        for (DeclarativeDirective d : additionalDirectives) {
+            d.validate(validator);
+        }
     }
 
     @Override
@@ -123,6 +138,9 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         }
         if (triggers != null && !triggers.getTriggers().isEmpty()) {
             result.append(triggers.toGroovy());
+        }
+        for (DeclarativeDirective d : additionalDirectives) {
+            result.append(d.toGroovy());
         }
 
         result.append("}\n");
@@ -202,6 +220,12 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (triggers != null) {
             triggers.removeSourceLocation();
         }
+        if (agent != null) {
+            agent.removeSourceLocation();
+        }
+        for (DeclarativeDirective d : additionalDirectives) {
+            d.removeSourceLocation();
+        }
     }
 
     private static String indent(int count) {
@@ -280,6 +304,14 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         this.triggers = triggers;
     }
 
+    @Nonnull
+    public List<DeclarativeDirective> getAdditionalDirectives() {
+        return additionalDirectives;
+    }
+
+    public void setAdditionalDirectives(@Nonnull List<DeclarativeDirective> additionalDirectives) {
+        this.additionalDirectives.addAll(additionalDirectives);
+    }
 
     @Override
     public String toString() {
@@ -293,6 +325,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 ", parameters=" + parameters +
                 ", triggers=" + triggers +
                 ", libraries=" + libraries +
+                ", additionalDirectives=" + additionalDirectives +
                 "}";
     }
 
@@ -338,8 +371,11 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         if (getLibraries() != null ? !getLibraries().equals(that.getLibraries()) : that.getLibraries() != null) {
             return false;
         }
-        return getTriggers() != null ? getTriggers().equals(that.getTriggers()) : that.getTriggers() == null;
+        if (getTriggers() != null ? !getTriggers().equals(that.getTriggers()) : that.getTriggers() != null) {
+            return false;
+        }
 
+        return getAdditionalDirectives().equals(that.getAdditionalDirectives());
     }
 
     @Override
@@ -354,6 +390,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         result = 31 * result + (getParameters() != null ? getParameters().hashCode() : 0);
         result = 31 * result + (getTriggers() != null ? getTriggers().hashCode() : 0);
         result = 31 * result + (getLibraries() != null ? getLibraries().hashCode() : 0);
+        result = 31 * result + getAdditionalDirectives().hashCode();
         return result;
     }
 }

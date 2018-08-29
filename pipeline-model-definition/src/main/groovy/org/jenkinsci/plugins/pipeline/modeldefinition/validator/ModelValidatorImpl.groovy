@@ -42,6 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions
@@ -281,7 +282,7 @@ class ModelValidatorImpl implements ModelValidator {
 
     private boolean isValidStepParameter(DescribableModel<? extends Describable> model,
                                          String key,
-                                         ModelASTElement keyElement) {
+                                         ModelASTMarkerInterface keyElement) {
         def p = model?.getParameter(key)
         if (p == null) {
             String possible = EditDistance.findNearest(key, model.getParameters().collect {
@@ -293,7 +294,7 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
-    private boolean validateDescribable(ModelASTElement element, String name,
+    private boolean validateDescribable(ModelASTMarkerInterface element, String name,
                                         ModelASTArgumentList args,
                                         DescribableModel<? extends Describable> model,
                                         boolean takesClosure = false) {
@@ -797,7 +798,11 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(value, true)
     }
 
-    private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
+    boolean validateElement(@Nonnull DeclarativeDirective directive, boolean inStage) {
+        return validateFromContributors(directive, true, inStage)
+    }
+
+    private boolean validateFromContributors(ModelASTMarkerInterface element, boolean isValid, boolean isNested = false) {
         boolean contributorsValid = getContributors().collect { contributor ->
             List<String> errors
             if (!(element instanceof ModelASTStage)) {

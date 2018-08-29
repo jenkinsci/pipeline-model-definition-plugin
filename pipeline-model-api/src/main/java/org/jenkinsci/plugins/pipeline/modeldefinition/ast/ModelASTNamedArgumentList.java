@@ -15,7 +15,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
  * @author Andrew Bayer
  */
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
-public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
+public class ModelASTNamedArgumentList extends ModelASTArgumentList {
     private Map<ModelASTKey, ModelASTValue> arguments = new LinkedHashMap<>();
 
     public ModelASTNamedArgumentList(Object sourceLocation) {

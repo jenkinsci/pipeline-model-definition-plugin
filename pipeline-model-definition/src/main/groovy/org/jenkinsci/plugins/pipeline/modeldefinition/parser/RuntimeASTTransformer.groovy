@@ -627,7 +627,8 @@ class RuntimeASTTransformer {
                     transformTriggers(original.triggers),
                     transformParameters(original.parameters),
                     transformLibraries(original.libraries),
-                    constX(original.stages.getUuid().toString())))
+                    constX(original.stages.getUuid().toString()),
+                    transformAdditionalDirectives(original.additionalDirectives)))
         }
 
         return constX(null)
@@ -654,7 +655,8 @@ class RuntimeASTTransformer {
                     transformOptions(original.options),
                     transformStageInput(original.input, original.name),
                     transformParallelContent(original),
-                    transformStages(original.stages)))
+                    transformStages(original.stages),
+                    transformAdditionalDirectives(original.additionalDirectives)))
         }
 
         return constX(null)
@@ -834,6 +836,14 @@ class RuntimeASTTransformer {
      */
     Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
         return transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class)
+    }
+
+    Expression transformAdditionalDirectives(@Nonnull List<DeclarativeDirective> additionalDirectives) {
+        MapExpression transformed = new MapExpression()
+        additionalDirectives.each { d ->
+            transformed.addMapEntryExpression(constX(d.getDescriptor().name), d.transformDirective())
+        }
+        return transformed
     }
 
 }

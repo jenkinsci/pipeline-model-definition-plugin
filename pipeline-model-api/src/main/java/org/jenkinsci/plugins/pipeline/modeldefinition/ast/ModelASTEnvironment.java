@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTEnvironment extends ModelASTElement {
+public class ModelASTEnvironment extends ModelASTElement {
     private Map<ModelASTKey, ModelASTEnvironmentValue> variables = new LinkedHashMap<>();
 
     public ModelASTEnvironment(Object sourceLocation) {

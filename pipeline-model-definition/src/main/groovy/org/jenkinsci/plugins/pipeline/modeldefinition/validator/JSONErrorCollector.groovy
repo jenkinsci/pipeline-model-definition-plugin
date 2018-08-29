@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMarkerInterface
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.jsonpointer.JsonPointer
 import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
@@ -45,6 +46,11 @@ class JSONErrorCollector extends ErrorCollector {
 
     @Override
     void error(ModelASTElement src, String message) {
+        error((ModelASTMarkerInterface)src, message)
+    }
+
+    @Override
+    void error(ModelASTMarkerInterface src, String message) {
         JsonTree json = null
         if (src.sourceLocation instanceof JsonTree) {
             json = (JsonTree)src.sourceLocation

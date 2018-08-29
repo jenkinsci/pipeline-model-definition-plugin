@@ -13,7 +13,7 @@ import javax.annotation.Nonnull;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTBuildParameters extends ModelASTElement {
+public class ModelASTBuildParameters extends ModelASTElement {
     private List<ModelASTBuildParameter> parameters = new ArrayList<>();
 
     public ModelASTBuildParameters(Object sourceLocation) {

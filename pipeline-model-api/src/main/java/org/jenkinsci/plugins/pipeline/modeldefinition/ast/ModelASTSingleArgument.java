@@ -13,7 +13,7 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-public final class ModelASTSingleArgument extends ModelASTArgumentList {
+public class ModelASTSingleArgument extends ModelASTArgumentList {
     private ModelASTValue value;
 
     public ModelASTSingleArgument(Object sourceLocation) {

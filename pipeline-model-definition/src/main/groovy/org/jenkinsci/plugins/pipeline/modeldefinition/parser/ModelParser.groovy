@@ -31,8 +31,6 @@ import hudson.model.Run
 import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.GroovyCodeVisitor
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -48,6 +46,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDesc
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirective
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.DeclarativeDirectiveDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
@@ -83,15 +83,19 @@ class ModelParser implements Parser {
     /**
      * Represents the source file being processed.
      */
-    private final SourceUnit sourceUnit
+    protected final SourceUnit sourceUnit
 
-    private final ModelValidator validator
+    protected final ModelValidator validator
 
-    private final ErrorCollector errorCollector
+    protected final ErrorCollector errorCollector
 
-    private final DescriptorLookupCache lookup
+    protected final DescriptorLookupCache lookup
 
-    private final Run<?,?> build
+    protected final Run<?,?> build
+
+    protected final Map<String,DeclarativeDirectiveDescriptor> topLevelAdditionalDirectives = [:]
+
+    protected final Map<String,DeclarativeDirectiveDescriptor> stageAdditionalDirectives = [:]
 
     @Deprecated
     ModelParser(SourceUnit sourceUnit) {
@@ -122,6 +126,15 @@ class ModelParser implements Parser {
             this.build = (Run) executable
         } else {
             this.build = null
+        }
+
+        DeclarativeDirectiveDescriptor.all().each { d ->
+            if (d.allowedAtTopLevel) {
+                topLevelAdditionalDirectives.put(d.name, d)
+            }
+            if (d.allowedInStage) {
+                stageAdditionalDirectives.put(d.name, d)
+            }
         }
     }
 
@@ -159,7 +172,7 @@ class ModelParser implements Parser {
         }
 
         if (pst != null) {
-            return parsePipelineStep(pst, secondaryRun)
+            return parseValidateAndTransformPipeline(pst, secondaryRun)
         } else {
             // Look for the pipeline step inside methods named call.
             MethodNode callMethod = src.methods.find { it.name == "call" }
@@ -170,7 +183,7 @@ class ModelParser implements Parser {
 
                 if (!pipelineSteps.isEmpty()) {
                     List<ModelASTPipelineDef> pipelineDefs = pipelineSteps.collect { p ->
-                        return parsePipelineStep(p, secondaryRun)
+                        return parseValidateAndTransformPipeline(p, secondaryRun)
                     }
                     // Even if there are multiple pipeline blocks, just return the first one - this return value is only
                     // used in a few places: tests, where there will only ever be one, and linting/converting, which also
@@ -186,7 +199,41 @@ class ModelParser implements Parser {
         return null // no 'pipeline', so this doesn't apply
     }
 
-    private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
+    @CheckForNull ModelASTPipelineDef parseValidateAndTransformPipeline(Statement pst, boolean secondaryRun = false) {
+        ModelASTPipelineDef pipelineDef = parsePipelineStep(pst, secondaryRun)
+
+        if (pipelineDef != null) {
+            def pipelineBlock = matchBlockStatement(pst)
+
+            List<DeclarativeDirective> additionalDirectives = pipelineDef.additionalDirectives
+
+            additionalDirectives.each { d ->
+                if (d instanceof DeclarativeDirective.Preprocessor) {
+                    pipelineDef = d.process(pipelineDef, errorCollector, build)
+                }
+            }
+
+            pipelineDef.validate(validator)
+
+            // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
+            astDebugLog {
+                "Model as JSON: ${pipelineDef.toJSON().toString(2)}"
+            }
+            // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
+            // are no errors.
+            if (!secondaryRun && errorCollector.errorCount == 0) {
+                pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(pipelineDef, build)
+                // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
+                astDebugLog {
+                    "Transformed runtime AST: ${-> prettyPrint(pipelineBlock.whole.arguments)}"
+                }
+            }
+        }
+
+        return pipelineDef
+    }
+
+    protected @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst)
 
         def pipelineBlock = matchBlockStatement(pst)
@@ -255,25 +302,16 @@ class ModelParser implements Parser {
                         errorCollector.error(placeholderForErrors, Messages.ModelParser_RenamedPostBuild())
                         break
                     default:
-                        // We need to check for unknowns here.
-                        errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
+                        if (topLevelAdditionalDirectives.containsKey(name)) {
+                            DeclarativeDirective d = parseAdditionalDirective(stmt, topLevelAdditionalDirectives.get(name))
+                            if (d != null) {
+                                r.additionalDirectives.add(d)
+                            }
+                        } else {
+                            // We need to check for unknowns here.
+                            errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
+                        }
                 }
-            }
-        }
-
-        r.validate(validator)
-
-        // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
-        astDebugLog {
-            "Model as JSON: ${r.toJSON().toString(2)}"
-        }
-        // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
-        // are no errors.
-        if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(r, build)
-            // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
-            astDebugLog {
-                "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"
             }
         }
 
@@ -372,7 +410,7 @@ class ModelParser implements Parser {
      * assuming no errors were encountered on the various subexpressions, in which case it will return null.
      */
     @CheckForNull
-    private ModelASTValue envValueForStringConcat(@Nonnull BinaryExpression exp) {
+    protected ModelASTValue envValueForStringConcat(@Nonnull BinaryExpression exp) {
         StringBuilder builder = new StringBuilder()
         boolean isLiteral = true
 
@@ -408,7 +446,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
+    protected boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
         if (e instanceof ConstantExpression || e instanceof GStringExpression) {
             ModelASTValue val = parseArgument(e)
             return appendAndIsLiteral(val, builder)
@@ -418,7 +456,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
+    protected boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
         if (val == null) {
             return true
         } else if (!val.isLiteral()) {
@@ -541,7 +579,7 @@ class ModelParser implements Parser {
                             BlockStatement block = asBlock(stepsBlock.body.code)
 
                             // Handle parallel as a special case
-                            if (block.statements.size()==1) {
+                            if (block.statements.size() == 1) {
                                 def parallel = matchParallel(block.statements[0])
 
                                 if (parallel != null) {
@@ -594,7 +632,14 @@ class ModelParser implements Parser {
                             stage.stages = parseStages(s)
                             break
                         default:
-                            errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
+                            if (stageAdditionalDirectives.containsKey(name)) {
+                                DeclarativeDirective d = parseAdditionalDirective(s, stageAdditionalDirectives.get(name))
+                                if (d != null) {
+                                    stage.additionalDirectives.add(d)
+                                }
+                            } else {
+                                errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
+                            }
                     }
                 }
             }
@@ -1004,7 +1049,7 @@ class ModelParser implements Parser {
     }
 
 
-    private ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
+    protected ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
         if (Jenkins.getInstance() != null && origArgs instanceof ModelASTSingleArgument) {
             ModelASTValue singleArgValue = ((ModelASTSingleArgument)origArgs).value
             ModelASTNamedArgumentList namedArgs = new ModelASTNamedArgumentList(origArgs.sourceLocation)
@@ -1038,7 +1083,7 @@ class ModelParser implements Parser {
         return parseCodeBlockInternal(st, new ModelASTScriptBlock(st), "Script")
     }
 
-    private <T extends AbstractModelASTCodeBlock> T parseCodeBlockInternal(Statement st, T scriptBlock, String pronoun) {
+    protected <T extends AbstractModelASTCodeBlock> T parseCodeBlockInternal(Statement st, T scriptBlock, String pronoun) {
         // TODO: Probably error out for cases with parameters?
         def bs = matchBlockStatement(st)
         if (bs != null) {
@@ -1150,14 +1195,14 @@ class ModelParser implements Parser {
         return b
     }
 
-    private ModelASTKey parseKey(Expression e) {
+    protected ModelASTKey parseKey(Expression e) {
         ModelASTKey key = new ModelASTKey(e)
         key.setKey(parseStringLiteral(e))
 
         return key
     }
 
-    private ModelASTArgumentList parseArgumentList(List<Expression> args) {
+    protected ModelASTArgumentList parseArgumentList(List<Expression> args) {
         switch (args.size()) {
         case 0:
             return new ModelASTNamedArgumentList(null)  // no arguments
@@ -1225,6 +1270,15 @@ class ModelParser implements Parser {
         }
 
         return val
+    }
+
+    /**
+     * Parse a {@link Statement} as a specific {@link DeclarativeDirective} extension.
+     */
+    @CheckForNull
+    DeclarativeDirective parseAdditionalDirective(@Nonnull Statement st,
+                                                  @Nonnull DeclarativeDirectiveDescriptor directiveDescriptor) {
+        return directiveDescriptor.parseDirectiveFromGroovy(st, sourceUnit)
     }
 
     protected String parseStringLiteral(Expression exp) {

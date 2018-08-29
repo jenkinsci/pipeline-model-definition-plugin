@@ -37,7 +37,7 @@ import java.util.Map;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTClosureMap extends ModelASTElement implements ModelASTMethodArg {
+public class ModelASTClosureMap extends ModelASTElement implements ModelASTMethodArg {
     private Map<ModelASTKey, ModelASTMethodArg> variables = new LinkedHashMap<>();
 
     public ModelASTClosureMap(Object sourceLocation) {

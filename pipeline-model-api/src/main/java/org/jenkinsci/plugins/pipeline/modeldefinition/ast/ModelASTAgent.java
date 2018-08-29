@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTAgent extends ModelASTElement {
+public class ModelASTAgent extends ModelASTElement {
     private ModelASTMethodArg variables;
     private ModelASTKey agentType;
 
