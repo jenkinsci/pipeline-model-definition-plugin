@@ -25,6 +25,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
 import hudson.model.Slave;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -157,6 +161,73 @@ public class PostStageTest extends AbstractModelDefTest {
                         "Post Child 2 ran",
                         "Post ran")
                 .go();
+    }
+
+    @Issue("JENKINS-52114")
+    @Test
+    public void postFailureSuccessInParallel() throws Exception {
+        expect(Result.FAILURE, "postFailureSuccessInParallel")
+                .logContains("Post Nested 1 ran",
+                        "Post Nested 2 ran",
+                        "Post Child 2 ran",
+                        "Post ran",
+                        "Found failure in Child 1",
+                        "Found success in Nested 2",
+                        "Found success in Child 2",
+                        "Found failure in Child 3",
+                        "Parallel parent failure")
+                .logNotContains("Found success in Child 1",
+                        "Found failure in Nested 2",
+                        "Found failure in Child 2",
+                        "Found success in Child 3",
+                        "Parallel parent success")
+                .go();
+    }
+
+    @Issue("JENKINS-52114")
+    @Test
+    public void abortedShouldNotTriggerFailure() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
+        job.setDefinition(new CpsFlowDefinition("" +
+                "pipeline {\n" +
+                "    agent any\n" +
+                "    stages {\n" +
+                "        stage('foo') {\n" +
+                "            steps {\n" +
+                "                echo 'hello'\n" +
+                "                semaphore 'wait-again'\n" +
+                "                sh 'sleep 15'\n" +
+                "            }\n" +
+                "            post {\n" +
+                "                success {\n" +
+                "                    echo 'I AM SUCCESSFUL'\n" +
+                "                }\n" +
+                "                aborted {\n" +
+                "                    echo 'I AM ABORTED'\n" +
+                "                }\n" +
+                "                failure {\n" +
+                "                    echo 'I FAILED'\n" +
+                "                }\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n", true));
+
+        WorkflowRun run1 = job.scheduleBuild2(0).waitForStart();
+        SemaphoreStep.waitForStart("wait-again/1", run1);
+        SemaphoreStep.success("wait-again/1", null);
+        Thread.sleep(1000);
+        run1.doStop();
+
+        j.assertBuildStatus(Result.ABORTED, j.waitForCompletion(run1));
+
+        j.assertLogContains("I AM ABORTED", run1);
+
+        j.assertLogNotContains("I AM SUCCESSFUL", run1);
+
+        j.assertLogNotContains("I FAILED", run1);
+
     }
 
     @Override

@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 import hudson.ExtensionComponent;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.Util;
 import hudson.model.Result;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
@@ -50,12 +51,28 @@ import java.util.Set;
  */
 public abstract class BuildCondition implements Serializable, ExtensionPoint {
 
-    public abstract boolean meetsCondition(@Nonnull WorkflowRun r);
+    @Deprecated
+    public boolean meetsCondition(@Nonnull WorkflowRun r) {
+        if (Util.isOverridden(BuildCondition.class, getClass(), "meetsCondition", WorkflowRun.class, Object.class, Throwable.class)) {
+            return meetsCondition(r, null, null);
+        } else {
+            throw new IllegalStateException(getClass().getName() + " must override meetsCondition(WorkflowRun,Object,Throwable)");
+        }
+    }
 
+    public boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
+        return meetsCondition(r);
+    }
+
+    @Deprecated
     public boolean meetsCondition(@Nonnull Object runWrapperObj) {
+        return meetsCondition(runWrapperObj, null, null);
+    }
+
+    public boolean meetsCondition(@Nonnull Object runWrapperObj, Object context, Throwable error) {
         RunWrapper runWrapper = (RunWrapper)runWrapperObj;
         WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild();
-        return run != null && meetsCondition(run);
+        return run != null && meetsCondition(run, context, error);
     }
 
     @Nonnull

@@ -94,11 +94,14 @@ class Root implements Serializable {
      *
      * @param r an {@link AbstractBuildConditionResponder}, such as {@link PostStage} or {@link PostBuild}.
      * @param runWrapperObj The {@link RunWrapper} for the build.
+     * @param context The context where this is being called, which could be either a {@link Root} or a {@link Stage}, but also could be null.
+     * @param error The first error seen in the relevant context. Can be null.
      * @return True if at least one condition is satisfied, false otherwise.
      */
-    /*package*/ boolean hasSatisfiedConditions(AbstractBuildConditionResponder r, Object runWrapperObj) {
+    /*package*/ boolean hasSatisfiedConditions(AbstractBuildConditionResponder r, Object runWrapperObj, Object context = null,
+                                               Throwable error = null) {
         if (r != null) {
-            return r.satisfiedConditions(runWrapperObj)
+            return r.satisfiedConditions(runWrapperObj, context, error)
         } else {
             return false
         }

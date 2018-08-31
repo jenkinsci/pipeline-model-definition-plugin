@@ -179,9 +179,10 @@ class ModelInterpreter implements Serializable {
                 }
             } finally {
                 // And finally, run the post stage steps if this was a parallel parent.
-                if (skippedReason == null && parent != null && root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"))) {
+                if (skippedReason == null && parent != null &&
+                    root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
                     Utils.logToTaskListener("Post stage")
-                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name)
+                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name, parent)
                 }
             }
 
@@ -317,10 +318,11 @@ class ModelInterpreter implements Serializable {
                     thisError = e
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
-                    if (skippedReason == null && root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild")) &&
+                    if (skippedReason == null &&
+                        root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
                         thisStage?.parallelContent) {
                         Utils.logToTaskListener("Post stage")
-                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
+                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name, thisStage)
                     }
                 }
 
@@ -665,9 +667,9 @@ class ModelInterpreter implements Serializable {
             }
         } finally {
             // And finally, run the post stage steps.
-            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"))) {
+            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, stageError)) {
                 Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name, thisStage)
             }
         }
 
@@ -738,15 +740,18 @@ class ModelInterpreter implements Serializable {
      * @param agentContext The {@link Agent} context we're running in.
      * @param stageError Any existing error from earlier parts of the stage we're in, or null.
      * @param stageName Optional - the name of the stage we're running in, so we can mark it as failed if needed.
+     * @param context Optional - the context where we're being called
      * @return The stageError, which, if null when passed in and an error is hit, will be set to the first error encountered.
      */
     def runPostConditions(AbstractBuildConditionResponder responder,
                           Agent agentContext,
                           Throwable stageError,
-                          String stageName = null) {
+                          String stageName = null,
+                          Object context = null) {
         BuildCondition.orderedConditionNames.each { conditionName ->
             try {
-                Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"))
+                Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"),
+                    context, stageError)
                 if (c != null) {
                     catchRequiredContextForNode(agentContext) {
                         delegateAndExecute(c)

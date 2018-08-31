@@ -27,6 +27,7 @@ import hudson.Extension
 import hudson.model.Result
 import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
 import javax.annotation.Nonnull
@@ -38,9 +39,18 @@ import javax.annotation.Nonnull
  */
 @Extension(ordinal=500d) @Symbol("failure")
 class Failure extends BuildCondition {
+    @Deprecated
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return meetsCondition(r, null, null)
+    }
+
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
         Result execResult = getExecutionResult(r)
+        if (context instanceof Stage && execResult != Result.ABORTED && r.getResult() != Result.ABORTED) {
+            return error != null
+        }
         return execResult != Result.ABORTED &&
             (execResult == Result.FAILURE || r.getResult() == Result.FAILURE)
     }
