@@ -110,6 +110,16 @@ public class DirectiveGeneratorTest {
                         "}");
     }
 
+    // TODO: Remove once we move to a baseline of 2.90 or later
+    private String trimParamOrEmpty() {
+        try {
+            StringParameterDefinition.class.getMethod("isTrim");
+            return ", trim: false";
+        } catch (NoSuchMethodException e) {
+            return "";
+        }
+    }
+
     @Test
     public void fullInput() throws Exception {
         InputDirective input = new InputDirective("hello");
@@ -129,7 +139,8 @@ public class DirectiveGeneratorTest {
                         "  submitter 'bob'\n" +
                         "  submitterParameter 'subParam'\n" +
                         "  parameters {\n" +
-                        "    string defaultValue: 'steve', description: 'Hey, a string', name: 'aString'\n" +
+                        // StringParameterDefinition added trim field in 2.90
+                        "    string defaultValue: 'steve', description: 'Hey, a string', name: 'aString'" + trimParamOrEmpty() + "\n" +
                         "    booleanParam defaultValue: true, description: 'A boolean now', name: 'aBool'\n" +
                         "  }\n" +
                         "}");
@@ -375,7 +386,7 @@ public class DirectiveGeneratorTest {
         ParametersDirective params = new ParametersDirective(p);
 
         assertGenerateDirective(params, "parameters {\n" +
-                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'\n" +
+                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'" + trimParamOrEmpty() + "\n" +
                 "}");
     }
 
@@ -388,7 +399,7 @@ public class DirectiveGeneratorTest {
         ParametersDirective params = new ParametersDirective(p);
 
         assertGenerateDirective(params, "parameters {\n" +
-                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'\n" +
+                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'" + trimParamOrEmpty() + "\n" +
                 "  booleanParam defaultValue: true, description: 'This will default to true.', name: 'SOME_BOOL'\n" +
                 "}");
     }
