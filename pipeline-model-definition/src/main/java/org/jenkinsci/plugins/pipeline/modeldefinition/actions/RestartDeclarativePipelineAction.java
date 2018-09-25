@@ -26,8 +26,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.Action;
+import hudson.model.Api;
+import hudson.model.Cause;
+import hudson.model.CauseAction;
+import hudson.model.Failure;
+import hudson.model.Item;
 import hudson.model.Queue;
+import hudson.model.Run;
 import hudson.util.FormValidation;
 import hudson.util.HttpResponses;
 import jenkins.model.Jenkins;
@@ -58,7 +64,12 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @ExportedBean
 public class RestartDeclarativePipelineAction implements Action {

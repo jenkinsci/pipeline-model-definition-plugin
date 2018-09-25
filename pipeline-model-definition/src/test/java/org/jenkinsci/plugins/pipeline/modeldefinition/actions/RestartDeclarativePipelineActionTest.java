@@ -31,6 +31,8 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import com.github.fge.jsonschema.util.JsonLoader;
+import com.fasterxml.jackson.databind.JsonNode;
 import hudson.model.BooleanParameterValue;
 import hudson.model.Item;
 import hudson.model.ParametersAction;
@@ -52,10 +54,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode;
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader;
 import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
-import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
@@ -657,7 +656,11 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
     @Issue("JENKINS-52261")
     @Test
     public void skippedParallelStagesMarkedNotExecuted() throws Exception {
-        WorkflowRun original = expect(Result.FAILURE, "restart", "skippedParallelStagesMarkedNotExecuted").logContains("Odd numbered build, failing", "This shouldn't show up on second run", "This also shouldn't show up on second run").go();
+        WorkflowRun original = expect(Result.FAILURE, "restart", "skippedParallelStagesMarkedNotExecuted")
+                .logContains("Odd numbered build, failing",
+                        "This shouldn't show up on second run",
+                        "This also shouldn't show up on second run")
+                .go();
 
         FlowExecution firstExecution = original.getExecution();
         assertNotNull(firstExecution);
@@ -694,7 +697,8 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertEquals("restart", cause.getOriginStage());
         // Note that I'm using the fully qualified name for the cause Messages class so that I don't have to change things
         // if I ever want to test something from other Messages.
-        assertEquals(org.jenkinsci.plugins.pipeline.modeldefinition.causes.Messages.RestartedDeclarativePipelineCause_ShortDescription(1, "restart"), cause.getShortDescription());
+        assertEquals(org.jenkinsci.plugins.pipeline.modeldefinition.causes.Messages.RestartedDeclarativePipelineCause_ShortDescription(1, "restart"),
+                cause.getShortDescription());
 
         FlowExecution secondExecution = b2.getExecution();
         assertNotNull(secondExecution);
