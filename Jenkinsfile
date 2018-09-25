@@ -21,6 +21,7 @@ pipeline {
         GIT_COMMITTER_NAME = "jenkins"
         GIT_COMMITTER_EMAIL = "jenkins@jenkins.io"
         NEWER_CORE_VERSION = "2.121.3"
+        TEST_TIMEOUT = "600"
     }
     
 
@@ -33,7 +34,7 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh 'mvn clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=360'
+                        sh 'mvn clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=${TEST_TIMEOUT}'
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
@@ -56,7 +57,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djenkins.test.timeout=360'
+                        bat 'mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djenkins.test.timeout=${TEST_TIMEOUT}'
                     }
                     post {
                         always {
@@ -69,7 +70,7 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=360 -Djenkins.version=${NEWER_CORE_VERSION}"
+                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
@@ -92,7 +93,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.test.timeout=360 -Djenkins.version=${NEWER_CORE_VERSION}"
+                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         always {
