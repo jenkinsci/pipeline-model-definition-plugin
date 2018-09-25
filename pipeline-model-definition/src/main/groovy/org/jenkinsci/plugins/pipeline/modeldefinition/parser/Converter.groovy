@@ -148,7 +148,7 @@ class Converter {
     }
 
     /**
-     * Takes a {@link CompilationUnit}, copmiles it with the {@link ModelParser} injected, and returns the resulting
+     * Takes a {@link CompilationUnit}, compiles it with the {@link ModelParser} injected, and returns the resulting
      * {@link ModelASTPipelineDef}
      *
      * @param cu {@link CompilationUnit} assembled by another method.
