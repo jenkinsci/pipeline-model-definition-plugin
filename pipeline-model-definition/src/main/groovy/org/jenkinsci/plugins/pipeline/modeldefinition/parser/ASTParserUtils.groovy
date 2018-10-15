@@ -194,9 +194,20 @@ class ASTParserUtils {
             n.expressions.each {
                 s << prettyPrint(it, ind)
             }
+        } else if (n instanceof NotExpression) {
+            s << printer("- not:", ind)
+            s << prettyPrint(n.expression, ind)
         } else if (n instanceof BooleanExpression) {
             s << printer("- boolexp:", ind)
             s << prettyPrint(n.expression, ind)
+        } else if (n instanceof TernaryExpression) {
+            s << printer("- ternary:", ind)
+            s << printer("- bool:", ind + 1)
+            s << prettyPrint(n.booleanExpression, ind + 1)
+            s << printer("- true:", ind + 1)
+            s << prettyPrint(n.trueExpression, ind + 1)
+            s << printer("- false:", ind + 1)
+            s << prettyPrint(n.falseExpression, ind + 1)
         } else {
             s << printer("- ${n}", ind)
         }

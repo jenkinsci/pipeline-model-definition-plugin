@@ -319,4 +319,12 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("value: first second", "value: first third")
                 .go();
     }
+
+    @Issue("JENKINS-54047")
+    @Test
+    public void notExpressionInEnvironment() throws Exception {
+        expect("notExpressionInEnvironment")
+                .logContains("expecting false, got false")
+                .go();
+    }
 }

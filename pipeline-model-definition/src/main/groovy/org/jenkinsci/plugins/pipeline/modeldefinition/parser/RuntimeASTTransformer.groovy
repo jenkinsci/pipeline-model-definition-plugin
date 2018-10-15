@@ -369,6 +369,9 @@ class RuntimeASTTransformer {
         } else if (expr instanceof BitwiseNegationExpression) {
             // Translate the nested expression - note, no test coverage due to bitwiseNegate not being whitelisted
             return new BitwiseNegationExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
+        } else if (expr instanceof NotExpression) {
+            // Translate the nested expression
+            return new NotExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
         } else if (expr instanceof BooleanExpression) {
             // Translate the nested expression
             return new BooleanExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
