@@ -296,7 +296,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         Thread.sleep(1000);
         run1.doStop();
 
-        j.assertBuildStatus(Result.ABORTED, j.waitForCompletion(run1));
+        j.waitForCompletion(run1);
 
         j.assertLogContains("I AM ABORTED", run1);
 
