@@ -73,26 +73,26 @@ class ModelInterpreter implements Serializable {
 
                 // Entire build, including notifications, runs in the agent.
                 inDeclarativeAgent(root, root, root.agent) {
-                    withCredentialsBlock(root.environment) {
-                        withEnvBlock(root.getEnvVars(script)) {
-                            inWrappers(root.options?.wrappers) {
-                                toolsBlock(root.tools, root.agent, null) {
-                                    firstError = evaluateSequentialStages(root, root.stages, firstError, null, restartedStage, null).call()
+                    firstError = runDirectiveWithPostBuild(root, firstError) {
+                        withCredentialsBlock(root.environment) {
+                            firstError = runDirectiveWithPostBuild(root, firstError) {
+                                withEnvBlock(root.getEnvVars(script)) {
+                                    inWrappers(root.options?.wrappers) {
+                                        toolsBlock(root.tools, root.agent, null) {
+                                            firstError = evaluateSequentialStages(root, root.stages, firstError, null, restartedStage, null).call()
 
-                                    // Execute post-build actions now that we've finished all parallel.
-                                    try {
-                                        postBuildRun = true
-                                        executePostBuild(root)
-                                    } catch (Throwable e) {
-                                        if (firstError == null) {
-                                            firstError = e
+                                            // Execute post-build actions now that we've finished all parallel.
+                                            Throwable postError = executePostBuild(root)
+                                            if (firstError == null) {
+                                                firstError = postError
+                                            }
+                                        }
+                                        // Throw any error we might have here to make sure that it gets caught and handled by
+                                        // wrappers.
+                                        if (firstError != null) {
+                                            throw firstError
                                         }
                                     }
-                                }
-                                // Throw any error we might have here to make sure that it gets caught and handled by
-                                // wrappers.
-                                if (firstError != null) {
-                                    throw firstError
                                 }
                             }
                         }
@@ -106,20 +106,71 @@ class ModelInterpreter implements Serializable {
                 }
             } finally {
                 // If we hit an exception somewhere *before* we got to parallel, we still need to do post-build tasks.
-                if (!postBuildRun) {
-                    try {
-                        executePostBuild(root)
-                    } catch (Throwable e) {
-                        if (firstError == null) {
-                            firstError = e
-                        }
-                    }
+                Throwable postError = executePostBuild(root)
+                if (firstError == null) {
+                    firstError = postError
                 }
             }
             if (firstError != null) {
                 throw firstError
             }
         }
+    }
+
+    /**
+     * TODO
+     */
+    Throwable runDirectiveWithPostBuild(Root root, Throwable firstErrorSeen, Closure body) {
+        try {
+            body.call()
+        } catch (Throwable e) {
+            if (firstErrorSeen == null) {
+                firstErrorSeen = e
+            }
+            // TODO: Ignoring errors in post because we already errored in a directive anyway so this would just mask things.
+            executePostBuild(root)
+        } finally {
+            return firstErrorSeen
+        }
+    }
+
+    /**
+     * TODO: Haven't quite figured out how to get this in the flow yet. Also wondering if it's even worth it, since the impetus for this,
+     * error in creds or env but post expects agent, doesn't work right in stage, because we enter creds/env *before* agent anyway.
+     */
+    Throwable runDirectiveWithPostStage(Root root, Stage stage, Throwable firstErrorSeen, SkippedStageReason skippedReason,
+                                        Agent parentAgent, Closure body) {
+        try {
+            body.call()
+        } catch (Throwable e) {
+            if (firstErrorSeen == null) {
+                firstErrorSeen = e
+            }
+            // TODO: Ignoring errors in post because we already errored in a directive anyway so this would just mask things.
+            executePostStage(root, stage, firstErrorSeen, skippedReason, parentAgent)
+        } finally {
+            if (firstErrorSeen != null) {
+                throw firstErrorSeen
+            }
+            return firstErrorSeen
+        }
+    }
+
+    /**
+     * TODO
+     */
+    def executePostStage(Root root, Stage stage, Throwable firstErrorSeen, SkippedStageReason skippedReason,
+                         Agent parentAgent) {
+        if (stage != null && !stage.hasPostRun) {
+            stage.hasPostRun = true
+            if (skippedReason == null &&
+                root.hasSatisfiedConditions(stage.post, script.getProperty("currentBuild"), stage, firstErrorSeen)) {
+                Utils.logToTaskListener("Post stage")
+                firstErrorSeen = runPostConditions(stage.post, stage.agent ?: parentAgent, firstErrorSeen, stage.name, stage)
+            }
+        }
+
+        return firstErrorSeen
     }
 
     /**
@@ -178,12 +229,8 @@ class ModelInterpreter implements Serializable {
                     }
                 }
             } finally {
-                // And finally, run the post stage steps if this was a parallel parent.
-                if (skippedReason == null && parent != null &&
-                    root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
-                    Utils.logToTaskListener("Post stage")
-                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name, parent)
-                }
+                // And finally, run the post stage steps for the parent of the sequential stages.
+                executePostStage(root, parent, firstError, skippedReason, root.agent)
             }
 
             return firstError
@@ -264,19 +311,24 @@ class ModelInterpreter implements Serializable {
                             } else {
                                 stageInput(thisStage.input) {
                                     def stageBody = {
-                                        withCredentialsBlock(thisStage.environment) {
-                                            withEnvBlock(thisStage.getEnvVars(script)) {
-                                                toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                                    if (thisStage?.stages) {
-                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
+                                        runDirectiveWithPostStage(root, thisStage, firstError, null, parentAgent) {
+                                            withCredentialsBlock(thisStage.environment) {
+                                                runDirectiveWithPostStage(root, thisStage, firstError, null,
+                                                    parentAgent) {
+                                                    withEnvBlock(thisStage.getEnvVars(script)) {
+                                                        toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                            if (thisStage?.stages) {
+                                                                def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
 
-                                                        // Propagate any possible error from the sequential stages as if it were an error thrown directly.
-                                                        if (nestedError != null) {
-                                                            throw nestedError
+                                                                // Propagate any possible error from the sequential stages as if it were an error thrown directly.
+                                                                if (nestedError != null) {
+                                                                    throw nestedError
+                                                                }
+                                                            } else {
+                                                                // Execute the actual stage and potential post-stage actions
+                                                                executeSingleStage(root, thisStage, parentAgent)
+                                                            }
                                                         }
-                                                    } else {
-                                                        // Execute the actual stage and potential post-stage actions
-                                                        executeSingleStage(root, thisStage, parentAgent)
                                                     }
                                                 }
                                             }
@@ -289,14 +341,20 @@ class ModelInterpreter implements Serializable {
                                         whenPassed = evaluateWhen(thisStage.when)
                                         if (whenPassed) {
                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                stageBody.call()
+                                                firstError = runDirectiveWithPostStage(root, thisStage, firstError, null, parentAgent) {
+
+                                                    stageBody.call()
+                                                }
                                             }
                                         }
                                     } else {
                                         inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                            whenPassed = evaluateWhen(thisStage.when)
-                                            if (whenPassed) {
-                                                stageBody.call()
+                                            firstError = runDirectiveWithPostStage(root, thisStage, firstError, null, parentAgent) {
+
+                                                whenPassed = evaluateWhen(thisStage.when)
+                                                if (whenPassed) {
+                                                    stageBody.call()
+                                                }
                                             }
                                         }
                                     }
@@ -310,20 +368,14 @@ class ModelInterpreter implements Serializable {
                         }
                     }
                 } catch (Throwable e) {
-                    script.getProperty("currentBuild").result = Result.FAILURE
                     Utils.markStageFailedAndContinued(thisStage.name)
                     if (firstError == null) {
                         firstError = e
                     }
                     thisError = e
                 } finally {
-                    // And finally, run the post stage steps if this was a parallel parent.
-                    if (skippedReason == null &&
-                        root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
-                        thisStage?.parallelContent) {
-                        Utils.logToTaskListener("Post stage")
-                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name, thisStage)
-                    }
+                    // And finally, run the post stage steps if they haven't yet been executed
+                    executePostStage(root, thisStage, firstError, skippedReason, parentAgent)
                 }
 
                 if (firstError != null) {
@@ -647,7 +699,7 @@ class ModelInterpreter implements Serializable {
     }
     
     /**
-     * Executes a single stage and post-stage actions, and returns any error it may have generated.
+     * Executes a single stage with steps and post-stage actions, and returns any error it may have generated.
      *
      * @param root The root context we're running in
      * @param thisStage The stage context we're running in
@@ -667,10 +719,7 @@ class ModelInterpreter implements Serializable {
             }
         } finally {
             // And finally, run the post stage steps.
-            if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, stageError)) {
-                Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name, thisStage)
-            }
+            stageError = executePostStage(root, thisStage, stageError, null, parentAgent)
         }
 
         if (stageError != null) {
@@ -722,15 +771,16 @@ class ModelInterpreter implements Serializable {
      * @param root The root context we're executing in
      */
     def executePostBuild(Root root) throws Throwable {
-        Throwable stageError = null
-        if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"))) {
-            script.stage(SyntheticStageNames.postBuild()) {
-                stageError = runPostConditions(root.post, root.agent, stageError)
+        if (!root.hasPostRun) {
+            Throwable postError = null
+            root.hasPostRun = true
+            if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"))) {
+                script.stage(SyntheticStageNames.postBuild()) {
+                    postError = runPostConditions(root.post, root.agent, postError)
+                }
             }
-        }
 
-        if (stageError != null) {
-            throw stageError
+            return postError
         }
     }
 

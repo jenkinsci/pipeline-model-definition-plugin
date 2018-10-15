@@ -239,4 +239,14 @@ public class PostStageTest extends AbstractModelDefTest {
     protected ExpectationsBuilder expect(Result result, String resource) {
         return super.expect(result, "postStage", resource);
     }
+
+    @Issue("JENKINS-53804")
+    @Test
+    public void credsErrorContextPathErrorInPostStage() throws Exception {
+        expect(Result.FAILURE, "credsErrorContextPathErrorInPostStage")
+                .logNotContains("Perhaps you forgot to surround the code with a step that provides this")
+                .logContains("in always")
+                .go();
+    }
+
 }

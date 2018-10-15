@@ -66,6 +66,8 @@ class Stage implements Serializable {
 
     StageInput input
 
+    boolean hasPostRun = false
+
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
