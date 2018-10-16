@@ -57,6 +57,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.ChangeLogConditi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.ChangeSetConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.EnvironmentConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.IsRestartedRunConditional;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.IsRestartedStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.NotConditional;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.DescribableParameter;
@@ -560,6 +561,15 @@ public class DirectiveGeneratorTest {
         WhenDirective when = new WhenDirective(new IsRestartedRunConditional(), false);
         assertGenerateDirective(when, "when {\n" +
                 "  isRestartedRun()\n" +
+                "}");
+    }
+
+    @Issue("JENKINS-53662")
+    @Test
+    public void whenIsRestartedStage() throws Exception {
+        WhenDirective when = new WhenDirective(new IsRestartedStageConditional(), false);
+        assertGenerateDirective(when, "when {\n" +
+                "  isRestartedStage()\n" +
                 "}");
     }
 

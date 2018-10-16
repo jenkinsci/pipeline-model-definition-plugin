@@ -292,6 +292,28 @@ class Utils {
         return cause != null
     }
 
+    /**
+     * Check if this run was caused by a restart and we're currently running the restarted stage.
+     */
+    @Whitelisted
+    static boolean isRestartedStage(CpsScript script) {
+        WorkflowRun r = script.$build()
+        RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
+        if (cause != null) {
+            CpsThread thread = CpsThread.current()
+            CpsFlowExecution execution = thread.execution
+
+            LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner()
+
+            FlowNode stageNode = execution.currentHeads.find { h ->
+                scanner.findFirstMatch(h, isStageWithOptionalName())
+            }
+
+            return stageNode.displayName == cause.originStage
+        }
+        return false
+    }
+
     @Restricted(NoExternalUse.class)
     static void updateRunAndJobActions(CpsScript script, String astUUID) throws Exception {
         WorkflowRun r = script.$build()
