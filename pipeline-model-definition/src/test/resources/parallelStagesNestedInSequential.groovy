@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,25 +28,49 @@ pipeline {
         stage("foo") {
             stages {
                 stage("first") {
-                    parallel {
-                        stage("first-and-one") {
-                            steps {
-                                echo "This should never be reached"
-                            }
-                        }
-                        stage("first-and-two") {
-                            steps {
-                                echo "This should also never be reached"
-                            }
-                        }
+                    agent {
+                        label "first-agent"
+                    }
+                    steps {
+                        echo "First stage, ${WHICH_AGENT}"
                     }
                 }
                 stage("second") {
-                    steps {
-                        echo "Second branch"
+                    parallel {
+                        stage("inner-first") {
+                            agent {
+                                label "second-agent"
+                            }
+                            tools {
+                                maven "apache-maven-3.0.1"
+                            }
+                            steps {
+                                echo "Second stage, ${WHICH_AGENT}"
+                                script {
+                                    if (isUnix()) {
+                                        sh 'mvn --version'
+                                    } else {
+                                        bat 'mvn --version'
+                                    }
+                                }
+                            }
+                        }
+                        stage("inner-second") {
+                            when {
+                                expression {
+                                    return false
+                                }
+                            }
+                            steps {
+                                echo "WE SHOULD NEVER GET HERE"
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
+
+

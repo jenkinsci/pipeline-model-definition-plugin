@@ -89,7 +89,7 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTPipelineDef pipelineDef);
 
-    boolean validateElement(ModelASTStage stage, boolean isNested);
+    boolean validateElement(ModelASTStage stage, boolean isWithinParallel);
 
     boolean validateElement(ModelASTStages stages);
 
