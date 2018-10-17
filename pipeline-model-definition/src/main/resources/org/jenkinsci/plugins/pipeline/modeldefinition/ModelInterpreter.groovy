@@ -73,9 +73,9 @@ class ModelInterpreter implements Serializable {
 
                 // Entire build, including notifications, runs in the agent.
                 inDeclarativeAgent(root, root, root.agent) {
-                    firstError = runDirectiveWithPostBuild(root, firstError) {
+                    runDirectiveWithPostBuild(root, firstError) {
                         withCredentialsBlock(root.environment) {
-                            firstError = runDirectiveWithPostBuild(root, firstError) {
+                            runDirectiveWithPostBuild(root, firstError) {
                                 withEnvBlock(root.getEnvVars(script)) {
                                     inWrappers(root.options?.wrappers) {
                                         toolsBlock(root.tools, root.agent, null) {
@@ -120,7 +120,7 @@ class ModelInterpreter implements Serializable {
     /**
      * TODO
      */
-    Throwable runDirectiveWithPostBuild(Root root, Throwable firstErrorSeen, Closure body) {
+    void runDirectiveWithPostBuild(Root root, Throwable firstErrorSeen, Closure body) {
         try {
             body.call()
         } catch (Throwable e) {
@@ -130,7 +130,9 @@ class ModelInterpreter implements Serializable {
             // TODO: Ignoring errors in post because we already errored in a directive anyway so this would just mask things.
             executePostBuild(root)
         } finally {
-            return firstErrorSeen
+            if (firstErrorSeen != null) {
+                throw firstErrorSeen
+            }
         }
     }
 
@@ -138,7 +140,7 @@ class ModelInterpreter implements Serializable {
      * TODO: Haven't quite figured out how to get this in the flow yet. Also wondering if it's even worth it, since the impetus for this,
      * error in creds or env but post expects agent, doesn't work right in stage, because we enter creds/env *before* agent anyway.
      */
-    Throwable runDirectiveWithPostStage(Root root, Stage stage, Throwable firstErrorSeen, SkippedStageReason skippedReason,
+    void runDirectiveWithPostStage(Root root, Stage stage, Throwable firstErrorSeen, SkippedStageReason skippedReason,
                                         Agent parentAgent, Closure body) {
         try {
             body.call()
@@ -152,7 +154,6 @@ class ModelInterpreter implements Serializable {
             if (firstErrorSeen != null) {
                 throw firstErrorSeen
             }
-            return firstErrorSeen
         }
     }
 
@@ -341,7 +342,7 @@ class ModelInterpreter implements Serializable {
                                         whenPassed = evaluateWhen(thisStage.when)
                                         if (whenPassed) {
                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                firstError = runDirectiveWithPostStage(root, thisStage, firstError, null, parentAgent) {
+                                                runDirectiveWithPostStage(root, thisStage, firstError, null, parentAgent) {
 
                                                     stageBody.call()
                                                 }
@@ -349,7 +350,7 @@ class ModelInterpreter implements Serializable {
                                         }
                                     } else {
                                         inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                            firstError = runDirectiveWithPostStage(root, thisStage, firstError, null, parentAgent) {
+                                            runDirectiveWithPostStage(root, thisStage, firstError, null, parentAgent) {
 
                                                 whenPassed = evaluateWhen(thisStage.when)
                                                 if (whenPassed) {
