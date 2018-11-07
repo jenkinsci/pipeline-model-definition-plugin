@@ -112,11 +112,15 @@ class Options implements Serializable {
     }
 
     static Map<String,String> getEligibleWrapperStepClasses() {
-        return wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY)
+        Map<String,String> c = [:]
+        c.putAll(wrapperStepsTypeCache.get(WRAPPER_STEPS_KEY))
+        return c
     }
 
     static Map<String,String> getEligibleDeclarativeOptionTypeClasses() {
-        return optionTypeCache.get(OPTION_CACHE_KEY)
+        Map<String,String> c = [:]
+        c.putAll(optionTypeCache.get(OPTION_CACHE_KEY))
+        return c
     }
 
     protected Object readResolve() throws IOException {
@@ -134,7 +138,8 @@ class Options implements Serializable {
      * @return A map of valid option type keys to their actual type IDs.
      */
     static Map<String,String> getAllowedOptionTypes() {
-        Map<String,String> c = propertyTypeCache.get(CACHE_KEY)
+        Map<String,String> c = [:]
+        c.putAll(propertyTypeCache.get(CACHE_KEY))
         c.putAll(getEligibleDeclarativeOptionTypeClasses())
         c.putAll(getEligibleWrapperStepClasses())
         return c.sort()
