@@ -157,6 +157,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "whenOr",
             "whenAnd",
             "whenBeforeAgentTrue",
+            "whenBeforeInputTrue",
             "usernamePassword",
             "environmentCrossReferences",
             "nestedParallelStages",
@@ -369,7 +370,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         private final String resourceParent;
         private String resource;
         private Map<String,String> otherResources;
-        private List<String> logContains;
+        public List<String> logContains;
         private List<String> logNotContains;
         private List<String> logMatches;
         private WorkflowRun run;

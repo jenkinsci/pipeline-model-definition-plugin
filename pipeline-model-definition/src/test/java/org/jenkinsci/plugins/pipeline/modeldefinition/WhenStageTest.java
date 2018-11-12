@@ -385,6 +385,17 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-44461")
     @Test
+    public void whenBeforeInputTrue() throws Exception {
+        WorkflowRun go = expect("whenBeforeInputTrue")
+                .logContains("Heal it")
+                .go();
+        System.out.println("=-------");
+        System.out.println(go);
+
+    }
+
+    @Issue("JENKINS-44461")
+    @Test
     public void whenBeforeAgentFalse() throws Exception {
         expect("whenBeforeAgentFalse")
                 .logContains("Heal it")
