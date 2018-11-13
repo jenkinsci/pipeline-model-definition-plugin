@@ -26,12 +26,12 @@ pipeline {
     agent none
 
     stages {
-        stage("One") {
+        stage("Hello") {
             steps {
                 echo "Hello"
             }
         }
-        stage("Two") {
+        stage("One") {
             when {
                 beforeInput true
                 expression {

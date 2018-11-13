@@ -119,6 +119,7 @@ public class ModelASTWhen extends ModelASTElement {
         return "ModelASTWhen{" +
                 "conditions=" + conditions +
                 ", beforeAgent=" + beforeAgent +
+                ", beforeInput=" + beforeInput +
                 "}";
     }
 

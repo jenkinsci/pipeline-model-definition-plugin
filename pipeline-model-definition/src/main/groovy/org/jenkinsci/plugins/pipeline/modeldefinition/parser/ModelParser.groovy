@@ -669,6 +669,8 @@ class ModelParser implements Parser {
                 def name = parseMethodName(mc)
                 if (name == "beforeAgent") {
                     w.beforeAgent = parseBooleanMethod(mc)
+                } else if (name == "beforeInput") {
+                    w.beforeInput = parseBooleanMethod(mc)
                 } else {
                     w.conditions.add(parseWhenContent(s))
                 }

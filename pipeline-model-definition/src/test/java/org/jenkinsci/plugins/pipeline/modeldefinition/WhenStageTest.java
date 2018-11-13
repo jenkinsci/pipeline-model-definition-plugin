@@ -27,10 +27,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.Slave;
+import hudson.model.queue.QueueTaskFuture;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.impl.mock.MockSCMController;
@@ -41,12 +43,16 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAc
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.jenkinsci.plugins.workflow.pickles.Pickle;
 import org.jenkinsci.plugins.workflow.support.pickles.SingleTypedPickleFactory;
 import org.jenkinsci.plugins.workflow.support.pickles.XStreamPickle;
+import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
+import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -63,8 +69,8 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.jenkinsci.plugins.pipeline.modeldefinition.util.IsJsonObjectContaining.hasEntry;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -383,15 +389,103 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Issue("JENKINS-44461")
+    @Issue("JENKINS-50880")
     @Test
     public void whenBeforeInputTrue() throws Exception {
-        WorkflowRun go = expect("whenBeforeInputTrue")
-                .logContains("Heal it")
-                .go();
-        System.out.println("=-------");
-        System.out.println(go);
 
+        String whenFile = "whenBeforeInputTrue";
+
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, whenFile);
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(whenFile), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(1, a.getExecutions().size());
+
+        InputStepExecution is = a.getExecution("Simple-input");
+        assertEquals("Continue?", is.getInput().getMessage());
+        assertEquals(2, is.getInput().getParameters().size());
+        assertNull(is.getInput().getSubmitter());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is.getId()), "proceed");
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("Hello", b);
+        j.assertLogNotContains("World", b);
+    }
+
+    @Issue("JENKINS-50880")
+    @Test
+    public void whenBeforeInputFalse() throws Exception {
+
+        String whenFile = "whenBeforeInputFalse";
+
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, whenFile);
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(whenFile), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+
+        j.assertLogNotContains("World", b);
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(1, a.getExecutions().size());
+
+        int wait = 100;
+        System.out.println("No World");
+        for (int i = 0; i <= wait; i++ ){
+            Thread.sleep(300);
+            e.waitForSuspension();
+            j.assertLogNotContains("World", b);
+        }
+        System.out.println("No World");
+
+        InputStepExecution is = a.getExecution("Simple-input");
+        assertEquals("Continue?", is.getInput().getMessage());
+        assertEquals(2, is.getInput().getParameters().size());
+        assertNull(is.getInput().getSubmitter());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page = wc.getPage(b, a.getUrlName());
+
+        System.out.println("No World");
+        for (int i = 0; i <= wait; i++ ){
+            Thread.sleep(300);
+            j.assertLogNotContains("World", b);
+        }
+        System.out.println("No World");
+
+
+        j.submit(page.getFormByName(is.getId()), "proceed");
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+//        j.assertBuildStatus(Result.ABORTED, j.waitForCompletion(b));
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("Hello", b);
+        j.assertLogContains("World", b);
+        j.assertLogContains("Heal it", b);
     }
 
     @Issue("JENKINS-44461")
