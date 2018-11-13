@@ -412,7 +412,6 @@ public class WhenStageTest extends AbstractModelDefTest {
 
         InputStepExecution is = a.getExecution("Simple-input");
         assertEquals("Continue?", is.getInput().getMessage());
-        assertEquals(2, is.getInput().getParameters().size());
         assertNull(is.getInput().getSubmitter());
 
         JenkinsRule.WebClient wc = j.createWebClient();
@@ -423,8 +422,8 @@ public class WhenStageTest extends AbstractModelDefTest {
 
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
-        j.assertLogContains("Hello", b);
-        j.assertLogNotContains("World", b);
+        j.assertLogContains("X-SHOW-X", b);
+
     }
 
     @Issue("JENKINS-50880")
@@ -440,52 +439,9 @@ public class WhenStageTest extends AbstractModelDefTest {
         WorkflowRun b = q.getStartCondition().get();
         CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
 
-        while (b.getAction(InputAction.class)==null) {
-            e.waitForSuspension();
-        }
-
-
-        j.assertLogNotContains("World", b);
-
-        // make sure we are pausing at the right state that reflects what we wrote in the program
-        InputAction a = b.getAction(InputAction.class);
-        assertEquals(1, a.getExecutions().size());
-
-        int wait = 100;
-        System.out.println("No World");
-        for (int i = 0; i <= wait; i++ ){
-            Thread.sleep(300);
-            e.waitForSuspension();
-            j.assertLogNotContains("World", b);
-        }
-        System.out.println("No World");
-
-        InputStepExecution is = a.getExecution("Simple-input");
-        assertEquals("Continue?", is.getInput().getMessage());
-        assertEquals(2, is.getInput().getParameters().size());
-        assertNull(is.getInput().getSubmitter());
-
-        JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage page = wc.getPage(b, a.getUrlName());
-
-        System.out.println("No World");
-        for (int i = 0; i <= wait; i++ ){
-            Thread.sleep(300);
-            j.assertLogNotContains("World", b);
-        }
-        System.out.println("No World");
-
-
-        j.submit(page.getFormByName(is.getId()), "proceed");
-        assertEquals(0, a.getExecutions().size());
-        q.get();
-
-//        j.assertBuildStatus(Result.ABORTED, j.waitForCompletion(b));
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
-        j.assertLogContains("Hello", b);
-        j.assertLogContains("World", b);
-        j.assertLogContains("Heal it", b);
+        j.assertLogNotContains("X-NO-SHOW-X", b);
     }
 
     @Issue("JENKINS-44461")

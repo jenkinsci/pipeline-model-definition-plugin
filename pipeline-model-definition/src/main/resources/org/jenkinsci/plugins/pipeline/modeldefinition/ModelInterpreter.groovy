@@ -262,49 +262,58 @@ class ModelInterpreter implements Serializable {
                                     }
                                 }
                             } else {
-                                stageInput(thisStage.input) {
-                                    def stageBody = {
-                                        withCredentialsBlock(thisStage.environment) {
-                                            withEnvBlock(thisStage.getEnvVars(script)) {
-                                                toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                                    if (thisStage?.stages) {
-                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
+                                boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
+                                boolean whenPassed = false
+                                // if is beforeInput -> check when before anything
+                                if (isBeforeInput) {
+                                    whenPassed = evaluateWhen(thisStage.when)
+                                }
+                                if(whenPassed || !isBeforeInput) {
+                                    stageInput(thisStage.input) {
 
-                                                        // Propagate any possible error from the sequential stages as if it were an error thrown directly.
-                                                        if (nestedError != null) {
-                                                            throw nestedError
+                                        def stageBody = {
+                                            withCredentialsBlock(thisStage.environment) {
+                                                withEnvBlock(thisStage.getEnvVars(script)) {
+                                                    toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                        if (thisStage?.stages) {
+                                                            def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
+
+                                                            // Propagate any possible error from the sequential stages as if it were an error thrown directly.
+                                                            if (nestedError != null) {
+                                                                throw nestedError
+                                                            }
+                                                        } else {
+                                                            // Execute the actual stage and potential post-stage actions
+                                                            executeSingleStage(root, thisStage, parentAgent)
                                                         }
-                                                    } else {
-                                                        // Execute the actual stage and potential post-stage actions
-                                                        executeSingleStage(root, thisStage, parentAgent)
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-
-                                    // If beforeAgent is true, evaluate the when before entering the agent.
-                                    boolean whenPassed = false
-                                    if (thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent) {
-                                        whenPassed = evaluateWhen(thisStage.when)
-                                        if (whenPassed) {
-                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                stageBody.call()
-                                            }
-                                        }
-                                    } else {
-                                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                        // If beforeAgent is true, evaluate the when before entering the agent.
+                                        if (thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent) {
                                             whenPassed = evaluateWhen(thisStage.when)
                                             if (whenPassed) {
-                                                stageBody.call()
+                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                    stageBody.call()
+                                                }
+                                            }
+                                        } else {
+                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                whenPassed = evaluateWhen(thisStage.when)
+                                                if (whenPassed) {
+                                                    stageBody.call()
+                                                }
                                             }
                                         }
-                                    }
 
-                                    if (!whenPassed) {
-                                        skippedReason = new SkippedStageReason.When(thisStage.name)
-                                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                        if (!whenPassed) {
+                                            skippedReason = new SkippedStageReason.When(thisStage.name)
+                                            skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                        }
                                     }
+                                }else{
+                                    skipStage(root, parentAgent, thisStage, firstError, new SkippedStageReason.When(thisStage.name), parent).call()
                                 }
                             }
                         }

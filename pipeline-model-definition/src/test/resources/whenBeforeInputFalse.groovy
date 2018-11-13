@@ -26,28 +26,22 @@ pipeline {
     agent none
 
     stages {
-        stage("Hello") {
-            steps {
-                echo "Hello"
-            }
-        }
         stage("One") {
+            options {
+                timeout(time: 5, unit: 'SECONDS')
+            }
             when {
-                expression  { true }
-                beforeInput false
+                expression  { false }
+                beforeInput true
             }
             input {
                 message "Continue?"
                 id "simple-input"
-                parameters {
-                    booleanParam(defaultValue: true, description: '', name: 'flag')
-                    string(defaultValue: "banana", description: '', name: 'fruit')
-                }
+
             }
             steps {
                 script {
-                    echo "World"
-                    echo "Heal it"
+                    echo "X-NO-SHOW-X"
                 }
 
             }

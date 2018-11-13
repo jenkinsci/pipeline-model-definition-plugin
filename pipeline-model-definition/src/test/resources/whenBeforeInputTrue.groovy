@@ -26,32 +26,19 @@ pipeline {
     agent none
 
     stages {
-        stage("Hello") {
-            steps {
-                echo "Hello"
-            }
-        }
         stage("One") {
             when {
+                expression  { true }
                 beforeInput true
-                expression {
-                    return getContext(hudson.FilePath) == null
-                }
             }
             input {
                 message "Continue?"
                 id "simple-input"
-                parameters {
-                    booleanParam(defaultValue: true, description: '', name: 'flag')
-                    string(defaultValue: "banana", description: '', name: 'fruit')
-                }
             }
             steps {
                 script {
-                    echo "World"
-                    echo "Heal it"
+                    echo "X-SHOW-X"
                 }
-
             }
         }
     }
