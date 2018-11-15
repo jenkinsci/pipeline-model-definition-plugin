@@ -370,7 +370,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         private final String resourceParent;
         private String resource;
         private Map<String,String> otherResources;
-        public List<String> logContains;
+        private List<String> logContains;
         private List<String> logNotContains;
         private List<String> logMatches;
         private WorkflowRun run;
