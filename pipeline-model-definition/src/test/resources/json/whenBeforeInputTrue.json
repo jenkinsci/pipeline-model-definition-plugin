@@ -1,54 +1,61 @@
 {"pipeline": {
-  "stages":   [
-    {
-      "name": "One",
-      "branches": [      {
-        "name": "default",
-        "steps": [        {
-          "name": "echo",
-          "arguments": [          {
-            "key": "message",
-            "value":             {
-              "isLiteral": true,
-              "value": "Hello"
-            }
-          }]
-        }]
-      }]
-    },
-    {
-      "name": "Two",
-      "branches": [      {
-        "name": "default",
-        "steps": [        {
-          "name": "script",
-          "arguments": [          {
-            "key": "scriptBlock",
-            "value":             {
-              "isLiteral": true,
-              "value": "echo \"World\"\n                    echo \"Heal it\""
-            }
-          }]
+  "stages": [  {
+    "name": "One",
+    "when":     {
+      "conditions": [      {
+        "name": "expression",
+        "arguments": [        {
+          "key": "scriptBlock",
+          "value":           {
+            "isLiteral": true,
+            "value": "false"
+          }
         }]
       }],
-      "when": {"conditions": [
+      "beforeInput": true
+    },
+    "options": {"options": [    {
+      "name": "timeout",
+      "arguments":       [
         {
-          "name": "branch",
-          "arguments": {
+          "key": "time",
+          "value":           {
             "isLiteral": true,
-            "value": "SOME_OTHER_BRANCH"
+            "value": 5
           }
-        }],
-        "beforeInput": true
+        },
+        {
+          "key": "unit",
+          "value":           {
+            "isLiteral": true,
+            "value": "SECONDS"
+          }
+        }
+      ]
+    }]},
+    "input":     {
+      "message":       {
+        "isLiteral": true,
+        "value": "Continue?"
+      },
+      "id":       {
+        "isLiteral": true,
+        "value": "simple-input"
       }
-    }
-  ],
-  "environment": [  {
-    "key": "BRANCH_NAME",
-    "value":     {
-      "isLiteral": true,
-      "value": "master"
-    }
+    },
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "script",
+        "arguments": [        {
+          "key": "scriptBlock",
+          "value":           {
+            "isLiteral": true,
+            "value": "echo \"X-NO-SHOW-X\""
+          }
+        }]
+      }]
+    }]
   }],
-  "agent": {"type": "any"}
+  "agent": {"type": "none"}
 }}
