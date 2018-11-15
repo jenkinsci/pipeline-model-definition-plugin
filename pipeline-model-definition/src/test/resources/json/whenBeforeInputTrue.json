@@ -31,18 +31,16 @@
           }]
         }]
       }],
-      "when": {"conditions": [      {
-        "name": "branch",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "SOME_OTHER_BRANCH"
-        },
-        "name": "beforeInput",
-        "arguments":         {
-          "isLiteral": true,
-          "value": "true"
-        }
-      }]}
+      "when": {"conditions": [
+        {
+          "name": "branch",
+          "arguments": {
+            "isLiteral": true,
+            "value": "SOME_OTHER_BRANCH"
+          }
+        }],
+        "beforeInput": true
+      }
     }
   ],
   "environment": [  {
