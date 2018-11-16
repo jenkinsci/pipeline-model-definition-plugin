@@ -13,7 +13,7 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr:'10'))
         timestamps()
-        timeout(time: 90, unit: 'MINUTES')
+        timeout(time: 120, unit: 'MINUTES')
     }
 
     // Make sure we have GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL set due to machine weirdness.
