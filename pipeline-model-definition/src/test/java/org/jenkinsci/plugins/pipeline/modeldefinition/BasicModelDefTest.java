@@ -1260,6 +1260,22 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-53558")
+    @Test
+    public void parallelStagesFailFastWithOption() throws Exception {
+        expect(Result.ABORTED,"parallelStagesFailFastWithOption")
+                .logContains("[Pipeline] { (foo)",
+                        "[first] { (Branch: first)",
+                        "[Pipeline] [first] { (first)",
+                        "[second] { (Branch: second)",
+                        "[Pipeline] [second] { (second)",
+                        "SECOND STAGE ABORTED")
+                .hasFailureCase()
+                .go();
+
+    }
+
+
     @Issue("JENKINS-47783")
     @Test
     public void parallelStagesHaveStatusWhenSkipped() throws Exception {

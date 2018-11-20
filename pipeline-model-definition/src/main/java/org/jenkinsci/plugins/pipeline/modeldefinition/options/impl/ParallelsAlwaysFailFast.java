@@ -32,10 +32,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 
-public class ParallelAlwaysFailFast extends DeclarativeOption {
+public class ParallelsAlwaysFailFast extends DeclarativeOption {
 
     @DataBoundConstructor
-    public ParallelAlwaysFailFast() {
+    public ParallelsAlwaysFailFast() {
 
     }
 
@@ -45,7 +45,7 @@ public class ParallelAlwaysFailFast extends DeclarativeOption {
         @Override
         @Nonnull
         public String getDisplayName() {
-            return "parallelsAlwaysFailFast Set the quiet period for the job";
+            return "Parallels stage Always FailFast";
         }
 
         @Override

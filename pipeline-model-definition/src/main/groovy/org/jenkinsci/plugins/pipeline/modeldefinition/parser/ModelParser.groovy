@@ -31,8 +31,6 @@ import hudson.model.Run
 import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.GroovyCodeVisitor
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -48,7 +46,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDesc
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.ParallelAlwaysFailFast
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
@@ -188,12 +185,7 @@ class ModelParser implements Parser {
     }
 
     private @CheckForNull isFailFast(ModelASTOptions options){
-        if( options == null || options.options.isEmpty()) return false
-        def model = new ModelASTOption( new ModelASTMethodCall() )
-        model.name = "parallelsAlwaysFailFast"
-        model.args = []
-
-        return options.options.contains( model )
+        return options.options.any { it.name == "parallelsAlwaysFailFast" }
     }
 
     private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
@@ -223,7 +215,7 @@ class ModelParser implements Parser {
 
                 switch (name) {
                     case 'stages':
-                         r.stages = parseStages(stmt, isFailFast(r.options))
+                        r.stages = parseStages(stmt, isFailFast(r.options))
                         break
                     case 'environment':
                         r.environment = parseEnvironment(stmt)
@@ -505,7 +497,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @CheckForNull ModelASTStage parseStage(Statement stmt, Boolean failFast = false) {
+    @CheckForNull ModelASTStage parseStage(Statement stmt, Boolean ff = false) {
         ModelASTStage stage = new ModelASTStage(stmt)
         def m = matchBlockStatement(stmt)
         if (m?.methodName != "stage") {
@@ -558,7 +550,6 @@ class ModelParser implements Parser {
                                     parallel.args.each { k, v ->
                                         stage.branches.add(parseBranch(k, asBlock(v.code)))
                                     }
-                                    stage.failFast = parallel.failFast
                                 } else {
                                     // otherwise it's a single line of execution
                                     stage.branches.add(parseBranch("default", block))
@@ -589,9 +580,9 @@ class ModelParser implements Parser {
                             if (parallelStmt == null) {
                                 errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
                             } else {
+                                stage.setFailFast(ff)
                                 eachStatement(parallelStmt.body.code) {
-                                    ModelASTStage parallelStage = parseStage(it)
-                                    parallelStage.failFast = failFast
+                                    ModelASTStage parallelStage = parseStage(it, ff)
                                     if (parallelStage != null) {
                                         stage.parallelContent.add(parallelStage)
                                     }
@@ -602,7 +593,7 @@ class ModelParser implements Parser {
                             stage.setFailFast(parseBooleanMethod(mc))
                             break
                         case 'stages':
-                            stage.stages = parseStages(s)
+                            stage.stages = parseStages(s, ff)
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
