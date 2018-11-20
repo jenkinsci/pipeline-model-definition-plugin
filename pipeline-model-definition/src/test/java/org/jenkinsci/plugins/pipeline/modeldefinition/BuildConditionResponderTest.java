@@ -338,4 +338,12 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-53804")
+    @Test
+    public void credsErrorContextPathErrorInPost() throws Exception {
+        expect(Result.FAILURE, "credsErrorContextPathErrorInPost")
+                .logNotContains("Perhaps you forgot to surround the code with a step that provides this")
+                .logContains("in always")
+                .go();
+    }
 }

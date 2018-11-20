@@ -59,6 +59,8 @@ class Root implements Serializable {
 
     final String astUUID
 
+    boolean hasPostRun
+
     @Whitelisted
     Root(Agent agent, Stages stages, PostBuild post, Environment environment, Tools tools, Options options,
          Triggers triggers, Parameters parameters, Libraries libraries, String astUUID) {
@@ -105,6 +107,5 @@ class Root implements Serializable {
         } else {
             return false
         }
-
     }
 }
