@@ -283,7 +283,7 @@ class ModelParser implements Parser {
     }
 
     void setFailFast(ModelASTStage s, boolean ff){
-        if(! ( s != null && s.getFailFast() == null && !ff))
+        if( s != null && !( s.getFailFast() == null && !ff))
             s.setFailFast(true)
     }
 
