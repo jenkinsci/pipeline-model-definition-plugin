@@ -811,6 +811,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue ("JENKINS-51792")
+    @Test
+    public void multipleStepsSectionsInStage() throws Exception {
+        expectError("multipleStepsSectionsInStage")
+                .logContains(Messages.Parser_MultipleOfSection("steps"))
+                .go();
+    }
+
     @Test
     public void nonBlockStages() throws Exception {
         expectError("nonBlockStages")
