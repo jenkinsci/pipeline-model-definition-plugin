@@ -296,7 +296,7 @@ class ModelParser implements Parser {
         } else {
             eachStatement(m.body.code) {
                 ModelASTStage s = parseStage(it, failFast )
-                setFailFast(s, failFast || s.failFast)
+                setFailFast(s, failFast || (s != null && s.failFast))
                 if (s != null) {
                     r.stages.add(s)
                 }
