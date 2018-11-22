@@ -62,8 +62,7 @@
           ]
         }]
       }
-    ],
-    "failFast": true
+    ]
   }],
   "agent": {"type": "none"},
   "options": {"options": [  {
