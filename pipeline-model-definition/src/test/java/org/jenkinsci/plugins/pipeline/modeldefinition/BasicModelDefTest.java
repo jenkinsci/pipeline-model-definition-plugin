@@ -1256,6 +1256,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "[second] { (Branch: second)",
                         "[Pipeline] [second] { (second)",
                         "SECOND STAGE ABORTED")
+                .logNotContains("Second branch")
                 .hasFailureCase()
                 .go();
     }
@@ -1270,6 +1271,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "[second] { (Branch: second)",
                         "[Pipeline] [second] { (second)",
                         "SECOND STAGE ABORTED")
+                .logNotContains("Second branch")
                 .hasFailureCase()
                 .go();
 

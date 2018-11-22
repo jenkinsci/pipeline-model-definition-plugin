@@ -45,7 +45,7 @@ public class ParallelsAlwaysFailFast extends DeclarativeOption {
         @Override
         @Nonnull
         public String getDisplayName() {
-            return "Parallels stage Always FailFast";
+            return "Parallel stages always fail fast";
         }
 
         @Override

@@ -31,6 +31,8 @@ import hudson.model.Run
 import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.GroovyCodeVisitor
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -184,10 +186,6 @@ class ModelParser implements Parser {
         return null // no 'pipeline', so this doesn't apply
     }
 
-    private @CheckForNull isFailFast(ModelASTOptions options){
-        return options != null && options.options.any { it.name == "parallelsAlwaysFailFast" }
-    }
-
     private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst)
 
@@ -215,7 +213,7 @@ class ModelParser implements Parser {
 
                 switch (name) {
                     case 'stages':
-                        r.stages = parseStages(stmt, isFailFast(r.options))
+                        r.stages = parseStages(stmt)
                         break
                     case 'environment':
                         r.environment = parseEnvironment(stmt)
@@ -282,12 +280,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    void setFailFast(ModelASTStage s, boolean ff){
-        if( s != null && !( s.getFailFast() == null && !ff))
-            s.setFailFast(true)
-    }
-
-    @Nonnull ModelASTStages parseStages(Statement stmt, Boolean failFast = false) {
+    @Nonnull ModelASTStages parseStages(Statement stmt) {
         def r = new ModelASTStages(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -295,8 +288,7 @@ class ModelParser implements Parser {
             errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("stages"))
         } else {
             eachStatement(m.body.code) {
-                ModelASTStage s = parseStage(it, failFast )
-                setFailFast(s, failFast || (s != null && s.failFast))
+                ModelASTStage s = parseStage(it)
                 if (s != null) {
                     r.stages.add(s)
                 }
@@ -503,7 +495,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @CheckForNull ModelASTStage parseStage(Statement stmt, Boolean ff = false) {
+    @CheckForNull ModelASTStage parseStage(Statement stmt) {
         ModelASTStage stage = new ModelASTStage(stmt)
         def m = matchBlockStatement(stmt)
         if (m?.methodName != "stage") {
@@ -550,12 +542,13 @@ class ModelParser implements Parser {
 
                             // Handle parallel as a special case
                             if (block.statements.size()==1) {
-                                def parallel = matchParallel(block.statements[0], ff)
+                                def parallel = matchParallel(block.statements[0])
+
                                 if (parallel != null) {
-                                    setFailFast(stage, parallel.failFast)
                                     parallel.args.each { k, v ->
                                         stage.branches.add(parseBranch(k, asBlock(v.code)))
                                     }
+                                    stage.failFast = parallel.failFast
                                 } else {
                                     // otherwise it's a single line of execution
                                     stage.branches.add(parseBranch("default", block))
@@ -586,9 +579,8 @@ class ModelParser implements Parser {
                             if (parallelStmt == null) {
                                 errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
                             } else {
-                                setFailFast(stage, ff)
                                 eachStatement(parallelStmt.body.code) {
-                                    ModelASTStage parallelStage = parseStage(it, ff)
+                                    ModelASTStage parallelStage = parseStage(it)
                                     if (parallelStage != null) {
                                         stage.parallelContent.add(parallelStage)
                                     }
@@ -596,10 +588,10 @@ class ModelParser implements Parser {
                             }
                             break
                         case 'failFast':
-                            setFailFast(stage, parseBooleanMethod(mc) )
+                            stage.setFailFast(parseBooleanMethod(mc))
                             break
                         case 'stages':
-                            stage.stages = parseStages(s, ff)
+                            stage.stages = parseStages(s)
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
@@ -1295,7 +1287,7 @@ class ModelParser implements Parser {
     /**
      * Attempts to match a statement as {@link ParallelMatch} or return null.
      */
-    @CheckForNull ParallelMatch matchParallel(Statement st, Boolean ff = false) {
+    @CheckForNull ParallelMatch matchParallel(Statement st) {
         def whole = matchMethodCall(st)
         if (whole!=null) {
             def methodName = matchMethodName(whole)
@@ -1331,7 +1323,7 @@ class ModelParser implements Parser {
                         }
                     }
                 }
-                return new ParallelMatch(whole, parallelArgs, failFast || ff)
+                return new ParallelMatch(whole, parallelArgs, failFast)
             }
         }
 
