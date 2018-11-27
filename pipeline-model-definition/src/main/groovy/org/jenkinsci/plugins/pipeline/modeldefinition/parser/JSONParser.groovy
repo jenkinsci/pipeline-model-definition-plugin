@@ -249,6 +249,10 @@ class JSONParser implements Parser {
             when.beforeAgent = j.node.get("beforeAgent")?.asBoolean()
         }
 
+        if (j.node.has("beforeInput")) {
+            when.beforeInput = j.node.get("beforeInput")?.asBoolean()
+        }
+
         JsonTree conditionsTree = j.append(JsonPointer.of("conditions"))
         conditionsTree.node.eachWithIndex { JsonNode entry, int i ->
             JsonTree condTree = conditionsTree.append(JsonPointer.of(i))

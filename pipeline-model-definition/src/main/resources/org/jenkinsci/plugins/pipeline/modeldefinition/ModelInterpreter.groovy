@@ -262,37 +262,52 @@ class ModelInterpreter implements Serializable {
                                     }
                                 }
                             } else {
-                                stageInput(thisStage.input) {
-                                    def stageBody = {
-                                        withCredentialsBlock(thisStage.environment) {
-                                            withEnvBlock(thisStage.getEnvVars(script)) {
-                                                toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                                    if (thisStage?.stages) {
-                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
 
-                                                        // Propagate any possible error from the sequential stages as if it were an error thrown directly.
-                                                        if (nestedError != null) {
-                                                            throw nestedError
-                                                        }
-                                                    } else {
-                                                        // Execute the actual stage and potential post-stage actions
-                                                        executeSingleStage(root, thisStage, parentAgent)
+                                def stageBody = {
+                                    withCredentialsBlock(thisStage.environment) {
+                                        withEnvBlock(thisStage.getEnvVars(script)) {
+                                            toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                if (thisStage?.stages) {
+                                                    def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
+
+                                                    // Propagate any possible error from the sequential stages as if it were an error thrown directly.
+                                                    if (nestedError != null) {
+                                                        throw nestedError
                                                     }
+                                                } else {
+                                                    // Execute the actual stage and potential post-stage actions
+                                                    executeSingleStage(root, thisStage, parentAgent)
                                                 }
                                             }
                                         }
                                     }
+                                }
 
-                                    // If beforeAgent is true, evaluate the when before entering the agent.
-                                    boolean whenPassed = false
-                                    if (thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent) {
-                                        whenPassed = evaluateWhen(thisStage.when)
-                                        if (whenPassed) {
+
+                                boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
+                                boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
+                                boolean whenPassed = false
+                                // if is beforeInput -> check when before anything
+                                if (isBeforeInput) {
+                                    whenPassed = evaluateWhen(thisStage.when)
+                                    if(whenPassed) {
+                                        stageInput(thisStage.input) {
                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                 stageBody.call()
                                             }
                                         }
-                                    } else {
+                                    }
+                                }else if(isBeforeAgent){
+                                    stageInput(thisStage.input) {
+                                        whenPassed = evaluateWhen(thisStage.when)
+                                        if (whenPassed) {
+                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                    stageBody.call()
+                                                }
+                                            }
+                                        }
+                                }else{
+                                    stageInput(thisStage.input) {
                                         inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                             whenPassed = evaluateWhen(thisStage.when)
                                             if (whenPassed) {
@@ -300,11 +315,12 @@ class ModelInterpreter implements Serializable {
                                             }
                                         }
                                     }
+                                }
 
-                                    if (!whenPassed) {
-                                        skippedReason = new SkippedStageReason.When(thisStage.name)
-                                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
-                                    }
+
+                                if (!whenPassed) {
+                                    skippedReason = new SkippedStageReason.When(thisStage.name)
+                                    skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                                 }
                             }
                         }
@@ -457,7 +473,7 @@ class ModelInterpreter implements Serializable {
      */
     def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
         Map<String,CredentialWrapper> creds = new HashMap<>()
-        
+
         if (environment != null) {
             try {
                 RunWrapper currentBuild = (RunWrapper)script.getProperty("currentBuild")
@@ -645,7 +661,7 @@ class ModelInterpreter implements Serializable {
             }
         }
     }
-    
+
     /**
      * Executes a single stage and post-stage actions, and returns any error it may have generated.
      *
