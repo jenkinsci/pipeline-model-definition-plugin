@@ -175,6 +175,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "globalLibrarySuccess",
             "jsonSchemaNull",
             "parallelStagesFailFast",
+            "parallelStagesFailFastWithOption",
             "parallelStagesGroupsAndStages",
             "topLevelStageGroup",
             "agentOnGroup"
