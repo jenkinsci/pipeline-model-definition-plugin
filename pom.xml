@@ -105,7 +105,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>branch-api</artifactId>
-        <version>2.0.20</version>
+        <version>2.1.1</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -383,7 +383,7 @@
   </build>
 
   <properties>
-    <jenkins.version>2.73.3</jenkins.version>
+    <jenkins.version>2.107.3</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.11</groovy.version>
     <jenkins-test-harness.version>2.39</jenkins-test-harness.version>
