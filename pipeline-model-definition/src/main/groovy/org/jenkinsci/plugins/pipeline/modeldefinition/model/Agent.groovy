@@ -51,9 +51,23 @@ import javax.annotation.CheckForNull
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
+    final Closure rawClosure
+
+    /*
+     * We're still extending MappedClosure, but just to preserve compatibility of running builds on upgrade.
+     */
+    @Deprecated
+    Agent(Map<String,Object> m) {
+        this.resultMap = m
+    }
+
     @Whitelisted
-    Agent(Map<String,Object> inMap) {
-        resultMap = inMap
+    Agent(Closure rawClosure) {
+        this.rawClosure = rawClosure
+    }
+
+    void populateMap(Map<String,Object> m) {
+        this.resultMap = m
     }
 
     @Deprecated
@@ -146,4 +160,6 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
         DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }
+
+    private static final long serialVersionUID = -9134086848416921688L
 }

@@ -126,24 +126,24 @@ class RuntimeASTTransformer {
      */
     Expression transformAgent(@CheckForNull ModelASTAgent original) {
         if (isGroovyAST(original) && original.agentType != null) {
-            ArgumentListExpression argList = new ArgumentListExpression()
+            MapExpression m
             if (original.variables == null ||
                 (original.variables instanceof ModelASTClosureMap &&
                     ((ModelASTClosureMap)original.variables).variables.isEmpty())) {
                 // Zero-arg agent type
                 MapExpression zeroArg = new MapExpression()
                 zeroArg.addMapEntryExpression(constX(original.agentType.key), constX(true))
-                argList.addExpression(zeroArg)
+                m = zeroArg
             } else {
                 BlockStatementMatch match =
                     matchBlockStatement((Statement) original.sourceLocation)
                 if (match != null) {
-                    argList.addExpression(recurseAndTransformMappedClosure(match.body))
+                    m = recurseAndTransformMappedClosure(match.body)
                 } else {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            return ctorX(ClassHelper.make(Agent.class), argList)
+            return ctorX(ClassHelper.make(Agent.class), args(closureX(block(returnS(m)))))
         }
 
         return constX(null)
