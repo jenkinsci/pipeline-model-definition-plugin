@@ -32,9 +32,9 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import javax.annotation.Nonnull
 
 /**
- * A {@link BuildCondition} for matching unstable builds.
+ * A {@link BuildCondition} for matching Unsuccessful builds.
  *
- * @author Andrew Bayer
+ * @author Jose Taboada
  */
 @Extension(ordinal=650d) @Symbol("unsuccessful")
 class Unsuccessful extends BuildCondition {
