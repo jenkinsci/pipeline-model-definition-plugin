@@ -107,7 +107,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     }
     @Test
-    public void withAllLocalUnsuccessfulWithNorBuilt() throws Exception {
+    public void withAllLocalUnsuccessfulWithNotBuilt() throws Exception {
         env(s).put("MAKE_RESULT", Result.NOT_BUILT.toString()).set();
         expect(Result.NOT_BUILT, "unsuccessful")
                 .logContains("I LOVE YOU VIRGINIA")
