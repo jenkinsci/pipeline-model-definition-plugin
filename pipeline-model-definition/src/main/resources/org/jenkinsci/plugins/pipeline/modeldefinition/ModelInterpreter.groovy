@@ -591,6 +591,9 @@ class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def inDeclarativeAgent(Object context, Root root, Agent agent, Closure body) {
+        if (agent != null) {
+            agent.populateMap((Map<String,Object>)instanceFromClosure(agent.rawClosure, Map.class))
+        }
         if (agent == null
             && root.agent.getDeclarativeAgent(root, root) instanceof AbstractDockerAgent
             && root.options?.options?.get("newContainerPerStage") != null) {
@@ -733,6 +736,19 @@ class ModelInterpreter implements Serializable {
 
         return instanceList
     }
+
+    private <Z> Z instanceFromClosure(Closure rawClosure, Class<Z> instanceType) {
+        rawClosure.delegate = script
+        rawClosure.resolveStrategy = Closure.DELEGATE_FIRST
+
+        def inst = rawClosure.call()
+        if (instanceType.isInstance(inst)) {
+            return instanceType.cast(inst)
+        }
+
+        return null
+    }
+
     /**
      * Executes the post build actions for this build
      * @param root The root context we're executing in

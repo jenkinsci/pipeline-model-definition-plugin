@@ -371,7 +371,7 @@ class ASTParserUtils {
      * @return A {@link MapExpression}, or null if the original expression was null.
      */
     @CheckForNull
-    static Expression recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
+    static MapExpression recurseAndTransformMappedClosure(@CheckForNull ClosureExpression original) {
         if (original != null) {
             MapExpression mappedClosure = new MapExpression()
             eachStatement(original.code) { s ->

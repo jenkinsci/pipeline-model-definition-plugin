@@ -341,6 +341,14 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-54919")
+    @Test
+    public void paramInAgentLabel() throws Exception {
+        expect("paramInAgentLabel")
+                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
+                .go();
+    }
+
     private void agentDocker(final String jenkinsfile, String... additionalLogContains) throws Exception {
         assumeDocker();
 
