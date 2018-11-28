@@ -49,10 +49,17 @@ import javax.annotation.CheckForNull
 @ToString
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class Agent implements Serializable {
+class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
     final Closure rawClosure
-    Map<String,Object> asMap = [:]
+
+    /*
+     * We're still extending MappedClosure, but just to preserve compatibility of running builds on upgrade.
+     */
+    @Deprecated
+    Agent(Map<String,Object> m) {
+        this.resultMap = m
+    }
 
     @Whitelisted
     Agent(Closure rawClosure) {
@@ -60,7 +67,7 @@ class Agent implements Serializable {
     }
 
     void populateMap(Map<String,Object> m) {
-        this.asMap = m
+        this.resultMap = m
     }
 
     @Deprecated
@@ -77,7 +84,7 @@ class Agent implements Serializable {
         String foundSymbol = findSymbol()
         if (foundSymbol != null) {
             DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.byName(foundSymbol)
-            def val = asMap.get(foundSymbol)
+            def val = getMap().get(foundSymbol)
             def argMap = [:]
             if (val instanceof Map) {
                 argMap.putAll(val)
@@ -140,7 +147,7 @@ class Agent implements Serializable {
         String sym = null
         DeclarativeAgentDescriptor.allSorted().each { d ->
             SymbolLookup.getSymbolValue(d)?.each { s ->
-                if (asMap.containsKey(s) && sym == null) {
+                if (getMap().containsKey(s) && sym == null) {
                     sym = s
                 }
             }
