@@ -69,6 +69,53 @@ public class PostStageTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void withAllLocalUnsuccessfulWithUnstable() throws Exception {
+        env(s).put("MAKE_RESULT", Result.UNSTABLE.toString()).set();
+        expect(Result.UNSTABLE, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logContains("I FAILED YOU, SORRY")
+                .logContains("I AM UNSTABLE")
+                .go();
+
+    }
+
+    @Test
+    public void withAllLocalUnsuccessfulWithAborted() throws Exception {
+        env(s).put("MAKE_RESULT", Result.ABORTED.toString()).set();
+        expect(Result.ABORTED, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logContains("I FAILED YOU, SORRY")
+                .go();
+    }
+
+    @Test
+    public void withAllLocalUnsuccessfulWithFailure() throws Exception {
+        env(s).put("MAKE_RESULT", Result.FAILURE.toString()).set();
+        expect(Result.FAILURE, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logContains("I FAILED YOU, SORRY")
+                .go();
+
+    }
+
+    @Test
+    public void withAllLocalUnsuccessfulWithSuccess() throws Exception {
+        env(s).put("MAKE_RESULT", Result.SUCCESS.toString()).set();
+        expect(Result.SUCCESS, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .go();
+
+    }
+    @Test
+    public void withAllLocalUnsuccessfulWithNorBuilt() throws Exception {
+        env(s).put("MAKE_RESULT", Result.NOT_BUILT.toString()).set();
+        expect(Result.NOT_BUILT, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .go();
+
+    }
+
+    @Test
     public void withAllLocalFailure() throws Exception {
         env(s).put("MAKE_RESULT", Result.FAILURE.toString()).set();
         expect(Result.FAILURE, "localAll").logContains(ALL_LOCAL_ALWAYS)
