@@ -160,4 +160,6 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
         DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }
+
+    private static final long serialVersionUID = -9134086848416921688L
 }
