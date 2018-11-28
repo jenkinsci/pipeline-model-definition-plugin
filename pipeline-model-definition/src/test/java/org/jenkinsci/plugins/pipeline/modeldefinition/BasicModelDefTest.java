@@ -1059,6 +1059,28 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertEquals(Arrays.asList("12", "11", "8", "5", "4", "3", "2"), tailOfList(startInnerSecond.getAllEnclosingIds()));
     }
 
+    @Issue("JENKINS-53734")
+    @Test
+    public void parallelStagesNestedInSequential() throws Exception {
+        Slave s = j.createOnlineSlave();
+        s.setLabelString("first-agent");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
+
+        Slave s2 = j.createOnlineSlave();
+        s2.setLabelString("second-agent");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
+
+        expect("parallelStagesNestedInSequential")
+                .logContains("[Pipeline] { (foo)",
+                        "First stage, first agent",
+                        "[Pipeline] [inner-first] { (inner-first)",
+                        "Second stage, second agent",
+                        "[inner-first] Apache Maven 3.0.1",
+                        "[Pipeline] [inner-second] { (inner-second)")
+                .logNotContains("WE SHOULD NEVER GET HERE")
+                .go();
+    }
+
     private List<String> tailOfList(List<String> l) {
         return Collections.unmodifiableList(l.subList(1, l.size()));
     }

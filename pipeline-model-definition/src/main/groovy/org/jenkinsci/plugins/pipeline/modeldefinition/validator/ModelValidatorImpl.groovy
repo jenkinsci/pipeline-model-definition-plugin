@@ -673,7 +673,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(pipelineDef, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTStage stage, boolean isNested) {
+    boolean validateElement(@Nonnull ModelASTStage stage, boolean isWithinParallel) {
         boolean valid = true
         def stepsStagesParallelCount = 0
         if (!stage.branches.isEmpty()) {
@@ -686,7 +686,7 @@ class ModelValidatorImpl implements ModelValidator {
             stepsStagesParallelCount += 1
         }
 
-        if (isNested && (stage.branches.size() > 1 || !stage.parallelContent?.isEmpty())) {
+        if (isWithinParallel && (stage.branches.size() > 1 || !stage.parallelContent?.isEmpty())) {
             ModelASTElement errorElement
             if (!stage.parallelContent.isEmpty()) {
                 def firstParallel = stage.parallelContent.first()
@@ -723,7 +723,7 @@ class ModelValidatorImpl implements ModelValidator {
             }
         }
 
-        return validateFromContributors(stage, valid, isNested)
+        return validateFromContributors(stage, valid, isWithinParallel)
     }
 
     boolean validateElement(@Nonnull ModelASTStages stages) {

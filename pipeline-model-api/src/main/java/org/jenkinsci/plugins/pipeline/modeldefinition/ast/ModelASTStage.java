@@ -110,8 +110,8 @@ public final class ModelASTStage extends ModelASTElement {
         validate(validator, false);
     }
 
-    public void validate(final ModelValidator validator, boolean isNested) {
-        validator.validateElement(this, isNested);
+    public void validate(final ModelValidator validator, boolean isWithinParallel) {
+        validator.validateElement(this, isWithinParallel);
 
         if (agent != null) {
             agent.validate(validator);
@@ -135,7 +135,7 @@ public final class ModelASTStage extends ModelASTElement {
             input.validate(validator);
         }
         if (stages != null) {
-            stages.validate(validator, true);
+            stages.validate(validator, isWithinParallel);
         }
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);

@@ -692,14 +692,6 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Issue("JENKINS-41334")
-    @Test
-    public void topLevelStageGroupsDeepNesting() throws Exception {
-        expectError("topLevelStageGroupsDeepNesting")
-                .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
-                .go();
-    }
-
     @Issue("JENKINS-46809")
     @Test
     public void parallelStagesGroupsDeepNesting() throws Exception {
