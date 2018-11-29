@@ -72,14 +72,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void simplePipeline() throws Exception {
-        expect("simplePipeline")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
-                .go();
-    }
-
-    @Test
     public void failingPipeline() throws Exception {
         expect(Result.FAILURE, "basic/failingPipeline")
                 .logContains("[Pipeline] { (foo)",

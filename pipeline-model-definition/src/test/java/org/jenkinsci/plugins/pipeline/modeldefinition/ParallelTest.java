@@ -51,12 +51,17 @@ import static org.junit.Assert.*;
 public class ParallelTest extends AbstractModelDefTest {
 
     private static Slave s;
+    private static Slave s2;
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(10);
-        s.setLabelString("some-label docker");
+        s.setLabelString("first-agent some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
+        s2 = j.createOnlineSlave();
+        s2.setLabelString("second-agent");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
     }
 
     @Issue("JENKINS-41334")
@@ -130,13 +135,6 @@ public class ParallelTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void parallelPipeline() throws Exception {
-        expect("parallel/parallelPipeline")
-                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
-                .go();
-    }
-
-    @Test
     public void parallelPipelineQuoteEscaping() throws Exception {
         expect("parallel/parallelPipelineQuoteEscaping")
                 .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: \"second\")")
@@ -177,14 +175,6 @@ public class ParallelTest extends AbstractModelDefTest {
     @Issue("JENKINS-41334")
     @Test
     public void parallelStagesAgentEnvWhen() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
-
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
-        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
-
         expect("parallel/parallelStagesAgentEnvWhen")
                 .logContains("[Pipeline] { (foo)",
                         "{ (Branch: first)",
@@ -209,14 +199,6 @@ public class ParallelTest extends AbstractModelDefTest {
     @Issue("JENKINS-46809")
     @Test
     public void parallelStagesGroupsAndStages() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
-
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
-        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
-
         WorkflowRun b = expect("parallel/parallelStagesGroupsAndStages")
                 .logContains("[Pipeline] { (foo)",
                         "{ (Branch: first)",
@@ -288,14 +270,6 @@ public class ParallelTest extends AbstractModelDefTest {
     @Issue("JENKINS-53734")
     @Test
     public void parallelStagesNestedInSequential() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
-
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
-        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
-
         expect("parallel/parallelStagesNestedInSequential")
                 .logContains("[Pipeline] { (foo)",
                         "First stage, first agent",
