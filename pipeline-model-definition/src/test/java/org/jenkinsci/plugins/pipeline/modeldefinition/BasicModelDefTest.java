@@ -28,6 +28,7 @@ import com.google.common.base.Predicate;
 import htmlpublisher.HtmlPublisherTarget;
 import hudson.model.Result;
 import hudson.model.Slave;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.LogRotator;
 import jenkins.model.BuildDiscarder;
@@ -51,6 +52,7 @@ import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -450,6 +452,36 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("objectMethodPipelineCall")
                 .logContains("Hi there")
                 .go();
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhen2() throws Exception {
+        expect("buildStatusWhen")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhen() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhen");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhen"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+//        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        j.waitForCompletion(b);
+
+        sampleRepo.init();
+        sampleRepo.write("newFile", "exists");
+        sampleRepo.git("add", "newFile");
+        sampleRepo.git("commit", "--message=later");
+
+        WorkflowRun b2 = q.getStartCondition().get();
+        j.waitForCompletion(b2);
+
     }
 
     @Test
