@@ -101,13 +101,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Test
-    public void twoStagePipeline() throws Exception {
-        expect("basic/twoStagePipeline")
-                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)", "goodbye")
-                .go();
-    }
-
     @Issue("JENKINS-38097")
     @Test
     public void allStagesExist() throws Exception {
@@ -229,7 +222,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)", "image: ubuntu")
                 .go();
     }
-
 
     @Test
     public void syntheticStages() throws Exception {

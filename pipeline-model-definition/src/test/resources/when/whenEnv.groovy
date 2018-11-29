@@ -46,5 +46,22 @@ pipeline {
 
             }
         }
+        stage("Three") {
+            when {
+                environment name: "FOO", value: "SOME_OTHER_VALUE"
+            }
+            steps {
+                echo "Should never be reached"
+            }
+        }
+        stage("Four") {
+            when {
+                environment name: "FOO", value: "bar", ignoreCase: true
+            }
+            steps {
+                echo "Ignore case worked"
+            }
+        }
+
     }
 }

@@ -707,26 +707,12 @@ public class WhenStageTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void whenEnvTrue() throws Exception {
-        expect("when/whenEnvTrue")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+    public void whenEnv() throws Exception {
+        expect("whenEnv")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World", "Ignore case worked")
+                .logNotContains("Should never be reached")
                 .go();
-    }
 
-    @Test
-    public void whenEnvIgnoreCase() throws Exception {
-        expect("when/whenEnvIgnoreCase")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenEnvFalse() throws Exception {
-        expect("when/whenEnvFalse")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
-                .go();
-    }
 
     @TestExtension
     public static class TestChangeLogStrategy extends ChangeLogStrategy {
