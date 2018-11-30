@@ -653,6 +653,31 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         j.assertLogNotContains("This shouldn't show up on second run", b2);
     }
 
+    @Issue("JENKINS-53662")
+    @Test
+    public void isRestartedStageCondition() throws Exception {
+        WorkflowRun original = expect("restart", "isRestartedStageCondition")
+                .logContains("This shouldn't show up on second run")
+                .logNotContains("This should only run on restart",
+                        "This shouldn't ever show up")
+                .go();
+
+        WorkflowJob p = original.getParent();
+
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
+
+        assertNotNull(redirect);
+        assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
+
+        j.waitUntilNoActivity();
+        WorkflowRun b2 = p.getBuildByNumber(2);
+        assertNotNull(b2);
+        j.assertBuildStatusSuccess(b2);
+        j.assertLogContains("This should only run on restart", b2);
+        j.assertLogNotContains("This shouldn't show up on second run", b2);
+        j.assertLogNotContains("This shouldn't ever show up", b2);
+    }
+
     @Issue("JENKINS-52261")
     @Test
     public void skippedParallelStagesMarkedNotExecuted() throws Exception {
