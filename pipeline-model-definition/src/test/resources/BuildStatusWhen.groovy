@@ -33,8 +33,8 @@ pipeline {
         stage("Two") {
             when {
                 expression {
-                    echo " build causes: " + currentBuild.getBuildCauses()
-                    return true
+                    echo " build causes: " + currentBuild.getBuildCauses().get(0)._class.contains("SCM")
+                    return currentBuild.getBuildCauses().get(0)._class.contains("SCM")
                 }
             }
             steps {
