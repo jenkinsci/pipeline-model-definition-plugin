@@ -1128,7 +1128,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         return Collections.unmodifiableList(l.subList(1, l.size()));
     }
 
-    @Ignore
+    @Ignore("No longer relevant due to https://github.com/jenkinsci/workflow-support-plugin/commit/d5d1f46255b623587198a25f8c179c64f0b74d12")
     @Issue("JENKINS-46112")
     @Test
     public void logActionPresentForError() throws Exception {
