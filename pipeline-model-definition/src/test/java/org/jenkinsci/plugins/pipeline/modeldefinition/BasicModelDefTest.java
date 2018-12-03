@@ -461,35 +461,41 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-46894")
     @Test
-    public void BuildStatusWhen2() throws Exception {
-        ExpectationsBuilder builder = expect("buildStatusWhen")
-                .runFromRepo(true)
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World");
-
-        builder.go();
-
-        sampleRepo.write("newFile", "exists");
-        sampleRepo.git("add", "newFile");
-        sampleRepo.git("commit", "--message=later");
-
-        builder.go();
-    }
-
-    @Issue("JENKINS-46894")
-    @Test
-    public void BuildStatusWhen() throws Exception {
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhen");
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhen"), true));
+    public void BuildStatusWhenWithTimeTrigger() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenTimerTrigger");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenTimerTrigger"), true));
 
         // get the build going, and wait until workflow pauses
         QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0,
-                new CauseAction(new TimerTrigger.TimerTriggerCause()),
-                new CauseAction(new SCMTrigger.SCMTriggerCause("git-hook")) );
+                new CauseAction(new TimerTrigger.TimerTriggerCause()));
+
         WorkflowRun b = q.getStartCondition().get();
 
         j.waitForCompletion(b);
 
         j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogNotContains("World", b);
+        j.assertLogNotContains("Heal it", b);
+
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithSCMTrigger() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenSCMTrigger");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenSCMTrigger"), true));
+
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0,
+                new CauseAction(new SCMTrigger.SCMTriggerCause("pooling")));
+
+        WorkflowRun b = q.getStartCondition().get();
+
+        j.waitForCompletion(b);
+
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogNotContains("World", b);
+        j.assertLogNotContains("Heal it", b);
 
     }
 

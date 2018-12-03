@@ -32,14 +32,10 @@ pipeline {
         }
         stage("Two") {
             when {
-                expression {
-                    echo " build causes: " + currentBuild.getBuildCauses().get(0)._class.contains("SCM")
-                    return currentBuild.getBuildCauses().get(0)._class.contains("SCM")
-                }
+                triggeredBy "TimerTrigger"
             }
             steps {
                 script {
-                    echo " build causes: " + currentBuild.getBuildCauses()
                     echo "World"
                     echo "Heal it"
                 }
