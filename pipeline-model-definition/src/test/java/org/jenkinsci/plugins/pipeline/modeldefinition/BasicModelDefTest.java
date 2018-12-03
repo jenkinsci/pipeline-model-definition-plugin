@@ -70,6 +70,7 @@ import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.steps.ErrorStep;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -1127,6 +1128,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         return Collections.unmodifiableList(l.subList(1, l.size()));
     }
 
+    @Ignore
     @Issue("JENKINS-46112")
     @Test
     public void logActionPresentForError() throws Exception {
