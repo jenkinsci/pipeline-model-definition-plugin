@@ -26,16 +26,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.base.Predicate;
 import htmlpublisher.HtmlPublisherTarget;
-import hudson.model.Cause;
 import hudson.model.CauseAction;
 import hudson.model.Result;
 import hudson.model.Slave;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.LogRotator;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
-import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 import jenkins.plugins.git.GitSCMSource;
@@ -57,7 +54,6 @@ import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -74,7 +70,6 @@ import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.steps.ErrorStep;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -466,10 +461,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenTimerTrigger"), true));
 
         // get the build going, and wait until workflow pauses
-        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0,
-                new CauseAction(new TimerTrigger.TimerTriggerCause()));
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new TimerTrigger.TimerTriggerCause()))
+                 .getStartCondition().get()
+         ;
 
-        WorkflowRun b = q.getStartCondition().get();
 
         j.waitForCompletion(b);
 
@@ -486,11 +482,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenSCMTrigger"), true));
 
         // get the build going, and wait until workflow pauses
-        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0,
-                new CauseAction(new SCMTrigger.SCMTriggerCause("pooling")));
-
-        WorkflowRun b = q.getStartCondition().get();
-
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new SCMTrigger.SCMTriggerCause("polling")))
+                .getStartCondition().get()
+                ;
         j.waitForCompletion(b);
 
         j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
