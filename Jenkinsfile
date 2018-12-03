@@ -13,14 +13,14 @@ pipeline {
     options {
         buildDiscarder(logRotator(numToKeepStr:'10'))
         timestamps()
-        timeout(time: 90, unit: 'MINUTES')
+        timeout(time: 120, unit: 'MINUTES')
     }
 
     // Make sure we have GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL set due to machine weirdness.
     environment {
         GIT_COMMITTER_NAME = "jenkins"
         GIT_COMMITTER_EMAIL = "jenkins@jenkins.io"
-        NEWER_CORE_VERSION = "2.121.3"
+        NEWER_CORE_VERSION = "2.138.3"
         TEST_TIMEOUT = "600"
     }
     

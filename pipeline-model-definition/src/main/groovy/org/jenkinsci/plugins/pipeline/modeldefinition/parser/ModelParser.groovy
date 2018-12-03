@@ -550,8 +550,12 @@ class ModelParser implements Parser {
                                     }
                                     stage.failFast = parallel.failFast
                                 } else {
-                                    // otherwise it's a single line of execution
-                                    stage.branches.add(parseBranch("default", block))
+                                    if (stage.getBranches().isEmpty()) {
+                                        // Only add a 'default' branch here if we don't already have one.
+                                        stage.branches.add(parseBranch("default", block))
+                                    } else {
+                                        break
+                                    }
                                 }
                             } else {
                                 // otherwise it's a single line of execution
