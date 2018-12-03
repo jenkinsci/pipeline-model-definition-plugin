@@ -175,10 +175,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void parallelStagesHaveStatusAndPost() throws Exception {
         WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatusAndPost")
                 .logContains("[Pipeline] { (foo)",
-                        "[first] { (Branch: first)",
-                        "[Pipeline] [first] { (first)",
-                        "[second] { (Branch: second)",
-                        "[Pipeline] [second] { (second)",
+                        "{ (Branch: first)",
+                        "[Pipeline] { (first)",
+                        "{ (Branch: second)",
+                        "[Pipeline] { (second)",
                         "FIRST BRANCH FAILED",
                         "SECOND BRANCH POST",
                         "FOO STAGE FAILED")
@@ -303,28 +303,28 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Test
     public void parallelPipeline() throws Exception {
         expect("parallelPipeline")
-                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
                 .go();
     }
 
     @Test
     public void parallelPipelineQuoteEscaping() throws Exception {
         expect("parallelPipelineQuoteEscaping")
-                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[\"second\"] { (Branch: \"second\")")
+                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: \"second\")")
                 .go();
     }
 
     @Test
     public void parallelPipelineWithSpaceInBranch() throws Exception {
         expect("parallelPipelineWithSpaceInBranch")
-                .logContains("[Pipeline] { (foo)", "[first one] { (Branch: first one)", "[second one] { (Branch: second one)")
+                .logContains("[Pipeline] { (foo)", "{ (Branch: first one)", "{ (Branch: second one)")
                 .go();
     }
 
     @Test
     public void parallelPipelineWithFailFast() throws Exception {
         expect("parallelPipelineWithFailFast")
-                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
                 .go();
     }
 
@@ -406,8 +406,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         assertNull(treeStep.getChildren().get(0).getSourceLocation());
         
         j.assertLogContains("[Pipeline] { (foo)", b);
-        j.assertLogContains("[first] { (Branch: first)", b);
-        j.assertLogContains("[second] { (Branch: second)", b);
+        j.assertLogContains("{ (Branch: first)", b);
+        j.assertLogContains("{ (Branch: second)", b);
     }
 
     private ModelASTBranch branchForName(String name, List<ModelASTBranch> branches) {
@@ -978,7 +978,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void parallelAndPostFailure() throws Exception {
         expect(Result.FAILURE, "parallelAndPostFailure")
                 .logContains("[Pipeline] { (foo)", "I HAVE EXPLODED")
-                .logNotContains("[first] { (Branch: first)", "[second] { (Branch: second)")
+                .logNotContains("{ (Branch: first)", "{ (Branch: second)")
                 .go();
     }
 
@@ -986,7 +986,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Test
     public void nestedParallelStages() throws Exception {
         expect("nestedParallelStages")
-                .logContains("[Pipeline] { (foo)", "[first] { (Branch: first)", "[second] { (Branch: second)")
+                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
                 .go();
     }
 
@@ -1003,8 +1003,8 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         expect("parallelStagesAgentEnvWhen")
                 .logContains("[Pipeline] { (foo)",
-                        "[first] { (Branch: first)",
-                        "[second] { (Branch: second)",
+                        "{ (Branch: first)",
+                        "{ (Branch: second)",
                         "First stage, first agent",
                         "First stage, do not override",
                         "First stage, overrode once and done",
@@ -1017,7 +1017,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "Second stage, overrode twice, in second branch",
                         "Second stage, overrode per nested, in second branch",
                         "Second stage, declared per nested, in second branch",
-                        "[second] Apache Maven 3.0.1")
+                        "Apache Maven 3.0.1")
                 .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
     }
@@ -1035,14 +1035,13 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         WorkflowRun b = expect("parallelStagesGroupsAndStages")
                 .logContains("[Pipeline] { (foo)",
-                        "[first] { (Branch: first)",
-                        "[second] { (Branch: second)",
+                        "{ (Branch: first)",
+                        "{ (Branch: second)",
                         "First stage, first agent",
-                        "[Pipeline] [second] { (inner-first)",
+                        "[Pipeline] { (inner-first)",
                         "Second stage, second agent",
-                        // Console log still shows [branch] (output), not [stage] (output), sadly.
-                        "[second] Apache Maven 3.0.1",
-                        "[Pipeline] [second] { (inner-second)")
+                        "Apache Maven 3.0.1",
+                        "[Pipeline] { (inner-second)")
                 .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
 
@@ -1116,10 +1115,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         expect("parallelStagesNestedInSequential")
                 .logContains("[Pipeline] { (foo)",
                         "First stage, first agent",
-                        "[Pipeline] [inner-first] { (inner-first)",
+                        "[Pipeline] { (inner-first)",
                         "Second stage, second agent",
-                        "[inner-first] Apache Maven 3.0.1",
-                        "[Pipeline] [inner-second] { (inner-second)")
+                        "Apache Maven 3.0.1",
+                        "[Pipeline] { (inner-second)")
                 .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
     }
@@ -1317,10 +1316,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void parallelStagesFailFast() throws Exception {
         expect(Result.ABORTED, "parallelStagesFailFast")
                 .logContains("[Pipeline] { (foo)",
-                        "[first] { (Branch: first)",
-                        "[Pipeline] [first] { (first)",
-                        "[second] { (Branch: second)",
-                        "[Pipeline] [second] { (second)",
+                        "{ (Branch: first)",
+                        "[Pipeline] { (first)",
+                        "{ (Branch: second)",
+                        "[Pipeline] { (second)",
                         "SECOND STAGE ABORTED")
                 .logNotContains("Second branch")
                 .hasFailureCase()
@@ -1332,10 +1331,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void parallelStagesFailFastWithOption() throws Exception {
         expect(Result.ABORTED,"parallelStagesFailFastWithOption")
                 .logContains("[Pipeline] { (foo)",
-                        "[first] { (Branch: first)",
-                        "[Pipeline] [first] { (first)",
-                        "[second] { (Branch: second)",
-                        "[Pipeline] [second] { (second)",
+                        "{ (Branch: first)",
+                        "[Pipeline] { (first)",
+                        "{ (Branch: second)",
+                        "[Pipeline] { (second)",
                         "SECOND STAGE ABORTED")
                 .logNotContains("Second branch")
                 .hasFailureCase()
@@ -1350,10 +1349,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         WorkflowRun b = expect(Result.FAILURE, "parallelStagesHaveStatusWhenSkipped")
                 .logContains("[Pipeline] { (bar)",
                         "[Pipeline] { (foo)",
-                        "[first] { (Branch: first)",
-                        "[Pipeline] [first] { (first)",
-                        "[second] { (Branch: second)",
-                        "[Pipeline] [second] { (second)")
+                        "{ (Branch: first)",
+                        "[Pipeline] { (first)",
+                        "{ (Branch: second)",
+                        "[Pipeline] { (second)")
                 .hasFailureCase()
                 .go();
 
