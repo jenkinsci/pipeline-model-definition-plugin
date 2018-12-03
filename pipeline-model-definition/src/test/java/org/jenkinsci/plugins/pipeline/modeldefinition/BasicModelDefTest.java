@@ -1145,11 +1145,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         });
         assertNotNull(n);
         LogAction l = n.getAction(LogAction.class);
-        /*
-        @TODO: this is failing becasue of workflow-support bump to 2.22
-         Previously was working.
-         */
-//        assertNotNull(l);
+        assertNotNull(l);
     }
 
     @Test
