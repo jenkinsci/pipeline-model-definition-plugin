@@ -31,6 +31,7 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
+import hudson.model.Cause
 import hudson.model.Describable
 import hudson.model.Descriptor
 import hudson.model.Job
@@ -290,6 +291,23 @@ class Utils {
         RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
 
         return cause != null
+    }
+
+    /**
+     * Check if this run was caused by a cause.
+     */
+    @Whitelisted
+    static boolean isRunCausedBy(CpsScript script, String cause, String detail = null) {
+        WorkflowRun r = script.$build()
+        return r.getCauses().any { shouldRunBeAllowed(it, cause, detail) }
+    }
+
+    static boolean shouldRunBeAllowed(Cause causeClass, String cause, String detail){
+        if( causeClass instanceof Cause.UserIdCause && Cause.UserIdCause.simpleName == cause){
+            return detail == null || causeClass.userId == detail
+        }else {
+            return causeClass.class.simpleName.matches("(?i)\\.*${cause}.*")
+        }
     }
 
     @Restricted(NoExternalUse.class)

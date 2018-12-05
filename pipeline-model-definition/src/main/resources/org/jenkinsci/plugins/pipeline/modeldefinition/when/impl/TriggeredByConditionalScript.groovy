@@ -27,22 +27,17 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 class TriggeredByConditionalScript extends DeclarativeStageConditionalScript<TriggeredByConditional> {
 
-    private String cause
-    private String triggerClass
 
     TriggeredByConditionalScript(CpsScript s, TriggeredByConditional c) {
         super(s, c)
-        this.cause = c.cause
-        RunWrapper currentBuild = (RunWrapper)script.getProperty("currentBuild")
-        this.triggerClass = currentBuild.getBuildCauses().get(0)._class
     }
 
     @Override
     boolean evaluate() {
-        return !triggerClass.contains(cause)
+        return Utils.isRunCausedBy(script, describable.cause, describable.detail)
     }
 }

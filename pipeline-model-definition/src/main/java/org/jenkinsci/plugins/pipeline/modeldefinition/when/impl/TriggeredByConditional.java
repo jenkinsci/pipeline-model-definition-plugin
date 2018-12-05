@@ -33,6 +33,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -43,14 +44,23 @@ import javax.annotation.Nonnull;
 public class TriggeredByConditional extends DeclarativeStageConditional<TriggeredByConditional> {
 
     private String cause;
+    private String detail;
 
     @DataBoundConstructor
     public TriggeredByConditional(String cause) {
         this.cause = cause;
     }
-
     public String getCause() {
         return cause;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    @DataBoundSetter
+    public void setDetail(String detail) {
+        this.detail = detail;
     }
 
     @Extension

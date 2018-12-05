@@ -26,13 +26,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.base.Predicate;
 import htmlpublisher.HtmlPublisherTarget;
+import hudson.model.Cause.UserIdCause;
 import hudson.model.CauseAction;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.LogRotator;
-import hudson.triggers.SCMTrigger;
-import hudson.triggers.TimerTrigger;
+import hudson.triggers.SCMTrigger.SCMTriggerCause;
+import hudson.triggers.TimerTrigger.TimerTriggerCause;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 import jenkins.plugins.git.GitSCMSource;
@@ -457,15 +458,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-46894")
     @Test
-    public void BuildStatusWhenWithTimeTrigger() throws Exception {
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenTimerTrigger");
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenTimerTrigger"), true));
+    public void BuildStatusWhenWithTimeTriggerSkipped() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenTimerTriggerSkipped");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenSCMTrigger"), true));
 
         // get the build going, and wait until workflow pauses
         WorkflowRun b = p.scheduleBuild2(0,
-                new CauseAction(new TimerTrigger.TimerTriggerCause()))
-                 .getStartCondition().get()
-         ;
+                new CauseAction(new TimerTriggerCause()))
+                 .getStartCondition().get();
 
 
         j.waitForCompletion(b);
@@ -478,20 +478,90 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-46894")
     @Test
+    public void BuildStatusWhenWithSCMTriggerSkipped() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenSCMTriggerSkipped");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenTimerTrigger"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new SCMTriggerCause("polling"))
+                ).getStartCondition().get();
+        j.waitForCompletion(b);
+
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogNotContains("World", b);
+        j.assertLogNotContains("Heal it", b);
+
+    }
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithTimeTrigger() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenTimerTrigger");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenTimerTrigger"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new TimerTriggerCause()))
+                 .getStartCondition().get();
+
+
+        j.waitForCompletion(b);
+
+        j.assertLogNotContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogContains("World", b);
+        j.assertLogContains("Heal it", b);
+
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
     public void BuildStatusWhenWithSCMTrigger() throws Exception {
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenSCMTrigger");
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenSCMTrigger"), true));
 
         // get the build going, and wait until workflow pauses
         WorkflowRun b = p.scheduleBuild2(0,
-                new CauseAction(new SCMTrigger.SCMTriggerCause("polling")))
-                .getStartCondition().get()
-                ;
+                new CauseAction(new SCMTriggerCause("polling"))
+                ).getStartCondition().get();
+        j.waitForCompletion(b);
+
+        j.assertLogNotContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogContains("World", b);
+        j.assertLogContains("Heal it", b);
+
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithUserIdCauseShouldBeSkipped() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenUserIdCauseSkipped");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenUserIdCause"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new UserIdCause("virginia"))
+                ).getStartCondition().get();
         j.waitForCompletion(b);
 
         j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
         j.assertLogNotContains("World", b);
         j.assertLogNotContains("Heal it", b);
+
+    }
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithUserIdCause() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenUserIdCause");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("buildStatusWhenUserIdCause"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new UserIdCause("vlinde"))
+                ).getStartCondition().get();
+        j.waitForCompletion(b);
+
+        j.assertLogContains("World", b);
+        j.assertLogContains("Heal it", b);
 
     }
 

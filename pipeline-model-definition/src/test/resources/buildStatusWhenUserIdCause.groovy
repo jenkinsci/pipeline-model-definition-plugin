@@ -32,7 +32,7 @@ pipeline {
         }
         stage("Two") {
             when {
-                triggeredBy cause: "SCMTrigger"
+                triggeredBy cause: "UserIdCause", detail: "vlinde"
             }
             steps {
                 script {
