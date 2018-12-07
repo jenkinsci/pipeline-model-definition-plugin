@@ -294,14 +294,21 @@ class Utils {
     }
 
     /**
-     * Check if this run was caused by a cause.
+     * Checks if this run was caused by a cause.
      */
-    @Whitelisted
     static boolean isRunCausedBy(CpsScript script, String cause, String detail = null) {
         WorkflowRun r = script.$build()
         return r.getCauses().any { shouldRunBeAllowed(it, cause, detail) }
     }
 
+    /**
+     * Checks if a specific cause must be aborted
+     *
+     * @param causeClass provided by the Run class
+     * @param cause that should be allowed to continue
+     * @param detail regarding the cause (currently the user in a UserIdCause)
+     * @return if a specific cause must be aborted
+     */
     static boolean shouldRunBeAllowed(Cause causeClass, String cause, String detail){
         if( causeClass instanceof Cause.UserIdCause && Cause.UserIdCause.simpleName == cause){
             return detail == null || causeClass.userId == detail
