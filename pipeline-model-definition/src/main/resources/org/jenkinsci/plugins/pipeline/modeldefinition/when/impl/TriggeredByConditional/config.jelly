@@ -25,7 +25,7 @@
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry field="compare" title="Build triggered cause">
+    <f:entry field="cause" title="Build triggered cause">
         <f:textbox/>
     </f:entry>
 </j:jelly>
