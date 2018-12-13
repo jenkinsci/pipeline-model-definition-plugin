@@ -31,6 +31,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.CheckoutExtensions
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.CheckoutToSubdirectory
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.ContainerPerStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
@@ -109,6 +110,12 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
                 }
             }
             if (!options.isEmpty()) {
+
+                CheckoutExtensions coe = (CheckoutExtensions) options.get("checkoutExtensions")
+                if (coe?.getExtensions() != null) {
+                    a.setExtensions(coe.extensions)
+                }
+
                 SkipDefaultCheckout skip = (SkipDefaultCheckout) options.get("skipDefaultCheckout")
                 if (skip?.isSkipDefaultCheckout()) {
                     doCheckout = false

@@ -183,6 +183,28 @@ public class OptionsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-49142")
+    @Test
+    public void checkoutExtensions() throws Exception {
+        expect("checkoutExtensions")
+                .logContains(
+                        "[Pipeline] { (foo)",
+                        "hello",
+                        "Cleaning workspace")
+                .go();
+    }
+
+    @Issue("JENKINS-49142")
+    @Test
+    public void checkoutExtensionsEmpty() throws Exception {
+        expect("checkoutExtensionsEmpty")
+                .logNotContains("Cleaning workspace")
+                .logContains(
+                        "[Pipeline] { (foo)",
+                        "hello")
+                .go();
+    }
+
     @Test
     public void simpleWrapper() throws Exception {
         expect("simpleWrapper")

@@ -28,8 +28,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent
 import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-import javax.annotation.Nonnull
-
 class CheckoutScript implements Serializable {
     
     static Closure doCheckout(CpsScript script, DeclarativeAgent agent, String customWorkspace = null, Closure body) {
@@ -72,6 +70,7 @@ class CheckoutScript implements Serializable {
         def checkoutMap = [:]
         if (!agent.inStage) {
             script.stage(SyntheticStageNames.checkout()) {
+                agent.decorateExtensions(script)
                 checkoutMap.putAll(script.checkout(script.scm) ?: [:])
             }
         } else {

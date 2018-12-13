@@ -25,13 +25,15 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.impl.CleanCheckout;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
-import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
@@ -42,6 +44,9 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
     protected boolean inStage;
     protected boolean doCheckout;
     protected String subdirectory;
+
+
+    protected List<String> extensions;
 
     @Override
     public WithScriptScript getScript(CpsScript cpsScript) throws Exception {
@@ -78,10 +83,19 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
         return subdirectory;
     }
 
+    public List<String> getExtensions() {
+        return extensions;
+    }
+
+    public void setExtensions(List<String> extensions) {
+        this.extensions = extensions;
+    }
+
     public void copyFlags(@Nonnull DeclarativeAgent a) {
         setInStage(a.isInStage());
         setDoCheckout(a.isDoCheckout());
         setSubdirectory(a.getSubdirectory());
+        setExtensions(a.getExtensions());
     }
 
     public boolean hasScmContext(CpsScript script) {
@@ -90,6 +104,17 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    public void decorateExtensions(CpsScript script){
+        if( script.getProperty("scm") instanceof GitSCM) {
+            GitSCM scm = (GitSCM) script.getProperty("scm");
+            if (extensions != null && extensions.contains("CleanCheckout")) {
+                scm.getExtensions().add(new CleanCheckout());
+            }
+        }else{
+            script.println("SCM property not valid: " + script.getProperty("scm"));
         }
     }
 
