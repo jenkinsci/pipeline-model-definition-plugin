@@ -68,9 +68,9 @@ class CheckoutScript implements Serializable {
 
     private static Map performCheckout(CpsScript script, DeclarativeAgent agent) {
         def checkoutMap = [:]
+        agent.decorateExtensions(script)
         if (!agent.inStage) {
             script.stage(SyntheticStageNames.checkout()) {
-                agent.decorateExtensions(script)
                 checkoutMap.putAll(script.checkout(script.scm) ?: [:])
             }
         } else {
