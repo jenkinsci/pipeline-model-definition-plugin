@@ -48,6 +48,7 @@ public class AgentTest extends AbstractModelDefTest {
     private static Slave s;
     private static Slave s2;
 
+    private static String password;
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
@@ -63,10 +64,16 @@ public class AgentTest extends AbstractModelDefTest {
         //setup credentials for docker registry
         CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
 
-        UsernamePasswordCredentialsImpl globalCred =
-                new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
-                "dockerhub", "sample", "jtaboada", "jenkinsci");
-        store.addCredentials(Domain.global(), globalCred);
+        password = System.getProperty("docker.password");
+
+        if(password != null) {
+            UsernamePasswordCredentialsImpl globalCred =
+                    new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+                            "dockerhub", "real", "jtaboada", password);
+
+            store.addCredentials(Domain.global(), globalCred);
+
+        }
     }
 
     @Test
@@ -99,7 +106,9 @@ public class AgentTest extends AbstractModelDefTest {
 
     @Test
     public void agentDockerWithCreds() throws Exception {
-        agentDocker("agentDockerWithCreds", "-v /tmp:/tmp");
+        //If there is no password, the test is ignored
+        if(password != null)
+            agentDocker("agentDockerWithCreds", "-v /tmp:/tmp");
     }
 
     @Test
