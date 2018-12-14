@@ -23,6 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
@@ -55,6 +60,13 @@ public class AgentTest extends AbstractModelDefTest {
         s2.setLabelString("other-docker");
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
                 new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second")));
+        //setup credentials for docker registry
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+
+        UsernamePasswordCredentialsImpl globalCred =
+                new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+                "dockerhub", "sample", "jtaboada", "jenkinsci");
+        store.addCredentials(Domain.global(), globalCred);
     }
 
     @Test
@@ -83,6 +95,11 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentDocker() throws Exception {
         agentDocker("agentDocker", "-v /tmp:/tmp");
+    }
+
+    @Test
+    public void agentDockerWithCreds() throws Exception {
+        agentDocker("agentDockerWithCreds", "-v /tmp:/tmp");
     }
 
     @Test
