@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.junit.BeforeClass;
@@ -325,6 +326,14 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void notExpressionInEnvironment() throws Exception {
         expect("notExpressionInEnvironment")
                 .logContains("expecting false, got false")
+                .go();
+    }
+
+    @Issue("JENKINS-52744")
+    @Test
+    public void improveMessageErrorWhenEnvVarNotExists() throws Exception {
+        expect(Result.FAILURE, "improveMessageErrorWhenEnvVarNotExists")
+                .logContains("IllegalArgumentException: Invalid var declared in environment: FOO")
                 .go();
     }
 }
