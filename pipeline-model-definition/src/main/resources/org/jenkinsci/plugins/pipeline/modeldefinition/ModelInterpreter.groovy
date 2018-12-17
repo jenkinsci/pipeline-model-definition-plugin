@@ -453,10 +453,10 @@ class ModelInterpreter implements Serializable {
             List<String> evaledEnv = envVars.collect { k, v ->
                 try{
                     "${k}=${v.call()}"
-                }catch (npe){
+                }catch (NullPointerException e){
                     throw new IllegalArgumentException(format("Invalid var declared in environment: %s", k))
                 }
-            }
+            }.findAll { it != null}
             return {
                 script.withEnv(evaledEnv) {
                     body.call()
