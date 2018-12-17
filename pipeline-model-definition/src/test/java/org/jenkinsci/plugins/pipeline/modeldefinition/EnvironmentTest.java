@@ -327,4 +327,14 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("expecting false, got false")
                 .go();
     }
+
+    @Issue("JENKINS-44376")
+    @Test
+    public void sharedVarsInEnvironment() throws Exception {
+        expect("environmentSharedVars")
+                .logContains("FOO-1 is FOO")
+                .logContains("FOO-2 is FOO")
+                .logContains("FOO-3 is BOO")
+                .go();
+    }
 }
