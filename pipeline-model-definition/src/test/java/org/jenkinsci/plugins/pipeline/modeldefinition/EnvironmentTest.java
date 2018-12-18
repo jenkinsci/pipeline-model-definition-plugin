@@ -332,9 +332,11 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Test
     public void sharedVarsInEnvironment() throws Exception {
         expect("environmentSharedVars")
-                .logContains("FOO-1 is FOO")
-                .logContains("FOO-2 is FOO")
-                .logContains("FOO-3 is BOO")
+                .logContainsInOrder(
+                        "FOO-1 is FOO",
+                        "FOO-2 is FOO",
+                        "FOO-3 is BOO"
+                )
                 .go();
     }
 }
