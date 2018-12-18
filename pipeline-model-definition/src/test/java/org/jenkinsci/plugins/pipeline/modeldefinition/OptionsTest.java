@@ -205,6 +205,22 @@ public class OptionsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-49142")
+    @Test
+    public void checkoutExtensionsWithSeveralStages() throws Exception {
+        expect("checkoutExtensionsWithSeveralStages")
+                .logContainsInOrder(
+                        "Cleaning workspace",
+                        "[Pipeline] { (foo)",
+                        "hello",
+                        "Commit message:",
+                        "Cleaning workspace",
+                        "Resetting working tree",
+                        "Cleaning workspace"
+                )
+                .go();
+    }
+
     @Test
     public void simpleWrapper() throws Exception {
         expect("simpleWrapper")
