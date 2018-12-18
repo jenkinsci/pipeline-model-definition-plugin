@@ -455,7 +455,7 @@ class ModelInterpreter implements Serializable {
                     "${k}=${v.call()}"
                 }catch (NullPointerException e){
 
-                    throw new IllegalArgumentException(format("Invalid var declared in environment: %s", k))
+                    throw new IllegalArgumentException(format("Invalid variable (%s) declared in environment; There are some problems with its value", k))
                 }
             }.findAll { it != null}
             return {
