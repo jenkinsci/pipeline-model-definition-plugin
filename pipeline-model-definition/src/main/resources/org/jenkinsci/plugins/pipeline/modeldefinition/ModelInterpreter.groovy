@@ -453,9 +453,8 @@ class ModelInterpreter implements Serializable {
             List<String> evaledEnv = envVars.collect { k, v ->
                 try{
                     "${k}=${v.call()}"
-                }catch (NullPointerException e){
-
-                    throw new IllegalArgumentException(format("Invalid variable (%s) declared in environment; There are some problems with its value", k))
+                }catch (NullPointerException e) {
+                    throw new IllegalArgumentException( Messages.ModelInterpreter_EnvironmentVariableFailed(k) )
                 }
             }.findAll { it != null}
             return {
