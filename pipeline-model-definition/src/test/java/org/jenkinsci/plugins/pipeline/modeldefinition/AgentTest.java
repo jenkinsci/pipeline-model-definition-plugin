@@ -23,6 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
@@ -43,6 +48,7 @@ public class AgentTest extends AbstractModelDefTest {
     private static Slave s;
     private static Slave s2;
 
+    private static String password;
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
@@ -55,6 +61,19 @@ public class AgentTest extends AbstractModelDefTest {
         s2.setLabelString("other-docker");
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
                 new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second")));
+        //setup credentials for docker registry
+        CredentialsStore store = CredentialsProvider.lookupStores(j.jenkins).iterator().next();
+
+        password = System.getProperty("docker.password");
+
+        if(password != null) {
+            UsernamePasswordCredentialsImpl globalCred =
+                    new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,
+                            "dockerhub", "real", "jtaboada", password);
+
+            store.addCredentials(Domain.global(), globalCred);
+
+        }
     }
 
     @Test
@@ -83,6 +102,13 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentDocker() throws Exception {
         agentDocker("agentDocker", "-v /tmp:/tmp");
+    }
+
+    @Test
+    public void agentDockerWithCreds() throws Exception {
+        //If there is no password, the test is ignored
+        if(password != null)
+            agentDocker("agentDockerWithCreds", "-v /tmp:/tmp");
     }
 
     @Test

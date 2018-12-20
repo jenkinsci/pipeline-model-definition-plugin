@@ -34,6 +34,7 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.Serializable;
 
 /**
  * @see org.jenkinsci.plugins.pipeline.modeldefinition.config.DockerLabelProvider
@@ -118,6 +119,23 @@ public class DeclarativeDockerUtils {
                 }
             }
             return null;
+        }
+    }
+    public static class DockerRegistry implements Serializable {
+        public String registry = "https://index.docker.io/v1/";
+        public String credential;
+
+        public DockerRegistry(String registry, String creds){
+            if( registry != null)
+                this.registry = registry;
+            this.credential = creds;
+        }
+
+        public boolean hasData(){
+            return credential != null;
+        }
+        public static DockerRegistry build(String dockerHub, String creds){
+            return new DockerRegistry( getRegistryUrl(dockerHub), getRegistryCredentialsId(creds));
         }
     }
 }
