@@ -333,7 +333,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Test
     public void improveMessageErrorWhenEnvVarNotExists() throws Exception {
         expect(Result.FAILURE, "improveMessageErrorWhenEnvVarNotExists")
-                .logContains("IllegalArgumentException: Invalid variable (FOO) declared in environment; There are some problems with its value")
+                .logContains("IllegalArgumentException: One or more variables have some issues with their values: FOO")
                 .go();
     }
 }
