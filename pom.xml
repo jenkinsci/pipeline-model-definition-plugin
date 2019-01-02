@@ -85,12 +85,12 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.58</version>
+        <version>2.62-20181227.162213-5</version> <!-- TODO: switch to release -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>script-security</artifactId>
-        <version>1.46</version>
+        <version>1.50-20181227.154539-3</version> <!-- TODO: Switch to release -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
