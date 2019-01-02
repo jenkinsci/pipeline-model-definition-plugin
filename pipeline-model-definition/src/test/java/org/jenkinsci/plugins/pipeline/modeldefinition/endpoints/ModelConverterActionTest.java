@@ -33,6 +33,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.net.URL;
@@ -40,6 +41,7 @@ import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ModelConverterActionTest extends AbstractModelDefTest {
@@ -243,4 +245,34 @@ public class ModelConverterActionTest extends AbstractModelDefTest {
         assertTrue("Errors array (" + topErrors.toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedErrorInJSON(topErrors, expectedError));
     }
+
+    @Issue("SECURITY-1266")
+    @Test
+    public void testLocalASTTransformInCompilation() throws Exception {
+        final String rawJenkinsfile = fileContentsFromResources("localASTTransformInCompilation.groovy", true);
+        // TODO: Get a better approach for skipping JSON-specific errors
+        if (rawJenkinsfile != null) {
+
+            JenkinsRule.WebClient wc = j.createWebClient();
+            WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
+
+            assertNotNull(rawJenkinsfile);
+
+            NameValuePair pair = new NameValuePair("jenkinsfile", rawJenkinsfile);
+            req.setRequestParameters(Collections.singletonList(pair));
+
+            String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+            assertNotNull(rawResult);
+
+            JSONObject result = JSONObject.fromObject(rawResult);
+            // TODO: Change this when we get proper JSON errors causing HTTP error codes
+            assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
+            JSONObject resultData = result.getJSONObject("data");
+            assertNotNull(resultData);
+            assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
+
+            assertNull(j.jenkins.getItem("should-not-exist"));
+        }
+    }
+
 }
