@@ -41,6 +41,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
+import static java.lang.String.format
 import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 
 /**
@@ -450,8 +451,12 @@ class ModelInterpreter implements Serializable {
     def withEnvBlock(Map<String,Closure> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
             List<String> evaledEnv = envVars.collect { k, v ->
-                "${k}=${v.call()}"
-            }
+                try{
+                    "${k}=${v.call()}"
+                }catch (NullPointerException e) {
+                    throw new IllegalArgumentException( Messages.ModelInterpreter_EnvironmentVariableFailed(k) )
+                }
+            }.findAll { it != null}
             return {
                 script.withEnv(evaledEnv) {
                     body.call()
