@@ -168,7 +168,6 @@ class ModelInterpreter implements Serializable {
                     try {
                         evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason).call()
                     } catch (Throwable e) {
-                        script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                         Utils.markStageFailedAndContinued(thisStage.name)
                         if (firstError == null) {
                             firstError = e
@@ -684,7 +683,6 @@ class ModelInterpreter implements Serializable {
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Throwable e) {
-            script.getProperty("currentBuild").result = Utils.getResultFromException(e)
             Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
                 stageError = e

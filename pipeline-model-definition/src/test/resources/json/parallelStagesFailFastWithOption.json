@@ -21,7 +21,7 @@
       {
         "name": "second",
         "post": {"conditions": [        {
-          "condition": "aborted",
+          "condition": "failure",
           "branch":           {
             "name": "default",
             "steps": [            {
@@ -30,7 +30,7 @@
                 "key": "message",
                 "value":                 {
                   "isLiteral": true,
-                  "value": "SECOND STAGE ABORTED"
+                  "value": "SECOND STAGE FAILED"
                 }
               }]
             }]
