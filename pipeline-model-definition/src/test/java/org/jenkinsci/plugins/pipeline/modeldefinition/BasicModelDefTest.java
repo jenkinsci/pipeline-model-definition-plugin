@@ -1381,7 +1381,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Issue("JENKINS-47109")
+    @Issue(value = {"JENKINS-47109", "JENKINS-55459"})
     @Test
     public void parallelStagesFailFast() throws Exception {
         expect(Result.FAILURE, "parallelStagesFailFast")
@@ -1396,7 +1396,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Issue("JENKINS-53558")
+    @Issue(value = {"JENKINS-53558", "JENKINS-55459"})
     @Test
     public void parallelStagesFailFastWithOption() throws Exception {
         expect(Result.FAILURE,"parallelStagesFailFastWithOption")

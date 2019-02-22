@@ -51,7 +51,7 @@ class Regression extends BuildCondition {
 
         // Get the *worst* result of either the execution or the run. If the run's result is null, that's effectively
         // SUCCESS.
-        Result runResult = combineResults(r)
+        Result runResult = combineResults(r, error)
 
         // If there's no previous build, we can't exactly be regressing, can we?
         if (prev == null) {

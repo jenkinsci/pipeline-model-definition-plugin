@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 
 import javax.annotation.CheckForNull;
@@ -75,18 +76,31 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         return run != null && meetsCondition(run, context, error);
     }
 
+    @Deprecated
     @Nonnull
     protected final Result combineResults(@Nonnull WorkflowRun run) {
+        return combineResults(run, null);
+    }
+
+    @Nonnull
+    protected final Result combineResults(@Nonnull WorkflowRun run, @CheckForNull Throwable error) {
         Result execResult = getExecutionResult(run);
         Result prevResult = run.getResult();
+        Result errorResult = Result.SUCCESS;
         if (prevResult == null) {
             prevResult = Result.SUCCESS;
         }
         if (execResult == null) {
-            return Result.SUCCESS;
-        } else {
-            return execResult.combine(prevResult);
+            execResult = Result.SUCCESS;
         }
+        if (error != null) {
+            if (error instanceof FlowInterruptedException) {
+                errorResult = ((FlowInterruptedException)error).getResult();
+            } else {
+                errorResult = Result.FAILURE;
+            }
+        }
+        return execResult.combine(prevResult).combine(errorResult);
     }
 
     @CheckForNull

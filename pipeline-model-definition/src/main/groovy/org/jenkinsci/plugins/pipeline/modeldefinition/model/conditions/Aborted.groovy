@@ -48,7 +48,7 @@ class Aborted extends BuildCondition {
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
         Result execResult = getExecutionResult(r)
-        Result errorResult = Result.SUCCESS;
+        Result errorResult = null
         if (error != null) {
             errorResult = Utils.getResultFromException(error)
         }
