@@ -788,7 +788,6 @@ class ModelInterpreter implements Serializable {
                     }
                 }
             } catch (Throwable e) {
-                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                 if (stageName != null) {
                     Utils.markStageFailedAndContinued(stageName)
                 }
