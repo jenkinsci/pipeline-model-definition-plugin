@@ -51,7 +51,7 @@ class Changed extends BuildCondition {
 
         // Get the *worst* result of either the execution or the run. If the run's result is null, that's effectively
         // SUCCESS.
-        Result runResult = combineResults(r)
+        Result runResult = combineResults(r, error)
 
         // If there's no previous build, we're inherently changed.
         if (prev == null) {
