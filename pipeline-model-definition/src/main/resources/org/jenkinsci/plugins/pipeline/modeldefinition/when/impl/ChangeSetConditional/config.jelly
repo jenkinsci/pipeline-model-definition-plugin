@@ -28,7 +28,7 @@
     <f:entry field="glob" title="File/path glob pattern to match against changeset">
         <f:textbox/>
     </f:entry>
-    <f:entry field="caseSensitive" title="Case-sensitive path/file matching">
-        <f:checkbox checked="false" />
+    <f:entry field="caseSensitive">
+        <f:checkbox title="Case-sensitive path/file matching" checked="false"/>
     </f:entry>
 </j:jelly>

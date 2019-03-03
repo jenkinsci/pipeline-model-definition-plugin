@@ -31,7 +31,7 @@
     <f:entry field="value" title="Expected value for environment variable">
         <f:textbox/>
     </f:entry>
-    <f:entry field="ignoreCase" title="Ignore case when comparing">
-        <f:checkbox checked="false"/>
+    <f:entry field="ignoreCase">
+        <f:checkbox title="Ignore case when comparing" checked="false"/>
     </f:entry>
 </j:jelly>

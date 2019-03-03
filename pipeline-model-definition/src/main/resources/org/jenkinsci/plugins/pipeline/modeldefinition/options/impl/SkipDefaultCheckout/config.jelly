@@ -25,7 +25,7 @@
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry field="skipDefaultCheckout" title="Skip default checkout">
-        <f:checkbox default="true"/>
+    <f:entry field="skipDefaultCheckout">
+        <f:checkbox title="Skip default checkout" default="true"/>
     </f:entry>
 </j:jelly>

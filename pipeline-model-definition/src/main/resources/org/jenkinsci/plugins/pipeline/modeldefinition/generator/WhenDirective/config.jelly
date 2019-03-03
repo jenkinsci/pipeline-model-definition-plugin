@@ -40,7 +40,7 @@
             </f:dropdownListBlock>
         </j:forEach>
     </f:dropdownList>
-    <f:entry field="beforeAgent" title="${%Evaluate Before Agent}">
-        <f:checkbox/>
+    <f:entry field="beforeAgent">
+        <f:checkbox title="${%Evaluate Before Agent}"/>
     </f:entry>
 </j:jelly>
