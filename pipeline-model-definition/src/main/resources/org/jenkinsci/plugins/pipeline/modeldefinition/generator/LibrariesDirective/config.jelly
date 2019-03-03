@@ -30,10 +30,10 @@
         <f:entry title="${%Libraries}" help="${descriptor.getHelpPage()}">
             <f:repeatable var="libs" items="${instance.getLibs()}">
                 <table width="100%">
-                    <f:entry title="${%Library Name}" help="${descriptor.getLibHelp('name')}">
+                    <f:entry title="${%Name}" help="${descriptor.getLibHelp('name')}">
                         <f:textbox name="libs.name" value="${libs.name}" />
                     </f:entry>
-                    <f:entry title="${%Library Version}" help="${descriptor.getLibHelp('version')}">
+                    <f:entry title="${%Version}" help="${descriptor.getLibHelp('version')}">
                         <f:textbox name="libs.version" value="${libs.version}" />
                     </f:entry>
                     <f:entry title="">
