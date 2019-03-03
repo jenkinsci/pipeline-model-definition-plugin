@@ -27,7 +27,7 @@
     <f:block>
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#stage" target="_blank">the online documentation</a>
         for more information on the <code>stage</code> directive.
-        <f:entry field="name" title="${%Stage Name}">
+        <f:entry field="name" title="${%Name}">
             <f:textbox/>
         </f:entry>
         <f:entry field="contentType" title="${%This stage will contain...}">
