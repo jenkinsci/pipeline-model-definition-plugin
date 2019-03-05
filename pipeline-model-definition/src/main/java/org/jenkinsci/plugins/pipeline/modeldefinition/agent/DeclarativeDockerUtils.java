@@ -122,18 +122,23 @@ public class DeclarativeDockerUtils {
         }
     }
     public static class DockerRegistry implements Serializable {
-        public String registry = "https://index.docker.io/v1/";
+        private final String DEFAULT_REGISTRY = "https://index.docker.io/v1/";
+        public String registry;
         public String credential;
 
         public DockerRegistry(String registry, String creds){
-            if( registry != null)
+            if (registry != null) {
                 this.registry = registry;
+            } else {
+                this.registry = DEFAULT_REGISTRY;
+            }
             this.credential = creds;
         }
 
         public boolean hasData(){
-            return credential != null;
+            return credential != null || !registry.equals(DEFAULT_REGISTRY);
         }
+
         public static DockerRegistry build(String dockerHub, String creds){
             return new DockerRegistry( getRegistryUrl(dockerHub), getRegistryCredentialsId(creds));
         }
