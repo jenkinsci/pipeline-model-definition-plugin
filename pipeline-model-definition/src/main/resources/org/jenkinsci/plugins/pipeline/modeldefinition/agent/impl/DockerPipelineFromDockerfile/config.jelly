@@ -40,8 +40,8 @@
     <f:entry field="label" title="Label">
         <f:textbox/>
     </f:entry>
-    <f:entry field="reuseNode" title="Reuse Node">
-        <f:checkbox/>
+    <f:entry field="reuseNode">
+        <f:checkbox title="Reuse Node"/>
     </f:entry>
     <f:entry field="customWorkspace" title="Custom Workspace">
         <f:textbox/>

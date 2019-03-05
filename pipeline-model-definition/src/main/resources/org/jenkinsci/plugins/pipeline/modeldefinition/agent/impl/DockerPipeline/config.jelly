@@ -34,8 +34,8 @@
     <f:entry field="label" title="Label">
         <f:textbox/>
     </f:entry>
-    <f:entry field="reuseNode" title="Reuse Node">
-        <f:checkbox/>
+    <f:entry field="reuseNode">
+        <f:checkbox title="Reuse Node"/>
     </f:entry>
     <f:entry field="customWorkspace" title="Custom Workspace">
         <f:textbox/>
@@ -46,7 +46,7 @@
     <f:entry field="registryCredentialsId" title="Registry Credentials ID">
         <f:textbox/>
     </f:entry>
-    <f:entry field="alwaysPull" title="Always Pull Image">
-        <f:checkbox/>
+    <f:entry field="alwaysPull">
+        <f:checkbox title="Always Pull Image"/>
     </f:entry>
 </j:jelly>
