@@ -30,11 +30,11 @@
         <f:entry title="${%Environment Variables}" help="${descriptor.getHelpPage()}">
             <f:repeatable var="env" items="${instance.getEnv()}">
                 <table width="100%">
-                    <f:entry title="${%Variable Name}" help="${descriptor.getEnvHelp('name')}">
+                    <f:entry title="${%Name}" help="${descriptor.getEnvHelp('name')}">
                         <f:textbox name="env.name" value="${env.name}" />
                     </f:entry>
                     <!-- TODO: Figure out how to support credentials here. -->
-                    <f:entry title="${%Variable Value}" help="${descriptor.getEnvHelp('value')}">
+                    <f:entry title="${%Value}" help="${descriptor.getEnvHelp('value')}">
                         <f:textbox name="env.value" value="${env.value}" />
                     </f:entry>
                     <f:entry title="">
