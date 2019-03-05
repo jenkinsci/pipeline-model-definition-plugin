@@ -40,6 +40,8 @@ import java.io.Serializable;
  * @see org.jenkinsci.plugins.pipeline.modeldefinition.config.DockerLabelProvider
  */
 public class DeclarativeDockerUtils {
+    private static final String DEFAULT_REGISTRY = "https://index.docker.io/v1/";
+
     private static Run<?,?> currentRun() {
         try {
             CpsThread t = CpsThread.current();
@@ -122,7 +124,6 @@ public class DeclarativeDockerUtils {
         }
     }
     public static class DockerRegistry implements Serializable {
-        private final String DEFAULT_REGISTRY = "https://index.docker.io/v1/";
         public String registry;
         public String credential;
 
