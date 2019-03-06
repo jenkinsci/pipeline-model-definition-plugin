@@ -112,6 +112,13 @@ public class AgentTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void agentDockerWithRegistryNoCreds() throws Exception {
+        agentDocker("agentDockerWithRegistryNoCreds",
+                "-v /tmp:/tmp",
+                "Registry is https://index.docker.io/v2/");
+    }
+
+    @Test
     public void agentDockerReuseNode() throws Exception {
         agentDocker("agentDockerReuseNode");
     }
