@@ -779,10 +779,15 @@ class ModelInterpreter implements Serializable {
                           String stageName = null,
                           Object context = null) {
         BuildCondition.orderedConditionNames.each { conditionName ->
+            RunWrapper runWrapper = script.getProperty("currentBuild")
+            String originalResultString = runWrapper.result
+            Result originalResult = originalResultString == null ? null : Result.fromString(originalResultString)
+            Result logicalResult = BuildCondition.getCombinedResult(runWrapper.rawBuild, stageError)
             try {
-                Closure c = responder.closureForSatisfiedCondition(conditionName, script.getProperty("currentBuild"),
+                Closure c = responder.closureForSatisfiedCondition(conditionName, runWrapper,
                     context, stageError)
                 if (c != null) {
+                    runWrapper.rawBuild.@result = logicalResult
                     catchRequiredContextForNode(agentContext) {
                         delegateAndExecute(c)
                     }
@@ -795,6 +800,18 @@ class ModelInterpreter implements Serializable {
                 Utils.logToTaskListener(getFullStackTrace(e))
                 if (stageError == null) {
                     stageError = e
+                }
+            } finally {
+                Result currentResult = Result.fromString(runWrapper.currentResult);
+                // We can't leave the result set because it will interfere with the
+                // final build result, so we reset it to the original value unless
+                // the actual value changed inside of the post condition.However,
+                // if the build result is set to the logical build result manually,
+                // then after the post condition it will be set back to the original
+                // value. This seems ok since the logical result is the same and so
+                // will be reset for any later post conditions.
+                if (currentResult == logicalResult && logicalResult != originalResult) {
+                    runWrapper.rawBuild.@result = originalResult // Intentionally using .@ to bypass the setter which does not allow nulls.
                 }
             }
         }

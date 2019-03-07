@@ -84,33 +84,12 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
 
     @Nonnull
     protected final Result combineResults(@Nonnull WorkflowRun run, @CheckForNull Throwable error) {
-        Result execResult = getExecutionResult(run);
-        Result prevResult = run.getResult();
-        Result errorResult = Result.SUCCESS;
-        if (prevResult == null) {
-            prevResult = Result.SUCCESS;
-        }
-        if (execResult == null) {
-            execResult = Result.SUCCESS;
-        }
-        if (error != null) {
-            if (error instanceof FlowInterruptedException) {
-                errorResult = ((FlowInterruptedException)error).getResult();
-            } else {
-                errorResult = Result.FAILURE;
-            }
-        }
-        return execResult.combine(prevResult).combine(errorResult);
+        return BuildCondition.getCombinedResult(run, error);
     }
 
     @CheckForNull
     protected Result getExecutionResult(@Nonnull WorkflowRun r) {
-        FlowExecution execution = r.getExecution();
-        if (execution instanceof CpsFlowExecution) {
-            return ((CpsFlowExecution) execution).getResult();
-        } else {
-            return r.getResult();
-        }
+        return BuildCondition.getFlowExecutionResult(r);
     }
 
     public abstract String getDescription();
@@ -154,6 +133,37 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
             }
         }
         return conditions;
+    }
+
+    @Nonnull
+    public static Result getCombinedResult(@Nonnull WorkflowRun run, @CheckForNull Throwable error) {
+        Result execResult = getFlowExecutionResult(run);
+        Result prevResult = run.getResult();
+        Result errorResult = Result.SUCCESS;
+        if (prevResult == null) {
+            prevResult = Result.SUCCESS;
+        }
+        if (execResult == null) {
+            execResult = Result.SUCCESS;
+        }
+        if (error != null) {
+            if (error instanceof FlowInterruptedException) {
+                errorResult = ((FlowInterruptedException)error).getResult();
+            } else {
+                errorResult = Result.FAILURE;
+            }
+        }
+        return execResult.combine(prevResult).combine(errorResult);
+    }
+
+    @CheckForNull
+    public static Result getFlowExecutionResult(@Nonnull WorkflowRun r) {
+        FlowExecution execution = r.getExecution();
+        if (execution instanceof CpsFlowExecution) {
+            return ((CpsFlowExecution) execution).getResult();
+        } else {
+            return r.getResult();
+        }
     }
 
     private static final long serialVersionUID = 1L;
