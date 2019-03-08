@@ -338,4 +338,61 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-56402")
+    @Test
+    public void resultIsFailureInPostAfterStageFailure() throws Exception {
+        expect(Result.FAILURE, "resultIsFailureInPostAfterStageFailure")
+                .logContains("Result in always: FAILURE",
+                        "CurrentResult in always: FAILURE", 
+                        "Result in failure: FAILURE",
+                        "CurrentResult in failure: FAILURE")
+                .go();
+    }
+
+    @Issue("JENKINS-56402")
+    @Test
+    public void resultIsFailureInPostAfterPostFailure() throws Exception {
+        expect(Result.FAILURE, "resultIsFailureInPostAfterPostFailure")
+                .logContains("Result in always: SUCCESS",
+                        "CurrentResult in always: SUCCESS",
+                        "Result in failure: FAILURE",
+                        "CurrentResult in failure: FAILURE",
+                        "Result in cleanup: FAILURE",
+                        "CurrentResult in cleanup: FAILURE")
+                .go();
+    }
+
+    @Issue("JENKINS-56402")
+    @Test
+    public void resultIsFailureInPostAfterResultModified() throws Exception {
+        expect(Result.FAILURE, "resultIsFailureInPostAfterResultModified")
+                .logContains("Result in always: UNSTABLE",
+                        "CurrentResult in always: UNSTABLE",
+                        "Result in cleanup: FAILURE",
+                        "CurrentResult in cleanup: FAILURE")
+                .go();
+    }
+
+    @Issue("JENKINS-56402")
+    @Test
+    public void resultStaysFailureWhenManuallySetInPost() throws Exception {
+        expect(Result.FAILURE, "resultStaysFailureWhenManuallySetInPost")
+                .logContains("Result in always: FAILURE",
+                        "CurrentResult in always: FAILURE",
+                        "Result in cleanup: FAILURE",
+                        "CurrentResult in cleanup: FAILURE")
+                .go();
+    }
+
+    @Issue("JENKINS-56402")
+    @Test
+    public void resultIsSuccessInPost() throws Exception {
+        expect(Result.SUCCESS, "resultIsSuccessInPost")
+                .logContains("Result in always: SUCCESS",
+                        "CurrentResult in always: SUCCESS",
+                        "Result in success: SUCCESS",
+                        "CurrentResult in success: SUCCESS")
+                .go();
+    }
+
 }
