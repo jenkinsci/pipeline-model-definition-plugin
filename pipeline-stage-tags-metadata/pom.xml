@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>1.3.7-SNAPSHOT</version>
+    <version>1.3.7-beta-1</version>
   </parent>
 
   <artifactId>pipeline-stage-tags-metadata</artifactId>
