@@ -98,13 +98,11 @@ public class PostStageTest extends AbstractModelDefTest {
 
     }
 
-    @Issue("JENKINS-55476")
     @Test
     public void withAllLocalUnsuccessfulWithSuccess() throws Exception {
         env(s).put("MAKE_RESULT", Result.SUCCESS.toString()).set();
         expect(Result.SUCCESS, "unsuccessful")
                 .logContains("I LOVE YOU VIRGINIA")
-                .logNotContains("I FAILED YOU, SORRY")
                 .go();
 
     }
@@ -113,7 +111,6 @@ public class PostStageTest extends AbstractModelDefTest {
         env(s).put("MAKE_RESULT", Result.NOT_BUILT.toString()).set();
         expect(Result.NOT_BUILT, "unsuccessful")
                 .logContains("I LOVE YOU VIRGINIA")
-                .logContains("I FAILED YOU, SORRY")
                 .go();
 
     }

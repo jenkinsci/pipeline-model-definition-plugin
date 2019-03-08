@@ -1381,31 +1381,31 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Issue(value = {"JENKINS-47109", "JENKINS-55459"})
+    @Issue("JENKINS-47109")
     @Test
     public void parallelStagesFailFast() throws Exception {
-        expect(Result.FAILURE, "parallelStagesFailFast")
+        expect(Result.ABORTED, "parallelStagesFailFast")
                 .logContains("[Pipeline] { (foo)",
                         "{ (Branch: first)",
                         "[Pipeline] { (first)",
                         "{ (Branch: second)",
                         "[Pipeline] { (second)",
-                        "SECOND STAGE FAILED")
+                        "SECOND STAGE ABORTED")
                 .logNotContains("Second branch")
                 .hasFailureCase()
                 .go();
     }
 
-    @Issue(value = {"JENKINS-53558", "JENKINS-55459"})
+    @Issue("JENKINS-53558")
     @Test
     public void parallelStagesFailFastWithOption() throws Exception {
-        expect(Result.FAILURE,"parallelStagesFailFastWithOption")
+        expect(Result.ABORTED,"parallelStagesFailFastWithOption")
                 .logContains("[Pipeline] { (foo)",
                         "{ (Branch: first)",
                         "[Pipeline] { (first)",
                         "{ (Branch: second)",
                         "[Pipeline] { (second)",
-                        "SECOND STAGE FAILED")
+                        "SECOND STAGE ABORTED")
                 .logNotContains("Second branch")
                 .hasFailureCase()
                 .go();

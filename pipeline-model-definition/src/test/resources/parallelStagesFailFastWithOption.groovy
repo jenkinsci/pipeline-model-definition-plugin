@@ -42,8 +42,8 @@ pipeline {
                         echo "Second branch"
                     }
                     post {
-                        failure {
-                            echo "SECOND STAGE FAILED"
+                        aborted {
+                            echo "SECOND STAGE ABORTED"
                         }
                     }
                 }

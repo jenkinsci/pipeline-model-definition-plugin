@@ -46,7 +46,7 @@
           ]
         }],
         "post": {"conditions": [        {
-          "condition": "failure",
+          "condition": "aborted",
           "branch":           {
             "name": "default",
             "steps": [            {
@@ -55,7 +55,7 @@
                 "key": "message",
                 "value":                 {
                   "isLiteral": true,
-                  "value": "SECOND STAGE FAILED"
+                  "value": "SECOND STAGE ABORTED"
                 }
               }]
             }]

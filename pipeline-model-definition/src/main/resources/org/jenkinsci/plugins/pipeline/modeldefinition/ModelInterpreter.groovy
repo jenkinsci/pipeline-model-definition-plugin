@@ -83,7 +83,7 @@ class ModelInterpreter implements Serializable {
                                     // Execute post-build actions now that we've finished all parallel.
                                     try {
                                         postBuildRun = true
-                                        executePostBuild(root, firstError)
+                                        executePostBuild(root)
                                     } catch (Throwable e) {
                                         if (firstError == null) {
                                             firstError = e
@@ -109,7 +109,7 @@ class ModelInterpreter implements Serializable {
                 // If we hit an exception somewhere *before* we got to parallel, we still need to do post-build tasks.
                 if (!postBuildRun) {
                     try {
-                        executePostBuild(root, firstError)
+                        executePostBuild(root)
                     } catch (Throwable e) {
                         if (firstError == null) {
                             firstError = e
@@ -168,6 +168,7 @@ class ModelInterpreter implements Serializable {
                     try {
                         evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason).call()
                     } catch (Throwable e) {
+                        script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                         Utils.markStageFailedAndContinued(thisStage.name)
                         if (firstError == null) {
                             firstError = e
@@ -234,6 +235,8 @@ class ModelInterpreter implements Serializable {
     def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parent,
                       SkippedStageReason skippedReason) {
         return {
+            def thisError = null
+
             script.stage(thisStage.name) {
                 try {
                     if (skippedReason != null) {
@@ -324,10 +327,12 @@ class ModelInterpreter implements Serializable {
                         }
                     }
                 } catch (Throwable e) {
+                    script.getProperty("currentBuild").result = Result.FAILURE
                     Utils.markStageFailedAndContinued(thisStage.name)
                     if (firstError == null) {
                         firstError = e
                     }
+                    thisError = e
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
                     if (skippedReason == null &&
@@ -679,6 +684,7 @@ class ModelInterpreter implements Serializable {
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Throwable e) {
+            script.getProperty("currentBuild").result = Utils.getResultFromException(e)
             Utils.markStageFailedAndContinued(thisStage.name)
             if (stageError == null) {
                 stageError = e
@@ -752,8 +758,9 @@ class ModelInterpreter implements Serializable {
      * Executes the post build actions for this build
      * @param root The root context we're executing in
      */
-    def executePostBuild(Root root, Throwable stageError) throws Throwable {
-        if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"), root, stageError)) {
+    def executePostBuild(Root root) throws Throwable {
+        Throwable stageError = null
+        if (root.hasSatisfiedConditions(root.post, script.getProperty("currentBuild"))) {
             script.stage(SyntheticStageNames.postBuild()) {
                 stageError = runPostConditions(root.post, root.agent, stageError)
             }
@@ -788,6 +795,7 @@ class ModelInterpreter implements Serializable {
                     }
                 }
             } catch (Throwable e) {
+                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                 if (stageName != null) {
                     Utils.markStageFailedAndContinued(stageName)
                 }

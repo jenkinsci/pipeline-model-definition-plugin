@@ -51,7 +51,7 @@ class Fixed extends BuildCondition {
 
         // Get the *worst* result of either the execution or the run. If the run's result is null, that's effectively
         // SUCCESS.
-        Result runResult = combineResults(r, error)
+        Result runResult = combineResults(r)
 
         // If there's no previous build, we can't exactly be fixed, can we?
         if (prev == null) {

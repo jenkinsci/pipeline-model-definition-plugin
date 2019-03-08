@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 import hudson.Extension
 import hudson.model.Result
 import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
@@ -48,11 +47,7 @@ class Aborted extends BuildCondition {
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
         Result execResult = getExecutionResult(r)
-        Result errorResult = null
-        if (error != null) {
-            errorResult = Utils.getResultFromException(error)
-        }
-        return execResult == Result.ABORTED || r.getResult() == Result.ABORTED || errorResult == Result.ABORTED
+        return execResult == Result.ABORTED || r.getResult() == Result.ABORTED
     }
 
     @Override
