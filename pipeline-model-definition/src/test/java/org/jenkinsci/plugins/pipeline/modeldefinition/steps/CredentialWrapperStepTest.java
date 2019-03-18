@@ -239,10 +239,10 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     public void sshCredentialsInEnv() throws Exception {
         expect("sshCredentialsInEnv")
                 .logContains("SSH_CRED_USR is ****",
-                        "SSH_CRED_KEY_FILE is ****")
+                        "SSH_CRED is ****")
                 .logContains("SSH_WITH_PASS_CRED_USR is ****",
-                        "SSH_WITH_PASS_CRED_PASS is ****",
-                        "SSH_WITH_PASS_CRED_KEY_FILE is ****")
+                        "SSH_WITH_PASS_CRED_PSW is ****",
+                        "SSH_WITH_PASS_CRED is ****")
                 .archives("sshCredUsr.txt", sshCredUser)
                 .archives("sshCredKey.txt", sshCredKeyContent)
                 .archives("sshWithPassCredUsrPass.txt", sshWithPassCredUser + ":" + sshWithPassCredPassphrase)

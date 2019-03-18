@@ -19,8 +19,8 @@ public class SSHUserPrivateKeyHandler extends CredentialsBindingHandler<SSHUserP
     @Nonnull
     @Override
     public List<MultiBinding<SSHUserPrivateKey>> toBindings(String varName, String credentialsId) {
-        SSHUserPrivateKeyBinding keyBinding = new SSHUserPrivateKeyBinding(varName + "_KEY_FILE", credentialsId);
-        keyBinding.setPassphraseVariable(varName + "_PASS");
+        SSHUserPrivateKeyBinding keyBinding = new SSHUserPrivateKeyBinding(varName, credentialsId);
+        keyBinding.setPassphraseVariable(varName + "_PSW");
         keyBinding.setUsernameVariable(varName + "_USR");
         return Collections.singletonList(keyBinding);
     }
@@ -36,9 +36,9 @@ public class SSHUserPrivateKeyHandler extends CredentialsBindingHandler<SSHUserP
     public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
         Map<String, Object> map = new HashMap<>();
         map.put("$class", SSHUserPrivateKeyBinding.class.getName());
-        map.put("keyFileVariable", new EnvVarResolver("%s_KEY_FILE"));
+        map.put("keyFileVariable", new EnvVarResolver());
         map.put("usernameVariable", new EnvVarResolver("%s_USR"));
-        map.put("passphraseVariable", new EnvVarResolver("%s_PASS"));
+        map.put("passphraseVariable", new EnvVarResolver("%s_PSW"));
         map.put("credentialsId", credentialsId);
         return Collections.singletonList(map);
     }

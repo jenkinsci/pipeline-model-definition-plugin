@@ -33,9 +33,9 @@ pipeline {
         stage("foo") {
             steps {
                 echo "SSH_CRED_USR is $SSH_CRED_USR"
-                echo "SSH_CRED_KEY_FILE is $SSH_CRED_KEY_FILE"
+                echo "SSH_CRED is $SSH_CRED"
                 writeFile file: "sshCredUsr.txt", text: "${SSH_CRED_USR}"
-                writeFile file: "sshCredKey.txt", text: "${readFile file: "$SSH_CRED_KEY_FILE"}"
+                writeFile file: "sshCredKey.txt", text: "${readFile file: "$SSH_CRED"}"
                 archive "**/*.txt"
             }
         }
@@ -46,10 +46,10 @@ pipeline {
             }
             steps {
                 echo "SSH_WITH_PASS_CRED_USR is $SSH_WITH_PASS_CRED_USR"
-                echo "SSH_WITH_PASS_CRED_PASS is $SSH_WITH_PASS_CRED_PASS"
-                echo "SSH_WITH_PASS_CRED_KEY_FILE is $SSH_WITH_PASS_CRED_KEY_FILE"
-                writeFile file: "sshWithPassCredUsrPass.txt", text: "${SSH_WITH_PASS_CRED_USR}:${SSH_WITH_PASS_CRED_PASS}"
-                writeFile file: "sshWithPassCredKey.txt", text: "${readFile file: "$SSH_WITH_PASS_CRED_KEY_FILE"}"
+                echo "SSH_WITH_PASS_CRED_PSW is $SSH_WITH_PASS_CRED_PSW"
+                echo "SSH_WITH_PASS_CRED is $SSH_WITH_PASS_CRED"
+                writeFile file: "sshWithPassCredUsrPass.txt", text: "${SSH_WITH_PASS_CRED_USR}:${SSH_WITH_PASS_CRED_PSW}"
+                writeFile file: "sshWithPassCredKey.txt", text: "${readFile file: "$SSH_WITH_PASS_CRED"}"
                 archive "**/*.txt"
             }
         }
