@@ -47,12 +47,7 @@ class Aborted extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        Result execResult = getExecutionResult(r)
-        Result errorResult = null
-        if (error != null) {
-            errorResult = Utils.getResultFromException(error)
-        }
-        return execResult == Result.ABORTED || r.getResult() == Result.ABORTED || errorResult == Result.ABORTED
+        return combineResults(r, error) == Result.ABORTED
     }
 
     @Override

@@ -24,12 +24,9 @@
 
 pipeline {
     agent none
-    options {
-        parallelsAlwaysFailFast()
-    }
     stages {
         stage("foo") {
-            //failFast true
+            failFast true
             parallel {
                 stage("first") {
                     steps {
@@ -45,6 +42,10 @@ pipeline {
                     }
                 }
                 stage("second") {
+                    agent any
+                    options {
+                        skipDefaultCheckout()
+                    }
                     steps {
                         sleep 10
                         echo "Second branch"
@@ -62,7 +63,3 @@ pipeline {
         }
     }
 }
-
-
-
-

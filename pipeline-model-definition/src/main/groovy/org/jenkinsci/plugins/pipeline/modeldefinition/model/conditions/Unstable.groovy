@@ -47,12 +47,7 @@ class Unstable extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        Result execResult = getExecutionResult(r)
-        Result errorResult = null
-        if (error != null) {
-            errorResult = Utils.getResultFromException(error)
-        }
-        return execResult == Result.UNSTABLE || r.getResult() == Result.UNSTABLE || errorResult == Result.UNSTABLE
+        return combineResults(r, error) == Result.UNSTABLE
     }
 
     @Override

@@ -32,6 +32,14 @@ pipeline {
                     steps {
                         error "First branch"
                     }
+                    post {
+                        aborted {
+                            echo "FIRST STAGE ABORTED"
+                        }
+                        failure {
+                            echo "FIRST STAGE FAILURE"
+                        }
+                    }
                 }
                 stage("second") {
                     steps {
@@ -39,8 +47,11 @@ pipeline {
                         echo "Second branch"
                     }
                     post {
+                        aborted {
+                            echo "SECOND STAGE ABORTED"
+                        }
                         failure {
-                            echo "SECOND STAGE FAILED"
+                            echo "SECOND STAGE FAILURE"
                         }
                     }
                 }

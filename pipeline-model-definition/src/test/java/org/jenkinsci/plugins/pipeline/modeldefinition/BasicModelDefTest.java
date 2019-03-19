@@ -1390,8 +1390,11 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "[Pipeline] { (first)",
                         "{ (Branch: second)",
                         "[Pipeline] { (second)",
-                        "SECOND STAGE FAILED")
-                .logNotContains("Second branch")
+                        "FIRST STAGE FAILURE",
+                        "SECOND STAGE ABORTED")
+                .logNotContains("Second branch",
+                        "FIRST STAGE ABORTED",
+                        "SECOND STAGE FAILURE")
                 .hasFailureCase()
                 .go();
     }
@@ -1405,13 +1408,33 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "[Pipeline] { (first)",
                         "{ (Branch: second)",
                         "[Pipeline] { (second)",
-                        "SECOND STAGE FAILED")
-                .logNotContains("Second branch")
+                        "FIRST STAGE FAILURE",
+                        "SECOND STAGE ABORTED")
+                .logNotContains("Second branch",
+                        "FIRST STAGE ABORTED",
+                        "SECOND STAGE FAILURE")
                 .hasFailureCase()
                 .go();
 
     }
 
+    @Issue(value = {"JENKINS-55459", "JENKINS-56544"})
+    @Test
+    public void parallelStagesFailFastWithAgent() throws Exception {
+        expect(Result.FAILURE, "parallelStagesFailFastWithAgent")
+                .logContains("[Pipeline] { (foo)",
+                        "{ (Branch: first)",
+                        "[Pipeline] { (first)",
+                        "{ (Branch: second)",
+                        "[Pipeline] { (second)",
+                        "FIRST STAGE FAILURE",
+                        "SECOND STAGE ABORTED")
+                .logNotContains("Second branch",
+                        "FIRST STAGE ABORTED",
+                        "SECOND STAGE FAILURE")
+                .hasFailureCase()
+                .go();
+    }
 
     @Issue("JENKINS-47783")
     @Test

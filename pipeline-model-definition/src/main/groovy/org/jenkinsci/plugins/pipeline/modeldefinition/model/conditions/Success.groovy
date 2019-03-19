@@ -48,17 +48,7 @@ class Success extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        Result execResult = getExecutionResult(r)
-        if (context instanceof Stage && (execResult == Result.FAILURE || r.getResult() == Result.FAILURE)) {
-            return error == null
-        }
-        Result errorResult = null
-        if (error != null) {
-            errorResult = Utils.getResultFromException(error)
-        }
-        return (execResult == null || execResult.isBetterOrEqualTo(Result.SUCCESS)) &&
-                (r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS)) &&
-                (errorResult == null || errorResult.isBetterOrEqualTo(Result.SUCCESS))
+        return combineResults(r, error) == Result.SUCCESS
     }
 
     @Override
