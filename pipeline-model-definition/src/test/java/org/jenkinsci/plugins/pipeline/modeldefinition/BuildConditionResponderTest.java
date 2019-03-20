@@ -82,6 +82,13 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void postFailureAfterManualResultChange() throws Exception {
+        expect(Result.FAILURE, "postFailureAfterManualResultChange")
+                .logContains("MANUALLY CHANGED RESULT TO FAILURE", "FAILURE CONDITION RAN")
+                .go();
+    }
+
     @Issue("JENKINS-50645")
     @Test
     public void postFailureAfterUnstable() throws Exception {
