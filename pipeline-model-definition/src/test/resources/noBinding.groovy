@@ -25,7 +25,7 @@
 
 pipeline {
     environment {
-        TO_SSH = credentials("sshCred1")
+        TO_SSH = credentials("certCred1")
     }
 
     agent any

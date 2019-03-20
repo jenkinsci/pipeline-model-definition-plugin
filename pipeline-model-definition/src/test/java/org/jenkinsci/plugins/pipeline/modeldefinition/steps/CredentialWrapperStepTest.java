@@ -35,6 +35,7 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainCredentials;
+import com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Result;
 import hudson.util.Secret;
@@ -112,8 +113,8 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvInFoldercred2U, mixedEnvInFolderCred2P);
         folderStore.addCredentials(Domain.global(), c);
 
-        SSHUserPrivateKey k = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "sshCred1", "bobby", new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource("abc123"), null, "sample");
-        store.addCredentials(Domain.global(), k);
+        CertificateCredentialsImpl certCred = new CertificateCredentialsImpl(CredentialsScope.GLOBAL, "certCred1", "sample", "test", new CertificateCredentialsImpl.FileOnMasterKeyStoreSource("/tmp/abc123"));
+        store.addCredentials(Domain.global(), certCred);
     }
 
     @Test
@@ -164,7 +165,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     public void noBindingAvailable() throws Exception {
         expect(Result.FAILURE, "noBinding").runFromRepo(false)
                 .logNotContains("Hello")
-                .logContains("No suitable binding handler could be found for type com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey")
+                .logContains("No suitable binding handler could be found for type com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl")
                 .go();
     }
 
