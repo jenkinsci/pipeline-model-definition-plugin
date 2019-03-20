@@ -48,16 +48,7 @@ class Failure extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        Result execResult = getExecutionResult(r)
-        if (context instanceof Stage && execResult != Result.ABORTED && r.getResult() != Result.ABORTED) {
-            return error != null
-        }
-        Result errorResult = null
-        if (error != null) {
-            errorResult = Utils.getResultFromException(error)
-        }
-        return execResult != Result.ABORTED &&
-            (execResult == Result.FAILURE || r.getResult() == Result.FAILURE || errorResult == Result.FAILURE)
+        return combineResults(r, error) == Result.FAILURE
     }
 
     @Override

@@ -16,7 +16,38 @@
               }
             }]
           }]
-        }]
+        }],
+        "post": {"conditions": [        {
+          "condition": "aborted",
+          "branch":           {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "FIRST STAGE ABORTED"
+                }
+              }]
+            }]
+          }
+        }, {
+          "condition": "failure",
+          "branch":           {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "FIRST STAGE FAILURE"
+                }
+              }]
+            }]
+          }
+        }]}
       },
       {
         "name": "second",
@@ -46,6 +77,21 @@
           ]
         }],
         "post": {"conditions": [        {
+          "condition": "aborted",
+          "branch":           {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "SECOND STAGE ABORTED"
+                }
+              }]
+            }]
+          }
+        }, {
           "condition": "failure",
           "branch":           {
             "name": "default",
@@ -55,7 +101,7 @@
                 "key": "message",
                 "value":                 {
                   "isLiteral": true,
-                  "value": "SECOND STAGE FAILED"
+                  "value": "SECOND STAGE FAILURE"
                 }
               }]
             }]

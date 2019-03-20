@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2018, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,39 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 
-import hudson.Extension
-import hudson.model.Result
-import org.jenkinsci.Symbol
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-
-import javax.annotation.Nonnull
-
-/**
- * A {@link BuildCondition} for matching aborted builds.
- *
- * @author Andrew Bayer
- */
-@Extension(ordinal=800d) @Symbol("aborted")
-class Aborted extends BuildCondition {
-    @Deprecated
-    @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
-        return meetsCondition(r, null, null)
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                script {
+                    currentBuild.result = 'FAILURE'
+                }
+                echo "MANUALLY CHANGED RESULT TO ${currentBuild.result}"
+            }
+            post {
+                failure {
+                    echo "FAILURE CONDITION RAN"
+                }
+            }
+        }
     }
-
-    @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        return combineResults(r, error) == Result.ABORTED
-    }
-
-    @Override
-    String getDescription() {
-        return Messages.Aborted_Description()
-    }
-
-    static final long serialVersionUID = 1L
 }

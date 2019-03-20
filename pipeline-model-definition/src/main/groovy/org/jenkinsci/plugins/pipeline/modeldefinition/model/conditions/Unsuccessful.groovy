@@ -47,14 +47,7 @@ class Unsuccessful extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        Result execResult = getExecutionResult(r)
-        Result errorResult = null
-        if (error != null) {
-            errorResult = Utils.getResultFromException(error)
-        }
-        return (execResult != null && execResult != Result.SUCCESS) ||
-                (r.getResult() != null && r.getResult() != Result.SUCCESS) ||
-                (errorResult != null && errorResult != Result.SUCCESS)
+        return combineResults(r, error) != Result.SUCCESS
     }
 
     @Override

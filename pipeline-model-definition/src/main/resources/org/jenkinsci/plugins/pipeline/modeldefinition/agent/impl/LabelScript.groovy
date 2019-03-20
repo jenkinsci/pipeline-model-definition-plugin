@@ -39,13 +39,8 @@ class LabelScript extends DeclarativeAgentScript<Label> {
     @Override
     Closure run(Closure body) {
         return {
-            try {
-                script.node(describable?.label) {
-                    CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
-                }
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
-                throw e
+            script.node(describable?.label) {
+                CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
             }
         }
     }

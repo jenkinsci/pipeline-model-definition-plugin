@@ -47,12 +47,7 @@ class NotBuilt extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        Result execResult = getExecutionResult(r)
-        Result errorResult = null
-        if (error != null) {
-            errorResult = Utils.getResultFromException(error)
-        }
-        return execResult == Result.NOT_BUILT || r.getResult() == Result.NOT_BUILT || errorResult == Result.NOT_BUILT
+        return combineResults(r, error) == Result.NOT_BUILT
     }
 
     @Override

@@ -44,23 +44,17 @@ class DockerPipelineScript extends AbstractDockerPipelineScript<DockerPipeline> 
                     try {
                         script.getProperty("docker").image(describable.image).pull()
                     } catch (Exception e) {
-                        script.getProperty("currentBuild").result = Utils.getResultFromException(e)
                         Utils.markStageFailedAndContinued(SyntheticStageNames.agentSetup())
                         throw e
                     }
                 }
             }
-            try {
-                if (Utils.withinAStage() && describable.alwaysPull) {
-                    script.getProperty("docker").image(describable.image).pull()
-                }
-                script.getProperty("docker").image(describable.image).inside(describable.args, {
-                    body.call()
-                })
-            } catch (Exception e) {
-                script.getProperty("currentBuild").result = Utils.getResultFromException(e)
-                throw e
+            if (Utils.withinAStage() && describable.alwaysPull) {
+                script.getProperty("docker").image(describable.image).pull()
             }
+            script.getProperty("docker").image(describable.image).inside(describable.args, {
+                body.call()
+            })
         }
     }
 }
