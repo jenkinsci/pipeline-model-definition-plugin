@@ -35,6 +35,7 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SecretBytes;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainCredentials;
+import com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Result;
 import hudson.util.Secret;
@@ -68,6 +69,13 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     private static final String otherFileCredId = "otherFileCred";
     private static final String otherFileCredName = "otherCredFile.txt";
     private static final String otherFileCredContent = "other-file-cred-content-is-here";
+    private static final String sshCredId = "sshCred";
+    private static final String sshCredKeyContent = "-----BEGIN RSA PRIVATE KEY-----\nqwerty/-1234567890\n------END RSA PRIVATE KEY-----";
+    private static final String sshCredUser = "bobby";
+    private static final String sshWithPassCredId = "sshWithPassCred";
+    private static final String sshWithPassCredKeyContent = "-----BEGIN RSA PRIVATE KEY-----\n1234567890/-qwerty\n------END RSA PRIVATE KEY-----";
+    private static final String sshWithPassCredUser = "bobby";
+    private static final String sshWithPassCredPassphrase = "super-secret-passphrase";
     private static Folder folder;
     private static final String mixedEnvInFolderCred1Secret = "Some secret text for 1 folder";
     private static final String mixedEnvInFoldercred2U = "bobby-in-folder";
@@ -91,6 +99,10 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         store.addCredentials(Domain.global(), fileCred);
         FileCredentialsImpl otherFileCred = new FileCredentialsImpl(CredentialsScope.GLOBAL, otherFileCredId, "test", otherFileCredName, SecretBytes.fromBytes(otherFileCredContent.getBytes()));
         store.addCredentials(Domain.global(), otherFileCred);
+        SSHUserPrivateKey sshCred = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, sshCredId, sshCredUser, new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(sshCredKeyContent), null, "test");
+        store.addCredentials(Domain.global(), sshCred);
+        SSHUserPrivateKey sshWithPassCred = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, sshWithPassCredId, sshWithPassCredUser, new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(sshWithPassCredKeyContent), sshWithPassCredPassphrase, "test");
+        store.addCredentials(Domain.global(), sshWithPassCred);
 
         folder = j.jenkins.createProject(Folder.class, "testFolder");
         folder.addProperty(new FolderCredentialsProvider.FolderCredentialsProperty(new DomainCredentials[0]));
@@ -101,8 +113,8 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvInFoldercred2U, mixedEnvInFolderCred2P);
         folderStore.addCredentials(Domain.global(), c);
 
-        SSHUserPrivateKey k = new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, "sshCred1", "bobby", new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource("abc123"), null, "sample");
-        store.addCredentials(Domain.global(), k);
+        CertificateCredentialsImpl certCred = new CertificateCredentialsImpl(CredentialsScope.GLOBAL, "certCred1", "sample", "test", new CertificateCredentialsImpl.FileOnMasterKeyStoreSource("/tmp/abc123"));
+        store.addCredentials(Domain.global(), certCred);
     }
 
     @Test
@@ -153,7 +165,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     public void noBindingAvailable() throws Exception {
         expect(Result.FAILURE, "noBinding").runFromRepo(false)
                 .logNotContains("Hello")
-                .logContains("No suitable binding handler could be found for type com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey")
+                .logContains("No suitable binding handler could be found for type com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl")
                 .go();
     }
 
@@ -220,6 +232,22 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("cred1.txt", mixedEnvCred1Secret)
                 .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P)
                 .archives("cred3.txt", mixedEnvCred3Secret)
+                .go();
+    }
+
+    @Issue("JENKINS-52850")
+    @Test
+    public void sshCredentialsInEnv() throws Exception {
+        expect("sshCredentialsInEnv")
+                .logContains("SSH_CRED_USR is ****",
+                        "SSH_CRED is ****")
+                .logContains("SSH_WITH_PASS_CRED_USR is ****",
+                        "SSH_WITH_PASS_CRED_PSW is ****",
+                        "SSH_WITH_PASS_CRED is ****")
+                .archives("sshCredUsr.txt", sshCredUser)
+                .archives("sshCredKey.txt", sshCredKeyContent)
+                .archives("sshWithPassCredUsrPass.txt", sshWithPassCredUser + ":" + sshWithPassCredPassphrase)
+                .archives("sshWithPassCredKey.txt", sshWithPassCredKeyContent)
                 .go();
     }
 }
