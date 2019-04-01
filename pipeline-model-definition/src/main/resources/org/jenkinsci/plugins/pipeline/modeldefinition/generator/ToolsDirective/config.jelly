@@ -73,14 +73,16 @@
                     <div name="tools" title="${symbol}: ${d.displayName}" tooltip="${d.tooltip}" descriptorId="${d.id}">
                         <j:set var="capture" value="" />
                         <local:body>
-                            <l:renderOnDemand tag="tr" clazz="config-page" capture="d,it,instance,symbol,h,${capture}">
-                                <f:entry title="${%Version}">
-                                    <select class="setting-input" name="symbolAndName">
-                                        <j:forEach var="inst" items="${d.installations}">
-                                            <f:option value="${symbol}::::${inst.name}">${inst.name}</f:option>
-                                        </j:forEach>
-                                    </select>
-                                </f:entry>
+                            <l:renderOnDemand tag="tr" clazz="config-page" capture="d,it,instance,symbol,${capture}">
+                                <l:ajax>
+                                    <f:entry title="${%Version}">
+                                        <select class="setting-input" name="symbolAndName">
+                                            <j:forEach var="inst" items="${d.installations}">
+                                                <f:option value="${symbol}::::${inst.name}">${inst.name}</f:option>
+                                            </j:forEach>
+                                        </select>
+                                    </f:entry>
+                                </l:ajax>
                             </l:renderOnDemand>
                         </local:body>
                     </div>
