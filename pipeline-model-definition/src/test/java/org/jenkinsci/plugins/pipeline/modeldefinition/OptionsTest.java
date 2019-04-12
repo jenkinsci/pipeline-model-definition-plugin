@@ -479,6 +479,22 @@ public class OptionsTest extends AbstractModelDefTest {
         inQueue.cancel(true);
     }
 
+    @Issue("JENKINS-46354")
+    @Test
+    public void topLevelRetryExecutesAllStages() throws Exception {
+        expect("topLevelRetryExecutesAllStages")
+                .logContains("Actually executing stage Bar")
+                .go();
+    }
+
+    @Issue("JENKINS-46354")
+    @Test
+    public void parentStageRetryExecutesAllChildStages() throws Exception {
+        expect("parentStageRetryExecutesAllChildStages")
+                .logContains("Actually executing stage Bar", "Actually executing stage Baz")
+                .go();
+    }
+
     private static class DummyPrivateKey extends BaseCredentials implements SSHUserPrivateKey, Serializable {
 
         private final String id;
