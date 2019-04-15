@@ -77,6 +77,9 @@ class ModelInterpreter implements Serializable {
                     withCredentialsBlock(root.environment) {
                         withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options?.wrappers) {
+                                // Wipe out the error, since if we get here and it's not null, that means we're retrying
+                                // the whole pipeline and don't want firstError to be set.
+                                firstError = null
                                 toolsBlock(root.tools, root.agent, null) {
                                     firstError = evaluateSequentialStages(root, root.stages, firstError, null, restartedStage, null).call()
 
