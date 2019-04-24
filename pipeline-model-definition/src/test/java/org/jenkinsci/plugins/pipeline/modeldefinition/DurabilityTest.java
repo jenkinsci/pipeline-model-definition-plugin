@@ -106,7 +106,7 @@ public class DurabilityTest extends AbstractDeclarativeTest {
                                 "  stages {\n" +
                                 "    stage('foo') {\n" +
                                 "      steps {\n" +
-                                "        sh('echo before=`basename $PWD`')\n" +
+                                "        sh('echo before=`basename \"$PWD\"`')\n" +
                                 "        sh('echo ONAGENT=$ONAGENT')\n" +
                                 "        semaphore 'wait'\n" +
                                 "        sh('echo after=$PWD')\n" +
