@@ -59,7 +59,7 @@ public class ToolsTest extends AbstractModelDefTest {
     @Issue("JENKINS-44497")
     @Test
     public void envVarInTools() throws Exception {
-        expect("envVarInTools")
+        expect("environment/envVarInTools")
                 .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
                 .go();
     }

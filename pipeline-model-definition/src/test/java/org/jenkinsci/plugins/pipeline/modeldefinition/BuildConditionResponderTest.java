@@ -49,7 +49,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void simplePostBuild() throws Exception {
-        expect("simplePostBuild")
+        expect("postStage/simplePostBuild")
                 .logContains("[Pipeline] { (foo)",
                         "hello",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
@@ -61,7 +61,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void postChecksAllConditions() throws Exception {
-        expect(Result.FAILURE, "postChecksAllConditions")
+        expect(Result.FAILURE, "postStage/postChecksAllConditions")
                 .logContains("[Pipeline] { (foo)",
                         "hello",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
@@ -77,14 +77,14 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     public void postFailureAfterSuccess() throws Exception {
         // NOTE: Not checking log in order because "I AM FAILING NOW" doesn't actually show up until the end of the Pipeline.
         // That's expected/normal behavior for the error step.
-        expect(Result.FAILURE, "postFailureAfterSuccess")
+        expect(Result.FAILURE, "postStage/postFailureAfterSuccess")
                 .logContains("I AM FAILING NOW", "I FAILED")
                 .go();
     }
 
     @Test
     public void postFailureAfterManualResultChange() throws Exception {
-        expect(Result.FAILURE, "postFailureAfterManualResultChange")
+        expect(Result.FAILURE, "postStage/postFailureAfterManualResultChange")
                 .logContains("MANUALLY CHANGED RESULT TO FAILURE", "FAILURE CONDITION RAN")
                 .go();
     }
@@ -94,21 +94,21 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     public void postFailureAfterUnstable() throws Exception {
         // NOTE: Not checking log in order because "I AM FAILING NOW" doesn't actually show up until the end of the Pipeline.
         // That's expected/normal behavior for the error step.
-        expect(Result.FAILURE, "postFailureAfterUnstable")
+        expect(Result.FAILURE, "postStage/postFailureAfterUnstable")
                 .logContains("I AM FAILING NOW", "I FAILED")
                 .go();
     }
 
     @Test
     public void postOnChanged() throws Exception {
-        WorkflowRun b = getAndStartNonRepoBuild("postOnChangeFailed");
+        WorkflowRun b = getAndStartNonRepoBuild("postStage/postOnChangeFailed");
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("I FAILED", b);
         j.assertLogNotContains("I REGRESSED", b);
 
         WorkflowJob job = b.getParent();
-        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeChanged"), true));
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postStage/postOnChangeChanged"), true));
         WorkflowRun b2 = j.buildAndAssertSuccess(job);
         j.assertLogContains("[Pipeline] { (foo)", b2);
         j.assertLogContains("hello", b2);
@@ -124,7 +124,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
         j.assertLogNotContains("I AM FIXED", b3);
 
         // And one more time for regression
-        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeFailed"), true));
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postStage/postOnChangeFailed"), true));
         WorkflowRun b4 = job.scheduleBuild2(0).waitForStart();
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b4));
         j.assertLogContains("[Pipeline] { (foo)", b4);
@@ -134,7 +134,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
 
     @Test
     public void unstablePost() throws Exception {
-            expect(Result.UNSTABLE, "unstablePost")
+            expect(Result.UNSTABLE, "postStage/unstablePost")
                     .logContains("[Pipeline] { (foo)", "hello", "I AM UNSTABLE")
                     .logNotContains("I FAILED")
                     .go();
@@ -143,7 +143,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-38993")
     @Test
     public void buildConditionOrdering() throws Exception {
-        expect("buildConditionOrdering")
+        expect("postStage/buildConditionOrdering")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logContainsInOrder("I AM ALWAYS", "I CHANGED", "I SUCCEEDED")
                 .go();
@@ -250,13 +250,13 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-48752")
     @Test
     public void changedAndNotSuccess() throws Exception {
-        WorkflowRun b = getAndStartNonRepoBuild("postOnChangeFailed");
+        WorkflowRun b = getAndStartNonRepoBuild("postStage/postOnChangeFailed");
         j.assertBuildStatus(Result.FAILURE, j.waitForCompletion(b));
         j.assertLogContains("[Pipeline] { (foo)", b);
         j.assertLogContains("I FAILED", b);
 
         WorkflowJob job = b.getParent();
-        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postOnChangeUnstable"), true));
+        job.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("postStage/postOnChangeUnstable"), true));
         WorkflowRun b2 = j.assertBuildStatus(Result.UNSTABLE, j.waitForCompletion(job.scheduleBuild2(0).get()));
         j.assertLogContains("[Pipeline] { (foo)", b2);
         j.assertLogContains("hello", b2);
@@ -314,7 +314,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-44993")
     @Test
     public void failureInPostBlock() throws Exception {
-        expect(Result.FAILURE, "failureInPostBlock")
+        expect(Result.FAILURE, "postStage/failureInPostBlock")
                 .logContains("[Pipeline] { (foo)",
                         "hello",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")",
@@ -331,13 +331,13 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-52084")
     @Test
     public void sequentialPostNode() throws Exception {
-        expect("sequentialPostNode").go();
+        expect("postStage/sequentialPostNode").go();
     }
 
     @Issue("JENKINS-51383")
     @Test
     public void postSuccessNoSuchMethodError() throws Exception {
-        expect(Result.FAILURE, "postSuccessNoSuchMethodError")
+        expect(Result.FAILURE, "postStage/postSuccessNoSuchMethodError")
                 .logContains("[Pipeline] { (foo)",
                         "before missing")
                 .logNotContains("MOST DEFINITELY FINISHED",
@@ -348,9 +348,9 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-56402")
     @Test
     public void resultIsFailureInPostAfterStageFailure() throws Exception {
-        expect(Result.FAILURE, "resultIsFailureInPostAfterStageFailure")
+        expect(Result.FAILURE, "postStage/resultIsFailureInPostAfterStageFailure")
                 .logContains("Result in always: FAILURE",
-                        "CurrentResult in always: FAILURE", 
+                        "CurrentResult in always: FAILURE",
                         "Result in failure: FAILURE",
                         "CurrentResult in failure: FAILURE")
                 .go();
@@ -359,7 +359,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-56402")
     @Test
     public void resultIsFailureInPostAfterPostFailure() throws Exception {
-        expect(Result.FAILURE, "resultIsFailureInPostAfterPostFailure")
+        expect(Result.FAILURE, "postStage/resultIsFailureInPostAfterPostFailure")
                 .logContains("Result in always: SUCCESS",
                         "CurrentResult in always: SUCCESS",
                         "Result in failure: FAILURE",
@@ -372,7 +372,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-56402")
     @Test
     public void resultIsFailureInPostAfterResultModified() throws Exception {
-        expect(Result.FAILURE, "resultIsFailureInPostAfterResultModified")
+        expect(Result.FAILURE, "postStage/resultIsFailureInPostAfterResultModified")
                 .logContains("Result in always: UNSTABLE",
                         "CurrentResult in always: UNSTABLE",
                         "Result in cleanup: FAILURE",
@@ -383,7 +383,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-56402")
     @Test
     public void resultStaysFailureWhenManuallySetInPost() throws Exception {
-        expect(Result.FAILURE, "resultStaysFailureWhenManuallySetInPost")
+        expect(Result.FAILURE, "postStage/resultStaysFailureWhenManuallySetInPost")
                 .logContains("Result in always: FAILURE",
                         "CurrentResult in always: FAILURE",
                         "Result in cleanup: FAILURE",
@@ -394,7 +394,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-56402")
     @Test
     public void resultIsSuccessInPost() throws Exception {
-        expect(Result.SUCCESS, "resultIsSuccessInPost")
+        expect(Result.SUCCESS, "postStage/resultIsSuccessInPost")
                 .logContains("Result in always: SUCCESS",
                         "CurrentResult in always: SUCCESS",
                         "Result in success: SUCCESS",

@@ -29,10 +29,15 @@ import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+
+import hudson.model.Cause.UserIdCause;
+import hudson.model.CauseAction;
 import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.model.queue.QueueTaskFuture;
+import hudson.triggers.SCMTrigger.SCMTriggerCause;
+import hudson.triggers.TimerTrigger.TimerTriggerCause;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.impl.mock.MockSCMController;
@@ -40,7 +45,6 @@ import jenkins.scm.impl.mock.MockSCMDiscoverChangeRequests;
 import jenkins.scm.impl.mock.MockSCMSource;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -89,7 +93,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void simpleWhen() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
-        ExpectationsBuilder expect = expect("when", "simpleWhen").runFromRepo(false);
+        ExpectationsBuilder expect = expect("when/conditions", "whenExpression").runFromRepo(false);
         expect.logContains("One", "Hello", "Should I run?", "Two").logNotContains("World").go();
         env(s).put("SECOND_STAGE", "RUN").set();
         expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Should I run?", "Two", "World").go();
@@ -98,7 +102,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenException() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
-        expect(Result.FAILURE, "when", "whenException").runFromRepo(false)
+        expect(Result.FAILURE, "when/conditions", "whenException").runFromRepo(false)
                 .logContains("One", "Hello", "Should I run?", "NullPointerException", "Two")
                 .logNotContains("World").go();
     }
@@ -109,16 +113,16 @@ public class WhenStageTest extends AbstractModelDefTest {
         expect(Result.FAILURE, "when", "whenEmpty").runFromRepo(false)
                 .logContains(Messages.ModelValidatorImpl_EmptyWhen()).logNotContains("Two", "World").go();
     }
-    
+
     @Test
     public void whenAllOfEmpty() throws Exception {
-        ExpectationsBuilder expect = expect(Result.FAILURE, "when", "allOfEmpty").runFromRepo(false);
+        ExpectationsBuilder expect = expect(Result.FAILURE, "when/conditions", "allOfEmpty").runFromRepo(false);
         expect.logContains(Messages.ModelValidatorImpl_NestedWhenWithoutChildren("allOf")).logNotContains("Hello", "World").go();
     }
 
     @Test
     public void toJson() throws IOException {
-        final String rawJenkinsfile = fileContentsFromResources("when/simpleWhen.groovy", true);
+        final String rawJenkinsfile = fileContentsFromResources("when/conditions/whenExpression.groovy", true);
         JenkinsRule.WebClient wc = j.createWebClient();
         WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"), HttpMethod.POST);
 
@@ -157,7 +161,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenChangeset() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
-        final ExpectationsBuilder builder = expect("when/changelog", "changeset")
+        final ExpectationsBuilder builder = expect("when/conditions/changelog", "changeset")
                 .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("JS World");
         builder.go();
@@ -179,7 +183,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenChangesetMoreCommits() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
-        final ExpectationsBuilder builder = expect("when/changelog", "changeset")
+        final ExpectationsBuilder builder = expect("when/conditions/changelog", "changeset")
                 .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("JS World");
         builder.go();
@@ -218,7 +222,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         controller.createBranch("repoX", "master");
         final int num = controller.openChangeRequest("repoX", "master");
         final String crNum = "change-request/" + num;
-        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/changelog/changeset").getBytes());
+        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/conditions/changelog/changeset").getBytes());
 
         WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
         project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverChangeRequests())));
@@ -267,7 +271,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenChangelog() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
-        final ExpectationsBuilder builder = expect("when/changelog", "changelog")
+        final ExpectationsBuilder builder = expect("when/conditions/changelog", "changelog")
                 .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("Dull World");
         builder.go();
@@ -286,7 +290,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenChangelogMoreCommits() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
-        final ExpectationsBuilder builder = expect("when/changelog", "changelog")
+        final ExpectationsBuilder builder = expect("when/conditions/changelog", "changelog")
                 .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
                 .logNotContains("Dull World");
         builder.go();
@@ -312,7 +316,7 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     @Test
     public void whenChangelogBadRegularExpression() throws Exception {
-        expect(Result.FAILURE,"when/changelog", "badRegularExpression")
+        expect(Result.FAILURE,"when/conditions/changelog", "badRegularExpression")
                 .logContains("\"{\"user_id\" : 24}\" is not a valid regular expression.")
                 .logNotContains("Hello,", "Dull World").go();
     }
@@ -326,7 +330,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         controller.createBranch("repoX", "master");
         final int num = controller.openChangeRequest("repoX", "master");
         final String crNum = "change-request/" + num;
-        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/changelog/changelog").getBytes());
+        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/conditions/changelog/changelog").getBytes());
 
         WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
         project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverChangeRequests())));
@@ -376,7 +380,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-48209")
     @Test
     public void whenExprDurableTask() throws Exception {
-        expect("whenExprDurableTask")
+        expect("when/whenExprDurableTask")
                 .logContains("Heal it")
                 .go();
     }
@@ -384,7 +388,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-44461")
     @Test
     public void whenBeforeAgentTrue() throws Exception {
-        expect("whenBeforeAgentTrue")
+        expect("when/whenBeforeAgentTrue")
                 .logContains("Heal it")
                 .go();
     }
@@ -393,10 +397,8 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenBeforeInputTrue() throws Exception {
 
-        String whenFile = "whenBeforeInputTrue";
-
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, whenFile);
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(whenFile), true));
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "whenBeforeInputTrue");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/whenBeforeInputTrue"), true));
         // get the build going, and wait until workflow pauses
         QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
         WorkflowRun b = q.getStartCondition().get();
@@ -430,10 +432,8 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenBeforeInputFalse() throws Exception {
 
-        String whenFile = "whenBeforeInputFalse";
-
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, whenFile);
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(whenFile), true));
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "whenBeforeInputFalse");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/whenBeforeInputFalse"), true));
         // get the build going, and wait until workflow pauses
         QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
         WorkflowRun b = q.getStartCondition().get();
@@ -447,7 +447,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-44461")
     @Test
     public void whenBeforeAgentFalse() throws Exception {
-        expect("whenBeforeAgentFalse")
+        expect("when/whenBeforeAgentFalse")
                 .logContains("Heal it")
                 .go();
     }
@@ -455,7 +455,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-44461")
     @Test
     public void whenBeforeAgentUnspecified() throws Exception {
-        expect("whenBeforeAgentUnspecified")
+        expect("when/whenBeforeAgentUnspecified")
                 .logContains("Heal it")
                 .go();
     }
@@ -464,7 +464,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenEquals() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
-        ExpectationsBuilder expect = expect("when", "whenEquals").runFromRepo(false);
+        ExpectationsBuilder expect = expect("when/conditions", "whenEquals").runFromRepo(false);
         expect.logContains("One", "Hello", "Two").logNotContains("World").go();
         env(s).put("SECOND_STAGE", "RUN").set();
         expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Two", "World").go();
@@ -473,7 +473,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-50815")
     @Test
     public void whenBranchNotMultibranch() throws Exception {
-        expect("whenBranchNotMultibranch")
+        expect("when/whenBranchNotMultibranch")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
                 .go();
     }
@@ -482,7 +482,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void simpleGroupWhen() throws Exception {
         env(s).put("RUN_GROUP", "NOPE").set();
-        ExpectationsBuilder expect = expect("when", "simpleGroupWhen").runFromRepo(false);
+        ExpectationsBuilder expect = expect("when/conditions", "simpleGroupWhen").runFromRepo(false);
         expect.logContains("One", "Hello", "Should I run?", "Two").logNotContains("World").go();
         env(s).put("RUN_GROUP", "RUN").set();
         expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Should I run?", "Two", "World").go();
@@ -494,6 +494,240 @@ public class WhenStageTest extends AbstractModelDefTest {
         }
         assertNotNull(item);
         item.getFuture().waitForStart();
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithTimeTriggerSkipped() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenTimerTriggerSkipped");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/conditions/buildStatusWhenSCMTrigger"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new TimerTriggerCause()))
+                 .getStartCondition().get();
+
+
+        j.waitForCompletion(b);
+
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogNotContains("World", b);
+        j.assertLogNotContains("Heal it", b);
+
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithSCMTriggerSkipped() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenSCMTriggerSkipped");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/conditions/buildStatusWhenTimerTrigger"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new SCMTriggerCause("polling"))
+                ).getStartCondition().get();
+        j.waitForCompletion(b);
+
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogNotContains("World", b);
+        j.assertLogNotContains("Heal it", b);
+
+    }
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithTimeTrigger() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenTimerTrigger");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/conditions/buildStatusWhenTimerTrigger"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new TimerTriggerCause()))
+                 .getStartCondition().get();
+
+
+        j.waitForCompletion(b);
+
+        j.assertLogNotContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogContains("World", b);
+        j.assertLogContains("Heal it", b);
+
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithSCMTrigger() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenSCMTrigger");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/conditions/buildStatusWhenSCMTrigger"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new SCMTriggerCause("polling"))
+                ).getStartCondition().get();
+        j.waitForCompletion(b);
+
+        j.assertLogNotContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogContains("World", b);
+        j.assertLogContains("Heal it", b);
+
+    }
+
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithUserIdCauseShouldBeSkipped() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenUserIdCauseSkipped");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/conditions/buildStatusWhenUserIdCause"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new UserIdCause("virginia"))
+                ).getStartCondition().get();
+        j.waitForCompletion(b);
+
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional",b);
+        j.assertLogNotContains("World", b);
+        j.assertLogNotContains("Heal it", b);
+
+    }
+    @Issue("JENKINS-46894")
+    @Test
+    public void BuildStatusWhenWithUserIdCause() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "buildStatusWhenUserIdCause");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("when/conditions/buildStatusWhenUserIdCause"), true));
+
+        // get the build going, and wait until workflow pauses
+        WorkflowRun b = p.scheduleBuild2(0,
+                new CauseAction(new UserIdCause("vlinde"))
+                ).getStartCondition().get();
+        j.waitForCompletion(b);
+
+        j.assertLogContains("World", b);
+        j.assertLogContains("Heal it", b);
+
+    }
+
+    @Test
+    public void basicWhen() throws Exception {
+        expect("when/basicWhen")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenExprUsingOutsideVarAndFunc() throws Exception {
+        expect("when/whenExprUsingOutsideVarAndFunc")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void skippedWhen() throws Exception {
+        expect("when/skippedWhen")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenLaterStages() throws Exception {
+        expect("when/whenLaterStages")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "I'm running anyway", "And I run last of all")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenBranchFalse() throws Exception {
+        expect("when/whenBranchFalse")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenBranchTrue() throws Exception {
+        expect("when/whenBranchTrue")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Issue("JENKINS-42226")
+    @Test
+    public void whenBranchNull() throws Exception {
+        expect("when/whenBranchNull")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenNot() throws Exception {
+        expect("when/whenNot")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenOr() throws Exception {
+        expect("when/whenOr")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenAnd() throws Exception {
+        expect("when/whenAnd")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Issue("JENKINS-42762")
+    @Test
+    public void whenMultiple() throws Exception {
+        expect("when/whenMultiple")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenAndOrSingle() throws Exception {
+        expect("when/whenAndOrSingle")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
+    }
+
+    @Test
+    public void whenNestedCombinations() throws Exception {
+        expect("when/whenNestedCombinations")
+                .logContains("First stage has no condition",
+                        "Second stage meets condition",
+                        "Fourth stage meets condition")
+                .logNotContains("Third stage meets condition")
+                .go();
+    }
+
+    @Test
+    public void whenEnvTrue() throws Exception {
+        expect("when/whenEnvTrue")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenEnvIgnoreCase() throws Exception {
+        expect("when/whenEnvIgnoreCase")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+                .go();
+    }
+
+    @Test
+    public void whenEnvFalse() throws Exception {
+        expect("when/whenEnvFalse")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
+                .logNotContains("World")
+                .go();
     }
 
     @TestExtension

@@ -52,7 +52,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
 
     @Test
     public void simpleEnvironment() throws Exception {
-        expect("simpleEnvironment")
+        expect("environment/simpleEnvironment")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is BAR",
                         "_UNDERSCORE is VALID")
@@ -62,7 +62,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-42082")
     @Test
     public void envVarContainsTEST() throws Exception {
-        expect("envVarContainsTEST")
+        expect("environment/envVarContainsTEST")
                 .logContains("TEST_VAR is BAR",
                         "VAR_TEST is VALID",
                         "TEST_VAR from shell is BAR",
@@ -73,7 +73,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-43143")
     @Test
     public void paramsInEnvironment() throws Exception {
-        expect("paramsInEnvironment")
+        expect("environment/paramsInEnvironment")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is BAR",
                         "_UNDERSCORE is VALIDAValue")
@@ -83,7 +83,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-43137")
     @Test
     public void multilineEnvironment() throws Exception {
-        expect("multilineEnvironment")
+        expect("environment/multilineEnvironment")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is BAR",
                         "MULTILINE is VALID\n\"SO THERE\"")
@@ -93,7 +93,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-42771")
     @Test
     public void multiExpressionEnvironment() throws Exception {
-        expect("multiExpressionEnvironment")
+        expect("environment/multiExpressionEnvironment")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is BAR",
                         "_UNDERSCORE is VALID")
@@ -102,7 +102,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
 
     @Test
     public void environmentInStage() throws Exception {
-        expect("environmentInStage")
+        expect("environment/environmentInStage")
                 .logContains("[Pipeline] { (foo)", "FOO is BAR")
                 .go();
     }
@@ -110,7 +110,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-46809")
     @Test
     public void environmentInGroup() throws Exception {
-        expect("environmentInGroup")
+        expect("environment/environmentInGroup")
                 .logContains("[Pipeline] { (foo)",
                         "Solo: FOO is BAZ",
                         "First in group: FOO is BAR",
@@ -121,7 +121,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-41748")
     @Test
     public void environmentCrossReferences() throws Exception {
-        expect("environmentCrossReferences")
+        expect("environment/environmentCrossReferences")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is FOO",
                         "BAR is FOOBAR",
@@ -133,7 +133,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-43872")
     @Test
     public void envDollarQuotes() throws Exception {
-        expect("envDollarQuotes")
+        expect("environment/envDollarQuotes")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is ${FOOTHAT}",
                         "BAR is ${FOOTHAT}BAR",
@@ -144,7 +144,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
 
     @Test
     public void envDotCrossRef() throws Exception {
-        expect("envDotCrossRef")
+        expect("environment/envDotCrossRef")
                 .logContains("[Pipeline] { (foo)",
                         "MICROSERVICE_NAME is directory",
                         "IMAGE_NAME is quay.io/svc/directory",
@@ -156,7 +156,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-43404")
     @Test
     public void envQuotesInQuotes() throws Exception {
-        expect("envQuotesInQuotes")
+        expect("environment/envQuotesInQuotes")
                 .logContains("[Pipeline] { (foo)",
                         "GRADLE_OPTIONS is --no-daemon --rerun-tasks -PBUILD_NUMBER=1 -PBRANCH=\"master\"",
                         "MULTILINE_SINGLE is \nLook at me 'here'",
@@ -167,7 +167,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-42748")
     @Test
     public void envBackslashes() throws Exception {
-        expect("envBackslashes")
+        expect("environment/envBackslashes")
                 .logContains("[Pipeline] { (foo)",
                         "echo SIMPLE_BACKSLASH is C:\\hey",
                         "echo NESTED_BACKSLASH is C:\\hey\\there",
@@ -183,7 +183,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-41890")
     @Test
     public void environmentWithWorkspace() throws Exception {
-        expect("environmentWithWorkspace")
+        expect("environment/environmentWithWorkspace")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is FOO",
                         "BAZ is FOOBAZ")
@@ -194,7 +194,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-42753")
     @Test
     public void stmtExprInEnvironment() throws Exception {
-        expect("stmtExprInEnvironment")
+        expect("environment/stmtExprInEnvironment")
                 .logContains("FOO is BAR",
                         "LIST_EXP is [a, BAR, c]",
                         "MAP_EXP is [a:z, b:BAR, c:x]",
@@ -213,7 +213,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     public void nonLiteralEnvironment() throws Exception {
         initGlobalLibrary();
 
-        expect("nonLiteralEnvironment")
+        expect("environment/nonLiteralEnvironment")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is BAR",
                         "BUILD_NUM_ENV is 1",
@@ -228,7 +228,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-43486")
     @Test
     public void booleanParamAndEnv() throws Exception {
-        expect("booleanParamAndEnv")
+        expect("environment/booleanParamAndEnv")
                 .logContains("hello")
                 .go();
     }
@@ -236,7 +236,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-43486")
     @Test
     public void nullParamAndEnv() throws Exception {
-        expect("nullParamAndEnv")
+        expect("environment/nullParamAndEnv")
                 .logContains("hello")
                 .go();
     }
@@ -244,14 +244,14 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-45916")
     @Test
     public void pathInEnv() throws Exception {
-        expect("pathInEnv")
+        expect("environment/pathInEnv")
                 .logMatches("PATH: .*tmpDir:")
                 .go();
     }
 
     @Test
     public void undefinedEnvRef() throws Exception {
-        expect("undefinedEnvRef")
+        expect("environment/undefinedEnvRef")
                 .logContains("[Pipeline] { (foo)",
                         "FOO is BAR",
                         "_UNDERSCORE is VALIDnullORNOT")
@@ -261,7 +261,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-45637")
     @Test
     public void multipleEnvSubstitutions() throws Exception {
-        expect("multipleEnvSubstitutions")
+        expect("environment/multipleEnvSubstitutions")
                 .logMatches("AAA_Key: key: \\d+ \\d+",
                         "AAA_BN_ONLY: bn: \\d+",
                         "AAA_EN_ONLY: en: \\d+")
@@ -271,7 +271,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-45636")
     @Test
     public void backslashReductionInEnv() throws Exception {
-        expect("backslashReductionInEnv")
+        expect("environment/backslashReductionInEnv")
                 .logMatches("AAA_Key1: a\\\\b \\d+",
                         "AAA_Key2: a\\\\\\\\b",
                         "AAA_Key3: a\\\\b",
@@ -283,7 +283,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Test
     public void variableToMethodToEnvVal() throws Exception {
         initGlobalLibrary();
-        expect("variableToMethodToEnvVal")
+        expect("environment/variableToMethodToEnvVal")
                 .logMatches("TADA_VAR: 1 tada")
                 .go();
     }
@@ -291,7 +291,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-44482")
     @Test
     public void backslashesFromExistingEnvVar() throws Exception {
-        expect("backslashesFromExistingEnvVar")
+        expect("environment/backslashesFromExistingEnvVar")
                 .logContains("FOO is C:\\Windows\\BAR")
                 .go();
     }
@@ -299,7 +299,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-45991")
     @Test
     public void defaultEnvValue() throws Exception {
-        expect("defaultEnvValue")
+        expect("environment/defaultEnvValue")
                 .logContains("FOO is OTHER", "BAZ is BAR")
                 .go();
     }
@@ -307,8 +307,8 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-42702")
     @Test
     public void readFileInEnv() throws Exception {
-        expect("readFileInEnv")
-                .otherResource("readFileInEnv-data.txt", "Version")
+        expect("environment/readFileInEnv")
+                .otherResource("environment/readFileInEnv-data.txt", "Version")
                 .logContains("Version is BANANA")
                 .go();
     }
@@ -316,7 +316,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-47600")
     @Test
     public void environmentOverwriteReference() throws Exception {
-        expect("environmentOverwriteReference")
+        expect("environment/environmentOverwriteReference")
                 .logContains("value: first second", "value: first third")
                 .go();
     }
@@ -324,7 +324,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-54047")
     @Test
     public void notExpressionInEnvironment() throws Exception {
-        expect("notExpressionInEnvironment")
+        expect("environment/notExpressionInEnvironment")
                 .logContains("expecting false, got false")
                 .go();
     }
@@ -336,4 +336,14 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("IllegalArgumentException: One or more variables have some issues with their values: FOO")
                 .go();
     }
+
+    @Issue("JENKINS-45198")
+    @Test
+    public void scmEnvVars() throws Exception {
+        expect("environment/scmEnvVars")
+                // workflow-scm-step 2.6+, git 3.3.1+
+                .logNotContains("GIT_COMMIT is null")
+                .go();
+    }
+
 }
