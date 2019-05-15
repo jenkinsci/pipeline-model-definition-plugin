@@ -51,7 +51,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
         assertEquals(getJSONErrorReport(jp, "agent/inRelativeCustomWorkspace"), 0, jp.getErrorCollector().getErrorCount());
         assertNotNull("Pipeline null for inRelativeCustomWorkspace", newRoot);
 
-        JSONObject nodeJson = JSONObject.fromObject(fileContentsFromResources("json/inRelativeCustomWorkspace.json"));
+        JSONObject nodeJson = JSONObject.fromObject(fileContentsFromResources("json/agent/inRelativeCustomWorkspace.json"));
 
         JSONParser nodeParser = new JSONParser(Converter.jsonTreeFromJSONObject(nodeJson));
         ModelASTPipelineDef nodeRoot = nodeParser.parse();
@@ -79,7 +79,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
         assertEquals(getJSONErrorReport(jp, "agent/agentLabelEmptyString"), 0, jp.getErrorCollector().getErrorCount());
         assertNotNull("Pipeline null for agentLabelEmptyString", newRoot);
 
-        JSONObject anyJson = JSONObject.fromObject(fileContentsFromResources("json/agentAny.json"));
+        JSONObject anyJson = JSONObject.fromObject(fileContentsFromResources("json/agent/agentAny.json"));
 
         JSONParser anyParser = new JSONParser(Converter.jsonTreeFromJSONObject(anyJson));
         ModelASTPipelineDef anyRoot = anyParser.parse();
