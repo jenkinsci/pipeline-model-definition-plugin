@@ -491,10 +491,10 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     }
 
-    @Ignore("Temporarily disabling to finish move")
     @Test
     public void fromEvaluate() throws Exception {
         expect("fromEvaluate")
+                .otherResource("simplePipeline.groovy", "simplePipeline.groovy")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();
