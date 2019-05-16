@@ -71,7 +71,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         controller.createBranch("repoX", "master");
         final int num = controller.openChangeRequest("repoX", "master");
         final String crNum = "change-request/" + num;
-        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/changelog/changeset").getBytes());
+        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/conditions/changelog/changeset").getBytes());
 
         WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
         project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverChangeRequests())));
@@ -197,7 +197,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         MockSCMController controller = MockSCMController.create();
         controller.createRepository("repo", MockRepositoryFlags.FORKABLE);
         controller.createBranch("repo", "master");
-        controller.addFile("repo", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenChangeRequest").getBytes());
+        controller.addFile("repo", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/conditions/whenChangeRequest").getBytes());
         int id = controller.openChangeRequest("repo", "master");
         controller.addFile("repo", "change-request/" + id, "mbopalua", "cr" + id + ".txt", "hello".getBytes());
         controller.cloneBranch("repo", "master", "release-2");

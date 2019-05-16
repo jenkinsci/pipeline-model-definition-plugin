@@ -174,7 +174,7 @@ public class DeclarativeDockerUtilsTest extends AbstractModelDefTest {
         GlobalConfig.get().setDockerLabel("thisone");
         GlobalConfig.get().setRegistry(null);
 
-        expect("agentDockerEnvTest").runFromRepo(false).logContains("Running on assumed Docker agent").go();
+        expect("agent/agentDockerEnvTest").runFromRepo(false).logContains("Running on assumed Docker agent").go();
 
     }
 
@@ -190,7 +190,7 @@ public class DeclarativeDockerUtilsTest extends AbstractModelDefTest {
         GlobalConfig.get().setDockerLabel("thisone");
         GlobalConfig.get().setRegistry(null);
 
-        expect("agentDockerEnvSpecLabel").runFromRepo(false).logContains("Running on assumed Docker agent").go();
+        expect("agent/agentDockerEnvSpecLabel").runFromRepo(false).logContains("Running on assumed Docker agent").go();
 
     }
 

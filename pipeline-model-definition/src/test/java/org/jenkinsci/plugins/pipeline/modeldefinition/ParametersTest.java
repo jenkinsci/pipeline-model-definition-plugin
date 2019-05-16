@@ -66,7 +66,7 @@ public class ParametersTest extends AbstractModelDefTest {
     @Ignore("Parameters are set before withEnv is called.")
     @Test
     public void envVarInParameters() throws Exception {
-        WorkflowRun b = expect("envVarInParameters")
+        WorkflowRun b = expect("environment/envVarInParameters")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();

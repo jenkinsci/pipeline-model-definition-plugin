@@ -7,7 +7,7 @@ public class ValidateDeclarativePipelineStepTest extends AbstractModelDefTest {
 
     @Test
     public void passes() throws Exception {
-        expect("validateDeclarativePipelineStep")
+        expect("steps/validateDeclarativePipelineStep")
                 .otherResource("simplePipeline.groovy", "testFile.groovy")
                 .logContains("Declarative Pipeline file 'testFile.groovy' is valid.",
                         "validation result - true")
@@ -16,7 +16,7 @@ public class ValidateDeclarativePipelineStepTest extends AbstractModelDefTest {
 
     @Test
     public void noFile() throws Exception {
-        expect("validateDeclarativePipelineStep")
+        expect("steps/validateDeclarativePipelineStep")
                 .logContains("Declarative Pipeline file 'testFile.groovy' does not exist.",
                         "validation result - false")
                 .go();
@@ -24,8 +24,8 @@ public class ValidateDeclarativePipelineStepTest extends AbstractModelDefTest {
 
     @Test
     public void noPipelineStep() throws Exception {
-        expect("validateDeclarativePipelineStep")
-                .otherResource("validateDeclarativePipelineStep.groovy", "testFile.groovy")
+        expect("steps/validateDeclarativePipelineStep")
+                .otherResource("steps/validateDeclarativePipelineStep.groovy", "testFile.groovy")
                 .logContains("Declarative Pipeline file 'testFile.groovy' does not contain the 'pipeline' step.",
                         "validation result - false")
                 .go();
@@ -33,7 +33,7 @@ public class ValidateDeclarativePipelineStepTest extends AbstractModelDefTest {
 
     @Test
     public void validationErrors() throws Exception {
-        expect("validateDeclarativePipelineStep")
+        expect("steps/validateDeclarativePipelineStep")
                 .otherResource("errors/emptyEnvironment.groovy", "testFile.groovy")
                 .logContains("Error(s) validating Declarative Pipeline file 'testFile.groovy' - org.codehaus.groovy.control.MultipleCompilationErrorsException",
                         "WorkflowScript: 26: No variables specified for environment @ line 26, column 5.",

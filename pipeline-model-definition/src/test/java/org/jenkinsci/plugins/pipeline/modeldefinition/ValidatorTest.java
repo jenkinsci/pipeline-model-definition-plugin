@@ -94,7 +94,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void rejectParallelMixedInSteps() throws Exception {
         expectError("rejectParallelMixedInSteps")
-                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel", 
+                .logContains(Messages.ModelValidatorImpl_BlockedStep("parallel",
                         BlockedStepsAndMethodCalls.blockedInSteps().get("parallel")))
                 .go();
     }
