@@ -23,6 +23,6 @@
  */
 
 
-def jf = readTrusted("when/whenAnd.groovy")
+def jf = readTrusted("simplePipeline.groovy")
 
 evaluate(jf)

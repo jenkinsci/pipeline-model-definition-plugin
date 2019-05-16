@@ -25,7 +25,7 @@ public class ValidateDeclarativePipelineStepTest extends AbstractModelDefTest {
     @Test
     public void noPipelineStep() throws Exception {
         expect("steps/validateDeclarativePipelineStep")
-                .otherResource("validateDeclarativePipelineStep.groovy", "testFile.groovy")
+                .otherResource("steps/validateDeclarativePipelineStep.groovy", "testFile.groovy")
                 .logContains("Declarative Pipeline file 'testFile.groovy' does not contain the 'pipeline' step.",
                         "validation result - false")
                 .go();
