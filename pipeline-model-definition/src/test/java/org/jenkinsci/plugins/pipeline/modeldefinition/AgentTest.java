@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
@@ -31,6 +32,7 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
@@ -254,6 +256,33 @@ public class AgentTest extends AbstractModelDefTest {
                         "The answer is 42",
                         "-v /tmp:/tmp",
                         "hi there, thisOtherArg")
+                .logNotContains("hi there, thisArgHere")
+                .go();
+    }
+
+    @Issue("JENKINS-57162")
+    @Test
+    public void additionalDockerBuildArgsImageHash() throws Exception {
+        assumeDocker();
+
+        sampleRepo.write("Dockerfile",  "FROM ubuntu:14.04\n\nARG someArg=thisArgHere\n\nRUN echo \"hi there, $someArg\" > /hi-there\n\n");
+        sampleRepo.git("init");
+        sampleRepo.git("add", "Dockerfile");
+        sampleRepo.git("commit", "--message=Dockerfile");
+
+        Folder folder = j.jenkins.createProject(Folder.class, "testFolder");
+        expect("agent/additionalDockerBuildArgsParallel")
+                .inFolder(folder)
+                .withProjectName("parallelImageHashTest")
+                .logContains("[Pipeline] { (foo)",
+                        "-v /tmp:/tmp",
+                        "docker build -t 8343c0815beb7a50c3676f09d7175d903a57f11b --build-arg someArg=thisOtherArg",
+                        "The answer is 42",
+                        "hi there, thisOtherArg",
+                        "[Pipeline] { (bar)",
+                        "docker build -t 4f8d74de557925eb9aacdfdf671b5e9de11b6086 --build-arg someArg=thisDifferentArg",
+                        "The answer is 43",
+                        "hi there, thisDifferentArg")
                 .logNotContains("hi there, thisArgHere")
                 .go();
     }
