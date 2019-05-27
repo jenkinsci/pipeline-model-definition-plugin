@@ -25,7 +25,10 @@
 package org.jenkinsci.plugins.pipeline;
 
 import hudson.Extension;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,7 +55,13 @@ public class StageStatus extends StageTagsMetadata {
     }
 
     public List<String> getSkippedStageValues() {
-        return Arrays.asList(getSkippedForConditional(), getSkippedForFailure(), getSkippedForUnstable());
+        return skippedStages();
+    }
+
+    @Nonnull
+    public static List<String> skippedStages() {
+        return Arrays.asList(getSkippedForConditional(), getSkippedForFailure(), getSkippedForUnstable(),
+                getSkippedForRestart());
     }
 
     public static String getFailedAndContinued() {
@@ -69,5 +78,30 @@ public class StageStatus extends StageTagsMetadata {
 
     public static String getSkippedForConditional() {
         return "SKIPPED_FOR_CONDITIONAL";
+    }
+
+    public static String getSkippedForRestart() {
+        return "SKIPPED_FOR_RESTART";
+    }
+
+    public static boolean isSkippedStage(@Nonnull FlowNode node) {
+        TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
+        if (tagsAction != null) {
+            String tagValue = tagsAction.getTagValue(TAG_NAME);
+            return tagValue != null && skippedStages().contains(tagValue);
+        }
+
+        return false;
+    }
+
+    public static boolean isSkippedStageForReason(@Nonnull FlowNode node, @Nonnull String reason) {
+        if (skippedStages().contains(reason)) {
+            TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
+            if (tagsAction != null) {
+                String tagValue = tagsAction.getTagValue(TAG_NAME);
+                return tagValue != null && tagValue.equals(reason);
+            }
+        }
+        return false;
     }
 }

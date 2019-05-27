@@ -59,7 +59,7 @@ public class ToolsTest extends AbstractModelDefTest {
     @Issue("JENKINS-44497")
     @Test
     public void envVarInTools() throws Exception {
-        expect("envVarInTools")
+        expect("environment/envVarInTools")
                 .logContains("[Pipeline] { (foo)", "Apache Maven 3.0.1")
                 .go();
     }
@@ -84,13 +84,25 @@ public class ToolsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-46809")
+    @Test
+    public void toolsInGroup() throws Exception {
+        Maven.MavenInstallation maven350 = ToolInstallations.configureMaven35();
+
+        Maven.MavenInstallation maven301 = ToolInstallations.configureMaven3();
+
+        j.jenkins.getDescriptorByType(Maven.DescriptorImpl.class).setInstallations(maven350, maven301);
+
+        expect("toolsInGroup")
+                .logContains("Solo: Apache Maven 3.0.1",
+                        "First in group: Apache Maven 3.5.0",
+                        "Second in group: Apache Maven 3.0.1")
+                .go();
+    }
+
     @Test
     public void buildPluginParentPOM() throws Exception {
-
-        Maven.MavenInstallation mvn = configureDefaultMaven("apache-maven-3.1.0", Maven.MavenInstallation.MAVEN_30);
-
-        Maven.MavenInstallation m3 = new Maven.MavenInstallation("apache-maven-3.1.0", mvn.getHome(), JenkinsRule.NO_PROPERTIES);
-        j.jenkins.getDescriptorByType(Maven.DescriptorImpl.class).setInstallations(m3);
+        Maven.MavenInstallation maven350 = ToolInstallations.configureMaven35();
         JDK[] jdks = j.jenkins.getDescriptorByType(JDK.DescriptorImpl.class).getInstallations();
         JDK thisJdk = null;
         for (JDK j : jdks) {
@@ -102,8 +114,8 @@ public class ToolsTest extends AbstractModelDefTest {
 
         expect("buildPluginParentPOM")
                 .logContains("[Pipeline] { (build)",
-                        "[INFO] BUILD SUCCESS",
-                        "M2_HOME: " + m3.getHome(),
+                        "BUILD SUCCESS",
+                        "M2_HOME: " + maven350.getHome(),
                         "JAVA_HOME: " + thisJdk.getHome())
                 .go();
     }

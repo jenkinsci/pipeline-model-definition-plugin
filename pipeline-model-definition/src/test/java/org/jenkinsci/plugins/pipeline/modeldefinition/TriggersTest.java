@@ -69,7 +69,7 @@ public class TriggersTest extends AbstractModelDefTest {
     @Ignore("Triggers are set before withEnv is called.")
     @Test
     public void envVarInTriggers() throws Exception {
-        WorkflowRun b = expect("envVarInTriggers")
+        WorkflowRun b = expect("environment/envVarInTriggers")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (Post Actions)")
                 .go();

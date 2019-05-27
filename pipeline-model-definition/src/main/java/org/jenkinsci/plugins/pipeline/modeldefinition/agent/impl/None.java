@@ -30,6 +30,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import javax.annotation.Nonnull;
+
 
 public class None extends DeclarativeAgent<None> {
 
@@ -40,5 +42,10 @@ public class None extends DeclarativeAgent<None> {
 
     @Extension(ordinal = -1000) @Symbol("none")
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<None> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Don't run on an agent";
+        }
     }
 }

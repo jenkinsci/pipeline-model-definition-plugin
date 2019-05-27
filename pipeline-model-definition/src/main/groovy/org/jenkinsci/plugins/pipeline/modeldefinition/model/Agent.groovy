@@ -26,11 +26,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.CheckoutToSubdirectory
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.ContainerPerStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -49,9 +51,23 @@ import javax.annotation.CheckForNull
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class Agent extends MappedClosure<Object,Agent> implements Serializable {
 
+    final Closure rawClosure
+
+    /*
+     * We're still extending MappedClosure, but just to preserve compatibility of running builds on upgrade.
+     */
+    @Deprecated
+    Agent(Map<String,Object> m) {
+        this.resultMap = m
+    }
+
     @Whitelisted
-    Agent(Map<String,Object> inMap) {
-        resultMap = inMap
+    Agent(Closure rawClosure) {
+        this.rawClosure = rawClosure
+    }
+
+    void populateMap(Map<String,Object> m) {
+        this.resultMap = m
     }
 
     @Deprecated
@@ -102,6 +118,18 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
                 if (subdir?.subdirectory != null && subdir?.subdirectory != "") {
                     a.setSubdirectory(subdir.subdirectory)
                 }
+                if (a instanceof AbstractDockerAgent) {
+                    ContainerPerStage containerPerStage = (ContainerPerStage) options.get("newContainerPerStage")
+                    if (containerPerStage != null) {
+                        if (context instanceof Root) {
+                            // If we're on the root, make sure we switch to basically just doing a label
+                            a.containerPerStageRoot = true
+                        } else if (context instanceof Stage && context.agent == null) {
+                            // While if we're on a stage that doesn't have an explicit agent, make sure we reuse the node
+                            a.reuseNode = true
+                        }
+                    }
+                }
             }
             a.setDoCheckout(doCheckout)
 
@@ -117,7 +145,7 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
      */
     private String findSymbol() {
         String sym = null
-        DeclarativeAgentDescriptor.all().each { d ->
+        DeclarativeAgentDescriptor.allSorted().each { d ->
             SymbolLookup.getSymbolValue(d)?.each { s ->
                 if (getMap().containsKey(s) && sym == null) {
                     sym = s
@@ -132,4 +160,6 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
         DeclarativeAgent a = getDeclarativeAgent(null, null)
         return a != null && !None.class.isInstance(a)
     }
+
+    private static final long serialVersionUID = -9134086848416921688L
 }

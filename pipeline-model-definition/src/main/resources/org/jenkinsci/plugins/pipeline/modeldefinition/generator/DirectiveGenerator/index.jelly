@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ The MIT License
+  ~
+  ~ Copyright (c) 2018, CloudBees, Inc.
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in
+  ~ all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  ~ THE SOFTWARE.
+  -->
+
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:local="local">
+    <l:layout title="${%Pipeline Syntax: Directive Generator}" norefresh="true">
+        <st:include page="sidepanel"/>
+        <l:main-panel>
+            <f:form name="config">
+                <f:section title="${%Overview}"/>
+                <f:block>
+                    The <b>Directive Generator</b> allows you to generate the Pipeline code for a Declarative Pipeline
+                    directive, such as <code>agent</code>, <code>options</code>, <code>when</code>, and more. Choose the
+                    directive you're interested in from the dropdown, and then choose the contents of the directive from
+                    the new form. Once you've filled out the form with the choices and values you want for your directive,
+                    click <b>Generate Declarative Directive</b> and the Pipeline code will appear in the box below. You
+                    can copy that code directly into the <code>pipeline</code> block in your <code>Jenkinsfile</code>,
+                    for top-level directives, or into a <code>stage</code> block for stage directives. See
+                    <a href="https://jenkins.io/doc/book/pipeline/syntax/" target="_blank">the online syntax documentation</a>
+                    for more information on directives.
+                </f:block>
+                <f:section title="${%Directives}"/>
+                <!-- Similar to f:dropdownDescriptorSelector, but adds fallback content to block, and JENKINS-25130 adds per-selection help: -->
+                <j:set var="item" value="${it.getItem(request)}"/>
+                <d:taglib uri="local">
+                    <d:tag name="listDirectives">
+                        <j:set var="inStage" value="false"/>
+                        <j:forEach var="descriptor" items="${directives}">
+                            <f:dropdownListBlock title="${descriptor.name}: ${descriptor.displayName}" staplerClass="${descriptor.clazz.name}" lazy="descriptor,item,inStage">
+                                <l:ajax>
+                                    <j:set var="it" value="${item}"/>
+                                    <j:set var="instance" value="${null}"/>
+                                    <j:set var="help" value="${descriptor.helpFile}"/>
+                                    <j:set var="inStage" value="false"/>
+                                    <j:if test="${help != null}">
+                                        <tr>
+                                            <td colspan="3"/>
+                                            <f:helpLink url="${help}"/>
+                                        </tr>
+                                        <f:helpArea/>
+                                    </j:if>
+                                    <st:include from="${descriptor}" page="${descriptor.configPage}" optional="true">
+                                        <f:block>
+                                            ${%This directive has not yet defined any visual configuration.}
+                                        </f:block>
+                                    </st:include>
+                                </l:ajax>
+                            </f:dropdownListBlock>
+                        </j:forEach>
+                    </d:tag>
+                </d:taglib>
+                <f:dropdownList name="prototype" title="${%Sample Directive}">
+                    <local:listDirectives directives="${it.getDirectives()}"/>
+                </f:dropdownList>
+                <j:set var="id" value="${h.generateId()}"/>
+                <f:block>
+                    <input type="button" value="${%Generate Declarative Directive}" onclick="handlePrototype_${id}(); return false" class="submit-button primary"/>
+                    <f:textarea id="prototypeText_${id}" readonly="true" style="margin-top: 10px" />
+                    <script>
+                        function handlePrototype_${id}() {
+                        buildFormTree(document.forms.config);
+                        // TODO JSON.stringify fails in some circumstances: https://gist.github.com/jglick/70ec4b15c1f628fdf2e9 due to Array.prototype.toJSON
+                        var json = Object.toJSON(JSON.parse(document.forms.config.elements.json.value).prototype);
+                        if (!json) {
+                        return; // just a separator
+                        }
+                        new Ajax.Request('${rootURL}/${it.GENERATE_URL}', {
+                        method: 'POST',
+                        parameters: {json: json},
+                        onSuccess: function(r) {
+                        document.getElementById('prototypeText_${id}').value = r.responseText;
+                        }
+                        });
+                        }
+                    </script>
+                </f:block>
+            </f:form>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

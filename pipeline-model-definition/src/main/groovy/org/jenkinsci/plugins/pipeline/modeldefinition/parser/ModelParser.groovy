@@ -550,8 +550,12 @@ class ModelParser implements Parser {
                                     }
                                     stage.failFast = parallel.failFast
                                 } else {
-                                    // otherwise it's a single line of execution
-                                    stage.branches.add(parseBranch("default", block))
+                                    if (stage.getBranches().isEmpty()) {
+                                        // Only add a 'default' branch here if we don't already have one.
+                                        stage.branches.add(parseBranch("default", block))
+                                    } else {
+                                        break
+                                    }
                                 }
                             } else {
                                 // otherwise it's a single line of execution
@@ -575,10 +579,23 @@ class ModelParser implements Parser {
                             stage.environment = parseEnvironment(s)
                             break
                         case 'parallel':
-                            stage.parallel = parseStages(s)
+                            def parallelStmt = matchBlockStatement(s)
+                            if (parallelStmt == null) {
+                                errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
+                            } else {
+                                eachStatement(parallelStmt.body.code) {
+                                    ModelASTStage parallelStage = parseStage(it)
+                                    if (parallelStage != null) {
+                                        stage.parallelContent.add(parallelStage)
+                                    }
+                                }
+                            }
                             break
                         case 'failFast':
                             stage.setFailFast(parseBooleanMethod(mc))
+                            break
+                        case 'stages':
+                            stage.stages = parseStages(s)
                             break
                         default:
                             errorCollector.error(stage, Messages.ModelParser_UnknownStageSection(name))
@@ -656,6 +673,8 @@ class ModelParser implements Parser {
                 def name = parseMethodName(mc)
                 if (name == "beforeAgent") {
                     w.beforeAgent = parseBooleanMethod(mc)
+                } else if (name == "beforeInput") {
+                    w.beforeInput = parseBooleanMethod(mc)
                 } else {
                     w.conditions.add(parseWhenContent(s))
                 }

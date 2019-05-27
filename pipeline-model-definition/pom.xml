@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>1.2.8-SNAPSHOT</version>
+    <version>1.3.9-SNAPSHOT</version>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
@@ -172,13 +172,15 @@
     </dependency>
 
     <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>htmlpublisher</artifactId>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-multibranch</artifactId>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>jira-steps</artifactId>
+      <artifactId>htmlpublisher</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -206,11 +208,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>jackson2-api</artifactId>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>com.jcabi</groupId>
       <artifactId>jcabi-matchers</artifactId>

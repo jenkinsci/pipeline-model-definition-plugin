@@ -26,21 +26,29 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 import hudson.Extension
 import hudson.model.Result
 import org.jenkinsci.Symbol
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+
+import javax.annotation.Nonnull
 
 /**
  * A {@link BuildCondition} for matching successful builds.
  *
  * @author Andrew Bayer
  */
-@Extension(ordinal=600d) @Symbol("success")
+@Extension(ordinal=700d) @Symbol("success")
 class Success extends BuildCondition {
+    @Deprecated
     @Override
-    boolean meetsCondition(WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return (execResult == null || execResult.isBetterOrEqualTo(Result.SUCCESS)) &&
-            (r.getResult() == null || r.getResult().isBetterOrEqualTo(Result.SUCCESS))
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return meetsCondition(r, null, null)
+    }
+
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
+        return combineResults(r, error) == Result.SUCCESS
     }
 
     @Override

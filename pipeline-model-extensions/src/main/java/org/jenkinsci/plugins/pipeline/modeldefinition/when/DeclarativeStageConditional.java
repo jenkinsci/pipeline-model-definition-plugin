@@ -27,10 +27,25 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
 import hudson.ExtensionPoint;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescriptor;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Conditionals for when to run a stage.
  */
 public abstract class DeclarativeStageConditional<S extends DeclarativeStageConditional<S>>
         extends WithScriptDescribable<S> implements ExtensionPoint {
+    @Override
+    public DeclarativeStageConditionalDescriptor getDescriptor() {
+        return (DeclarativeStageConditionalDescriptor) super.getDescriptor();
+    }
+
+    @Nonnull
+    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
+        return new ArrayList<>();
+    }
 }

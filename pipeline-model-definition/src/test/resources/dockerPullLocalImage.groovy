@@ -34,7 +34,7 @@ pipeline {
             agent {
                 docker {
                     image "maven:3-alpine"
-                    args "-v /tmp:/tmp -p 8000:8000"
+                    args "-v /tmp:/tmp"
                     reuseNode true
                 }
             }

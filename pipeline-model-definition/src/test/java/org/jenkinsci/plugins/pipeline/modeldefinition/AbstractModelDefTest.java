@@ -41,7 +41,6 @@ import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -67,6 +66,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.jcabi.matchers.RegexMatchers.containsPattern;
 import static org.hamcrest.Matchers.equalTo;
@@ -104,7 +104,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                 agentTypes.add(symbol);
             }
         }
-        legalAgentTypes = "[" + StringUtils.join(agentTypes, ", ") + "]";
+        legalAgentTypes = "[" + StringUtils.join(agentTypes.stream().sorted().collect(Collectors.toList()), ", ") + "]";
     }
 
     private static String symbolFromDescriptor(Descriptor d) {
@@ -122,58 +122,63 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simplePipeline",
-            "agentAny",
-            "agentLabel",
-            "agentNoneWithNode",
-            "metaStepSyntax",
-            "simpleEnvironment",
+            "agent/agentAny",
+            "agent/agentLabel",
+            "agent/agentNoneWithNode",
+            "steps/metaStepSyntax",
+            "environment/simpleEnvironment",
             "simpleScript",
-            "twoStagePipeline",
-            "validStepParameters",
-            "parallelPipeline",
-            "simplePostBuild",
+            "basic/twoStagePipeline",
+            "steps/validStepParameters",
+            "parallel/parallelPipeline",
+            "postStage/simplePostBuild",
             "simpleTools",
-            "legacyMetaStepSyntax",
+            "steps/legacyMetaStepSyntax",
             "perStageConfigAgent",
-            "simpleJobProperties",
+            "options/simpleJobProperties",
             "simpleTriggers",
             "simpleParameters",
             "stringsNeedingEscapeLogic",
-            "simpleWrapper",
+            "options/simpleWrapper",
             "multipleWrappers",
-            "multipleVariablesForAgent",
+            "agent/multipleVariablesForAgent",
             "toolsInStage",
-            "environmentInStage",
-            "basicWhen",
-            "skippedWhen",
-            "parallelPipelineWithFailFast",
-            "whenBranchFalse",
-            "whenEnvFalse",
-            "parallelPipelineWithSpaceInBranch",
-            "parallelPipelineQuoteEscaping",
-            "nestedTreeSteps",
-            "inCustomWorkspace",
-            "whenNot",
-            "whenOr",
-            "whenAnd",
-            "whenBeforeAgentTrue",
-            "usernamePassword",
-            "environmentCrossReferences",
-            "nestedParallelStages",
+            "environment/environmentInStage",
+            "when/basicWhen",
+            "when/skippedWhen",
+            "parallel/parallelPipelineWithFailFast",
+            "when/whenBranchFalse",
+            "when/whenEnvFalse",
+            "parallel/parallelPipelineWithSpaceInBranch",
+            "parallel/parallelPipelineQuoteEscaping",
+            "steps/nestedTreeSteps",
+            "agent/inCustomWorkspace",
+            "when/whenNot",
+            "when/whenOr",
+            "when/whenAnd",
+            "when/whenBeforeAgentTrue",
+            "when/whenBeforeInputFalse",
+            "environment/usernamePassword",
+            "environment/environmentCrossReferences",
+            "parallel/nestedParallelStages",
             "stagePost",
-            "when/changelog/changelog",
-            "when/changelog/changeset",
-            "backslashReductionInEnv",
+            "when/conditions/changelog/changelog",
+            "when/conditions/changelog/changeset",
+            "environment/backslashReductionInEnv",
             "stageWrapper"
     );
 
     public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simpleInput",
             "parametersInInput",
-            "agentDocker",
-            "globalLibrarySuccess",
+            "agent/agentDocker",
+            "libraries/globalLibrarySuccess",
             "jsonSchemaNull",
-            "parallelStagesFailFast"
+            "parallel/parallelStagesFailFast",
+            "parallel/parallelStagesFailFastWithOption",
+            "parallel/parallelStagesGroupsAndStages",
+            "basic/topLevelStageGroup",
+            "agent/agentOnGroup"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -212,7 +217,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("'steps'")});
         result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
 
-        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[otherField, docker, dockerfile, label, any, none]")});
+        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, docker, dockerfile, label, none, otherField]")});
 
         // Not using the full message here due to issues with the test extension in MultipleUnnamedParametersTest bleeding over in some situations.
         // That resulted in multiArgCtorProp sometimes showing up in the list of valid options, but not always. We still have the full test in
@@ -225,12 +230,17 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]")});
         result.add(new Object[]{"notificationsSectionRemoved", "additional properties are not allowed"});
         result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
-                "allOf, anyOf, branch, changelog, changeset, environment, equals, expression, not")});
+                "allOf, anyOf, branch, buildingTag, changeRequest, changelog, changeset, environment, equals, expression, isRestartedRun, not, tag")});
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
-        result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_BothStagesAndSteps("foo")});
+        result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"parallelStagesAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"parallelStepsAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"parallelStagesStepsAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
+        result.add(new Object[]{"parallelStagesDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"parallelStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
 
         // TODO: Better error messaging for these schema violations.
         result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});
@@ -256,27 +266,44 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         return getAndStartBuild(null);
     }
 
+
     protected WorkflowRun getAndStartBuild(Folder folder) throws Exception {
-        WorkflowJob p = createWorkflowJob(folder);
+        return getAndStartBuild(folder, null);
+    }
+
+    protected WorkflowRun getAndStartBuild(Folder folder, String projectName) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder, projectName);
         p.setDefinition(new CpsScmFlowDefinition(new GitStep(sampleRepo.toString()).createSCM(), "Jenkinsfile"));
         return p.scheduleBuild2(0).waitForStart();
     }
+
 
     protected WorkflowRun getAndStartNonRepoBuild(String pipelineScriptFile) throws Exception {
         return getAndStartNonRepoBuild(null, pipelineScriptFile);
     }
 
     protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile) throws Exception {
-        WorkflowJob p = createWorkflowJob(folder);
+        return getAndStartNonRepoBuild(folder, pipelineScriptFile, null);
+    }
+
+    protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile, String projectName) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder, projectName);
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(pipelineScriptFile), true));
         return p.scheduleBuild2(0).waitForStart();
     }
 
     private WorkflowJob createWorkflowJob(Folder folder) throws IOException {
+        return createWorkflowJob(folder, null);
+    }
+
+    private WorkflowJob createWorkflowJob(Folder folder, String projectName) throws IOException {
         if (folder == null) {
             return j.createProject(WorkflowJob.class);
         } else {
-            return folder.createProject(WorkflowJob.class, "test" + (folder.getItems().size() + 1));
+            if (projectName == null) {
+                projectName = "test" + (folder.getItems().size() + 1);
+            }
+            return folder.createProject(WorkflowJob.class, projectName);
         }
     }
 
@@ -363,11 +390,12 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         private List<String> logContains;
         private List<String> logNotContains;
         private List<String> logMatches;
+        private String projectName;
         private WorkflowRun run;
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
         private boolean hasFailureCause;
-        private List<String> inLogInOrder;
+        private List<String> logContainsInOrder;
         private List<Matcher<Run>> buildMatchers;
 
         private ExpectationsBuilder(String resourceParent, String resource) {
@@ -387,8 +415,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             return this;
         }
 
-        public ExpectationsBuilder inLogInOrder(String... msgsInOrder) {
-            this.inLogInOrder = Arrays.asList(msgsInOrder);
+        public ExpectationsBuilder logContainsInOrder(String... msgsInOrder) {
+            this.logContainsInOrder = Arrays.asList(msgsInOrder);
             return this;
         }
 
@@ -399,6 +427,11 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         public ExpectationsBuilder inFolder(Folder folder) {
             this.folder = folder;
+            return this;
+        }
+
+        public ExpectationsBuilder withProjectName(String projectName) {
+            this.projectName = projectName;
             return this;
         }
 
@@ -468,14 +501,42 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                     } else {
                         prepRepoWithJenkinsfileAndOtherFiles(resourceFullName, otherResources);
                     }
-                    run = getAndStartBuild(folder);
+                    run = getAndStartBuild(folder, projectName);
                 } else {
-                    run = getAndStartNonRepoBuild(folder, resourceFullName);
+                    run = getAndStartNonRepoBuild(folder, resourceFullName, projectName);
                 }
             } else {
                 run = run.getParent().scheduleBuild2(0).waitForStart();
             }
-            j.assertBuildStatus(result, j.waitForCompletion(run));
+            try {
+                j.assertBuildStatus(result, j.waitForCompletion(run));
+            } catch (AssertionError e) {
+                // It appears that in some cases where the build result is set explictly, WorkflowRun.isBuilding()
+                // returns false too soon. Perhaps the reason is that we end up catching the Run in the middle of shutdown,
+                // so CpsFlowExecution.isComplete (and thus WorkflowRun.isInProgress() and WorkflowRun.isBuilding()) is false,
+                // but the WorkflowRun has not yet had its result set to whatever the result of the FlowEndNode is, so
+                // we see the manually-set result for a short amount of time.
+                // Here is an extract of logs where this happened while running BuildConditionResponderTest.postFailureAfterUnstable(),
+                // note that WorkflowRun#finish was called _after_ the build result was checked for the first time!
+                /*
+                  14.530 [test0 #1] [Pipeline] echo
+                  14.531 [test0 #1] I FAILED
+                  14.531 [test0 #1] [Pipeline] }
+                Build result did not initially match FAILURE
+                  14.583 [test0 #1] [Pipeline] // stage
+                  14.583 [test0 #1] [Pipeline] End of Pipeline
+                  14.589 [id=52]    INFO    o.j.p.workflow.job.WorkflowRun#finish: test0 #1 completed: FAILURE
+                  14.609 [test0 #1] ERROR: I AM FAILING NOW
+                  14.609 [test0 #1] Finished: FAILURE
+                But after 1s build result _did_ match FAILURE
+                  15.712 [id=15]    INFO    jenkins.model.Jenkins#cleanUp: Stopping Jenkins
+                  15.723 [id=52]    WARNING h.u.ExceptionCatchingThreadFactory#uncaughtException: Thread Computer.threadPoolForRemoting [#1] terminated unexpectedly
+                */
+                System.out.println("Build result did not initially match " + result);
+                Thread.sleep(1000);
+                j.assertBuildStatus(result, run);
+                System.out.println("But after 1s build result _did_ match " + result);
+            }
             // To deal with some erratic failures due to error logs not showing up until after "completion"
             Thread.sleep(100);
 
@@ -498,9 +559,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             if (hasFailureCause) {
                 assertNotNull(run.getExecution().getCauseOfFailure());
             }
-            if (inLogInOrder != null && !inLogInOrder.isEmpty()) {
+            if (logContainsInOrder != null && !logContainsInOrder.isEmpty()) {
                 String buildLog = JenkinsRule.getLog(run);
-                assertThat(buildLog, stringContainsInOrder(inLogInOrder));
+                assertThat(buildLog, stringContainsInOrder(logContainsInOrder));
             }
 
             for (Matcher<Run> matcher : buildMatchers) {

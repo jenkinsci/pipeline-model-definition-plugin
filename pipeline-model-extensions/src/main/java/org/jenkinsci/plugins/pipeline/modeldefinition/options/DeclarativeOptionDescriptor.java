@@ -29,7 +29,10 @@ import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 
 import javax.annotation.Nonnull;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class DeclarativeOptionDescriptor extends Descriptor<DeclarativeOption> {
 
@@ -50,11 +53,19 @@ public abstract class DeclarativeOptionDescriptor extends Descriptor<Declarative
     }
 
     /**
+     * If true, this option can *only* be used in stages.
+     */
+    public boolean isStageOnly() {
+        return false;
+    }
+
+    /**
      * Get all {@link DeclarativeOptionDescriptor}s.
      *
      * @return a list of all {@link DeclarativeOptionDescriptor}s registered.`
      */
-    public static ExtensionList<DeclarativeOptionDescriptor> all() {
-        return ExtensionList.lookup(DeclarativeOptionDescriptor.class);
+    public static List<DeclarativeOptionDescriptor> all() {
+        ExtensionList<DeclarativeOptionDescriptor> descs = ExtensionList.lookup(DeclarativeOptionDescriptor.class);
+        return descs.stream().sorted(Comparator.comparing(DeclarativeOptionDescriptor::getName)).collect(Collectors.toList());
     }
 }

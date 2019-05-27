@@ -27,6 +27,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.ParametersDefinitionProperty;
 import jenkins.model.BuildDiscarderProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -37,6 +40,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
+
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -85,5 +90,50 @@ public class DeclarativeUpgradeTest extends AbstractDeclarativeTest {
         DeclarativeJobPropertyTrackerAction action3 = p.getAction(DeclarativeJobPropertyTrackerAction.class);
         assertNotNull(action3);
         assertTrue(action3.getParameters().isEmpty());
+    }
+
+    @LocalData
+    @Test
+    public void parallelAddsGroupsExecutionModelActionUpgrade() throws Exception {
+        WorkflowJob p = j.jenkins.getItemByFullName("ptest1", WorkflowJob.class);
+        assertNotNull(p);
+        WorkflowRun b1 = p.getLastBuild();
+        assertNotNull(b1);
+        ExecutionModelAction action = b1.getAction(ExecutionModelAction.class);
+        assertNotNull(action);
+        ModelASTStages stages = action.getStages();
+        assertNotNull(stages);
+
+        // Get the parent stage
+        ModelASTStage parentStage = null;
+        for (ModelASTStage s : stages.getStages()) {
+            if ("parent".equals(s.getName())) {
+                parentStage = s;
+            }
+        }
+        assertNotNull(parentStage);
+
+        // Make sure parentStage.parallel is now null.
+        assertNull(parentStage.getParallel());
+
+        // Make sure parentStage.parallelContent is not null and has two elements
+        List<ModelASTStage> parallelContent = parentStage.getParallelContent();
+        assertNotNull(parallelContent);
+        assertEquals(2, parallelContent.size());
+
+        // Get the two parallel stages.
+        ModelASTStage branchOne = null;
+        ModelASTStage branchTwo = null;
+        for (ModelASTStage s : parallelContent) {
+            if ("branch-one".equals(s.getName())) {
+                branchOne = s;
+            } else if ("branch-two".equals(s.getName())) {
+                branchTwo = s;
+            }
+        }
+
+        // Make sure we found the two parallel stages.
+        assertNotNull(branchOne);
+        assertNotNull(branchTwo);
     }
 }

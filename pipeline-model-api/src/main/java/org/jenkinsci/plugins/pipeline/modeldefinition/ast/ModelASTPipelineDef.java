@@ -135,13 +135,17 @@ public final class ModelASTPipelineDef extends ModelASTElement {
      * @return An indented string of Groovy, suitable for use in a Jenkinsfile.
      */
     public String toPrettyGroovy() {
+        return toIndentedGroovy(toGroovy());
+    }
+
+    public static String toIndentedGroovy(@Nonnull String orig) {
         StringBuilder result = new StringBuilder();
 
         int indentCount = 0;
         boolean tripleSingleQuotedString = false;
 
         boolean first = true;
-        for (String r : toGroovy().split("\n")) {
+        for (String r : orig.split("\n")) {
             if (first) {
                 first = false;
             } else {
@@ -153,12 +157,12 @@ public final class ModelASTPipelineDef extends ModelASTElement {
                 if (r.startsWith("}") || r.startsWith(")") || r.startsWith("]")) {
                     indentCount--;
                 }
-
-                result.append(indent(indentCount)).append(r);
+                if (!StringUtils.isEmpty(r)) {
+                    result.append(indent(indentCount)).append(r);
+                }
                 if (r.endsWith("{") || r.endsWith("(") || r.endsWith("[")) {
                     indentCount++;
                 }
-
             }
 
             int index = r.indexOf("\'\'\'");
@@ -200,7 +204,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         }
     }
 
-    private String indent(int count) {
+    private static String indent(int count) {
         return StringUtils.repeat("  ", count);
     }
 

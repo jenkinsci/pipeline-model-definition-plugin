@@ -1,0 +1,53 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "stages":     [
+      {
+        "name": "bar",
+        "branches": [        {
+          "name": "default",
+          "steps": [          {
+            "name": "echo",
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": true,
+                "value": "Bar"
+              }
+            }]
+          }]
+        }]
+      },
+      {
+        "name": "baz",
+        "branches": [        {
+          "name": "default",
+          "steps": [          {
+            "name": "echo",
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": true,
+                "value": "Baz"
+              }
+            }]
+          }]
+        }]
+      }
+    ],
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": true,
+            "value": "This will never happen"
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent": {"type": "none"}
+}}

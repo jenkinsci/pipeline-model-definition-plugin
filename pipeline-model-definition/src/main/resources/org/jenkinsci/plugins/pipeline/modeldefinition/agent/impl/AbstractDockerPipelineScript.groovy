@@ -43,24 +43,30 @@ abstract class AbstractDockerPipelineScript<A extends AbstractDockerAgent<A>> ex
             return {
                 configureRegistry(body).call()
             }
+        } else if (describable.containerPerStageRoot) {
+            return getLabelScript().run {
+                body.call()
+            }
         } else {
-            String targetLabel = DeclarativeDockerUtils.getLabel(describable.label)
-            Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: targetLabel])
-            l.copyFlags(describable)
-            l.customWorkspace = describable.customWorkspace
-            LabelScript labelScript = (LabelScript) l.getScript(script)
-            return labelScript.run {
+            return getLabelScript().run {
                 configureRegistry(body).call()
             }
         }
     }
 
+    protected LabelScript getLabelScript() {
+        String targetLabel = DeclarativeDockerUtils.getLabel(describable.label)
+        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: targetLabel])
+        l.copyFlags(describable)
+        l.customWorkspace = describable.customWorkspace
+        return (LabelScript) l.getScript(script)
+    }
+
     protected Closure configureRegistry(Closure body) {
         return {
-            String registryUrl = DeclarativeDockerUtils.getRegistryUrl(describable.registryUrl)
-            String registryCreds = DeclarativeDockerUtils.getRegistryCredentialsId(describable.registryCredentialsId)
-            if (registryUrl != null) {
-                script.getProperty("docker").withRegistry(registryUrl, registryCreds) {
+            DeclarativeDockerUtils.DockerRegistry registry = DeclarativeDockerUtils.DockerRegistry.build(describable.registryUrl, describable.registryCredentialsId)
+            if (registry.hasData()) {
+                script.getProperty("docker").withRegistry(registry.registry, registry.credential) {
                     runImage(body).call()
                 }
             } else {

@@ -26,20 +26,29 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model.conditions
 import hudson.Extension
 import hudson.model.Result
 import org.jenkinsci.Symbol
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
+
+import javax.annotation.Nonnull
 
 /**
  * A {@link BuildCondition} for matching failed builds.
  *
  * @author Andrew Bayer
  */
-@Extension(ordinal=700d) @Symbol("failure")
+@Extension(ordinal=500d) @Symbol("failure")
 class Failure extends BuildCondition {
+    @Deprecated
     @Override
-    boolean meetsCondition(WorkflowRun r) {
-        Result execResult = getExecutionResult(r)
-        return execResult == Result.FAILURE || r.getResult() == Result.FAILURE
+    boolean meetsCondition(@Nonnull WorkflowRun r) {
+        return meetsCondition(r, null, null)
+    }
+
+    @Override
+    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
+        return combineResults(r, error) == Result.FAILURE
     }
 
     @Override

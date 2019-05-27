@@ -4,6 +4,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 
 /**
  * Represents what context in which to run the build - i.e., which label to run on, what Docker agent to run in, etc.
@@ -22,17 +23,47 @@ public final class ModelASTAgent extends ModelASTElement {
     @Override
     public JSONObject toJSON() {
         final JSONObject j = new JSONObject();
-        j.accumulate("type", agentType.toJSON());
 
-        if (variables != null) {
-            if (variables instanceof ModelASTClosureMap &&
-                    !((ModelASTClosureMap) variables).getVariables().isEmpty()) {
-                j.accumulate("arguments", variables.toJSON());
-            } else if (variables instanceof ModelASTValue) {
-                j.accumulate("argument", variables.toJSON());
+        // Handle JENKINS-43016 - round-trip empty-string label agent into agent any.
+        if (isEmptyStringLabelAgent()) {
+            j.accumulate("type", "any");
+        } else {
+            j.accumulate("type", agentType.toJSON());
+
+            if (variables != null) {
+                if (variables instanceof ModelASTClosureMap &&
+                        !((ModelASTClosureMap) variables).getVariables().isEmpty()) {
+                    j.accumulate("arguments", variables.toJSON());
+                } else if (variables instanceof ModelASTValue) {
+                    j.accumulate("argument", variables.toJSON());
+                }
             }
         }
         return j;
+    }
+
+    private boolean isEmptyStringLabelAgent() {
+        if (agentType.getKey().equals("label") || agentType.getKey().equals("node")) {
+            if (variables instanceof ModelASTValue && "".equals(((ModelASTValue) variables).getValue())) {
+                return true;
+            }
+            if (variables instanceof ModelASTClosureMap) {
+                Map<ModelASTKey, ModelASTMethodArg> vars = ((ModelASTClosureMap) variables).getVariables();
+                // Don't actually switch to "agent any" if there are any additional options besides the label.
+                if (vars.size() == 1) {
+                    for (Map.Entry<ModelASTKey,ModelASTMethodArg> entry : vars.entrySet()) {
+                        if (entry.getKey().getKey().equals("label")) {
+                            ModelASTMethodArg argValue = entry.getValue();
+                            if (argValue instanceof ModelASTValue && ((ModelASTValue) argValue).getValue().equals("")) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override

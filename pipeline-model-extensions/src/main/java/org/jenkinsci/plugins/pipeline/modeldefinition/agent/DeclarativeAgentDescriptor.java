@@ -31,8 +31,11 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Descriptor for {@link DeclarativeAgent}.
@@ -44,10 +47,19 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
     /**
      * Get all {@link DeclarativeAgentDescriptor}s.
      *
-     * @return a list of all {@link DeclarativeAgentDescriptor}s registered.`
+     * @return a list of all {@link DeclarativeAgentDescriptor}s registered.
      */
     public static ExtensionList<DeclarativeAgentDescriptor> all() {
         return ExtensionList.lookup(DeclarativeAgentDescriptor.class);
+    }
+
+    /**
+     * Get all {@link DeclarativeAgentDescriptor}s, sorted by name.
+     *
+     * @return a list of all {@link DeclarativeAgentDescriptor}s registered, sorted by name.
+     */
+    public static List<DeclarativeAgentDescriptor> allSorted() {
+        return all().stream().sorted(Comparator.comparing(DeclarativeAgentDescriptor::getName)).collect(Collectors.toList());
     }
 
     /**

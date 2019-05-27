@@ -25,6 +25,10 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
 import hudson.model.Slave;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -65,6 +69,56 @@ public class PostStageTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void withAllLocalUnsuccessfulWithUnstable() throws Exception {
+        env(s).put("MAKE_RESULT", Result.UNSTABLE.toString()).set();
+        expect(Result.UNSTABLE, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logContains("I FAILED YOU, SORRY")
+                .logContains("I AM UNSTABLE")
+                .go();
+
+    }
+
+    @Test
+    public void withAllLocalUnsuccessfulWithAborted() throws Exception {
+        env(s).put("MAKE_RESULT", Result.ABORTED.toString()).set();
+        expect(Result.ABORTED, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logContains("I FAILED YOU, SORRY")
+                .go();
+    }
+
+    @Test
+    public void withAllLocalUnsuccessfulWithFailure() throws Exception {
+        env(s).put("MAKE_RESULT", Result.FAILURE.toString()).set();
+        expect(Result.FAILURE, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logContains("I FAILED YOU, SORRY")
+                .go();
+
+    }
+
+    @Issue("JENKINS-55476")
+    @Test
+    public void withAllLocalUnsuccessfulWithSuccess() throws Exception {
+        env(s).put("MAKE_RESULT", Result.SUCCESS.toString()).set();
+        expect(Result.SUCCESS, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logNotContains("I FAILED YOU, SORRY")
+                .go();
+
+    }
+    @Test
+    public void withAllLocalUnsuccessfulWithNotBuilt() throws Exception {
+        env(s).put("MAKE_RESULT", Result.NOT_BUILT.toString()).set();
+        expect(Result.NOT_BUILT, "unsuccessful")
+                .logContains("I LOVE YOU VIRGINIA")
+                .logContains("I FAILED YOU, SORRY")
+                .go();
+
+    }
+
+    @Test
     public void withAllLocalFailure() throws Exception {
         env(s).put("MAKE_RESULT", Result.FAILURE.toString()).set();
         expect(Result.FAILURE, "localAll").logContains(ALL_LOCAL_ALWAYS)
@@ -86,6 +140,16 @@ public class PostStageTest extends AbstractModelDefTest {
     public void withAllLocalSuccess() throws Exception {
         env(s).set();
         expect(Result.SUCCESS, "localAll").logContains(ALL_LOCAL_ALWAYS)
+                .logContains("All is well", "MOST DEFINITELY FINISHED", "I HAVE CHANGED")
+                .logNotContains("I WAS ABORTED", "I FAILED", "I AM UNSTABLE").go();
+
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void withGroupAllLocalSuccess() throws Exception {
+        env(s).set();
+        expect(Result.SUCCESS, "groupLocalAll").logContains(ALL_LOCAL_ALWAYS)
                 .logContains("All is well", "MOST DEFINITELY FINISHED", "I HAVE CHANGED")
                 .logNotContains("I WAS ABORTED", "I FAILED", "I AM UNSTABLE").go();
 
@@ -136,6 +200,84 @@ public class PostStageTest extends AbstractModelDefTest {
         expect("postAfterParallel")
                 .logContains("Post ran")
                 .go();
+    }
+
+    @Issue("JENKINS-46809")
+    @Test
+    public void postInParallelAndSequential() throws Exception {
+        expect("postInParallelAndSequential")
+                .logContains("Post Nested 1 ran",
+                        "Post Nested 2 ran",
+                        "Post Child 2 ran",
+                        "Post ran")
+                .go();
+    }
+
+    @Issue("JENKINS-52114")
+    @Test
+    public void postFailureSuccessInParallel() throws Exception {
+        expect(Result.FAILURE, "postFailureSuccessInParallel")
+                .logContains("Post Nested 1 ran",
+                        "Post Nested 2 ran",
+                        "Post Child 2 ran",
+                        "Post ran",
+                        "Found failure in Child 1",
+                        "Found success in Nested 2",
+                        "Found success in Child 2",
+                        "Found failure in Child 3",
+                        "Parallel parent failure")
+                .logNotContains("Found success in Child 1",
+                        "Found failure in Nested 2",
+                        "Found failure in Child 2",
+                        "Found success in Child 3",
+                        "Parallel parent success")
+                .go();
+    }
+
+    @Issue("JENKINS-52114")
+    @Test
+    public void abortedShouldNotTriggerFailure() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
+        job.setDefinition(new CpsFlowDefinition("" +
+                "pipeline {\n" +
+                "    agent any\n" +
+                "    stages {\n" +
+                "        stage('foo') {\n" +
+                "            steps {\n" +
+                "                echo 'hello'\n" +
+                "                semaphore 'wait-again'\n" +
+                "                sh 'sleep 15'\n" +
+                "            }\n" +
+                "            post {\n" +
+                "                success {\n" +
+                "                    echo 'I AM SUCCESSFUL'\n" +
+                "                }\n" +
+                "                aborted {\n" +
+                "                    echo 'I AM ABORTED'\n" +
+                "                }\n" +
+                "                failure {\n" +
+                "                    echo 'I FAILED'\n" +
+                "                }\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n", true));
+
+        WorkflowRun run1 = job.scheduleBuild2(0).waitForStart();
+        SemaphoreStep.waitForStart("wait-again/1", run1);
+        SemaphoreStep.success("wait-again/1", null);
+        Thread.sleep(1000);
+        run1.doStop();
+
+        j.waitForCompletion(run1);
+
+        j.assertLogContains("I AM ABORTED", run1);
+
+        j.assertLogNotContains("I AM SUCCESSFUL", run1);
+
+        j.assertLogNotContains("I FAILED", run1);
+
     }
 
     @Override

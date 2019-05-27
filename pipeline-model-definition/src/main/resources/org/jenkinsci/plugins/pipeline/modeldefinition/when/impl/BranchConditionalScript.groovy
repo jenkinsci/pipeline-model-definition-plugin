@@ -36,7 +36,11 @@ class BranchConditionalScript extends DeclarativeStageConditionalScript<BranchCo
 
     @Override
      boolean evaluate() {
-        return describable.branchMatches(describable.compare,
-            (String)script.getProperty("env").getProperty("BRANCH_NAME"))
+        String branchName = (String)script.getProperty("env").getProperty("BRANCH_NAME")
+        if (branchName == null || branchName == "") {
+            // fall back to GIT_LOCAL_BRANCH - note that GIT_BRANCH will have the remote on it, while BRANCH_NAME doesn't.
+            branchName = (String)script.getProperty("env").getProperty("GIT_LOCAL_BRANCH")
+        }
+        return describable.branchMatches(describable.compare, branchName)
     }
 }

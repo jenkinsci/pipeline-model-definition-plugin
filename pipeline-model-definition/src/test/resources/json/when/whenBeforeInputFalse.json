@@ -1,0 +1,61 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "One",
+    "when":     {
+      "conditions": [      {
+        "name": "expression",
+        "arguments": [        {
+          "key": "scriptBlock",
+          "value":           {
+            "isLiteral": true,
+            "value": "false"
+          }
+        }]
+      }],
+      "beforeInput": true
+    },
+    "options": {"options": [    {
+      "name": "timeout",
+      "arguments":       [
+        {
+          "key": "time",
+          "value":           {
+            "isLiteral": true,
+            "value": 5
+          }
+        },
+        {
+          "key": "unit",
+          "value":           {
+            "isLiteral": true,
+            "value": "SECONDS"
+          }
+        }
+      ]
+    }]},
+    "input":     {
+      "message":       {
+        "isLiteral": true,
+        "value": "Continue?"
+      },
+      "id":       {
+        "isLiteral": true,
+        "value": "simple-input"
+      }
+    },
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "script",
+        "arguments": [        {
+          "key": "scriptBlock",
+          "value":           {
+            "isLiteral": true,
+            "value": "echo \"X-NO-SHOW-X\""
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent": {"type": "none"}
+}}

@@ -36,6 +36,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -85,6 +86,12 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
     @Extension
     @Symbol("environment")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
+        @Override
+        @Nonnull
+        public String getDisplayName() {
+            return "Execute the stage if an environment variable exists and equals a value";
+        }
+
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);

@@ -23,17 +23,17 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.JsonNode
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.JsonReferenceException
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.ProcessingException
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.jsonpointer.JsonPointer
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingMessage
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingReport
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree
+import com.github.fge.jsonschema.exceptions.JsonReferenceException
+import com.github.fge.jsonschema.exceptions.ProcessingException
+import com.github.fge.jsonschema.jsonpointer.JsonPointer
+import com.github.fge.jsonschema.report.ProcessingMessage
+import com.github.fge.jsonschema.report.ProcessingReport
+import com.github.fge.jsonschema.tree.JsonTree
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
@@ -139,7 +139,6 @@ class JSONParser implements Parser {
         return pipelineDef
     }
 
-
     @CheckForNull ModelASTStages parseStages(JsonTree j) {
         ModelASTStages stages = new ModelASTStages(j)
 
@@ -158,7 +157,10 @@ class JSONParser implements Parser {
             stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
         if (j.node.has("parallel")) {
-            stage.parallel = parseStages(j.append(JsonPointer.of("parallel")))
+            JsonTree content = j.append(JsonPointer.of("parallel"))
+            content?.node?.eachWithIndex{ JsonNode entry, int i ->
+                stage.parallelContent.add(parseStage(content.append(JsonPointer.of(i))))
+            }
         }
 
         JsonTree branches = j.append(JsonPointer.of("branches"))
@@ -166,6 +168,9 @@ class JSONParser implements Parser {
             stage.branches.add(parseBranch(branches.append(JsonPointer.of(i))))
         }
 
+        if (j.node.has("stages")) {
+            stage.stages = parseStages(j.append(JsonPointer.of("stages")))
+        }
         if (j.node.has("failFast") && (stage.branches.size() > 1 || j.node.has("parallel")))  {
             stage.failFast = j.node.get("failFast")?.asBoolean()
         }
@@ -242,6 +247,10 @@ class JSONParser implements Parser {
 
         if (j.node.has("beforeAgent")) {
             when.beforeAgent = j.node.get("beforeAgent")?.asBoolean()
+        }
+
+        if (j.node.has("beforeInput")) {
+            when.beforeInput = j.node.get("beforeInput")?.asBoolean()
         }
 
         JsonTree conditionsTree = j.append(JsonPointer.of("conditions"))

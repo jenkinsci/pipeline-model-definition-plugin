@@ -2,22 +2,22 @@
 
 ## API Endpoints
 
-All API endpoints are exposed under `JENKINS_URL/pipeline-model-converter` currently.
+All API endpoints are exposed under `JENKINS_URL/pipeline-model-schema` or `JENKINS_URL/pipeline-model-converter` currently.
 
 ### JSON Schema
-* *URL*: `JENKINS_URL/pipeline-model-converter/schema`
+* *URL*: `JENKINS_URL/pipeline-model-schema/json`
 * *Parameters*: None
 * *Info*: JSON schema for the JSON representation of the model.
 * *Returns*: The JSON schema
 
 ### Validation of `Jenkinsfile`
-* *URL*: `JENKINS_URL/pipeine-model-converter/validateJenkinsfile`
+* *URL*: `JENKINS_URL/pipeline-model-converter/validateJenkinsfile`
 * *Parameters*: `jenkinsfile` - the `Jenkinsfile` contents
 * *Info*: Takes a `Jenkinsfile` and validates its syntax, semantics, steps, parameters etc on the Jenkins master.
 * *Returns*: JSON with a `result` field that will either be `success` or `failure`. If `failure`, there'll be an additional array in the `errors` field of the error messages encountered.
 
 ### Validation of JSON representation
-* *URL*: `JENKINS_URL/pipeine-model-converter/validateJson`
+* *URL*: `JENKINS_URL/pipeline-model-converter/validateJson`
 * *Parameters*: `json` - the JSON representation
 * *Info*: Takes a JSON representation of the model and validates its syntax, semantics, steps, parameters etc on the Jenkins master.
 * *Returns*: JSON with a `result` field that will either be `success` or `failure`. If `failure`, there'll be an additional array in the `errors` field of the error messages encountered.

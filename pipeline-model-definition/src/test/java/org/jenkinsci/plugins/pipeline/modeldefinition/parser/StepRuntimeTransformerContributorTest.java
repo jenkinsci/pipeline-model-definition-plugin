@@ -52,7 +52,7 @@ public class StepRuntimeTransformerContributorTest extends AbstractModelDefTest 
 
     @Test
     public void nestedTransform() throws Exception {
-        expect("nestedTreeSteps")
+        expect("steps/nestedTreeSteps")
                 .logContains("HELLO", "Timeout set to expire in 10 sec")
                 .go();
     }

@@ -415,6 +415,9 @@
         "beforeAgent": {
           "type": "boolean"
         },
+        "beforeInput": {
+          "type": "boolean"
+        },
         "conditions": {
           "type": "array",
           "minItems": 1,
@@ -518,6 +521,9 @@
           }
         },
         "parallel": {
+          "$ref": "#/definitions/stages"
+        },
+        "stages": {
           "$ref": "#/definitions/stages"
         }
       },

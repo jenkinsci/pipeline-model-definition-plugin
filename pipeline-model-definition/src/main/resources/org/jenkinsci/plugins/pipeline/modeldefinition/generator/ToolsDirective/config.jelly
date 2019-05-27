@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ The MIT License
+  ~
+  ~ Copyright (c) 2018, CloudBees, Inc.
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in
+  ~ all copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  ~ THE SOFTWARE.
+  -->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:local="local">
+    <f:block>
+        See <a href="https://jenkins.io/doc/book/pipeline/syntax/#tools" target="_blank">the online documentation</a>
+        for more information on the <code>tools</code> directive.
+        <j:set var="instance" value="${null}" />
+        <d:taglib uri="local">
+            <d:tag name="body">
+                <j:set var="help" value="${d.helpFile}" />
+                <table style="width:100%">
+                    <tr>
+                        <td colspan="3">
+                            <div class="dd-handle">
+                                <b>${d.displayName}</b>
+                            </div>
+                        </td>
+                        <f:helpLink url="${help}"/>
+                    </tr>
+                    <!-- TODO: help support is unintuitive; people should be able to see help from drop-down menu -->
+                    <j:if test="${help!=null}">
+                        <f:helpArea />
+                    </j:if>
+
+                    <d:invokeBody/>
+
+                    <f:block>
+                        <div align="right">
+                            <f:repeatableDeleteButton value="${attrs.deleteCaption}" />
+                        </div>
+                    </f:block>
+                </table>
+            </d:tag>
+        </d:taglib>
+
+        <st:adjunct includes="lib.form.hetero-list.hetero-list"/>
+
+        <j:set var="targetType" value="${it.class}"/>
+        <div class="hetero-list-container with-drag-drop one-each">
+            <div class="repeatable-insertion-point" />
+
+            <div class="prototypes to-be-removed">
+                <!-- render one prototype for each type -->
+                <j:set var="instance" value="${null}" />
+                <j:set var="descriptors" value="${descriptor.getDescriptors()}" />
+                <j:forEach var="d" items="${descriptors}" varStatus="loop">
+                    <j:invokeStatic var="symbol" className="org.jenkinsci.plugins.pipeline.modeldefinition.generator.DirectiveGenerator" method="getSymbolForDescriptor">
+                        <j:arg value="${d}" type="hudson.model.Descriptor" />
+                    </j:invokeStatic>
+                    <div name="tools" title="${symbol}: ${d.displayName}" tooltip="${d.tooltip}" descriptorId="${d.id}">
+                        <j:set var="capture" value="" />
+                        <local:body>
+                            <l:renderOnDemand tag="tr" clazz="config-page" capture="d,it,instance,symbol,${capture}">
+                                <l:ajax>
+                                    <f:entry title="${%Version}">
+                                        <select class="setting-input" name="symbolAndName">
+                                            <j:forEach var="inst" items="${d.installations}">
+                                                <f:option value="${symbol}::::${inst.name}">${inst.name}</f:option>
+                                            </j:forEach>
+                                        </select>
+                                    </f:entry>
+                                </l:ajax>
+                            </l:renderOnDemand>
+                        </local:body>
+                    </div>
+                </j:forEach>
+            </div>
+
+            <div>
+                <input type="button" value="${%Add}" class="hetero-list-add" suffix="tools"/>
+            </div>
+        </div>
+    </f:block>
+</j:jelly>

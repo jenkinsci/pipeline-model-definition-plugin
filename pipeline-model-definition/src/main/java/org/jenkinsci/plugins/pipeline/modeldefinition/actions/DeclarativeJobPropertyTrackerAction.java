@@ -28,9 +28,11 @@ import hudson.model.InvisibleAction;
 import hudson.model.JobProperty;
 import hudson.model.ParameterDefinition;
 import hudson.triggers.Trigger;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -44,10 +46,19 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
     private final Set<String> jobProperties = new HashSet<>();
     private final Set<String> triggers = new HashSet<>();
     private final Set<String> parameters = new HashSet<>();
+    private Set<String> options = new HashSet<>();
 
+    @Deprecated
     public DeclarativeJobPropertyTrackerAction(@CheckForNull List<JobProperty> rawJobProperties,
                                                @CheckForNull List<Trigger> rawTriggers,
                                                @CheckForNull List<ParameterDefinition> rawParameters) {
+        this(rawJobProperties, rawTriggers, rawParameters, null);
+    }
+
+    public DeclarativeJobPropertyTrackerAction(@CheckForNull List<JobProperty> rawJobProperties,
+                                               @CheckForNull List<Trigger> rawTriggers,
+                                               @CheckForNull List<ParameterDefinition> rawParameters,
+                                               @CheckForNull List<DeclarativeOption> rawOptions) {
         if (rawJobProperties != null) {
             for (JobProperty p : rawJobProperties) {
                 jobProperties.add(p.getDescriptor().getId());
@@ -63,6 +74,19 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
                 parameters.add(d.getName());
             }
         }
+        if (rawOptions != null) {
+            for (DeclarativeOption o : rawOptions) {
+                options.add(o.getDescriptor().getName());
+            }
+        }
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.options == null) {
+            this.options = new HashSet<>();
+        }
+
+        return this;
     }
 
     /**
@@ -74,6 +98,7 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
         this.jobProperties.addAll(copyFrom.getJobProperties());
         this.triggers.addAll(copyFrom.getTriggers());
         this.parameters.addAll(copyFrom.getParameters());
+        this.options.addAll(copyFrom.getOptions());
     }
 
     public Set<String> getJobProperties() {
@@ -88,8 +113,16 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
         return Collections.unmodifiableSet(parameters);
     }
 
+    public Set<String> getOptions() {
+        return Collections.unmodifiableSet(options);
+    }
+
     @Override
     public String toString() {
-        return "DeclarativeJobPropertyTrackerAction[jobProperties:" + jobProperties + ",triggers:" + triggers + ",parameters:" + parameters + "]";
+        return "DeclarativeJobPropertyTrackerAction[jobProperties:" + jobProperties
+                + ",triggers:" + triggers
+                + ",parameters:" + parameters
+                + ",options:" + options
+                + "]";
     }
 }

@@ -24,13 +24,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.util.JsonLoader
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.fasterxml.jackson.databind.JsonNode
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.exceptions.ProcessingException
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.main.JsonSchema
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.report.ProcessingReport
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.JsonTree
-import org.jenkinsci.plugins.pipeline.modeldefinition.shaded.com.github.fge.jsonschema.tree.SimpleJsonTree
+import com.github.fge.jsonschema.util.JsonLoader
+import com.fasterxml.jackson.databind.JsonNode
+import com.github.fge.jsonschema.exceptions.ProcessingException
+import com.github.fge.jsonschema.main.JsonSchema
+import com.github.fge.jsonschema.report.ProcessingReport
+import com.github.fge.jsonschema.tree.JsonTree
+import com.github.fge.jsonschema.tree.SimpleJsonTree
 import jenkins.model.Jenkins
 import net.sf.json.JSONObject
 import org.codehaus.groovy.control.CompilationFailedException
@@ -42,6 +42,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ASTSchema
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
+import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox
 import org.jenkinsci.plugins.workflow.cps.CpsThread
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator
 
@@ -49,7 +50,7 @@ import java.security.CodeSource
 import java.security.cert.Certificate
 
 import static groovy.lang.GroovyShell.DEFAULT_CODE_BASE
-import static org.codehaus.groovy.control.Phases.CANONICALIZATION
+import static org.codehaus.groovy.control.Phases.CONVERSION
 
 /**
  * Utilities for converting from/to {@link ModelASTPipelineDef} and raw Pipeline script.
@@ -133,7 +134,7 @@ class Converter {
     }
 
     private static CompilerConfiguration makeCompilerConfiguration() {
-        CompilerConfiguration cc = new CompilerConfiguration()
+        CompilerConfiguration cc = GroovySandbox.createBaseCompilerConfiguration()
 
         ImportCustomizer ic = new ImportCustomizer()
         ic.addStarImports(NonCPS.class.getPackage().getName())
@@ -148,7 +149,7 @@ class Converter {
     }
 
     /**
-     * Takes a {@link CompilationUnit}, copmiles it with the {@link ModelParser} injected, and returns the resulting
+     * Takes a {@link CompilationUnit}, compiles it with the {@link ModelParser} injected, and returns the resulting
      * {@link ModelASTPipelineDef}
      *
      * @param cu {@link CompilationUnit} assembled by another method.
@@ -166,9 +167,9 @@ class Converter {
                     model[0] = new ModelParser(source, enabledOptionalValidators).parse(true)
                 }
             }
-        }, CANONICALIZATION)
+        }, CONVERSION)
 
-        cu.compile(CANONICALIZATION)
+        cu.compile(CONVERSION)
 
         return model[0]
     }
@@ -195,9 +196,9 @@ class Converter {
                     model[0] = new ModelParser(source, enabledOptionalValidators).parsePlainSteps(source.AST)
                 }
             }
-        }, CANONICALIZATION)
+        }, CONVERSION)
 
-        cu.compile(CANONICALIZATION)
+        cu.compile(CONVERSION)
 
         return model[0]
     }

@@ -35,6 +35,11 @@ pipeline {
                     if (res != null) {
                         echo "Setting build result ${res}"
                         currentBuild.result = res
+                        // JENKINS-52114 - can't tell the difference between setting currentBuild.result in this stage
+                        // and an error in a parallel stage, so let's error.
+                        if (res == "FAILURE") {
+                            error "Failing explicitly"
+                        }
                     } else {
                         echo "All is well"
                     }

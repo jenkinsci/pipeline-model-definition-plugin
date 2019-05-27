@@ -126,24 +126,24 @@ class RuntimeASTTransformer {
      */
     Expression transformAgent(@CheckForNull ModelASTAgent original) {
         if (isGroovyAST(original) && original.agentType != null) {
-            ArgumentListExpression argList = new ArgumentListExpression()
+            MapExpression m
             if (original.variables == null ||
                 (original.variables instanceof ModelASTClosureMap &&
                     ((ModelASTClosureMap)original.variables).variables.isEmpty())) {
                 // Zero-arg agent type
                 MapExpression zeroArg = new MapExpression()
                 zeroArg.addMapEntryExpression(constX(original.agentType.key), constX(true))
-                argList.addExpression(zeroArg)
+                m = zeroArg
             } else {
                 BlockStatementMatch match =
                     matchBlockStatement((Statement) original.sourceLocation)
                 if (match != null) {
-                    argList.addExpression(recurseAndTransformMappedClosure(match.body))
+                    m = recurseAndTransformMappedClosure(match.body)
                 } else {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            return ctorX(ClassHelper.make(Agent.class), argList)
+            return ctorX(ClassHelper.make(Agent.class), args(closureX(block(returnS(m)))))
         }
 
         return constX(null)
@@ -369,6 +369,9 @@ class RuntimeASTTransformer {
         } else if (expr instanceof BitwiseNegationExpression) {
             // Translate the nested expression - note, no test coverage due to bitwiseNegate not being whitelisted
             return new BitwiseNegationExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
+        } else if (expr instanceof NotExpression) {
+            // Translate the nested expression
+            return new NotExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
         } else if (expr instanceof BooleanExpression) {
             // Translate the nested expression
             return new BooleanExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
@@ -651,9 +654,10 @@ class RuntimeASTTransformer {
                     transformTools(original.tools),
                     transformEnvironment(original.environment),
                     constX(original.failFast != null ? original.failFast : false),
-                    transformStages(original.parallel),
                     transformOptions(original.options),
-                    transformStageInput(original.input, original.name)))
+                    transformStageInput(original.input, original.name),
+                    transformParallelContent(original),
+                    transformStages(original.stages)))
         }
 
         return constX(null)
@@ -707,7 +711,9 @@ class RuntimeASTTransformer {
 
             return ctorX(ClassHelper.make(StageConditionals.class),
                 args(closureX(block(returnS(closList))),
-                    constX(original.beforeAgent != null ? original.beforeAgent : false)))
+                    constX(original.beforeAgent != null ? original.beforeAgent : false),
+                    constX(original.beforeInput != null ? original.beforeInput : false)
+                ))
         }
         return constX(null)
     }
@@ -727,6 +733,29 @@ class RuntimeASTTransformer {
             }
 
             return ctorX(ClassHelper.make(Stages.class), args(argList))
+        }
+
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating a list of {@link Stage}s.
+     *
+     * @param original The parsed AST model of a stage
+     * @return The AST for a list of {@link Stage}s, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformParallelContent(@CheckForNull ModelASTStage original) {
+        if (isGroovyAST(original) && original?.parallelContent) {
+            ListExpression argList = new ListExpression()
+            original.parallelContent.each { c ->
+                if (c instanceof ModelASTStage) {
+                    argList.addExpression(transformStage(c))
+                } else {
+                    argList.addExpression(constX(null))
+                }
+            }
+            return argList
         }
 
         return constX(null)

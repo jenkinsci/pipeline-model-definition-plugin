@@ -31,6 +31,7 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
+import hudson.model.Cause
 import hudson.model.Describable
 import hudson.model.Descriptor
 import hudson.model.Job
@@ -39,6 +40,7 @@ import hudson.model.ParameterDefinition
 import hudson.model.ParametersDefinitionProperty
 import hudson.model.Result
 import hudson.triggers.Trigger
+import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -54,15 +56,18 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.QuietPeriod
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.LabelAction
+import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction
 import org.jenkinsci.plugins.workflow.actions.TagsAction
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
@@ -73,6 +78,7 @@ import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.graph.BlockEndNode
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner
 import org.jenkinsci.plugins.workflow.graphanalysis.Filterator
 import org.jenkinsci.plugins.workflow.graphanalysis.FlowScanningUtils
 import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner
@@ -276,6 +282,41 @@ class Utils {
         return nodes
     }
 
+    /**
+     * Check if this run was caused by a restart.
+     */
+    @Whitelisted
+    static boolean isRestartedRun(CpsScript script) {
+        WorkflowRun r = script.$build()
+        RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
+
+        return cause != null
+    }
+
+    /**
+     * Checks if this run was caused by a cause.
+     */
+    static boolean isRunCausedBy(CpsScript script, String cause, String detail = null) {
+        WorkflowRun r = script.$build()
+        return r.getCauses().any { shouldRunBeAllowed(it, cause, detail) }
+    }
+
+    /**
+     * Checks if a specific cause must be aborted
+     *
+     * @param causeClass provided by the Run class
+     * @param cause that should be allowed to continue
+     * @param detail regarding the cause (currently the user in a UserIdCause)
+     * @return if a specific cause must be aborted
+     */
+    static boolean shouldRunBeAllowed(Cause causeClass, String cause, String detail){
+        if( causeClass instanceof Cause.UserIdCause && Cause.UserIdCause.simpleName == cause){
+            return detail == null || causeClass.userId == detail
+        }else {
+            return causeClass.class.simpleName.matches("(?i)\\.*${cause}.*")
+        }
+    }
+
     @Restricted(NoExternalUse.class)
     static void updateRunAndJobActions(CpsScript script, String astUUID) throws Exception {
         WorkflowRun r = script.$build()
@@ -293,7 +334,7 @@ class Utils {
         }
     }
 
-    private static void markStageWithTag(String stageName, String tagName, String tagValue) {
+    static void markStageWithTag(String stageName, String tagName, String tagValue) {
         List<FlowNode> matched = findStageFlowNodes(stageName)
 
         matched.each { currentNode ->
@@ -308,6 +349,49 @@ class Utils {
                     currentNode.save()
                 }
             }
+        }
+    }
+
+    static void markStartAndEndNodesInStageAsNotExecuted(String stageName, FlowExecution execution = null) {
+        if (execution == null) {
+            CpsThread thread = CpsThread.current()
+            execution = thread.execution
+        }
+
+        List<BlockStartNode> nodes = []
+
+        ForkScanner scanner = new ForkScanner()
+
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+
+        if (stage != null && stage instanceof BlockStartNode) {
+            nodes.add(stage)
+
+            // Additional check needed to get the possible enclosing parallel branch for a nested stage.
+            Filterator<FlowNode> filtered = FlowScanningUtils.fetchEnclosingBlocks(stage)
+                .filter(isParallelBranchFlowNode(stageName))
+
+            filtered.each { f ->
+                if (f != null && f instanceof BlockStartNode) {
+                    nodes.add(f)
+                }
+            }
+        }
+
+        DepthFirstScanner depthFirstScanner = new DepthFirstScanner()
+
+        nodes.each { n ->
+            n.addAction(new NotExecutedNodeAction())
+            FlowNode endNode =  depthFirstScanner.findFirstMatch(execution.currentHeads, null, endNodeForStage(n))
+            if (endNode != null) {
+                endNode.addAction(new NotExecutedNodeAction())
+            }
+        }
+    }
+
+    static boolean stageHasStatusOf(@Nonnull String stageName, @Nonnull FlowExecution execution, @Nonnull String... statuses) {
+        return findStageFlowNodes(stageName, execution).every { n ->
+            return statuses.contains(n.getAction(TagsAction.class)?.getTagValue(StageStatus.TAG_NAME))
         }
     }
 
@@ -435,7 +519,7 @@ class Utils {
      * @param e The exception.
      * @return The result.
      */
-    static Result getResultFromException(Exception e) {
+    static Result getResultFromException(Throwable e) {
         if (e instanceof FlowInterruptedException) {
             return ((FlowInterruptedException)e).result
         } else {
@@ -467,6 +551,15 @@ class Utils {
         return l
     }
 
+    @Deprecated
+    @Restricted(NoExternalUse.class)
+    static void updateJobProperties(@CheckForNull List<Object> propsOrUninstantiated,
+                                    @CheckForNull List<Object> trigsOrUninstantiated,
+                                    @CheckForNull List<Object> paramsOrUninstantiated,
+                                    @Nonnull CpsScript script) {
+        updateJobProperties(propsOrUninstantiated, trigsOrUninstantiated, paramsOrUninstantiated, null, script)
+    }
+
     /**
      * Given the values from {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Options#getProperties()},
      * {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers#getTriggers()}, and
@@ -480,16 +573,20 @@ class Utils {
      *   {@link UninstantiatedDescribable}s.
      * @param paramsOrUninstantiated Newly-defined parameters, potentially a mix of {@link ParameterDefinition}s and
      *   {@link UninstantiatedDescribable}s.
+     * @param optionsOrUninstantiated Newly-defined Declarative options, potentially a mix of {@link DeclarativeOption}s and
+     *   {@link UninstantiatedDescribable}s.
      * @param script
      */
     @Restricted(NoExternalUse.class)
     static void updateJobProperties(@CheckForNull List<Object> propsOrUninstantiated,
                                     @CheckForNull List<Object> trigsOrUninstantiated,
                                     @CheckForNull List<Object> paramsOrUninstantiated,
+                                    @CheckForNull Map<String,DeclarativeOption> optionsOrUninstantiated,
                                     @Nonnull CpsScript script) {
-        List<JobProperty> rawJobProperties = instantiateList(JobProperty.class, propsOrUninstantiated)
-        List<Trigger> rawTriggers = instantiateList(Trigger.class, trigsOrUninstantiated)
-        List<ParameterDefinition> rawParameters = instantiateList(ParameterDefinition.class, paramsOrUninstantiated)
+        List<JobProperty> rawJobProperties = instantiateList(JobProperty.class, propsOrUninstantiated ?: [])
+        List<Trigger> rawTriggers = instantiateList(Trigger.class, trigsOrUninstantiated ?: [])
+        List<ParameterDefinition> rawParameters = instantiateList(ParameterDefinition.class, paramsOrUninstantiated ?: [])
+        List<DeclarativeOption> rawOptions = optionsOrUninstantiated != null ? optionsOrUninstantiated.values().asList() : []
 
         WorkflowRun r = script.$build()
         WorkflowJob j = r.getParent()
@@ -501,6 +598,7 @@ class Utils {
         Set<String> previousProperties = new HashSet<>()
         Set<String> previousTriggers = new HashSet<>()
         Set<String> previousParameters = new HashSet<>()
+        Set<String> previousOptions = new HashSet<>()
 
         // First, use the action from the job if it's present.
         DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
@@ -516,6 +614,7 @@ class Utils {
             previousProperties.addAll(previousAction.getJobProperties())
             previousTriggers.addAll(previousAction.getTriggers())
             previousParameters.addAll(previousAction.getParameters())
+            previousOptions.addAll(previousAction.getOptions())
         }
 
         List<JobProperty> jobPropertiesToApply = []
@@ -553,6 +652,18 @@ class Utils {
 
         BulkChange bc = new BulkChange(j)
         try {
+            // Check if QuietPeriod option is specified
+            QuietPeriod quietPeriod = (QuietPeriod) rawOptions.find { it instanceof QuietPeriod }
+            if (quietPeriod != null) {
+                j.setQuietPeriod(quietPeriod.quietPeriod)
+            } else {
+                String quietPeriodName = Jenkins.getActiveInstance().getDescriptorByType(QuietPeriod.DescriptorImpl.class)?.getName()
+                // If the quiet period was set by the previous build, wipe it out.
+                if (quietPeriodName != null && previousOptions.contains(quietPeriodName)) {
+                    j.setQuietPeriod(Jenkins.getActiveInstance().getQuietPeriod())
+                }
+            }
+
             // Remove the triggers/parameters properties regardless.
             j.removeProperty(PipelineTriggersJobProperty.class)
             j.removeProperty(ParametersDefinitionProperty.class)
@@ -580,7 +691,7 @@ class Utils {
 
             bc.commit()
             // Add the action tracking what we added (or empty otherwise)
-            j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters))
+            j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters, rawOptions))
         } finally {
             bc.abort()
         }
@@ -749,5 +860,18 @@ class Utils {
         } else {
             return []
         }
+    }
+
+    /**
+     * Get the stage we're restarting at, if this build is a restarted one in the first place.
+     * @param script The script from ModelInterpreter
+     * @return The name of the stage we're restarting at, if defined, and null otherwise.
+     */
+    static String getRestartedStage(@Nonnull CpsScript script) {
+        WorkflowRun r = script.$build()
+
+        RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
+
+        return cause?.originStage
     }
 }

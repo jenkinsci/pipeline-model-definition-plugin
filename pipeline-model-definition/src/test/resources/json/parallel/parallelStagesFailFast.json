@@ -1,0 +1,115 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "parallel":     [
+      {
+        "name": "first",
+        "branches": [        {
+          "name": "default",
+          "steps": [          {
+            "name": "error",
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": true,
+                "value": "First branch"
+              }
+            }]
+          }]
+        }],
+        "post": {"conditions": [        {
+          "condition": "aborted",
+          "branch":           {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "FIRST STAGE ABORTED"
+                }
+              }]
+            }]
+          }
+        }, {
+          "condition": "failure",
+          "branch":           {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "FIRST STAGE FAILURE"
+                }
+              }]
+            }]
+          }
+        }]}
+      },
+      {
+        "name": "second",
+        "branches": [        {
+          "name": "default",
+          "steps":           [
+            {
+              "name": "sleep",
+              "arguments": [              {
+                "key": "time",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": 10
+                }
+              }]
+            },
+            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "Second branch"
+                }
+              }]
+            }
+          ]
+        }],
+        "post": {"conditions": [        {
+          "condition": "aborted",
+          "branch":           {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "SECOND STAGE ABORTED"
+                }
+              }]
+            }]
+          }
+        }, {
+          "condition": "failure",
+          "branch":           {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "SECOND STAGE FAILURE"
+                }
+              }]
+            }]
+          }
+        }]}
+      }
+    ],
+    "failFast": true
+  }],
+  "agent": {"type": "none"}
+}}

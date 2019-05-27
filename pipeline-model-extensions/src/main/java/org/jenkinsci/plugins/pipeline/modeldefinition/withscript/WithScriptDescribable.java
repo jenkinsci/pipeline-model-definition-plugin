@@ -27,10 +27,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyCodeSource;
 import hudson.model.AbstractDescribableImpl;
+import org.apache.commons.lang.reflect.ConstructorUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.net.URL;
 
 /**
@@ -67,8 +69,12 @@ public abstract class WithScriptDescribable<T extends WithScriptDescribable<T>> 
                 throw e;
             }
         }
-        return (WithScriptScript) clz.getConstructor(CpsScript.class, this.getClass())
-                .newInstance(cpsScript, this);
+        final Constructor constructor = ConstructorUtils.getMatchingAccessibleConstructor(clz, new Class[]{CpsScript.class, this.getClass()});
+        if (constructor == null) {
+            //Restoring same behaviour as Class.getConstructor
+            throw new NoSuchMethodException(clz.getName() + ".<init>("+CpsScript.class.getName()+","+this.getClass().getName()+")");
+        }
+        return (WithScriptScript) constructor.newInstance(cpsScript, this);
     }
 
     @Override
