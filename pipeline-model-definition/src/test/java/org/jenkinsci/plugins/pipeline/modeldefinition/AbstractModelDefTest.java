@@ -266,27 +266,44 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         return getAndStartBuild(null);
     }
 
+
     protected WorkflowRun getAndStartBuild(Folder folder) throws Exception {
-        WorkflowJob p = createWorkflowJob(folder);
+        return getAndStartBuild(folder, null);
+    }
+
+    protected WorkflowRun getAndStartBuild(Folder folder, String projectName) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder, projectName);
         p.setDefinition(new CpsScmFlowDefinition(new GitStep(sampleRepo.toString()).createSCM(), "Jenkinsfile"));
         return p.scheduleBuild2(0).waitForStart();
     }
+
 
     protected WorkflowRun getAndStartNonRepoBuild(String pipelineScriptFile) throws Exception {
         return getAndStartNonRepoBuild(null, pipelineScriptFile);
     }
 
     protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile) throws Exception {
-        WorkflowJob p = createWorkflowJob(folder);
+        return getAndStartNonRepoBuild(folder, pipelineScriptFile, null);
+    }
+
+    protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile, String projectName) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder, projectName);
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(pipelineScriptFile), true));
         return p.scheduleBuild2(0).waitForStart();
     }
 
     private WorkflowJob createWorkflowJob(Folder folder) throws IOException {
+        return createWorkflowJob(folder, null);
+    }
+
+    private WorkflowJob createWorkflowJob(Folder folder, String projectName) throws IOException {
         if (folder == null) {
             return j.createProject(WorkflowJob.class);
         } else {
-            return folder.createProject(WorkflowJob.class, "test" + (folder.getItems().size() + 1));
+            if (projectName == null) {
+                projectName = "test" + (folder.getItems().size() + 1);
+            }
+            return folder.createProject(WorkflowJob.class, projectName);
         }
     }
 
@@ -373,6 +390,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         private List<String> logContains;
         private List<String> logNotContains;
         private List<String> logMatches;
+        private String projectName;
         private WorkflowRun run;
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
@@ -409,6 +427,11 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         public ExpectationsBuilder inFolder(Folder folder) {
             this.folder = folder;
+            return this;
+        }
+
+        public ExpectationsBuilder withProjectName(String projectName) {
+            this.projectName = projectName;
             return this;
         }
 
@@ -478,9 +501,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                     } else {
                         prepRepoWithJenkinsfileAndOtherFiles(resourceFullName, otherResources);
                     }
-                    run = getAndStartBuild(folder);
+                    run = getAndStartBuild(folder, projectName);
                 } else {
-                    run = getAndStartNonRepoBuild(folder, resourceFullName);
+                    run = getAndStartNonRepoBuild(folder, resourceFullName, projectName);
                 }
             } else {
                 run = run.getParent().scheduleBuild2(0).waitForStart();
