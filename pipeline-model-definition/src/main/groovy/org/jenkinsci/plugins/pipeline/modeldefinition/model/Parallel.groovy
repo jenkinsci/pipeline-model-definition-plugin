@@ -29,22 +29,18 @@ import groovy.transform.ToString
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
 /**
- * A container for one or more {@link Stage}s to be executed within the build, in the order they're declared.
+ * A container for one or more {@link Stage}s to be executed within the build in parallel.
+ * Used as a base to hold common functionality between parallel and matrix.
  *
- * @author Andrew Bayer
+ * @author Liam Newman
  */
 @ToString
-@EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class Stages implements Serializable {
-    List<Stage> stages = []
+@EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings(value=["SE_NO_SERIALVERSIONID","EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"])
+class Parallel extends Stages {
 
     @Whitelisted
-    Stages(List<Stage> stages) {
-        this.stages = new ArrayList<>(stages)
-    }
-
-    List<Stage> getStages() {
-        return stages
+    Parallel(List<Stage> stages) {
+        super(stages)
     }
 }

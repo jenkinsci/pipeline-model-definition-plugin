@@ -674,17 +674,17 @@ class ModelValidatorImpl implements ModelValidator {
         if (!stage.branches.isEmpty()) {
             stepsStagesParallelCount += 1
         }
-        if (!stage.parallelContent.isEmpty()) {
+        if (stage.parallel != null) {
             stepsStagesParallelCount += 1
         }
         if (stage.stages != null) {
             stepsStagesParallelCount += 1
         }
 
-        if (isWithinParallel && (stage.branches.size() > 1 || !stage.parallelContent?.isEmpty())) {
+        if (isWithinParallel && (stage.branches.size() > 1 || stage.parallel != null)) {
             ModelASTElement errorElement
-            if (!stage.parallelContent.isEmpty()) {
-                def firstParallel = stage.parallelContent.first()
+            if (stage.parallel != null) {
+                def firstParallel = stage.parallel.stages.first()
                 if (firstParallel instanceof ModelASTElement) {
                     errorElement = firstParallel
                 } else {
@@ -701,7 +701,7 @@ class ModelValidatorImpl implements ModelValidator {
         } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (!stage.parallelContent.isEmpty()) {
+        } else if (stage.parallel != null) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false
