@@ -24,68 +24,24 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
-import com.google.common.base.Predicate;
-import htmlpublisher.HtmlPublisherTarget;
-import hudson.model.Cause.UserIdCause;
-import hudson.model.CauseAction;
 import hudson.model.Result;
 import hudson.model.Slave;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
-import hudson.tasks.LogRotator;
-import hudson.triggers.SCMTrigger.SCMTriggerCause;
-import hudson.triggers.TimerTrigger.TimerTriggerCause;
-import jenkins.model.BuildDiscarder;
-import jenkins.model.BuildDiscarderProperty;
 import jenkins.plugins.git.GitSCMSource;
-import org.apache.commons.io.FileUtils;
-import org.jenkinsci.plugins.pipeline.StageStatus;
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTKey;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTScriptBlock;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTreeStep;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
-import org.jenkinsci.plugins.workflow.actions.LogAction;
-import org.jenkinsci.plugins.workflow.actions.TagsAction;
-import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
-import org.jenkinsci.plugins.workflow.flow.FlowExecution;
-import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
-import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
-import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
-import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
-import org.jenkinsci.plugins.workflow.steps.ErrorStep;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author Andrew Bayer

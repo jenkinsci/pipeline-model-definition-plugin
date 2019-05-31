@@ -24,6 +24,8 @@
 
 @Library('echo-utils@master')
 import myecho
+@Library('echo-utils@master')
+import myecho
 
 pipeline {
     agent none

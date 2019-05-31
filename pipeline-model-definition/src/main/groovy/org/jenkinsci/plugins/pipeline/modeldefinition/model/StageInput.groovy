@@ -25,15 +25,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import com.google.common.cache.LoadingCache
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import hudson.model.ParameterDefinition
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
-import javax.annotation.Nonnull
 
 /**
  * A container for lists of parameter definitions.

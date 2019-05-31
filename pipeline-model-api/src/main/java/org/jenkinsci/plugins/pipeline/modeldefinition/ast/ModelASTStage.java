@@ -1,14 +1,14 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents an individual Stage and the {@link ModelASTBranch}s it may contain.

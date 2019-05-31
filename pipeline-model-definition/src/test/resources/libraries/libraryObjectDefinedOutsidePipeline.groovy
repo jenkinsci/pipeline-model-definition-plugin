@@ -24,6 +24,8 @@
 
 @Library('zot-stuff@master')
 import org.foo.Zot
+@Library('zot-stuff@master')
+import org.foo.Zot
 
 def z = new Zot(steps)
 

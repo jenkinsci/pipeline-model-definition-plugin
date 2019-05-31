@@ -32,12 +32,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
@@ -54,7 +49,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-
 import java.util.Collections;
 
 import static org.junit.Assert.assertNotNull;

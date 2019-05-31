@@ -38,12 +38,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Extension point for build conditions.

@@ -52,9 +52,7 @@ import org.jvnet.hudson.test.TestExtension;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Note that in practice, only {@link #serializationEnvGString} fails, but it felt best to cover the other possible

@@ -27,22 +27,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Slave;
 import jenkins.branch.BranchSource;
-import jenkins.scm.impl.mock.MockChangeRequestFlags;
-import jenkins.scm.impl.mock.MockRepositoryFlags;
-import jenkins.scm.impl.mock.MockSCMController;
-import jenkins.scm.impl.mock.MockSCMDiscoverBranches;
-import jenkins.scm.impl.mock.MockSCMDiscoverChangeRequests;
-import jenkins.scm.impl.mock.MockSCMDiscoverTags;
-import jenkins.scm.impl.mock.MockSCMSource;
+import jenkins.scm.impl.mock.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;

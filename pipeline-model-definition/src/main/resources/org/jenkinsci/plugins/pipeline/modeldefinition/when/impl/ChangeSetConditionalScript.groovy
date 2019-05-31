@@ -26,7 +26,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
 import hudson.scm.ChangeLogSet
-import org.apache.tools.ant.DirectoryScanner
 import org.apache.tools.ant.types.selectors.SelectorUtils
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 

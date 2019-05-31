@@ -33,11 +33,7 @@ import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBindin
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Extension
 public class UsernamePasswordHandler extends CredentialsBindingHandler<StandardUsernamePasswordCredentials> {

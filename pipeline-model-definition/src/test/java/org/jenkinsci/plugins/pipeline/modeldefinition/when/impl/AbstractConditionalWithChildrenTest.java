@@ -1,13 +1,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
-
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+
+import java.util.List;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class AbstractConditionalWithChildrenTest {
 

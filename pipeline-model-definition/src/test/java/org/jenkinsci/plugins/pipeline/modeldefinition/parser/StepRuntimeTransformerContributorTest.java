@@ -24,15 +24,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
-import org.jenkinsci.plugins.pipeline.modeldefinition.SyntheticStageNames;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;

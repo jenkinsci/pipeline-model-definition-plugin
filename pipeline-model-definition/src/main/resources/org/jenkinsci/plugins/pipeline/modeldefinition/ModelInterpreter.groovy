@@ -29,6 +29,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
@@ -41,7 +42,6 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static java.lang.String.format
 import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 
 /**
