@@ -27,7 +27,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 
 import javax.annotation.Nonnull;
-
 import java.util.ArrayList;
 import java.util.List;
 

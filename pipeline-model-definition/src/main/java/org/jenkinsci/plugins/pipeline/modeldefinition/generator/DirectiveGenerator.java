@@ -29,7 +29,6 @@ import hudson.Functions;
 import hudson.model.Action;
 import hudson.model.Descriptor;
 import hudson.model.Item;
-import hudson.model.Job;
 import jenkins.branch.OrganizationFolder;
 import jenkins.model.Jenkins;
 import jenkins.model.TransientActionFactory;
@@ -51,11 +50,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

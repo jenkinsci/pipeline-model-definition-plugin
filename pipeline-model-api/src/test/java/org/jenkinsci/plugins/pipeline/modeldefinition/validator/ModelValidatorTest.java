@@ -1,18 +1,11 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
-import java.util.Collections;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildCondition;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildConditionsContainer;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodArg;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostBuild;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPostStage;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+
+import java.util.Collections;
 
 public class ModelValidatorTest {
 

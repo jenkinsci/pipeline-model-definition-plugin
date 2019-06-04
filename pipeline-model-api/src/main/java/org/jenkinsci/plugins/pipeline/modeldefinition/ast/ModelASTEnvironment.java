@@ -1,12 +1,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents a block of "foo = 'bar'" assignments to environment variables, corresponding to {@code Environment}.

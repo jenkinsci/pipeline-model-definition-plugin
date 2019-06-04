@@ -21,9 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 @Library('zot-stuff@test')
-import org.foo.Zot
+import java.lang.Object
 
 pipeline {
     agent none

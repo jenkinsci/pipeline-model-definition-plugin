@@ -30,11 +30,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
 
 import static org.junit.Assert.assertNotNull;
-import static org.jvnet.hudson.test.ToolInstallations.configureDefaultMaven;
 
 /**
  * @author Andrew Bayer

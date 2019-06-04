@@ -41,12 +41,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
