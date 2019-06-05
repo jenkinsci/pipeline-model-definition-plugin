@@ -21,23 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-@Library('zot-stuff@master')
-import org.foo.Zot
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
-def z = new Zot(steps)
+/**
+ * A container for one or more {@link Stage}s to be executed within the build in parallel.
+ * Used as a base to hold common functionality between parallel and matrix.
+ *
+ * @author Liam Newman
+ */
+@ToString
+@EqualsAndHashCode(callSuper = true)
+@SuppressFBWarnings(value=["SE_NO_SERIALVERSIONID","EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"])
+class Parallel extends Stages {
 
-pipeline {
-    agent any
-    stages {
-        stage ('prepare') {
-            steps {
-                script {
-                    z.echo("hello")
-                }
-            }
-        }
+    @Whitelisted
+    Parallel(List<Stage> stages) {
+        super(stages)
     }
 }
-
-

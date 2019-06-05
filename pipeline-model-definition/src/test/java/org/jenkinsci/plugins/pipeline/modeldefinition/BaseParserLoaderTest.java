@@ -38,10 +38,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public abstract class BaseParserLoaderTest extends AbstractModelDefTest {
     public static String getSyntaxErrorReport(MultipleCompilationErrorsException e, String configName) {

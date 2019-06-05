@@ -1,6 +1,6 @@
 // TODO replace all this with: buildPlugin(configurations: buildPlugin.recommendedConfigurations()) (yes, Scripted, so what)
 // This Jenkinsfile's main purpose is to show a real-world-ish example
-// of what Pipeline config syntax actually looks like. 
+// of what Pipeline config syntax actually looks like.
 pipeline {
     // Make sure that the tools we need are installed and on the path.
     tools {
@@ -24,7 +24,7 @@ pipeline {
         NEWER_CORE_VERSION = "2.138.3"
         TEST_TIMEOUT = "600"
     }
-    
+
 
     stages {
         // While there is only one stage here, you can specify as many stages as you like!
@@ -35,7 +35,7 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=${TEST_TIMEOUT}"
+                        sh "mvn -B clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=${TEST_TIMEOUT}"
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
@@ -58,7 +58,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djenkins.test.timeout=${TEST_TIMEOUT}"
+                        bat "mvn -B clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djenkins.test.timeout=${TEST_TIMEOUT}"
                     }
                     post {
                         always {
@@ -71,7 +71,7 @@ pipeline {
                         label "highmem"
                     }
                     steps {
-                        sh "mvn clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
+                        sh "mvn -B clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         // No matter what the build status is, run this step. There are other conditions
@@ -94,7 +94,7 @@ pipeline {
                         label "windows"
                     }
                     steps {
-                        bat "mvn clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
+                        bat "mvn -B clean install -Dconcurrency=1 -Dmaven.test.failure.ignore=true -Dcodenarc.skip=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
                     }
                     post {
                         always {

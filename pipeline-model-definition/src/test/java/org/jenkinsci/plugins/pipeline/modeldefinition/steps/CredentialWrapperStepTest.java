@@ -119,7 +119,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void usernamePassword() throws Exception {
-        expect("usernamePassword").runFromRepo(false)
+        expect("environment/usernamePassword").runFromRepo(false)
                 .logNotContains(usernamePasswordPassword, "FOO_USR is " + usernamePasswordUsername)
                 .logContains("FOO_USR is *")
                 .archives("combined/foo.txt", allOf(containsString(usernamePasswordUsername), containsString(usernamePasswordPassword)))
@@ -130,7 +130,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     @Issue("JENKINS-43143")
     @Test
     public void paramsInCreds() throws Exception {
-        expect("paramsInCreds").runFromRepo(false)
+        expect("environment/paramsInCreds").runFromRepo(false)
                 .logNotContains(usernamePasswordPassword, "FOO_USR is " + usernamePasswordUsername)
                 .logContains("FOO_USR is *")
                 .logContains("CONTAINS_CREDS is FOOcredentials")
@@ -140,7 +140,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void mixedEnv() throws Exception {
-        expect("mixedEnv")
+        expect("environment/mixedEnv")
                 .logContains("SOME_VAR is SOME VALUE",
                              "INBETWEEN is Something in between",
                              "OTHER_VAR is OTHER VALUE")
@@ -152,7 +152,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     @Test
     public void mixedEnvInFolder() throws Exception {
 
-        expect("credentials", "mixedEnv").runFromRepo(false).inFolder(folder)
+        expect("credentials", "environment/mixedEnv").runFromRepo(false).inFolder(folder)
                 .logContains("SOME_VAR is SOME VALUE",
                              "INBETWEEN is Something in between",
                              "OTHER_VAR is OTHER VALUE")
@@ -163,7 +163,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void noBindingAvailable() throws Exception {
-        expect(Result.FAILURE, "noBinding").runFromRepo(false)
+        expect(Result.FAILURE, "environment/noBinding").runFromRepo(false)
                 .logNotContains("Hello")
                 .logContains("No suitable binding handler could be found for type com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl")
                 .go();
@@ -172,7 +172,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     @Issue("JENKINS-42858")
     @Test
     public void credentialsEnvCrossReference() throws Exception {
-        expect("credentialsEnvCrossReference")
+        expect("environment/credentialsEnvCrossReference")
                 .logContains("SOME_VAR is SOME VALUE",
                         "INBETWEEN is Something **** between",
                         "OTHER_VAR is OTHER VALUE")
@@ -184,7 +184,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     @Issue("JENKINS-43872")
     @Test
     public void credentialsDollarQuotes() throws Exception {
-        expect("credentialsDollarQuotes")
+        expect("environment/credentialsDollarQuotes")
                 .logContains("SOME_VAR is SOME VALUE",
                         "INBETWEEN is Something **** between",
                         "OTHER_VAR is OTHER VALUE")
@@ -196,7 +196,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     @Issue("JENKINS-43910")
     @Test
     public void fileCredentialsInEnv() throws Exception {
-        expect("fileCredentialsInEnv")
+        expect("environment/fileCredentialsInEnv")
                 .logContains("FILECRED is ****",
                         "INBETWEEN is Something **** between",
                         "OTHERCRED is ****",
@@ -208,7 +208,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void credentialsUsedInWhenEnv() throws Exception {
-        expect("credentialsUsedInWhenEnv")
+        expect("environment/credentialsUsedInWhenEnv")
                 .logContains("CRED1 is ****",
                         "INBETWEEN is Something **** between",
                         "Got to stage 'bar'")
@@ -218,7 +218,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void credentialsUsedInWhenExpression() throws Exception {
-        expect("credentialsUsedInWhenExpression")
+        expect("environment/credentialsUsedInWhenExpression")
                 .logContains("CRED1 is ****",
                         "INBETWEEN is Something **** between",
                         "Got to stage 'bar'")
@@ -228,7 +228,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
     @Test
     public void credentialsInGroup() throws Exception {
-        expect("credentialsInGroup")
+        expect("environment/credentialsInGroup")
                 .archives("cred1.txt", mixedEnvCred1Secret)
                 .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P)
                 .archives("cred3.txt", mixedEnvCred3Secret)
@@ -238,7 +238,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
     @Issue("JENKINS-52850")
     @Test
     public void sshCredentialsInEnv() throws Exception {
-        expect("sshCredentialsInEnv")
+        expect("environment/sshCredentialsInEnv")
                 .logContains("SSH_CRED_USR is ****",
                         "SSH_CRED is ****")
                 .logContains("SSH_WITH_PASS_CRED_USR is ****",

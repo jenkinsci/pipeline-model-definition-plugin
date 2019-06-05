@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,18 @@
 
 @Library('zot-stuff@master')
 import org.foo.Zot
+@Library('zot-stuff@master')
+import org.foo.Zot
 
 pipeline {
     agent any
     stages {
         stage ('prepare') {
-            when {
-                expression {
-                    def z = new Zot(steps)
-                    return z != null
-                }
-            }
             steps {
-                echo "hello"
+                script {
+                    def z = new Zot(steps)
+                    z.echo("hello")
+                }
             }
         }
     }

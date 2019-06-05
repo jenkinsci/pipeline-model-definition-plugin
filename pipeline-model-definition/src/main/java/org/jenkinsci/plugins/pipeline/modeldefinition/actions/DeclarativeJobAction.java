@@ -25,12 +25,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
 import hudson.model.InvisibleAction;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class DeclarativeJobAction extends InvisibleAction {
     public DeclarativeJobAction() {

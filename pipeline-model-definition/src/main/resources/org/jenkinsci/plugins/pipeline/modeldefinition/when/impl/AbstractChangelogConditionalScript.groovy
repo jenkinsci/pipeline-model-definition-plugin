@@ -32,7 +32,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-import org.jenkinsci.plugins.workflow.multibranch.BranchJobProperty
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageConditional<S>> extends DeclarativeStageConditionalScript<S> {

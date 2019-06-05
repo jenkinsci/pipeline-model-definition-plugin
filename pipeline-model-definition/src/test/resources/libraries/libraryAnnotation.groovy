@@ -22,15 +22,17 @@
  * THE SOFTWARE.
  */
 
-@Library('zot-stuff@test')
-import org.foo.Zot
+@Library('echo-utils@master')
+import myecho
+@Library('echo-utils@master')
+import myecho
 
 pipeline {
     agent none
     stages {
         stage("foo") {
             steps {
-                echo "Hello world"
+                myecho()
             }
         }
     }

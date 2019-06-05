@@ -37,11 +37,7 @@ import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Simplified {@link org.jenkinsci.plugins.credentialsbinding.Binding} handler for use in {@code environment {} }

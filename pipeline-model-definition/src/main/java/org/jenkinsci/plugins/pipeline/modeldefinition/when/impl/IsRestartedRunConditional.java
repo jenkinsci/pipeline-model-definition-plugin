@@ -25,7 +25,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
-import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
@@ -35,9 +34,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.CheckForNull;
-import java.io.File;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * True if the run was restarted.

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,36 @@
  * THE SOFTWARE.
  */
 
-@Library('echo-utils@master')
-import myecho
-
 pipeline {
     agent none
+
     stages {
-        stage("foo") {
-            steps {
-                myecho()
+        stage("test") {
+            parallel {
+                stage("foo") {
+                    agent {
+                        dockerfile {
+                            args "-v /tmp:/tmp"
+                            additionalBuildArgs "--build-arg someArg=thisOtherArg"
+                        }
+                    }
+                    steps {
+                        sh 'cat /hi-there'
+                        sh 'echo "The answer is 42"'
+                    }
+                }
+                stage("bar") {
+                    agent {
+                        dockerfile {
+                            args "-v /tmp:/tmp"
+                            additionalBuildArgs "--build-arg someArg=thisDifferentArg"
+                        }
+                    }
+                    steps {
+                        sh 'cat /hi-there'
+                        sh 'echo "The answer is 43"'
+                    }
+                }
             }
         }
     }

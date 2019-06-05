@@ -36,9 +36,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.net.URL;
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
 public class ErrorsEndpointOpsTest extends AbstractModelDefTest {

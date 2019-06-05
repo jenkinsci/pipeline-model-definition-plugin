@@ -24,16 +24,16 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.fasterxml.jackson.databind.JsonNode
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import com.github.fge.jsonschema.exceptions.JsonReferenceException
 import com.github.fge.jsonschema.exceptions.ProcessingException
 import com.github.fge.jsonschema.jsonpointer.JsonPointer
 import com.github.fge.jsonschema.report.ProcessingMessage
 import com.github.fge.jsonschema.report.ProcessingReport
 import com.github.fge.jsonschema.tree.JsonTree
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollector
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
@@ -149,6 +149,16 @@ class JSONParser implements Parser {
         return stages
     }
 
+    @CheckForNull ModelASTParallel parseParallel(JsonTree j) {
+        ModelASTParallel parallel = new ModelASTParallel(j)
+
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            parallel.stages.add(parseStage(j.append(JsonPointer.of(i))))
+        }
+
+        return parallel
+    }
+
     @CheckForNull ModelASTStage parseStage(JsonTree j) {
         ModelASTStage stage = new ModelASTStage(j)
 
@@ -157,10 +167,7 @@ class JSONParser implements Parser {
             stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
         if (j.node.has("parallel")) {
-            JsonTree content = j.append(JsonPointer.of("parallel"))
-            content?.node?.eachWithIndex{ JsonNode entry, int i ->
-                stage.parallelContent.add(parseStage(content.append(JsonPointer.of(i))))
-            }
+            stage.parallel = parseParallel(j.append(JsonPointer.of("parallel")))
         }
 
         JsonTree branches = j.append(JsonPointer.of("branches"))

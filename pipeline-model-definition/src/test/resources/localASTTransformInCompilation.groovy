@@ -22,7 +22,8 @@
  * THE SOFTWARE.
  */
 
-import groovy.transform.*
+import groovy.transform.ASTTest
+import groovy.transform.Field
 import jenkins.model.Jenkins
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 

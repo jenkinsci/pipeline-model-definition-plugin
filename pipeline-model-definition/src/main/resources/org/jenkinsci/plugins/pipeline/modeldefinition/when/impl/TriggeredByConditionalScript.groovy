@@ -25,9 +25,9 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 class TriggeredByConditionalScript extends DeclarativeStageConditionalScript<TriggeredByConditional> {
 

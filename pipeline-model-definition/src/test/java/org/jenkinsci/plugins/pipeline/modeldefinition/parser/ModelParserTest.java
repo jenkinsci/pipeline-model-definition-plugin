@@ -38,7 +38,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
     @Issue({"JENKINS-41118","JENKINS-43016"})
     @Test
     public void labelWithOptionsBecomesNode() throws Exception {
-        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/inRelativeCustomWorkspace.groovy"));
+        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/agent/inRelativeCustomWorkspace.groovy"));
 
         assertNotNull(origRoot);
 
@@ -48,15 +48,15 @@ public class ModelParserTest extends BaseParserLoaderTest {
         JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
         ModelASTPipelineDef newRoot = jp.parse();
 
-        assertEquals(getJSONErrorReport(jp, "inRelativeCustomWorkspace"), 0, jp.getErrorCollector().getErrorCount());
+        assertEquals(getJSONErrorReport(jp, "agent/inRelativeCustomWorkspace"), 0, jp.getErrorCollector().getErrorCount());
         assertNotNull("Pipeline null for inRelativeCustomWorkspace", newRoot);
 
-        JSONObject nodeJson = JSONObject.fromObject(fileContentsFromResources("json/inRelativeCustomWorkspace.json"));
+        JSONObject nodeJson = JSONObject.fromObject(fileContentsFromResources("json/agent/inRelativeCustomWorkspace.json"));
 
         JSONParser nodeParser = new JSONParser(Converter.jsonTreeFromJSONObject(nodeJson));
         ModelASTPipelineDef nodeRoot = nodeParser.parse();
 
-        assertEquals(getJSONErrorReport(nodeParser, "inRelativeCustomWorkspace"),
+        assertEquals(getJSONErrorReport(nodeParser, "agent/inRelativeCustomWorkspace"),
                 0, nodeParser.getErrorCollector().getErrorCount());
         assertNotNull("Pipeline null for inRelativeCustomWorkspace", nodeRoot);
 
@@ -66,7 +66,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
     @Issue("JENKINS-43016")
     @Test
     public void labelWithEmptyStringBecomesAny() throws Exception {
-        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/agentLabelEmptyString.groovy"));
+        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/agent/agentLabelEmptyString.groovy"));
 
         assertNotNull(origRoot);
 
@@ -76,15 +76,15 @@ public class ModelParserTest extends BaseParserLoaderTest {
         JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(origJson));
         ModelASTPipelineDef newRoot = jp.parse();
 
-        assertEquals(getJSONErrorReport(jp, "agentLabelEmptyString"), 0, jp.getErrorCollector().getErrorCount());
+        assertEquals(getJSONErrorReport(jp, "agent/agentLabelEmptyString"), 0, jp.getErrorCollector().getErrorCount());
         assertNotNull("Pipeline null for agentLabelEmptyString", newRoot);
 
-        JSONObject anyJson = JSONObject.fromObject(fileContentsFromResources("json/agentAny.json"));
+        JSONObject anyJson = JSONObject.fromObject(fileContentsFromResources("json/agent/agentAny.json"));
 
         JSONParser anyParser = new JSONParser(Converter.jsonTreeFromJSONObject(anyJson));
         ModelASTPipelineDef anyRoot = anyParser.parse();
 
-        assertEquals(getJSONErrorReport(anyParser, "agentAny"),
+        assertEquals(getJSONErrorReport(anyParser, "agent/agentAny"),
                 0, anyParser.getErrorCollector().getErrorCount());
         assertNotNull("Pipeline null for agentAny", anyRoot);
 
@@ -94,7 +94,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
 
     @Test
     public void librariesDirective() throws Exception {
-        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/librariesDirective.groovy"));
+        ModelASTPipelineDef origRoot = Converter.urlToPipelineDef(getClass().getResource("/libraries/librariesDirective.groovy"));
 
         assertNotNull(origRoot);
 
@@ -107,7 +107,7 @@ public class ModelParserTest extends BaseParserLoaderTest {
         assertEquals(getJSONErrorReport(jp, "librariesDirective"), 0, jp.getErrorCollector().getErrorCount());
         assertNotNull("Pipeline null for librariesDirective", newRoot);
 
-        JSONObject nodeJson = JSONObject.fromObject(fileContentsFromResources("json/librariesDirective.json"));
+        JSONObject nodeJson = JSONObject.fromObject(fileContentsFromResources("json/libraries/librariesDirective.json"));
 
         JSONParser nodeParser = new JSONParser(Converter.jsonTreeFromJSONObject(nodeJson));
         ModelASTPipelineDef nodeRoot = nodeParser.parse();

@@ -27,12 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTArgumentList;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTNamedArgumentList;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPositionalArgumentList;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTSingleArgument;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTValue;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
