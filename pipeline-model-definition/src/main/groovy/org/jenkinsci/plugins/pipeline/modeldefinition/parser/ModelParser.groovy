@@ -291,6 +291,23 @@ class ModelParser implements Parser {
         return r
     }
 
+    @Nonnull ModelASTParallel parseParallel(Statement stmt) {
+        def r = new ModelASTParallel(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m==null) {
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("parallel"))
+        } else {
+            eachStatement(m.body.code) {
+                ModelASTStage s = parseStage(it)
+                if (s != null) {
+                    r.stages.add(s)
+                }
+            }
+        }
+        return r
+    }
+
     @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt)
 
@@ -573,17 +590,7 @@ class ModelParser implements Parser {
                             stage.environment = parseEnvironment(s)
                             break
                         case 'parallel':
-                            def parallelStmt = matchBlockStatement(s)
-                            if (parallelStmt == null) {
-                                errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
-                            } else {
-                                eachStatement(parallelStmt.body.code) {
-                                    ModelASTStage parallelStage = parseStage(it)
-                                    if (parallelStage != null) {
-                                        stage.parallelContent.add(parallelStage)
-                                    }
-                                }
-                            }
+                            stage.parallel = parseParallel(s)
                             break
                         case 'failFast':
                             stage.setFailFast(parseBooleanMethod(mc))

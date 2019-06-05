@@ -205,7 +205,7 @@ class ModelInterpreter implements Serializable {
      */
     def getParallelStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason skippedReason) {
         def parallelStages = [:]
-        thisStage?.parallelContent?.each { content ->
+        thisStage?.parallel?.stages?.each { content ->
             if (skippedReason != null) {
                 parallelStages.put(content.name,
                     evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name)))
@@ -249,7 +249,7 @@ class ModelInterpreter implements Serializable {
                         skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else {
                         inWrappers(thisStage.options?.wrappers) {
-                            if (thisStage?.parallelContent) {
+                            if (thisStage?.parallel != null) {
                                 stageInput(thisStage.input) {
                                     if (evaluateWhen(thisStage.when)) {
                                         withCredentialsBlock(thisStage.environment) {
@@ -335,7 +335,7 @@ class ModelInterpreter implements Serializable {
                     // And finally, run the post stage steps if this was a parallel parent.
                     if (skippedReason == null &&
                         root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
-                        thisStage?.parallelContent) {
+                        thisStage?.parallel != null) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name, thisStage)
                     }
@@ -385,7 +385,7 @@ class ModelInterpreter implements Serializable {
         return {
             Utils.logToTaskListener(reason.message)
             Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
-            if (thisStage?.parallelContent) {
+            if (thisStage?.parallel != null) {
                 Map<String,Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
                 script.parallel(parallelToSkip)
                 if (reason instanceof SkippedStageReason.Restart) {

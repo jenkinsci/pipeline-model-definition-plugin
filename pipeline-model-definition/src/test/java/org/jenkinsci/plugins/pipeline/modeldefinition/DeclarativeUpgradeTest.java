@@ -110,10 +110,10 @@ public class DeclarativeUpgradeTest extends AbstractDeclarativeTest {
         assertNotNull(parentStage);
 
         // Make sure parentStage.parallel is now null.
-        assertNull(parentStage.getParallel());
+        assertNull(parentStage.getParallelContent());
 
-        // Make sure parentStage.parallelContent is not null and has two elements
-        List<ModelASTStage> parallelContent = parentStage.getParallelContent();
+        // Make sure parentStage.parallel is not null and has two elements
+        List<ModelASTStage> parallelContent = parentStage.getParallel().getStages();
         assertNotNull(parallelContent);
         assertEquals(2, parallelContent.size());
 

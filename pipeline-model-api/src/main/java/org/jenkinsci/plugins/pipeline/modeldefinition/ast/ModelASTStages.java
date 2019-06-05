@@ -13,7 +13,7 @@ import java.util.UUID;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTStages extends ModelASTElement {
+public class ModelASTStages extends ModelASTElement {
     private List<ModelASTStage> stages = new ArrayList<>();
     private final UUID uuid;
 
