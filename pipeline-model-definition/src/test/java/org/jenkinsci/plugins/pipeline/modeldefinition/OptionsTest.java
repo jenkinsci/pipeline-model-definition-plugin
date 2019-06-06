@@ -500,7 +500,7 @@ public class OptionsTest extends AbstractModelDefTest {
         assertNotNull(execution);
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("foo"));
         assertNotNull(startFoo);
         assertTrue(startFoo instanceof StepStartNode);
         FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((StepStartNode)startFoo));

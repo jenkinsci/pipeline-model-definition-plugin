@@ -175,8 +175,7 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void agentNone() throws Exception {
         expect(Result.FAILURE, "agent/agentNone")
-                .logContains(Messages.ModelInterpreter_NoNodeContext(),
-                        "Perhaps you forgot to surround the code with a step that provides this, such as: node")
+                .logContains(Messages.ModelInterpreter_NoNodeContext())
                 .go();
     }
 

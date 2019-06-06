@@ -66,7 +66,6 @@ import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.graph.BlockEndNode
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode
@@ -78,7 +77,6 @@ import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
-import org.jenkinsci.plugins.workflow.support.steps.StageStep
 import org.kohsuke.accmod.Restricted
 import org.kohsuke.accmod.restrictions.NoExternalUse
 
@@ -168,29 +166,6 @@ class Utils {
         }
     }
 
-    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
-        return new Predicate<FlowNode>() {
-            @Override
-            boolean apply(@Nullable FlowNode input) {
-                if (input != null) {
-                    if (input instanceof StepStartNode &&
-                        ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
-                        (stageName == null || input.displayName == stageName)) {
-                        // This is a true stage.
-                        return true
-                    } else if (input.getAction(LabelAction.class) != null &&
-                        input.getAction(ThreadNameAction.class) != null &&
-                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
-                        // This is actually a parallel block
-                        return true
-                    }
-                }
-
-                return false
-            }
-        }
-    }
-
     static String stringToSHA1(String s) {
         return DigestUtils.sha1Hex(s)
     }
@@ -219,7 +194,7 @@ class Utils {
         LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner()
 
         FlowNode stageNode = execution.currentHeads.find { h ->
-            scanner.findFirstMatch(h, isStageWithOptionalName())
+            scanner.findFirstMatch(h, CommonUtils.isStageWithOptionalName())
         }
 
         return stageNode != null
@@ -252,7 +227,7 @@ class Utils {
 
         ForkScanner scanner = new ForkScanner()
 
-        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
 
         if (stage != null) {
             nodes.add(stage)
@@ -351,7 +326,7 @@ class Utils {
 
         ForkScanner scanner = new ForkScanner()
 
-        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
 
         if (stage != null && stage instanceof BlockStartNode) {
             nodes.add(stage)

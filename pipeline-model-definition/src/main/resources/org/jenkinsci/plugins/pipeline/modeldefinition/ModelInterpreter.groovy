@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
@@ -185,7 +186,7 @@ class ModelInterpreter implements Serializable {
                 if (skippedReason == null && parent != null &&
                     root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
                     Utils.logToTaskListener("Post stage")
-                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name, parent)
+                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name)
                 }
             }
 
@@ -337,7 +338,7 @@ class ModelInterpreter implements Serializable {
                         root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
                         thisStage?.parallel != null) {
                         Utils.logToTaskListener("Post stage")
-                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name, thisStage)
+                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
                 }
 
@@ -679,6 +680,7 @@ class ModelInterpreter implements Serializable {
         Throwable stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: parentAgent) {
+                System.err.println("GOT CONTEXT FOR ${thisStage.name}")
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Throwable e) {
@@ -690,7 +692,7 @@ class ModelInterpreter implements Serializable {
             // And finally, run the post stage steps.
             if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, stageError)) {
                 Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name, thisStage)
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
             }
         }
 
@@ -779,16 +781,15 @@ class ModelInterpreter implements Serializable {
     def runPostConditions(AbstractBuildConditionResponder responder,
                           Agent agentContext,
                           Throwable stageError,
-                          String stageName = null,
-                          Object context = null) {
+                          String stageName = null) {
         BuildCondition.orderedConditionNames.each { conditionName ->
             RunWrapper runWrapper = script.getProperty("currentBuild")
             String originalResultString = runWrapper.result
             Result originalResult = originalResultString == null ? null : Result.fromString(originalResultString)
-            Result logicalResult = BuildCondition.getCombinedResult(runWrapper.rawBuild, stageError)
+            Result logicalResult = BuildCondition.getCombinedResult((WorkflowRun)runWrapper.rawBuild, stageError, stageName)
             try {
                 Closure c = responder.closureForSatisfiedCondition(conditionName, runWrapper,
-                    context, stageError)
+                    stageName, stageError)
                 if (c != null) {
                     runWrapper.rawBuild.@result = logicalResult
                     catchRequiredContextForNode(agentContext) {

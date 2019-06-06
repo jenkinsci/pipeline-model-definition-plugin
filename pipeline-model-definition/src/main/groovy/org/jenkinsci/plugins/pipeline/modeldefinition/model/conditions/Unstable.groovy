@@ -46,7 +46,7 @@ class Unstable extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        return combineResults(r, error) == Result.UNSTABLE
+        return combineResults(r, error, context) == Result.UNSTABLE
     }
 
     @Override
