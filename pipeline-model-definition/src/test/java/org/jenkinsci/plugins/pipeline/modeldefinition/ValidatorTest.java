@@ -693,7 +693,7 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
     }
-
+    
     @Test
     public void parametersAndTriggersInOptions() throws Exception {
         expectError("parametersAndTriggersInOptions")
@@ -974,4 +974,14 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelParser_ExpectedStage())
                 .go();
     }
+
+
+    @Test
+    public void matrixStagesAndGroups() throws Exception {
+        expectError("matrixStagesAndGroups")
+                .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+                .go();
+    }
+
+
 }

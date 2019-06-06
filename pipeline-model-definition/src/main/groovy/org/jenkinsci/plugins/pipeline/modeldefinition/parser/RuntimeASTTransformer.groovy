@@ -649,7 +649,8 @@ class RuntimeASTTransformer {
                     transformOptions(original.options),
                     transformStageInput(original.input, original.name),
                     transformStages(original.stages),
-                    transformStages(original.parallel)))
+                    transformStages(original.parallel),
+                    transformStages(original.matrix)))
         }
 
         return constX(null)
@@ -724,7 +725,9 @@ class RuntimeASTTransformer {
                 argList.addExpression(transformStage(s))
             }
 
-            if (original instanceof ModelASTParallel) {
+            if (original instanceof ModelASTMatrix) {
+                return ctorX(ClassHelper.make(Matrix.class), args(argList))
+            } else if (original instanceof ModelASTParallel) {
                 return ctorX(ClassHelper.make(Parallel.class), args(argList))
             } else {
                 return ctorX(ClassHelper.make(Stages.class), args(argList))
