@@ -362,6 +362,15 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-43911")
+    @Test
+    public void agentFromParentEnv() throws Exception {
+        expect("agent/agentFromParentEnv")
+                .logContains("WHICH_AGENT=first",
+                        "WHICH_AGENT=second")
+                .go();
+    }
+
     @Ignore("Until JENKINS-46831 is addressed")
     @Issue("JENKINS-46831")
     @Test
