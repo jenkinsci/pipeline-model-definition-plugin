@@ -46,7 +46,7 @@ class Failure extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        return combineResults(r, error) == Result.FAILURE
+        return combineResults(r, error, context) == Result.FAILURE
     }
 
     @Override
