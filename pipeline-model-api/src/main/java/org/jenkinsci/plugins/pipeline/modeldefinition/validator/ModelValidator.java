@@ -69,6 +69,10 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTStages stages);
 
+    boolean validateElement(ModelASTParallel parallel);
+
+    boolean validateElement(ModelASTMatrix stages);
+
     boolean validateElement(ModelASTLibraries libraries);
 
     boolean validateElement(ModelASTWhenCondition condition);

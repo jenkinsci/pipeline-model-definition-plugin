@@ -308,6 +308,23 @@ class ModelParser implements Parser {
         return r
     }
 
+    @Nonnull ModelASTMatrix parseMatrix(Statement stmt) {
+        def r = new ModelASTMatrix(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m==null) {
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("matrix"))
+        } else {
+            eachStatement(m.body.code) {
+                ModelASTStage s = parseStage(it)
+                if (s != null) {
+                    r.stages.add(s)
+                }
+            }
+        }
+        return r
+    }
+
     @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt)
 
@@ -591,6 +608,9 @@ class ModelParser implements Parser {
                             break
                         case 'parallel':
                             stage.parallel = parseParallel(s)
+                            break
+                        case 'matrix':
+                            stage.matrix = parseMatrix(s)
                             break
                         case 'failFast':
                             stage.setFailFast(parseBooleanMethod(mc))

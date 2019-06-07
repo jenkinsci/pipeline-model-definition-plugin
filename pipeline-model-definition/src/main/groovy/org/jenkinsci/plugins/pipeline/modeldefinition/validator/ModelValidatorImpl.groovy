@@ -677,6 +677,9 @@ class ModelValidatorImpl implements ModelValidator {
         if (stage.parallel != null) {
             stepsStagesParallelCount += 1
         }
+        if (stage.matrix != null) {
+            stepsStagesParallelCount += 1
+        }
         if (stage.stages != null) {
             stepsStagesParallelCount += 1
         }
@@ -739,6 +742,14 @@ class ModelValidatorImpl implements ModelValidator {
         }
 
         return validateFromContributors(stages, valid)
+    }
+
+    boolean validateElement(@Nonnull ModelASTParallel parallel) {
+        return true;
+    }
+
+    boolean validateElement(@Nonnull ModelASTMatrix matrix) {
+        return true;
     }
 
     boolean validateElement(@Nonnull ModelASTAgent agent) {

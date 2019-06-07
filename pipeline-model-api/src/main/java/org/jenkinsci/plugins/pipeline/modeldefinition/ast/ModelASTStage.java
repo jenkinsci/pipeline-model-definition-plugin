@@ -30,6 +30,7 @@ public final class ModelASTStage extends ModelASTElement {
     private ModelASTOptions options;
     private ModelASTStageInput input;
     private ModelASTParallel parallel;
+    private ModelASTMatrix matrix;
 
     @Deprecated
     private transient List<ModelASTStage> parallelContent = new ArrayList<>();
@@ -85,6 +86,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (parallel != null) {
             o.accumulate("parallel", parallel.toJSON());
         }
+        if (matrix != null) {
+            o.accumulate("matrix", matrix.toJSON());
+        }
         if (!branches.isEmpty()) {
             final JSONArray a = new JSONArray();
             for (ModelASTBranch branch : branches) {
@@ -133,10 +137,13 @@ public final class ModelASTStage extends ModelASTElement {
             stages.validate(validator, isWithinParallel);
         }
         if (parallel != null) {
-            parallel.validate(validator, true);
+            parallel.validate(validator);
         }
         for (ModelASTBranch branch : branches) {
             branch.validate(validator);
+        }
+        if (matrix != null) {
+            matrix.validate(validator);
         }
     }
 
@@ -171,12 +178,19 @@ public final class ModelASTStage extends ModelASTElement {
             result.append(stages.toGroovy());
             result.append("}\n");
         }
-        if (parallel != null) {
+        if (parallel != null || matrix != null) {
             if (failFast != null && failFast) {
                 result.append("failFast true\n");
             }
+        }
+        if (parallel != null) {
             result.append("parallel {\n");
             result.append(parallel.toGroovy());
+            result.append("}\n");
+        }
+        if (matrix != null) {
+            result.append("matrix {\n");
+            result.append(matrix.toGroovy());
             result.append("}\n");
         }
         if (!branches.isEmpty()) {
@@ -244,6 +258,9 @@ public final class ModelASTStage extends ModelASTElement {
         }
         if (parallel != null) {
             parallel.removeSourceLocation();
+        }
+        if (matrix != null) {
+            matrix.removeSourceLocation();
         }
     }
 
@@ -325,6 +342,14 @@ public final class ModelASTStage extends ModelASTElement {
 
     public void setParallel(ModelASTParallel s) {
         this.parallel = s;
+    }
+
+    public ModelASTMatrix getMatrix() {
+        return matrix;
+    }
+
+    public void setMatrix(ModelASTMatrix s) {
+        this.matrix = s;
     }
 
     public ModelASTOptions getOptions() {
@@ -419,6 +444,9 @@ public final class ModelASTStage extends ModelASTElement {
         if (getParallel() != null ? !getParallel().equals(that.getParallel()) : that.getParallel() != null) {
             return false;
         }
+        if (getMatrix() != null ? !getMatrix().equals(that.getMatrix()) : that.getMatrix() != null) {
+            return false;
+        }
         if (getParallelContent() != null ? !getParallelContent().equals(that.getParallelContent())
                 : that.getParallelContent() != null) {
             return false;
@@ -440,6 +468,7 @@ public final class ModelASTStage extends ModelASTElement {
         result = 31 * result + (getBranches() != null ? getBranches().hashCode() : 0);
         result = 31 * result + (getFailFast() != null ? getFailFast().hashCode() : 0);
         result = 31 * result + (getParallel() != null ? getParallel().hashCode() : 0);
+        result = 31 * result + (getMatrix() != null ? getMatrix().hashCode() : 0);
         result = 31 * result + (getOptions() != null ? getOptions().hashCode() : 0);
         result = 31 * result + (getInput() != null ? getInput().hashCode() : 0);
         result = 31 * result + (getParallelContent() != null ? getParallelContent().hashCode() : 0);

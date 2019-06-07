@@ -159,6 +159,16 @@ class JSONParser implements Parser {
         return parallel
     }
 
+    @CheckForNull ModelASTMatrix parseMatrix(JsonTree j) {
+        ModelASTParallel matrix = new ModelASTMatrix(j)
+
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            matrix.stages.add(parseStage(j.append(JsonPointer.of(i))))
+        }
+
+        return matrix
+    }
+
     @CheckForNull ModelASTStage parseStage(JsonTree j) {
         ModelASTStage stage = new ModelASTStage(j)
 
@@ -168,6 +178,9 @@ class JSONParser implements Parser {
         }
         if (j.node.has("parallel")) {
             stage.parallel = parseParallel(j.append(JsonPointer.of("parallel")))
+        }
+        if (j.node.has("matrix")) {
+            stage.parallel = parseParallel(j.append(JsonPointer.of("matrix")))
         }
 
         JsonTree branches = j.append(JsonPointer.of("branches"))

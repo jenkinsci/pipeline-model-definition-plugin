@@ -223,6 +223,35 @@ class ModelInterpreter implements Serializable {
     }
 
     /**
+     * Get the map to pass to the parallel step of nested stages to run in parallel for the given stage.
+     *
+     * @param root The root of the Declarative model
+     * @param parentAgent The parent agent definition. Can be null.
+     * @param thisStage The current stage we'll look in for parallel stages
+     * @param firstError An error that's already occurred earlier in the build. Can be null.
+     * @param skippedReason A possibly null reason this stage, its children, and therefore its grandchildren, will be skipped.
+     * @return A map of parallel branch names to closures to pass to the parallel step
+     */
+    def getMatrixStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason skippedReason) {
+        def matrixStages = [:]
+        thisStage?.matrix?.stages?.each { content ->
+            if (skippedReason != null) {
+                matrixStages.put(content.name,
+                        evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name)))
+            } else {
+                matrixStages.put(content.name,
+                        evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null))
+            }
+        }
+        if (!matrixStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast") != null) ) {
+            matrixStages.put("failFast", true)
+        }
+
+        return matrixStages
+
+    }
+
+    /**
      * Evaluate a stage, setting up agent, tools, env, etc, determining any nested stages to execute, skipping
      * if appropriate, etc, actually executing the stage via executeSingleStage, parallel, or evaluateSequentialStages.
      *
@@ -249,12 +278,17 @@ class ModelInterpreter implements Serializable {
                         skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else {
                         inWrappers(thisStage.options?.wrappers) {
-                            if (thisStage?.parallel != null) {
+                            if (thisStage?.parallel != null || thisStage?.matrix != null) {
                                 stageInput(thisStage.input) {
                                     if (evaluateWhen(thisStage.when)) {
                                         withCredentialsBlock(thisStage.environment) {
                                             withEnvBlock(thisStage.getEnvVars(script)) {
-                                                script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
+                                                if (thisStage?.parallel != null) {
+                                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
+                                                } else {
+                                                    script.parallel(getMatrixStages(root, parentAgent, thisStage, firstError, null))
+
+                                                }
                                             }
                                         }
                                     } else {
@@ -335,7 +369,7 @@ class ModelInterpreter implements Serializable {
                     // And finally, run the post stage steps if this was a parallel parent.
                     if (skippedReason == null &&
                         root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
-                        thisStage?.parallel != null) {
+                            (thisStage?.parallel != null || thisStage?.matrix != null)) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name, thisStage)
                     }
@@ -386,7 +420,13 @@ class ModelInterpreter implements Serializable {
             Utils.logToTaskListener(reason.message)
             Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
             if (thisStage?.parallel != null) {
-                Map<String,Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
+                Map<String, Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
+                script.parallel(parallelToSkip)
+                if (reason instanceof SkippedStageReason.Restart) {
+                    parallelToSkip.keySet().each { k -> Utils.markStartAndEndNodesInStageAsNotExecuted(k) }
+                }
+            } else if (thisStage?.matrix != null) {
+                Map<String,Closure> parallelToSkip = getMatrixStages(root, parentAgent, thisStage, firstError, reason)
                 script.parallel(parallelToSkip)
                 if (reason instanceof SkippedStageReason.Restart) {
                     parallelToSkip.keySet().each { k -> Utils.markStartAndEndNodesInStageAsNotExecuted(k) }

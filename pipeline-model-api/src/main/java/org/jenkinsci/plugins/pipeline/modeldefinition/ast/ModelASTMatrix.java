@@ -10,15 +10,10 @@ import javax.annotation.Nonnull;
  *
  * @author Liam Newman
  */
-public class ModelASTParallel extends ModelASTStages {
+public final class ModelASTMatrix extends ModelASTParallel {
 
-    public ModelASTParallel(Object sourceLocation) {
+    public ModelASTMatrix(Object sourceLocation) {
         super(sourceLocation);
-    }
-
-    @Override
-    public void validate(@Nonnull final ModelValidator validator) {
-        validate(validator, true);
     }
 
     @Override
@@ -29,7 +24,7 @@ public class ModelASTParallel extends ModelASTStages {
 
     @Override
     public String toString() {
-        return "ModelASTParallel{" +
+        return "ModelASTMatrix{" +
                 "stages=" + getStages() +
                 "}";
     }
