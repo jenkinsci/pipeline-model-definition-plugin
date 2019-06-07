@@ -38,10 +38,7 @@ import org.jvnet.hudson.test.Issue;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ParametersTest extends AbstractModelDefTest {
     @Test
@@ -66,7 +63,7 @@ public class ParametersTest extends AbstractModelDefTest {
     @Ignore("Parameters are set before withEnv is called.")
     @Test
     public void envVarInParameters() throws Exception {
-        WorkflowRun b = expect("envVarInParameters")
+        WorkflowRun b = expect("environment/envVarInParameters")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();

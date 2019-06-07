@@ -31,8 +31,6 @@ import hudson.model.Run
 import jenkins.model.Jenkins
 import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.GroovyCodeVisitor
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
@@ -43,16 +41,12 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ErrorCollector
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.SourceUnitErrorCollector
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.*
 import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
@@ -286,6 +280,23 @@ class ModelParser implements Parser {
         def m = matchBlockStatement(stmt)
         if (m==null) {
             errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("stages"))
+        } else {
+            eachStatement(m.body.code) {
+                ModelASTStage s = parseStage(it)
+                if (s != null) {
+                    r.stages.add(s)
+                }
+            }
+        }
+        return r
+    }
+
+    @Nonnull ModelASTParallel parseParallel(Statement stmt) {
+        def r = new ModelASTParallel(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m==null) {
+            errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("parallel"))
         } else {
             eachStatement(m.body.code) {
                 ModelASTStage s = parseStage(it)
@@ -579,17 +590,7 @@ class ModelParser implements Parser {
                             stage.environment = parseEnvironment(s)
                             break
                         case 'parallel':
-                            def parallelStmt = matchBlockStatement(s)
-                            if (parallelStmt == null) {
-                                errorCollector.error(stage, Messages.ModelParser_ExpectedBlockFor("parallel"))
-                            } else {
-                                eachStatement(parallelStmt.body.code) {
-                                    ModelASTStage parallelStage = parseStage(it)
-                                    if (parallelStage != null) {
-                                        stage.parallelContent.add(parallelStage)
-                                    }
-                                }
-                            }
+                            stage.parallel = parseParallel(s)
                             break
                         case 'failFast':
                             stage.setFailFast(parseBooleanMethod(mc))

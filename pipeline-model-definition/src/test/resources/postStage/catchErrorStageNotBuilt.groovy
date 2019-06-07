@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2019, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,19 +22,35 @@
  * THE SOFTWARE.
  */
 
-@Library('echo-utils@master')
-import myecho
-
 pipeline {
-    agent none
+    agent any
+
     stages {
         stage("foo") {
             steps {
-                myecho()
+                catchError(buildResult: "SUCCESS",
+                    message: "Caught an error",
+                    stageResult: "NOT_BUILT") {
+                    error("uhoh")
+                }
+            }
+            post {
+                success {
+                    echo "This shouldn't happen"
+                }
+                notBuilt {
+                    echo "This should happen"
+                }
             }
         }
     }
+
+    post {
+        success {
+            echo "The build should be a success"
+        }
+        notBuilt {
+            echo "The build shouldn't be not built"
+        }
+    }
 }
-
-
-

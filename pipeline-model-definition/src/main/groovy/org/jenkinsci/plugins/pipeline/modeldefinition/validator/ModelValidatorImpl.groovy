@@ -41,12 +41,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StageOptions
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Tools
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
@@ -679,17 +674,17 @@ class ModelValidatorImpl implements ModelValidator {
         if (!stage.branches.isEmpty()) {
             stepsStagesParallelCount += 1
         }
-        if (!stage.parallelContent.isEmpty()) {
+        if (stage.parallel != null) {
             stepsStagesParallelCount += 1
         }
         if (stage.stages != null) {
             stepsStagesParallelCount += 1
         }
 
-        if (isWithinParallel && (stage.branches.size() > 1 || !stage.parallelContent?.isEmpty())) {
+        if (isWithinParallel && (stage.branches.size() > 1 || stage.parallel != null)) {
             ModelASTElement errorElement
-            if (!stage.parallelContent.isEmpty()) {
-                def firstParallel = stage.parallelContent.first()
+            if (stage.parallel != null) {
+                def firstParallel = stage.parallel.stages.first()
                 if (firstParallel instanceof ModelASTElement) {
                     errorElement = firstParallel
                 } else {
@@ -706,7 +701,7 @@ class ModelValidatorImpl implements ModelValidator {
         } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (!stage.parallelContent.isEmpty()) {
+        } else if (stage.parallel != null) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false

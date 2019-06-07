@@ -31,14 +31,7 @@ import com.google.common.cache.LoadingCache
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
-import hudson.model.Cause
-import hudson.model.Describable
-import hudson.model.Descriptor
-import hudson.model.Job
-import hudson.model.JobProperty
-import hudson.model.ParameterDefinition
-import hudson.model.ParametersDefinitionProperty
-import hudson.model.Result
+import hudson.model.*
 import hudson.triggers.Trigger
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
@@ -73,23 +66,17 @@ import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.cps.CpsThread
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 import org.jenkinsci.plugins.workflow.graph.BlockEndNode
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode
 import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner
-import org.jenkinsci.plugins.workflow.graphanalysis.Filterator
-import org.jenkinsci.plugins.workflow.graphanalysis.FlowScanningUtils
-import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner
-import org.jenkinsci.plugins.workflow.graphanalysis.LinearBlockHoppingScanner
+import org.jenkinsci.plugins.workflow.graphanalysis.*
 import org.jenkinsci.plugins.workflow.job.WorkflowJob
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
 import org.jenkinsci.plugins.workflow.steps.Step
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
-import org.jenkinsci.plugins.workflow.support.steps.StageStep
 import org.kohsuke.accmod.Restricted
 import org.kohsuke.accmod.restrictions.NoExternalUse
 
@@ -179,29 +166,6 @@ class Utils {
         }
     }
 
-    static Predicate<FlowNode> isStageWithOptionalName(final String stageName = null) {
-        return new Predicate<FlowNode>() {
-            @Override
-            boolean apply(@Nullable FlowNode input) {
-                if (input != null) {
-                    if (input instanceof StepStartNode &&
-                        ((StepStartNode) input).descriptor instanceof StageStep.DescriptorImpl &&
-                        (stageName == null || input.displayName == stageName)) {
-                        // This is a true stage.
-                        return true
-                    } else if (input.getAction(LabelAction.class) != null &&
-                        input.getAction(ThreadNameAction.class) != null &&
-                        (stageName == null || input.getAction(ThreadNameAction)?.threadName == stageName)) {
-                        // This is actually a parallel block
-                        return true
-                    }
-                }
-
-                return false
-            }
-        }
-    }
-
     static String stringToSHA1(String s) {
         return DigestUtils.sha1Hex(s)
     }
@@ -230,7 +194,7 @@ class Utils {
         LinearBlockHoppingScanner scanner = new LinearBlockHoppingScanner()
 
         FlowNode stageNode = execution.currentHeads.find { h ->
-            scanner.findFirstMatch(h, isStageWithOptionalName())
+            scanner.findFirstMatch(h, CommonUtils.isStageWithOptionalName())
         }
 
         return stageNode != null
@@ -263,7 +227,7 @@ class Utils {
 
         ForkScanner scanner = new ForkScanner()
 
-        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
 
         if (stage != null) {
             nodes.add(stage)
@@ -362,7 +326,7 @@ class Utils {
 
         ForkScanner scanner = new ForkScanner()
 
-        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, isStageWithOptionalName(stageName))
+        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
 
         if (stage != null && stage instanceof BlockStartNode) {
             nodes.add(stage)

@@ -24,11 +24,11 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import hudson.Extension;
-import hudson.model.RootAction;
 import com.github.fge.jsonschema.exceptions.ProcessingException;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import hudson.Extension;
+import hudson.model.RootAction;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 

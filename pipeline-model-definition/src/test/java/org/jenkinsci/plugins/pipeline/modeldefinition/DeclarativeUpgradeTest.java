@@ -43,11 +43,7 @@ import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class DeclarativeUpgradeTest extends AbstractDeclarativeTest {
     @ClassRule
@@ -114,10 +110,10 @@ public class DeclarativeUpgradeTest extends AbstractDeclarativeTest {
         assertNotNull(parentStage);
 
         // Make sure parentStage.parallel is now null.
-        assertNull(parentStage.getParallel());
+        assertNull(parentStage.getParallelContent());
 
-        // Make sure parentStage.parallelContent is not null and has two elements
-        List<ModelASTStage> parallelContent = parentStage.getParallelContent();
+        // Make sure parentStage.parallel is not null and has two elements
+        List<ModelASTStage> parallelContent = parentStage.getParallel().getStages();
         assertNotNull(parallelContent);
         assertEquals(2, parallelContent.size());
 

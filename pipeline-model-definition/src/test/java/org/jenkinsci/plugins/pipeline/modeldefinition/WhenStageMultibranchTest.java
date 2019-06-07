@@ -27,22 +27,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Slave;
 import jenkins.branch.BranchSource;
-import jenkins.scm.impl.mock.MockChangeRequestFlags;
-import jenkins.scm.impl.mock.MockRepositoryFlags;
-import jenkins.scm.impl.mock.MockSCMController;
-import jenkins.scm.impl.mock.MockSCMDiscoverBranches;
-import jenkins.scm.impl.mock.MockSCMDiscoverChangeRequests;
-import jenkins.scm.impl.mock.MockSCMDiscoverTags;
-import jenkins.scm.impl.mock.MockSCMSource;
+import jenkins.scm.impl.mock.*;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -71,7 +62,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         controller.createBranch("repoX", "master");
         final int num = controller.openChangeRequest("repoX", "master");
         final String crNum = "change-request/" + num;
-        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/changelog/changeset").getBytes());
+        controller.addFile("repoX", crNum, "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/conditions/changelog/changeset").getBytes());
 
         WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
         project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverChangeRequests())));
@@ -197,7 +188,7 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         MockSCMController controller = MockSCMController.create();
         controller.createRepository("repo", MockRepositoryFlags.FORKABLE);
         controller.createBranch("repo", "master");
-        controller.addFile("repo", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenChangeRequest").getBytes());
+        controller.addFile("repo", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/conditions/whenChangeRequest").getBytes());
         int id = controller.openChangeRequest("repo", "master");
         controller.addFile("repo", "change-request/" + id, "mbopalua", "cr" + id + ".txt", "hello".getBytes());
         controller.cloneBranch("repo", "master", "release-2");

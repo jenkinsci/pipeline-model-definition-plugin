@@ -52,9 +52,7 @@ import org.jvnet.hudson.test.TestExtension;
 import javax.annotation.Nonnull;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Note that in practice, only {@link #serializationEnvGString} fails, but it felt best to cover the other possible
@@ -75,7 +73,7 @@ public class SerializationTest extends AbstractModelDefTest {
 
     @Test
     public void serializationEnvGString() throws Exception {
-        expect("serializationEnvGString")
+        expect("serialization/serializationEnvGString")
                 .logContains("[Pipeline] { (foo)",
                         "_UNDERSCORE is VALID")
                 .logMatches("FOO is test\\d+foo")
@@ -84,7 +82,7 @@ public class SerializationTest extends AbstractModelDefTest {
 
     @Test
     public void serializationParametersGString() throws Exception {
-        WorkflowRun b = expect("serializationParametersGString")
+        WorkflowRun b = expect("serialization/serializationParametersGString")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();
@@ -103,21 +101,21 @@ public class SerializationTest extends AbstractModelDefTest {
 
     @Test
     public void serializationAgentGString() throws Exception {
-        expect("serializationAgentGString")
+        expect("serialization/serializationAgentGString")
                 .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .go();
     }
 
     @Test
     public void serializationAgentNestedGString() throws Exception {
-        expect("serializationAgentNestedGString")
+        expect("serialization/serializationAgentNestedGString")
                 .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .go();
     }
 
     @Test
     public void serializationJobPropsGString() throws Exception {
-        WorkflowRun b = expect("serializationJobPropsGString")
+        WorkflowRun b = expect("serialization/serializationJobPropsGString")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .go();
@@ -153,14 +151,14 @@ public class SerializationTest extends AbstractModelDefTest {
         secondLib.setDefaultVersion("master");
         GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
 
-        expect("serializationLibrariesGString")
+        expect("serialization/serializationLibrariesGString")
                 .logContains("something special", "from another library")
                 .go();
     }
 
     @Test
     public void serializationTriggersGString() throws Exception {
-        WorkflowRun b = expect("serializationTriggersGString")
+        WorkflowRun b = expect("serialization/serializationTriggersGString")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (Post Actions)")
                 .go();
@@ -182,14 +180,14 @@ public class SerializationTest extends AbstractModelDefTest {
 
     @Test
     public void serializationWhenBranchGString() throws Exception {
-        expect("serializationWhenBranchGString")
+        expect("serialization/serializationWhenBranchGString")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
                 .go();
     }
 
     @Test
     public void serializationWhenEnvGString() throws Exception {
-        expect("serializationWhenEnvGString")
+        expect("serialization/serializationWhenEnvGString")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
                 .go();
     }

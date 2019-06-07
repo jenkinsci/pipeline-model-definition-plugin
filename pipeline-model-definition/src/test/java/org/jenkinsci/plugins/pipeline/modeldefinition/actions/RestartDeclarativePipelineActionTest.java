@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebRequest;
@@ -32,14 +33,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import com.github.fge.jsonschema.util.JsonLoader;
-import com.fasterxml.jackson.databind.JsonNode;
-import hudson.model.BooleanParameterValue;
-import hudson.model.Item;
-import hudson.model.ParametersAction;
-import hudson.model.Queue;
-import hudson.model.Result;
-import hudson.model.StringParameterValue;
-import hudson.model.User;
+import hudson.model.*;
 import hudson.scm.ChangeLogSet;
 import hudson.security.ACL;
 import hudson.security.AuthorizationStrategy;
@@ -52,6 +46,7 @@ import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.NotReallyRoleSensitiveCallable;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
 import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
@@ -80,12 +75,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.jenkinsci.plugins.pipeline.modeldefinition.BasicModelDefTest.stageStatusPredicate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
@@ -806,7 +796,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
     private void assertStageIsNotExecuted(@Nonnull String stageName, @Nonnull WorkflowRun run, @Nonnull FlowExecution execution) {
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode startStage = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName(stageName));
+        FlowNode startStage = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName(stageName));
         assertNotNull(startStage);
         assertTrue(startStage instanceof BlockStartNode);
         FlowNode endStage = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startStage));

@@ -32,15 +32,7 @@ import hudson.triggers.Trigger
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.expr.*
-import org.codehaus.groovy.ast.stmt.BlockStatement
-import org.codehaus.groovy.ast.stmt.CatchStatement
-import org.codehaus.groovy.ast.stmt.ExpressionStatement
-import org.codehaus.groovy.ast.stmt.ForStatement
-import org.codehaus.groovy.ast.stmt.IfStatement
-import org.codehaus.groovy.ast.stmt.ReturnStatement
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.ast.stmt.TryCatchStatement
-import org.codehaus.groovy.ast.stmt.WhileStatement
+import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
@@ -656,8 +648,8 @@ class RuntimeASTTransformer {
                     constX(original.failFast != null ? original.failFast : false),
                     transformOptions(original.options),
                     transformStageInput(original.input, original.name),
-                    transformParallelContent(original),
-                    transformStages(original.stages)))
+                    transformStages(original.stages),
+                    transformStages(original.parallel)))
         }
 
         return constX(null)
@@ -732,30 +724,11 @@ class RuntimeASTTransformer {
                 argList.addExpression(transformStage(s))
             }
 
-            return ctorX(ClassHelper.make(Stages.class), args(argList))
-        }
-
-        return constX(null)
-    }
-
-    /**
-     * Generates the AST (to be CPS-transformed) for instantiating a list of {@link Stage}s.
-     *
-     * @param original The parsed AST model of a stage
-     * @return The AST for a list of {@link Stage}s, or the constant null expression if the original
-     * cannot be transformed.
-     */
-    Expression transformParallelContent(@CheckForNull ModelASTStage original) {
-        if (isGroovyAST(original) && original?.parallelContent) {
-            ListExpression argList = new ListExpression()
-            original.parallelContent.each { c ->
-                if (c instanceof ModelASTStage) {
-                    argList.addExpression(transformStage(c))
-                } else {
-                    argList.addExpression(constX(null))
-                }
+            if (original instanceof ModelASTParallel) {
+                return ctorX(ClassHelper.make(Parallel.class), args(argList))
+            } else {
+                return ctorX(ClassHelper.make(Stages.class), args(argList))
             }
-            return argList
         }
 
         return constX(null)

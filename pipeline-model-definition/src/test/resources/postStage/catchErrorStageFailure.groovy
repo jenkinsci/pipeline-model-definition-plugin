@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2019, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,24 +22,35 @@
  * THE SOFTWARE.
  */
 
-@Library('zot-stuff@master')
-import org.foo.Zot
-
 pipeline {
     agent any
+
     stages {
-        stage ('prepare') {
-            when {
-                expression {
-                    def z = new Zot(steps)
-                    return z != null
+        stage("foo") {
+            steps {
+                catchError(buildResult: "SUCCESS",
+                    message: "Caught an error",
+                    stageResult: "FAILURE") {
+                    error("uhoh")
                 }
             }
-            steps {
-                echo "hello"
+            post {
+                success {
+                    echo "This shouldn't happen"
+                }
+                failure {
+                    echo "This should happen"
+                }
             }
         }
     }
+
+    post {
+        success {
+            echo "The build should be a success"
+        }
+        failure {
+            echo "The build shouldn't be a failure"
+        }
+    }
 }
-
-

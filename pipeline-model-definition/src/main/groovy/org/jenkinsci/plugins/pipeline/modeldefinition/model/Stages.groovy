@@ -41,7 +41,7 @@ class Stages implements Serializable {
 
     @Whitelisted
     Stages(List<Stage> stages) {
-        this.stages = stages
+        this.stages = new ArrayList<>(stages)
     }
 
     List<Stage> getStages() {

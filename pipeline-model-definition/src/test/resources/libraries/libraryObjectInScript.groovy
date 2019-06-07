@@ -24,8 +24,8 @@
 
 @Library('zot-stuff@master')
 import org.foo.Zot
-
-def z = new Zot(steps)
+@Library('zot-stuff@master')
+import org.foo.Zot
 
 pipeline {
     agent any
@@ -33,6 +33,7 @@ pipeline {
         stage ('prepare') {
             steps {
                 script {
+                    def z = new Zot(steps)
                     z.echo("hello")
                 }
             }

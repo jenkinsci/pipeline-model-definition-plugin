@@ -55,10 +55,10 @@ class Stage implements Serializable {
 
     Stages stages
 
-    List<Stage> parallelContent = []
-
     @Deprecated
-    transient Stages parallel
+    transient List<Stage> parallelContent
+
+    Parallel parallel
 
     boolean failFast
 
@@ -69,19 +69,21 @@ class Stage implements Serializable {
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
-        this(name, steps, agent, post, when, tools, environment, failFast, null, null, parallel?.stages, null)
+        this(name, steps, agent, post, when, tools, environment, failFast, null, null,
+                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null)
     }
 
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast, StageOptions options, StageInput input) {
-        this(name, steps, agent, post, when, tools, environment, failFast, options, input, parallel?.stages, null)
+        this(name, steps, agent, post, when, tools, environment, failFast, options, input,
+                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null)
     }
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, boolean failFast, StageOptions options, StageInput input,
-          List<Stage> parallelContent, Stages stages) {
+          Stages stages, Parallel parallel) {
         this.name = name
         this.agent = agent
         this.post = post
@@ -93,19 +95,21 @@ class Stage implements Serializable {
         this.options = options
         this.input = input
         this.stages = stages
-        if (parallelContent != null) {
-            this.parallelContent.addAll(parallelContent)
-        }
+        this.parallel = parallel
     }
 
+
     protected Object readResolve() throws IOException {
-        if (this.parallel != null) {
-            if (this.parallelContent == null) {
-                this.parallelContent = []
+        if (this.parallelContent?.size() > 0) {
+            if (this.parallel == null) {
+                this.parallel = new Parallel()
             }
-            this.parallelContent.addAll(this.parallel.stages)
-            this.parallel = null
+            if (this.parallelContent?.size() > 0) {
+                this.stages.stages.addAll(this.parallelContent)
+            }
+            this.parallelContent = null
         }
+
         return this
     }
 

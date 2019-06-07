@@ -62,7 +62,7 @@ public class ScriptStepTest extends AbstractModelDefTest {
         initGlobalLibrary();
 
         // Test the successful, albeit limited, case.
-        expect("globalLibrarySuccessInScript")
+        expect("libraries/globalLibrarySuccessInScript")
                 .logContains("Hello Pipeline",
                         "[seed-set-get]",
                         "[nothing here]",

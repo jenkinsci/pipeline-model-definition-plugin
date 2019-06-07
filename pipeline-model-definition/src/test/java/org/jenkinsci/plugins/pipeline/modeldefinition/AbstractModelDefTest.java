@@ -25,11 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.collect.ImmutableList;
-import hudson.model.Descriptor;
-import hudson.model.ParameterDefinition;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.Slave;
+import hudson.model.*;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
@@ -61,11 +57,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.jcabi.matchers.RegexMatchers.containsPattern;
@@ -122,63 +114,63 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simplePipeline",
-            "agentAny",
-            "agentLabel",
-            "agentNoneWithNode",
-            "metaStepSyntax",
-            "simpleEnvironment",
+            "agent/agentAny",
+            "agent/agentLabel",
+            "agent/agentNoneWithNode",
+            "steps/metaStepSyntax",
+            "environment/simpleEnvironment",
             "simpleScript",
-            "twoStagePipeline",
-            "validStepParameters",
-            "parallelPipeline",
-            "simplePostBuild",
+            "basic/twoStagePipeline",
+            "steps/validStepParameters",
+            "parallel/parallelPipeline",
+            "postStage/simplePostBuild",
             "simpleTools",
-            "legacyMetaStepSyntax",
+            "steps/legacyMetaStepSyntax",
             "perStageConfigAgent",
-            "simpleJobProperties",
+            "options/simpleJobProperties",
             "simpleTriggers",
             "simpleParameters",
             "stringsNeedingEscapeLogic",
-            "simpleWrapper",
+            "options/simpleWrapper",
             "multipleWrappers",
-            "multipleVariablesForAgent",
+            "agent/multipleVariablesForAgent",
             "toolsInStage",
-            "environmentInStage",
-            "basicWhen",
-            "skippedWhen",
-            "parallelPipelineWithFailFast",
-            "whenBranchFalse",
-            "whenEnvFalse",
-            "parallelPipelineWithSpaceInBranch",
-            "parallelPipelineQuoteEscaping",
-            "nestedTreeSteps",
-            "inCustomWorkspace",
-            "whenNot",
-            "whenOr",
-            "whenAnd",
-            "whenBeforeAgentTrue",
-            "whenBeforeInputFalse",
-            "usernamePassword",
-            "environmentCrossReferences",
-            "nestedParallelStages",
+            "environment/environmentInStage",
+            "when/basicWhen",
+            "when/skippedWhen",
+            "parallel/parallelPipelineWithFailFast",
+            "when/whenBranchFalse",
+            "when/whenEnvFalse",
+            "parallel/parallelPipelineWithSpaceInBranch",
+            "parallel/parallelPipelineQuoteEscaping",
+            "steps/nestedTreeSteps",
+            "agent/inCustomWorkspace",
+            "when/whenNot",
+            "when/whenOr",
+            "when/whenAnd",
+            "when/whenBeforeAgentTrue",
+            "when/whenBeforeInputFalse",
+            "environment/usernamePassword",
+            "environment/environmentCrossReferences",
+            "parallel/nestedParallelStages",
             "stagePost",
-            "when/changelog/changelog",
-            "when/changelog/changeset",
-            "backslashReductionInEnv",
+            "when/conditions/changelog/changelog",
+            "when/conditions/changelog/changeset",
+            "environment/backslashReductionInEnv",
             "stageWrapper"
     );
 
     public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simpleInput",
             "parametersInInput",
-            "agentDocker",
-            "globalLibrarySuccess",
+            "agent/agentDocker",
+            "libraries/globalLibrarySuccess",
             "jsonSchemaNull",
-            "parallelStagesFailFast",
-            "parallelStagesFailFastWithOption",
-            "parallelStagesGroupsAndStages",
-            "topLevelStageGroup",
-            "agentOnGroup"
+            "parallel/parallelStagesFailFast",
+            "parallel/parallelStagesFailFastWithOption",
+            "parallel/parallelStagesGroupsAndStages",
+            "basic/topLevelStageGroup",
+            "agent/agentOnGroup"
     );
 
     public static Iterable<Object[]> configsWithErrors() {
@@ -266,27 +258,44 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         return getAndStartBuild(null);
     }
 
+
     protected WorkflowRun getAndStartBuild(Folder folder) throws Exception {
-        WorkflowJob p = createWorkflowJob(folder);
+        return getAndStartBuild(folder, null);
+    }
+
+    protected WorkflowRun getAndStartBuild(Folder folder, String projectName) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder, projectName);
         p.setDefinition(new CpsScmFlowDefinition(new GitStep(sampleRepo.toString()).createSCM(), "Jenkinsfile"));
         return p.scheduleBuild2(0).waitForStart();
     }
+
 
     protected WorkflowRun getAndStartNonRepoBuild(String pipelineScriptFile) throws Exception {
         return getAndStartNonRepoBuild(null, pipelineScriptFile);
     }
 
     protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile) throws Exception {
-        WorkflowJob p = createWorkflowJob(folder);
+        return getAndStartNonRepoBuild(folder, pipelineScriptFile, null);
+    }
+
+    protected WorkflowRun getAndStartNonRepoBuild(Folder folder, String pipelineScriptFile, String projectName) throws Exception {
+        WorkflowJob p = createWorkflowJob(folder, projectName);
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources(pipelineScriptFile), true));
         return p.scheduleBuild2(0).waitForStart();
     }
 
     private WorkflowJob createWorkflowJob(Folder folder) throws IOException {
+        return createWorkflowJob(folder, null);
+    }
+
+    private WorkflowJob createWorkflowJob(Folder folder, String projectName) throws IOException {
         if (folder == null) {
             return j.createProject(WorkflowJob.class);
         } else {
-            return folder.createProject(WorkflowJob.class, "test" + (folder.getItems().size() + 1));
+            if (projectName == null) {
+                projectName = "test" + (folder.getItems().size() + 1);
+            }
+            return folder.createProject(WorkflowJob.class, projectName);
         }
     }
 
@@ -373,6 +382,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         private List<String> logContains;
         private List<String> logNotContains;
         private List<String> logMatches;
+        private String projectName;
         private WorkflowRun run;
         private boolean runFromRepo = true;
         private Folder folder; //We use the real stuff here, no mocking fluff
@@ -409,6 +419,11 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         public ExpectationsBuilder inFolder(Folder folder) {
             this.folder = folder;
+            return this;
+        }
+
+        public ExpectationsBuilder withProjectName(String projectName) {
+            this.projectName = projectName;
             return this;
         }
 
@@ -478,9 +493,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                     } else {
                         prepRepoWithJenkinsfileAndOtherFiles(resourceFullName, otherResources);
                     }
-                    run = getAndStartBuild(folder);
+                    run = getAndStartBuild(folder, projectName);
                 } else {
-                    run = getAndStartNonRepoBuild(folder, resourceFullName);
+                    run = getAndStartNonRepoBuild(folder, resourceFullName, projectName);
                 }
             } else {
                 run = run.getParent().scheduleBuild2(0).waitForStart();

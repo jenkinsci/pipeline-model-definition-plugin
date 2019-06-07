@@ -30,7 +30,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -278,6 +277,83 @@ public class PostStageTest extends AbstractModelDefTest {
 
         j.assertLogNotContains("I FAILED", run1);
 
+    }
+
+    @Issue("JENKINS-57826")
+    @Test
+    public void catchErrorStageFailure() throws Exception {
+        expect("catchErrorStageFailure")
+                .logContains("This should happen",
+                       "The build should be a success")
+                .logNotContains("This shouldn't happen",
+                        "The build shouldn't be a failure")
+                .go();
+    }
+
+    @Issue("JENKINS-57826")
+    @Test
+    public void catchErrorStageFailureNested() throws Exception {
+        expect("catchErrorStageFailureNested")
+                .logContains("This should happen",
+                        "The build should be a success")
+                .logNotContains("This shouldn't happen",
+                        "The build shouldn't be a failure")
+                .go();
+    }
+
+    @Issue("JENKINS-57826")
+    @Test
+    public void catchErrorStageAborted() throws Exception {
+        expect("catchErrorStageAborted")
+                .logContains("This should happen",
+                        "The build should be a success")
+                .logNotContains("This shouldn't happen",
+                        "The build shouldn't be aborted")
+                .go();
+    }
+
+    @Issue("JENKINS-57826")
+    @Test
+    public void catchErrorStageUnstable() throws Exception {
+        expect("catchErrorStageUnstable")
+                .logContains("This should happen",
+                        "The build should be a success")
+                .logNotContains("This shouldn't happen",
+                        "The build shouldn't be unstable")
+                .go();
+    }
+
+    @Issue("JENKINS-57826")
+    @Test
+    public void catchErrorStageUnstableBuildFailure() throws Exception {
+        expect(Result.FAILURE, "catchErrorStageUnstableBuildFailure")
+                .logContains("This should happen",
+                        "The build should be a failure")
+                .logNotContains("This shouldn't happen",
+                        "The build shouldn't be unstable")
+                .go();
+    }
+
+    @Issue("JENKINS-57826")
+    @Test
+    public void catchErrorStageNotBuilt() throws Exception {
+        expect("catchErrorStageNotBuilt")
+                .logContains("This should happen",
+                        "The build should be a success")
+                .logNotContains("This shouldn't happen",
+                        "The build shouldn't be not built")
+                .go();
+    }
+
+    @Issue("JENKINS-57826")
+    @Test
+    public void warnErrorStageUnstable() throws Exception {
+        expect(Result.UNSTABLE, "warnErrorStageUnstable")
+                .logContains("This should happen",
+                        "The build should be unstable")
+                .logNotContains("This shouldn't happen",
+                        "The build shouldn't be a success")
+                .go();
     }
 
     @Override

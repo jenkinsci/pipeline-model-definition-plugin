@@ -65,9 +65,9 @@ class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineScript<Do
             def dockerfilePath = describable.getDockerfilePath(script.isUnix())
             try {
                 RunWrapper runWrapper = (RunWrapper)script.getProperty("currentBuild")
-                def hash = Utils.stringToSHA1("${runWrapper.fullProjectName}\n${script.readFile("${dockerfilePath}")}")
-                def imgName = "${hash}"
                 def additionalBuildArgs = describable.getAdditionalBuildArgs() ? " ${describable.additionalBuildArgs}" : ""
+                def hash = Utils.stringToSHA1("${runWrapper.fullProjectName}\n${script.readFile("${dockerfilePath}")}\n${additionalBuildArgs}")
+                def imgName = "${hash}"
                 def commandLine = "docker build -t ${imgName}${additionalBuildArgs} -f \"${dockerfilePath}\" \"${describable.getActualDir()}\""
                 script.sh commandLine
                 script.dockerFingerprintFrom dockerfile: dockerfilePath, image: imgName, toolName: script.env.DOCKER_TOOL_NAME, commandLine: commandLine

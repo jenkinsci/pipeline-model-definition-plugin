@@ -30,6 +30,11 @@ pipeline {
             parallel {
                 stage("first") {
                     steps {
+                        // There's a race condition where if the first branch fails before the second branch even gets into
+                        // its node, the second stage is marked as failed, not aborted. This isn't ideal, but frankly
+                        // I don't feel like figuring it out and I think it's likely to be at a deeper level than just
+                        // Declarative, so let's sleep here to be safe.
+                        sleep 5
                         error "First branch"
                     }
                     post {

@@ -29,19 +29,20 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
 import javax.annotation.CheckForNull
 import javax.annotation.Nonnull
 
-import static java.lang.String.format
 import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 
 /**
@@ -185,7 +186,7 @@ class ModelInterpreter implements Serializable {
                 if (skippedReason == null && parent != null &&
                     root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
                     Utils.logToTaskListener("Post stage")
-                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name, parent)
+                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name)
                 }
             }
 
@@ -205,7 +206,7 @@ class ModelInterpreter implements Serializable {
      */
     def getParallelStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason skippedReason) {
         def parallelStages = [:]
-        thisStage?.parallelContent?.each { content ->
+        thisStage?.parallel?.stages?.each { content ->
             if (skippedReason != null) {
                 parallelStages.put(content.name,
                     evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name)))
@@ -249,7 +250,7 @@ class ModelInterpreter implements Serializable {
                         skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else {
                         inWrappers(thisStage.options?.wrappers) {
-                            if (thisStage?.parallelContent) {
+                            if (thisStage?.parallel != null) {
                                 stageInput(thisStage.input) {
                                     if (evaluateWhen(thisStage.when)) {
                                         withCredentialsBlock(thisStage.environment) {
@@ -335,9 +336,9 @@ class ModelInterpreter implements Serializable {
                     // And finally, run the post stage steps if this was a parallel parent.
                     if (skippedReason == null &&
                         root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
-                        thisStage?.parallelContent) {
+                        thisStage?.parallel != null) {
                         Utils.logToTaskListener("Post stage")
-                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name, thisStage)
+                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
                 }
 
@@ -385,7 +386,7 @@ class ModelInterpreter implements Serializable {
         return {
             Utils.logToTaskListener(reason.message)
             Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
-            if (thisStage?.parallelContent) {
+            if (thisStage?.parallel != null) {
                 Map<String,Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
                 script.parallel(parallelToSkip)
                 if (reason instanceof SkippedStageReason.Restart) {
@@ -679,6 +680,7 @@ class ModelInterpreter implements Serializable {
         Throwable stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: parentAgent) {
+                System.err.println("GOT CONTEXT FOR ${thisStage.name}")
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Throwable e) {
@@ -690,7 +692,7 @@ class ModelInterpreter implements Serializable {
             // And finally, run the post stage steps.
             if (root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, stageError)) {
                 Utils.logToTaskListener("Post stage")
-                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name, thisStage)
+                stageError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, stageError, thisStage.name)
             }
         }
 
@@ -779,16 +781,15 @@ class ModelInterpreter implements Serializable {
     def runPostConditions(AbstractBuildConditionResponder responder,
                           Agent agentContext,
                           Throwable stageError,
-                          String stageName = null,
-                          Object context = null) {
+                          String stageName = null) {
         BuildCondition.orderedConditionNames.each { conditionName ->
             RunWrapper runWrapper = script.getProperty("currentBuild")
             String originalResultString = runWrapper.result
             Result originalResult = originalResultString == null ? null : Result.fromString(originalResultString)
-            Result logicalResult = BuildCondition.getCombinedResult(runWrapper.rawBuild, stageError)
+            Result logicalResult = BuildCondition.getCombinedResult((WorkflowRun)runWrapper.rawBuild, stageError, stageName)
             try {
                 Closure c = responder.closureForSatisfiedCondition(conditionName, runWrapper,
-                    context, stageError)
+                    stageName, stageError)
                 if (c != null) {
                     runWrapper.rawBuild.@result = logicalResult
                     catchRequiredContextForNode(agentContext) {

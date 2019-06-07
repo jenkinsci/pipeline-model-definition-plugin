@@ -28,9 +28,13 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.Util;
 import hudson.model.Result;
+import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils;
 import org.jenkinsci.plugins.structs.SymbolLookup;
+import org.jenkinsci.plugins.workflow.actions.WarningAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
@@ -38,12 +42,8 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 /**
  * Extension point for build conditions.
@@ -82,9 +82,15 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         return combineResults(run, null);
     }
 
+    @Deprecated
     @Nonnull
     protected final Result combineResults(@Nonnull WorkflowRun run, @CheckForNull Throwable error) {
-        return BuildCondition.getCombinedResult(run, error);
+        return combineResults(run, error, null);
+    }
+
+    @Nonnull
+    protected final Result combineResults(@Nonnull WorkflowRun run, @CheckForNull Throwable error, @CheckForNull Object context) {
+        return BuildCondition.getCombinedResult(run, error, context);
     }
 
     @CheckForNull
@@ -135,11 +141,35 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         return conditions;
     }
 
+    @Deprecated
     @Nonnull
     public static Result getCombinedResult(@Nonnull WorkflowRun run, @CheckForNull Throwable error) {
+        return getCombinedResult(run, error, null);
+    }
+
+    @Nonnull
+    public static Result getCombinedResult(@Nonnull WorkflowRun run, @CheckForNull Throwable error, @CheckForNull Object context) {
+        Result errorResult = Result.SUCCESS;
+        if (context instanceof String) {
+            String stageName = (String)context;
+            List<FlowNode> startAndEnd = CommonUtils.findPossiblyUnfinishedEndNodeForCurrentStage(stageName, run.getExecution());
+            if (startAndEnd.size() == 2 && startAndEnd.get(0) != null && startAndEnd.get(1) != null) {
+                // TODO: Remove this in favor of moving StatusAndTiming#findWarningBetween public.
+                DepthFirstScanner scanner = new DepthFirstScanner();
+                if (scanner.setup(startAndEnd.get(1), Collections.singletonList(startAndEnd.get(0)))) {
+                    WarningAction warningAction = StreamSupport.stream(scanner.spliterator(), false)
+                            .map(node -> node.getPersistentAction(WarningAction.class))
+                            .filter(Objects::nonNull)
+                            .max(Comparator.comparing(warning -> warning.getResult().ordinal))
+                            .orElse(null);
+                    if (warningAction != null) {
+                        errorResult = warningAction.getResult();
+                    }
+                }
+            }
+        }
         Result execResult = getFlowExecutionResult(run);
         Result prevResult = run.getResult();
-        Result errorResult = Result.SUCCESS;
         if (prevResult == null) {
             prevResult = Result.SUCCESS;
         }

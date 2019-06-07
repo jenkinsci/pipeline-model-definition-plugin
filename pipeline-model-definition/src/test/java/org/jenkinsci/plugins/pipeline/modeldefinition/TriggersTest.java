@@ -38,10 +38,7 @@ import org.jvnet.hudson.test.Issue;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TriggersTest extends AbstractModelDefTest {
     @Test
@@ -69,7 +66,7 @@ public class TriggersTest extends AbstractModelDefTest {
     @Ignore("Triggers are set before withEnv is called.")
     @Test
     public void envVarInTriggers() throws Exception {
-        WorkflowRun b = expect("envVarInTriggers")
+        WorkflowRun b = expect("environment/envVarInTriggers")
                 .logContains("[Pipeline] { (foo)", "hello")
                 .logNotContains("[Pipeline] { (Post Actions)")
                 .go();
