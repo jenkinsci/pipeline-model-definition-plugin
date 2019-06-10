@@ -6,6 +6,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a branch of Pipeline steps to execute, either as part of a parallel block, or on its own.
@@ -72,30 +73,16 @@ public final class ModelASTBranch extends ModelASTElement {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
+        if (this == o) return true;
+        if (!(o instanceof ModelASTBranch)) return false;
+        if (!super.equals(o)) return false;
         ModelASTBranch that = (ModelASTBranch) o;
-
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-        return getSteps() != null ? getSteps().equals(that.getSteps()) : that.getSteps() == null;
-
+        return Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getSteps(), that.getSteps());
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
-        return result;
+        return Objects.hash(super.hashCode(), getName(), getSteps());
     }
 }
