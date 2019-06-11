@@ -24,7 +24,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -51,40 +50,24 @@ public final class ModelASTStageInput extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        final JSONObject o = new JSONObject();
-        o.accumulate("message", message.toJSON());
-
-        if (id != null) {
-            o.accumulate("id", id.toJSON());
-        }
-        if (ok != null) {
-            o.accumulate("ok", ok.toJSON());
-        }
-        if (submitter != null) {
-            o.accumulate("submitter", submitter.toJSON());
-        }
-        if (submitterParameter != null) {
-            o.accumulate("submitterParameter", submitterParameter.toJSON());
-        }
-        if (!parameters.isEmpty()) {
-            final JSONObject p = new JSONObject();
-            final JSONArray a = new JSONArray();
-            for (ModelASTBuildParameter parameter : parameters) {
-                a.add(parameter.toJSON());
+        final JSONObject o = new JSONObject()
+            .accumulate("message", toJSON(message))
+            .elementOpt("id", toJSON(id))
+            .elementOpt("ok", toJSON(ok))
+            .elementOpt("submitter", toJSON(submitter))
+            .elementOpt("submitterParameter", toJSON(submitterParameter));
+            if (parameters != null && !parameters.isEmpty()) {
+                // Redundancy due to how we parse parameters in JSON. This makes top-level and input parameters JSON consistent.
+                o.elementOpt("parameters", toJSONObject("parameters", parameters));
             }
-            // Redundancy due to how we parse parameters in JSON. This makes top-level and input parameters JSON consistent.
-            p.accumulate("parameters", a);
-            o.accumulate("parameters", p);
-        }
+
         return o;
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTBuildParameter parameter: parameters) {
-            parameter.validate(validator);
-        }
+        validate(validator, parameters);
     }
 
     @Override
@@ -118,21 +101,11 @@ public final class ModelASTStageInput extends ModelASTElement {
     public void removeSourceLocation() {
         super.removeSourceLocation();
         message.removeSourceLocation();
-        if (id != null) {
-            id.removeSourceLocation();
-        }
-        if (ok != null) {
-            ok.removeSourceLocation();
-        }
-        if (submitter != null) {
-            submitter.removeSourceLocation();
-        }
-        if (submitterParameter != null) {
-            submitterParameter.removeSourceLocation();
-        }
-        for (ModelASTBuildParameter parameter: parameters) {
-            parameter.removeSourceLocation();
-        }
+        removeSourceLocation(id);
+        removeSourceLocation(ok);
+        removeSourceLocation(submitter);
+        removeSourceLocation(submitterParameter);
+        removeSourceLocationsFrom(parameters);
     }
 
     public List<ModelASTBuildParameter> getParameters() {

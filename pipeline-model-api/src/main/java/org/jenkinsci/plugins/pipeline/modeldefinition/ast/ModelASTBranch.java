@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -25,37 +24,26 @@ public final class ModelASTBranch extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTStep step: steps) {
-            a.add(step.toJSON());
-        }
-
-        return new JSONObject().accumulate("name", name).accumulate("steps", a);
+        return new JSONObject()
+                .accumulate("name", name)
+                .accumulate("steps", toJSONArray(steps));
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTStep step: steps) {
-            step.validate(validator);
-        }
+        validate(validator, steps);
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        for (ModelASTStep step: steps) {
-            result.append(step.toGroovy()).append("\n");
-        }
-        return result.toString();
+        return toGroovy(steps);
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTStep step: steps) {
-            step.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(steps);
     }
 
     public String getName() {

@@ -22,15 +22,13 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
 
     @Override
     public Object toJSON() {
-        return value.toJSON();
+        return toJSON(value);
     }
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         // Nothing to immediately validate here
-        if (value != null) {
-            value.validate(validator);
-        }
+        validate(validator, value);
     }
 
     @Override
@@ -41,9 +39,7 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        if (value != null) {
-            value.removeSourceLocation();
-        }
+        removeSourceLocation(value);
     }
 
     public ModelASTValue getValue() {

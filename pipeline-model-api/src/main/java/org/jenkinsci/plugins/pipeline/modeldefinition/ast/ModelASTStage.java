@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
@@ -53,53 +52,20 @@ public final class ModelASTStage extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        o.accumulate("name", name);
-
-        if (agent != null) {
-            o.accumulate("agent", agent.toJSON());
-        }
-        if (when != null) {
-            o.accumulate("when", when.toJSON());
-        }
-
-        if (post != null) {
-            o.accumulate("post", post.toJSON());
-        }
-
-        if (tools != null) {
-            o.accumulate("tools", tools.toJSON());
-        }
-
-        if (environment != null) {
-            o.accumulate("environment", environment.toJSON());
-        }
-        if (options != null) {
-            o.accumulate("options", options.toJSON());
-        }
-        if (input != null) {
-            o.accumulate("input", input.toJSON());
-        }
-        if (stages != null) {
-            o.accumulate("stages", stages.toJSON());
-        }
-        if (parallel != null) {
-            o.accumulate("parallel", parallel.toJSON());
-        }
-        if (matrix != null) {
-            o.accumulate("matrix", matrix.toJSON());
-        }
-        if (!branches.isEmpty()) {
-            final JSONArray a = new JSONArray();
-            for (ModelASTBranch branch : branches) {
-                a.add(branch.toJSON());
-            }
-            o.accumulate("branches", a);
-        }
-
-        if (failFast != null) {
-            o.accumulate("failFast", failFast);
-        }
+        JSONObject o = new JSONObject()
+            .accumulate("name", name)
+            .elementOpt("agent", toJSON(agent))
+            .elementOpt("when", toJSON(when))
+            .elementOpt("post", toJSON(post))
+            .elementOpt("tools", toJSON(tools))
+            .elementOpt("environment", toJSON(environment))
+            .elementOpt("options", toJSON(options))
+            .elementOpt("input", toJSON(input))
+            .elementOpt("stages", toJSON(stages))
+            .elementOpt("parallel", toJSON(parallel))
+            .elementOpt("matrix", toJSON(matrix))
+            .elementOpt("branches", nullIfEmpty(toJSONArray(branches)))
+            .elementOpt("failFast", failFast);
 
         return o;
     }
@@ -112,39 +78,19 @@ public final class ModelASTStage extends ModelASTElement {
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         validator.validateElement(this, isWithinParallel);
 
-        if (agent != null) {
-            agent.validate(validator);
-        }
-        if (when != null) {
-            when.validate(validator);
-        }
-        if (post != null) {
-            post.validate(validator);
-        }
-        if (tools != null) {
-            tools.validate(validator);
-        }
-        if (environment != null) {
-            environment.validate(validator);
-        }
-        if (options != null) {
-            options.validate(validator);
-        }
-        if (input != null) {
-            input.validate(validator);
-        }
+        validate(validator, agent);
+        validate(validator, when);
+        validate(validator, post);
+        validate(validator, tools);
+        validate(validator, environment);
+        validate(validator, options);
+        validate(validator, input);
         if (stages != null) {
             stages.validate(validator, isWithinParallel);
         }
-        if (parallel != null) {
-            parallel.validate(validator);
-        }
-        for (ModelASTBranch branch : branches) {
-            branch.validate(validator);
-        }
-        if (matrix != null) {
-            matrix.validate(validator);
-        }
+        validate(validator, parallel);
+        validate(validator, branches);
+        validate(validator, matrix);
     }
 
     @Override
@@ -152,47 +98,23 @@ public final class ModelASTStage extends ModelASTElement {
         StringBuilder result = new StringBuilder();
         // TODO decide if we need to support multiline names
         result.append("stage(\'").append(name.replace("'", "\\'")).append("\') {\n");
-        if (agent != null) {
-            result.append(agent.toGroovy());
-        }
-        if (when != null) {
-            result.append(when.toGroovy());
-        }
-        if (tools != null) {
-            result.append(tools.toGroovy());
-        }
-        if (environment != null) {
-            result.append(environment.toGroovy());
-        }
-        if (options != null) {
-            result.append(options.toGroovy());
-        }
-        if (input != null) {
-            result.append(input.toGroovy());
-        }
-        if (post != null) {
-            result.append(post.toGroovy());
-        }
-        if (stages != null) {
-            result.append("stages {\n");
-            result.append(stages.toGroovy());
-            result.append("}\n");
-        }
+        result.append(toGroovy(agent));
+        result.append(toGroovy(when));
+        result.append(toGroovy(tools));
+        result.append(toGroovy(environment));
+        result.append(toGroovy(options));
+        result.append(toGroovy(input));
+        result.append(toGroovy(post));
+        result.append(toGroovy(stages));
+
         if (parallel != null || matrix != null) {
             if (failFast != null && failFast) {
                 result.append("failFast true\n");
             }
         }
-        if (parallel != null) {
-            result.append("parallel {\n");
-            result.append(parallel.toGroovy());
-            result.append("}\n");
-        }
-        if (matrix != null) {
-            result.append("matrix {\n");
-            result.append(matrix.toGroovy());
-            result.append("}\n");
-        }
+        result.append(toGroovy(parallel));
+        result.append(toGroovy(matrix));
+
         if (!branches.isEmpty()) {
             result.append("steps {\n");
             if (branches.size() > 1) {
@@ -229,39 +151,18 @@ public final class ModelASTStage extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        if (agent != null) {
-            agent.removeSourceLocation();
-        }
-        if (when != null) {
-            when.removeSourceLocation();
-        }
-        if (post != null) {
-            post.removeSourceLocation();
-        }
-        if (tools != null) {
-            tools.removeSourceLocation();
-        }
-        if (environment != null) {
-            environment.removeSourceLocation();
-        }
-        if (options != null) {
-            options.removeSourceLocation();
-        }
-        if (input != null) {
-            input.removeSourceLocation();
-        }
-        if (stages != null) {
-            stages.removeSourceLocation();
-        }
-        for (ModelASTBranch branch: branches) {
-            branch.removeSourceLocation();
-        }
-        if (parallel != null) {
-            parallel.removeSourceLocation();
-        }
-        if (matrix != null) {
-            matrix.removeSourceLocation();
-        }
+        removeSourceLocation(agent);
+        removeSourceLocation(when);
+        removeSourceLocation(post);
+        removeSourceLocation(tools);
+        removeSourceLocation(environment);
+        removeSourceLocation(options);
+        removeSourceLocation(input);
+        removeSourceLocation(stages);
+        removeSourceLocationsFrom(branches);
+        removeSourceLocation(parallel);
+        removeSourceLocation(matrix);
+        removeSourceLocationsFrom(parallelContent);
     }
 
     public String getName() {

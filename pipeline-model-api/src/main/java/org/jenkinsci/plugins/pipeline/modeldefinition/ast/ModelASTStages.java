@@ -24,11 +24,7 @@ public class ModelASTStages extends ModelASTElement {
 
     @Override
     public JSONArray toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTStage stage: stages) {
-            a.add(stage.toJSON());
-        }
-        return a;
+        return toJSONArray(stages);
     }
 
     @Override
@@ -38,26 +34,20 @@ public class ModelASTStages extends ModelASTElement {
 
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         validator.validateElement(this);
-        for (ModelASTStage stage : stages) {
-            stage.validate(validator, isWithinParallel);
+        if (stages != null) {
+            stages.forEach(stage -> stage.validate(validator, isWithinParallel));
         }
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        for (ModelASTStage stage: stages) {
-            result.append(stage.toGroovy());
-        }
-        return result.toString();
+        return toGroovyBlock("stages", stages);
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTStage stage : stages) {
-            stage.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(stages);
     }
 
     public UUID getUuid() {

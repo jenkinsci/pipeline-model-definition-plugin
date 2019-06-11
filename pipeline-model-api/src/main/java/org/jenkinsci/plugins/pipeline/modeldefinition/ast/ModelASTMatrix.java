@@ -23,6 +23,11 @@ public final class ModelASTMatrix extends ModelASTParallel {
     }
 
     @Override
+    public String toGroovy() {
+        return toGroovyBlock("matrix", getStages());
+    }
+
+    @Override
     public String toString() {
         return "ModelASTMatrix{" +
                 "stages=" + getStages() +

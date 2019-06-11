@@ -20,7 +20,9 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
 
     @Override
     public JSONObject toJSON() {
-        return new JSONObject().accumulate("key", key.toJSON()).accumulate("value", value.toJSON());
+        return new JSONObject()
+                .accumulate("key", toJSON(key))
+                .accumulate("value", toJSON(value));
     }
 
     @Override
