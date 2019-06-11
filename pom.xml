@@ -167,12 +167,12 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-support</artifactId>
-        <version>3.3</version>
+        <version>${workflow-support-plugin.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-support</artifactId>
-        <version>3.3</version>
+        <version>${workflow-support-plugin.version}</version>
         <classifier>tests</classifier>
       </dependency>
       <dependency>
@@ -317,7 +317,6 @@
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
         <artifactId>gmaven-plugin</artifactId>
-        <version>1.5-jenkins-3</version>
         <configuration>
           <providerSelection>1.8</providerSelection>
         </configuration>
@@ -343,7 +342,6 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.7.9</version>
         <executions>
           <execution>
             <id>prepare-agent</id>
@@ -386,9 +384,8 @@
     <jenkins.version>2.150.1</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.11</groovy.version>
-    <jenkins-test-harness.version>2.39</jenkins-test-harness.version>
-    <concurrency>1</concurrency>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
+    <workflow-support-plugin.version>3.3</workflow-support-plugin.version>
   </properties>
 
   <repositories>
