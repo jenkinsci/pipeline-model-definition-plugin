@@ -680,7 +680,6 @@ class ModelInterpreter implements Serializable {
         Throwable stageError = null
         try {
             catchRequiredContextForNode(thisStage.agent ?: parentAgent) {
-                System.err.println("GOT CONTEXT FOR ${thisStage.name}")
                 delegateAndExecute(thisStage.steps.closure)
             }
         } catch (Throwable e) {
