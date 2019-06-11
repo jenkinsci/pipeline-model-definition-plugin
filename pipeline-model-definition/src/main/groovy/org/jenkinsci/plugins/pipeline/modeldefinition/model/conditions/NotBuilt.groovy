@@ -46,7 +46,7 @@ class NotBuilt extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        return combineResults(r, error) == Result.NOT_BUILT
+        return combineResults(r, error, context) == Result.NOT_BUILT
     }
 
     @Override

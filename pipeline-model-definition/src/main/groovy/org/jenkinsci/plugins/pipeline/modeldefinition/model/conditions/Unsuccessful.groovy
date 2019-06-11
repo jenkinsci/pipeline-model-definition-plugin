@@ -46,7 +46,7 @@ class Unsuccessful extends BuildCondition {
 
     @Override
     boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
-        return combineResults(r, error) != Result.SUCCESS
+        return combineResults(r, error, context) != Result.SUCCESS
     }
 
     @Override

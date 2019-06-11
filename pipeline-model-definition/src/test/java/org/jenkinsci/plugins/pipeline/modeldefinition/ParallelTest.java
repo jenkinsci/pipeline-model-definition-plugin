@@ -78,7 +78,7 @@ public class ParallelTest extends AbstractModelDefTest {
         assertNotNull(execution);
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("foo"));
         assertNotNull(startFoo);
         assertTrue(startFoo instanceof BlockStartNode);
         FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFoo));
@@ -86,7 +86,7 @@ public class ParallelTest extends AbstractModelDefTest {
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
         assertNotNull(endFoo.getError());
 
-        FlowNode startFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("first"));
+        FlowNode startFirst = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("first"));
         assertNotNull(startFirst);
         assertTrue(startFirst instanceof BlockStartNode);
         FlowNode endFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFirst));
@@ -94,7 +94,7 @@ public class ParallelTest extends AbstractModelDefTest {
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFirst, endFirst, null));
         assertNotNull(endFirst.getError());
 
-        FlowNode startThird = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("third"));
+        FlowNode startThird = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("third"));
         assertNotNull(startThird);
         assertTrue(startThird instanceof BlockStartNode);
         FlowNode endThird = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startThird));
@@ -232,7 +232,7 @@ public class ParallelTest extends AbstractModelDefTest {
         FlowExecution execution = b.getExecution();
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("foo"));
         assertNotNull(startFoo);
         assertTrue(startFoo instanceof BlockStartNode);
         FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFoo));
@@ -240,21 +240,21 @@ public class ParallelTest extends AbstractModelDefTest {
         assertEquals(GenericStatus.SUCCESS, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
         assertNull(endFoo.getError());
 
-        FlowNode startFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("first"));
+        FlowNode startFirst = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("first"));
         assertNotNull(startFirst);
         assertTrue(startFirst instanceof BlockStartNode);
         FlowNode endFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFirst));
         assertNotNull(endFirst);
         assertEquals(GenericStatus.SUCCESS, StatusAndTiming.computeChunkStatus(b, null, startFirst, endFirst, null));
 
-        FlowNode startInnerFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("inner-first"));
+        FlowNode startInnerFirst = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("inner-first"));
         assertNotNull(startInnerFirst);
         assertTrue(startInnerFirst instanceof BlockStartNode);
         FlowNode endInnerFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startInnerFirst));
         assertNotNull(endInnerFirst);
         assertEquals(GenericStatus.SUCCESS, StatusAndTiming.computeChunkStatus(b, null, startInnerFirst, endInnerFirst, null));
 
-        FlowNode startInnerSecond = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("inner-second"));
+        FlowNode startInnerSecond = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("inner-second"));
         assertNotNull(startInnerSecond);
         assertTrue(startInnerSecond instanceof BlockStartNode);
         FlowNode endInnerSecond = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startInnerSecond));
@@ -382,7 +382,7 @@ public class ParallelTest extends AbstractModelDefTest {
         FlowExecution execution = b.getExecution();
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode startFoo = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("foo"));
+        FlowNode startFoo = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("foo"));
         assertNotNull(startFoo);
         assertTrue(startFoo instanceof BlockStartNode);
         FlowNode endFoo = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFoo));
@@ -390,14 +390,14 @@ public class ParallelTest extends AbstractModelDefTest {
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFoo, endFoo, null));
         assertNotNull(endFoo.getError());
 
-        FlowNode startFirst = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("first"));
+        FlowNode startFirst = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("first"));
         assertNotNull(startFirst);
         assertTrue(startFirst instanceof BlockStartNode);
         FlowNode endFirst = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startFirst));
         assertNotNull(endFirst);
         assertEquals(GenericStatus.FAILURE, StatusAndTiming.computeChunkStatus(b, null, startFirst, endFirst, null));
 
-        FlowNode startSecond = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName("second"));
+        FlowNode startSecond = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("second"));
         assertNotNull(startSecond);
         assertTrue(startSecond instanceof BlockStartNode);
         FlowNode endSecond = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startSecond));

@@ -46,6 +46,7 @@ import jenkins.plugins.git.GitSCMSource;
 import jenkins.security.NotReallyRoleSensitiveCallable;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
 import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
@@ -795,7 +796,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
     private void assertStageIsNotExecuted(@Nonnull String stageName, @Nonnull WorkflowRun run, @Nonnull FlowExecution execution) {
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode startStage = scanner.findFirstMatch(heads, null, Utils.isStageWithOptionalName(stageName));
+        FlowNode startStage = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName(stageName));
         assertNotNull(startStage);
         assertTrue(startStage instanceof BlockStartNode);
         FlowNode endStage = scanner.findFirstMatch(heads, null, Utils.endNodeForStage((BlockStartNode)startStage));
