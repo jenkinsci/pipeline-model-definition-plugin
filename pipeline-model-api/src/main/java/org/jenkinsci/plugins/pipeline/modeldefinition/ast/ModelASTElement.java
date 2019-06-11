@@ -30,9 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public abstract class ModelASTElement implements ModelASTMarkerInterface {
@@ -151,7 +149,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
-    protected static <T extends ModelASTMarkerInterface> String toGroovyArgList(List<T> list) {
+    protected static <T extends ModelASTMarkerInterface> String toGroovyArgList(Collection<T> list) {
         StringBuilder result = new StringBuilder();
         boolean first = true;
         for (T item : list) {
@@ -244,19 +242,25 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
         // No-op
     }
 
-    protected static void validate(@Nonnull ModelValidator validator, @CheckForNull ModelASTMarkerInterface item) {
-        if (item != null) {
-            item.validate(validator);
+    protected static void validate(@Nonnull ModelValidator validator, @CheckForNull ModelASTMarkerInterface... items) {
+        if (items != null && items.length > 0) {
+            validate(validator, Arrays.asList(items));
         }
     }
 
-    protected static <T extends ModelASTMarkerInterface> void validate(@Nonnull ModelValidator validator, @CheckForNull List<T> list) {
+    protected static <T extends ModelASTMarkerInterface> void validate(@Nonnull ModelValidator validator, @CheckForNull List<T> list, @CheckForNull ModelASTMarkerInterface... items) {
+        validate(validator, items);
         if (list != null) {
-            list.forEach( item -> item.validate(validator));
+            for (T item : list) {
+                if (item != null) {
+                    item.validate(validator);
+                }
+            }
         }
     }
 
-    protected static <K extends  ModelASTMarkerInterface, V extends  ModelASTMarkerInterface> void validate(@Nonnull ModelValidator validator, @CheckForNull Map<K, V> map) {
+    protected static <K extends  ModelASTMarkerInterface, V extends  ModelASTMarkerInterface> void validate(@Nonnull ModelValidator validator, @CheckForNull Map<K, V> map, @CheckForNull ModelASTMarkerInterface... items) {
+        validate(validator, items);
         if (map != null) {
             for (Map.Entry<K, V> entry : map.entrySet()) {
                 entry.getKey().validate(validator);
@@ -265,37 +269,39 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
         }
     }
 
-    /**
-     * Removes the source location value from this element.
-     */
+    @Override
     public void removeSourceLocation() {
         sourceLocation = null;
     }
 
     /**
-     * Removes the source location value from this element.
-     */
-    protected static void removeSourceLocation(@CheckForNull ModelASTMarkerInterface item) {
-        if (item != null) {
-            item.removeSourceLocation();
+     * Removes the source location value from this list of elements element.
+    */
+    protected static void removeSourceLocationsFrom(@CheckForNull ModelASTMarkerInterface... items) {
+        if (items != null && items.length > 0) {
+            removeSourceLocationsFrom(Arrays.asList(items));
         }
     }
 
     /**
      * Removes the source location value from this list of elements.
      */
-    protected static <T extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Collection<T> list) {
+    protected static <T extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Collection<T> list, @CheckForNull ModelASTMarkerInterface... items) {
+        removeSourceLocationsFrom(items);
         if (list != null) {
             for (T item : list) {
-                item.removeSourceLocation();
+                if (item != null) {
+                    item.removeSourceLocation();
+                }
             }
         }
     }
 
     /**
-     * Removes the source location value from this map of elements.
+     * Removes the source location value from this list of elements.
      */
-    protected static <K extends ModelASTMarkerInterface, V extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Map<K, V> map) {
+    protected static <K extends ModelASTMarkerInterface, V extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Map<K, V> map, @CheckForNull ModelASTMarkerInterface... items) {
+        removeSourceLocationsFrom(items);
         if (map != null) {
             for (Map.Entry<K, V> entry : map.entrySet()) {
                 entry.getKey().removeSourceLocation();

@@ -40,7 +40,7 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocation(branch);
+        removeSourceLocationsFrom(branch);
     }
 
     public String getCondition() {

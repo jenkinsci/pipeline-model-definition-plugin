@@ -77,20 +77,10 @@ public final class ModelASTStage extends ModelASTElement {
 
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         validator.validateElement(this, isWithinParallel);
-
-        validate(validator, agent);
-        validate(validator, when);
-        validate(validator, post);
-        validate(validator, tools);
-        validate(validator, environment);
-        validate(validator, options);
-        validate(validator, input);
+        validate(validator, branches, agent, when, post, tools, environment, options, input, parallel, matrix);
         if (stages != null) {
             stages.validate(validator, isWithinParallel);
         }
-        validate(validator, parallel);
-        validate(validator, branches);
-        validate(validator, matrix);
     }
 
     @Override
@@ -151,18 +141,7 @@ public final class ModelASTStage extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocation(agent);
-        removeSourceLocation(when);
-        removeSourceLocation(post);
-        removeSourceLocation(tools);
-        removeSourceLocation(environment);
-        removeSourceLocation(options);
-        removeSourceLocation(input);
-        removeSourceLocation(stages);
-        removeSourceLocationsFrom(branches);
-        removeSourceLocation(parallel);
-        removeSourceLocation(matrix);
-        removeSourceLocationsFrom(parallelContent);
+        removeSourceLocationsFrom(branches, agent, when, post, tools, environment, options, input, stages, parallel, matrix);
     }
 
     public String getName() {

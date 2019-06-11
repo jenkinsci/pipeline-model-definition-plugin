@@ -56,8 +56,7 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
-        validate(validator, args);
-        validate(validator, children);
+        validate(validator, children, args);
     }
 
     @Override
@@ -75,8 +74,7 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocation(args);
-        removeSourceLocationsFrom(children);
+        removeSourceLocationsFrom(children, args);
     }
 
     public String getName() {

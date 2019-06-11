@@ -70,9 +70,7 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTValue arg : args) {
-            arg.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(args);
     }
 
     public String getName() {

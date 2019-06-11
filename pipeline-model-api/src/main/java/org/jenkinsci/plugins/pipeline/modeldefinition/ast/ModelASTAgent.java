@@ -91,8 +91,7 @@ public final class ModelASTAgent extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocation(agentType);
-        removeSourceLocation(variables);
+        removeSourceLocationsFrom(agentType, variables);
     }
 
     public ModelASTKey getAgentType() {

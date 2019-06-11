@@ -119,7 +119,7 @@ public class ModelASTStep extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocation(args);
+        removeSourceLocationsFrom(args);
     }
 
     public String getName() {

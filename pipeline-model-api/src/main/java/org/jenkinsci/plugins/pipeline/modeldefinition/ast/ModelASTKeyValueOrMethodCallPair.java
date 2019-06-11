@@ -27,8 +27,7 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
-        key.validate(validator);
-        value.validate(validator);
+        validate(validator, key, value);
     }
 
     @Override
@@ -39,8 +38,7 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        key.removeSourceLocation();
-        value.removeSourceLocation();
+        removeSourceLocationsFrom(key, value);
     }
 
     public ModelASTKey getKey() {

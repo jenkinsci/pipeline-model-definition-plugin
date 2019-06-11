@@ -46,32 +46,24 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
-        validate(validator, stages);
-        validate(validator, postBuild);
-        validate(validator, environment);
-        validate(validator, agent);
-        validate(validator, tools);
-        validate(validator, options);
-        validate(validator, parameters);
-        validate(validator, triggers);
-        validate(validator, libraries);
+        validate(validator, stages, postBuild, environment, agent, tools, options, parameters, triggers, libraries);
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        result.append("pipeline {\n");
-        result.append(toGroovy(agent));
-        result.append(toGroovy(libraries));
-        result.append(toGroovy(stages));
-        result.append(toGroovy(tools));
-        result.append(toGroovy(environment));
-        result.append(toGroovy(postBuild));
-        result.append(toGroovyCheckEmpty(options));
-        result.append(toGroovyCheckEmpty(parameters));
-        result.append(toGroovyCheckEmpty(triggers));
+        StringBuilder result = new StringBuilder()
+            .append("pipeline {\n")
+            .append(toGroovy(agent))
+            .append(toGroovy(libraries))
+            .append(toGroovy(stages))
+            .append(toGroovy(tools))
+            .append(toGroovy(environment))
+            .append(toGroovy(postBuild))
+            .append(toGroovyCheckEmpty(options))
+            .append(toGroovyCheckEmpty(parameters))
+            .append(toGroovyCheckEmpty(triggers))
+            .append("}\n");
 
-        result.append("}\n");
         return result.toString();
     }
 
@@ -124,14 +116,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocation(stages);
-        removeSourceLocation(libraries);
-        removeSourceLocation(postBuild);
-        removeSourceLocation(environment);
-        removeSourceLocation(tools);
-        removeSourceLocation(options);
-        removeSourceLocation(parameters);
-        removeSourceLocation(triggers);
+        removeSourceLocationsFrom(stages, libraries, postBuild, environment, tools, options, parameters, triggers);
     }
 
     private static String indent(int count) {

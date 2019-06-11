@@ -100,12 +100,7 @@ public final class ModelASTStageInput extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        message.removeSourceLocation();
-        removeSourceLocation(id);
-        removeSourceLocation(ok);
-        removeSourceLocation(submitter);
-        removeSourceLocation(submitterParameter);
-        removeSourceLocationsFrom(parameters);
+        removeSourceLocationsFrom(parameters, message, id, ok, submitter, submitterParameter);
     }
 
     public List<ModelASTBuildParameter> getParameters() {
