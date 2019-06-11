@@ -339,7 +339,7 @@
           <tagNameFormat>pipeline-model-definition-@{project.version}</tagNameFormat>
         </configuration>
       </plugin>
-      <plugin> <!-- TODO can probably be deleted -->
+      <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <executions>
