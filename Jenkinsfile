@@ -1,4 +1,3 @@
-// TODO replace all this with: buildPlugin(configurations: buildPlugin.recommendedConfigurations()) (yes, Scripted, so what)
 // This Jenkinsfile's main purpose is to show a real-world-ish example
 // of what Pipeline config syntax actually looks like.
 pipeline {
