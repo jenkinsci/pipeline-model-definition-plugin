@@ -673,6 +673,7 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private Expression valueOrNull(@CheckForNull ModelASTValue value, Object defaultValue = null) {
         if (value?.sourceLocation instanceof Expression) {
             return (Expression)value.sourceLocation
