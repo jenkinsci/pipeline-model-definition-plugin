@@ -313,6 +313,24 @@
   </dependencyManagement>
 
   <build>
+    <!-- gmaven is inherited from the parent-pom.  Set it to never run. -->
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.gmaven</groupId>
+          <artifactId>gmaven-plugin</artifactId>
+          <executions>
+            <execution>
+              <phase>none</phase>
+            </execution>
+            <execution>
+              <id>test-in-groovy</id>
+              <phase>none</phase>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.codehaus.gmavenplus</groupId>
