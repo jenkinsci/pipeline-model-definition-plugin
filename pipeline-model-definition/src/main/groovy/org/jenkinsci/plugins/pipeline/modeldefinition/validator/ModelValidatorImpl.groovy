@@ -67,7 +67,11 @@ class ModelValidatorImpl implements ModelValidator {
     private transient FlowExecution execution
     private transient List<DeclarativeValidatorContributor> validatorContributors
 
-    ModelValidatorImpl(@Nonnull ErrorCollector e, FlowExecution execution = null) {
+    ModelValidatorImpl(@Nonnull ErrorCollector e) {
+        this(e, [], null)
+    }
+
+    ModelValidatorImpl(@Nonnull ErrorCollector e, FlowExecution execution) {
         this(e, [], execution)
     }
 
