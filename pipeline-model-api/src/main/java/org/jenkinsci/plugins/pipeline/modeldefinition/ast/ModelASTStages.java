@@ -34,8 +34,8 @@ public class ModelASTStages extends ModelASTElement {
 
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         validator.validateElement(this);
-        if (stages != null) {
-            stages.forEach(stage -> stage.validate(validator, isWithinParallel));
+        for (ModelASTStage stage : stages) {
+            stage.validate(validator, isWithinParallel);
         }
     }
 

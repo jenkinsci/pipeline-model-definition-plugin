@@ -85,25 +85,25 @@ public final class ModelASTStage extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        // TODO decide if we need to support multiline names
-        result.append("stage(\'").append(name.replace("'", "\\'")).append("\') {\n");
-        result.append(toGroovy(agent));
-        result.append(toGroovy(when));
-        result.append(toGroovy(tools));
-        result.append(toGroovy(environment));
-        result.append(toGroovy(options));
-        result.append(toGroovy(input));
-        result.append(toGroovy(post));
-        result.append(toGroovy(stages));
+        StringBuilder result = new StringBuilder()
+            // TODO decide if we need to support multiline names
+            .append("stage(\'").append(name.replace("'", "\\'")).append("\') {\n")
+            .append(toGroovy(agent))
+            .append(toGroovy(when))
+            .append(toGroovy(tools))
+            .append(toGroovy(environment))
+            .append(toGroovy(options))
+            .append(toGroovy(input))
+            .append(toGroovy(post))
+            .append(toGroovy(stages));
 
         if (parallel != null || matrix != null) {
             if (failFast != null && failFast) {
                 result.append("failFast true\n");
             }
         }
-        result.append(toGroovy(parallel));
-        result.append(toGroovy(matrix));
+        result.append(toGroovy(parallel))
+            .append(toGroovy(matrix));
 
         if (!branches.isEmpty()) {
             result.append("steps {\n");

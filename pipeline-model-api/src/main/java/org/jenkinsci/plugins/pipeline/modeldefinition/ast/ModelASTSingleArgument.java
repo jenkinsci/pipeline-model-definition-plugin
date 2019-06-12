@@ -38,6 +38,7 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
 
     @Override
     public void removeSourceLocation() {
+        super.removeSourceLocation();
         removeSourceLocationsFrom(value);
     }
 

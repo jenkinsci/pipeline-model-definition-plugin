@@ -269,7 +269,9 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
         }
     }
 
-    @Override
+    /**
+     * Removes the source location value from this element.
+     */
     public void removeSourceLocation() {
         sourceLocation = null;
     }
@@ -278,7 +280,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      * Removes the source location value from this list of elements element.
     */
     protected static void removeSourceLocationsFrom(@CheckForNull ModelASTMarkerInterface... items) {
-        if (items != null && items.length > 0) {
+        if (items != null) {
             removeSourceLocationsFrom(Arrays.asList(items));
         }
     }
@@ -286,8 +288,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
     /**
      * Removes the source location value from this list of elements.
      */
-    protected static <T extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Collection<T> list, @CheckForNull ModelASTMarkerInterface... items) {
-        removeSourceLocationsFrom(items);
+    protected static <T extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Collection<T> list) {
         if (list != null) {
             for (T item : list) {
                 if (item != null) {
@@ -300,9 +301,17 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
     /**
      * Removes the source location value from this list of elements.
      */
-    protected static <K extends ModelASTMarkerInterface, V extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Map<K, V> map, @CheckForNull ModelASTMarkerInterface... items) {
+    protected static <T extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Collection<T> list, @CheckForNull ModelASTMarkerInterface... items) {
         removeSourceLocationsFrom(items);
+        removeSourceLocationsFrom(list);
+    }
+
+    /**
+     * Removes the source location value from this map of elements.
+     */
+    protected static <K extends ModelASTMarkerInterface, V extends ModelASTMarkerInterface> void removeSourceLocationsFrom(@CheckForNull Map<K, V> map, @CheckForNull ModelASTMarkerInterface... items) {
         if (map != null) {
+            removeSourceLocationsFrom(items);
             for (Map.Entry<K, V> entry : map.entrySet()) {
                 entry.getKey().removeSourceLocation();
                 entry.getValue().removeSourceLocation();
