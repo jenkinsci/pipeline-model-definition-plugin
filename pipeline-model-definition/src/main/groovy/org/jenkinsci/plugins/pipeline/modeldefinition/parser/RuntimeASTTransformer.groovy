@@ -672,11 +672,11 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    private Expression valueOrNull(@CheckForNull ModelASTValue value, Object defaultValue = null) {
+    private Expression valueOrNull(@CheckForNull ModelASTValue value) {
         if (value?.sourceLocation instanceof Expression) {
             return (Expression)value.sourceLocation
         } else {
-            return constX(defaultValue)
+            return constX(null)
         }
     }
 

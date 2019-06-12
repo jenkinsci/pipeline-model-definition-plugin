@@ -288,6 +288,7 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private boolean validateDescribable(ModelASTElement element, String name,
                                         ModelASTArgumentList args,
                                         DescribableModel<? extends Describable> model,
@@ -620,6 +621,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(opt, valid)
     }
 
+    @SuppressFBWarnings(value = ["REC_CATCH_EXCEPTION", "UPM_UNCALLED_PRIVATE_METHOD"])
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
         if (v.isLiteral()) {
             try {
@@ -792,6 +794,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(value, true)
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
         boolean contributorsValid = getContributors().collect { contributor ->
             List<String> errors
