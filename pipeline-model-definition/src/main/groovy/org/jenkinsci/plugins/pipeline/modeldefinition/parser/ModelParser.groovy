@@ -180,6 +180,7 @@ class ModelParser implements Parser {
         return null // no 'pipeline', so this doesn't apply
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst)
 
