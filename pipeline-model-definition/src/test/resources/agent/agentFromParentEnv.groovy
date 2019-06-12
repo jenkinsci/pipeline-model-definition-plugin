@@ -32,7 +32,13 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh('echo WHICH_AGENT=$WHICH_AGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo WHICH_AGENT=$WHICH_AGENT')
+                    } else {
+                        bat('echo WHICH_AGENT=$WHICH_AGENT')
+                    }
+                }
             }
         }
         stage("bar") {
@@ -40,7 +46,13 @@ pipeline {
                 label "${PARENT_LABEL}"
             }
             steps {
-                sh('echo WHICH_AGENT=$WHICH_AGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo WHICH_AGENT=$WHICH_AGENT')
+                    } else {
+                        bat('echo WHICH_AGENT=$WHICH_AGENT')
+                    }
+                }
             }
         }
     }

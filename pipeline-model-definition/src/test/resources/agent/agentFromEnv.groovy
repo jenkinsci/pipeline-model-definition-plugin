@@ -32,7 +32,13 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                sh('echo WHICH_AGENT=$WHICH_AGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo WHICH_AGENT=$WHICH_AGENT')
+                    } else {
+                        bat('echo WHICH_AGENT=$WHICH_AGENT')
+                    }
+                }
             }
         }
         stage("bar") {
@@ -43,7 +49,13 @@ pipeline {
                 SECOND_LABEL = "other-docker"
             }
             steps {
-                sh('echo WHICH_AGENT=$WHICH_AGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo WHICH_AGENT=$WHICH_AGENT')
+                    } else {
+                        bat('echo WHICH_AGENT=$WHICH_AGENT')
+                    }
+                }
             }
         }
     }
