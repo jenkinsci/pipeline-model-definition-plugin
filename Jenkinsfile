@@ -31,7 +31,7 @@ pipeline {
             parallel {
                 stage("linux") {
                     agent {
-                        label "highmem"
+                        label "linux"
                     }
                     steps {
                         sh "mvn -B clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=${TEST_TIMEOUT}"
@@ -65,9 +65,9 @@ pipeline {
                         }
                     }
                 }
-                stage("linux-newer-core") {
+                stage("linux-newer-jenkins-core") {
                     agent {
-                        label "highmem"
+                        label "linux"
                     }
                     steps {
                         sh "mvn -B clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
@@ -88,7 +88,7 @@ pipeline {
                         }
                     }
                 }
-                stage("windows-newer-core") {
+                stage("windows-newer-jenkins-core") {
                     agent {
                         label "windows"
                     }
@@ -98,6 +98,32 @@ pipeline {
                     post {
                         always {
                             junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
+                        }
+                    }
+                }
+                stage("linux-jdk11-newer-jenkins-core") {
+                    agent {
+                        label "linux"
+                    }
+                    tools {
+                        jdk "jdk11"
+                    }
+                    steps {
+                        sh "mvn -B clean install --show-version -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
+                    }
+                    post {
+                        // No matter what the build status is, run this step. There are other conditions
+                        // available as well, such as "success", "failed", "unstable", and "changed".
+                        always {
+                            junit testResults: '*/target/surefire-reports/*.xml', keepLongStdio: true
+                        }
+                        success {
+                            archive "**/target/*.hpi"
+                            archive "**/target/site/jacoco/jacoco.xml"
+                        }
+                        unstable {
+                            archive "**/target/*.hpi"
+                            archive "**/target/site/jacoco/jacoco.xml"
                         }
                     }
                 }
