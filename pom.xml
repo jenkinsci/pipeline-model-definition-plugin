@@ -328,9 +328,6 @@
           <groupId>org.codehaus.gmavenplus</groupId>
           <artifactId>gmavenplus-plugin</artifactId>
           <version>1.7.1</version>
-          <configuration>
-            <providerSelection>1.8</providerSelection>
-          </configuration>
           <executions>
             <execution>
               <goals>
