@@ -558,7 +558,6 @@
     "axes": {
       "description": "Section containing a list of axis elements",
       "type": "array",
-      "minItems": 1,
       "items": {
         "$ref": "#/definitions/axis"
       },

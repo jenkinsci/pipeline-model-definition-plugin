@@ -37,60 +37,62 @@ pipeline {
                 OVERRIDE_PER_NESTED = "override in each branch"
             }
             matrix {
-                stage("first") {
-                    agent {
-                        label "first-agent"
+                stages {
+                    stage("first") {
+                        agent {
+                            label "first-agent"
+                        }
+                        environment {
+                            OVERRIDE_TWICE = "overrode twice, in first branch"
+                            OVERRIDE_PER_NESTED = "overrode per nested, in first branch"
+                            DECLARED_PER_NESTED = "declared per nested, in first branch"
+                        }
+                        steps {
+                            echo "First stage, ${WHICH_AGENT}"
+                            echo "First stage, ${DO_NOT_OVERRIDE}"
+                            echo "First stage, ${OVERRIDE_ONCE}"
+                            echo "First stage, ${OVERRIDE_TWICE}"
+                            echo "First stage, ${OVERRIDE_PER_NESTED}"
+                            echo "First stage, ${DECLARED_PER_NESTED}"
+                        }
                     }
-                    environment {
-                        OVERRIDE_TWICE = "overrode twice, in first branch"
-                        OVERRIDE_PER_NESTED = "overrode per nested, in first branch"
-                        DECLARED_PER_NESTED = "declared per nested, in first branch"
-                    }
-                    steps {
-                        echo "First stage, ${WHICH_AGENT}"
-                        echo "First stage, ${DO_NOT_OVERRIDE}"
-                        echo "First stage, ${OVERRIDE_ONCE}"
-                        echo "First stage, ${OVERRIDE_TWICE}"
-                        echo "First stage, ${OVERRIDE_PER_NESTED}"
-                        echo "First stage, ${DECLARED_PER_NESTED}"
-                    }
-                }
-                stage("second") {
-                    agent {
-                        label "second-agent"
-                    }
-                    tools {
-                        maven "apache-maven-3.0.1"
-                    }
-                    environment {
-                        OVERRIDE_TWICE = "overrode twice, in second branch"
-                        OVERRIDE_PER_NESTED = "overrode per nested, in second branch"
-                        DECLARED_PER_NESTED = "declared per nested, in second branch"
-                    }
-                    steps {
-                        echo "Second stage, ${WHICH_AGENT}"
-                        echo "Second stage, ${DO_NOT_OVERRIDE}"
-                        echo "Second stage, ${OVERRIDE_ONCE}"
-                        echo "Second stage, ${OVERRIDE_TWICE}"
-                        echo "Second stage, ${OVERRIDE_PER_NESTED}"
-                        echo "Second stage, ${DECLARED_PER_NESTED}"
-                        script {
-                            if (isUnix()) {
-                                sh 'mvn --version'
-                            } else {
-                                bat 'mvn --version'
+                    stage("second") {
+                        agent {
+                            label "second-agent"
+                        }
+                        tools {
+                            maven "apache-maven-3.0.1"
+                        }
+                        environment {
+                            OVERRIDE_TWICE = "overrode twice, in second branch"
+                            OVERRIDE_PER_NESTED = "overrode per nested, in second branch"
+                            DECLARED_PER_NESTED = "declared per nested, in second branch"
+                        }
+                        steps {
+                            echo "Second stage, ${WHICH_AGENT}"
+                            echo "Second stage, ${DO_NOT_OVERRIDE}"
+                            echo "Second stage, ${OVERRIDE_ONCE}"
+                            echo "Second stage, ${OVERRIDE_TWICE}"
+                            echo "Second stage, ${OVERRIDE_PER_NESTED}"
+                            echo "Second stage, ${DECLARED_PER_NESTED}"
+                            script {
+                                if (isUnix()) {
+                                    sh 'mvn --version'
+                                } else {
+                                    bat 'mvn --version'
+                                }
                             }
                         }
                     }
-                }
-                stage("third") {
-                    when {
-                        expression {
-                            return false
+                    stage("third") {
+                        when {
+                            expression {
+                                return false
+                            }
                         }
-                    }
-                    steps {
-                        echo "WE SHOULD NEVER GET HERE"
+                        steps {
+                            echo "WE SHOULD NEVER GET HERE"
+                        }
                     }
                 }
             }

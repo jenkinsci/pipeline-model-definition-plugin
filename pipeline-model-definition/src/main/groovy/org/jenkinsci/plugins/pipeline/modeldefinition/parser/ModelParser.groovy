@@ -316,14 +316,66 @@ class ModelParser implements Parser {
         if (m==null) {
             errorCollector.error(r, Messages.ModelParser_ExpectedBlockFor("matrix"))
         } else {
+            def sectionsSeen = new HashSet()
             eachStatement(m.body.code) {
-                ModelASTStage s = parseStage(it)
-                if (s != null) {
-                    r.stages.add(s)
+                ModelASTKey placeholderForErrors = new ModelASTKey(it)
+                def mc = matchMethodCall(it)
+                if (mc == null) {
+                    errorCollector.error(placeholderForErrors,
+                            Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
+                } else {
+                    def name = parseMethodName(mc)
+                    // Here, method name is a "section" name
+                    if (!sectionsSeen.add(name)) {
+                        // Also an error that we couldn't actually detect at model evaluation time.
+                        errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(name))
+                    }
+
+                    switch (name) {
+                        case 'stages':
+                            def stages = parseStages(it)
+                            r.stages = stages.stages
+                            break
+                        case 'axes':
+                            r.axes = parseAxes(it);
+                            break;
+                        default:
+                            // We need to check for unknowns here.
+                            errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
+                    }
                 }
             }
         }
         return r
+    }
+
+    @Nonnull ModelASTAxisContainer parseAxes(Statement stmt) {
+        def a = new ModelASTAxisContainer(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m==null) {
+            errorCollector.error(a, Messages.ModelParser_ExpectedBlockFor("axes"))
+        } else {
+            eachStatement(m.body.code) {
+                ModelASTAxis s = parseAxis(it)
+                if (s != null) {
+                    a.axes.add(s)
+                }
+            }
+        }
+        return a
+    }
+
+    @Nonnull ModelASTAxisContainer parseAxis(Statement stmt) {
+        def a = new ModelASTAxis(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m == null) {
+            errorCollector.error(a, Messages.ModelParser_ExpectedBlockFor("axis"))
+        } else {
+
+        }
+        return a
     }
 
     @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {

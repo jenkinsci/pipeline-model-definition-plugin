@@ -168,8 +168,8 @@ public class MatrixTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-41334")
     @Test
-    public void nestedParallelStages() throws Exception {
-        expect("matrix/nestedParallelStages")
+    public void nestedMatrixStages() throws Exception {
+        expect("matrix/nestedMatrixStages")
                 .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
                 .go();
     }

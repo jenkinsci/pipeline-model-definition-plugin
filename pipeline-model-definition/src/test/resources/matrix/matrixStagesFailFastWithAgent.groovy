@@ -28,34 +28,36 @@ pipeline {
         stage("foo") {
             failFast true
             matrix {
-                stage("first") {
-                    steps {
-                        error "First branch"
-                    }
-                    post {
-                        aborted {
-                            echo "FIRST STAGE ABORTED"
+                stages {
+                    stage("first") {
+                        steps {
+                            error "First branch"
                         }
-                        failure {
-                            echo "FIRST STAGE FAILURE"
+                        post {
+                            aborted {
+                                echo "FIRST STAGE ABORTED"
+                            }
+                            failure {
+                                echo "FIRST STAGE FAILURE"
+                            }
                         }
                     }
-                }
-                stage("second") {
-                    agent any
-                    options {
-                        skipDefaultCheckout()
-                    }
-                    steps {
-                        sleep 10
-                        echo "Second branch"
-                    }
-                    post {
-                        aborted {
-                            echo "SECOND STAGE ABORTED"
+                    stage("second") {
+                        agent any
+                        options {
+                            skipDefaultCheckout()
                         }
-                        failure {
-                            echo "SECOND STAGE FAILURE"
+                        steps {
+                            sleep 10
+                            echo "Second branch"
+                        }
+                        post {
+                            aborted {
+                                echo "SECOND STAGE ABORTED"
+                            }
+                            failure {
+                                echo "SECOND STAGE FAILURE"
+                            }
                         }
                     }
                 }

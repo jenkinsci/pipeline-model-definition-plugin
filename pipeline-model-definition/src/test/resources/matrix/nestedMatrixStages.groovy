@@ -27,14 +27,16 @@ pipeline {
     stages {
         stage("foo") {
             matrix {
-                stage("first") {
-                    steps {
-                        echo "First branch"
+                statges {
+                    stage("first") {
+                        steps {
+                            echo "First branch"
+                        }
                     }
-                }
-                stage("second") {
-                    steps {
-                        echo "Second branch"
+                    stage("second") {
+                        steps {
+                            echo "Second branch"
+                        }
                     }
                 }
             }

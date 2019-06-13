@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -20,6 +21,13 @@ public final class ModelASTMatrix extends ModelASTParallel {
     }
 
     @Override
+    public Object toJSON() {
+        return  new JSONObject()
+                .elementOpt("axes", toJSON(axes))
+                .elementOpt("stages", nullIfEmpty(toJSONArray(getStages())));
+    }
+
+    @Override
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         super.validate(validator, true);
         validator.validateElement(this);
@@ -27,12 +35,17 @@ public final class ModelASTMatrix extends ModelASTParallel {
 
     @Override
     public String toGroovy() {
-        return toGroovyBlock("matrix", getStages());
+        StringBuilder children = new StringBuilder()
+                .append(toGroovy(axes))
+                .append(toGroovyBlock("stages", getStages()));
+        return "matrix {\n" + children.toString() + "}\n";
     }
+
 
     @Override
     public String toString() {
         return "ModelASTMatrix{" +
+                "axes=" + axes +
                 "stages=" + getStages() +
                 "}";
     }

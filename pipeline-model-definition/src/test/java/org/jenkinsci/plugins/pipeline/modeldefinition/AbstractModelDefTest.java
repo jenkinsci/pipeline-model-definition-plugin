@@ -157,7 +157,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "when/conditions/changelog/changelog",
             "when/conditions/changelog/changeset",
             "environment/backslashReductionInEnv",
-            "stageWrapper"
+            "stageWrapper",
+            "matrix/matrixPipeline"
     );
 
     public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(

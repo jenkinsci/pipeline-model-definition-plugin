@@ -28,8 +28,8 @@ pipeline {
         stage("foo") {
             steps {
                 parallel(first: {
-                    echo "First branch"
-                },
+                        echo "First branch"
+                    },
                     second: {
                         echo "Second branch"
                     },
