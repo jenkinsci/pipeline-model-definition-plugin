@@ -178,12 +178,12 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>scm-api</artifactId>
-        <version>2.2.7</version>
+        <version>${scm-api.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>scm-api</artifactId>
-        <version>2.2.7</version>
+        <version>${scm-api.version}</version>
         <classifier>tests</classifier>
       </dependency>
       <dependency>
@@ -248,11 +248,6 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>structs</artifactId>
         <version>1.19</version>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
-        <version>2.13.0</version>
       </dependency>
       <dependency>
         <groupId>com.jcabi</groupId>
@@ -402,9 +397,12 @@
   <properties>
     <jenkins.version>2.150.1</jenkins.version>
     <java.level>8</java.level>
-    <groovy.version>2.4.11</groovy.version>
+    <groovy.version>2.4.12</groovy.version>
+    <jenkins-test-harness.version>2.39</jenkins-test-harness.version>
+    <concurrency>1</concurrency>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
     <workflow-support-plugin.version>3.3</workflow-support-plugin.version>
+    <scm-api.version>2.4.1</scm-api.version>
   </properties>
 
   <repositories>
