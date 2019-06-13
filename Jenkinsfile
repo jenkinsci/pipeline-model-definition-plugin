@@ -31,7 +31,7 @@ pipeline {
             parallel {
                 stage("linux") {
                     agent {
-                        label "linux"
+                        label "highmem"
                     }
                     steps {
                         sh "mvn -B clean install -Dmaven.test.failure.ignore=true -Djenkins.test.timeout=${TEST_TIMEOUT}"
@@ -67,7 +67,7 @@ pipeline {
                 }
                 stage("linux-newer-jenkins-core") {
                     agent {
-                        label "linux"
+                        label "highmem"
                     }
                     steps {
                         sh "mvn -B clean install -Dmaven.test.failure.ignore=true -Djava.level=8 -Djenkins.test.timeout=${TEST_TIMEOUT} -Djenkins.version=${NEWER_CORE_VERSION}"
