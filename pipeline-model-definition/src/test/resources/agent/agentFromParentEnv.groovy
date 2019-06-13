@@ -34,9 +34,10 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
+
                         sh('echo WHICH_AGENT=$WHICH_AGENT')
                     } else {
-                        bat('echo WHICH_AGENT=$WHICH_AGENT')
+                        bat('echo WHICH_AGENT=%WHICH_AGENT%')
                     }
                 }
             }
@@ -50,7 +51,7 @@ pipeline {
                     if (isUnix()) {
                         sh('echo WHICH_AGENT=$WHICH_AGENT')
                     } else {
-                        bat('echo WHICH_AGENT=$WHICH_AGENT')
+                        bat('echo WHICH_AGENT=%WHICH_AGENT%')
                     }
                 }
             }
