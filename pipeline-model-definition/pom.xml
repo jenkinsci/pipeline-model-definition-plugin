@@ -48,6 +48,10 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.codehaus.gmavenplus</groupId>
+        <artifactId>gmavenplus-plugin</artifactId>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>codenarc-maven-plugin</artifactId>
         <version>0.22-1</version>
