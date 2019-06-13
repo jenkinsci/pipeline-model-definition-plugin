@@ -24,16 +24,17 @@
 
 pipeline {
     agent {
-        label "${FIRST_LABEL}"
+        label "docker"
     }
     environment {
-        FIRST_LABEL = "docker"
+        PARENT_LABEL = "other-docker"
     }
     stages {
         stage("foo") {
             steps {
                 script {
                     if (isUnix()) {
+
                         sh('echo WHICH_AGENT=$WHICH_AGENT')
                     } else {
                         bat('echo WHICH_AGENT=%WHICH_AGENT%')
@@ -43,10 +44,7 @@ pipeline {
         }
         stage("bar") {
             agent {
-                label "${SECOND_LABEL}"
-            }
-            environment {
-                SECOND_LABEL = "other-docker"
+                label "${PARENT_LABEL}"
             }
             steps {
                 script {
