@@ -17,11 +17,11 @@ pipeline {
                         if (isUnix()) {
                             sh 'echo "M2_HOME: ${M2_HOME}"'
                             sh 'echo "JAVA_HOME: ${JAVA_HOME}"'
-                            sh 'mvn clean verify -Dmaven.test.failure.ignore=true'
+                            sh 'mvn clean verify -Dmaven.test.failure.ignore=true -e'
                         } else {
                             bat 'echo "M2_HOME: %M2_HOME%"'
                             bat 'echo "JAVA_HOME: %JAVA_HOME%"'
-                            bat 'mvn clean verify -Dmaven.test.failure.ignore=true'
+                            bat 'mvn clean verify -Dmaven.test.failure.ignore=true -e'
                         }
                     }
                 }
