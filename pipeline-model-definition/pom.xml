@@ -70,7 +70,18 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemProperties combine.children="append">
+            <property>
+              <!-- some of the AbstractModelDefTest’s run for a long time with @ClassRule JenkinsRule -->
+              <name>jenkins.test.timeout</name>
+              <value>600</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 

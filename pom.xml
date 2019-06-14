@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.43</version>
+    <version>3.44</version>
     <relativePath />
   </parent>
 
@@ -339,6 +339,13 @@
             </execution>
           </executions>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <reuseForks>false</reuseForks> <!-- saw some confusion between WhenStageTest and RestartDeclarativePipelineActionTest -->
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -395,8 +402,6 @@
     <jenkins.version>2.150.1</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
-    <jenkins-test-harness.version>2.39</jenkins-test-harness.version>
-    <concurrency>1</concurrency>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
     <workflow-support-plugin.version>3.3</workflow-support-plugin.version>
     <scm-api.version>2.4.1</scm-api.version>
