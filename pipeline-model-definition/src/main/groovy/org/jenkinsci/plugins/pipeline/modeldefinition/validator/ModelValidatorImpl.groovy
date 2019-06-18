@@ -758,6 +758,10 @@ class ModelValidatorImpl implements ModelValidator {
         return true;
     }
 
+    boolean validateElement(ModelASTAxis axis) {
+        return true;
+    }
+
     boolean validateElement(@Nonnull ModelASTAgent agent) {
         boolean valid = true
 

@@ -186,10 +186,19 @@ class JSONParser implements Parser {
     @CheckForNull ModelASTAxis parseAxis(JsonTree j) {
         ModelASTAxis axis = new ModelASTAxis(j)
 
-        // TODO
+        if (j.node.has("name")) {
+            axis.name = parseValue(j.append(JsonPointer.of("name")))
+        }
+
+        if (j.node.has("values")) {
+            JsonTree valueList = j.append(JsonPointer.of("values"))
+            valueList.node.eachWithIndex { JsonNode entry, int i ->
+                axis.values.add(parseValue(valueList.append(JsonPointer.of(i))))
+            }
+        }
+
         return axis
     }
-
 
     @CheckForNull ModelASTStage parseStage(JsonTree j) {
         ModelASTStage stage = new ModelASTStage(j)

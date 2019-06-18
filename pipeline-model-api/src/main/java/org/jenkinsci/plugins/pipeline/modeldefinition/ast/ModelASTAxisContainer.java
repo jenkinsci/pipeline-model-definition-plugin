@@ -29,7 +29,8 @@ public class ModelASTAxisContainer extends ModelASTElement {
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
-        /* validator.validateElement(this); */
+        // nothing to validate on this element
+        validate(validator, axes);
     }
 
     @Override

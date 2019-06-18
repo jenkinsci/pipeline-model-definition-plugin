@@ -31,6 +31,7 @@ public final class ModelASTMatrix extends ModelASTParallel {
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         super.validate(validator, true);
         validator.validateElement(this);
+        validate(validator, axes);
     }
 
     @Override
@@ -39,6 +40,12 @@ public final class ModelASTMatrix extends ModelASTParallel {
                 .append(toGroovy(axes))
                 .append(toGroovyBlock("stages", getStages()));
         return "matrix {\n" + children.toString() + "}\n";
+    }
+
+    @Override
+    public void removeSourceLocation() {
+        super.removeSourceLocation();
+        removeSourceLocationsFrom(axes);
     }
 
 

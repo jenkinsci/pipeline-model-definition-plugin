@@ -259,7 +259,7 @@ class ModelParser implements Parser {
         r.validate(validator)
 
         // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
-        astDebugLog {
+        astDebugLog {xf
             "Model as JSON: ${r.toJSON().toString(2)}"
         }
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
@@ -366,15 +366,44 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTAxisContainer parseAxis(Statement stmt) {
+    @Nonnull ModelASTAxis parseAxis(Statement stmt) {
         def a = new ModelASTAxis(stmt)
 
         def m = matchBlockStatement(stmt)
         if (m == null) {
             errorCollector.error(a, Messages.ModelParser_ExpectedBlockFor("axis"))
         } else {
+            def sectionsSeen = new HashSet()
+            eachStatement(m.body.code) {
+                ModelASTKey placeholderForErrors = new ModelASTKey(it)
+                def mc = matchMethodCall(it)
+                if (mc == null) {
+                    errorCollector.error(placeholderForErrors,
+                            Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
+                } else {
+                    def method = parseMethodCall(mc)
+                    // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
+                    if (!sectionsSeen.add(method.name)) {
+                        // Also an error that we couldn't actually detect at model evaluation time.
+                        errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(method.name))
+                    }
 
+                    switch (method.name) {
+                        case 'name':
+                            // TODO - must be one arg
+                            a.name = method.args.first()
+                            break
+                        case 'values':
+                            a.values.addAll(method.args);
+                            break
+                        default:
+                            // We need to check for unknowns here.
+                            errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(method.name))
+                    }
+                }
+            }
         }
+
         return a
     }
 

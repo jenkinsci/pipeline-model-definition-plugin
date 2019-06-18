@@ -28,6 +28,10 @@ pipeline {
         stage("foo") {
             matrix {
                 axes {
+                    axis {
+                        name "os"
+                        values "linux", "windows", "mac"
+                    }
                 }
                 stages {
                     stage("first") {

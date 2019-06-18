@@ -553,11 +553,16 @@
         "stages": {
           "$ref": "#/definitions/stages"
         }
-      }
+      },
+      "required": [
+        "axes", "stages"
+      ],
+      "additionalProperties": false
     },
     "axes": {
       "description": "Section containing a list of axis elements",
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "#/definitions/axis"
       },
@@ -568,18 +573,18 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "$ref": "#/definitions/rawArgument"
         },
         "values": {
           "type": "array",
           "minItems": 1,
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/rawArgument"
           }
         }
       },
       "required": [
-        "axes"
+        "name", "values"
       ],
       "additionalProperties": false
     },
