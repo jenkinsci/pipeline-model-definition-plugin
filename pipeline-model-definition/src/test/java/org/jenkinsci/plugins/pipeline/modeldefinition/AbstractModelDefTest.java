@@ -501,7 +501,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                 run = run.getParent().scheduleBuild2(0).waitForStart();
             }
             j.waitForCompletion(run);
-            j.waitForMessage("Finished: " + result, run); // like BuildListener.finished
+            // Calling `j.assertBuildStatus` directly after `j.waitForCompletion` is subject to race conditions in Pipeline jobs, so the call to `j.waitForMessage` is just here to ensure that the build is totally complete before checking the status.
+            // If that race condition is fixed, the call to `j.waitForMessage` can be removed.
+            j.waitForMessage("Finished: " + result, run); // like BuildListener.finished. 
             j.assertBuildStatus(result, run); // just double-checking
 
             if (logContains != null) {
