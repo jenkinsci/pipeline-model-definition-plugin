@@ -18,7 +18,7 @@ import java.util.Objects;
  */
 public class ModelASTAxis extends ModelASTElement {
 
-    private ModelASTValue name;
+    private ModelASTKey name;
     private List<ModelASTValue> values = new ArrayList<>();
 
     public ModelASTAxis(Object sourceLocation) {
@@ -40,7 +40,7 @@ public class ModelASTAxis extends ModelASTElement {
     @Override
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder()
-            .append("name ").append(toGroovy(name) + '\n')
+            .append("name '").append(toGroovy(name) + "'\n")
             .append(("values ")).append(toGroovyArgList(values)).append("\n");
         return "axis {\n" + argStr.toString() + "}\n";
     }
@@ -59,11 +59,11 @@ public class ModelASTAxis extends ModelASTElement {
                 "}";
     }
 
-    public ModelASTValue getName() {
+    public ModelASTKey getName() {
         return name;
     }
 
-    public void setName(ModelASTValue name) {
+    public void setName(ModelASTKey name) {
         this.name = name;
     }
 

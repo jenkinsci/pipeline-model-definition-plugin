@@ -573,7 +573,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "$ref": "#/definitions/rawArgument"
+          "type": "string"
         },
         "values": {
           "type": "array",

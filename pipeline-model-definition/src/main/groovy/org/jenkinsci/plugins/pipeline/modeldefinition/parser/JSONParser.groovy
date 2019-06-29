@@ -187,7 +187,7 @@ class JSONParser implements Parser {
         ModelASTAxis axis = new ModelASTAxis(j)
 
         if (j.node.has("name")) {
-            axis.name = parseValue(j.append(JsonPointer.of("name")))
+            axis.name = parseKey(j.append(JsonPointer.of("name")))
         }
 
         if (j.node.has("values")) {

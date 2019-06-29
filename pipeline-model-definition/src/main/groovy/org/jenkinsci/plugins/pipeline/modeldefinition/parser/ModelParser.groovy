@@ -391,7 +391,13 @@ class ModelParser implements Parser {
                     switch (method.name) {
                         case 'name':
                             // TODO - must be one arg
-                            a.name = method.args.first()
+                            def nameExp = ((TupleExpression)mc.arguments).first()
+//                            if (nameExp==null) {
+//                                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+//                                errorCollector.error(stage, Messages.ModelParser_ExpectedStageName())
+//                                return null
+//                            }
+                            a.name = parseKey(nameExp)
                             break
                         case 'values':
                             a.values.addAll(method.args);

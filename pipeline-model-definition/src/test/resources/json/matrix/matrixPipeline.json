@@ -4,10 +4,7 @@
     "matrix": {
       "axes": [
         {
-          "name": {
-            "isLiteral": true,
-            "value": "os"
-          },
+          "name": "os",
           "values": [
             {
               "isLiteral": true,

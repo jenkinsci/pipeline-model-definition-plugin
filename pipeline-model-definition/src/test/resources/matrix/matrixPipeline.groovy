@@ -29,7 +29,7 @@ pipeline {
             matrix {
                 axes {
                     axis {
-                        name "os"
+                        name 'os'
                         values "linux", "windows", "mac"
                     }
                 }
