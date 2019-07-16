@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -59,6 +60,7 @@ public class MatrixTest extends AbstractModelDefTest {
         s.setLabelString("some-label docker");
     }
 
+    @Ignore
     @Issue("JENKINS-41334")
     @Test
     public void matrixStagesHaveStatusAndPost() throws Exception {
@@ -132,10 +134,30 @@ public class MatrixTest extends AbstractModelDefTest {
     @Test
     public void matrixPipeline() throws Exception {
         expect("matrix/matrixPipeline")
-                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
+                .logContains("[Pipeline] { (foo)",
+                        "{ (Branch: Matrix: os = 'linux')",
+                        "{ (Branch: Matrix: os = 'windows')",
+                        "{ (Branch: Matrix: os = 'mac')")
                 .go();
     }
 
+    @Test
+    public void matrixPipelineTwoAxis() throws Exception {
+        expect("matrix/matrixPipelineTwoAxis")
+                .logContains("[Pipeline] { (foo)",
+                        "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
+                        "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
+                        "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
+                        "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
+                        "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
+                        "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
+                        "{ (Branch: Matrix: os = 'linux', browser = 'safari')",
+                        "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
+                        "{ (Branch: Matrix: os = 'mac', browser = 'safari')")
+                .go();
+    }
+
+    @Ignore
     @Test
     public void matrixPipelineQuoteEscaping() throws Exception {
         expect("matrix/matrixPipelineQuoteEscaping")
@@ -143,69 +165,52 @@ public class MatrixTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Test
-    public void matrixPipelineWithSpaceInBranch() throws Exception {
-        expect("matrix/matrixPipelineWithSpaceInBranch")
-                .logContains("[Pipeline] { (foo)", "{ (Branch: first one)", "{ (Branch: second one)")
-                .go();
-    }
-
-    @Test
-    public void matrixPipelineWithFailFast() throws Exception {
-        expect("matrix/matrixPipelineWithFailFast")
-                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
-                .go();
-    }
-
-    @Issue("JENKINS-43625")
-    @Test
-    public void matrixAndPostFailure() throws Exception {
-        expect(Result.FAILURE, "matrix/matrixAndPostFailure")
-                .logContains("[Pipeline] { (foo)", "I HAVE EXPLODED")
-                .logNotContains("{ (Branch: first)", "{ (Branch: second)")
-                .go();
-    }
-
-    @Issue("JENKINS-41334")
-    @Test
-    public void nestedParallelStages() throws Exception {
-        expect("matrix/nestedParallelStages")
-                .logContains("[Pipeline] { (foo)", "{ (Branch: first)", "{ (Branch: second)")
-                .go();
-    }
-
     @Issue("JENKINS-41334")
     @Test
     public void matrixStagesAgentEnvWhen() throws Exception {
         Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
+        s.setLabelString("windows-agent");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
 
         Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
-        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
+        s2.setLabelString("linux-agent");
+        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "linux agent")));
+
+        Slave s3 = j.createOnlineSlave();
+        s3.setLabelString("mac-agent");
+        s3.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "mac agent")));
 
         expect("matrix/matrixStagesAgentEnvWhen")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: first)",
-                        "{ (Branch: second)",
-                        "First stage, first agent",
+                        "{ (Branch: Matrix: os = 'linux')",
+                        "{ (Branch: Matrix: os = 'windows')",
+                        "{ (Branch: Matrix: os = 'mac')",
+                        "First stage, mac agent",
                         "First stage, do not override",
                         "First stage, overrode once and done",
-                        "First stage, overrode twice, in first branch",
-                        "First stage, overrode per nested, in first branch",
-                        "First stage, declared per nested, in first branch",
-                        "Second stage, second agent",
-                        "Second stage, do not override",
-                        "Second stage, overrode once and done",
-                        "Second stage, overrode twice, in second branch",
-                        "Second stage, overrode per nested, in second branch",
-                        "Second stage, declared per nested, in second branch",
+                        "First stage, overrode twice, in first mac branch",
+                        "First stage, overrode per nested, in first mac branch",
+                        "First stage, declared per nested, in first mac branch",
+                        "First stage, windows agent",
+                        "First stage, do not override",
+                        "First stage, overrode once and done",
+                        "First stage, overrode twice, in first windows branch",
+                        "First stage, overrode per nested, in first windows branch",
+                        "First stage, declared per nested, in first windows branch",
+                        "First stage, linux agent",
+                        "First stage, do not override",
+                        "First stage, overrode once and done",
+                        "First stage, overrode twice, in first linux branch",
+                        "First stage, overrode per nested, in first linux branch",
+                        "First stage, declared per nested, in first linux branch",
+                        "Apache Maven 3.0.1",
+                        "Apache Maven 3.0.1",
                         "Apache Maven 3.0.1")
                 .logNotContains("WE SHOULD NEVER GET HERE")
                 .go();
     }
 
+    @Ignore
     @Issue("JENKINS-46809")
     @Test
     public void matrixStagesGroupsAndStages() throws Exception {
@@ -285,6 +290,7 @@ public class MatrixTest extends AbstractModelDefTest {
         assertEquals(Arrays.asList("12", "11", "8", "5", "4", "3", "2"), tailOfList(startInnerSecond.getAllEnclosingIds()));
     }
 
+    @Ignore
     @Issue("JENKINS-53734")
     @Test
     public void matrixStagesNestedInSequential() throws Exception {
@@ -316,12 +322,18 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixStagesFailFast() throws Exception {
         expect(Result.FAILURE, "matrix/matrixStagesFailFast")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: first)",
+                        "{ (Branch: Matrix: os = 'linux')",
+                        "{ (Branch: Matrix: os = 'windows')",
+                        "{ (Branch: Matrix: os = 'mac')",
                         "[Pipeline] { (first)",
-                        "{ (Branch: second)",
+                        "[Pipeline] { (first)",
+                        "[Pipeline] { (first)",
                         "[Pipeline] { (second)",
-                        "FIRST STAGE FAILURE",
-                        "SECOND STAGE ABORTED")
+                        "[Pipeline] { (second)",
+                        "FIRST windows STAGE FAILURE",
+                        "Failed in branch Matrix: os = 'windows'",
+                        "SECOND linux STAGE ABORTED",
+                        "SECOND mac STAGE ABORTED")
                 .logNotContains("Second branch",
                         "FIRST STAGE ABORTED",
                         "SECOND STAGE FAILURE")
@@ -334,18 +346,23 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixStagesFailFastWithOption() throws Exception {
         expect(Result.FAILURE,"matrix/matrixStagesFailFastWithOption")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: first)",
+                        "{ (Branch: Matrix: os = 'linux')",
+                        "{ (Branch: Matrix: os = 'windows')",
+                        "{ (Branch: Matrix: os = 'mac')",
                         "[Pipeline] { (first)",
-                        "{ (Branch: second)",
+                        "[Pipeline] { (first)",
+                        "[Pipeline] { (first)",
                         "[Pipeline] { (second)",
-                        "FIRST STAGE FAILURE",
-                        "SECOND STAGE ABORTED")
+                        "[Pipeline] { (second)",
+                        "FIRST windows STAGE FAILURE",
+                        "Failed in branch Matrix: os = 'windows'",
+                        "SECOND linux STAGE ABORTED",
+                        "SECOND mac STAGE ABORTED")
                 .logNotContains("Second branch",
                         "FIRST STAGE ABORTED",
                         "SECOND STAGE FAILURE")
                 .hasFailureCase()
                 .go();
-
     }
 
     @Issue(value = {"JENKINS-55459", "JENKINS-56544"})
@@ -353,12 +370,18 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixStagesFailFastWithAgent() throws Exception {
         expect(Result.FAILURE, "matrix/matrixStagesFailFastWithAgent")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: first)",
+                        "{ (Branch: Matrix: os = 'linux')",
+                        "{ (Branch: Matrix: os = 'windows')",
+                        "{ (Branch: Matrix: os = 'mac')",
                         "[Pipeline] { (first)",
-                        "{ (Branch: second)",
+                        "[Pipeline] { (first)",
+                        "[Pipeline] { (first)",
                         "[Pipeline] { (second)",
-                        "FIRST STAGE FAILURE",
-                        "SECOND STAGE ABORTED")
+                        "[Pipeline] { (second)",
+                        "FIRST windows STAGE FAILURE",
+                        "Failed in branch Matrix: os = 'windows'",
+                        "SECOND linux STAGE ABORTED",
+                        "SECOND mac STAGE ABORTED")
                 .logNotContains("Second branch",
                         "FIRST STAGE ABORTED",
                         "SECOND STAGE FAILURE")
@@ -372,9 +395,14 @@ public class MatrixTest extends AbstractModelDefTest {
         WorkflowRun b = expect(Result.FAILURE, "matrix/matrixStagesHaveStatusWhenSkipped")
                 .logContains("[Pipeline] { (bar)",
                         "[Pipeline] { (foo)",
-                        "{ (Branch: first)",
+                        "{ (Branch: Matrix: os = 'linux')",
+                        "{ (Branch: Matrix: os = 'windows')",
+                        "{ (Branch: Matrix: os = 'mac')",
                         "[Pipeline] { (first)",
-                        "{ (Branch: second)",
+                        "[Pipeline] { (first)",
+                        "[Pipeline] { (first)",
+                        "[Pipeline] { (second)",
+                        "[Pipeline] { (second)",
                         "[Pipeline] { (second)")
                 .hasFailureCase()
                 .go();
@@ -409,6 +437,7 @@ public class MatrixTest extends AbstractModelDefTest {
         assertTrue(StageStatus.isSkippedStageForReason(startFirst, StageStatus.getSkippedForFailure()));
         }
 
+    @Ignore
     @Issue("JENKINS-46597")
     @Test
     public void matrixStagesShouldntTriggerNSE() throws Exception {

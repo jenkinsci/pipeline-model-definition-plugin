@@ -32,14 +32,22 @@ pipeline {
         }
         stage("foo") {
             matrix {
-                stage("first") {
-                    steps {
-                        echo "First branch"
+                axes {
+                    axis {
+                        name 'os'
+                        values "linux", "windows", "mac"
                     }
                 }
-                stage("second") {
-                    steps {
-                        echo "Second branch"
+                stages {
+                    stage("first") {
+                        steps {
+                            echo "First branch"
+                        }
+                    }
+                    stage("second") {
+                        steps {
+                            echo "Second branch"
+                        }
                     }
                 }
             }

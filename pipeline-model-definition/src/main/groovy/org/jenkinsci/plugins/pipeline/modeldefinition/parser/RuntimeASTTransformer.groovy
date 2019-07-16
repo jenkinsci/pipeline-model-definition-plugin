@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
+import com.google.common.collect.Sets
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.model.JobProperty
 import hudson.model.ParameterDefinition
@@ -149,12 +150,26 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformEnvironment(@CheckForNull ModelASTEnvironment original) {
-        if (isGroovyAST(original) && !original.variables.isEmpty()) {
+        if (isGroovyAST(original)) {
+            return transformEnvironmentMap(original.variables)
+        }
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating an {@link Environment}.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link Environment}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables) {
+        if (!variables.isEmpty()) {
             return ctorX(ClassHelper.make(Environment.class),
-                args(
-                    generateEnvironmentResolver(original, ModelASTValue.class),
-                    generateEnvironmentResolver(original, ModelASTInternalFunctionCall.class)
-                ))
+                    args(
+                            generateEnvironmentResolver(variables, ModelASTValue.class),
+                            generateEnvironmentResolver(variables, ModelASTInternalFunctionCall.class)
+                    ))
         }
         return constX(null)
     }
@@ -166,15 +181,15 @@ class RuntimeASTTransformer {
      * @param valueType Either {@link ModelASTInternalFunctionCall} for credentials or {@link ModelASTValue} for env.
      * @return The AST for instantiating the resolver.
      */
-    private Expression generateEnvironmentResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
+    private Expression generateEnvironmentResolver(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, @Nonnull Class valueType) {
         Set<String> keys = new HashSet<>()
 
         // We need to keep track of the environment keys for use in
-        keys.addAll(original.variables.findAll { k, v -> v instanceof ModelASTValue }.collect { k, v -> k.key })
+        keys.addAll(variables.findAll { k, v -> v instanceof ModelASTValue }.collect { k, v -> k.key })
 
         MapExpression closureMap = new MapExpression()
 
-        original.variables.each { k, v ->
+        variables.each { k, v ->
             // Filter for only the desired value type - ModelASTValue for env vars, ModelASTInternalFunctionCall for
             // credentials.
             if (v instanceof ModelASTElement && valueType.isInstance(v) && v.sourceLocation != null) {
@@ -650,7 +665,7 @@ class RuntimeASTTransformer {
                     transformStageInput(original.input, original.name),
                     transformStages(original.stages),
                     transformStages(original.parallel),
-                    transformStages(original.matrix)))
+                    transformMatrix(original.matrix)))
         }
 
         return constX(null)
@@ -726,13 +741,100 @@ class RuntimeASTTransformer {
                 argList.addExpression(transformStage(s))
             }
 
-            if (original instanceof ModelASTMatrix) {
-                return ctorX(ClassHelper.make(Matrix.class), args(argList))
-            } else if (original instanceof ModelASTParallel) {
+            if (original instanceof ModelASTParallel) {
                 return ctorX(ClassHelper.make(Parallel.class), args(argList))
             } else {
                 return ctorX(ClassHelper.make(Stages.class), args(argList))
             }
+        }
+
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating {@link Matrix}.
+     * Generates a synthetic stage for each combination of axes and excludes.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link Matrix}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformMatrix(@CheckForNull ModelASTMatrix original) {
+        if (isGroovyAST(original) && !original.stages.isEmpty() && !original.axes.axes.isEmpty()) {
+            ListExpression argList = new ListExpression()
+
+            // generate matrix combinations of axes - cartesianProduct
+            List<Map<ModelASTKey, ModelASTValue>> expansion = expandAxes(original.axes.axes)
+
+            // TODO: remove excluded combinations once I have excludes
+
+            // for each combination
+            expansion.each { item ->
+                argList.addExpression(transformMatrixStage(item, original))
+            }
+
+            // return matrix class containing the list of generated stages
+            return ctorX(ClassHelper.make(Matrix.class), args(argList))
+        }
+
+        return constX(null)
+    }
+
+    List<Map<ModelASTKey, ModelASTValue>> expandAxes(List<ModelASTAxis> axes) {
+        def result = new ArrayList<Map<ModelASTKey, ModelASTValue>>()
+        // using LinkedHashMap to maintain insertion order
+        // axes will be added in the order they are declared
+        result.add(new LinkedHashMap<ModelASTKey, ModelASTValue>())
+        axes.each { axis ->
+            def interim = result
+            result = new ArrayList<Map<ModelASTKey, ModelASTValue>>()
+            axis.values.each { value ->
+                interim.each {
+                    Map<ModelASTKey, ModelASTValue> generated = it.clone()
+                    generated.put(axis.name, value)
+                    result.add(generated)
+                }
+            }
+        }
+        return result
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating {@link Stage}.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link Stage}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    Expression transformMatrixStage(@CheckForNull Map<ModelASTKey, ModelASTValue> cell,  @CheckForNull ModelASTMatrix original) {
+        if (isGroovyAST(original)) {
+
+            //     create a generated stage with unique name based on combination
+            //     TODO: maybe if there is only one stage, use it as the template for these synthetic stages?  Avoid two layers of stages when one would do.
+
+            List<String> cellLabels = new ArrayList<>();
+            cell.each { cellLabels.add(it.key.key.toString() + " = '" + it.value.value.toString() + "'") }
+
+            def name = "Matrix: " + cellLabels.join(", ")
+
+            //     add environment block to the generated stage with axis name/value pairs
+            def environment = transformEnvironmentMap(cell)
+
+            //     add an instances of all the stages in the AST to each synthetic stage
+            return ctorX(ClassHelper.make(Stage.class),
+                    args(constX(name),
+                            constX(null),
+                            constX(null), // agent
+                            constX(null),
+                            constX(null),
+                            constX(null),
+                            environment,
+                            constX(false), // failfast is set on the container stage
+                            constX(null),
+                            constX(null),
+                            transformStages(original),
+                            constX(null),
+                            constX(null)))
         }
 
         return constX(null)

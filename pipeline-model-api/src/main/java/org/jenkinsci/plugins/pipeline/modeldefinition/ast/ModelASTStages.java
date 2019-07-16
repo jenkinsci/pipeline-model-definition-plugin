@@ -23,7 +23,7 @@ public class ModelASTStages extends ModelASTElement {
     }
 
     @Override
-    public JSONArray toJSON() {
+    public Object toJSON() {
         return toJSONArray(stages);
     }
 

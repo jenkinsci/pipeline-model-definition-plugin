@@ -27,42 +27,44 @@ pipeline {
     stages {
         stage("foo") {
             matrix {
-                stage("first") {
-                    agent {
-                        label "first-agent"
+                stages {
+                    stage("first") {
+                        agent {
+                            label "first-agent"
+                        }
+                        steps {
+                            echo "First stage, ${WHICH_AGENT}"
+                        }
                     }
-                    steps {
-                        echo "First stage, ${WHICH_AGENT}"
-                    }
-                }
-                stage("second") {
-                    stages {
-                        stage("inner-first") {
-                            agent {
-                                label "second-agent"
-                            }
-                            tools {
-                                maven "apache-maven-3.0.1"
-                            }
-                            steps {
-                                echo "Second stage, ${WHICH_AGENT}"
-                                script {
-                                    if (isUnix()) {
-                                        sh 'mvn --version'
-                                    } else {
-                                        bat 'mvn --version'
+                    stage("second") {
+                        stages {
+                            stage("inner-first") {
+                                agent {
+                                    label "second-agent"
+                                }
+                                tools {
+                                    maven "apache-maven-3.0.1"
+                                }
+                                steps {
+                                    echo "Second stage, ${WHICH_AGENT}"
+                                    script {
+                                        if (isUnix()) {
+                                            sh 'mvn --version'
+                                        } else {
+                                            bat 'mvn --version'
+                                        }
                                     }
                                 }
                             }
-                        }
-                        stage("inner-second") {
-                            when {
-                                expression {
-                                    return false
+                            stage("inner-second") {
+                                when {
+                                    expression {
+                                        return false
+                                    }
                                 }
-                            }
-                            steps {
-                                echo "WE SHOULD NEVER GET HERE"
+                                steps {
+                                    echo "WE SHOULD NEVER GET HERE"
+                                }
                             }
                         }
                     }

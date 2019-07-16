@@ -162,11 +162,42 @@ class JSONParser implements Parser {
     @CheckForNull ModelASTMatrix parseMatrix(JsonTree j) {
         ModelASTParallel matrix = new ModelASTMatrix(j)
 
-        j.node.eachWithIndex { JsonNode entry, int i ->
-            matrix.stages.add(parseStage(j.append(JsonPointer.of(i))))
+        if (j.node.has("stages")) {
+            ModelASTStages stages = parseStages(j.append(JsonPointer.of("stages")))
+            matrix.stages.addAll(stages.stages)
+        }
+        if (j.node.has("axes")) {
+            matrix.axes = parseAxes(j.append(JsonPointer.of("axes")))
         }
 
         return matrix
+    }
+
+    @CheckForNull ModelASTAxisContainer parseAxes(JsonTree j) {
+        ModelASTAxisContainer axes = new ModelASTAxisContainer(j)
+
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            axes.axes.add(parseAxis(j.append(JsonPointer.of(i))))
+        }
+
+        return axes
+    }
+
+    @CheckForNull ModelASTAxis parseAxis(JsonTree j) {
+        ModelASTAxis axis = new ModelASTAxis(j)
+
+        if (j.node.has("name")) {
+            axis.name = parseKey(j.append(JsonPointer.of("name")))
+        }
+
+        if (j.node.has("values")) {
+            JsonTree valueList = j.append(JsonPointer.of("values"))
+            valueList.node.eachWithIndex { JsonNode entry, int i ->
+                axis.values.add(parseValue(valueList.append(JsonPointer.of(i))))
+            }
+        }
+
+        return axis
     }
 
     @CheckForNull ModelASTStage parseStage(JsonTree j) {
@@ -180,7 +211,7 @@ class JSONParser implements Parser {
             stage.parallel = parseParallel(j.append(JsonPointer.of("parallel")))
         }
         if (j.node.has("matrix")) {
-            stage.parallel = parseParallel(j.append(JsonPointer.of("matrix")))
+            stage.matrix = parseMatrix(j.append(JsonPointer.of("matrix")))
         }
 
         JsonTree branches = j.append(JsonPointer.of("branches"))

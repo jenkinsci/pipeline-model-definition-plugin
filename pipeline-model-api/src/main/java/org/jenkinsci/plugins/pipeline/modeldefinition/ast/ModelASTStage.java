@@ -271,6 +271,7 @@ public final class ModelASTStage extends ModelASTElement {
                 ", branches=" + branches +
                 ", failFast=" + failFast +
                 ", parallel=" + parallel +
+                ", matrix=" + matrix +
                 ", options=" + options +
                 ", input=" + input +
                 ", parallelContent=" + parallelContent +

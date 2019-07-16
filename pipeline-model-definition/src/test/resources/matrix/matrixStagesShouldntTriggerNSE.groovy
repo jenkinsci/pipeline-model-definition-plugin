@@ -36,104 +36,106 @@ pipeline {
         }
         stage("foo") {
             matrix {
-                stage("first") {
-                    agent any
-                    when {
-                        expression {
-                            sleep 1
-                            return params.shouldRun == true
+                stages {
+                    stage("first") {
+                        agent any
+                        when {
+                            expression {
+                                sleep 1
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "First branch"
                         }
                     }
-                    steps {
-                        echo "First branch"
-                    }
-                }
-                stage("second") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == true
+                    stage("second") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "Second branch"
                         }
                     }
-                    steps {
-                        echo "Second branch"
-                    }
-                }
-                stage("third") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == true
+                    stage("third") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "third branch"
                         }
                     }
-                    steps {
-                        echo "third branch"
-                    }
-                }
-                stage("fourth") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == true
+                    stage("fourth") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "fourth branch"
                         }
                     }
-                    steps {
-                        echo "fourth branch"
-                    }
-                }
-                stage("fifth") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == true
+                    stage("fifth") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "Fifth branch"
                         }
                     }
-                    steps {
-                        echo "Fifth branch"
-                    }
-                }
-                stage("sixth") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == true
+                    stage("sixth") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "sixth branch"
                         }
                     }
-                    steps {
-                        echo "sixth branch"
-                    }
-                }
-                stage("seventh") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == true
+                    stage("seventh") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "seventh branch"
                         }
                     }
-                    steps {
-                        echo "seventh branch"
-                    }
-                }
-                stage("eighth") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == true
+                    stage("eighth") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == true
+                            }
+                        }
+                        steps {
+                            echo "eighth branch"
                         }
                     }
-                    steps {
-                        echo "eighth branch"
-                    }
-                }
-                stage("ninth") {
-                    agent any
-                    when {
-                        expression {
-                            return params.shouldRun == false
+                    stage("ninth") {
+                        agent any
+                        when {
+                            expression {
+                                return params.shouldRun == false
+                            }
                         }
-                    }
-                    steps {
-                        echo "ninth branch"
+                        steps {
+                            echo "ninth branch"
+                        }
                     }
                 }
             }

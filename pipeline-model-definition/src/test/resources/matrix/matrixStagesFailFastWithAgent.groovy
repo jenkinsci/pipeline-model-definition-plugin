@@ -28,34 +28,47 @@ pipeline {
         stage("foo") {
             failFast true
             matrix {
-                stage("first") {
-                    steps {
-                        error "First branch"
-                    }
-                    post {
-                        aborted {
-                            echo "FIRST STAGE ABORTED"
-                        }
-                        failure {
-                            echo "FIRST STAGE FAILURE"
-                        }
+                axes {
+                    axis {
+                        name 'os'
+                        values "linux", "windows", "mac"
                     }
                 }
-                stage("second") {
-                    agent any
-                    options {
-                        skipDefaultCheckout()
-                    }
-                    steps {
-                        sleep 10
-                        echo "Second branch"
-                    }
-                    post {
-                        aborted {
-                            echo "SECOND STAGE ABORTED"
+                stages {
+                    stage("first") {
+                        steps {
+                            script {
+                                if (env.os == "windows") {
+                                    sleep 1
+                                    error "First branch"
+                                }
+                            }
                         }
-                        failure {
-                            echo "SECOND STAGE FAILURE"
+                        post {
+                            aborted {
+                                echo "FIRST STAGE ABORTED"
+                            }
+                            failure {
+                                echo "FIRST $os STAGE FAILURE"
+                            }
+                        }
+                    }
+                    stage("second") {
+                        agent any
+                        options {
+                            skipDefaultCheckout()
+                        }
+                        steps {
+                            sleep 10
+                            error "Second branch"
+                        }
+                        post {
+                            aborted {
+                                echo "SECOND $os STAGE ABORTED"
+                            }
+                            failure {
+                                echo "SECOND STAGE FAILURE"
+                            }
                         }
                     }
                 }

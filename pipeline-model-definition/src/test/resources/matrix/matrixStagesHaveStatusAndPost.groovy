@@ -27,40 +27,42 @@ pipeline {
     stages {
         stage("foo") {
             matrix {
-                stage("first") {
-                    steps {
-                        error "First branch"
+                stages {
+                    stage("first") {
+                        steps {
+                            error "First branch"
+                        }
+                        post {
+                            failure {
+                                echo "FIRST BRANCH FAILED"
+                            }
+                        }
                     }
-                    post {
-                        failure {
-                            echo "FIRST BRANCH FAILED"
+                    stage("second") {
+                        steps {
+                            echo "Second branch"
+                        }
+                        post {
+                            always {
+                                echo "SECOND BRANCH POST"
+                            }
+                        }
+                    }
+                    stage("third") {
+                        when {
+                            expression {
+                                return false
+                            }
+                        }
+                        steps {
+                            echo "Third branch"
                         }
                     }
                 }
-                stage("second") {
-                    steps {
-                        echo "Second branch"
+                post {
+                    failure {
+                        echo "FOO STAGE FAILED"
                     }
-                    post {
-                        always {
-                            echo "SECOND BRANCH POST"
-                        }
-                    }
-                }
-                stage("third") {
-                    when {
-                        expression {
-                            return false
-                        }
-                    }
-                    steps {
-                        echo "Third branch"
-                    }
-                }
-            }
-            post {
-                failure {
-                    echo "FOO STAGE FAILED"
                 }
             }
         }
