@@ -37,6 +37,7 @@ pipeline {
                     stage("first") {
                         steps {
                             echo "First branch"
+                            echo "OS=$os"
                         }
                     }
                     stage("second") {

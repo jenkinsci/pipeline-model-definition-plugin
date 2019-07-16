@@ -31,28 +31,39 @@ pipeline {
         stage("foo") {
             //failFast true
             matrix {
+                axes {
+                    axis {
+                        name 'os'
+                        values "linux", "windows", "mac"
+                    }
+                }
                 stages {
                     stage("first") {
                         steps {
-                            error "First branch"
+                            script {
+                                if (env.os == "windows") {
+                                    sleep 1
+                                    error "First branch"
+                                }
+                            }
                         }
                         post {
                             aborted {
                                 echo "FIRST STAGE ABORTED"
                             }
                             failure {
-                                echo "FIRST STAGE FAILURE"
+                                echo "FIRST $os STAGE FAILURE"
                             }
                         }
                     }
                     stage("second") {
                         steps {
                             sleep 10
-                            echo "Second branch"
+                            error "Second branch"
                         }
                         post {
                             aborted {
-                                echo "SECOND STAGE ABORTED"
+                                echo "SECOND $os STAGE ABORTED"
                             }
                             failure {
                                 echo "SECOND STAGE FAILURE"

@@ -30,7 +30,7 @@ pipeline {
                 stage("first-branch") {
                     stages {
                         stage("first") {
-                            maatrix {
+                            matrix {
                                 stage("first-and-one") {
                                     steps {
                                         echo "This should never be reached"

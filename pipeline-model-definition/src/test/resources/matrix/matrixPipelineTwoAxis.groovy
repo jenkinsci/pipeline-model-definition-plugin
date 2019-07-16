@@ -23,30 +23,35 @@
  */
 
 pipeline {
-    agent any
+    agent none
     stages {
-        stage("barf") {
-            steps {
-                sh "exit 1"
-            }
-        }
         stage("foo") {
-            steps {
-                parallel(first: {
-                    echo "First branch"
-                },
-                    second: {
-                        echo "Second branch"
-                    })
+            matrix {
+                axes {
+                    axis {
+                        name 'os'
+                        values "linux", "windows", "mac"
+                    }
+                    axis {
+                        name 'browser'
+                        values "firefox", "chrome", "safari"
+                    }
+                }
+                stages {
+                    stage("first") {
+                        steps {
+                            echo "First branch"
+                            echo "OS=$os"
+                            echo "BROWSER=$browser"
+                        }
+                    }
+                    stage("second") {
+                        steps {
+                            echo "Second branch"
+                        }
+                    }
+                }
             }
-        }
-    }
-    post {
-        failure {
-            echo "I HAVE EXPLODED"
         }
     }
 }
-
-
-
