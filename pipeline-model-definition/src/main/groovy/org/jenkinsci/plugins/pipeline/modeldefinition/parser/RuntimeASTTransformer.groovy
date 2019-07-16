@@ -782,7 +782,9 @@ class RuntimeASTTransformer {
 
     List<Map<ModelASTKey, ModelASTValue>> expandAxes(List<ModelASTAxis> axes) {
         def result = new ArrayList<Map<ModelASTKey, ModelASTValue>>()
-        result.add(new HashMap<ModelASTKey, ModelASTValue>())
+        // using LinkedHashMap to maintain insertion order
+        // axes will be added in the order they are declared
+        result.add(new LinkedHashMap<ModelASTKey, ModelASTValue>())
         axes.each { axis ->
             def interim = result
             result = new ArrayList<Map<ModelASTKey, ModelASTValue>>()
