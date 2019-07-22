@@ -140,7 +140,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
     private static boolean canRestart(WorkflowRun b, String user) {
         final RestartDeclarativePipelineAction a = b.getAction(RestartDeclarativePipelineAction.class);
-        return ACL.impersonate(User.get(user).impersonate(), new NotReallyRoleSensitiveCallable<Boolean,RuntimeException>() {
+        return ACL.impersonate(User.getById(user, true).impersonate(), new NotReallyRoleSensitiveCallable<Boolean,RuntimeException>() {
             @Override public Boolean call() throws RuntimeException {
                 return a.isRestartEnabled();
             }

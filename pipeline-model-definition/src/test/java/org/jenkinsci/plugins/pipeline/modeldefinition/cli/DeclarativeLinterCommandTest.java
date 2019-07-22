@@ -99,7 +99,7 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
         assertThat(result, not(succeeded()));
         assertThat(result.stderr(), containsString("ERROR: anonymous is missing the Overall/Read permission"));
 
-        declarativeLinterCommand.setTransportAuth(User.get("alice").impersonate());
+        declarativeLinterCommand.setTransportAuth(User.getById("alice", true).impersonate());
         final CLICommandInvoker.Result result2 = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
 
         assertThat(result2, succeeded());
