@@ -339,6 +339,9 @@ class ModelParser implements Parser {
                         case 'axes':
                             r.axes = parseAxes(it);
                             break;
+                        case 'excludes':
+                            r.excludes = parseExcludes(it);
+                            break;
                         default:
                             // We need to check for unknowns here.
                             errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
@@ -412,6 +415,93 @@ class ModelParser implements Parser {
 
         return a
     }
+
+    @Nonnull ModelASTExcludes parseExcludes(Statement stmt) {
+        def a = new ModelASTExcludes(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m==null) {
+            errorCollector.error(a, Messages.ModelParser_ExpectedBlockFor("excludes"))
+        } else {
+            eachStatement(m.body.code) {
+                ModelASTExclude s = parseExclude(it)
+                if (s != null) {
+                    a.excludes.add(s)
+                }
+            }
+        }
+        return a
+    }
+
+    @Nonnull ModelASTExclude parseExclude(Statement stmt) {
+        def a = new ModelASTExclude(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m==null) {
+            errorCollector.error(a, Messages.ModelParser_ExpectedBlockFor("exclude"))
+        } else {
+            eachStatement(m.body.code) {
+                ModelASTExcludeAxis s = parseExcludeAxis(it)
+                if (s != null) {
+                    a.axes.add(s)
+                }
+            }
+        }
+        return a
+    }
+
+    @Nonnull ModelASTExcludeAxis parseExcludeAxis(Statement stmt) {
+//        return (ModelASTExcludeAxis) parseAxis(stmt)
+        def a = new ModelASTExcludeAxis(stmt)
+
+        def m = matchBlockStatement(stmt)
+        if (m == null) {
+            errorCollector.error(a, Messages.ModelParser_ExpectedBlockFor("axis"))
+        } else {
+            def sectionsSeen = new HashSet()
+            eachStatement(m.body.code) {
+                ModelASTKey placeholderForErrors = new ModelASTKey(it)
+                def mc = matchMethodCall(it)
+                if (mc == null) {
+                    errorCollector.error(placeholderForErrors,
+                            Messages.ModelParser_InvalidSectionDefinition(getSourceText(stmt)))
+                } else {
+                    def method = parseMethodCall(mc)
+                    // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
+                    if (!sectionsSeen.add(method.name)) {
+                        // Also an error that we couldn't actually detect at model evaluation time.
+                        errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(method.name))
+                    }
+
+                    switch (method.name) {
+                        case 'name':
+                            // TODO - must be one arg
+                            def nameExp = ((TupleExpression)mc.arguments).first()
+//                            if (nameExp==null) {
+//                                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
+//                                errorCollector.error(stage, Messages.ModelParser_ExpectedStageName())
+//                                return null
+//                            }
+                            a.name = parseKey(nameExp)
+                            break
+                        case 'values':
+                            a.values.addAll(method.args);
+                            break
+                        case 'notValues':
+                            a.inverse = Boolean.TRUE;
+                            a.values.addAll(method.args);
+                            break
+                        default:
+                            // We need to check for unknowns here.
+                            errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(method.name))
+                    }
+                }
+            }
+        }
+
+        return a
+    }
+
 
     @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt)
