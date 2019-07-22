@@ -36,6 +36,7 @@ import com.github.fge.jsonschema.util.JsonLoader;
 import hudson.model.*;
 import hudson.scm.ChangeLogSet;
 import hudson.security.ACL;
+import hudson.security.ACLContext;
 import hudson.security.AuthorizationStrategy;
 import hudson.security.SecurityRealm;
 import hudson.security.csrf.CrumbIssuer;
@@ -140,11 +141,9 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
     private static boolean canRestart(WorkflowRun b, String user) {
         final RestartDeclarativePipelineAction a = b.getAction(RestartDeclarativePipelineAction.class);
-        return ACL.impersonate(User.getById(user, true).impersonate(), new NotReallyRoleSensitiveCallable<Boolean,RuntimeException>() {
-            @Override public Boolean call() throws RuntimeException {
-                return a.isRestartEnabled();
-            }
-        });
+        try (ACLContext context = ACL.as(User.getById(user, true))) {
+            return a.isRestartEnabled();
+        }
     }
 
     @Issue("JENKINS-45455")
