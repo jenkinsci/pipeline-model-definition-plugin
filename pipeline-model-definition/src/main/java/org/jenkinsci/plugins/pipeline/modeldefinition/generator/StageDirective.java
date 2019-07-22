@@ -104,13 +104,13 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         @Nonnull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(AgentDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(InputDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(EnvironmentDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(OptionsDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(WhenDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(ToolsDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(PostDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(AgentDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(InputDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(EnvironmentDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(OptionsDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(WhenDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(ToolsDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(PostDirective.DescriptorImpl.class));
 
             return descriptors;
         }
