@@ -764,9 +764,10 @@ class RuntimeASTTransformer {
             ListExpression argList = new ListExpression()
 
             // generate matrix combinations of axes - cartesianProduct
-            List<Map<ModelASTKey, ModelASTValue>> expansion = expandAxes(original.axes.axes)
+            Set<Map<ModelASTKey, ModelASTValue>> expansion = expandAxes(original.axes.axes)
 
-            // TODO: remove excluded combinations once I have excludes
+            // remove excluded combinations
+            filterExcludes(expansion, original.excludes)
 
             // for each combination
             expansion.each { item ->
@@ -780,14 +781,14 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    List<Map<ModelASTKey, ModelASTValue>> expandAxes(List<ModelASTAxis> axes) {
-        def result = new ArrayList<Map<ModelASTKey, ModelASTValue>>()
+    Set<Map<ModelASTKey, ModelASTValue>> expandAxes(List<ModelASTAxis> axes) {
+        def result = new LinkedHashSet<Map<ModelASTKey, ModelASTValue>>()
         // using LinkedHashMap to maintain insertion order
         // axes will be added in the order they are declared
         result.add(new LinkedHashMap<ModelASTKey, ModelASTValue>())
         axes.each { axis ->
             def interim = result
-            result = new ArrayList<Map<ModelASTKey, ModelASTValue>>()
+            result = new LinkedHashSet<Map<ModelASTKey, ModelASTValue>>()
             axis.values.each { value ->
                 interim.each {
                     Map<ModelASTKey, ModelASTValue> generated = it.clone()
@@ -797,6 +798,18 @@ class RuntimeASTTransformer {
             }
         }
         return result
+    }
+
+    void filterExcludes(Set<Map<ModelASTKey, ModelASTValue>> expansion, ModelASTExcludes excludes) {
+        if (isGroovyAST(excludes)) {
+            excludes.excludes.each { exclude ->
+                Set<Map<ModelASTKey, ModelASTValue>> filter = expansion.clone()
+                exclude.getExcludeAxes().each { excludeAxis ->
+                    filter.removeAll { !excludeAxis.inverse ^ excludeAxis.values.contains(it.get(excludeAxis.name)) }
+                }
+                expansion.removeAll(filter)
+            }
+        }
     }
 
     /**

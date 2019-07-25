@@ -550,6 +550,9 @@
         "axes": {
           "$ref": "#/definitions/axes"
         },
+        "excludes": {
+          "$ref": "#/definitions/excludes"
+        },
         "stages": {
           "$ref": "#/definitions/stages"
         }
@@ -588,7 +591,47 @@
       ],
       "additionalProperties": false
     },
-
+    "excludes": {
+      "description": "Section containing a list of exclude elements",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/exclude"
+      },
+      "additionalProperties": false
+    },
+    "exclude": {
+      "description": "Section containing a list of excludeAxis elements",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/excludeAxis"
+      },
+      "additionalProperties": false
+    },
+    "excludeAxis": {
+      "description": "One axis of a matrix",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "inverse": {
+          "type": "boolean"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/rawArgument"
+          }
+        }
+      },
+      "required": [
+        "name", "values"
+      ],
+      "additionalProperties": false
+    },
     "pipeline": {
       "type": "object",
       "properties": {

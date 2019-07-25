@@ -169,6 +169,9 @@ class JSONParser implements Parser {
         if (j.node.has("axes")) {
             matrix.axes = parseAxes(j.append(JsonPointer.of("axes")))
         }
+        if (j.node.has("excludes")) {
+            matrix.excludes = parseExcludes(j.append(JsonPointer.of("excludes")))
+        }
 
         return matrix
     }
@@ -188,6 +191,47 @@ class JSONParser implements Parser {
 
         if (j.node.has("name")) {
             axis.name = parseKey(j.append(JsonPointer.of("name")))
+        }
+
+        if (j.node.has("values")) {
+            JsonTree valueList = j.append(JsonPointer.of("values"))
+            valueList.node.eachWithIndex { JsonNode entry, int i ->
+                axis.values.add(parseValue(valueList.append(JsonPointer.of(i))))
+            }
+        }
+
+        return axis
+    }
+
+    @CheckForNull ModelASTExcludes parseExcludes(JsonTree j) {
+        ModelASTExcludes excludes = new ModelASTExcludes(j)
+
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            excludes.excludes.add(parseExclude(j.append(JsonPointer.of(i))))
+        }
+
+        return excludes
+    }
+
+    @CheckForNull ModelASTExclude parseExclude(JsonTree j) {
+        ModelASTExclude exclude = new ModelASTExclude(j)
+
+        j.node.eachWithIndex { JsonNode entry, int i ->
+            exclude.axes.add(parseExcludeAxis(j.append(JsonPointer.of(i))))
+        }
+
+        return exclude
+    }
+
+    @CheckForNull ModelASTExcludeAxis parseExcludeAxis(JsonTree j) {
+        ModelASTExcludeAxis axis = new ModelASTExcludeAxis(j)
+
+        if (j.node.has("name")) {
+            axis.name = parseKey(j.append(JsonPointer.of("name")))
+        }
+
+        if (j.node.has("inverse")) {
+            axis.inverse = j.node.get("inverse")?.asBoolean()
         }
 
         if (j.node.has("values")) {

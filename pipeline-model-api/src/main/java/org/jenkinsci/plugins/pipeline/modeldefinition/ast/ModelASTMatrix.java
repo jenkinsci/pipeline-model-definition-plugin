@@ -15,6 +15,7 @@ import java.util.Objects;
 public final class ModelASTMatrix extends ModelASTParallel {
 
     private ModelASTAxisContainer axes;
+    private ModelASTExcludes excludes;
 
     public ModelASTMatrix(Object sourceLocation) {
         super(sourceLocation);
@@ -24,6 +25,7 @@ public final class ModelASTMatrix extends ModelASTParallel {
     public Object toJSON() {
         return  new JSONObject()
                 .elementOpt("axes", toJSON(axes))
+                .elementOpt("excludes", toJSON(excludes))
                 .elementOpt("stages", nullIfEmpty(toJSONArray(getStages())));
     }
 
@@ -31,13 +33,14 @@ public final class ModelASTMatrix extends ModelASTParallel {
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         super.validate(validator, true);
         validator.validateElement(this);
-        validate(validator, axes);
+        validate(validator, axes, excludes);
     }
 
     @Override
     public String toGroovy() {
         StringBuilder children = new StringBuilder()
                 .append(toGroovy(axes))
+                .append(toGroovy(excludes))
                 .append(toGroovyBlock("stages", getStages()));
         return "matrix {\n" + children.toString() + "}\n";
     }
@@ -46,6 +49,7 @@ public final class ModelASTMatrix extends ModelASTParallel {
     public void removeSourceLocation() {
         super.removeSourceLocation();
         removeSourceLocationsFrom(axes);
+        removeSourceLocationsFrom(excludes);
     }
 
 
@@ -53,6 +57,7 @@ public final class ModelASTMatrix extends ModelASTParallel {
     public String toString() {
         return "ModelASTMatrix{" +
                 "axes=" + axes +
+                "excludes=" + excludes +
                 "stages=" + getStages() +
                 "}";
     }
@@ -65,17 +70,32 @@ public final class ModelASTMatrix extends ModelASTParallel {
         this.axes = axes;
     }
 
+    public ModelASTExcludes getExcludes() {
+        return excludes;
+    }
+
+    public void setExcludes(ModelASTExcludes excludes) {
+        this.excludes = excludes;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ModelASTMatrix)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ModelASTMatrix)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
         ModelASTMatrix that = (ModelASTMatrix) o;
-        return Objects.equals(getAxes(), that.getAxes());
+        return Objects.equals(getAxes(), that.getAxes()) &&
+            Objects.equals(getExcludes(), that.getExcludes());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getAxes());
+        return Objects.hash(super.hashCode(), getAxes(), getExcludes());
     }
 }

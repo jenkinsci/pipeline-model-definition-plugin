@@ -157,6 +157,62 @@ public class MatrixTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void matrixPipelineTwoAxisOneExclude() throws Exception {
+        expect("matrix/matrixPipelineTwoAxisOneExclude")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'safari')")
+            .logNotContains("{ (Branch: Matrix: os = 'linux', browser = 'safari')")
+            .go();
+    }
+
+    @Test
+    public void matrixPipelineTwoAxisTwoExcludes() throws Exception {
+        expect("matrix/matrixPipelineTwoAxisTwoExcludes")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'safari')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'ie')")
+            .logNotContains(
+                "{ (Branch: Matrix: os = 'linux', browser = 'safari')",
+                "{ (Branch: Matrix: os = 'linux', browser = 'ie')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'ie')")
+            .go();
+    }
+
+    @Test
+    public void matrixPipelineTwoAxisExcludeNot() throws Exception {
+        expect("matrix/matrixPipelineTwoAxisExcludeNot")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
+                "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'safari')",
+                "{ (Branch: Matrix: os = 'windows', browser = 'ie')")
+            .logNotContains(
+                "{ (Branch: Matrix: os = 'linux', browser = 'safari')",
+                "{ (Branch: Matrix: os = 'linux', browser = 'ie')",
+                "{ (Branch: Matrix: os = 'mac', browser = 'ie')")
+            .go();
+    }
+
     @Ignore
     @Test
     public void matrixPipelineQuoteEscaping() throws Exception {

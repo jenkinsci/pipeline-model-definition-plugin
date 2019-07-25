@@ -755,11 +755,19 @@ class ModelValidatorImpl implements ModelValidator {
     }
 
     boolean validateElement(@Nonnull ModelASTMatrix matrix) {
-        return true;
+        return true
     }
 
     boolean validateElement(ModelASTAxis axis) {
-        return true;
+        return true
+    }
+
+    boolean validateElement(ModelASTExclude exclude) {
+        return true
+    }
+
+    boolean validateElement(ModelASTExcludeAxis axis) {
+        return true
     }
 
     boolean validateElement(@Nonnull ModelASTAgent agent) {
