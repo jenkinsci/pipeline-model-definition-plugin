@@ -31,14 +31,22 @@ pipeline {
                     stages {
                         stage("first") {
                             matrix {
-                                stage("first-and-one") {
-                                    steps {
-                                        echo "This should never be reached"
+                                axes {
+                                    axis {
+                                        name 'os'
+                                        values "linux", "windows", "mac"
                                     }
                                 }
-                                stage("first-and-two") {
-                                    steps {
-                                        echo "This should also never be reached"
+                                stages {
+                                    stage("first-and-one") {
+                                        steps {
+                                            echo "This should never be reached"
+                                        }
+                                    }
+                                    stage("first-and-two") {
+                                        steps {
+                                            echo "This should also never be reached"
+                                        }
                                     }
                                 }
                             }

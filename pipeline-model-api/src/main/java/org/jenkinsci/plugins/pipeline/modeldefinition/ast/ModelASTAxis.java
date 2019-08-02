@@ -19,7 +19,7 @@ import java.util.Objects;
 public class ModelASTAxis extends ModelASTElement {
 
     private ModelASTKey name;
-    private List<ModelASTValue> values = new ArrayList<>();
+    private List<ModelASTValue> values;
 
     public ModelASTAxis(Object sourceLocation) {
         super(sourceLocation);

@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -30,6 +29,7 @@ public class ModelASTAxisContainer extends ModelASTElement {
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         // nothing to validate on this element
+        validator.validateElement(this);
         validate(validator, axes);
     }
 

@@ -259,8 +259,8 @@ class ModelParser implements Parser {
         r.validate(validator)
 
         // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
-        astDebugLog {xf
-            "Model as JSON: ${r.toJSON().toString(2)}"
+        astDebugLog {
+            "Model as JSON:\\n${r.toJSON().toString(2)}"
         }
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
@@ -268,7 +268,7 @@ class ModelParser implements Parser {
             pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(r, build)
             // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
             astDebugLog {
-                "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"
+                "Transformed runtime AST:\\n${ -> prettyPrint(pipelineBlock.whole.arguments)}"
             }
         }
 
@@ -403,6 +403,9 @@ class ModelParser implements Parser {
                             a.name = parseKey(nameExp)
                             break
                         case 'values':
+                            if (a.values == null) {
+                                a.values = []
+                            }
                             a.values.addAll(method.args);
                             break
                         default:

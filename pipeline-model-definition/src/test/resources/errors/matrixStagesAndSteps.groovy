@@ -26,6 +26,9 @@ pipeline {
     agent none
     stages {
         stage("foo") {
+            steps {
+                echo "This will never happen"
+            }
             matrix {
                 axes {
                     axis {
@@ -35,25 +38,8 @@ pipeline {
                 }
                 stages {
                     stage("first") {
-                        matrix {
-                            axes {
-                                axis {
-                                    name 'os'
-                                    values "linux", "windows", "mac"
-                                }
-                            }
-                            stages {
-                                stage("first-and-one") {
-                                    steps {
-                                        echo "This should never be reached"
-                                    }
-                                }
-                                stage("first-and-two") {
-                                    steps {
-                                        echo "This should also never be reached"
-                                    }
-                                }
-                            }
+                        steps {
+                            echo "First branch"
                         }
                     }
                     stage("second") {

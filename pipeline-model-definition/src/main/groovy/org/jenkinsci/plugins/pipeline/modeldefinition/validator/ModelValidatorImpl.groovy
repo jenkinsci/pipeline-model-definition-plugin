@@ -690,15 +690,12 @@ class ModelValidatorImpl implements ModelValidator {
             stepsStagesParallelCount += 1
         }
 
-        if (isWithinParallel && (stage.branches.size() > 1 || stage.parallel != null)) {
+        if (isWithinParallel && (stage.branches.size() > 1 || stage.parallel != null || stage.matrix != null)) {
             ModelASTElement errorElement
-            if (stage.parallel != null) {
-                def firstParallel = stage.parallel.stages.first()
-                if (firstParallel instanceof ModelASTElement) {
-                    errorElement = firstParallel
-                } else {
-                    errorElement = stage
-                }
+            if (stage.matrix != null) {
+                errorElement = stage.matrix
+            } else if (stage.parallel != null) {
+                errorElement = stage.parallel
             } else {
                 errorElement = stage.branches.first()
             }
@@ -733,41 +730,122 @@ class ModelValidatorImpl implements ModelValidator {
     boolean validateElement(@Nonnull ModelASTStages stages) {
         boolean valid = true
 
-        if (stages.stages.isEmpty()) {
-            errorCollector.error(stages, Messages.ModelValidatorImpl_NoStages())
+        if (stages.stages == null) {
+            errorCollector.error(stages, Messages.ModelValidatorImpl_RequiredSection("stages"))
             valid = false
-        }
+        } else {
+            if (stages.stages.isEmpty()) {
+                errorCollector.error(stages, Messages.ModelValidatorImpl_NoStages())
+                valid = false
+            }
 
-        def stageNames = stages.stages.collect { s ->
-            s.name
-        }
+            def stageNames = stages.stages.collect { s ->
+                s.name
+            }
 
-        stageNames.findAll { stageNames.count(it) > 1 }.unique().each { sn ->
-            errorCollector.error(stages, Messages.ModelValidatorImpl_DuplicateStageName(sn))
-            valid = false
+            stageNames.findAll { stageNames.count(it) > 1 }.unique().each { sn ->
+                errorCollector.error(stages, Messages.ModelValidatorImpl_DuplicateStageName(sn))
+                valid = false
+            }
         }
 
         return validateFromContributors(stages, valid)
     }
 
     boolean validateElement(@Nonnull ModelASTParallel parallel) {
-        return true;
+        return validateElement((ModelASTStages)parallel)
     }
 
     boolean validateElement(@Nonnull ModelASTMatrix matrix) {
-        return true
+        boolean valid = true
+
+        if (matrix.axes == null) {
+            errorCollector.error(matrix, Messages.ModelValidatorImpl_RequiredSection("axes"))
+            valid = false
+        }
+
+        return validateFromContributors(matrix, valid)
+    }
+
+    boolean validateElement(ModelASTAxisContainer axes) {
+        boolean valid = true
+
+        if (axes.axes.isEmpty()) {
+            errorCollector.error(axes, Messages.ModelValidatorImpl_NoAxes())
+            valid = false
+        }
+
+        def names = axes.axes.collect { s ->
+            s.name
+        }
+
+        names.findAll { names.count(it) > 1 }.unique().each { name ->
+            errorCollector.error(axes, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
+            valid = false
+        }
+
+        return validateFromContributors(axes, valid)
     }
 
     boolean validateElement(ModelASTAxis axis) {
-        return true
+        boolean valid = true
+
+        if (axis.name == null) {
+            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("name"))
+            valid = false
+        }
+
+        if (axis.values == null) {
+            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("values"))
+        }
+
+        return validateFromContributors(axis, valid)
+    }
+
+    boolean validateElement(ModelASTExcludes excludes) {
+        boolean valid = true
+
+        if (excludes.excludes.isEmpty()) {
+            errorCollector.error(excludes, Messages.ModelValidatorImpl_NoExcludes())
+            valid = false
+        }
+
+        return validateFromContributors(excludes, valid)
     }
 
     boolean validateElement(ModelASTExclude exclude) {
-        return true
+        boolean valid = true
+
+        if (exclude.excludeAxes.isEmpty()) {
+            errorCollector.error(exclude, Messages.ModelValidatorImpl_NoAxes())
+            valid = false
+        }
+
+        def names = exclude.excludeAxes.collect { s ->
+            s.name
+        }
+
+        names.findAll { names.count(it) > 1 }.unique().each { name ->
+            errorCollector.error(exclude, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
+            valid = false
+        }
+
+        return validateFromContributors(exclude, valid)
     }
 
     boolean validateElement(ModelASTExcludeAxis axis) {
-        return true
+        boolean valid = true
+
+        if (axis.name == null) {
+            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("name"))
+            valid = false
+        }
+
+        if (axis.values == null) {
+            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("values or notValues"))
+        }
+
+        return validateFromContributors(axis, valid)
     }
 
     boolean validateElement(@Nonnull ModelASTAgent agent) {
