@@ -386,6 +386,7 @@ class Utils {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
+    @Whitelisted
     @Restricted(NoExternalUse.class)
     static void markStageSkippedForConditional(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
