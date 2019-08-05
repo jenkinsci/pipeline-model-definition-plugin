@@ -730,23 +730,18 @@ class ModelValidatorImpl implements ModelValidator {
     boolean validateElement(@Nonnull ModelASTStages stages) {
         boolean valid = true
 
-        if (stages.stages == null) {
-            errorCollector.error(stages, Messages.ModelValidatorImpl_RequiredSection("stages"))
+        if (stages.stages.isEmpty()) {
+            errorCollector.error(stages, Messages.ModelValidatorImpl_NoStages())
             valid = false
-        } else {
-            if (stages.stages.isEmpty()) {
-                errorCollector.error(stages, Messages.ModelValidatorImpl_NoStages())
-                valid = false
-            }
+        }
 
-            def stageNames = stages.stages.collect { s ->
-                s.name
-            }
+        def stageNames = stages.stages.collect { s ->
+            s.name
+        }
 
-            stageNames.findAll { stageNames.count(it) > 1 }.unique().each { sn ->
-                errorCollector.error(stages, Messages.ModelValidatorImpl_DuplicateStageName(sn))
-                valid = false
-            }
+        stageNames.findAll { stageNames.count(it) > 1 }.unique().each { sn ->
+            errorCollector.error(stages, Messages.ModelValidatorImpl_DuplicateStageName(sn))
+            valid = false
         }
 
         return validateFromContributors(stages, valid)
@@ -779,6 +774,11 @@ class ModelValidatorImpl implements ModelValidator {
             s.name
         }
 
+        names.findAll { it == '' }.each { name ->
+            errorCollector.error(axes, Messages.ModelValidatorImpl_EmptySection("name"))
+            valid = false
+        }
+
         names.findAll { names.count(it) > 1 }.unique().each { name ->
             errorCollector.error(axes, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
             valid = false
@@ -795,8 +795,15 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        if (axis.values == null) {
+        if (axis.values.isEmpty()) {
             errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("values"))
+        }
+
+        axis.values.each { value ->
+            if (!value.literal) {
+                errorCollector.error(value, Messages.ModelParser_ExpectedStringLiteralButGot(value.value))
+                valid = false
+            }
         }
 
         return validateFromContributors(axis, valid)
@@ -825,6 +832,11 @@ class ModelValidatorImpl implements ModelValidator {
             s.name
         }
 
+        names.findAll { it == '' }.each { name ->
+            errorCollector.error(exclude, Messages.ModelValidatorImpl_EmptySection("name"))
+            valid = false
+        }
+
         names.findAll { names.count(it) > 1 }.unique().each { name ->
             errorCollector.error(exclude, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
             valid = false
@@ -841,8 +853,8 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        if (axis.values == null) {
-            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("values or notValues"))
+        if (axis.values.isEmpty()) {
+            errorCollector.error(axis, Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
         }
 
         return validateFromContributors(axis, valid)

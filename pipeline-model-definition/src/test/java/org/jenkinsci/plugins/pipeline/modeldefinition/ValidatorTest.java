@@ -160,7 +160,8 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void matrixMissingStages() throws Exception {
         expectError("matrixMissingStages")
-            .logContains(Messages.ModelValidatorImpl_RequiredSection("stages"))
+//            .logContains(Messages.ModelValidatorImpl_RequiredSection("stages"))
+            .logContains(Messages.ModelValidatorImpl_NoStages())
             .go();
     }
 
@@ -203,6 +204,13 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void matrixExcludeAxisMissingValues() throws Exception {
         expectError("matrixAxisMissingValues")
             .logContains(Messages.ModelValidatorImpl_RequiredSection("values"))
+            .go();
+    }
+
+    @Test
+    public void matrixExcludeValuesWithNotValues() throws Exception {
+        expectError("matrixExcludeValuesWithNotValues")
+            .logContains(Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
             .go();
     }
 
@@ -797,6 +805,13 @@ public class ValidatorTest extends AbstractModelDefTest {
     public void parallelMatrixStagesGroupsDeepNesting() throws Exception {
         expectError("parallelMatrixStagesGroupsDeepNesting")
             .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+            .go();
+    }
+
+    @Test
+    public void matrixTopLevel() throws Exception {
+        expectError("matrixTopLevel")
+            .logContains(Messages.Parser_UndefinedSection("matrix"))
             .go();
     }
 

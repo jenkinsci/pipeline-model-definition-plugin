@@ -19,8 +19,6 @@ public final class ModelASTMatrix extends ModelASTParallel {
 
     public ModelASTMatrix(Object sourceLocation) {
         super(sourceLocation);
-        // stages section may not exist, so start as null
-        this.setStages(null);
     }
 
     @Override

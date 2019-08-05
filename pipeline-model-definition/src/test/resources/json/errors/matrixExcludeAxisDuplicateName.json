@@ -52,6 +52,20 @@
             }]
           },
           {
+            "name": "os",
+            "inverse": true,
+            "values":           [
+              {
+                "isLiteral": true,
+                "value": "windows"
+              },
+              {
+                "isLiteral": true,
+                "value": "mac"
+              }
+            ]
+          },
+          {
             "name": "browser",
             "values": [            {
               "isLiteral": true,

@@ -268,7 +268,7 @@ class ModelParser implements Parser {
             pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(r, build)
             // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
             astDebugLog {
-                "Transformed runtime AST:\\n${ -> prettyPrint(pipelineBlock.whole.arguments)}"
+                "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"
             }
         }
 
@@ -403,9 +403,6 @@ class ModelParser implements Parser {
                             a.name = parseKey(nameExp)
                             break
                         case 'values':
-                            if (a.values == null) {
-                                a.values = []
-                            }
                             a.values.addAll(method.args);
                             break
                         default:
@@ -488,9 +485,17 @@ class ModelParser implements Parser {
                             a.name = parseKey(nameExp)
                             break
                         case 'values':
+                            // Do not allow values and notValues
+                            if (sectionsSeen.contains("notValues")) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
+                            }
                             a.values.addAll(method.args);
                             break
                         case 'notValues':
+                            // Do not allow values and notValues
+                            if (sectionsSeen.contains("values")) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
+                            }
                             a.inverse = Boolean.TRUE;
                             a.values.addAll(method.args);
                             break

@@ -21,61 +21,22 @@
           ]
         },
         {
-          "name": "browser",
+          "name": "os",
           "values":           [
             {
               "isLiteral": true,
-              "value": "firefox"
+              "value": "linux"
             },
             {
               "isLiteral": true,
-              "value": "chrome"
+              "value": "windows"
             },
             {
               "isLiteral": true,
-              "value": "safari"
-            },
-            {
-              "isLiteral": true,
-              "value": "ie"
+              "value": "mac"
             }
           ]
         }
-      ],
-      "excludes":       [
-        [
-          {
-            "name": "os",
-            "values": [            {
-              "isLiteral": true,
-              "value": "linux"
-            }]
-          },
-          {
-            "name": "browser",
-            "values": [            {
-              "isLiteral": true,
-              "value": "safari"
-            }]
-          }
-        ],
-        [
-          {
-            "name": "os",
-            "values": [            {
-              "isLiteral": true,
-              "value": "windows"
-            }],
-            "inverse": true
-          },
-          {
-            "name": "browser",
-            "values": [            {
-              "isLiteral": true,
-              "value": "ie"
-            }]
-          }
-        ]
       ],
       "stages":       [
         {

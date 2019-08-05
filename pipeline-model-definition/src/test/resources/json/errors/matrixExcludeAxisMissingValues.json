@@ -52,7 +52,6 @@
             }]
           },
           {
-            "name": "browser",
             "values": [            {
               "isLiteral": true,
               "value": "safari"

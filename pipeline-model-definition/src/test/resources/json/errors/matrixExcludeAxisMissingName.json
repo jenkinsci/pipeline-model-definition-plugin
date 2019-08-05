@@ -52,11 +52,7 @@
             }]
           },
           {
-            "name": "browser",
-            "values": [            {
-              "isLiteral": true,
-              "value": "safari"
-            }]
+            "name": "browser"
           }
         ],
         [
