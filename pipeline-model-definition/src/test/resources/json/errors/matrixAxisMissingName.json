@@ -1,0 +1,46 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "matrix":     {
+      "axes":       [
+        {
+          "values":           [
+            {
+              "isLiteral": true,
+              "value": "linux"
+            },
+            {
+              "isLiteral": true,
+              "value": "windows"
+            },
+            {
+              "isLiteral": true,
+              "value": "mac"
+            }
+          ]
+        }
+      ],
+      "stages":       [
+        {
+          "name": "first",
+          "branches": [          {
+            "name": "default",
+            "steps":             [
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": true,
+                    "value": "First branch"
+                  }
+                }]
+              }
+            ]
+          }]
+        }
+      ]
+    }
+  }],
+  "agent": {"type": "none"}
+}}
