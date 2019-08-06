@@ -130,6 +130,91 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void matrixEmptyAxes() throws Exception {
+        expectError("matrixEmptyAxes")
+            .logContains(Messages.ModelValidatorImpl_NoAxes())
+            .go();
+    }
+
+    @Test
+    public void matrixEmptyExcludes() throws Exception {
+        expectError("matrixEmptyExcludes")
+            .logContains(Messages.ModelValidatorImpl_NoExcludes())
+            .go();
+    }
+
+    @Test
+    public void matrixEmptyExclude() throws Exception {
+        expectError("matrixEmptyExclude")
+            .logContains(Messages.ModelValidatorImpl_NoAxes())
+            .go();
+    }
+
+    @Test
+    public void matrixMissingAxes() throws Exception {
+        expectError("matrixMissingAxes")
+            .logContains(Messages.ModelValidatorImpl_RequiredSection("axes"))
+            .go();
+    }
+
+    @Test
+    public void matrixMissingStages() throws Exception {
+        expectError("matrixMissingStages")
+//            .logContains(Messages.ModelValidatorImpl_RequiredSection("stages"))
+            .logContains(Messages.ModelValidatorImpl_NoStages())
+            .go();
+    }
+
+    @Test
+    public void matrixAxisDuplicateName() throws Exception {
+        expectError("matrixAxisDuplicateName")
+            .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("os"))
+            .go();
+    }
+
+    @Test
+    public void matrixAxisMissingName() throws Exception {
+        expectError("matrixAxisMissingName")
+            .logContains(Messages.ModelValidatorImpl_RequiredSection("name"))
+            .go();
+    }
+
+    @Test
+    public void matrixAxisMissingValues() throws Exception {
+        expectError("matrixAxisMissingValues")
+            .logContains(Messages.ModelValidatorImpl_RequiredSection("values"))
+            .go();
+    }
+
+    @Test
+    public void matrixExcludeAxisDuplicateName() throws Exception {
+        expectError("matrixAxisDuplicateName")
+            .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("os"))
+            .go();
+    }
+
+    @Test
+    public void matrixExcludeAxisMissingName() throws Exception {
+        expectError("matrixAxisMissingName")
+            .logContains(Messages.ModelValidatorImpl_RequiredSection("name"))
+            .go();
+    }
+
+    @Test
+    public void matrixExcludeAxisMissingValues() throws Exception {
+        expectError("matrixAxisMissingValues")
+            .logContains(Messages.ModelValidatorImpl_RequiredSection("values"))
+            .go();
+    }
+
+    @Test
+    public void matrixExcludeValuesWithNotValues() throws Exception {
+        expectError("matrixExcludeValuesWithNotValues")
+            .logContains(Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
+            .go();
+    }
+
+    @Test
     public void whenInvalidParameterType() throws Exception {
         expectError("whenInvalidParameterType")
                 .logContains(Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class))
@@ -678,12 +763,27 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void matrixStagesAndSteps() throws Exception {
+        expectError("matrixStagesAndSteps")
+            .logContains(Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo"))
+            .go();
+    }
+
+
     @Issue("JENKINS-41334")
     @Test
     public void parallelStagesDeepNesting() throws Exception {
         expectError("parallelStagesDeepNesting")
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
+    }
+
+    @Test
+    public void matrixStagesDeepNesting() throws Exception {
+        expectError("matrixStagesDeepNesting")
+            .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+            .go();
     }
 
     @Issue("JENKINS-46809")
@@ -693,7 +793,28 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
                 .go();
     }
-    
+
+    @Test
+    public void matrixParallelStagesGroupsDeepNesting() throws Exception {
+        expectError("matrixParallelStagesGroupsDeepNesting")
+            .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+            .go();
+    }
+
+    @Test
+    public void parallelMatrixStagesGroupsDeepNesting() throws Exception {
+        expectError("parallelMatrixStagesGroupsDeepNesting")
+            .logContains(Messages.ModelValidatorImpl_NoNestedWithinNestedStages())
+            .go();
+    }
+
+    @Test
+    public void matrixTopLevel() throws Exception {
+        expectError("matrixTopLevel")
+            .logContains(Messages.Parser_UndefinedSection("matrix"))
+            .go();
+    }
+
     @Test
     public void parametersAndTriggersInOptions() throws Exception {
         expectError("parametersAndTriggersInOptions")

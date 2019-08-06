@@ -1,82 +1,101 @@
 {"pipeline": {
   "stages": [  {
     "name": "foo",
-    "matrix":     [
-      {
-        "name": "first-branch",
-        "stages":         [
+    "matrix":     {
+      "axes": [      {
+        "name": "os",
+        "values":         [
           {
-            "name": "first",
-            "parallel":             [
-              {
-                "name": "first-and-one",
-                "branches": [                {
-                  "name": "default",
-                  "steps": [                  {
-                    "name": "echo",
-                    "arguments": [                    {
-                      "key": "message",
-                      "value":                       {
-                        "isLiteral": true,
-                        "value": "This should never be reached"
-                      }
-                    }]
-                  }]
-                }]
-              },
-              {
-                "name": "first-and-two",
-                "branches": [                {
-                  "name": "default",
-                  "steps": [                  {
-                    "name": "echo",
-                    "arguments": [                    {
-                      "key": "message",
-                      "value":                       {
-                        "isLiteral": true,
-                        "value": "This should also never be reached"
-                      }
-                    }]
-                  }]
-                }]
-              }
-            ]
+            "isLiteral": true,
+            "value": "linux"
           },
           {
-            "name": "second",
-            "branches": [            {
-              "name": "default",
-              "steps": [              {
-                "name": "echo",
-                "arguments": [                {
-                  "key": "message",
-                  "value":                   {
-                    "isLiteral": true,
-                    "value": "Second stage"
-                  }
-                }]
-              }]
-            }]
+            "isLiteral": true,
+            "value": "windows"
+          },
+          {
+            "isLiteral": true,
+            "value": "mac"
           }
         ]
-      },
-      {
-        "name": "third",
-        "branches": [        {
-          "name": "default",
-          "steps": [          {
-            "name": "echo",
-            "arguments": [            {
-              "key": "message",
-              "value":               {
-                "isLiteral": true,
-                "value": "Third stage"
-              }
+      }],
+      "stages":       [
+        {
+          "name": "first-branch",
+          "stages":           [
+            {
+              "name": "first",
+              "parallel":               [
+                {
+                  "name": "first-and-one",
+                  "branches": [                  {
+                    "name": "default",
+                    "steps": [                    {
+                      "name": "echo",
+                      "arguments": [                      {
+                        "key": "message",
+                        "value":                         {
+                          "isLiteral": true,
+                          "value": "This should never be reached"
+                        }
+                      }]
+                    }]
+                  }]
+                },
+                {
+                  "name": "first-and-two",
+                  "branches": [                  {
+                    "name": "default",
+                    "steps": [                    {
+                      "name": "echo",
+                      "arguments": [                      {
+                        "key": "message",
+                        "value":                         {
+                          "isLiteral": true,
+                          "value": "This should also never be reached"
+                        }
+                      }]
+                    }]
+                  }]
+                }
+              ]
+            },
+            {
+              "name": "second",
+              "branches": [              {
+                "name": "default",
+                "steps": [                {
+                  "name": "echo",
+                  "arguments": [                  {
+                    "key": "message",
+                    "value":                     {
+                      "isLiteral": true,
+                      "value": "Second stage"
+                    }
+                  }]
+                }]
+              }]
+            }
+          ]
+        },
+        {
+          "name": "third",
+          "branches": [          {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "Third stage"
+                }
+              }]
             }]
           }]
-        }]
-      }
-    ]
+        }
+      ]
+    }
   }],
   "agent": {"type": "none"}
 }}

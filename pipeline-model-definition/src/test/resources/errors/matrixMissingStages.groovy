@@ -23,41 +23,21 @@
  */
 
 pipeline {
-    agent none
-    stages {
-        stage("foo") {
-            stages {
-                stage("bar") {
-                    steps {
-                        echo "Bar"
-                    }
-                }
-                stage("baz") {
-                    steps {
-                        echo "Baz"
-                    }
-                }
-            }
-            matrix {
-                axes {
-                    axis {
-                        name 'os'
-                        values "linux", "windows", "mac"
-                    }
-                }
-                stages {
-                    stage("first") {
-                        steps {
-                            echo "First branch"
-                        }
-                    }
-                    stage("second") {
-                        steps {
-                            echo "Second branch"
-                        }
-                    }
-                }
-            }
+  agent none
+  stages {
+    stage("foo") {
+      matrix {
+        axes {
+          axis {
+            name 'os'
+            values "linux", "windows", "mac"
+          }
+          axis {
+            name 'browser'
+            values "firefox", "chrome", "safari", "ie"
+          }
         }
+      }
     }
+  }
 }

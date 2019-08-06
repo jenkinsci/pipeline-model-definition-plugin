@@ -73,7 +73,11 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTMatrix matrix);
 
+    boolean validateElement(ModelASTAxisContainer axes);
+
     boolean validateElement(ModelASTAxis axis);
+
+    boolean validateElement(ModelASTExcludes excludes);
 
     boolean validateElement(ModelASTExclude exclude);
 

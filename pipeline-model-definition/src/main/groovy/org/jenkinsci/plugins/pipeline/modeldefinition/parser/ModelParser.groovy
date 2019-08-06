@@ -259,8 +259,8 @@ class ModelParser implements Parser {
         r.validate(validator)
 
         // Lazily evaluate r.toJSON() - i.e., only if AST_DEBUG_LOGGING is true.
-        astDebugLog {xf
-            "Model as JSON: ${r.toJSON().toString(2)}"
+        astDebugLog {
+            "Model as JSON:\\n${r.toJSON().toString(2)}"
         }
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
@@ -485,9 +485,17 @@ class ModelParser implements Parser {
                             a.name = parseKey(nameExp)
                             break
                         case 'values':
+                            // Do not allow values and notValues
+                            if (sectionsSeen.contains("notValues")) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
+                            }
                             a.values.addAll(method.args);
                             break
                         case 'notValues':
+                            // Do not allow values and notValues
+                            if (sectionsSeen.contains("values")) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
+                            }
                             a.inverse = Boolean.TRUE;
                             a.values.addAll(method.args);
                             break
