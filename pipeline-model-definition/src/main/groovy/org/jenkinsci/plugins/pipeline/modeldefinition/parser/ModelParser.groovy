@@ -1013,7 +1013,7 @@ class ModelParser implements Parser {
 
 
     private ModelASTArgumentList populateStepArgumentList(final ModelASTStep step, final ModelASTArgumentList origArgs) {
-        if (Jenkins.getInstance() != null && origArgs instanceof ModelASTSingleArgument) {
+        if (Jenkins.getInstanceOrNull() != null && origArgs instanceof ModelASTSingleArgument) {
             ModelASTValue singleArgValue = ((ModelASTSingleArgument)origArgs).value
             ModelASTNamedArgumentList namedArgs = new ModelASTNamedArgumentList(origArgs.sourceLocation)
             Descriptor<? extends Describable> desc = lookup.lookupStepFirstThenFunction(step.name)

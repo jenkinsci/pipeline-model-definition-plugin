@@ -44,7 +44,7 @@ public class DeclarativeLinterCommand extends CLICommand {
     }
 
     protected int run() throws Exception {
-        Jenkins.getInstance().checkPermission(READ);
+        Jenkins.get().checkPermission(READ);
         int retVal = 0;
         List<String> output = new ArrayList<>();
 
