@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
  *
  * @author Liam Newman
  */
-public final class ModelASTParallel extends ModelASTStages {
+public class ModelASTParallel extends ModelASTStages {
 
     public ModelASTParallel(Object sourceLocation) {
         super(sourceLocation);
@@ -24,6 +24,12 @@ public final class ModelASTParallel extends ModelASTStages {
     @Override
     public void validate(final ModelValidator validator, boolean isWithinParallel) {
         super.validate(validator, true);
+        validator.validateElement(this);
+    }
+
+    @Override
+    public String toGroovy() {
+        return toGroovyBlock("parallel", getStages());
     }
 
     @Override

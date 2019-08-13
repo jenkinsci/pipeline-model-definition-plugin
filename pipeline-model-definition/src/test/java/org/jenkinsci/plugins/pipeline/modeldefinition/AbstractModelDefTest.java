@@ -157,7 +157,12 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "when/conditions/changelog/changelog",
             "when/conditions/changelog/changeset",
             "environment/backslashReductionInEnv",
-            "stageWrapper"
+            "stageWrapper",
+            "matrix/matrixPipeline",
+            "matrix/matrixPipelineTwoAxis",
+            "matrix/matrixPipelineTwoAxisOneExclude",
+            "matrix/matrixPipelineTwoAxisTwoExcludes",
+            "matrix/matrixPipelineTwoAxisExcludeNot"
     );
 
     public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(
@@ -226,6 +231,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
+
+        //parallel
         result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStagesAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStepsAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
@@ -233,6 +240,35 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
         result.add(new Object[]{"parallelStagesDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
         result.add(new Object[]{"parallelStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+
+        //matrix
+        // TODO: turn these back on when we update the json files
+        result.add(new Object[]{"matrixStagesAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"matrixStagesAndSteps", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"matrixParallelStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"parallelMatrixStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"matrixStagesDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+
+
+        result.add(new Object[]{"matrixTopLevel", Messages.JSONParser_MissingRequiredProperties("'stages'")});
+//        result.add(new Object[]{"matrixAxisDuplicateName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisDuplicateValue", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisMissingName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisMissingValues", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisNonLiteralValue", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"matrixEmptyAxes", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"matrixEmptyExcludes", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"matrixEmptyExclude",  Messages.JSONParser_TooFewItems(0, 1)});
+//        result.add(new Object[]{"matrixExcludeAxisDuplicateName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeAxisDuplicateValue", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeAxisMissingValues", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeAxisMissingName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeValuesWithValuesNot", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"matrixMissingAxes", Messages.JSONParser_MissingRequiredProperties("'axes'")});
+        result.add(new Object[]{"matrixMissingStages", Messages.JSONParser_MissingRequiredProperties("'stages'")});
+
+
+
 
         // TODO: Better error messaging for these schema violations.
         result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});

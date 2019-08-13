@@ -24,7 +24,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -37,7 +36,7 @@ import java.util.List;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTLibraries extends ModelASTElement {
+public final class ModelASTLibraries extends ModelASTElement implements ModelASTElementContainer {
     private List<ModelASTValue> libs = new ArrayList<>();
 
     public ModelASTLibraries(Object sourceLocation) {
@@ -46,19 +45,13 @@ public final class ModelASTLibraries extends ModelASTElement {
 
     @Override
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTValue v : libs) {
-            a.add(v.toJSON());
-        }
-        return new JSONObject().accumulate("libraries", a);
+        return toJSONObject("libraries", libs);
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTValue v : libs) {
-            v.validate(validator);
-        }
+        validate(validator, libs);
     }
 
     @Override
@@ -74,9 +67,11 @@ public final class ModelASTLibraries extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTValue v : libs) {
-            v.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(libs);
+    }
+
+    public boolean isEmpty() {
+        return libs.isEmpty();
     }
 
     public List<ModelASTValue> getLibs() {

@@ -23,12 +23,8 @@ public class ModelASTStages extends ModelASTElement {
     }
 
     @Override
-    public JSONArray toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTStage stage: stages) {
-            a.add(stage.toJSON());
-        }
-        return a;
+    public Object toJSON() {
+        return toJSONArray(stages);
     }
 
     @Override
@@ -45,19 +41,13 @@ public class ModelASTStages extends ModelASTElement {
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        for (ModelASTStage stage: stages) {
-            result.append(stage.toGroovy());
-        }
-        return result.toString();
+        return toGroovyBlock("stages", stages);
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTStage stage : stages) {
-            stage.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(stages);
     }
 
     public UUID getUuid() {

@@ -386,6 +386,7 @@ class Utils {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
+    @Whitelisted
     @Restricted(NoExternalUse.class)
     static void markStageSkippedForConditional(String stageName) {
         markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
@@ -420,6 +421,7 @@ class Utils {
      * @param excludedSymbols Optional list of symbol names to exclude from the cache.
      * @return A map of symbols or class names to class names.
      */
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private static Map<String,String> populateTypeCache(Class<? extends Descriptor> type,
                                                         boolean includeClassNames = false,
                                                         List<String> excludedSymbols = [],
