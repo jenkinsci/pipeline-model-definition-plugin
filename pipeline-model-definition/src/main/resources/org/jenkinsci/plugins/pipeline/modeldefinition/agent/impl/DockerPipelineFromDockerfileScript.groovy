@@ -70,7 +70,6 @@ class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineScript<Do
                 def imgName = "${hash}"
                 def commandLine = "docker build -t ${imgName}${additionalBuildArgs} -f \"${dockerfilePath}\" \"${describable.getActualDir()}\""
                 script.sh commandLine
-                script.dockerFingerprintFrom dockerfile: dockerfilePath, image: imgName, toolName: script.env.DOCKER_TOOL_NAME, commandLine: commandLine
                 return script.getProperty("docker").image(imgName)
             } catch (FileNotFoundException f) {
                 script.error("No Dockerfile found at ${dockerfilePath} in repository - failing.")
