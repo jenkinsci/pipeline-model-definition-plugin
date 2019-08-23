@@ -83,7 +83,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doToJenkinsfile(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(Jenkins.READ);
+        Jenkins.get().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -123,7 +123,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doToJson(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(Jenkins.READ);
+        Jenkins.get().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -151,7 +151,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doStepsToJson(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(Jenkins.READ);
+        Jenkins.get().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -179,7 +179,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doStepsToJenkinsfile(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(Jenkins.READ);
+        Jenkins.get().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -235,7 +235,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doValidateJenkinsfile(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(Jenkins.READ);
+        Jenkins.get().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -263,7 +263,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doValidateJson(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(Jenkins.READ);
+        Jenkins.get().checkPermission(Jenkins.READ);
 
         JSONObject result = new JSONObject();
 
@@ -305,7 +305,7 @@ public class ModelConverterAction implements RootAction {
     @SuppressWarnings("unused")
     @RequirePOST
     public HttpResponse doValidate(StaplerRequest req) {
-        Jenkins.getInstance().checkPermission(Jenkins.READ);
+        Jenkins.get().checkPermission(Jenkins.READ);
 
         List<String> output = new ArrayList<>();
 

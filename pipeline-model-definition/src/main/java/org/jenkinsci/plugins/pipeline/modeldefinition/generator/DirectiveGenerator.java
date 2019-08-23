@@ -76,7 +76,7 @@ public class DirectiveGenerator extends Snippetizer {
     public HttpResponse doGenerateDirective(StaplerRequest req, @QueryParameter String json) throws Exception {
         // TODO is there not an easier way to do this? Maybe Descriptor.newInstancesFromHeteroList on a one-element JSONArray?
         JSONObject jsonO = JSONObject.fromObject(json);
-        Jenkins j = Jenkins.getActiveInstance();
+        Jenkins j = Jenkins.get();
         Class<?> c = j.getPluginManager().uberClassLoader.loadClass(jsonO.getString("stapler-class"));
         DirectiveDescriptor descriptor = (DirectiveDescriptor)j.getDescriptor(c.asSubclass(AbstractDirective.class));
         if (descriptor == null) {

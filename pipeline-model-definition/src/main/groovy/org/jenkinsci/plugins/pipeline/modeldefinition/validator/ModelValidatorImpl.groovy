@@ -137,7 +137,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         // Only do the symbol lookup if we have a Jenkins instance and condition/branch aren't null. That only happens
         // when there's a failure at parse-time.
-        if (Jenkins.getInstance() != null && buildCondition.condition != null && buildCondition.branch != null) {
+        if (Jenkins.getInstanceOrNull() != null && buildCondition.condition != null && buildCondition.branch != null) {
             if (SymbolLookup.get().find(BuildCondition.class, buildCondition.condition) == null) {
                 errorCollector.error(buildCondition,
                     Messages.ModelValidatorImpl_InvalidBuildCondition(buildCondition.condition, BuildCondition.getOrderedConditionNames()))
@@ -187,7 +187,7 @@ class ModelValidatorImpl implements ModelValidator {
 
                 // Can't do tools validation without a Jenkins instance, so move on if that's not available, or if the tool value is a
                 // non-literal - we allow users to shoot themselves there.
-                if (Jenkins.getInstance() != null && v.isLiteral()) {
+                if (Jenkins.getInstanceOrNull() != null && v.isLiteral()) {
                     // Not bothering with a null check here since we could only get this far if the ToolDescriptor's available in the first place.
                     ToolDescriptor desc = ToolInstallation.all().find { it.getId() == Tools.typeForKey(k.key) }
                     def installer = desc.getInstallations().find { it.name == (String) v.value }
@@ -408,7 +408,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         // We can't do step validation without a Jenkins instance, so move on.
         // Also, special casing of parallel due to it not having a DataBoundConstructor.
-        if (Jenkins.getInstance() != null && step.name != "parallel") {
+        if (Jenkins.getInstanceOrNull() != null && step.name != "parallel") {
             Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
             DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
@@ -423,7 +423,7 @@ class ModelValidatorImpl implements ModelValidator {
     boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
 
-        if (Jenkins.getInstance() != null) {
+        if (Jenkins.getInstanceOrNull() != null) {
             DescribableModel<? extends Describable> model
 
             List<Class<? extends Describable>> parentDescribables = Utils.parentsForMethodCall(meth)
