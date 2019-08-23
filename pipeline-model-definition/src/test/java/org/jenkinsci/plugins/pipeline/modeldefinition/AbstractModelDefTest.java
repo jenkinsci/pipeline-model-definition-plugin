@@ -536,37 +536,11 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             } else {
                 run = run.getParent().scheduleBuild2(0).waitForStart();
             }
-            try {
-                j.assertBuildStatus(result, j.waitForCompletion(run));
-            } catch (AssertionError e) {
-                // It appears that in some cases where the build result is set explictly, WorkflowRun.isBuilding()
-                // returns false too soon. Perhaps the reason is that we end up catching the Run in the middle of shutdown,
-                // so CpsFlowExecution.isComplete (and thus WorkflowRun.isInProgress() and WorkflowRun.isBuilding()) is false,
-                // but the WorkflowRun has not yet had its result set to whatever the result of the FlowEndNode is, so
-                // we see the manually-set result for a short amount of time.
-                // Here is an extract of logs where this happened while running BuildConditionResponderTest.postFailureAfterUnstable(),
-                // note that WorkflowRun#finish was called _after_ the build result was checked for the first time!
-                /*
-                  14.530 [test0 #1] [Pipeline] echo
-                  14.531 [test0 #1] I FAILED
-                  14.531 [test0 #1] [Pipeline] }
-                Build result did not initially match FAILURE
-                  14.583 [test0 #1] [Pipeline] // stage
-                  14.583 [test0 #1] [Pipeline] End of Pipeline
-                  14.589 [id=52]    INFO    o.j.p.workflow.job.WorkflowRun#finish: test0 #1 completed: FAILURE
-                  14.609 [test0 #1] ERROR: I AM FAILING NOW
-                  14.609 [test0 #1] Finished: FAILURE
-                But after 1s build result _did_ match FAILURE
-                  15.712 [id=15]    INFO    jenkins.model.Jenkins#cleanUp: Stopping Jenkins
-                  15.723 [id=52]    WARNING h.u.ExceptionCatchingThreadFactory#uncaughtException: Thread Computer.threadPoolForRemoting [#1] terminated unexpectedly
-                */
-                System.out.println("Build result did not initially match " + result);
-                Thread.sleep(1000);
-                j.assertBuildStatus(result, run);
-                System.out.println("But after 1s build result _did_ match " + result);
-            }
-            // To deal with some erratic failures due to error logs not showing up until after "completion"
-            Thread.sleep(100);
+            j.waitForCompletion(run);
+            // Calling `j.assertBuildStatus` directly after `j.waitForCompletion` is subject to race conditions in Pipeline jobs, so the call to `j.waitForMessage` is just here to ensure that the build is totally complete before checking the status.
+            // If that race condition is fixed, the call to `j.waitForMessage` can be removed.
+            j.waitForMessage("Finished: " + result, run); // like BuildListener.finished. 
+            j.assertBuildStatus(result, run); // just double-checking
 
             if (logContains != null) {
                 for (String entry : logContains) {
