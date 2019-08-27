@@ -26,18 +26,18 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
-import org.apache.tools.ant.types.selectors.SelectorUtils;
+import hudson.util.ListBoxModel;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import java.io.File;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -46,15 +46,40 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
 public class BranchConditional extends DeclarativeStageConditional<BranchConditional> {
-    private final String compare;
+    private final String pattern;
+    private String comparator;
 
     @DataBoundConstructor
-    public BranchConditional(String compare) {
-        this.compare = compare;
+    public BranchConditional(String pattern) {
+        this.pattern = pattern;
     }
 
+    @Deprecated
     public String getCompare() {
-        return compare;
+        return pattern;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    /**
+     * The {@link Comparator} to use.
+     * @return the name of the comparator or null if default.
+     */
+    public String getComparator() {
+        return comparator;
+    }
+
+    @DataBoundSetter
+    public void setComparator(String comparator) {
+        final Comparator c = Comparator.get(comparator, null);
+        //TODO validation
+        if (c != null) {
+            this.comparator = c.name();
+        } else {
+            this.comparator = null;
+        }
     }
 
     public boolean branchMatches(String toCompare, String actualBranch) {
@@ -63,19 +88,15 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
         } else if (isEmpty(actualBranch) || isEmpty(toCompare)) {
             return false;
         }
-        // Replace the Git directory separator character (always '/')
-        // with the platform specific directory separator before
-        // invoking Ant's platform specific path matching.
-        String safeCompare = toCompare.replace('/', File.separatorChar);
-        String safeName = actualBranch.replace('/', File.separatorChar);
-        return SelectorUtils.matchPath(safeCompare, safeName, false);
+
+        Comparator c = Comparator.get(comparator, Comparator.GLOB);
+        return c.compare(toCompare, actualBranch);
     }
 
     @Extension
     @Symbol("branch")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<BranchConditional> {
         @Override
-        @Nonnull
         public String getDisplayName() {
             return "Execute the stage if the current branch matches a pattern";
         }
@@ -83,6 +104,10 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+        }
+
+        public ListBoxModel doFillComparatorItems() {
+            return Comparator.getSelectOptions(true, Comparator.GLOB);
         }
     }
 }

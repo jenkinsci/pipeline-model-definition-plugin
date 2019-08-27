@@ -267,6 +267,50 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
     }
 
+    @Test
+    public void whenBranch() throws Exception {
+        MockSCMController controller = MockSCMController.create();
+        controller.createRepository("repoX");
+        controller.createBranch("repoX", "master");
+        controller.addFile("repoX", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenBranch").getBytes());
+        controller.cloneBranch("repoX", "master", "release-two");
+        controller.cloneBranch("repoX", "master", "release-2");
+
+        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
+        project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverBranches())));
+
+        waitFor(project.scheduleBuild2(0));
+        j.waitUntilNoActivity();
+
+        assertThat(project.getItems(), hasSize(3)); //Just tests the multibranch is correctly configured
+
+        final WorkflowJob master = project.getItem("master");
+        WorkflowRun build = master.getLastBuild();
+        assertNotNull(master);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogNotContains("release it", build);
+
+        WorkflowJob releaseJob = project.getItem("release-two");
+        assertNotNull(releaseJob);
+        build = releaseJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("release it", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
+        j.assertLogNotContains("Digit release", build);
+
+        releaseJob = project.getItem("release-2");
+        assertNotNull(releaseJob);
+        build = releaseJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("release it", build);
+        j.assertLogContains("Digit release", build);
+    }
 
     @TestExtension
     public static class TestChangeLogStrategy extends WhenStageTest.TestChangeLogStrategy {
