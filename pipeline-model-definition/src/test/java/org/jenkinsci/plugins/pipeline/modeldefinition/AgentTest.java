@@ -79,13 +79,6 @@ public class AgentTest extends AbstractModelDefTest {
         }
     }
 
-    @Test
-    public void agentLabel() throws Exception {
-        expect("agent/agentLabel")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
-                .go();
-    }
-
     @Issue("JENKINS-37932")
     @Test
     public void agentAny() throws Exception {
@@ -94,6 +87,7 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
+    // Also covers basic agentLabel usage.
     @Test
     public void noCheckoutScmInWrongContext() throws Exception {
         expect("agent/noCheckoutScmInWrongContext")
@@ -148,6 +142,7 @@ public class AgentTest extends AbstractModelDefTest {
 
     }
 
+    // Also covers agentAnyInStage, perStageConfigAgent
     @Issue("JENKINS-41605")
     @Test
     public void agentInStageAutoCheckout() throws Exception {
@@ -187,26 +182,12 @@ public class AgentTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void perStageConfigAgent() throws Exception {
-        expect("perStageConfigAgent")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
-                .go();
-    }
-
-    @Test
     public void multipleVariablesForAgent() throws Exception {
         expect("agent/multipleVariablesForAgent")
                 .logContains("[Pipeline] { (foo)",
                         "ONAGENT=true",
                         "Running in labelAndOtherField with otherField = banana",
                         "And nested: foo: monkey, bar: false")
-                .go();
-    }
-
-    @Test
-    public void agentAnyInStage() throws Exception {
-        expect("agent/agentAnyInStage")
-                .logContains("[Pipeline] { (foo)", "THIS WORKS")
                 .go();
     }
 

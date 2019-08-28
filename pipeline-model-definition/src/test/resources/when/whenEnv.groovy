@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,24 +23,45 @@
  */
 
 pipeline {
-    agent none
+    agent any
+    environment {
+        FOO = "BAR"
+    }
+
     stages {
-        stage("foo") {
-            agent {
-                label 'some-label'
+        stage("One") {
+            steps {
+                echo "Hello"
+            }
+        }
+        stage("Two") {
+            when {
+                environment name: "FOO", value: "BAR"
             }
             steps {
                 script {
-                    if (isUnix()) {
-                        sh('echo ONAGENT=$ONAGENT')
-                    } else {
-                        bat('echo ONAGENT=%ONAGENT%')
-                    }
+                    echo "World"
+                    echo "Heal it"
                 }
+
             }
         }
+        stage("Three") {
+            when {
+                environment name: "FOO", value: "SOME_OTHER_VALUE"
+            }
+            steps {
+                echo "Should never be reached"
+            }
+        }
+        stage("Four") {
+            when {
+                environment name: "FOO", value: "bar", ignoreCase: true
+            }
+            steps {
+                echo "Ignore case worked"
+            }
+        }
+
     }
 }
-
-
-

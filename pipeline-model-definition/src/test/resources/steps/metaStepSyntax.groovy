@@ -30,14 +30,9 @@ pipeline {
         stage("foo") {
             steps {
                 writeFile text: 'hello world', file: 'msg.out'
+                writeFile text: 'goodbye world', file: 'msg2.out'
                 archiveArtifacts(allowEmptyArchive: true, artifacts: 'msg.out')
-                script {
-                    if (isUnix()) {
-                        sh('echo ONAGENT=$ONAGENT')
-                    } else {
-                        bat('echo ONAGENT=%ONAGENT%')
-                    }
-                }
+                step([$class: 'ArtifactArchiver', artifacts: 'msg2.out', fingerprint: true])
             }
         }
     }

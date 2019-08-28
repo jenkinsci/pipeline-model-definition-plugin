@@ -49,13 +49,6 @@ public class StepsTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void validStepParameters() throws Exception {
-        expect("steps/validStepParameters")
-                .logContains("[Pipeline] { (foo)", "[Pipeline] timeout", "hello")
-                .go();
-    }
-
-    @Test
     public void nestedTreeSteps() throws Exception {
         expect("steps/nestedTreeSteps")
                 .logContains("[Pipeline] { (foo)", "[Pipeline] timeout", "[Pipeline] retry", "hello")
@@ -66,17 +59,8 @@ public class StepsTest extends AbstractModelDefTest {
     public void metaStepSyntax() throws Exception {
         env(s).set();
         expect("steps/metaStepSyntax")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .archives("msg.out", "hello world")
-                .go();
-    }
-
-    @Test
-    public void legacyMetaStepSyntax() throws Exception {
-        env(s).set();
-        expect("steps/legacyMetaStepSyntax")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
-                .archives("msg.out", "hello world")
+                .archives("msg2.out", "goodbye world")
                 .go();
     }
 

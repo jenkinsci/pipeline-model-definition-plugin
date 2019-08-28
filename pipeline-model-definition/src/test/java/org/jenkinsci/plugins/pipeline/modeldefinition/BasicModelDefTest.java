@@ -72,14 +72,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void simplePipeline() throws Exception {
-        expect("simplePipeline")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
-                .go();
-    }
-
-    @Test
     public void failingPipeline() throws Exception {
         expect(Result.FAILURE, "basic/failingPipeline")
                 .logContains("[Pipeline] { (foo)",
@@ -98,13 +90,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "goodbye",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .hasFailureCase()
-                .go();
-    }
-
-    @Test
-    public void twoStagePipeline() throws Exception {
-        expect("basic/twoStagePipeline")
-                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)", "goodbye")
                 .go();
     }
 
@@ -229,7 +214,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)", "image: ubuntu")
                 .go();
     }
-
 
     @Test
     public void syntheticStages() throws Exception {
