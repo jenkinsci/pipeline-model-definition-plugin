@@ -33,13 +33,37 @@ pipeline {
         }
         stage("Two") {
             when {
-                branch "release-*"
+                branch "master"
             }
             steps {
-                echo "release it"
+                echo "master it (default)"
             }
         }
         stage("Three") {
+            when {
+                branch pattern: "master", comparator: "EQUALS"
+            }
+            steps {
+                echo "master it (EQUALS)"
+            }
+        }
+        stage("Four") {
+            when {
+                branch "release-*"
+            }
+            steps {
+                echo "release it (default)"
+            }
+        }
+        stage("Five") {
+            when {
+                branch pattern: "release-*", comparator: "GLOB"
+            }
+            steps {
+                echo "release it (GLOB)"
+            }
+        }
+        stage("Six") {
             when {
                 branch pattern: "release-\\d+", comparator: "REGEXP"
             }
