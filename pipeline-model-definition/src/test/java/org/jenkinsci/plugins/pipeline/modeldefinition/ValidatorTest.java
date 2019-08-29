@@ -160,8 +160,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void matrixMissingStages() throws Exception {
         expectError("matrixMissingStages")
-//            .logContains(Messages.ModelValidatorImpl_RequiredSection("stages"))
-            .logContains(Messages.ModelValidatorImpl_NoStages())
+            .logContains(Messages.ModelValidatorImpl_RequiredSection("stages"))
             .go();
     }
 

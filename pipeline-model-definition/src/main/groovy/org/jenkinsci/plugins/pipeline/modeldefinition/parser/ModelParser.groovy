@@ -332,16 +332,72 @@ class ModelParser implements Parser {
                     }
 
                     switch (name) {
-                        case 'stages':
-                            def stages = parseStages(it)
-                            r.stages = stages.stages
-                            break
                         case 'axes':
                             r.axes = parseAxes(it);
                             break;
                         case 'excludes':
                             r.excludes = parseExcludes(it);
                             break;
+                        case 'agent':
+                            r.agent = parseAgent(it)
+                            break
+                        case 'when':
+                            r.when = parseWhen(it)
+                            break
+                        case 'steps':
+                            def stepsBlock = matchBlockStatement(it)
+                            BlockStatement block = asBlock(stepsBlock.body.code)
+
+                            // Handle parallel as a special case
+                            if (block.statements.size()==1) {
+                                def parallel = matchParallel(block.statements[0])
+
+                                if (parallel != null) {
+                                    parallel.args.each { k, v ->
+                                        r.branches.add(parseBranch(k, asBlock(v.code)))
+                                    }
+                                    r.failFast = parallel.failFast
+                                } else {
+                                    if (r.getBranches().isEmpty()) {
+                                        // Only add a 'default' branch here if we don't already have one.
+                                        r.branches.add(parseBranch("default", block))
+                                    } else {
+                                        break
+                                    }
+                                }
+                            } else {
+                                // otherwise it's a single line of execution
+                                r.branches.add(parseBranch("default", block))
+                            }
+                            break
+                        case 'post':
+                            r.post = parsePostStage(it)
+                            break
+                        case 'options':
+                            r.options = parseOptions(it)
+                            r.options.inStage = true
+                            break
+                        case 'input':
+                            r.input = parseInput(it)
+                            break
+                        case 'tools':
+                            r.tools = parseTools(it)
+                            break
+                        case 'environment':
+                            r.environment = parseEnvironment(it)
+                            break
+                        case 'parallel':
+                            r.parallel = parseParallel(it)
+                            break
+                        case 'matrix':
+                            r.matrix = parseMatrix(it)
+                            break
+                        case 'failFast':
+                            r.setFailFast(parseBooleanMethod(mc))
+                            break
+                        case 'stages':
+                            r.stages = parseStages(it)
+                            break
                         default:
                             // We need to check for unknowns here.
                             errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))

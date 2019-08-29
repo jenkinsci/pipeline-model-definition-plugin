@@ -16,7 +16,7 @@ import java.util.List;
  * @author Andrew Bayer
  * @see ModelASTPipelineDef
  */
-public final class ModelASTStage extends ModelASTElement {
+public class ModelASTStage extends ModelASTElement {
     protected String name;
     protected ModelASTAgent agent;
     protected ModelASTPostStage post;
@@ -88,6 +88,15 @@ public final class ModelASTStage extends ModelASTElement {
         StringBuilder result = new StringBuilder()
             // TODO decide if we need to support multiline names
             .append("stage(\'").append(name.replace("'", "\\'")).append("\') {\n")
+            .append(childrenToGroovy())
+            .append("}\n");
+
+        return result.toString();
+    }
+
+    protected String childrenToGroovy() {
+        StringBuilder result = new StringBuilder()
+            // TODO decide if we need to support multiline names
             .append(toGroovy(agent))
             .append(toGroovy(when))
             .append(toGroovy(tools))
@@ -118,9 +127,9 @@ public final class ModelASTStage extends ModelASTElement {
                     }
                     result.append('\n');
                     result.append('"' + StringEscapeUtils.escapeJava(branch.getName()) + '"')
-                            .append(": {\n")
-                            .append(branch.toGroovy())
-                            .append("\n}");
+                        .append(": {\n")
+                        .append(branch.toGroovy())
+                        .append("\n}");
                 }
                 if (failFast != null && failFast) {
                     result.append(",\nfailFast: true");
@@ -132,8 +141,6 @@ public final class ModelASTStage extends ModelASTElement {
 
             result.append("}\n");
         }
-
-        result.append("}\n");
 
         return result.toString();
     }
@@ -262,20 +269,24 @@ public final class ModelASTStage extends ModelASTElement {
     public String toString() {
         return "ModelASTStage{" +
                 "name='" + name + '\'' +
-                ", agent=" + agent +
-                ", when=" + when +
-                ", post=" + post +
-                ", tools=" + tools +
-                ", environment=" + environment +
-                ", stages=" + stages +
-                ", branches=" + branches +
-                ", failFast=" + failFast +
-                ", parallel=" + parallel +
-                ", matrix=" + matrix +
-                ", options=" + options +
-                ", input=" + input +
-                ", parallelContent=" + parallelContent +
+                ", " + childrenToString() +
                 "}";
+    }
+
+    protected String childrenToString() {
+        return
+            "agent=" + agent +
+            ", when=" + when +
+            ", post=" + post +
+            ", tools=" + tools +
+            ", environment=" + environment +
+            ", stages=" + stages +
+            ", branches=" + branches +
+            ", failFast=" + failFast +
+            ", parallel=" + parallel +
+            ", matrix=" + matrix +
+            ", options=" + options +
+            ", input=" + input;
     }
 
     @Override

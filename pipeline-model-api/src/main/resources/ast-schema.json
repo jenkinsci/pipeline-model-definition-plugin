@@ -553,6 +553,42 @@
         "excludes": {
           "$ref": "#/definitions/excludes"
         },
+        "failFast": {
+          "type": "boolean"
+        },
+        "agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "when": {
+          "$ref": "#/definitions/when"
+        },
+        "post": {
+          "$ref": "#/definitions/post"
+        },
+        "tools": {
+          "$ref": "#/definitions/tools"
+        },
+        "environment": {
+          "$ref": "#/definitions/environment"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "input": {
+          "$ref": "#/definitions/input"
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/branch"
+          }
+        },
+        "matrix": {
+          "$ref": "#/definitions/matrix"
+        },
+        "parallel": {
+          "$ref": "#/definitions/stages"
+        },
         "stages": {
           "$ref": "#/definitions/stages"
         }

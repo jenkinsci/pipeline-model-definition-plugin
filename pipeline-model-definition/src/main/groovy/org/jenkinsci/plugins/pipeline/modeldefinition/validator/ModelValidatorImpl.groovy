@@ -707,7 +707,7 @@ class ModelValidatorImpl implements ModelValidator {
         } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (stage.parallel != null) {
+        } else if (stage.parallel != null || stage.matrix != null) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false
@@ -756,6 +756,11 @@ class ModelValidatorImpl implements ModelValidator {
 
         if (matrix.axes == null) {
             errorCollector.error(matrix, Messages.ModelValidatorImpl_RequiredSection("axes"))
+            valid = false
+        }
+
+        if (matrix.stages == null) {
+            errorCollector.error(matrix, Messages.ModelValidatorImpl_RequiredSection("stages"))
             valid = false
         }
 

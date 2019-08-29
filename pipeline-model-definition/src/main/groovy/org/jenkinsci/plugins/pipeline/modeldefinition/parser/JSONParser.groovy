@@ -160,18 +160,16 @@ class JSONParser implements Parser {
     }
 
     @CheckForNull ModelASTMatrix parseMatrix(JsonTree j) {
-        ModelASTParallel matrix = new ModelASTMatrix(j)
+        ModelASTMatrix matrix = new ModelASTMatrix(j)
 
-        if (j.node.has("stages")) {
-            ModelASTStages stages = parseStages(j.append(JsonPointer.of("stages")))
-            matrix.stages.addAll(stages.stages)
-        }
         if (j.node.has("axes")) {
             matrix.axes = parseAxes(j.append(JsonPointer.of("axes")))
         }
         if (j.node.has("excludes")) {
             matrix.excludes = parseExcludes(j.append(JsonPointer.of("excludes")))
         }
+
+        parseStageContents(j, matrix)
 
         return matrix
     }
@@ -248,6 +246,14 @@ class JSONParser implements Parser {
         ModelASTStage stage = new ModelASTStage(j)
 
         stage.name = j.node.get("name").asText()
+
+        parseStageContents(j, stage)
+
+        return stage
+
+    }
+
+    @CheckForNull ModelASTStage parseStageContents(JsonTree j, ModelASTStage stage) {
         if (j.node.has("agent")) {
             stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
@@ -297,7 +303,6 @@ class JSONParser implements Parser {
         return stage
 
     }
-
     @CheckForNull ModelASTStageInput parseInput(JsonTree j) {
         ModelASTStageInput input = new ModelASTStageInput(j)
 

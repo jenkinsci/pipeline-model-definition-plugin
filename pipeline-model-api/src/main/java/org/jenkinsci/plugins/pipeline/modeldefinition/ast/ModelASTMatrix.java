@@ -4,6 +4,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -12,7 +13,7 @@ import java.util.Objects;
  *
  * @author Liam Newman
  */
-public final class ModelASTMatrix extends ModelASTParallel {
+public final class ModelASTMatrix extends ModelASTStage {
 
     private ModelASTAxisContainer axes;
     private ModelASTExcludes excludes;
@@ -22,11 +23,13 @@ public final class ModelASTMatrix extends ModelASTParallel {
     }
 
     @Override
-    public Object toJSON() {
-        return  new JSONObject()
+    public JSONObject toJSON() {
+        JSONObject o = new JSONObject()
                 .elementOpt("axes", toJSON(axes))
-                .elementOpt("excludes", toJSON(excludes))
-                .elementOpt("stages", nullIfEmpty(toJSONArray(getStages())));
+                .elementOpt("excludes", toJSON(excludes));
+        o.putAll(super.toJSON());
+        o.remove("name");
+        return o;
     }
 
     @Override
@@ -39,9 +42,10 @@ public final class ModelASTMatrix extends ModelASTParallel {
     @Override
     public String toGroovy() {
         StringBuilder children = new StringBuilder()
-                .append(toGroovy(axes))
-                .append(toGroovy(excludes))
-                .append(toGroovyBlock("stages", getStages()));
+            .append(toGroovy(axes))
+            .append(toGroovy(excludes))
+            .append(childrenToGroovy());
+
         return "matrix {\n" + children.toString() + "}\n";
     }
 
@@ -56,9 +60,9 @@ public final class ModelASTMatrix extends ModelASTParallel {
     @Override
     public String toString() {
         return "ModelASTMatrix{" +
-                "axes=" + axes +
-                "excludes=" + excludes +
-                "stages=" + getStages() +
+                ", axes=" + axes +
+                ", excludes=" + excludes +
+                ", " + childrenToString() +
                 "}";
     }
 
@@ -83,7 +87,7 @@ public final class ModelASTMatrix extends ModelASTParallel {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ModelASTMatrix)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
         if (!super.equals(o)) {

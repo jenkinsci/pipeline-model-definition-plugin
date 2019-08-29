@@ -760,7 +760,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformMatrix(@CheckForNull ModelASTMatrix original) {
-        if (isGroovyAST(original) && !original.stages.isEmpty() && !original.axes.axes.isEmpty()) {
+        if (isGroovyAST(original) && !original?.stages?.stages?.isEmpty() && !original?.axes?.axes?.isEmpty()) {
             ListExpression argList = new ListExpression()
 
             // generate matrix combinations of axes - cartesianProduct
@@ -828,26 +828,17 @@ class RuntimeASTTransformer {
             List<String> cellLabels = new ArrayList<>();
             cell.each { cellLabels.add(it.key.key.toString() + " = '" + it.value.value.toString() + "'") }
 
-            def name = "Matrix: " + cellLabels.join(", ")
+            // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
+            original.name = "Matrix: " + cellLabels.join(", ")
 
+            // add an environment to the AST if not already present
+            if (original.environment == null) {
+                original.environment = new ModelASTEnvironment(original.sourceLocation)
+            }
             //     add environment block to the generated stage with axis name/value pairs
-            def environment = transformEnvironmentMap(cell)
+            original.environment.variables.putAll(cell)
 
-            //     add an instances of all the stages in the AST to each synthetic stage
-            return ctorX(ClassHelper.make(Stage.class),
-                    args(constX(name),
-                            constX(null),
-                            constX(null), // agent
-                            constX(null),
-                            constX(null),
-                            constX(null),
-                            environment,
-                            constX(false), // failfast is set on the container stage
-                            constX(null),
-                            constX(null),
-                            transformStages(original),
-                            constX(null),
-                            constX(null)))
+            return transformStage(original)
         }
 
         return constX(null)
