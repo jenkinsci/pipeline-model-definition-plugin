@@ -13,10 +13,11 @@ import java.util.Objects;
  *
  * @author Liam Newman
  */
-public final class ModelASTMatrix extends ModelASTStage {
+public final class ModelASTMatrix extends ModelASTStageBase {
 
     private ModelASTAxisContainer axes;
     private ModelASTExcludes excludes;
+    private ModelASTStages stages;
 
     public ModelASTMatrix(Object sourceLocation) {
         super(sourceLocation);
@@ -24,19 +25,23 @@ public final class ModelASTMatrix extends ModelASTStage {
 
     @Override
     public JSONObject toJSON() {
-        JSONObject o = new JSONObject()
+        JSONObject o = super.toJSON()
                 .elementOpt("axes", toJSON(axes))
-                .elementOpt("excludes", toJSON(excludes));
-        o.putAll(super.toJSON());
-        o.remove("name");
+                .elementOpt("excludes", toJSON(excludes))
+                .elementOpt("stages", toJSON(stages));
+
         return o;
     }
 
     @Override
-    public void validate(final ModelValidator validator, boolean isWithinParallel) {
-        super.validate(validator, true);
+    public void validate(final ModelValidator validator) {
+        super.validate(validator);
         validator.validateElement(this);
         validate(validator, axes, excludes);
+        if (stages != null) {
+            stages.validate(validator, true);
+        }
+
     }
 
     @Override
@@ -44,7 +49,8 @@ public final class ModelASTMatrix extends ModelASTStage {
         StringBuilder children = new StringBuilder()
             .append(toGroovy(axes))
             .append(toGroovy(excludes))
-            .append(childrenToGroovy());
+            .append(super.toGroovy())
+            .append(toGroovy(stages));
 
         return "matrix {\n" + children.toString() + "}\n";
     }
@@ -52,8 +58,7 @@ public final class ModelASTMatrix extends ModelASTStage {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocationsFrom(axes);
-        removeSourceLocationsFrom(excludes);
+        removeSourceLocationsFrom(axes, excludes, stages);
     }
 
 
@@ -62,7 +67,7 @@ public final class ModelASTMatrix extends ModelASTStage {
         return "ModelASTMatrix{" +
                 ", axes=" + axes +
                 ", excludes=" + excludes +
-                ", " + childrenToString() +
+                ", " + super.toString() +
                 "}";
     }
 
@@ -82,6 +87,14 @@ public final class ModelASTMatrix extends ModelASTStage {
         this.excludes = excludes;
     }
 
+    public ModelASTStages getStages() {
+        return stages;
+    }
+
+    public void setStages(ModelASTStages stages) {
+        this.stages = stages;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -95,11 +108,12 @@ public final class ModelASTMatrix extends ModelASTStage {
         }
         ModelASTMatrix that = (ModelASTMatrix) o;
         return Objects.equals(getAxes(), that.getAxes()) &&
-            Objects.equals(getExcludes(), that.getExcludes());
+            Objects.equals(getExcludes(), that.getExcludes()) &&
+            Objects.equals(getStages(), that.getStages());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getAxes(), getExcludes());
+        return Objects.hash(super.hashCode(), getAxes(), getExcludes(), getStages());
     }
 }

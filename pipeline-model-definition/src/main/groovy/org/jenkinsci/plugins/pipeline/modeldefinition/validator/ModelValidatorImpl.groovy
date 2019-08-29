@@ -674,6 +674,10 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(pipelineDef, valid)
     }
 
+    boolean validateElement(ModelASTStageBase stage) {
+        return true
+    }
+
     boolean validateElement(@Nonnull ModelASTStage stage, boolean isWithinParallel) {
         boolean valid = true
         def stepsStagesParallelCount = 0

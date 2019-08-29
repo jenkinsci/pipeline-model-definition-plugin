@@ -168,8 +168,11 @@ class JSONParser implements Parser {
         if (j.node.has("excludes")) {
             matrix.excludes = parseExcludes(j.append(JsonPointer.of("excludes")))
         }
+        if (j.node.has("stages")) {
+            matrix.stages = parseStages(j.append(JsonPointer.of("stages")))
+        }
 
-        parseStageContents(j, matrix)
+        parseStageBase(j, matrix)
 
         return matrix
     }
@@ -247,16 +250,6 @@ class JSONParser implements Parser {
 
         stage.name = j.node.get("name").asText()
 
-        parseStageContents(j, stage)
-
-        return stage
-
-    }
-
-    @CheckForNull ModelASTStage parseStageContents(JsonTree j, ModelASTStage stage) {
-        if (j.node.has("agent")) {
-            stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
-        }
         if (j.node.has("parallel")) {
             stage.parallel = parseParallel(j.append(JsonPointer.of("parallel")))
         }
@@ -274,6 +267,17 @@ class JSONParser implements Parser {
         }
         if (j.node.has("failFast") && (stage.branches.size() > 1 || j.node.has("parallel")))  {
             stage.failFast = j.node.get("failFast")?.asBoolean()
+        }
+
+        parseStageBase(j, stage)
+
+        return stage
+
+    }
+
+    @CheckForNull ModelASTStageBase parseStageBase(JsonTree j, ModelASTStageBase stage) {
+        if (j.node.has("agent")) {
+            stage.agent = parseAgent(j.append(JsonPointer.of("agent")))
         }
 
         if (j.node.has("options")) {

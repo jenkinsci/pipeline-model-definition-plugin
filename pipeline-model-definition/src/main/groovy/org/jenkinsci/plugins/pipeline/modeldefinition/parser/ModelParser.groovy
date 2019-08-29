@@ -344,32 +344,6 @@ class ModelParser implements Parser {
                         case 'when':
                             r.when = parseWhen(it)
                             break
-                        case 'steps':
-                            def stepsBlock = matchBlockStatement(it)
-                            BlockStatement block = asBlock(stepsBlock.body.code)
-
-                            // Handle parallel as a special case
-                            if (block.statements.size()==1) {
-                                def parallel = matchParallel(block.statements[0])
-
-                                if (parallel != null) {
-                                    parallel.args.each { k, v ->
-                                        r.branches.add(parseBranch(k, asBlock(v.code)))
-                                    }
-                                    r.failFast = parallel.failFast
-                                } else {
-                                    if (r.getBranches().isEmpty()) {
-                                        // Only add a 'default' branch here if we don't already have one.
-                                        r.branches.add(parseBranch("default", block))
-                                    } else {
-                                        break
-                                    }
-                                }
-                            } else {
-                                // otherwise it's a single line of execution
-                                r.branches.add(parseBranch("default", block))
-                            }
-                            break
                         case 'post':
                             r.post = parsePostStage(it)
                             break
@@ -385,15 +359,6 @@ class ModelParser implements Parser {
                             break
                         case 'environment':
                             r.environment = parseEnvironment(it)
-                            break
-                        case 'parallel':
-                            r.parallel = parseParallel(it)
-                            break
-                        case 'matrix':
-                            r.matrix = parseMatrix(it)
-                            break
-                        case 'failFast':
-                            r.setFailFast(parseBooleanMethod(mc))
                             break
                         case 'stages':
                             r.stages = parseStages(it)
