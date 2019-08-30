@@ -25,7 +25,6 @@
 pipeline {
     agent none
     environment {
-        OS_VALUE = "override in matrix axis"
         OVERRIDE_TWICE = "override twice"
         DO_NOT_OVERRIDE = "do not override"
         OVERRIDE_ONCE = "override once"
@@ -33,6 +32,7 @@ pipeline {
     stages {
         stage("foo") {
             environment {
+                OS_VALUE = "override in matrix axis"
                 OVERRIDE_TWICE = "overrode once, one to go"
                 OVERRIDE_ONCE = "overrode once and done"
                 OVERRIDE_PER_NESTED = "override in each branch"
@@ -44,20 +44,20 @@ pipeline {
                         values "linux", "windows", "mac"
                     }
                 }
+                agent {
+                    label "${OS_VALUE}-agent"
+                }
+                tools {
+                    maven "apache-maven-3.0.1"
+                }
+                environment {
+                    OS_VALUE = "${OS_VALUE}-os"
+                    OVERRIDE_TWICE = "overrode twice, in first ${OS_VALUE} branch"
+                    OVERRIDE_PER_NESTED = "overrode per nested, in first ${OS_VALUE} branch"
+                    DECLARED_PER_NESTED = "declared per nested, in first ${OS_VALUE} branch"
+                }
                 stages {
                     stage("first") {
-                        agent {
-                            label "${OS_VALUE}-agent"
-                        }
-                        tools {
-                            maven "apache-maven-3.0.1"
-                        }
-                        environment {
-                            OS_VALUE = "${OS_VALUE}-os"
-                            OVERRIDE_TWICE = "overrode twice, in first ${OS_VALUE} branch"
-                            OVERRIDE_PER_NESTED = "overrode per nested, in first ${OS_VALUE} branch"
-                            DECLARED_PER_NESTED = "declared per nested, in first ${OS_VALUE} branch"
-                        }
                         steps {
                             echo "First stage, ${WHICH_AGENT}"
                             echo "First stage, ${DO_NOT_OVERRIDE}"

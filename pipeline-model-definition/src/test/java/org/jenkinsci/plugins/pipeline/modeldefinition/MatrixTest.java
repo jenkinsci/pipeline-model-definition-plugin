@@ -52,12 +52,31 @@ import static org.junit.Assert.*;
 public class MatrixTest extends AbstractModelDefTest {
 
     private static Slave s;
+    private static Slave linux;
+    private static Slave mac;
+    private static Slave windows;
 
+    private static String password;
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
+        s.setLabelString("agent-one some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
         s.setNumExecutors(10);
-        s.setLabelString("some-label docker");
+
+        linux = j.createOnlineSlave();
+        linux.setLabelString("linux-agent");
+        linux.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "linux agent")));
+        mac = j.createOnlineSlave();
+        mac.setLabelString("mac-agent");
+        mac.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "mac agent")));
+        windows = j.createOnlineSlave();
+        windows.setLabelString("windows-agent");
+        windows.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
     }
 
     @Ignore
@@ -224,46 +243,70 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-41334")
     @Test
     public void matrixStagesAgentEnvWhen() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("windows-agent");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
-
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("linux-agent");
-        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "linux agent")));
-
-        Slave s3 = j.createOnlineSlave();
-        s3.setLabelString("mac-agent");
-        s3.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "mac agent")));
-
         expect("matrix/matrixStagesAgentEnvWhen")
-                .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux')",
-                        "{ (Branch: Matrix: os = 'windows')",
-                        "{ (Branch: Matrix: os = 'mac')",
-                        "First stage, mac agent",
-                        "First stage, do not override",
-                        "First stage, overrode once and done",
-                        "First stage, overrode twice, in first mac branch",
-                        "First stage, overrode per nested, in first mac branch",
-                        "First stage, declared per nested, in first mac branch",
-                        "First stage, windows agent",
-                        "First stage, do not override",
-                        "First stage, overrode once and done",
-                        "First stage, overrode twice, in first windows branch",
-                        "First stage, overrode per nested, in first windows branch",
-                        "First stage, declared per nested, in first windows branch",
-                        "First stage, linux agent",
-                        "First stage, do not override",
-                        "First stage, overrode once and done",
-                        "First stage, overrode twice, in first linux branch",
-                        "First stage, overrode per nested, in first linux branch",
-                        "First stage, declared per nested, in first linux branch",
-                        "Apache Maven 3.0.1",
-                        "Apache Maven 3.0.1",
-                        "Apache Maven 3.0.1")
-                .logNotContains("WE SHOULD NEVER GET HERE")
-                .go();
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix: os = 'linux')",
+                "{ (Branch: Matrix: os = 'windows')",
+                "{ (Branch: Matrix: os = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "override in matrix axis")
+            .go();
+    }
+
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void matrixStagesAgentEnvWhenPerCell() throws Exception {
+        expect("matrix/matrixStagesAgentEnvWhenPerCell")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix: os = 'linux')",
+                "{ (Branch: Matrix: os = 'windows')",
+                "{ (Branch: Matrix: os = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "override in matrix axis")
+            .go();
     }
 
     @Ignore

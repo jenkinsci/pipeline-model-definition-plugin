@@ -665,7 +665,8 @@ class RuntimeASTTransformer {
                     transformStageInput(original.input, original.name),
                     transformStages(original.stages),
                     transformStages(original.parallel),
-                    transformMatrix(original.matrix)))
+                    transformMatrix(original.matrix),
+                    constX(null)))
         }
 
         return constX(null)
@@ -831,13 +832,6 @@ class RuntimeASTTransformer {
             // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
             String name = "Matrix: " + cellLabels.join(", ")
 
-            // add an environment to the AST if not already present
-            if (original.environment == null) {
-                original.environment = new ModelASTEnvironment(original.sourceLocation)
-            }
-            //     add environment block to the generated stage with axis name/value pairs
-            original.environment.variables.putAll(cell)
-
             return ctorX(ClassHelper.make(Stage.class),
                     args(constX(name),
                             constX(null), // steps
@@ -851,7 +845,8 @@ class RuntimeASTTransformer {
                             transformStageInput(original.input, name),
                             transformStages(original.stages),
                             constX(null), // parallel
-                            constX(null))) // matrix
+                            constX(null), // matrix
+                            transformEnvironmentMap(cell)))  //  preAgentEnvironment for cell values
         }
 
         return constX(null)

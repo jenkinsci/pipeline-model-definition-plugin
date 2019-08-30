@@ -49,6 +49,8 @@ class Stage implements Serializable {
 
     Tools tools
 
+    Environment preAgentEnvironment
+
     Environment environment
 
     StepsBlock steps
@@ -72,26 +74,27 @@ class Stage implements Serializable {
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
         this(name, steps, agent, post, when, tools, environment, failFast, null, null,
-                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null)
+                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null, null)
     }
 
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast, StageOptions options, StageInput input) {
         this(name, steps, agent, post, when, tools, environment, failFast, options, input,
-                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null)
+                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null, null)
     }
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, boolean failFast, StageOptions options, StageInput input,
-          Stages stages, Parallel parallel, Matrix matrix) {
+          Stages stages, Parallel parallel, Matrix matrix, Environment preAgentEnvironment) {
         this.name = name
         this.agent = agent
         this.post = post
         this.when = when
         this.tools = tools
         this.environment = environment
+        this.preAgentEnvironment = preAgentEnvironment
         this.steps = steps
         this.failFast = failFast
         this.options = options
@@ -126,6 +129,21 @@ class Stage implements Serializable {
         if (environment != null) {
             environment.envResolver.setScript(script)
             return environment.envResolver.closureMap
+        } else {
+            return [:]
+        }
+    }
+
+    /**
+     * Helper method for translating the key/value pairs in the {@link Environment} into a list of "key=value" strings
+     * suitable for use with the withEnv step.
+     *
+     * @return a map of keys to closures.
+     */
+    Map<String,Closure> getPreAgentEnvVars(CpsScript script) {
+        if (preAgentEnvironment != null) {
+            preAgentEnvironment.envResolver.setScript(script)
+            return preAgentEnvironment.envResolver.closureMap
         } else {
             return [:]
         }

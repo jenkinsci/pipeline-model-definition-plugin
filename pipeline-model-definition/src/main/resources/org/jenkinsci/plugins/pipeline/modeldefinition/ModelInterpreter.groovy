@@ -323,31 +323,33 @@ class ModelInterpreter implements Serializable {
                                 boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
                                 boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
                                 boolean whenPassed = false
-                                // if is beforeInput -> check when before anything
-                                if (isBeforeInput) {
-                                    whenPassed = evaluateWhen(thisStage.when)
-                                    if(whenPassed) {
-                                        stageInput(thisStage.input) {
-                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                stageBody.call()
-                                            }
-                                        }
-                                    }
-                                }else if(isBeforeAgent){
-                                    stageInput(thisStage.input) {
+                                withEnvBlock(thisStage.getPreAgentEnvVars(script)) {
+                                    // if is beforeInput -> check when before anything
+                                    if (isBeforeInput) {
                                         whenPassed = evaluateWhen(thisStage.when)
-                                        if (whenPassed) {
+                                        if(whenPassed) {
+                                            stageInput(thisStage.input) {
                                                 inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                     stageBody.call()
                                                 }
                                             }
                                         }
-                                }else{
-                                    stageInput(thisStage.input) {
-                                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                    } else if (isBeforeAgent) {
+                                        stageInput(thisStage.input) {
                                             whenPassed = evaluateWhen(thisStage.when)
                                             if (whenPassed) {
-                                                stageBody.call()
+                                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                        stageBody.call()
+                                                    }
+                                                }
+                                            }
+                                    } else {
+                                        stageInput(thisStage.input) {
+                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                whenPassed = evaluateWhen(thisStage.when)
+                                                if (whenPassed) {
+                                                    stageBody.call()
+                                                }
                                             }
                                         }
                                     }
