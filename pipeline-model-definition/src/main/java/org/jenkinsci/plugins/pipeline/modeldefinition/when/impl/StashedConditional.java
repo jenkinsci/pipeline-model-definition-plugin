@@ -101,7 +101,7 @@ public class StashedConditional extends DeclarativeStageConditional<StashedCondi
 
     @DataBoundSetter
     public void setComparator(@CheckForNull String comparator) {
-        Comparator c = Comparator.get(comparator, Comparator.EQUALS);
+        Comparator c = Comparator.get(comparator, null);
         //TODO validation
         if (c != null) {
             this.comparator = c.name();

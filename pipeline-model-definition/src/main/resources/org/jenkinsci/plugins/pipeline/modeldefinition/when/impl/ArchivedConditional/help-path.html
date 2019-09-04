@@ -24,14 +24,6 @@
   -->
 
 <p>
-    Check that the files discovered with <code>path</code> has the specified content.
-    You need to specify a path pattern for the content to be checked. If the path resolves to multiple files
-    all files will be checked in order until a match is found or all paths are explored.
-</p>
-<p>
-    Setting this value without <code>path</code> will have no effect,
-    it would act as if only <code>name</code> was specified.
-</p>
-<p>
-    Use <code>comparator</code> to specify how to match the content.
+    Check for the existence of file paths in the stash.
+    The path is expressed as a <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a>.
 </p>
