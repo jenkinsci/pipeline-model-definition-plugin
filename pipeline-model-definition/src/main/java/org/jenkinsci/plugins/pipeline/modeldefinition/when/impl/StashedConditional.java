@@ -26,10 +26,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.model.Computer;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.ListBoxModel;
@@ -129,10 +131,17 @@ public class StashedConditional extends DeclarativeStageConditional<StashedCondi
                 tempFile = Files.createTempDirectory("pipeline-when-stashed").toFile();
                 tempFile.deleteOnExit();
                 FilePath tmpWorkspace = new FilePath(tempFile);
+                final Computer jc = Jenkins.get().toComputer();
+                EnvVars env = null;
+                if (jc != null) {
+                    env = jc.getEnvironment();
+                } else {
+                    env = new EnvVars();
+                }
                 stashAwareArtifactManager.unstash(name,
                         tmpWorkspace,
                         Jenkins.get().createLauncher(TaskListener.NULL),
-                        Jenkins.get().toComputer().buildEnvironment(TaskListener.NULL),
+                        env,
                         TaskListener.NULL);
                 if (tmpWorkspace.list().isEmpty()) {
                     return false;
