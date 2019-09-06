@@ -29,14 +29,14 @@ pipeline {
       matrix {
         axes {
           axis {
-            name 'os'
+            name 'OS_VALUE'
 //            values "linux", "windows", "mac"
           }
         }
         stages {
           stage("first") {
             steps {
-              echo "First branch: $os"
+              echo "First branch: ${OS_VALUE}"
             }
           }
         }

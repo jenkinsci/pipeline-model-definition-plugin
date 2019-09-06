@@ -9,7 +9,7 @@
             "name": "first",
             "matrix":             {
               "axes": [              {
-                "name": "os",
+                "name": "OS_VALUE",
                 "values":                 [
                   {
                     "isLiteral": true,

@@ -783,7 +783,7 @@ class ModelValidatorImpl implements ModelValidator {
             s.name
         }
 
-        names.findAll { names.count(it) > 1 }.unique().each { name ->
+        names.findAll { it != null && it.key != null && it.key != '' && names.count(it) > 1 }.unique().each { name ->
             errorCollector.error(name, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
             valid = false
         }
@@ -844,7 +844,7 @@ class ModelValidatorImpl implements ModelValidator {
             s.name
         }
 
-        names.findAll { names.count(it) > 1 }.unique().each { name ->
+        names.findAll { it != null && it.key != null && it.key != '' && names.count(it) > 1 }.unique().each { name ->
             errorCollector.error(name, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
             valid = false
         }

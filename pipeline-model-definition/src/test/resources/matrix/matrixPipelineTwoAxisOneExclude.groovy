@@ -29,22 +29,22 @@ pipeline {
             matrix {
                 axes {
                     axis {
-                        name 'os'
+                        name 'OS_VALUE'
                         values "linux", "windows", "mac"
                     }
                     axis {
-                        name 'browser'
+                        name 'BROWSER_VALUE'
                         values "firefox", "chrome", "safari"
                     }
                 }
                 excludes {
                     exclude {
                         axis {
-                            name 'os'
+                            name 'OS_VALUE'
                             values 'linux'
                         }
                         axis {
-                            name 'browser'
+                            name 'BROWSER_VALUE'
                             values 'safari'
                         }
                     }
@@ -53,8 +53,8 @@ pipeline {
                     stage("first") {
                         steps {
                             echo "First branch"
-                            echo "OS=$os"
-                            echo "BROWSER=$browser"
+                            echo "OS=${OS_VALUE}"
+                            echo "BROWSER=${BROWSER_VALUE}"
                         }
                     }
                     stage("second") {

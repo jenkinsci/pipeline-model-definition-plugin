@@ -26,7 +26,7 @@
                   "key": "message",
                   "value":                   {
                     "isLiteral": false,
-                    "value": "\"OS=$os\""
+                    "value": "\"OS=${OS_VALUE}\""
                   }
                 }]
               },
@@ -36,7 +36,7 @@
                   "key": "message",
                   "value":                   {
                     "isLiteral": false,
-                    "value": "\"BROWSER=$browser\""
+                    "value": "\"BROWSER=${BROWSER_VALUE}\""
                   }
                 }]
               }

@@ -4,7 +4,7 @@
     "matrix":     {
       "axes":       [
         {
-          "name": "os",
+          "name": "OS_VALUE",
           "values":           [
             {
               "isLiteral": true,
@@ -21,7 +21,7 @@
           ]
         },
         {
-          "name": "browser",
+          "name": "BROWSER_VALUE",
           "values":           [
             {
               "isLiteral": true,
@@ -40,14 +40,14 @@
       ],
       "excludes": [      [
         {
-          "name": "os",
+          "name": "OS_VALUE",
           "values": [          {
             "isLiteral": true,
             "value": "linux"
           }]
         },
         {
-          "name": "browser",
+          "name": "BROWSER_VALUE",
           "values": [          {
             "isLiteral": true,
             "value": "safari"
@@ -76,7 +76,7 @@
                   "key": "message",
                   "value":                   {
                     "isLiteral": false,
-                    "value": "\"OS=$os\""
+                    "value": "\"OS=${OS_VALUE}\""
                   }
                 }]
               },
@@ -86,7 +86,7 @@
                   "key": "message",
                   "value":                   {
                     "isLiteral": false,
-                    "value": "\"BROWSER=$browser\""
+                    "value": "\"BROWSER=${BROWSER_VALUE}\""
                   }
                 }]
               }

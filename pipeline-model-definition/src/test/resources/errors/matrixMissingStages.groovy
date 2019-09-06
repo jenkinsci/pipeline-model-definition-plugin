@@ -29,11 +29,11 @@ pipeline {
       matrix {
         axes {
           axis {
-            name 'os'
+            name 'OS_VALUE'
             values "linux", "windows", "mac"
           }
           axis {
-            name 'browser'
+            name 'BROWSER_VALUE'
             values "firefox", "chrome", "safari", "ie"
           }
         }

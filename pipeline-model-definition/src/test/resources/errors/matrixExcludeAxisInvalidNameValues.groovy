@@ -29,7 +29,7 @@ pipeline {
       matrix {
         axes {
           axis {
-            name 'os'
+            name 'OS_VALUE'
             values "linux", "windows", "mac"
           }
         }
@@ -40,15 +40,15 @@ pipeline {
               values 'blank'
             }
             axis {
-              name 'os'
+              name 'OS_VALUE'
               values 'linux'
             }
             axis {
-              name 'os'
+              name 'OS_VALUE'
               notValues "windows", "mac"
             }
             axis {
-              name 'browser'
+              name 'BROWSER_VALUE'
               values 'safari', 'safari'
             }
             axis {
@@ -77,7 +77,7 @@ pipeline {
         stages {
           stage("first") {
             steps {
-              echo "First branch: $os"
+              echo "First branch: ${OS_VALUE}"
             }
           }
         }

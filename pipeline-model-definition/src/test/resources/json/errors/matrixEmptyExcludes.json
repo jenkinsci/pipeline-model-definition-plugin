@@ -4,7 +4,7 @@
     "matrix":     {
       "axes":       [
         {
-          "name": "os",
+          "name": "OS_VALUE",
           "values":           [
             {
               "isLiteral": true,
@@ -21,7 +21,7 @@
           ]
         },
         {
-          "name": "browser",
+          "name": "BROWSER_VALUE",
           "values":           [
             {
               "isLiteral": true,
@@ -66,7 +66,7 @@
                   "key": "message",
                   "value":                   {
                     "isLiteral": false,
-                    "value": "\"OS=$os\""
+                    "value": "\"OS=${OS_VALUE}\""
                   }
                 }]
               },
@@ -76,7 +76,7 @@
                   "key": "message",
                   "value":                   {
                     "isLiteral": false,
-                    "value": "\"BROWSER=$browser\""
+                    "value": "\"BROWSER=${BROWSER_VALUE}\""
                   }
                 }]
               }

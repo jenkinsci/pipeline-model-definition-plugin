@@ -165,20 +165,6 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void matrixAxisDuplicateName() throws Exception {
-        expectError("matrixAxisDuplicateName")
-            .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("os"))
-            .go();
-    }
-
-    @Test
-    public void matrixAxisDuplicateValue() throws Exception {
-        expectError("matrixAxisDuplicateValue")
-            .logContains(Messages.ModelValidatorImpl_DuplicateAxisValue("windows"))
-            .go();
-    }
-
-    @Test
     public void matrixAxisMissingName() throws Exception {
         expectError("matrixAxisMissingName")
             .logContains(Messages.ModelValidatorImpl_RequiredSection("name"))
@@ -195,7 +181,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void matrixAxisInvalidNameValues() throws Exception {
         expectError("matrixAxisInvalidNameValues")
-            .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("os"))
+            .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("OS_VALUE"))
             .logContains(Messages.ModelValidatorImpl_DuplicateAxisValue("safari"))
             .logContains(Messages.ModelParser_ExpectedStringLiteral())
             .logContains("name \"${this_is_gstring_name}\"")
@@ -205,6 +191,7 @@ public class ValidatorTest extends AbstractModelDefTest {
             .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("HY-PHEN"))
             .logContains(Messages.ModelParser_ExpectedStringLiteralButGot("\"${this_is_gstring_value}\""))
             .logNotContains("_UNDERSCORE")
+            .logNotContains(Messages.ModelValidatorImpl_DuplicateAxisName(""))
             .go();
     }
 
@@ -225,7 +212,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @Test
     public void matrixExcludeAxisInvalidNameValues() throws Exception {
       expectError("matrixExcludeAxisInvalidNameValues")
-          .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("os"))
+          .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("OS_VALUE"))
           .logContains(Messages.ModelValidatorImpl_DuplicateAxisValue("safari"))
           .logContains(Messages.ModelParser_ExpectedStringLiteral())
           .logContains("name \"${this_is_gstring_name}\"")
@@ -235,6 +222,7 @@ public class ValidatorTest extends AbstractModelDefTest {
           .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("HY-PHEN"))
           .logContains(Messages.ModelParser_ExpectedStringLiteralButGot("\"${this_is_gstring_value}\""))
           .logNotContains("_UNDERSCORE")
+          .logNotContains(Messages.ModelValidatorImpl_DuplicateAxisName(""))
           .go();
     }
 

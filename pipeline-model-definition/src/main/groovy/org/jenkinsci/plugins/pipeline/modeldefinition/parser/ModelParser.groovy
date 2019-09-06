@@ -420,7 +420,8 @@ class ModelParser implements Parser {
                             } else if (args.size() > 1) {
                                 errorCollector.error(placeholderForErrors, Messages.ModelParser_TooManyArgsForField('name'))
                             } else {
-                                a.name = parseKey(args[0])
+                                a.name = new ModelASTKey(args[0])
+                                a.name.key = parseStringLiteralOrEmpty(args[0])
                             }
                             break
                         case 'values':
@@ -502,7 +503,8 @@ class ModelParser implements Parser {
                             } else if (args.size() > 1) {
                                 errorCollector.error(placeholderForErrors, Messages.ModelParser_TooManyArgsForField('name'))
                             } else {
-                                a.name = parseKey(args[0])
+                                a.name = new ModelASTKey(args[0])
+                                a.name.key = parseStringLiteralOrEmpty(args[0])
                             }
                             break
                         case 'values':
@@ -1461,13 +1463,17 @@ class ModelParser implements Parser {
         return val
     }
 
-    protected String parseStringLiteral(Expression exp) {
+    protected String parseStringLiteralOrEmpty(Expression exp) {
         def s = matchStringLiteral(exp)
         if (s==null) {
             errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedStringLiteral())
         }
 
-        return s != null ? s : "error"
+        return s ?: ""
+    }
+
+    protected String parseStringLiteral(Expression exp) {
+        return parseStringLiteralOrEmpty(exp) ?: "error"
     }
 
     @CheckForNull String matchStringLiteral(Expression exp) {
