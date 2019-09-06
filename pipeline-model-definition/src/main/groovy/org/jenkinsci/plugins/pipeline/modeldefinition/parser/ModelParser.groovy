@@ -414,14 +414,14 @@ class ModelParser implements Parser {
 
                     switch (method.name) {
                         case 'name':
-                            // TODO - must be one arg
-                            def nameExp = ((TupleExpression)mc.arguments).first()
-//                            if (nameExp==null) {
-//                                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-//                                errorCollector.error(stage, Messages.ModelParser_ExpectedStageName())
-//                                return null
-//                            }
-                            a.name = parseKey(nameExp)
+                            List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                            if (args.isEmpty()) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_NoArgForField('name'))
+                            } else if (args.size() > 1) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_TooManyArgsForField('name'))
+                            } else {
+                                a.name = parseKey(args[0])
+                            }
                             break
                         case 'values':
                             a.values.addAll(method.args);
@@ -496,14 +496,14 @@ class ModelParser implements Parser {
 
                     switch (method.name) {
                         case 'name':
-                            // TODO - must be one arg
-                            def nameExp = ((TupleExpression)mc.arguments).first()
-//                            if (nameExp==null) {
-//                                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-//                                errorCollector.error(stage, Messages.ModelParser_ExpectedStageName())
-//                                return null
-//                            }
-                            a.name = parseKey(nameExp)
+                            List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                            if (args.isEmpty()) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_NoArgForField('name'))
+                            } else if (args.size() > 1) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_TooManyArgsForField('name'))
+                            } else {
+                                a.name = parseKey(args[0])
+                            }
                             break
                         case 'values':
                             // Do not allow values and notValues
@@ -1466,7 +1466,8 @@ class ModelParser implements Parser {
         if (s==null) {
             errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedStringLiteral())
         }
-        return s?:"error"
+
+        return s != null ? s : "error"
     }
 
     @CheckForNull String matchStringLiteral(Expression exp) {

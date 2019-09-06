@@ -25,55 +25,50 @@
 pipeline {
   agent none
   stages {
-    stage("foo") {
+    stage("Top level stage") {
       matrix {
         axes {
           axis {
+            name ''
+            values 'blank'
+          }
+          axis {
             name 'os'
-            values "linux", "windows", "mac"
+            values 'linux'
+          }
+          axis {
+            name 'os'
+            values "windows", "mac"
           }
           axis {
             name 'browser'
-            values "firefox", "chrome", "safari", "ie"
+            values 'safari', 'safari'
           }
-        }
-        excludes {
-          exclude {
-            axis {
-              name 'os'
-              values 'linux'
-            }
-            axis {
-              name 'os'
-              notValues "windows", "mac"
-            }
-            axis {
-              name 'browser'
-              values 'safari'
-            }
+          axis {
+            name '1NUMBER'
+            values "invalid"
           }
-          exclude {
-            axis {
-              name 'os'
-              notValues 'windows'
-            }
-            axis {
-              name 'browser'
-              values 'ie'
-            }
+          axis {
+            name '_UNDERSCORE'
+            values "okay"
+          }
+          axis {
+            name '$DOLLAR'
+            values "invalid"
+          }
+          axis {
+            name 'HY-PHEN'
+            values "invalid"
+          }
+          axis {
+            name "${this_is_gstring_name}"
+            values "linux", "windows", "mac", "${this_is_gstring_value}"
           }
         }
         stages {
           stage("first") {
             steps {
-              echo "First branch"
-              echo "OS=$os"
-              echo "BROWSER=$browser"
-            }
-          }
-          stage("second") {
-            steps {
-              echo "Second branch"
+              echo "First branch: $os"
             }
           }
         }

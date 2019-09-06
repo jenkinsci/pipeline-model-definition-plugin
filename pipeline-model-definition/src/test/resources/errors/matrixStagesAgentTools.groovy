@@ -23,24 +23,33 @@
  */
 
 pipeline {
-  agent none
-  stages {
-    stage("Top level stage") {
-      matrix {
-        axes {
-          axis {
-            name ''
-            values "linux", "windows", "mac"
-          }
-        }
-        stages {
-          stage("first") {
-            steps {
-              echo "First branch: $os"
+    agent none
+    stages {
+        stage("foo") {
+            agent any
+            tools {
+                maven "apache-maven-3.0.1"
             }
-          }
+            matrix {
+                axes {
+                    axis {
+                        name 'test'
+                        values 'placeholder'
+                    }
+                }
+                stages {
+                    stage("first") {
+                        steps {
+                            echo "First branch"
+                        }
+                    }
+                    stage("second") {
+                        steps {
+                            echo "Second branch"
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }

@@ -172,6 +172,13 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void matrixAxisDuplicateValue() throws Exception {
+        expectError("matrixAxisDuplicateValue")
+            .logContains(Messages.ModelValidatorImpl_DuplicateAxisValue("windows"))
+            .go();
+    }
+
+    @Test
     public void matrixAxisMissingName() throws Exception {
         expectError("matrixAxisMissingName")
             .logContains(Messages.ModelValidatorImpl_RequiredSection("name"))
@@ -186,9 +193,18 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void matrixExcludeAxisDuplicateName() throws Exception {
-        expectError("matrixAxisDuplicateName")
+    public void matrixAxisInvalidNameValues() throws Exception {
+        expectError("matrixAxisInvalidNameValues")
             .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("os"))
+            .logContains(Messages.ModelValidatorImpl_DuplicateAxisValue("safari"))
+            .logContains(Messages.ModelParser_ExpectedStringLiteral())
+            .logContains("name \"${this_is_gstring_name}\"")
+            .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv(""))
+            .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("1NUMBER"))
+            .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("$DOLLAR"))
+            .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("HY-PHEN"))
+            .logContains(Messages.ModelParser_ExpectedStringLiteralButGot("\"${this_is_gstring_value}\""))
+            .logNotContains("_UNDERSCORE")
             .go();
     }
 
@@ -207,6 +223,22 @@ public class ValidatorTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void matrixExcludeAxisInvalidNameValues() throws Exception {
+      expectError("matrixExcludeAxisInvalidNameValues")
+          .logContains(Messages.ModelValidatorImpl_DuplicateAxisName("os"))
+          .logContains(Messages.ModelValidatorImpl_DuplicateAxisValue("safari"))
+          .logContains(Messages.ModelParser_ExpectedStringLiteral())
+          .logContains("name \"${this_is_gstring_name}\"")
+          .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv(""))
+          .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("1NUMBER"))
+          .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("$DOLLAR"))
+          .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("HY-PHEN"))
+          .logContains(Messages.ModelParser_ExpectedStringLiteralButGot("\"${this_is_gstring_value}\""))
+          .logNotContains("_UNDERSCORE")
+          .go();
+    }
+
+  @Test
     public void matrixExcludeValuesWithNotValues() throws Exception {
         expectError("matrixExcludeValuesWithNotValues")
             .logContains(Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
@@ -762,6 +794,16 @@ public class ValidatorTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-41334")
+    @Test
+    public void matrixStagesAgentTools() throws Exception {
+        expectError("matrixStagesAgentTools")
+            .logContains(Messages.ModelValidatorImpl_AgentInNestedStages("foo"),
+                Messages.ModelValidatorImpl_ToolsInNestedStages("foo"))
+            .go();
+    }
+
+    @Issue("JENKINS-41334")
     @Test
     public void matrixStagesAndSteps() throws Exception {
         expectError("matrixStagesAndSteps")
