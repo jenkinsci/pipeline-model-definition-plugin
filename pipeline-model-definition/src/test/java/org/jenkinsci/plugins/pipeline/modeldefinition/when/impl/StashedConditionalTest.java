@@ -29,6 +29,7 @@ import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.ExtensionList;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -54,8 +55,10 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 /**
  * Tests {@link StashedConditional}
@@ -64,12 +67,14 @@ public class StashedConditionalTest extends AbstractModelDefTest {
 
     @Test
     public void happy() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         doHappy();
         assertFalse(managed);
     }
 
     @Test
     public void happyArtifactManager() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         doHappy();
         assertTrue(managed);
     }
@@ -86,12 +91,14 @@ public class StashedConditionalTest extends AbstractModelDefTest {
 
     @Test
     public void manyFiles() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         doManyFiles();
         assertFalse(managed);
     }
 
     @Test
     public void manyFilesArtifactManager() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         doManyFiles();
         assertTrue(managed);
     }
@@ -108,12 +115,14 @@ public class StashedConditionalTest extends AbstractModelDefTest {
 
     @Test
     public void manyFilesNoMatch() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         doManyFilesNoMatch();
         assertFalse(managed);
     }
 
     @Test
     public void manyFilesNoMatchArtifactManager() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         doManyFilesNoMatch();
         assertTrue(managed);
     }
@@ -126,9 +135,6 @@ public class StashedConditionalTest extends AbstractModelDefTest {
                 "Three")
                 .logNotContains("We have a greeting").go();
     }
-
-
-
 
     @Before
     public void setArtifactManager() {

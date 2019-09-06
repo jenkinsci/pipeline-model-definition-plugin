@@ -25,8 +25,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import hudson.Functions;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assume.assumeThat;
 
 /**
  * Tests for {@link ArchivedConditional}.
@@ -35,6 +39,7 @@ public class ArchivedConditionalTest extends AbstractModelDefTest {
 
     @Test
     public void happy() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         ExpectationsBuilder expect = expect("when/conditions/archived", "happy").runFromRepo(false);
         expect.logContains(
                 "One", "Hello",
@@ -46,6 +51,7 @@ public class ArchivedConditionalTest extends AbstractModelDefTest {
 
     @Test
     public void manyFiles() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         ExpectationsBuilder expect = expect("when/conditions/archived", "manyfiles").runFromRepo(false);
         expect.logContains(
                 "One", "Hello",
@@ -57,6 +63,7 @@ public class ArchivedConditionalTest extends AbstractModelDefTest {
 
     @Test
     public void manyFilesNoMatch() throws Exception {
+        assumeThat(Functions.isWindows(), equalTo(false));
         ExpectationsBuilder expect = expect("when/conditions/archived", "manyfilesnomatch").runFromRepo(false);
         expect.logContains(
                 "One", "Hello",
