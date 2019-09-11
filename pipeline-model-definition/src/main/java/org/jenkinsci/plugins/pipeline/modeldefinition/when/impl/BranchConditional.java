@@ -75,6 +75,7 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
 
     /**
      * The {@link Comparator} to use.
+     * Default is {@link Comparator#GLOB}
      * @return the name of the comparator or null if default.
      */
     public String getComparator() {
@@ -84,7 +85,6 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
     @DataBoundSetter
     public void setComparator(String comparator) {
         final Comparator c = Comparator.get(comparator, null);
-        //TODO validation
         if (c != null) {
             this.comparator = c.name();
         } else {
