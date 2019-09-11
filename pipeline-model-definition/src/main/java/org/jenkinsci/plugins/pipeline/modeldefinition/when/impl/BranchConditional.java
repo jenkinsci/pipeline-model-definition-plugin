@@ -38,6 +38,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
+import java.io.IOException;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -46,7 +47,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
 public class BranchConditional extends DeclarativeStageConditional<BranchConditional> {
-    private final String pattern;
+    private transient String compare;
+    private String pattern;
     private String comparator;
 
     @DataBoundConstructor
@@ -56,11 +58,18 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
 
     @Deprecated
     public String getCompare() {
-        return pattern;
+        return compare;
     }
 
     public String getPattern() {
         return pattern;
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.compare != null) {
+            this.pattern = this.compare;
+        }
+        return this;
     }
 
     /**
