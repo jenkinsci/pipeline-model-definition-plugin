@@ -161,6 +161,15 @@ public class MatrixTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void matrixPipelineLiterals() throws Exception {
+        expect("matrix/matrixPipelineLiterals")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix: OS_VALUE = '1')",
+                "{ (Branch: Matrix: OS_VALUE = 'true')")
+            .go();
+    }
+
+    @Test
     public void matrixPipelineTwoAxis() throws Exception {
         expect("matrix/matrixPipelineTwoAxis")
                 .logContains("[Pipeline] { (foo)",

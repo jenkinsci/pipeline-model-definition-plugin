@@ -190,6 +190,7 @@ public class ValidatorTest extends AbstractModelDefTest {
             .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("$DOLLAR"))
             .logContains(Messages.ModelValidatorImpl_InvalidIdentifierInEnv("HY-PHEN"))
             .logContains(Messages.ModelParser_ExpectedStringLiteralButGot("\"${this_is_gstring_value}\""))
+            .logContains(Messages.ModelParser_ExpectedStringLiteralButGot("${[1, 2, 3, 4]}"))
             .logNotContains("_UNDERSCORE")
             .logNotContains(Messages.ModelValidatorImpl_DuplicateAxisName(""))
             .go();

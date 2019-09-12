@@ -323,7 +323,11 @@ class ModelInterpreter implements Serializable {
                                 boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
                                 boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
                                 boolean whenPassed = false
-                                withEnvBlock(thisStage.getPreAgentEnvVars(script)) {
+
+                                // if this a is a matrix generated stage, evaluate the matrix axis values first
+                                // These are literals that guaranteed not to depend on other variables
+                                // Users will expect them to be available at all times in a particular cell in a matrix.
+                                withEnvBlock(thisStage.getMatrixEnvVars(script)) {
                                     // if is beforeInput -> check when before anything
                                     if (isBeforeInput) {
                                         whenPassed = evaluateWhen(thisStage.when)

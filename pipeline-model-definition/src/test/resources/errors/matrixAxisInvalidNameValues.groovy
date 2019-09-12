@@ -64,6 +64,10 @@ pipeline {
             name "${this_is_gstring_name}"
             values "linux", "windows", "mac", "${this_is_gstring_value}"
           }
+          axis {
+            name "NO_ARRAYS"
+            values ([1, 2, 3, 4])
+          }
         }
         stages {
           stage("first") {

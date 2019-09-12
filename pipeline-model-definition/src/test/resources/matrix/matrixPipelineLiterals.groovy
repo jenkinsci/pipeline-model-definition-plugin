@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,17 +26,28 @@ pipeline {
     agent none
     stages {
         stage("foo") {
-            steps {
-                parallel(first: {
-                    echo "First branch"
-                },
-                    '"second"': {
-                        echo "Second branch"
-                    })
+            matrix {
+                axes {
+                    axis {
+                        name 'OS_VALUE'
+                        values 1, true
+                    }
+                }
+                stages {
+                    stage("first") {
+                        steps {
+                            echo "First branch"
+                            echo "OS=${OS_VALUE}"
+                            echo "BROWSER=${BROWSER_VALUE}"
+                        }
+                    }
+                    stage("second") {
+                        steps {
+                            echo "Second branch"
+                        }
+                    }
+                }
             }
         }
     }
 }
-
-
-

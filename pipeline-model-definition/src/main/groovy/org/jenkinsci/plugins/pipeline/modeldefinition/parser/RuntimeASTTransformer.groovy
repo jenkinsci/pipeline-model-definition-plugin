@@ -846,7 +846,7 @@ class RuntimeASTTransformer {
                             transformStages(original.stages),
                             constX(null), // parallel
                             constX(null), // matrix
-                            transformEnvironmentMap(cell)))  //  preAgentEnvironment for cell values
+                            transformEnvironmentMap(cell)))  //  matrixEnvironment for cell values
         }
 
         return constX(null)

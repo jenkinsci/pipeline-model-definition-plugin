@@ -49,8 +49,18 @@ class Stage implements Serializable {
 
     Tools tools
 
-    Environment preAgentEnvironment
+    /**
+     * Holds environment values from the axes of a parent matrix stage.
+     * The values are guaranteed to be literals.
+     * They are always applied before any other context for each generated stage in a matrix
+     */
+    Environment matrixEnvironment
 
+    /**
+     * Holds environment values provided by the user.
+     * These are evaluated after entering an agent context (if any)
+     * Values may be non-literals such as GStrings.
+     */
     Environment environment
 
     StepsBlock steps
@@ -87,14 +97,14 @@ class Stage implements Serializable {
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, boolean failFast, StageOptions options, StageInput input,
-          Stages stages, Parallel parallel, Matrix matrix, Environment preAgentEnvironment) {
+          Stages stages, Parallel parallel, Matrix matrix, Environment matrixEnvironment) {
         this.name = name
         this.agent = agent
         this.post = post
         this.when = when
         this.tools = tools
         this.environment = environment
-        this.preAgentEnvironment = preAgentEnvironment
+        this.matrixEnvironment = matrixEnvironment
         this.steps = steps
         this.failFast = failFast
         this.options = options
@@ -140,10 +150,10 @@ class Stage implements Serializable {
      *
      * @return a map of keys to closures.
      */
-    Map<String,Closure> getPreAgentEnvVars(CpsScript script) {
-        if (preAgentEnvironment != null) {
-            preAgentEnvironment.envResolver.setScript(script)
-            return preAgentEnvironment.envResolver.closureMap
+    Map<String,Closure> getMatrixEnvVars(CpsScript script) {
+        if (matrixEnvironment != null) {
+            matrixEnvironment.envResolver.setScript(script)
+            return matrixEnvironment.envResolver.closureMap
         } else {
             return [:]
         }
