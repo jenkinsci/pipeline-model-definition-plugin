@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -47,6 +48,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class BranchConditional extends DeclarativeStageConditional<BranchConditional> {
     private transient String compare;
     private String pattern;
