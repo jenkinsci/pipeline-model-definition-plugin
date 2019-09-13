@@ -23,21 +23,29 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.Result;
 import hudson.model.Slave;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
+import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
+import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -387,7 +395,52 @@ public class ParallelTest extends AbstractModelDefTest {
     @Test
     public void parallelStagesShoudntTriggerNSE() throws Exception {
         expect("parallel/parallelStagesShouldntTriggerNSE")
-                .logContains("ninth branch")
-                .go();
+            .logContains("ninth branch")
+            .go();
     }
+
+    @Test
+    public void parallelInput() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "parallelInput");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("parallel/parallelInput"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(2, a.getExecutions().size());
+
+        InputStepExecution is1 = a.getExecution("One");
+        assertEquals("Continue One?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        InputStepExecution is2 = a.getExecution("Two");
+        assertEquals("Continue Two?", is2.getInput().getMessage());
+        assertEquals(0, is2.getInput().getParameters().size());
+        assertNull(is2.getInput().getSubmitter());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+
+        HtmlPage page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is2.getId()), "proceed");
+
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("One Continues", b);
+        j.assertLogContains("Two Continues", b);
+    }
+
 }
