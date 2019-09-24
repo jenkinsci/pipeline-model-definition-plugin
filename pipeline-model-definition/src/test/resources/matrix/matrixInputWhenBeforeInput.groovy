@@ -33,28 +33,20 @@ pipeline {
                         values 'A', 'B'
                     }
                 }
+                input {
+                    message "Continue?"
+                }
+                when {
+                    environment name: "AXIS_VALUE", value: "A"
+                    beforeInput true
+                }
                 stages {
                     stage("One") {
-                        when {
-
-                            environment name: "AXIS_VALUE", value: "A"
-                            beforeInput true
-                        }
-                        input {
-                            message "Continue One?"
-                        }
                         steps {
                             echo "One Continues in ${AXIS_VALUE}"
                         }
                     }
                     stage("Two") {
-                        when {
-                            environment name: "AXIS_VALUE", value: "B"
-                            beforeInput true
-                        }
-                        input {
-                            message "Continue Two?"
-                        }
                         steps {
                             echo "Two Continues in ${AXIS_VALUE}"
                         }

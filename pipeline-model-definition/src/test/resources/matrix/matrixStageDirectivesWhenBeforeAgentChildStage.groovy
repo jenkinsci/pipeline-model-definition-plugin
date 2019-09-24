@@ -45,43 +45,57 @@ pipeline {
                     }
                 }
                 stages {
-                    stage("first") {
+                    stage("Cell") {
                         agent {
                             label "${OS_VALUE}-agent"
                         }
                         tools {
-                            maven "apache-maven-3.0.1"
+                            maven "apache-maven-${MAVEN_VERSION}"
+                        }
+                        when {
+                            not {
+                                environment name: "WHICH_AGENT", value: "${OS_VALUE} agent"
+                            }
+                            beforeAgent true
                         }
                         environment {
                             OS_VALUE = "${OS_VALUE}-os"
                             OVERRIDE_TWICE = "overrode twice, in first ${OS_VALUE} branch"
                             OVERRIDE_PER_NESTED = "overrode per nested, in first ${OS_VALUE} branch"
                             DECLARED_PER_NESTED = "declared per nested, in first ${OS_VALUE} branch"
+                            MAVEN_VERSION = "3.0.1"
                         }
-                        steps {
-                            echo "First stage, ${WHICH_AGENT}"
-                            echo "First stage, ${DO_NOT_OVERRIDE}"
-                            echo "First stage, ${OVERRIDE_ONCE}"
-                            echo "First stage, ${OVERRIDE_TWICE}"
-                            echo "First stage, ${OVERRIDE_PER_NESTED}"
-                            echo "First stage, ${DECLARED_PER_NESTED}"
-                            script {
-                                if (isUnix()) {
-                                    sh 'mvn --version'
-                                } else {
-                                    bat 'mvn --version'
+                        stages {
+                            stage("first") {
+                                steps {
+                                    echo "First stage, ${WHICH_AGENT}"
+                                    echo "First stage, ${DO_NOT_OVERRIDE}"
+                                    echo "First stage, ${OVERRIDE_ONCE}"
+                                    echo "First stage, ${OVERRIDE_TWICE}"
+                                    echo "First stage, ${OVERRIDE_PER_NESTED}"
+                                    echo "First stage, ${DECLARED_PER_NESTED}"
+                                    dir("subdir") {
+                                        script {
+                                            if (isUnix()) {
+                                                sh 'mvn --version'
+                                            } else {
+                                                bat 'mvn --version'
+                                            }
+                                            if (!fileExists("Jenkinsfile")) {
+                                                echo "Jenkinsfile does not exist"
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                        }
-                    }
-                    stage("second") {
-                        when {
-                            expression {
-                                return false
+                            stage("second") {
+                                when {
+                                    environment name: "OS_VALUE", value: "not-an-os"
+                                }
+                                steps {
+                                    echo "WE SHOULD NEVER GET HERE"
+                                }
                             }
-                        }
-                        steps {
-                            echo "WE SHOULD NEVER GET HERE"
                         }
                     }
                 }

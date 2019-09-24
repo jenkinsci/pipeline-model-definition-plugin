@@ -25,6 +25,7 @@
 pipeline {
     agent none
     environment {
+        OS_VALUE = "override in matrix axis"
         OVERRIDE_TWICE = "override twice"
         DO_NOT_OVERRIDE = "do not override"
         OVERRIDE_ONCE = "override once"
@@ -32,7 +33,6 @@ pipeline {
     stages {
         stage("foo") {
             environment {
-                OS_VALUE = "override in matrix axis"
                 OVERRIDE_TWICE = "overrode once, one to go"
                 OVERRIDE_ONCE = "overrode once and done"
                 OVERRIDE_PER_NESTED = "override in each branch"
@@ -48,13 +48,17 @@ pipeline {
                     label "${OS_VALUE}-agent"
                 }
                 tools {
-                    maven "apache-maven-3.0.1"
+                    maven "apache-maven-${MAVEN_VERSION}"
+                }
+                when {
+                    environment name: "WHICH_AGENT", value: "${OS_VALUE} agent"
                 }
                 environment {
                     OS_VALUE = "${OS_VALUE}-os"
                     OVERRIDE_TWICE = "overrode twice, in first ${OS_VALUE} branch"
                     OVERRIDE_PER_NESTED = "overrode per nested, in first ${OS_VALUE} branch"
                     DECLARED_PER_NESTED = "declared per nested, in first ${OS_VALUE} branch"
+                    MAVEN_VERSION = "3.0.1"
                 }
                 stages {
                     stage("first") {
@@ -65,20 +69,23 @@ pipeline {
                             echo "First stage, ${OVERRIDE_TWICE}"
                             echo "First stage, ${OVERRIDE_PER_NESTED}"
                             echo "First stage, ${DECLARED_PER_NESTED}"
-                            script {
-                                if (isUnix()) {
-                                    sh 'mvn --version'
-                                } else {
-                                    bat 'mvn --version'
+                            dir("subdir") {
+                                script {
+                                    if (isUnix()) {
+                                        sh 'mvn --version'
+                                    } else {
+                                        bat 'mvn --version'
+                                    }
+                                    if (!fileExists("Jenkinsfile")) {
+                                        echo "Jenkinsfile does not exist"
+                                    }
                                 }
                             }
                         }
                     }
                     stage("second") {
                         when {
-                            expression {
-                                return false
-                            }
+                            environment name: "OS_VALUE", value: "not-an-os"
                         }
                         steps {
                             echo "WE SHOULD NEVER GET HERE"

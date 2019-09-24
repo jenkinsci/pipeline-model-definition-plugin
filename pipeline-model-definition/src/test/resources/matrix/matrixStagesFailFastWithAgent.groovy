@@ -38,7 +38,7 @@ pipeline {
                     stage("first") {
                         steps {
                             script {
-                                if (env.os == "windows") {
+                                if (env.OS_VALUE == "windows") {
                                     sleep 1
                                     error "First branch"
                                 }

@@ -278,60 +278,59 @@ class ModelInterpreter implements Serializable {
                         skippedReason = new SkippedStageReason.Unstable(thisStage.name)
                         skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else {
-                        inWrappers(thisStage.options?.wrappers) {
-                            if (thisStage?.parallel != null || thisStage?.matrix != null) {
-                                stageInput(thisStage.input) {
-                                    if (evaluateWhen(thisStage.when)) {
+                        // if this a is a matrix generated stage, evaluate the matrix axis values first
+                        // These are literals that guaranteed not to depend on other variables
+                        // Users will expect them to be available at all times in a particular cell in a matrix.
+                        withEnvBlock(thisStage.getMatrixCellEnvVars(script)) {
+                            inWrappers(thisStage.options?.wrappers) {
+                                if (thisStage?.parallel != null || thisStage?.matrix != null) {
+                                    stageInput(thisStage.input) {
+                                        if (evaluateWhen(thisStage.when)) {
+                                            withCredentialsBlock(thisStage.environment) {
+                                                withEnvBlock(thisStage.getEnvVars(script)) {
+                                                    if (thisStage?.parallel != null) {
+                                                        script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
+                                                    } else {
+                                                        script.parallel(getMatrixStages(root, parentAgent, thisStage, firstError, null))
+
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            skippedReason = new SkippedStageReason.When(thisStage.name)
+                                            skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                        }
+                                    }
+                                } else {
+
+                                    def stageBody = {
                                         withCredentialsBlock(thisStage.environment) {
                                             withEnvBlock(thisStage.getEnvVars(script)) {
-                                                if (thisStage?.parallel != null) {
-                                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
-                                                } else {
-                                                    script.parallel(getMatrixStages(root, parentAgent, thisStage, firstError, null))
+                                                toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                    if (thisStage?.stages) {
+                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
 
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        skippedReason = new SkippedStageReason.When(thisStage.name)
-                                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
-                                    }
-                                }
-                            } else {
-
-                                def stageBody = {
-                                    withCredentialsBlock(thisStage.environment) {
-                                        withEnvBlock(thisStage.getEnvVars(script)) {
-                                            toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                                if (thisStage?.stages) {
-                                                    def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
-
-                                                    // Propagate any possible error from the sequential stages as if it were an error thrown directly.
-                                                    if (nestedError != null) {
-                                                        throw nestedError
+                                                        // Propagate any possible error from the sequential stages as if it were an error thrown directly.
+                                                        if (nestedError != null) {
+                                                            throw nestedError
+                                                        }
+                                                    } else {
+                                                        // Execute the actual stage and potential post-stage actions
+                                                        executeSingleStage(root, thisStage, parentAgent)
                                                     }
-                                                } else {
-                                                    // Execute the actual stage and potential post-stage actions
-                                                    executeSingleStage(root, thisStage, parentAgent)
                                                 }
                                             }
                                         }
                                     }
-                                }
 
+                                    boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
+                                    boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
+                                    boolean whenPassed = false
 
-                                boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
-                                boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
-                                boolean whenPassed = false
-
-                                // if this a is a matrix generated stage, evaluate the matrix axis values first
-                                // These are literals that guaranteed not to depend on other variables
-                                // Users will expect them to be available at all times in a particular cell in a matrix.
-                                withEnvBlock(thisStage.getMatrixEnvVars(script)) {
                                     // if is beforeInput -> check when before anything
                                     if (isBeforeInput) {
                                         whenPassed = evaluateWhen(thisStage.when)
-                                        if(whenPassed) {
+                                        if (whenPassed) {
                                             stageInput(thisStage.input) {
                                                 inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                     stageBody.call()
@@ -342,11 +341,11 @@ class ModelInterpreter implements Serializable {
                                         stageInput(thisStage.input) {
                                             whenPassed = evaluateWhen(thisStage.when)
                                             if (whenPassed) {
-                                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                        stageBody.call()
-                                                    }
+                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                    stageBody.call()
                                                 }
                                             }
+                                        }
                                     } else {
                                         stageInput(thisStage.input) {
                                             inDeclarativeAgent(thisStage, root, thisStage.agent) {
@@ -357,12 +356,11 @@ class ModelInterpreter implements Serializable {
                                             }
                                         }
                                     }
-                                }
 
-
-                                if (!whenPassed) {
-                                    skippedReason = new SkippedStageReason.When(thisStage.name)
-                                    skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                    if (!whenPassed) {
+                                        skippedReason = new SkippedStageReason.When(thisStage.name)
+                                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                    }
                                 }
                             }
                         }

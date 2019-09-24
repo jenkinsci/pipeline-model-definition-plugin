@@ -36,6 +36,9 @@ pipeline {
                 input {
                     message "Continue?"
                 }
+                when {
+                    environment name: "AXIS_VALUE", value: "A"
+                }
                 stages {
                     stage("One") {
                         steps {

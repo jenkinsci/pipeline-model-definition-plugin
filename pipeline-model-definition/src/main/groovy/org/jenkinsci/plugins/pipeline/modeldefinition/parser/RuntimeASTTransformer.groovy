@@ -830,7 +830,7 @@ class RuntimeASTTransformer {
             cell.each { cellLabels.add(it.key.key.toString() + " = '" + it.value.value.toString() + "'") }
 
             // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
-            String name = "Matrix: " + cellLabels.join(", ")
+            String name = "Matrix - " + cellLabels.join(", ")
 
             return ctorX(ClassHelper.make(Stage.class),
                     args(constX(name),
@@ -846,7 +846,7 @@ class RuntimeASTTransformer {
                             transformStages(original.stages),
                             constX(null), // parallel
                             constX(null), // matrix
-                            transformEnvironmentMap(cell)))  //  matrixEnvironment for cell values
+                            transformEnvironmentMap(cell)))  //  matrixCellEnvironment holding values for this cell in the matrix
         }
 
         return constX(null)

@@ -50,11 +50,11 @@ class Stage implements Serializable {
     Tools tools
 
     /**
-     * Holds environment values from the axes of a parent matrix stage.
+     * Holds environment values for this cell, generated from the axes of a parent matrix directive.
      * The values are guaranteed to be literals.
-     * They are always applied before any other context for each generated stage in a matrix
+     * They are always applied before any other context for each generated cell stage in a matrix
      */
-    Environment matrixEnvironment
+    Environment matrixCellEnvironment
 
     /**
      * Holds environment values provided by the user.
@@ -97,14 +97,13 @@ class Stage implements Serializable {
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, boolean failFast, StageOptions options, StageInput input,
-          Stages stages, Parallel parallel, Matrix matrix, Environment matrixEnvironment) {
+          Stages stages, Parallel parallel, Matrix matrix, Environment matrixCellEnvironment) {
         this.name = name
         this.agent = agent
         this.post = post
         this.when = when
         this.tools = tools
         this.environment = environment
-        this.matrixEnvironment = matrixEnvironment
         this.steps = steps
         this.failFast = failFast
         this.options = options
@@ -112,6 +111,7 @@ class Stage implements Serializable {
         this.stages = stages
         this.parallel = parallel
         this.matrix = matrix
+        this.matrixCellEnvironment = matrixCellEnvironment
     }
 
 
@@ -150,10 +150,10 @@ class Stage implements Serializable {
      *
      * @return a map of keys to closures.
      */
-    Map<String,Closure> getMatrixEnvVars(CpsScript script) {
-        if (matrixEnvironment != null) {
-            matrixEnvironment.envResolver.setScript(script)
-            return matrixEnvironment.envResolver.closureMap
+    Map<String,Closure> getMatrixCellEnvVars(CpsScript script) {
+        if (matrixCellEnvironment != null) {
+            matrixCellEnvironment.envResolver.setScript(script)
+            return matrixCellEnvironment.envResolver.closureMap
         } else {
             return [:]
         }

@@ -33,20 +33,27 @@ pipeline {
                         values 'A', 'B'
                     }
                 }
-                input {
-                    message "Continue?"
-                }
                 stages {
-                    stage("One") {
-                        steps {
-                            echo "One Continues in ${AXIS_VALUE}"
+                    stage("Cell") {
+                        input {
+                            message "Continue?"
                         }
-                    }
-                    stage("Two") {
-                        steps {
-                            echo "Two Continues in ${AXIS_VALUE}"
+                        when {
+                            environment name: "AXIS_VALUE", value: "A"
                         }
+                        stages {
+                            stage("One") {
+                                steps {
+                                    echo "One Continues in ${AXIS_VALUE}"
+                                }
+                            }
+                            stage("Two") {
+                                steps {
+                                    echo "Two Continues in ${AXIS_VALUE}"
+                                }
 
+                            }
+                        }
                     }
                 }
             }

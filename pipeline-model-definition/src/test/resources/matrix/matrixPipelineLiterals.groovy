@@ -38,7 +38,6 @@ pipeline {
                         steps {
                             echo "First branch"
                             echo "OS=${OS_VALUE}"
-                            echo "BROWSER=${BROWSER_VALUE}"
                         }
                     }
                     stage("second") {
