@@ -84,20 +84,20 @@ class Stage implements Serializable {
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast) {
         this(name, steps, agent, post, when, tools, environment, failFast, null, null,
-                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null, null)
+                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null)
     }
 
     @Deprecated
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, Stages parallel, boolean failFast, StageOptions options, StageInput input) {
         this(name, steps, agent, post, when, tools, environment, failFast, options, input,
-                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null, null)
+                (Stages) null, (Parallel) parallel != null ? new Parallel(parallel.stages) : null, null)
     }
 
     @Whitelisted
     Stage(String name, StepsBlock steps, Agent agent, PostStage post, StageConditionals when, Tools tools,
           Environment environment, boolean failFast, StageOptions options, StageInput input,
-          Stages stages, Parallel parallel, Matrix matrix, Environment matrixCellEnvironment) {
+          Stages stages, Parallel parallel, Environment matrixCellEnvironment) {
         this.name = name
         this.agent = agent
         this.post = post
@@ -110,7 +110,6 @@ class Stage implements Serializable {
         this.input = input
         this.stages = stages
         this.parallel = parallel
-        this.matrix = matrix
         this.matrixCellEnvironment = matrixCellEnvironment
     }
 

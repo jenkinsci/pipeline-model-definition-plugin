@@ -652,6 +652,12 @@ class RuntimeASTTransformer {
      */
     Expression transformStage(@CheckForNull ModelASTStage original) {
         if (isGroovyAST(original)) {
+            // Matrix is a special form of parallel
+            // At runtime, they behave the same
+            Expression parallel = original.parallel != null ?
+                    transformStages(original.parallel) :
+                    transformMatrix(original.matrix)
+
             return ctorX(ClassHelper.make(Stage.class),
                 args(constX(original.name),
                     transformStepsFromStage(original),
@@ -664,8 +670,7 @@ class RuntimeASTTransformer {
                     transformOptions(original.options),
                     transformStageInput(original.input, original.name),
                     transformStages(original.stages),
-                    transformStages(original.parallel),
-                    transformMatrix(original.matrix),
+                    parallel,
                     constX(null)))
         }
 
@@ -845,7 +850,6 @@ class RuntimeASTTransformer {
                             transformStageInput(original.input, name),
                             transformStages(original.stages),
                             constX(null), // parallel
-                            constX(null), // matrix
                             transformEnvironmentMap(cell)))  //  matrixCellEnvironment holding values for this cell in the matrix
         }
 
