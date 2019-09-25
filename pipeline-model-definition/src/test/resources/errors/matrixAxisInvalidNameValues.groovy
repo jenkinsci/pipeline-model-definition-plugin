@@ -25,55 +25,54 @@
 pipeline {
   agent none
   stages {
-    stage("foo") {
+    stage("Top level stage") {
       matrix {
         axes {
           axis {
-            name 'os'
-            values "linux", "windows", "mac"
+            name ''
+            values 'blank'
           }
           axis {
-            name 'browser'
-            values "firefox", "chrome", "safari", "ie"
+            name 'OS_VALUE'
+            values 'linux'
           }
-        }
-        excludes {
-          exclude {
-            axis {
-              name 'os'
-              values 'linux'
-            }
-            axis {
-              name 'os'
-              notValues "windows", "mac"
-            }
-            axis {
-              name 'browser'
-              values 'safari'
-            }
+          axis {
+            name 'OS_VALUE'
+            values "windows", "mac"
           }
-          exclude {
-            axis {
-              name 'os'
-              notValues 'windows'
-            }
-            axis {
-              name 'browser'
-              values 'ie'
-            }
+          axis {
+            name 'BROWSER_VALUE'
+            values 'safari', 'safari'
+          }
+          axis {
+            name '1NUMBER'
+            values "invalid"
+          }
+          axis {
+            name '_UNDERSCORE'
+            values "okay"
+          }
+          axis {
+            name '$DOLLAR'
+            values "invalid"
+          }
+          axis {
+            name 'HY-PHEN'
+            values "invalid"
+          }
+          axis {
+            name "${this_is_gstring_name}"
+            values "linux", "windows", "mac", "${this_is_gstring_value}"
+          }
+          axis {
+            name "NO_ARRAYS"
+            values ([1, 2, 3, 4])
           }
         }
         stages {
           stage("first") {
             steps {
-              echo "First branch"
-              echo "OS=$os"
-              echo "BROWSER=$browser"
-            }
-          }
-          stage("second") {
-            steps {
-              echo "Second branch"
+              echo "First branch: ${OS_VALUE}"
             }
           }
         }

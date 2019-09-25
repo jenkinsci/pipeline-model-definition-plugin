@@ -674,6 +674,10 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(pipelineDef, valid)
     }
 
+    boolean validateElement(ModelASTStageBase stage) {
+        return true
+    }
+
     boolean validateElement(@Nonnull ModelASTStage stage, boolean isWithinParallel) {
         boolean valid = true
         def stepsStagesParallelCount = 0
@@ -707,7 +711,7 @@ class ModelValidatorImpl implements ModelValidator {
         } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (stage.parallel != null) {
+        } else if (stage.parallel != null || stage.matrix != null) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false
@@ -759,6 +763,11 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
+        if (matrix.stages == null) {
+            errorCollector.error(matrix, Messages.ModelValidatorImpl_RequiredSection("stages"))
+            valid = false
+        }
+
         return validateFromContributors(matrix, valid)
     }
 
@@ -774,13 +783,8 @@ class ModelValidatorImpl implements ModelValidator {
             s.name
         }
 
-        names.findAll { it == '' }.each { name ->
-            errorCollector.error(axes, Messages.ModelValidatorImpl_EmptySection("name"))
-            valid = false
-        }
-
-        names.findAll { names.count(it) > 1 }.unique().each { name ->
-            errorCollector.error(axes, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
+        names.findAll { it != null && it.key != null && it.key != '' && names.count(it) > 1 }.unique().each { name ->
+            errorCollector.error(name, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
             valid = false
         }
 
@@ -793,10 +797,18 @@ class ModelValidatorImpl implements ModelValidator {
         if (axis.name == null) {
             errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("name"))
             valid = false
+        } else if (!Utils.validEnvIdentifier(axis.name.key)) {
+            errorCollector.error(axis.name, Messages.ModelValidatorImpl_InvalidIdentifierInEnv(axis.name.key))
+            valid = false
         }
 
         if (axis.values.isEmpty()) {
             errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("values"))
+        }
+
+        axis.values.findAll { axis.values.count(it) > 1 }.unique().each { value ->
+            errorCollector.error(value, Messages.ModelValidatorImpl_DuplicateAxisValue(value.value))
+            valid = false
         }
 
         axis.values.each { value ->
@@ -832,13 +844,8 @@ class ModelValidatorImpl implements ModelValidator {
             s.name
         }
 
-        names.findAll { it == '' }.each { name ->
-            errorCollector.error(exclude, Messages.ModelValidatorImpl_EmptySection("name"))
-            valid = false
-        }
-
-        names.findAll { names.count(it) > 1 }.unique().each { name ->
-            errorCollector.error(exclude, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
+        names.findAll { it != null && it.key != null && it.key != '' && names.count(it) > 1 }.unique().each { name ->
+            errorCollector.error(name, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
             valid = false
         }
 
@@ -848,14 +855,7 @@ class ModelValidatorImpl implements ModelValidator {
     boolean validateElement(ModelASTExcludeAxis axis) {
         boolean valid = true
 
-        if (axis.name == null) {
-            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("name"))
-            valid = false
-        }
-
-        if (axis.values.isEmpty()) {
-            errorCollector.error(axis, Messages.ModelParser_MatrixExcludeAxisValuesOrNotValues())
-        }
+        // validation is the  by ModelASTExcludeAxis
 
         return validateFromContributors(axis, valid)
     }

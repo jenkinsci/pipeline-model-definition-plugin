@@ -23,28 +23,41 @@
  */
 
 pipeline {
-  agent none
-  stages {
-    stage("Top level stage") {
-      matrix {
-        axes {
-          axis {
-            name 'os'
-            values "linux", "windows", "mac"
-          }
-          axis {
-            name 'os'
-            values "linux", "windows", "mac"
-          }
-        }
-        stages {
-          stage("first") {
-            steps {
-              echo "First branch: $os"
+    agent none
+    stages {
+        stage("foo") {
+            matrix {
+                axes {
+                    axis {
+                        name 'AXIS_VALUE'
+                        values 'A', 'B'
+                    }
+                }
+                stages {
+                    stage("Cell") {
+                        input {
+                            message "Continue?"
+                        }
+                        when {
+                            environment name: "AXIS_VALUE", value: "A"
+                            beforeInput true
+                        }
+                        stages {
+                            stage("One") {
+                                steps {
+                                    echo "One Continues in ${AXIS_VALUE}"
+                                }
+                            }
+                            stage("Two") {
+                                steps {
+                                    echo "Two Continues in ${AXIS_VALUE}"
+                                }
+
+                            }
+                        }
+                    }
+                }
             }
-          }
         }
-      }
     }
-  }
 }

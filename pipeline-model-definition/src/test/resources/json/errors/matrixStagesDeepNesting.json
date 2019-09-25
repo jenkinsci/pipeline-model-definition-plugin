@@ -3,7 +3,7 @@
     "name": "foo",
     "matrix":     {
       "axes": [      {
-        "name": "os",
+        "name": "OS_VALUE",
         "values":         [
           {
             "isLiteral": true,
@@ -24,7 +24,7 @@
           "name": "first",
           "matrix":           {
             "axes": [            {
-              "name": "os",
+              "name": "OS_VALUE",
               "values":               [
                 {
                   "isLiteral": true,

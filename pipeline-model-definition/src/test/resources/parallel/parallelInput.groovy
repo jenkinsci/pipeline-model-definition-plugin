@@ -23,33 +23,31 @@
  */
 
 pipeline {
-  agent none
-  stages {
-    stage("Top level stage") {
-      matrix {
-        axes {
-          axis {
-            name 'os'
-            values "linux", "windows", "mac"
-          }
-        }
-        excludes {
-          exclude {
-            axis {
-              name 'os'
-              values "${varName}"
+    agent none
+    stages {
+        stage("foo") {
+            parallel {
+                stage("One") {
+                    input {
+                        message "Continue One?"
+                    }
+                    steps {
+                        echo "One Continues"
+                    }
+                }
+                stage("Two") {
+                    input {
+                        message "Continue Two?"
+                    }
+                    steps {
+                        echo "Two Continues"
+                    }
 
+                }
             }
-          }
         }
-        stages {
-          stage("first") {
-            steps {
-              echo "First branch: $os"
-            }
-          }
-        }
-      }
     }
-  }
 }
+
+
+

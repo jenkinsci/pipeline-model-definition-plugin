@@ -23,57 +23,25 @@
  */
 
 pipeline {
-  agent none
-  stages {
-    stage("foo") {
-      matrix {
-        axes {
-          axis {
-            name 'os'
-            values "linux", "windows", "mac"
-          }
-          axis {
-            name 'browser'
-            values "firefox", "chrome", "safari", "ie"
-          }
+    agent none
+    stages {
+        stage("parent") {
+            environment {
+                MESSAGE = "Continue?"
+            }
+            stages {
+                stage("Foo") {
+                    input {
+                        message "${MESSAGE}"
+                    }
+                    steps {
+                        echo "hello"
+                    }
+                }
+            }
         }
-        excludes {
-          exclude {
-            axis {
-              name 'os'
-              values 'linux'
-            }
-            axis {
-              name 'browser'
-              values 'safari', 'safari'
-            }
-          }
-          exclude {
-            axis {
-              name 'os'
-              notValues 'windows'
-            }
-            axis {
-              name 'browser'
-              values 'ie'
-            }
-          }
-        }
-        stages {
-          stage("first") {
-            steps {
-              echo "First branch"
-              echo "OS=$os"
-              echo "BROWSER=$browser"
-            }
-          }
-          stage("second") {
-            steps {
-              echo "Second branch"
-            }
-          }
-        }
-      }
     }
-  }
 }
+
+
+

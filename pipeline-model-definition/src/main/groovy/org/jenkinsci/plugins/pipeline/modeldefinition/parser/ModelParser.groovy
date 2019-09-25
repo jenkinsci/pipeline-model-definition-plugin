@@ -332,16 +332,37 @@ class ModelParser implements Parser {
                     }
 
                     switch (name) {
-                        case 'stages':
-                            def stages = parseStages(it)
-                            r.stages = stages.stages
-                            break
                         case 'axes':
                             r.axes = parseAxes(it);
                             break;
                         case 'excludes':
                             r.excludes = parseExcludes(it);
                             break;
+                        case 'agent':
+                            r.agent = parseAgent(it)
+                            break
+                        case 'when':
+                            r.when = parseWhen(it)
+                            break
+                        case 'post':
+                            r.post = parsePostStage(it)
+                            break
+                        case 'options':
+                            r.options = parseOptions(it)
+                            r.options.inStage = true
+                            break
+                        case 'input':
+                            r.input = parseInput(it)
+                            break
+                        case 'tools':
+                            r.tools = parseTools(it)
+                            break
+                        case 'environment':
+                            r.environment = parseEnvironment(it)
+                            break
+                        case 'stages':
+                            r.stages = parseStages(it)
+                            break
                         default:
                             // We need to check for unknowns here.
                             errorCollector.error(placeholderForErrors, Messages.Parser_UndefinedSection(name))
@@ -393,14 +414,15 @@ class ModelParser implements Parser {
 
                     switch (method.name) {
                         case 'name':
-                            // TODO - must be one arg
-                            def nameExp = ((TupleExpression)mc.arguments).first()
-//                            if (nameExp==null) {
-//                                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-//                                errorCollector.error(stage, Messages.ModelParser_ExpectedStageName())
-//                                return null
-//                            }
-                            a.name = parseKey(nameExp)
+                            List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                            if (args.isEmpty()) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_NoArgForField('name'))
+                            } else if (args.size() > 1) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_TooManyArgsForField('name'))
+                            } else {
+                                a.name = new ModelASTKey(args[0])
+                                a.name.key = parseStringLiteralOrEmpty(args[0])
+                            }
                             break
                         case 'values':
                             a.values.addAll(method.args);
@@ -475,14 +497,15 @@ class ModelParser implements Parser {
 
                     switch (method.name) {
                         case 'name':
-                            // TODO - must be one arg
-                            def nameExp = ((TupleExpression)mc.arguments).first()
-//                            if (nameExp==null) {
-//                                // Not sure of a better way to deal with this - it's a full-on parse-time failure.
-//                                errorCollector.error(stage, Messages.ModelParser_ExpectedStageName())
-//                                return null
-//                            }
-                            a.name = parseKey(nameExp)
+                            List<Expression> args = ((TupleExpression) mc.arguments).expressions
+                            if (args.isEmpty()) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_NoArgForField('name'))
+                            } else if (args.size() > 1) {
+                                errorCollector.error(placeholderForErrors, Messages.ModelParser_TooManyArgsForField('name'))
+                            } else {
+                                a.name = new ModelASTKey(args[0])
+                                a.name.key = parseStringLiteralOrEmpty(args[0])
+                            }
                             break
                         case 'values':
                             // Do not allow values and notValues
@@ -1440,12 +1463,17 @@ class ModelParser implements Parser {
         return val
     }
 
-    protected String parseStringLiteral(Expression exp) {
+    protected String parseStringLiteralOrEmpty(Expression exp) {
         def s = matchStringLiteral(exp)
         if (s==null) {
             errorCollector.error(ModelASTValue.fromConstant(null, exp), Messages.ModelParser_ExpectedStringLiteral())
         }
-        return s?:"error"
+
+        return s ?: ""
+    }
+
+    protected String parseStringLiteral(Expression exp) {
+        return parseStringLiteralOrEmpty(exp) ?: "error"
     }
 
     @CheckForNull String matchStringLiteral(Expression exp) {

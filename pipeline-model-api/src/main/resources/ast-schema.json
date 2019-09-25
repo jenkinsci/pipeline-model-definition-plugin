@@ -553,6 +553,27 @@
         "excludes": {
           "$ref": "#/definitions/excludes"
         },
+        "agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "when": {
+          "$ref": "#/definitions/when"
+        },
+        "post": {
+          "$ref": "#/definitions/post"
+        },
+        "tools": {
+          "$ref": "#/definitions/tools"
+        },
+        "environment": {
+          "$ref": "#/definitions/environment"
+        },
+        "options": {
+          "$ref": "#/definitions/options"
+        },
+        "input": {
+          "$ref": "#/definitions/input"
+        },
         "stages": {
           "$ref": "#/definitions/stages"
         }

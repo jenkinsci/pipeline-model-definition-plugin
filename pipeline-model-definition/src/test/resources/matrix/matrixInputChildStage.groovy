@@ -23,21 +23,40 @@
  */
 
 pipeline {
-  agent none
-  stages {
-    stage("foo") {
-      matrix {
-        axes {
-          axis {
-            name 'OS_VALUE'
-            values "linux", "windows", "mac"
-          }
-          axis {
-            name 'BROWSER_VALUE'
-            values "firefox", "chrome", "safari", "ie"
-          }
+    agent none
+    stages {
+        stage("foo") {
+            matrix {
+                axes {
+                    axis {
+                        name 'AXIS_VALUE'
+                        values 'A', 'B'
+                    }
+                }
+                stages {
+                    stage('Cell') {
+                        input {
+                            message "Continue?"
+                        }
+                        stages {
+                            stage("One") {
+                                steps {
+                                    echo "One Continues in ${AXIS_VALUE}"
+                                }
+                            }
+                            stage("Two") {
+                                steps {
+                                    echo "Two Continues in ${AXIS_VALUE}"
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }
+
+
+

@@ -25,16 +25,60 @@
 pipeline {
   agent none
   stages {
-    stage("foo") {
+    stage("Top level stage") {
       matrix {
         axes {
           axis {
             name 'OS_VALUE'
             values "linux", "windows", "mac"
           }
-          axis {
-            name 'BROWSER_VALUE'
-            values "firefox", "chrome", "safari", "ie"
+        }
+        excludes {
+          exclude {
+            axis {
+              name ''
+              values 'blank'
+            }
+            axis {
+              name 'OS_VALUE'
+              values 'linux'
+            }
+            axis {
+              name 'OS_VALUE'
+              notValues "windows", "mac"
+            }
+            axis {
+              name 'BROWSER_VALUE'
+              values 'safari', 'safari'
+            }
+            axis {
+              name '1NUMBER'
+              values "invalid"
+            }
+            axis {
+              name '_UNDERSCORE'
+              values "okay"
+            }
+            axis {
+              name '$DOLLAR'
+              values "invalid"
+            }
+            axis {
+              name 'HY-PHEN'
+              values "invalid"
+            }
+            axis {
+              name "${this_is_gstring_name}"
+              values "linux", "windows", "mac", "${this_is_gstring_value}"
+            }
+          }
+        }
+
+        stages {
+          stage("first") {
+            steps {
+              echo "First branch: ${OS_VALUE}"
+            }
           }
         }
       }

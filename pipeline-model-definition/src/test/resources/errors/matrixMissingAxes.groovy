@@ -31,8 +31,8 @@ pipeline {
           stage("first") {
             steps {
               echo "First branch"
-              echo "OS=$os"
-              echo "BROWSER=$browser"
+              echo "OS=${OS_VALUE}"
+              echo "BROWSER=${BROWSER_VALUE}"
             }
           }
           stage("second") {

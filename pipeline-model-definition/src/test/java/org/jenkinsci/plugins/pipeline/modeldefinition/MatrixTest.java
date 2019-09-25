@@ -23,22 +23,30 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.Result;
 import hudson.model.Slave;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
+import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
+import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,12 +60,31 @@ import static org.junit.Assert.*;
 public class MatrixTest extends AbstractModelDefTest {
 
     private static Slave s;
+    private static Slave linux;
+    private static Slave mac;
+    private static Slave windows;
 
+    private static String password;
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
+        s.setLabelString("agent-one some-label docker");
+        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
         s.setNumExecutors(10);
-        s.setLabelString("some-label docker");
+
+        linux = j.createOnlineSlave();
+        linux.setLabelString("linux-agent");
+        linux.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "linux agent")));
+        mac = j.createOnlineSlave();
+        mac.setLabelString("mac-agent");
+        mac.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "mac agent")));
+        windows = j.createOnlineSlave();
+        windows.setLabelString("windows-agent");
+        windows.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
+            new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
     }
 
     @Ignore
@@ -135,25 +162,34 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixPipeline() throws Exception {
         expect("matrix/matrixPipeline")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux')",
-                        "{ (Branch: Matrix: os = 'windows')",
-                        "{ (Branch: Matrix: os = 'mac')")
+                        "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac')")
                 .go();
+    }
+
+    @Test
+    public void matrixPipelineLiterals() throws Exception {
+        expect("matrix/matrixPipelineLiterals")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = '1')",
+                "{ (Branch: Matrix - OS_VALUE = 'true')")
+            .go();
     }
 
     @Test
     public void matrixPipelineTwoAxis() throws Exception {
         expect("matrix/matrixPipelineTwoAxis")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
-                        "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
-                        "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
-                        "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
-                        "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
-                        "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
-                        "{ (Branch: Matrix: os = 'linux', browser = 'safari')",
-                        "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
-                        "{ (Branch: Matrix: os = 'mac', browser = 'safari')")
+                        "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'firefox')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'firefox')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'firefox')",
+                        "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'chrome')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'chrome')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'chrome')",
+                        "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'safari')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'safari')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'safari')")
                 .go();
     }
 
@@ -161,15 +197,15 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixPipelineTwoAxisOneExclude() throws Exception {
         expect("matrix/matrixPipelineTwoAxisOneExclude")
             .logContains("[Pipeline] { (foo)",
-                "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'safari')")
-            .logNotContains("{ (Branch: Matrix: os = 'linux', browser = 'safari')")
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'safari')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'safari')")
+            .logNotContains("{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'safari')")
             .go();
     }
 
@@ -177,19 +213,19 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixPipelineTwoAxisTwoExcludes() throws Exception {
         expect("matrix/matrixPipelineTwoAxisTwoExcludes")
             .logContains("[Pipeline] { (foo)",
-                "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'safari')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'ie')")
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'safari')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'safari')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'ie')")
             .logNotContains(
-                "{ (Branch: Matrix: os = 'linux', browser = 'safari')",
-                "{ (Branch: Matrix: os = 'linux', browser = 'ie')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'ie')")
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'safari')",
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'ie')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'ie')")
             .go();
     }
 
@@ -197,19 +233,19 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixPipelineTwoAxisExcludeNot() throws Exception {
         expect("matrix/matrixPipelineTwoAxisExcludeNot")
             .logContains("[Pipeline] { (foo)",
-                "{ (Branch: Matrix: os = 'linux', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'firefox')",
-                "{ (Branch: Matrix: os = 'linux', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'chrome')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'safari')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'safari')",
-                "{ (Branch: Matrix: os = 'windows', browser = 'ie')")
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'firefox')",
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'chrome')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'safari')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'safari')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'ie')")
             .logNotContains(
-                "{ (Branch: Matrix: os = 'linux', browser = 'safari')",
-                "{ (Branch: Matrix: os = 'linux', browser = 'ie')",
-                "{ (Branch: Matrix: os = 'mac', browser = 'ie')")
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'safari')",
+                "{ (Branch: Matrix - OS_VALUE = 'linux', BROWSER_VALUE = 'ie')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'ie')")
             .go();
     }
 
@@ -223,48 +259,144 @@ public class MatrixTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-41334")
     @Test
-    public void matrixStagesAgentEnvWhen() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("windows-agent");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
-
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("linux-agent");
-        s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "linux agent")));
-
-        Slave s3 = j.createOnlineSlave();
-        s3.setLabelString("mac-agent");
-        s3.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "mac agent")));
-
-        expect("matrix/matrixStagesAgentEnvWhen")
-                .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux')",
-                        "{ (Branch: Matrix: os = 'windows')",
-                        "{ (Branch: Matrix: os = 'mac')",
-                        "First stage, mac agent",
-                        "First stage, do not override",
-                        "First stage, overrode once and done",
-                        "First stage, overrode twice, in first mac branch",
-                        "First stage, overrode per nested, in first mac branch",
-                        "First stage, declared per nested, in first mac branch",
-                        "First stage, windows agent",
-                        "First stage, do not override",
-                        "First stage, overrode once and done",
-                        "First stage, overrode twice, in first windows branch",
-                        "First stage, overrode per nested, in first windows branch",
-                        "First stage, declared per nested, in first windows branch",
-                        "First stage, linux agent",
-                        "First stage, do not override",
-                        "First stage, overrode once and done",
-                        "First stage, overrode twice, in first linux branch",
-                        "First stage, overrode per nested, in first linux branch",
-                        "First stage, declared per nested, in first linux branch",
-                        "Apache Maven 3.0.1",
-                        "Apache Maven 3.0.1",
-                        "Apache Maven 3.0.1")
-                .logNotContains("WE SHOULD NEVER GET HERE")
-                .go();
+    public void matrixStageDirectives() throws Exception {
+        expect("matrix/matrixStageDirectives")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "override in matrix axis")
+            .go();
     }
+
+
+    // Behavior should be identical to previous, just expressed differently
+    @Issue("JENKINS-41334")
+    @Test
+    public void matrixStageDirectivesChildStage() throws Exception {
+        expect("matrix/matrixStageDirectivesChildStage")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "override in matrix axis")
+            .go();
+    }
+
+    @Issue("JENKINS-41334")
+    @Test
+    public void matrixStageDirectivesWhenBeforeAgent() throws Exception {
+        expect("matrix/matrixStageDirectivesWhenBeforeAgent")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "override in matrix axis")
+            .go();
+    }
+
+
+    // Behavior should be identical to previous, just expressed differently
+    @Issue("JENKINS-41334")
+    @Test
+    public void matrixStageDirectivesWhenBeforeAgentChildStage() throws Exception {
+        expect("matrix/matrixStageDirectivesWhenBeforeAgentChildStage")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "override in matrix axis")
+            .go();
+    }
+
 
     @Ignore
     @Issue("JENKINS-46809")
@@ -378,16 +510,16 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixStagesFailFast() throws Exception {
         expect(Result.FAILURE, "matrix/matrixStagesFailFast")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux')",
-                        "{ (Branch: Matrix: os = 'windows')",
-                        "{ (Branch: Matrix: os = 'mac')",
+                        "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac')",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (second)",
                         "[Pipeline] { (second)",
                         "FIRST windows STAGE FAILURE",
-                        "Failed in branch Matrix: os = 'windows'",
+                        "Failed in branch Matrix - OS_VALUE = 'windows'",
                         "SECOND linux STAGE ABORTED",
                         "SECOND mac STAGE ABORTED")
                 .logNotContains("Second branch",
@@ -402,16 +534,16 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixStagesFailFastWithOption() throws Exception {
         expect(Result.FAILURE,"matrix/matrixStagesFailFastWithOption")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux')",
-                        "{ (Branch: Matrix: os = 'windows')",
-                        "{ (Branch: Matrix: os = 'mac')",
+                        "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac')",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (second)",
                         "[Pipeline] { (second)",
                         "FIRST windows STAGE FAILURE",
-                        "Failed in branch Matrix: os = 'windows'",
+                        "Failed in branch Matrix - OS_VALUE = 'windows'",
                         "SECOND linux STAGE ABORTED",
                         "SECOND mac STAGE ABORTED")
                 .logNotContains("Second branch",
@@ -426,16 +558,16 @@ public class MatrixTest extends AbstractModelDefTest {
     public void matrixStagesFailFastWithAgent() throws Exception {
         expect(Result.FAILURE, "matrix/matrixStagesFailFastWithAgent")
                 .logContains("[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux')",
-                        "{ (Branch: Matrix: os = 'windows')",
-                        "{ (Branch: Matrix: os = 'mac')",
+                        "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac')",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (second)",
                         "[Pipeline] { (second)",
                         "FIRST windows STAGE FAILURE",
-                        "Failed in branch Matrix: os = 'windows'",
+                        "Failed in branch Matrix - OS_VALUE = 'windows'",
                         "SECOND linux STAGE ABORTED",
                         "SECOND mac STAGE ABORTED")
                 .logNotContains("Second branch",
@@ -451,9 +583,9 @@ public class MatrixTest extends AbstractModelDefTest {
         WorkflowRun b = expect(Result.FAILURE, "matrix/matrixStagesHaveStatusWhenSkipped")
                 .logContains("[Pipeline] { (bar)",
                         "[Pipeline] { (foo)",
-                        "{ (Branch: Matrix: os = 'linux')",
-                        "{ (Branch: Matrix: os = 'windows')",
-                        "{ (Branch: Matrix: os = 'mac')",
+                        "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac')",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
                         "[Pipeline] { (first)",
@@ -501,4 +633,290 @@ public class MatrixTest extends AbstractModelDefTest {
                 .logContains("ninth branch")
                 .go();
     }
+
+    @Test
+    public void matrixInput() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "matrixInput");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("matrix/matrixInput"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(2, a.getExecutions().size());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page;
+
+        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(1, a.getExecutions().size());
+
+        is1 = a.getExecution("Matrix - AXIS_VALUE = 'B'");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("One Continues in A", b);
+        j.assertLogContains("Two Continues in A", b);
+        j.assertLogContains("One Continues in B", b);
+        j.assertLogContains("Two Continues in B", b);
+    }
+
+    @Test
+    public void matrixInputChildStage() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "matrixInputChildStage");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("matrix/matrixInputChildStage"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(2, a.getExecutions().size());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page;
+
+        InputStepExecution is1 = a.getExecution("Cell");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(1, a.getExecutions().size());
+
+        is1 = a.getExecution("Cell");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("One Continues in A", b);
+        j.assertLogContains("Two Continues in A", b);
+        j.assertLogContains("One Continues in B", b);
+        j.assertLogContains("Two Continues in B", b);
+    }
+
+    @Test
+    public void matrixInputWhen() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "matrixInputWhen");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("matrix/matrixInputWhen"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(2, a.getExecutions().size());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page;
+
+        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(1, a.getExecutions().size());
+
+        is1 = a.getExecution("Matrix - AXIS_VALUE = 'B'");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("One Continues in A", b);
+        j.assertLogContains("Two Continues in A", b);
+        j.assertLogContains("Stage \"Matrix - AXIS_VALUE = 'B'\" skipped due to when conditional", b);
+        j.assertLogNotContains("One Continues in B", b);
+        j.assertLogNotContains("Two Continues in B", b);
+    }
+
+    @Test
+    public void matrixInputWhenChildStage() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "matrixInputWhenChildStage");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("matrix/matrixInputWhenChildStage"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(2, a.getExecutions().size());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page;
+
+        InputStepExecution is1 = a.getExecution("Cell");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(1, a.getExecutions().size());
+
+        is1 = a.getExecution("Cell");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("One Continues in A", b);
+        j.assertLogContains("Two Continues in A", b);
+        j.assertLogContains("Stage \"Cell\" skipped due to when conditional", b);
+        j.assertLogNotContains("One Continues in B", b);
+        j.assertLogNotContains("Two Continues in B", b);
+    }
+
+    @Test
+    public void matrixInputWhenBeforeInput() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "matrixInputWhenBeforeInput");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("matrix/matrixInputWhenBeforeInput"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(1, a.getExecutions().size());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page;
+
+        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("One Continues in A", b);
+        j.assertLogContains("Two Continues in A", b);
+        j.assertLogContains("Stage \"Matrix - AXIS_VALUE = 'B'\" skipped due to when conditional", b);
+        j.assertLogNotContains("One Continues in B", b);
+        j.assertLogNotContains("Two Continues in B", b);
+    }
+
+    @Test
+    public void matrixInputWhenBeforeInputChildStage() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "matrixInputWhenBeforeInputChildStage");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("matrix/matrixInputWhenBeforeInputChildStage"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(1, a.getExecutions().size());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page;
+
+        InputStepExecution is1 = a.getExecution("Cell");
+        assertEquals("Continue?", is1.getInput().getMessage());
+        assertEquals(0, is1.getInput().getParameters().size());
+        assertNull(is1.getInput().getSubmitter());
+
+        page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is1.getId()), "proceed");
+
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("One Continues in A", b);
+        j.assertLogContains("Two Continues in A", b);
+        j.assertLogContains("Stage \"Cell\" skipped due to when conditional", b);
+        j.assertLogNotContains("One Continues in B", b);
+        j.assertLogNotContains("Two Continues in B", b);
+    }
+
+
 }

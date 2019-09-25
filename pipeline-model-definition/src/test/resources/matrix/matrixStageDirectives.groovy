@@ -25,7 +25,7 @@
 pipeline {
     agent none
     environment {
-        os = "override in matrix axis"
+        OS_VALUE = "override in matrix axis"
         OVERRIDE_TWICE = "override twice"
         DO_NOT_OVERRIDE = "do not override"
         OVERRIDE_ONCE = "override once"
@@ -40,23 +40,28 @@ pipeline {
             matrix {
                 axes {
                     axis {
-                        name 'os'
+                        name 'OS_VALUE'
                         values "linux", "windows", "mac"
                     }
                 }
+                agent {
+                    label "${OS_VALUE}-agent"
+                }
+                tools {
+                    maven "apache-maven-${MAVEN_VERSION}"
+                }
+                when {
+                    environment name: "WHICH_AGENT", value: "${OS_VALUE} agent"
+                }
+                environment {
+                    OS_VALUE = "${OS_VALUE}-os"
+                    OVERRIDE_TWICE = "overrode twice, in first ${OS_VALUE} branch"
+                    OVERRIDE_PER_NESTED = "overrode per nested, in first ${OS_VALUE} branch"
+                    DECLARED_PER_NESTED = "declared per nested, in first ${OS_VALUE} branch"
+                    MAVEN_VERSION = "3.0.1"
+                }
                 stages {
                     stage("first") {
-                        agent {
-                            label "$os-agent"
-                        }
-                        tools {
-                            maven "apache-maven-3.0.1"
-                        }
-                        environment {
-                            OVERRIDE_TWICE = "overrode twice, in first $os branch"
-                            OVERRIDE_PER_NESTED = "overrode per nested, in first $os branch"
-                            DECLARED_PER_NESTED = "declared per nested, in first $os branch"
-                        }
                         steps {
                             echo "First stage, ${WHICH_AGENT}"
                             echo "First stage, ${DO_NOT_OVERRIDE}"
@@ -64,20 +69,23 @@ pipeline {
                             echo "First stage, ${OVERRIDE_TWICE}"
                             echo "First stage, ${OVERRIDE_PER_NESTED}"
                             echo "First stage, ${DECLARED_PER_NESTED}"
-                            script {
-                                if (isUnix()) {
-                                    sh 'mvn --version'
-                                } else {
-                                    bat 'mvn --version'
+                            dir("subdir") {
+                                script {
+                                    if (isUnix()) {
+                                        sh 'mvn --version'
+                                    } else {
+                                        bat 'mvn --version'
+                                    }
+                                    if (!fileExists("Jenkinsfile")) {
+                                        echo "Jenkinsfile does not exist"
+                                    }
                                 }
                             }
                         }
                     }
                     stage("second") {
                         when {
-                            expression {
-                                return false
-                            }
+                            environment name: "OS_VALUE", value: "not-an-os"
                         }
                         steps {
                             echo "WE SHOULD NEVER GET HERE"

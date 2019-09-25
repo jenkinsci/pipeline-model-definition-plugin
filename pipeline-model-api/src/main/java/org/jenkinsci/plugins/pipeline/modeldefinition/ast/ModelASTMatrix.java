@@ -4,6 +4,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -12,53 +13,61 @@ import java.util.Objects;
  *
  * @author Liam Newman
  */
-public final class ModelASTMatrix extends ModelASTParallel {
+public final class ModelASTMatrix extends ModelASTStageBase {
 
     private ModelASTAxisContainer axes;
     private ModelASTExcludes excludes;
+    private ModelASTStages stages;
 
     public ModelASTMatrix(Object sourceLocation) {
         super(sourceLocation);
     }
 
     @Override
-    public Object toJSON() {
-        return  new JSONObject()
+    public JSONObject toJSON() {
+        JSONObject o = super.toJSON()
                 .elementOpt("axes", toJSON(axes))
                 .elementOpt("excludes", toJSON(excludes))
-                .elementOpt("stages", nullIfEmpty(toJSONArray(getStages())));
+                .elementOpt("stages", toJSON(stages));
+
+        return o;
     }
 
     @Override
-    public void validate(final ModelValidator validator, boolean isWithinParallel) {
-        super.validate(validator, true);
+    public void validate(final ModelValidator validator) {
+        super.validate(validator);
         validator.validateElement(this);
         validate(validator, axes, excludes);
+        if (stages != null) {
+            stages.validate(validator, true);
+        }
+
     }
 
     @Override
     public String toGroovy() {
         StringBuilder children = new StringBuilder()
-                .append(toGroovy(axes))
-                .append(toGroovy(excludes))
-                .append(toGroovyBlock("stages", getStages()));
+            .append(toGroovy(axes))
+            .append(toGroovy(excludes))
+            .append(super.toGroovy())
+            .append(toGroovy(stages));
+
         return "matrix {\n" + children.toString() + "}\n";
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocationsFrom(axes);
-        removeSourceLocationsFrom(excludes);
+        removeSourceLocationsFrom(axes, excludes, stages);
     }
 
 
     @Override
     public String toString() {
         return "ModelASTMatrix{" +
-                "axes=" + axes +
-                "excludes=" + excludes +
-                "stages=" + getStages() +
+                ", axes=" + axes +
+                ", excludes=" + excludes +
+                ", " + super.toString() +
                 "}";
     }
 
@@ -78,12 +87,20 @@ public final class ModelASTMatrix extends ModelASTParallel {
         this.excludes = excludes;
     }
 
+    public ModelASTStages getStages() {
+        return stages;
+    }
+
+    public void setStages(ModelASTStages stages) {
+        this.stages = stages;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ModelASTMatrix)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
         if (!super.equals(o)) {
@@ -91,11 +108,12 @@ public final class ModelASTMatrix extends ModelASTParallel {
         }
         ModelASTMatrix that = (ModelASTMatrix) o;
         return Objects.equals(getAxes(), that.getAxes()) &&
-            Objects.equals(getExcludes(), that.getExcludes());
+            Objects.equals(getExcludes(), that.getExcludes()) &&
+            Objects.equals(getStages(), that.getStages());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getAxes(), getExcludes());
+        return Objects.hash(super.hashCode(), getAxes(), getExcludes(), getStages());
     }
 }

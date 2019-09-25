@@ -224,35 +224,6 @@ class ModelInterpreter implements Serializable {
     }
 
     /**
-     * Get the map to pass to the parallel step of nested stages to run in parallel for the given stage.
-     *
-     * @param root The root of the Declarative model
-     * @param parentAgent The parent agent definition. Can be null.
-     * @param thisStage The current stage we'll look in for parallel stages
-     * @param firstError An error that's already occurred earlier in the build. Can be null.
-     * @param skippedReason A possibly null reason this stage, its children, and therefore its grandchildren, will be skipped.
-     * @return A map of parallel branch names to closures to pass to the parallel step
-     */
-    def getMatrixStages(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason skippedReason) {
-        def matrixStages = [:]
-        thisStage?.matrix?.stages?.each { content ->
-            if (skippedReason != null) {
-                matrixStages.put(content.name,
-                        evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name)))
-            } else {
-                matrixStages.put(content.name,
-                        evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null))
-            }
-        }
-        if (!matrixStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast") != null) ) {
-            matrixStages.put("failFast", true)
-        }
-
-        return matrixStages
-
-    }
-
-    /**
      * Evaluate a stage, setting up agent, tools, env, etc, determining any nested stages to execute, skipping
      * if appropriate, etc, actually executing the stage via executeSingleStage, parallel, or evaluateSequentialStages.
      *
@@ -278,85 +249,84 @@ class ModelInterpreter implements Serializable {
                         skippedReason = new SkippedStageReason.Unstable(thisStage.name)
                         skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else {
-                        inWrappers(thisStage.options?.wrappers) {
-                            if (thisStage?.parallel != null || thisStage?.matrix != null) {
-                                stageInput(thisStage.input) {
-                                    if (evaluateWhen(thisStage.when)) {
+                        // if this a is a matrix generated stage, evaluate the matrix axis values first
+                        // These are literals that guaranteed not to depend on other variables
+                        // Users will expect them to be available at all times in a particular cell in a matrix.
+                        withEnvBlock(thisStage.getMatrixCellEnvVars(script)) {
+                            inWrappers(thisStage.options?.wrappers) {
+                                if (thisStage?.parallel != null) {
+                                    stageInput(thisStage.input) {
+                                        if (evaluateWhen(thisStage.when)) {
+                                            withCredentialsBlock(thisStage.environment) {
+                                                withEnvBlock(thisStage.getEnvVars(script)) {
+                                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
+                                                }
+                                            }
+                                        } else {
+                                            skippedReason = new SkippedStageReason.When(thisStage.name)
+                                            skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                        }
+                                    }
+                                } else {
+
+                                    def stageBody = {
                                         withCredentialsBlock(thisStage.environment) {
                                             withEnvBlock(thisStage.getEnvVars(script)) {
-                                                if (thisStage?.parallel != null) {
-                                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
-                                                } else {
-                                                    script.parallel(getMatrixStages(root, parentAgent, thisStage, firstError, null))
+                                                toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                    if (thisStage?.stages) {
+                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
 
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        skippedReason = new SkippedStageReason.When(thisStage.name)
-                                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
-                                    }
-                                }
-                            } else {
-
-                                def stageBody = {
-                                    withCredentialsBlock(thisStage.environment) {
-                                        withEnvBlock(thisStage.getEnvVars(script)) {
-                                            toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                                if (thisStage?.stages) {
-                                                    def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
-
-                                                    // Propagate any possible error from the sequential stages as if it were an error thrown directly.
-                                                    if (nestedError != null) {
-                                                        throw nestedError
+                                                        // Propagate any possible error from the sequential stages as if it were an error thrown directly.
+                                                        if (nestedError != null) {
+                                                            throw nestedError
+                                                        }
+                                                    } else {
+                                                        // Execute the actual stage and potential post-stage actions
+                                                        executeSingleStage(root, thisStage, parentAgent)
                                                     }
-                                                } else {
-                                                    // Execute the actual stage and potential post-stage actions
-                                                    executeSingleStage(root, thisStage, parentAgent)
                                                 }
                                             }
                                         }
                                     }
-                                }
 
+                                    boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
+                                    boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
+                                    boolean whenPassed = false
 
-                                boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
-                                boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
-                                boolean whenPassed = false
-                                // if is beforeInput -> check when before anything
-                                if (isBeforeInput) {
-                                    whenPassed = evaluateWhen(thisStage.when)
-                                    if(whenPassed) {
-                                        stageInput(thisStage.input) {
-                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                stageBody.call()
-                                            }
-                                        }
-                                    }
-                                }else if(isBeforeAgent){
-                                    stageInput(thisStage.input) {
+                                    // if is beforeInput -> check when before anything
+                                    if (isBeforeInput) {
                                         whenPassed = evaluateWhen(thisStage.when)
                                         if (whenPassed) {
+                                            stageInput(thisStage.input) {
                                                 inDeclarativeAgent(thisStage, root, thisStage.agent) {
                                                     stageBody.call()
                                                 }
                                             }
                                         }
-                                }else{
-                                    stageInput(thisStage.input) {
-                                        inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                    } else if (isBeforeAgent) {
+                                        stageInput(thisStage.input) {
                                             whenPassed = evaluateWhen(thisStage.when)
                                             if (whenPassed) {
-                                                stageBody.call()
+                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                    stageBody.call()
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        stageInput(thisStage.input) {
+                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                whenPassed = evaluateWhen(thisStage.when)
+                                                if (whenPassed) {
+                                                    stageBody.call()
+                                                }
                                             }
                                         }
                                     }
-                                }
 
-
-                                if (!whenPassed) {
-                                    skippedReason = new SkippedStageReason.When(thisStage.name)
-                                    skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                    if (!whenPassed) {
+                                        skippedReason = new SkippedStageReason.When(thisStage.name)
+                                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                    }
                                 }
                             }
                         }
@@ -370,7 +340,7 @@ class ModelInterpreter implements Serializable {
                     // And finally, run the post stage steps if this was a parallel parent.
                     if (skippedReason == null &&
                         root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
-                            (thisStage?.parallel != null || thisStage?.matrix != null)) {
+                            thisStage?.parallel != null) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
                     }
@@ -422,12 +392,6 @@ class ModelInterpreter implements Serializable {
             Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
             if (thisStage?.parallel != null) {
                 Map<String, Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
-                script.parallel(parallelToSkip)
-                if (reason instanceof SkippedStageReason.Restart) {
-                    parallelToSkip.keySet().each { k -> Utils.markStartAndEndNodesInStageAsNotExecuted(k) }
-                }
-            } else if (thisStage?.matrix != null) {
-                Map<String,Closure> parallelToSkip = getMatrixStages(root, parentAgent, thisStage, firstError, reason)
                 script.parallel(parallelToSkip)
                 if (reason instanceof SkippedStageReason.Restart) {
                     parallelToSkip.keySet().each { k -> Utils.markStartAndEndNodesInStageAsNotExecuted(k) }

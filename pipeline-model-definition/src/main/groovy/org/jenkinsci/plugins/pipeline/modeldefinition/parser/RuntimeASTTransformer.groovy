@@ -652,6 +652,12 @@ class RuntimeASTTransformer {
      */
     Expression transformStage(@CheckForNull ModelASTStage original) {
         if (isGroovyAST(original)) {
+            // Matrix is a special form of parallel
+            // At runtime, they behave the same
+            Expression parallel = original.parallel != null ?
+                    transformStages(original.parallel) :
+                    transformMatrix(original.matrix)
+
             return ctorX(ClassHelper.make(Stage.class),
                 args(constX(original.name),
                     transformStepsFromStage(original),
@@ -664,8 +670,8 @@ class RuntimeASTTransformer {
                     transformOptions(original.options),
                     transformStageInput(original.input, original.name),
                     transformStages(original.stages),
-                    transformStages(original.parallel),
-                    transformMatrix(original.matrix)))
+                    parallel,
+                    constX(null)))
         }
 
         return constX(null)
@@ -760,7 +766,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     Expression transformMatrix(@CheckForNull ModelASTMatrix original) {
-        if (isGroovyAST(original) && !original.stages.isEmpty() && !original.axes.axes.isEmpty()) {
+        if (isGroovyAST(original) && !original?.stages?.stages?.isEmpty() && !original?.axes?.axes?.isEmpty()) {
             ListExpression argList = new ListExpression()
 
             // generate matrix combinations of axes - cartesianProduct
@@ -828,26 +834,23 @@ class RuntimeASTTransformer {
             List<String> cellLabels = new ArrayList<>();
             cell.each { cellLabels.add(it.key.key.toString() + " = '" + it.value.value.toString() + "'") }
 
-            def name = "Matrix: " + cellLabels.join(", ")
+            // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
+            String name = "Matrix - " + cellLabels.join(", ")
 
-            //     add environment block to the generated stage with axis name/value pairs
-            def environment = transformEnvironmentMap(cell)
-
-            //     add an instances of all the stages in the AST to each synthetic stage
             return ctorX(ClassHelper.make(Stage.class),
                     args(constX(name),
-                            constX(null),
-                            constX(null), // agent
-                            constX(null),
-                            constX(null),
-                            constX(null),
-                            environment,
-                            constX(false), // failfast is set on the container stage
-                            constX(null),
-                            constX(null),
-                            transformStages(original),
-                            constX(null),
-                            constX(null)))
+                            constX(null), // steps
+                            transformAgent(original.agent),
+                            transformPostStage(original.post),
+                            transformStageConditionals(original.when),
+                            transformTools(original.tools),
+                            transformEnvironment(original.environment),
+                            constX(false), // failfast on serial is not interesting
+                            transformOptions(original.options),
+                            transformStageInput(original.input, name),
+                            transformStages(original.stages),
+                            constX(null), // parallel
+                            transformEnvironmentMap(cell)))  //  matrixCellEnvironment holding values for this cell in the matrix
         }
 
         return constX(null)

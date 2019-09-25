@@ -23,21 +23,30 @@
  */
 
 pipeline {
-  agent none
-  stages {
-    stage("foo") {
-      matrix {
-        axes {
-          axis {
-            name 'OS_VALUE'
-            values "linux", "windows", "mac"
-          }
-          axis {
-            name 'BROWSER_VALUE'
-            values "firefox", "chrome", "safari", "ie"
-          }
+    agent none
+    stages {
+        stage("foo") {
+            matrix {
+                axes {
+                    axis {
+                        name 'OS_VALUE'
+                        values 1, true
+                    }
+                }
+                stages {
+                    stage("first") {
+                        steps {
+                            echo "First branch"
+                            echo "OS=${OS_VALUE}"
+                        }
+                    }
+                    stage("second") {
+                        steps {
+                            echo "Second branch"
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }

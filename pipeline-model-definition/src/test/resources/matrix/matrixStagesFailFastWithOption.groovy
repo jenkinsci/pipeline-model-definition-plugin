@@ -33,7 +33,7 @@ pipeline {
             matrix {
                 axes {
                     axis {
-                        name 'os'
+                        name 'OS_VALUE'
                         values "linux", "windows", "mac"
                     }
                 }
@@ -41,7 +41,7 @@ pipeline {
                     stage("first") {
                         steps {
                             script {
-                                if (env.os == "windows") {
+                                if (env.OS_VALUE == "windows") {
                                     sleep 1
                                     error "First branch"
                                 }
@@ -52,7 +52,7 @@ pipeline {
                                 echo "FIRST STAGE ABORTED"
                             }
                             failure {
-                                echo "FIRST $os STAGE FAILURE"
+                                echo "FIRST ${OS_VALUE} STAGE FAILURE"
                             }
                         }
                     }
@@ -63,7 +63,7 @@ pipeline {
                         }
                         post {
                             aborted {
-                                echo "SECOND $os STAGE ABORTED"
+                                echo "SECOND ${OS_VALUE} STAGE ABORTED"
                             }
                             failure {
                                 echo "SECOND STAGE FAILURE"
