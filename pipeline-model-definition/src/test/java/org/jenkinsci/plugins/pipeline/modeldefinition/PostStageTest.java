@@ -236,7 +236,7 @@ public class PostStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-52114")
     @Test
     public void abortedShouldNotTriggerFailure() throws Exception {
-        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        assumeSh();
         WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
         job.setDefinition(new CpsFlowDefinition("" +
                 "pipeline {\n" +

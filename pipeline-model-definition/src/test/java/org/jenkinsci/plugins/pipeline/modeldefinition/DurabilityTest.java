@@ -86,7 +86,7 @@ public class DurabilityTest extends AbstractDeclarativeTest {
 
     @Test
     public void survivesRestart() throws Exception {
-        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        assumeSh();
 
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
