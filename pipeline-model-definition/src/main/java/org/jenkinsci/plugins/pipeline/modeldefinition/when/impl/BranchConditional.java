@@ -50,6 +50,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class BranchConditional extends DeclarativeStageConditional<BranchConditional> {
+    @Deprecated
     private transient String compare;
     private String pattern;
     private String comparator;
