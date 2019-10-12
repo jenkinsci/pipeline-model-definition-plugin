@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,26 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-
-/**
- * A container for one or more {@link Stage}s to be executed within the build in parallel.
- * Used as a base to hold common functionality between parallel and matrix.
- *
- * @author Liam Newman
- */
-@ToString
-@EqualsAndHashCode(callSuper = true)
-@SuppressFBWarnings(value=["SE_NO_SERIALVERSIONID","EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"])
-class Matrix extends Parallel {
-
-    @Whitelisted
-    Matrix(List<Stage>... stages) {
-        super(stages)
+pipeline {
+    agent none
+    stages {
+        stage("Matrix Stage") {
+            matrix {
+                axes {
+                    axis {
+                        name 'letters1'
+                        values "a", "b", "c", "d"
+                    }
+                    axis {
+                        name 'letters4'
+                        values "a", "b", "c", "d"
+                    }
+                    axis {
+                        name 'letters16'
+                        values "a", "b", "c", "d"
+                    }
+                    axis {
+                        name 'letters64'
+                        values "a", "b", "c", "d"
+                    }
+                }
+                stages {
+                    stage("No agent needed") {
+                        steps {
+                            echo "$letters1 $letters4 $letters16 $letters64 "
+                        }
+                    }
+                }
+            }
+        }
     }
 }

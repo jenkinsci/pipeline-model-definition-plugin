@@ -37,14 +37,23 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class Stages implements Serializable {
-    List<Stage> stages = []
+    private final List<Stage> stages = []
 
     @Whitelisted
-    Stages(List<Stage> stages) {
-        this.stages = new ArrayList<>(stages)
+    Stages(List<Stage>... stages) {
+        this.stages = concat(stages)
     }
 
     List<Stage> getStages() {
         return stages
+    }
+
+    private static List<Stage> concat(List<Stage>[] stages) {
+        List<Stage> result = new ArrayList<>()
+
+        for (List<Stage> l : stages)
+            result.addAll(l)
+
+        return result
     }
 }

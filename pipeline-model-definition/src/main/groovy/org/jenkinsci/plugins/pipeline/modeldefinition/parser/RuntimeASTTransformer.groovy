@@ -767,7 +767,6 @@ class RuntimeASTTransformer {
      */
     Expression transformMatrix(@CheckForNull ModelASTMatrix original) {
         if (isGroovyAST(original) && !original?.stages?.stages?.isEmpty() && !original?.axes?.axes?.isEmpty()) {
-            ListExpression argList = new ListExpression()
 
             // generate matrix combinations of axes - cartesianProduct
             Set<Map<ModelASTKey, ModelASTValue>> expansion = expandAxes(original.axes.axes)
@@ -775,13 +774,31 @@ class RuntimeASTTransformer {
             // remove excluded combinations
             filterExcludes(expansion, original.excludes)
 
-            // for each combination
+            // for each combination, generate a new cell
+            // We're generating this a ListExpression which is limited to 250 items.
+            // To circumvent this we will pass an array of lists to a var args.
+            def listLimit = 250
+            if (expansion.size() > listLimit * listLimit) {
+                throw new IllegalArgumentException("Matrix supports up to ${listLimit} cells. Found ${expansion.size()}.")
+            }
+
+            ListExpression expandedMatrixStages = new ListExpression()
+            ArrayList<Expression> argList = new ArrayList<>()
+            argList.add(expandedMatrixStages)
+
+            def count = 0
             expansion.each { item ->
-                argList.addExpression(transformMatrixStage(item, original))
+                if (count++ >= listLimit) {
+                    count = 1
+                    expandedMatrixStages = new ListExpression()
+                    argList.add(expandedMatrixStages)
+                }
+
+                expandedMatrixStages.addExpression(transformMatrixStage(item, original))
             }
 
             // return matrix class containing the list of generated stages
-            return ctorX(ClassHelper.make(Matrix.class), args(argList))
+            return ctorX(ClassHelper.make(Matrix.class), args((Expression[])argList.toArray()))
         }
 
         return constX(null)

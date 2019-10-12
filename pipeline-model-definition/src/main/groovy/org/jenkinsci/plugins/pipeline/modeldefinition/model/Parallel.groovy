@@ -40,7 +40,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 class Parallel extends Stages {
 
     @Whitelisted
-    Parallel(List<Stage> stages) {
+    Parallel(List<Stage>... stages) {
         super(stages)
     }
 }

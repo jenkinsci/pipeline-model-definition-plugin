@@ -177,6 +177,43 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Issue("JENKINS-")
+    @Test
+    public void matrix100() throws Exception {
+        expect("matrix/matrix100")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'j', letters10 = 'j')")
+            .go();
+    }
+
+    @Issue("JENKINS-")
+    @Test
+    public void matrix300() throws Exception {
+        expect("matrix/matrix300")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a', , letters100 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'j', letters10 = 'j', letters100 = 'c')")
+            .go();
+    }
+
+
+    @Ignore("Too large for ci testing")
+    @Issue("JENKINS-")
+    @Test
+    public void matrix1024() throws Exception {
+        expect("matrix/matrix1024")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters4 = 'a', letters16 = 'a', letters64 = 'a', letters256 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'd', letters4 = 'd', letters16 = 'd', letters64 = 'd', letters256 = 'd')")
+            .go();
+    }
+
+    @Ignore("Too large for ci testing")
+    @Issue("JENKINS-")
+    @Test
+    public void matrix65200() throws Exception {
+        expect("matrix/matrix65200")
+            .go();
+    }
+
     @Test
     public void matrixPipelineTwoAxis() throws Exception {
         expect("matrix/matrixPipelineTwoAxis")
