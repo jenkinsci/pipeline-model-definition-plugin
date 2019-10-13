@@ -579,7 +579,7 @@ class ModelInterpreter implements Serializable {
         toolsList.each { l ->
             String k = l.get(0)
             Closure v = (Closure)l.get(1)
-            String toolVer = v.call()
+            String toolVer = delegateAndExecute(v)
 
             script.tool(name: toolVer, type: Tools.typeForKey(k))
 
