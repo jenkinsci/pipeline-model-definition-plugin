@@ -177,7 +177,17 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-    @Issue("JENKINS-")
+    @Issue("JENKINS-37984")
+    @Test
+    public void matrix50() throws Exception {
+        expect("matrix/matrix50")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'j', letters10 = 'e')")
+            .go();
+    }
+
+    @Ignore("Too large for ci testing. Would cause 'method too large' error before .")
+    @Issue("JENKINS-37984")
     @Test
     public void matrix100() throws Exception {
         expect("matrix/matrix100")
@@ -186,7 +196,8 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-    @Issue("JENKINS-")
+    @Ignore("Too large for ci testing")
+    @Issue("JENKINS-37984")
     @Test
     public void matrix300() throws Exception {
         expect("matrix/matrix300")
@@ -195,9 +206,8 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-
     @Ignore("Too large for ci testing")
-    @Issue("JENKINS-")
+    @Issue("JENKINS-37984")
     @Test
     public void matrix1024() throws Exception {
         expect("matrix/matrix1024")
@@ -207,7 +217,7 @@ public class MatrixTest extends AbstractModelDefTest {
     }
 
     @Ignore("Too large for ci testing")
-    @Issue("JENKINS-")
+    @Issue("JENKINS-37984")
     @Test
     public void matrix65200() throws Exception {
         expect("matrix/matrix65200")
