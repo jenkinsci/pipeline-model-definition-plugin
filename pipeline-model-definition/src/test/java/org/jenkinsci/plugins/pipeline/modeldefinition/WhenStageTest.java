@@ -449,6 +449,26 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-51865")
+    @Test
+    public void whenBeforeOptionsTrue() throws Exception {
+        expect("when/whenBeforeOptionsTrue")
+                .logContains("Stage One here")
+                .logNotContains("Stage Two here")
+                .logNotContains("Timeout set to expire")
+                .go();
+    }
+
+    @Issue("JENKINS-51865")
+    @Test
+    public void whenBeforeOptionsFalse() throws Exception {
+        expect("when/whenBeforeOptionsFalse")
+                .logContains("Stage One here")
+                .logNotContains("Stage Two here")
+                .logContains("Timeout set to expire")
+                .go();
+    }
+
     @Issue("JENKINS-49226")
     @Test
     public void whenEquals() throws Exception {
