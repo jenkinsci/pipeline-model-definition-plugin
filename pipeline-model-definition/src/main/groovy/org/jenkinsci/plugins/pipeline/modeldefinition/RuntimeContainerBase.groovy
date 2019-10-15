@@ -24,69 +24,11 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
-import com.google.common.base.Predicate
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import hudson.BulkChange
-import hudson.Extension
-import hudson.ExtensionList
-import hudson.model.*
-import hudson.triggers.Trigger
-import jenkins.model.Jenkins
-import org.apache.commons.codec.digest.DigestUtils
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.stmt.BlockStatement
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.control.SourceUnit
-import org.codehaus.groovy.runtime.InvokerHelper
-import org.jenkinsci.plugins.pipeline.StageStatus
-import org.jenkinsci.plugins.pipeline.StageTagsMetadata
-import org.jenkinsci.plugins.pipeline.SyntheticStage
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBuildParameter
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTTrigger
-import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.StepsBlock
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.QuietPeriod
-import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
-import org.jenkinsci.plugins.structs.SymbolLookup
-import org.jenkinsci.plugins.structs.describable.DescribableModel
-import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
-import org.jenkinsci.plugins.workflow.actions.LabelAction
-import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction
-import org.jenkinsci.plugins.workflow.actions.TagsAction
-import org.jenkinsci.plugins.workflow.actions.ThreadNameAction
-import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-import org.jenkinsci.plugins.workflow.cps.CpsThread
-import org.jenkinsci.plugins.workflow.flow.FlowExecution
-import org.jenkinsci.plugins.workflow.graph.BlockEndNode
-import org.jenkinsci.plugins.workflow.graph.BlockStartNode
-import org.jenkinsci.plugins.workflow.graph.FlowNode
-import org.jenkinsci.plugins.workflow.graphanalysis.*
-import org.jenkinsci.plugins.workflow.job.WorkflowJob
-import org.jenkinsci.plugins.workflow.job.WorkflowRun
-import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
-import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException
-import org.jenkinsci.plugins.workflow.steps.Step
-import org.jenkinsci.plugins.workflow.steps.StepDescriptor
-import org.kohsuke.accmod.Restricted
-import org.kohsuke.accmod.restrictions.NoExternalUse
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
-import javax.annotation.Nullable
-import javax.lang.model.SourceVersion
-import java.util.concurrent.TimeUnit
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.codehaus.groovy.runtime.InvokerHelper
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
  *
@@ -96,7 +38,7 @@ import java.util.concurrent.TimeUnit
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeContainerBase {
 
-    protected static CpsScript that
+    private static CpsScript that
     private static Map<Class,RuntimeContainerBase> classMap = new HashMap<>()
 
     @Whitelisted
