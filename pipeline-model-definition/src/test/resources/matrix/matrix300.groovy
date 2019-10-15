@@ -30,25 +30,21 @@ pipeline {
                 axes {
                     axis {
                         name 'letters1'
-                        values "a", "b", "c", "d"
+                        values "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"
                     }
                     axis {
-                        name 'letters4'
-                        values "a", "b", "c", "d"
+                        name 'letters10'
+                        values "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"
                     }
                     axis {
-                        name 'letters16'
-                        values "a", "b", "c", "d"
-                    }
-                    axis {
-                        name 'letters64'
-                        values "a", "b", "c", "d"
+                        name 'letters100'
+                        values "a", "b", "c"
                     }
                 }
                 stages {
                     stage("No agent needed") {
                         steps {
-                            echo "$letters1 $letters4 $letters16 $letters64 "
+                            echo "0"
                         }
                     }
                 }

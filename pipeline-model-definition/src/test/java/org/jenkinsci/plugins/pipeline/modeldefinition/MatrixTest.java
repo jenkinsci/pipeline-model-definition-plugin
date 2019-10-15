@@ -186,7 +186,7 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-    @Ignore("Too large for ci testing. Would cause 'method too large' error before .")
+    @Ignore("Too large for ci testing. Would cause 'method too large' error before fix.")
     @Issue("JENKINS-37984")
     @Test
     public void matrix100() throws Exception {
@@ -220,6 +220,7 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-37984")
     @Test
     public void matrix65200() throws Exception {
+        // This is the limit imposed by a list of ListExpression
         expect("matrix/matrix65200")
             .go();
     }

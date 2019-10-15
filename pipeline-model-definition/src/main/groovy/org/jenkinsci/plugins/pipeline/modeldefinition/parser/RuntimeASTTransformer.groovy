@@ -38,6 +38,7 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.RuntimeContainerBase
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
@@ -71,20 +72,46 @@ class RuntimeASTTransformer {
         this.moduleNode = moduleNode
     }
 
+    /**
+     * Turns a constructor call into a function call that returns the constructed instance
+     * @param type the type to be instantiated
+     * @param args arguments to the constructor
+     * @return call to a function that returns an instance of type
+     */
     Expression ctorXFunction(ClassNode type, Expression args) {
         return mappedMethod(type.nameWithoutPackage, type, ctorX(type, args))
     }
 
-    Expression mappedMethod(String groupName, ClassNode returnType, Expression returnXBody) {
+    /**
+     * Turns a list expression into a function that returns a list expression
+     * @param listExpression the list expression to be wrapped in a function call
+     * @return call to a function that returns the provided ListExpression
+     */
+    Expression listExpressionFunction(ListExpression listExpression) {
+        def type = ClassHelper.make(ListExpression.class)
+        return mappedMethod(type.nameWithoutPackage, type, listExpression)
+    }
 
+    /**
+     * Returns a call expression that will return the passed in expression.
+     * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
+     * @param groupName Name of the grouping to add this function to
+     * @param returnType return type of the function
+     * @param returnXBody expression to be returned
+     * @return callX that returns the value of returnXBody
+     */
+    Expression mappedMethod(String groupName, ClassNode returnType, Expression returnXBody) {
         // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
         // However, class loading isn't free, so we also don't want a single method per class
         ClassNode classNode = methodClassNode[groupName]
-
+        String className = null
         // If we don't have a classNode for this group name or if this class has reached groupSize, start a new class
         if (classNode == null || classNode.methods.size() >= groupSize) {
-            classNode = new ClassNode("__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}", ACC_PUBLIC, ClassHelper.make(Object))
+            // Get an uncreative unique class name
+            className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}__"
+            classNode = new ClassNode(className, ACC_PUBLIC, ClassHelper.make(RuntimeContainerBase.class))
             this.moduleNode.addClass(classNode)
+
             methodClassNode[groupName] = classNode
         }
 
@@ -98,12 +125,23 @@ class RuntimeASTTransformer {
                         returnS(returnXBody)
                 )
 
-        MethodNode method = new MethodNode(name, ACC_PUBLIC | ACC_STATIC, ClassHelper.make(returnType.class), [] as Parameter[], [] as ClassNode[], methodBody)
+        // The instance method
+        MethodNode method = new MethodNode(name + "_", ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], methodBody)
         classNode.addMethod(method)
 
-        // Instead the passed in expression, we return a function call that returns the passed in expression
+        // A static method wrapping the instance method.
+        // This reduces the complexity at for the top level script, which is where method size most often causes problems.
+        method = new MethodNode(name, ACC_PUBLIC | ACC_STATIC, returnType, [] as Parameter[], [] as ClassNode[],
+                block(
+                        returnS(callX(callX(ClassHelper.make(RuntimeContainerBase.class), 'getInstance', args(classX(classNode))), name + "_"))
+                )
+        )
+        classNode.addMethod(method)
+
+        // Instead of the passed in expression, we return a function call that returns the passed in expression
         return callX(classNode, name)
     }
+
 
     /**
      * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
@@ -829,21 +867,22 @@ class RuntimeASTTransformer {
 
             ListExpression expandedMatrixStages = new ListExpression()
             ArrayList<Expression> argList = new ArrayList<>()
-            argList.add(expandedMatrixStages)
 
             def count = 0
             expansion.each { item ->
                 if (count++ >= listLimit) {
                     count = 1
+                    argList.add(listExpressionFunction(expandedMatrixStages))
                     expandedMatrixStages = new ListExpression()
-                    argList.add(expandedMatrixStages)
                 }
 
                 expandedMatrixStages.addExpression(transformMatrixStage(item, original))
             }
 
+            argList.add(listExpressionFunction(expandedMatrixStages))
+
             // return matrix class containing the list of generated stages
-            return ctorX(ClassHelper.make(Matrix.class), args((Expression[])argList.toArray()))
+            return ctorXFunction(ClassHelper.make(Matrix.class), args((Expression[])argList.toArray()))
         }
 
         return constX(null)

@@ -283,6 +283,7 @@ class Utils {
 
     @Restricted(NoExternalUse.class)
     static void updateRunAndJobActions(CpsScript script, String astUUID) throws Exception {
+        RuntimeContainerBase.initialize(script)
         WorkflowRun r = script.$build()
         ExecutionModelAction action = r.getAction(ExecutionModelAction.class)
         if (action != null) {
