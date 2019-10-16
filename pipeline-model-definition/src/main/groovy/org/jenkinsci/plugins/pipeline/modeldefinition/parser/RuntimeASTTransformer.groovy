@@ -110,6 +110,7 @@ class RuntimeASTTransformer {
             // Get an uncreative unique class name
             className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}__"
             classNode = new ClassNode(className, ACC_PUBLIC, ClassHelper.make(RuntimeContainerBase.class))
+            classNode.addConstructor(ACC_PUBLIC, [] as Parameter[], [ClassHelper.make(IOException.class)] as ClassNode[], block(ctorSuperS()))
             this.moduleNode.addClass(classNode)
 
             methodClassNode[groupName] = classNode
