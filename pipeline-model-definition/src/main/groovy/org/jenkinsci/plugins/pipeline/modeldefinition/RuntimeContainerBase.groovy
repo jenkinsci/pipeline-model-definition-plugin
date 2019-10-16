@@ -31,18 +31,25 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
+ * IMPORTANT: This class must inherit from CpsScript or Declarative Pipeline will halt and catch fire.
  *
  *
  * @author Liam Newman
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class RuntimeContainerBase {
+class RuntimeContainerBase extends CpsScript {
 
     private static CpsScript that
     private static Map<Class,RuntimeContainerBase> classMap = new HashMap<>()
 
     @Whitelisted
-    RuntimeContainerBase() {
+    RuntimeContainerBase() throws IOException {
+        super()
+    }
+
+    @Override
+    Object run() {
+        return null
     }
 
     @Whitelisted
@@ -51,7 +58,7 @@ class RuntimeContainerBase {
     }
 
     @Whitelisted
-    static Object getInstance(Class instanceClass) {
+    static RuntimeContainerBase getInstance(Class instanceClass) throws IOException {
         if (!classMap.containsKey(instanceClass)) {
             classMap[instanceClass] = instanceClass.getConstructor().newInstance()
         }
