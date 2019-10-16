@@ -55,6 +55,7 @@ class ModelInterpreter implements Serializable {
 
     ModelInterpreter(CpsScript script) {
         this.script = script
+        RuntimeContainerBase.initialize(script)
     }
 
     def call(CpsClosure closure) {
