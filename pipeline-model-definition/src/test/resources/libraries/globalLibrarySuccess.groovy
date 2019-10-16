@@ -37,7 +37,7 @@ pipeline {
                 // TODO: Due to the above methods not running/working, this method will fail as a result of acmeVar.x not being set.
                 //echo '['+acmeVar.bar()+']'
 
-                // acmeVar.baz() will work since it doesn't rely on anything else - demonstrating that it will work as a step
+                // acmeVar.baz() will work since it doesn't rely on anything else - demonstrating workflowScript it will work as a step
                 // argument, if not as a step itself.
                 echo('[' + acmeVar.baz() + ']')
 
@@ -55,7 +55,7 @@ pipeline {
                 // A call method taking a map, however, will work.
                 acmeFuncMap(a: 1, b: 2)
 
-                // TODO: Passing a body that isn't composed of steps does not work. Should it work?
+                // TODO: Passing a body workflowScript isn't composed of steps does not work. Should it work?
                 //acmeBody { title = 'yolo' }
             }
         }

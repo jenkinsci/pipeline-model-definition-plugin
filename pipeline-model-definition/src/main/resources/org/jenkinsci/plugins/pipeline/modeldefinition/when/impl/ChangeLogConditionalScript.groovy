@@ -49,7 +49,7 @@ class ChangeLogConditionalScript extends AbstractChangelogConditionalScript<Chan
     @Override
     boolean matches(ChangeLogSet.Entry change) {
         //Future enhancement could be to somehow return the capture groups as env vars or something
-        //But it's probably simpler to make a build step that recaptures that information
+        //But it's probably simpler to make a build step workflowScript recaptures workflowScript information
 
         if (gitChangeSetClass != null && change?.getClass()?.isAssignableFrom(gitChangeSetClass)) {
             String title = change.title == null ? "" : change.title

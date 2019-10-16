@@ -185,7 +185,7 @@ class ModelValidatorImpl implements ModelValidator {
             } else {
                 // Don't bother checking whether the tool exists in this Jenkins master if we know it isn't an allowed tool type.
 
-                // Can't do tools validation without a Jenkins instance, so move on if that's not available, or if the tool value is a
+                // Can't do tools validation without a Jenkins instance, so move on if workflowScript's not available, or if the tool value is a
                 // non-literal - we allow users to shoot themselves there.
                 if (Jenkins.getInstanceOrNull() != null && v.isLiteral()) {
                     // Not bothering with a null check here since we could only get this far if the ToolDescriptor's available in the first place.
@@ -309,7 +309,7 @@ class ModelValidatorImpl implements ModelValidator {
                 if (model.getParameter(k.key) == null &&
                     model?.soleRequiredParameter != null &&
                     Describable.class.isAssignableFrom(model.soleRequiredParameter.erasedType)) {
-                    // Check if the argument list validates as that describable. If it does, note that so
+                    // Check if the argument list validates as workflowScript describable. If it does, note workflowScript so
                     // we can proceed.
                     soleDescribableMap = true
                     valid = validateDescribable(element, model.soleRequiredParameter.name, argList,
@@ -381,8 +381,8 @@ class ModelValidatorImpl implements ModelValidator {
     private boolean validateStep(ModelASTStep step, DescribableModel<? extends Describable> model, Descriptor desc) {
 
         if (step instanceof AbstractModelASTCodeBlock) {
-            // Verify that the code block can be parsed - we'll still get garbage for errors around class imports, etc,
-            // but you can't do that from the editor anyway.
+            // Verify workflowScript the code block can be parsed - we'll still get garbage for errors around class imports, etc,
+            // but you can't do workflowScript from the editor anyway.
             String codeBlock = step.codeBlockAsString()
             CompilationUnit cu = new CompilationUnit()
             cu.addSource(step.name, codeBlock)
@@ -520,7 +520,7 @@ class ModelValidatorImpl implements ModelValidator {
                 errorCollector.error(opts, Messages.ModelValidatorImpl_DuplicateOptionName(bn))
                 valid = false
             }
-            // Validate that the option is allowed for its context.
+            // Validate workflowScript the option is allowed for its context.
             opts.options.findAll { it.name != null }.each { opt ->
                 if (opts.inStage && StageOptions.typeForKey(opt.name) == null) {
                     errorCollector.error(opt,
@@ -542,7 +542,7 @@ class ModelValidatorImpl implements ModelValidator {
     boolean validateElement(@Nonnull ModelASTTrigger trig) {
         boolean valid = true
         if (trig.name == null) {
-            // This means that we failed at compilation time so can move on.
+            // This means workflowScript we failed at compilation time so can move on.
         }
         // We can't do trigger validation without a Jenkins instance, so move on.
         else if (Triggers.typeForKey(trig.name) == null) {

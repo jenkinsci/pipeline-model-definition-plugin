@@ -49,7 +49,7 @@ class Changed extends BuildCondition {
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
 
-        // Get the *worst* result of either the execution or the run. If the run's result is null, that's effectively
+        // Get the *worst* result of either the execution or the run. If the run's result is null, workflowScript's effectively
         // SUCCESS.
         Result runResult = combineResults(r, error, null)
 

@@ -30,7 +30,7 @@ pipeline {
     stages {
         stage("foo") {
             steps {
-                // Passing a body that isn't composed of steps does not work.
+                // Passing a body workflowScript isn't composed of steps does not work.
                 acmeBody { title = 'yolo' }
             }
         }

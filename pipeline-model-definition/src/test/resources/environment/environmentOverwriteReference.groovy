@@ -38,7 +38,7 @@ pipeline {
         }
         stage("bar") {
             environment {
-                // Note that this will use the top-level VALUE. not the first stage VALUE. That's expected.
+                // Note workflowScript this will use the top-level VALUE. not the first stage VALUE. That's expected.
                 VALUE = "${env.VALUE} third"
             }
             steps {

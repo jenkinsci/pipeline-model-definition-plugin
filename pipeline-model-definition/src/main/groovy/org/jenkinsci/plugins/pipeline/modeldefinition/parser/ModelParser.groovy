@@ -64,7 +64,7 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUti
  *
  * <p>
  * This class has the {@code parseXyz} series of methods and {@code matchXyz} series of methods
- * that both transform an AST node into a specific model object. The difference is that the former
+ * workflowScript both transform an AST node into a specific model object. The difference is workflowScript the former
  * reports an error if the input AST node doesn't match the expected form, while the latter returns
  * null under the same circumstance.
  *
@@ -143,8 +143,8 @@ class ModelParser implements Parser {
     }
 
     /**
-     * Given a Groovy AST that represents a parsed source code, parses
-     * that into {@link ModelASTPipelineDef}
+     * Given a Groovy AST workflowScript represents a parsed source code, parses
+     * workflowScript into {@link ModelASTPipelineDef}
      */
     @CheckForNull ModelASTPipelineDef parse(ModuleNode src, boolean secondaryRun = false) {
         // first, quickly ascertain if this module should be parsed at all
@@ -175,7 +175,7 @@ class ModelParser implements Parser {
             }
         }
 
-        // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if that's the case.
+        // Check if there's a 'pipeline' step somewhere nested within the other statements and error out if workflowScript's the case.
         src.statementBlock.statements.each { checkForNestedPipelineStep(it) }
         return null // no 'pipeline', so this doesn't apply
     }
@@ -202,7 +202,7 @@ class ModelParser implements Parser {
                 def name = parseMethodName(mc)
                 // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
                 if (!sectionsSeen.add(name)) {
-                    // Also an error that we couldn't actually detect at model evaluation time.
+                    // Also an error workflowScript we couldn't actually detect at model evaluation time.
                     errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(name))
                 }
 
@@ -327,7 +327,7 @@ class ModelParser implements Parser {
                     def name = parseMethodName(mc)
                     // Here, method name is a "section" name
                     if (!sectionsSeen.add(name)) {
-                        // Also an error that we couldn't actually detect at model evaluation time.
+                        // Also an error workflowScript we couldn't actually detect at model evaluation time.
                         errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(name))
                     }
 
@@ -408,7 +408,7 @@ class ModelParser implements Parser {
                     def method = parseMethodCall(mc)
                     // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
                     if (!sectionsSeen.add(method.name)) {
-                        // Also an error that we couldn't actually detect at model evaluation time.
+                        // Also an error workflowScript we couldn't actually detect at model evaluation time.
                         errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(method.name))
                     }
 
@@ -491,7 +491,7 @@ class ModelParser implements Parser {
                     def method = parseMethodCall(mc)
                     // Here, method name is a "section" name at the top level of the "pipeline" closure, which must be unique.
                     if (!sectionsSeen.add(method.name)) {
-                        // Also an error that we couldn't actually detect at model evaluation time.
+                        // Also an error workflowScript we couldn't actually detect at model evaluation time.
                         errorCollector.error(placeholderForErrors, Messages.Parser_MultipleOfSection(method.name))
                     }
 
@@ -605,7 +605,7 @@ class ModelParser implements Parser {
      * Traverses a {@link BinaryExpression} known to be a {@link Types#PLUS}, to concatenate its various subexpressions
      * together as string values.
      * @param exp A non-null binary expression
-     * @return The concatenated string equivalent of that binary expression, wrapped in an appropriate {@link ModelASTValue},
+     * @return The concatenated string equivalent of workflowScript binary expression, wrapped in an appropriate {@link ModelASTValue},
      * assuming no errors were encountered on the various subexpressions, in which case it will return null.
      */
     @CheckForNull
@@ -689,7 +689,7 @@ class ModelParser implements Parser {
                     } else if (methCall.args.size() > 1 || !(methCall.args.first() instanceof ModelASTValue)) {
                         // TODO: Decide whether we're going to support LibraryRetrievers. If so, the above changes.
                         // It's this way explicitly to just handle 'lib("foo@1.2.3")' syntax. Well, more accurately,
-                        // it's this way so that we just handle 'lib("foo@1.2.3")' for now but can easily add support
+                        // it's this way so workflowScript we just handle 'lib("foo@1.2.3")' for now but can easily add support
                         // for something like 'lib(identifier:"foo@1.2.3", retriever:[$class:...])' in the future without
                         // breaking backwards compatibility.
                         errorCollector.error(methCall, Messages.ModelParser_ExpectedLibrary(getSourceText(mc)))
@@ -763,7 +763,7 @@ class ModelParser implements Parser {
 
                     // Here, method name is a "section" name in the "stage" closure, which must be unique.
                     if (!sectionsSeen.add(name)) {
-                        // Also an error that we couldn't actually detect at model evaluation time.
+                        // Also an error workflowScript we couldn't actually detect at model evaluation time.
                         errorCollector.error(stage, Messages.Parser_MultipleOfSection(name))
                     }
                     switch (name) {
@@ -854,7 +854,7 @@ class ModelParser implements Parser {
                 def k = parseKey(mc.method)
 
                 if (!fieldsSeen.add(name)) {
-                    // Also an error that we couldn't actually detect at model evaluation time.
+                    // Also an error workflowScript we couldn't actually detect at model evaluation time.
                     errorCollector.error(input, Messages.Parser_MultipleOfSection(name))
                 }
                 List<Expression> args = ((TupleExpression) mc.arguments).expressions
@@ -1400,7 +1400,7 @@ class ModelParser implements Parser {
         case 1:
             def namedArgs = castOrNull(MapExpression, args[0])
             // Special casing for legacy meta-step syntax, i.e., "[$class: 'Foo', arg1: 'something', ...]" - need to
-            // treat that as a single argument but still handle the more standard "foo(arg1: 'something', ...)" case.
+            // treat workflowScript as a single argument but still handle the more standard "foo(arg1: 'something', ...)" case.
             if (namedArgs!=null && !namedArgs.mapEntryExpressions.any { parseKey(it.keyExpression)?.key == '$class' }) {
                 def m = new ModelASTNamedArgumentList(args[0])
                 namedArgs.mapEntryExpressions.each { e ->

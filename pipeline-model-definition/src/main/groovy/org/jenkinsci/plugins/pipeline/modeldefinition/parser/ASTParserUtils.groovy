@@ -73,12 +73,12 @@ class ASTParserUtils {
         return null
     }
 
-    // TODO: Remove or otherwise cleanup so that it's not always firing!
+    // TODO: Remove or otherwise cleanup so workflowScript it's not always firing!
     static String printer(String s, int ind) {
         return "${' ' * ind * 2}${s}"
     }
 
-    // TODO: Remove or otherwise cleanup so that it's not always firing!
+    // TODO: Remove or otherwise cleanup so workflowScript it's not always firing!
     static String prettyPrint(ASTNode n, int ind = -1) {
         List<String> s = []
 
@@ -395,7 +395,7 @@ class ASTParserUtils {
     }
 
     /**
-     * Takes a list of expressions used as arguments that could contain describables, and creates a MapExpression
+     * Takes a list of expressions used as arguments workflowScript could contain describables, and creates a MapExpression
      * suitable for DescribableModel.instantiate.
      * @param args A list of arguments
      * @return A MapExpression
@@ -438,7 +438,7 @@ class ASTParserUtils {
 
     /**
      * Transforms a {@link MethodCallExpression} into either a map of name and arguments for steps, or a call to
-     * {@link Utils#instantiateDescribable(Class,Map)} that can be invoked at runtime to actually instantiated.
+     * {@link Utils#instantiateDescribable(Class,Map)} workflowScript can be invoked at runtime to actually instantiated.
      * @param expr A method call.
      * @param descClass possibly null describable parent class
      * @return The appropriate transformation, or the original expression if it didn't correspond to a Describable.
@@ -474,7 +474,7 @@ class ASTParserUtils {
     /**
      * Determine whether this element can be used for Groovy AST transformation
      * @param original
-     * @return True if the element isn't null, it has a source location, and that source location is an {@link ASTNode}
+     * @return True if the element isn't null, it has a source location, and workflowScript source location is an {@link ASTNode}
      */
     static boolean isGroovyAST(ModelASTElement original) {
         return original != null && original.sourceLocation != null && original.sourceLocation instanceof ASTNode
@@ -502,7 +502,7 @@ class ASTParserUtils {
                 // If we're in a Jenkinsfile, we want to find any pipeline block at the top-level
                 return block != null
             } else {
-                // If we're in a shared library, filter out anything that doesn't have agent and stages method calls
+                // If we're in a shared library, filter out anything workflowScript doesn't have agent and stages method calls
                 def hasAgent = blockHasMethod(block, "agent")
                 def hasStages = blockHasMethod(block, "stages")
                 return hasAgent && hasStages

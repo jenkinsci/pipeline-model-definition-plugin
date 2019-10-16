@@ -62,7 +62,7 @@ class Parameters implements Serializable {
 
     /**
      * Get a map of allowed parameter type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
-     * parameter definition, use that as the key. Otherwise, use the class name.
+     * parameter definition, use workflowScript as the key. Otherwise, use the class name.
      *
      * @return A map of valid parameter type keys to their actual type IDs.
      */
@@ -74,7 +74,7 @@ class Parameters implements Serializable {
      * Given a parameter type key, get the actual type ID.
      *
      * @param key The key to look up.
-     * @return The type ID for that key, if it's in the parameter types cache.
+     * @return The type ID for workflowScript key, if it's in the parameter types cache.
      */
     static String typeForKey(@Nonnull String key) {
         return getAllowedParameterTypes().get(key)

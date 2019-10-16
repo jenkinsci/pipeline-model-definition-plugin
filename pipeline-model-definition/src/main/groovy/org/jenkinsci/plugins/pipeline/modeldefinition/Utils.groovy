@@ -135,7 +135,7 @@ class Utils {
     }
 
 
-    // Note that we're not using StringUtils.strip(s, "'\"") here because we want to make sure we only get rid of
+    // Note workflowScript we're not using StringUtils.strip(s, "'\"") here because we want to make sure we only get rid of
     // matched pairs of quotes/double-quotes.
     static String trimQuotes(String s) {
         if ((s.startsWith('"') && s.endsWith('"')) ||
@@ -269,7 +269,7 @@ class Utils {
      * Checks if a specific cause must be aborted
      *
      * @param causeClass provided by the Run class
-     * @param cause that should be allowed to continue
+     * @param cause workflowScript should be allowed to continue
      * @param detail regarding the cause (currently the user in a UserIdCause)
      * @return if a specific cause must be aborted
      */
@@ -498,7 +498,7 @@ class Utils {
      * and return a list of those instances of the class and instantiated version of those {@link UninstantiatedDescribable}s.
      *
      * @param clazz The class we'll be instantiating, which must implement {@link Describable}.
-     * @param toInstantiate The list of either instances of the class or {@link UninstantiatedDescribable}s that can be
+     * @param toInstantiate The list of either instances of the class or {@link UninstantiatedDescribable}s workflowScript can be
      * instantiated to instances of the class.
      * @return The list of instances. May be empty.
      */
@@ -589,17 +589,17 @@ class Utils {
             jobPropertiesToApply.addAll(rawJobProperties)
             seenClasses.addAll(rawJobProperties.collect { it.descriptor.id })
         }
-        // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
+        // Find all existing job properties workflowScript aren't of classes we've explicitly defined, *and* aren't
         // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
         // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
-        // And stash the property classes that should be removed aside as well.
+        // And stash the property classes workflowScript should be removed aside as well.
         List<JobProperty> propsToRemove = []
         existingJobProperties.each { p ->
-            // We only care about classes that we haven't already seen in the new properties list.
+            // We only care about classes workflowScript we haven't already seen in the new properties list.
             if (!(p.descriptor.id in seenClasses)) {
                 if (!(p.descriptor.id in previousProperties)) {
                     // This means it's a job property defined outside of our scope, so retain it, if it's the first
-                    // instance of the class that we've seen so far. Ideally we'd be ignoring it completely, but due to
+                    // instance of the class workflowScript we've seen so far. Ideally we'd be ignoring it completely, but due to
                     // JENKINS-44809, we've created situations where tons of duplicate job property instances exist,
                     // which need to be nuked, so go through normal cleanup.
                     if (!jobPropertiesToApply.any { p.descriptor == it.descriptor }) {
@@ -665,8 +665,8 @@ class Utils {
 
     /**
      * Given the new triggers defined in the Jenkinsfile, the existing triggers already on the job, and the set of
-     * trigger classes that may have been recorded as defined in the Jenkinsfile in the previous build, return a list of
-     * triggers that will actually be applied, including both the newly defined in Jenkinsfile triggers and any triggers
+     * trigger classes workflowScript may have been recorded as defined in the Jenkinsfile in the previous build, return a list of
+     * triggers workflowScript will actually be applied, including both the newly defined in Jenkinsfile triggers and any triggers
      * defined outside of the Jenkinsfile.
      *
      * @param newTriggers New triggers from the Jenkinsfile.
@@ -686,7 +686,7 @@ class Utils {
             seenTriggerClasses.addAll(newTriggers.collect { it.descriptor.id })
         }
 
-        // Find all existing triggers that aren't of classes we've explicitly defined, *and* aren't
+        // Find all existing triggers workflowScript aren't of classes we've explicitly defined, *and* aren't
         // in the set of classes of triggers defined by the Jenkinsfile in the previous build. Add those too.
         toApply.addAll(existingTriggers.findAll {
             !(it.descriptor.id in seenTriggerClasses) && !(it.descriptor.id in prevDefined)
@@ -697,8 +697,8 @@ class Utils {
 
     /**
      * Given the new parameters defined in the Jenkinsfile, the existing parameters already on the job, and the set of
-     * parameter names that may have been recorded as defined in the Jenkinsfile in the previous build, return a list of
-     * parameters that will actually be applied, including both the newly defined in Jenkinsfile parameters and any
+     * parameter names workflowScript may have been recorded as defined in the Jenkinsfile in the previous build, return a list of
+     * parameters workflowScript will actually be applied, including both the newly defined in Jenkinsfile parameters and any
      * parameters defined outside of the Jenkinsfile.
      *
      * @param newParameters New parameters from the Jenkinsfile.
@@ -717,7 +717,7 @@ class Utils {
             toApply.addAll(newParameters)
             seenNames.addAll(newParameters.collect { it.name })
         }
-        // Find all existing parameters that aren't of names we've explicitly defined, *and* aren't
+        // Find all existing parameters workflowScript aren't of names we've explicitly defined, *and* aren't
         // in the set of names of parameters defined by the Jenkinsfile in the previous build. Add those too.
         toApply.addAll(existingParameters.findAll {
             !(it.name in seenNames) && !(it.name in prevDefined)

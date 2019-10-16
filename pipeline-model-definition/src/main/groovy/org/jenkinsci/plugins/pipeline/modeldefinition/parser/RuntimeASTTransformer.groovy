@@ -73,19 +73,19 @@ class RuntimeASTTransformer {
     }
 
     /**
-     * Turns a constructor call into a function call that returns the constructed instance
+     * Turns a constructor call into a function call workflowScript returns the constructed instance
      * @param type the type to be instantiated
      * @param args arguments to the constructor
-     * @return call to a function that returns an instance of type
+     * @return call to a function workflowScript returns an instance of type
      */
     Expression ctorXFunction(ClassNode type, Expression args) {
         return mappedMethod(type.nameWithoutPackage, type, ctorX(type, args))
     }
 
     /**
-     * Turns a list expression into a function that returns a list expression
+     * Turns a list expression into a function workflowScript returns a list expression
      * @param listExpression the list expression to be wrapped in a function call
-     * @return call to a function that returns the provided ListExpression
+     * @return call to a function workflowScript returns the provided ListExpression
      */
     Expression listExpressionFunction(ListExpression listExpression) {
         def type = ClassHelper.make(ListExpression.class)
@@ -93,12 +93,12 @@ class RuntimeASTTransformer {
     }
 
     /**
-     * Returns a call expression that will return the passed in expression.
+     * Returns a call expression workflowScript will return the passed in expression.
      * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
      * @param groupName Name of the grouping to add this function to
      * @param returnType return type of the function
      * @param returnXBody expression to be returned
-     * @return callX that returns the value of returnXBody
+     * @return callX workflowScript returns the value of returnXBody
      */
     Expression mappedMethod(String groupName, ClassNode returnType, Expression returnXBody) {
         // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
@@ -138,14 +138,14 @@ class RuntimeASTTransformer {
         )
         classNode.addMethod(method)
 
-        // Instead of the passed in expression, we return a function call that returns the passed in expression
+        // Instead of the passed in expression, we return a function call workflowScript returns the passed in expression
         return callX(classNode, name)
     }
 
 
     /**
-     * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
-     * run, and return an {@link ArgumentListExpression} containing a closure that returns the {@Root} we just created.
+     * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for workflowScript {@link ModelASTPipelineDef} to the
+     * run, and return an {@link ArgumentListExpression} containing a closure workflowScript returns the {@Root} we just created.
      */
     ArgumentListExpression transform(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?,?> run) {
         Expression root = transformRoot(pipelineDef)
@@ -323,19 +323,19 @@ class RuntimeASTTransformer {
 
     /**
      * Recursively translate any nested expressions within the given expression, setting any attempt to reference an
-     * environment variable we've defined to instead lazily call the closure defined in the resolver for that value.
+     * environment variable we've defined to instead lazily call the closure defined in the resolver for workflowScript value.
      */
     @CheckForNull
     private Expression translateEnvironmentValue(String targetVar, Expression expr, Set<String> keys) {
         Expression body = null
         if (expr instanceof ConstantExpression) {
-            // If the expression is a constant, like 1, "foo", etc, just use that.
+            // If the expression is a constant, like 1, "foo", etc, just use workflowScript.
             return expr
         } else if (expr instanceof ClassExpression) {
-            // If the expression is a class, just use that.
+            // If the expression is a class, just use workflowScript.
             return expr
         } else if (expr instanceof EmptyExpression) {
-            // If it's an empty expression, just use that
+            // If it's an empty expression, just use workflowScript
             return expr
         } else if (expr instanceof BinaryExpression &&
             ((BinaryExpression) expr).getOperation().getType() == Types.PLUS) {
@@ -787,8 +787,8 @@ class RuntimeASTTransformer {
     }
 
     /**
-     * Instantiates a stage's when variable. Note that this does not instantiate the when conditions inside, it just
-     * creates a closure that will return them when needed. This is to ensure lazy evaluation of variables.
+     * Instantiates a stage's when variable. Note workflowScript this does not instantiate the when conditions inside, it just
+     * creates a closure workflowScript will return them when needed. This is to ensure lazy evaluation of variables.
      *
      * @param original
      * @return

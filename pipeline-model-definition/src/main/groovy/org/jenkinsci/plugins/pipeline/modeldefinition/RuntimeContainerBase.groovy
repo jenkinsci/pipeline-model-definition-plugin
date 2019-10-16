@@ -26,35 +26,36 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.codehaus.groovy.runtime.InvokerHelper
+import hudson.model.Run
+import org.codehaus.groovy.control.CompilationFailedException
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 /**
  * IMPORTANT: This class must inherit from CpsScript or Declarative Pipeline will halt and catch fire.
- *
+ * Exmples:
+ * <ul>
+ * <li> this class must inherit the sleep method from CpsScript (or implement the same behavior itself).
+ * <li> script step resolution can't find globals
+ * <li> Groovy's getProperty is not whitelisted by default except for on CpsScript
+ * </ul>
  *
  * @author Liam Newman
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeContainerBase extends CpsScript {
 
-    private static CpsScript that
-    private static Map<Class,RuntimeContainerBase> classMap = new HashMap<>()
+    private static CpsScript workflowScript
+    private static final Map<Class,RuntimeContainerBase> classMap = new HashMap<>()
 
     @Whitelisted
     RuntimeContainerBase() throws IOException {
         super()
     }
 
-    @Override
-    Object run() {
-        return null
-    }
-
     @Whitelisted
     static void initialize(CpsScript script) {
-        that = script
+        workflowScript = script
     }
 
     @Whitelisted
@@ -65,40 +66,63 @@ class RuntimeContainerBase extends CpsScript {
         return classMap[instanceClass]
     }
 
-    /**
-     * @see CpsScript#sleep(long)
+    /*
+     * We want all classes that derive from this one to behave as though they are the main
+     * "WorkflowScript" class. The methods below form a passthrough.
      */
-    @Whitelisted
-    Object sleep(long arg) {
-        return InvokerHelper.invokeMethod(that, "sleep", arg)
+
+    // Script overrides
+    @Override
+    Object run() {
+        return null
+    }
+
+    @Override
+    Binding getBinding() {
+        return workflowScript.getBinding()
+    }
+
+    @Override
+    void setBinding(Binding binding) {
+        workflowScript.setBinding(binding)
+    }
+
+    @Override
+    Object getProperty(String propertyName) {
+        return workflowScript.getProperty(propertyName)
+    }
+
+    @Override
+    void setProperty(String propertyName, Object newValue) {
+        workflowScript.setProperty(propertyName, newValue)
     }
 
 
-/* Overriding methods defined in DefaultGroovyMethods
-        if we don't do this, definitions in DefaultGroovyMethods get called. One problem
-        is that most of them are not whitelisted, and the other problem is that they don't
-        always forward the call to the closure owner.
+    // CpsScript overrides
 
-        In CpsScript we override these methods and redefine them as variants of the 'echo' step,
-        so for this to work the same from closure body, we need to redefine them.
- */
-    @Whitelisted
-    void println(Object arg) {
-        InvokerHelper.invokeMethod(that, "println", [arg])
+    @Override
+    Run<?, ?> $build() throws IOException {
+        return workflowScript.$build()
     }
 
-    @Whitelisted
-    void println() {
-        InvokerHelper.invokeMethod(that, "println",[])
+    @Override
+    Run<?, ?> $buildNoException() {
+        return workflowScript.$buildNoException()
     }
 
-    @Whitelisted
-    void print(Object arg) {
-        InvokerHelper.invokeMethod(that, "print", [arg]);
+    @Override
+    Object evaluate(String script) throws CompilationFailedException {
+        return workflowScript.evaluate(script)
     }
 
-    @Whitelisted
-    void printf(String format, Object value) {
-        InvokerHelper.invokeMethod(that, "printf", [])
+    @Override
+    Object evaluate(File file) throws CompilationFailedException, IOException {
+        return workflowScript.evaluate(file)
     }
+
+    @Override
+    void run(File file, String[] arguments) throws CompilationFailedException, IOException {
+        workflowScript.run(file, arguments)
+    }
+
 }

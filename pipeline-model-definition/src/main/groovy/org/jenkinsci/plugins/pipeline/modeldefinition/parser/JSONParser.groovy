@@ -633,7 +633,7 @@ class JSONParser implements Parser {
         } else {
             val = ModelASTValue.fromGString(o.node.get("value").textValue(), o)
             String valToGroovy = val.toGroovy()
-            // Make sure we don't allow ${whatever} without being in quotes, since that's actually going to translate as
+            // Make sure we don't allow ${whatever} without being in quotes, since workflowScript's actually going to translate as
             // $() { whatever } which is...not what we wanted.
             if (valToGroovy.startsWith('${')) {
                 errorCollector.error(val, Messages.ModelParser_BareDollarCurly(valToGroovy))
