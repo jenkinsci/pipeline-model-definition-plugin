@@ -219,7 +219,7 @@ class RuntimeASTTransformer {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            return ctorX(ClassHelper.make(Agent.class), args(closureX(block(returnS(m)))))
+            return ctorXFunction(ClassHelper.make(Agent.class), args(closureX(block(returnS(m)))))
         }
 
         return constX(null)
@@ -248,7 +248,7 @@ class RuntimeASTTransformer {
      */
     Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables) {
         if (!variables.isEmpty()) {
-            return ctorX(ClassHelper.make(Environment.class),
+            return ctorXFunction(ClassHelper.make(Environment.class),
                     args(
                             generateEnvironmentResolver(variables, ModelASTValue.class),
                             generateEnvironmentResolver(variables, ModelASTInternalFunctionCall.class)
@@ -710,7 +710,7 @@ class RuntimeASTTransformer {
      */
     Expression transformRoot(@CheckForNull ModelASTPipelineDef original) {
         if (isGroovyAST(original)) {
-            return ctorX(ClassHelper.make(Root.class),
+            return ctorXFunction(ClassHelper.make(Root.class),
                 args(transformAgent(original.agent),
                     transformStages(original.stages),
                     transformPostBuild(original.postBuild),
@@ -741,7 +741,7 @@ class RuntimeASTTransformer {
                     transformStages(original.parallel) :
                     transformMatrix(original.matrix)
 
-            return ctorX(ClassHelper.make(Stage.class),
+            return ctorXFunction(ClassHelper.make(Stage.class),
                 args(constX(original.name),
                     transformStepsFromStage(original),
                     transformAgent(original.agent),
@@ -831,9 +831,9 @@ class RuntimeASTTransformer {
             }
 
             if (original instanceof ModelASTParallel) {
-                return ctorX(ClassHelper.make(Parallel.class), args(argList))
+                return ctorXFunction(ClassHelper.make(Parallel.class), args(argList))
             } else {
-                return ctorX(ClassHelper.make(Stages.class), args(argList))
+                return ctorXFunction(ClassHelper.make(Stages.class), args(argList))
             }
         }
 
