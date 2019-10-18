@@ -186,7 +186,6 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-    @Ignore("Too large for ci testing. Would cause 'method too large' error before fix.")
     @Issue("JENKINS-37984")
     @Test
     public void matrix100() throws Exception {
@@ -201,7 +200,7 @@ public class MatrixTest extends AbstractModelDefTest {
     @Test
     public void matrix300() throws Exception {
         expect("matrix/matrix300")
-            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a', , letters100 = 'a')",
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a', letters100 = 'a')",
                 "{ (Branch: Matrix - letters1 = 'j', letters10 = 'j', letters100 = 'c')")
             .go();
     }

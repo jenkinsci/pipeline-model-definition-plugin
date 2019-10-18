@@ -284,12 +284,12 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Environment}, or the constant null expression if the original
      * cannot be transformed.
      */
-    Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables) {
+    Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, boolean disableWrapping = false) {
         if (!variables.isEmpty()) {
             return ctorXFunction(ClassHelper.make(Environment.class),
                     args(
-                            generateEnvironmentResolver(variables, ModelASTValue.class),
-                            generateEnvironmentResolver(variables, ModelASTInternalFunctionCall.class)
+                            generateEnvironmentResolver(variables, ModelASTValue.class, disableWrapping),
+                            generateEnvironmentResolver(variables, ModelASTInternalFunctionCall.class, disableWrapping)
                     ))
         }
         return constX(null)
@@ -302,7 +302,7 @@ class RuntimeASTTransformer {
      * @param valueType Either {@link ModelASTInternalFunctionCall} for credentials or {@link ModelASTValue} for env.
      * @return The AST for instantiating the resolver.
      */
-    private Expression generateEnvironmentResolver(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, @Nonnull Class valueType) {
+    private Expression generateEnvironmentResolver(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, @Nonnull Class valueType, boolean disableWrapping = false) {
         Set<String> keys = new HashSet<>()
 
         // We need to keep track of the environment keys for use in
@@ -337,8 +337,12 @@ class RuntimeASTTransformer {
             }
         }
 
-        return rootVarWrapper(callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
-            args(closureMap)))
+        Expression result = callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
+                args(closureMap))
+        if(!disableWrapping) {
+            result = rootVarWrapper(result)
+        }
+        return result
     }
 
     /**
@@ -771,7 +775,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stage}, or the constant null expression if the original
      * cannot be transformed.
      */
-    Expression transformStage(@CheckForNull ModelASTStage original) {
+    Expression transformStage(@CheckForNull ModelASTStage original, boolean disableCtorXFunction = false) {
         if (isGroovyAST(original)) {
             // Matrix is a special form of parallel
             // At runtime, they behave the same
@@ -779,20 +783,37 @@ class RuntimeASTTransformer {
                     transformStages(original.parallel) :
                     transformMatrix(original.matrix)
 
-            return ctorXFunction(ClassHelper.make(Stage.class),
-                args(constX(original.name),
-                    transformStepsFromStage(original),
-                    transformAgent(original.agent),
-                    transformPostStage(original.post),
-                    transformStageConditionals(original.when),
-                    transformTools(original.tools),
-                    transformEnvironment(original.environment),
-                    constX(original.failFast != null ? original.failFast : false),
-                    transformOptions(original.options),
-                    transformStageInput(original.input, original.name),
-                    transformStages(original.stages),
-                    parallel,
-                    constX(null)))
+            if(disableCtorXFunction) {
+                return ctorX(ClassHelper.make(Stage.class),
+                        args(constX(original.name),
+                                transformStepsFromStage(original, disableCtorXFunction),
+                                transformAgent(original.agent),
+                                transformPostStage(original.post),
+                                transformStageConditionals(original.when),
+                                transformTools(original.tools),
+                                transformEnvironment(original.environment),
+                                constX(original.failFast != null ? original.failFast : false),
+                                transformOptions(original.options),
+                                transformStageInput(original.input, original.name),
+                                transformStages(original.stages),
+                                parallel,
+                                constX(null)))
+            } else {
+                return ctorXFunction(ClassHelper.make(Stage.class),
+                        args(constX(original.name),
+                                transformStepsFromStage(original),
+                                transformAgent(original.agent),
+                                transformPostStage(original.post),
+                                transformStageConditionals(original.when),
+                                transformTools(original.tools),
+                                transformEnvironment(original.environment),
+                                constX(original.failFast != null ? original.failFast : false),
+                                transformOptions(original.options),
+                                transformStageInput(original.input, original.name),
+                                transformStages(original.stages),
+                                parallel,
+                                constX(null)))
+            }
         }
 
         return constX(null)
@@ -861,17 +882,21 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stages}, or the constant null expression if the original
      * cannot be transformed.
      */
-    Expression transformStages(@CheckForNull ModelASTStages original) {
+    Expression transformStages(@CheckForNull ModelASTStages original, boolean disableCtorXFunction = false) {
         if (isGroovyAST(original) && !original.stages.isEmpty()) {
             ListExpression argList = new ListExpression()
             original.stages.each { s ->
-                argList.addExpression(transformStage(s))
+                argList.addExpression(transformStage(s, disableCtorXFunction))
             }
 
-            if (original instanceof ModelASTParallel) {
-                return ctorXFunction(ClassHelper.make(Parallel.class), args(argList))
+            ClassNode classNode = original instanceof ModelASTParallel ?
+                    ClassHelper.make(Parallel.class) :
+                    ClassHelper.make(Stages.class)
+
+            if (disableCtorXFunction) {
+                return ctorX(ClassHelper.make(Parallel.class), args(argList))
             } else {
-                return ctorXFunction(ClassHelper.make(Stages.class), args(argList))
+                return ctorXFunction(ClassHelper.make(Parallel.class), args(argList))
             }
         }
 
@@ -903,6 +928,9 @@ class RuntimeASTTransformer {
                 throw new IllegalArgumentException("Matrix supports up to ${listLimit} cells. Found ${expansion.size()}.")
             }
 
+
+            Expression stagesExpression = rootVarWrapper(transformStages(original.stages, true))
+
             ListExpression expandedMatrixStages = new ListExpression()
             ArrayList<Expression> argList = new ArrayList<>()
 
@@ -914,7 +942,7 @@ class RuntimeASTTransformer {
                     expandedMatrixStages = new ListExpression()
                 }
 
-                expandedMatrixStages.addExpression(transformMatrixStage(item, original))
+                expandedMatrixStages.addExpression(transformMatrixStage(item, original, stagesExpression))
             }
 
             argList.add(listExpressionFunction(expandedMatrixStages))
@@ -964,7 +992,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stage}, or the constant null expression if the original
      * cannot be transformed.
      */
-    Expression transformMatrixStage(@CheckForNull Map<ModelASTKey, ModelASTValue> cell,  @CheckForNull ModelASTMatrix original) {
+    Expression transformMatrixStage(@CheckForNull Map<ModelASTKey, ModelASTValue> cell,  @CheckForNull ModelASTMatrix original, Expression stagesExpression) {
         if (isGroovyAST(original)) {
 
             //     create a generated stage with unique name based on combination
@@ -987,9 +1015,9 @@ class RuntimeASTTransformer {
                             constX(false), // failfast on serial is not interesting
                             transformOptions(original.options),
                             transformStageInput(original.input, name),
-                            transformStages(original.stages),
+                            stagesExpression,
                             constX(null), // parallel
-                            transformEnvironmentMap(cell)))  //  matrixCellEnvironment holding values for this cell in the matrix
+                            transformEnvironmentMap(cell, true)))  //  matrixCellEnvironment holding values for this cell in the matrix
         }
 
         return constX(null)
@@ -1002,7 +1030,7 @@ class RuntimeASTTransformer {
      * @return A method call of {@link Utils#createStepsBlock(Closure)}, or a constant null expression if the original
      * is null.
      */
-    Expression transformStepsFromStage(@CheckForNull ModelASTStage original) {
+    Expression transformStepsFromStage(@CheckForNull ModelASTStage original, boolean disableWrapping = false) {
         if (isGroovyAST(original)) {
             BlockStatementMatch stageMatch = matchBlockStatement((Statement)original.sourceLocation)
             if (stageMatch != null) {
@@ -1012,9 +1040,12 @@ class RuntimeASTTransformer {
                 if (stepsMethod != null) {
                     BlockStatementMatch stepsMatch = matchBlockStatement(stepsMethod)
                     if (stepsMatch != null) {
-                        ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
+                        Expression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
+                        if (!disableWrapping) {
+                            transformedBody = rootVarWrapper(transformedBody)
+                        }
                         return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                            args(rootVarWrapper(transformedBody)))
+                            args(transformedBody))
                     }
                 }
             }
