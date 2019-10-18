@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.classgen.VariableScopeVisitor
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
@@ -266,6 +267,11 @@ class ModelParser implements Parser {
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
             pipelineBlock.whole.arguments = new RuntimeASTTransformer(sourceUnit).transform(r, build)
+
+            // Variables require scoping or they'll throw "Unsupported expression for CPS transformation" errors at runtime
+            VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(sourceUnit)
+            scopeVisitor.visitClass(src.scriptClassDummy)
+
             // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
             astDebugLog {
                 "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"

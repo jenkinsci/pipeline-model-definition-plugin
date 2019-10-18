@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.VariableScope
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.classgen.VariableScopeVisitor
@@ -67,7 +68,7 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC
 class RuntimeASTTransformer {
     SourceUnit sourceUnit
     ModuleNode moduleNode
-
+    List<Statement> pipelineElementHandles = new ArrayList<>()
     def methodClassNode = [:]
     static def groupSize = 50
 
@@ -98,16 +99,21 @@ class RuntimeASTTransformer {
 
 
     /**
-     * Turns a list expression into a function workflowScript returns a list expression
-     * @param listExpression the list expression to be wrapped in a function call
-     * @return call to a function workflowScript returns the provided ListExpression
+     * Turns an expression into a script bound variable declaration returned from a closure.
+     * This delays the evaluation of that contents of these variables to when the closure is called,
+     * and also evaluates the contents in the context of the current script environment.
+     *
+     * @param expression the expression to be replaced with a variable
+     * @return call to a function that returns the provided expression >>>>>>> 3eb0bb61... squash
      */
     Expression rootVarWrapper(Expression expression) {
-        String variableName = "__declarativePipelineExpression${this.moduleNode.statementBlock.statements.size()}"
+        String variableName = "__declarativePipelineRuntime_Expression_${pipelineElementHandles.size()}"
+
         VariableExpression variable = varX(variableName)
-        Expression wrapper = closureX(block(returnS(expression)))
-        Expression declarationExpression = new BinaryExpression(variable, ASSIGN, wrapper)
-        this.moduleNode.statementBlock.statements.add(stmt(declarationExpression))
+        Expression assignedValue = closureX(block(returnS(expression)))
+
+        Expression declarationExpression = new BinaryExpression(variable, ASSIGN, assignedValue)
+        pipelineElementHandles.add(stmt(declarationExpression))
 
         variable = varX(new DynamicVariable(variableName, false))
 
@@ -173,12 +179,6 @@ class RuntimeASTTransformer {
      */
     ArgumentListExpression transform(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?,?> run) {
 
-        // IMPORTANT: The pipeline {} statement MUST be the last item in this list or
-        // all statements (such a variable declarations) will be ignored.
-        // TODO: detect the pipeline {} statement rather than assuming it is the last one
-        def pipelineStatement = moduleNode.statementBlock.statements.last()
-        moduleNode.statementBlock.statements.remove(pipelineStatement)
-
         Expression root = transformRoot(pipelineDef)
         if (run != null) {
             ModelASTStages stages = pipelineDef.stages
@@ -192,20 +192,16 @@ class RuntimeASTTransformer {
             }
         }
 
-        Expression result = rootVarWrapper(
-                closureX(
-                        block(
-                                returnS(root)
-                        )
-                )
-        )
+        BlockStatement result = block()
 
-        // Variables require scoping or they'll throw errors later in compilation
-        VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(sourceUnit)
-        scopeVisitor.visitClass(moduleNode.getScriptClassDummy())
+        // These variable handles are declared in this closure, but will still be bound to the script context
+        // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
+        result.addStatements(pipelineElementHandles)
 
-        moduleNode.statementBlock.statements.add(pipelineStatement)
-        return args(result)
+        // finally return the pipeline runtime elements
+        result.addStatement(returnS(root))
+
+        return args(closureX(result))
     }
 
     /**
@@ -302,7 +298,7 @@ class RuntimeASTTransformer {
      * @param valueType Either {@link ModelASTInternalFunctionCall} for credentials or {@link ModelASTValue} for env.
      * @return The AST for instantiating the resolver.
      */
-    private Expression generateEnvironmentResolver(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, @Nonnull Class valueType, boolean disableWrapping = false) {
+    private Expression generateEnvironmentResolver(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, @Nonnull Class valueType, boolean disableWrapping) {
         Set<String> keys = new HashSet<>()
 
         // We need to keep track of the environment keys for use in
@@ -339,6 +335,9 @@ class RuntimeASTTransformer {
 
         Expression result = callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
                 args(closureMap))
+
+        // in the case of Matrix Cell Environment blocks, we know they don't need to be inside a closure
+        // they are all literal key-values with no external references allowed.
         if(!disableWrapping) {
             result = rootVarWrapper(result)
         }
@@ -861,7 +860,7 @@ class RuntimeASTTransformer {
                         (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
                             DeclarativeStageConditional.class, cond.name)
                     if (desc != null) {
-                        closList.addExpression(desc.transformToRuntimeAST(cond))
+                        closList.addExpression(rootVarWrapper(desc.transformToRuntimeAST(cond)))
                     }
                 }
             }
