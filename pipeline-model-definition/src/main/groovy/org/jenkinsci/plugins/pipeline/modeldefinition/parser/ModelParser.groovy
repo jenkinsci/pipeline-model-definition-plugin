@@ -265,7 +265,7 @@ class ModelParser implements Parser {
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = new RuntimeASTTransformer(src).transform(r, build)
+            pipelineBlock.whole.arguments = new RuntimeASTTransformer(sourceUnit).transform(r, build)
             // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
             astDebugLog {
                 "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"

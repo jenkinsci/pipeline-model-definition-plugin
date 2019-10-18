@@ -37,6 +37,8 @@ import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
+import org.codehaus.groovy.classgen.VariableScopeVisitor
+import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.RuntimeContainerBase
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -63,13 +65,15 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeASTTransformer {
-    ClassNode rootClassNode
+    SourceUnit sourceUnit
     ModuleNode moduleNode
+
     def methodClassNode = [:]
     static def groupSize = 50
 
-    RuntimeASTTransformer(ModuleNode moduleNode) {
-        this.moduleNode = moduleNode
+    RuntimeASTTransformer(SourceUnit sourceUnit) {
+        this.sourceUnit = sourceUnit
+        this.moduleNode = sourceUnit.AST
     }
 
     /**
@@ -91,6 +95,25 @@ class RuntimeASTTransformer {
         def type = ClassHelper.make(ListExpression.class)
         return mappedMethod(type.nameWithoutPackage, type, listExpression)
     }
+
+
+    /**
+     * Turns a list expression into a function workflowScript returns a list expression
+     * @param listExpression the list expression to be wrapped in a function call
+     * @return call to a function workflowScript returns the provided ListExpression
+     */
+    Expression rootVarWrapper(Expression expression) {
+        String variableName = "__declarativePipelineExpression${this.moduleNode.statementBlock.statements.size()}"
+        VariableExpression variable = varX(variableName)
+        Expression wrapper = closureX(block(returnS(expression)))
+        Expression declarationExpression = new BinaryExpression(variable, ASSIGN, wrapper)
+        this.moduleNode.statementBlock.statements.add(stmt(declarationExpression))
+
+        variable = varX(new DynamicVariable(variableName, false))
+
+        return callX(variable, 'call')
+    }
+
 
     /**
      * Returns a call expression workflowScript will return the passed in expression.
@@ -149,6 +172,13 @@ class RuntimeASTTransformer {
      * run, and return an {@link ArgumentListExpression} containing a closure workflowScript returns the {@Root} we just created.
      */
     ArgumentListExpression transform(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?,?> run) {
+
+        // IMPORTANT: The pipeline {} statement MUST be the last item in this list or
+        // all statements (such a variable declarations) will be ignored.
+        // TODO: detect the pipeline {} statement rather than assuming it is the last one
+        def pipelineStatement = moduleNode.statementBlock.statements.last()
+        moduleNode.statementBlock.statements.remove(pipelineStatement)
+
         Expression root = transformRoot(pipelineDef)
         if (run != null) {
             ModelASTStages stages = pipelineDef.stages
@@ -162,13 +192,20 @@ class RuntimeASTTransformer {
             }
         }
 
-        return args(
-            closureX(
-                block(
-                    returnS(root)
+        Expression result = rootVarWrapper(
+                closureX(
+                        block(
+                                returnS(root)
+                        )
                 )
-            )
         )
+
+        // Variables require scoping or they'll throw errors later in compilation
+        VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(sourceUnit)
+        scopeVisitor.visitClass(moduleNode.getScriptClassDummy())
+
+        moduleNode.statementBlock.statements.add(pipelineStatement)
+        return args(result)
     }
 
     /**
@@ -220,7 +257,7 @@ class RuntimeASTTransformer {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            return ctorXFunction(ClassHelper.make(Agent.class), args(closureX(block(returnS(m)))))
+            return ctorXFunction(ClassHelper.make(Agent.class), args(rootVarWrapper(closureX(block(returnS(m))))))
         }
 
         return constX(null)
@@ -300,8 +337,8 @@ class RuntimeASTTransformer {
             }
         }
 
-        return callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
-            args(closureMap))
+        return rootVarWrapper(callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
+            args(closureMap)))
     }
 
     /**
@@ -808,8 +845,8 @@ class RuntimeASTTransformer {
                 }
             }
 
-            return ctorX(ClassHelper.make(StageConditionals.class),
-                args(closureX(block(returnS(closList))),
+            return ctorXFunction(ClassHelper.make(StageConditionals.class),
+                args(rootVarWrapper(closureX(block(returnS(closList)))),
                     constX(original.beforeAgent != null ? original.beforeAgent : false),
                     constX(original.beforeInput != null ? original.beforeInput : false)
                 ))
@@ -977,7 +1014,7 @@ class RuntimeASTTransformer {
                     if (stepsMatch != null) {
                         ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
                         return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                            args(transformedBody))
+                            args(rootVarWrapper(transformedBody)))
                     }
                 }
             }
