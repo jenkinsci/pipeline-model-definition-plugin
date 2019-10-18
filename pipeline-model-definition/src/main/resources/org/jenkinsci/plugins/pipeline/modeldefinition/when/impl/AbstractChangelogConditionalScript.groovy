@@ -50,13 +50,13 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
             if (head != null) {
                 /*
                   Some special handling for pull requests to take into consideration all the builds for a particular PR.
-                  Since a PR is a series of changes workflowScript will be merged in some way as one unit so all the changes should be considered.
-                  There is a difference in for example Gerrit where the change workflowScript is going to be merged is only the one commit in the latest patch set,
+                  Since a PR is a series of changes that will be merged in some way as one unit so all the changes should be considered.
+                  There is a difference in for example Gerrit where the change that is going to be merged is only the one commit in the latest patch set,
                   so the previous builds in the change request are not really dependant on each other.
                   Otherwise we could have just done this for all ChangeRequestSCMHead instances.
                   A better approach than checking each specific implementation would be nice.
                   There are some caveats here, like if build 3 contains a revert commit of what is in build 2
-                  we will still "trigger" for change sets on the commit workflowScript was reverted.
+                  we will still "trigger" for change sets on the commit that was reverted.
                 */
                 //TODO JENKINS-33274
 

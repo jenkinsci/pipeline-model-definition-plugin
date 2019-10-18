@@ -133,7 +133,7 @@ class Options implements Serializable {
 
     /**
      * Get a map of allowed option type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
-     * option, use workflowScript as the key. If the option type is a wrapper, use the step name as the key. Otherwise, use the class name.
+     * option, use that as the key. If the option type is a wrapper, use the step name as the key. Otherwise, use the class name.
      *
      * @return A map of valid option type keys to their actual type IDs.
      */
@@ -149,7 +149,7 @@ class Options implements Serializable {
      * Given a option type key, get the actual type ID.
      *
      * @param key The key to look up.
-     * @return The type ID for workflowScript key, if it's in the option types cache.
+     * @return The type ID for that key, if it's in the option types cache.
      */
     static String typeForKey(@Nonnull String key) {
         return getAllowedOptionTypes().get(key)

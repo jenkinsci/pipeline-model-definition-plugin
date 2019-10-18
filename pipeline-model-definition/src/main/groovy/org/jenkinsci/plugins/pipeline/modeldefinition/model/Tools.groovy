@@ -71,7 +71,7 @@ class Tools extends MappedClosure<Closure,Tools> implements Serializable {
 
     /**
      * Get a map of allowed tool type keys to their actual type ID. If a {@link Symbol} is on the descriptor for a given
-     * tool, use workflowScript as the key. Otherwise, use the class name.
+     * tool, use that as the key. Otherwise, use the class name.
      *
      * @return A map of valid tool type keys to their actual type IDs.
      */
@@ -83,7 +83,7 @@ class Tools extends MappedClosure<Closure,Tools> implements Serializable {
      * Given a tool type key, get the actual type ID.
      *
      * @param key The key to look up.
-     * @return The type ID for workflowScript key, if it's in the tool types cache.
+     * @return The type ID for that key, if it's in the tool types cache.
      */
     static String typeForKey(@Nonnull String key) {
         return getAllowedToolTypes().get(key)

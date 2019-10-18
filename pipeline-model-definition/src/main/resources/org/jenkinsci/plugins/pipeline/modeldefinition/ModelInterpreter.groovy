@@ -79,13 +79,13 @@ class ModelInterpreter implements Serializable {
                     withCredentialsBlock(root.environment) {
                         withEnvBlock(root.getEnvVars(script)) {
                             inWrappers(root.options?.wrappers) {
-                                // Wipe out the error, since if we get here and it's not null, workflowScript means we're retrying
+                                // Wipe out the error, since if we get here and it's not null, that means we're retrying
                                 // the whole pipeline and don't want firstError to be set.
                                 firstError = null
                                 toolsBlock(root.tools, root.agent, null) {
                                     firstError = evaluateSequentialStages(root, root.stages, firstError, null, restartedStage, null).call()
 
-                                    // Execute post-build actions now workflowScript we've finished all parallel.
+                                    // Execute post-build actions now that we've finished all parallel.
                                     try {
                                         postBuildRun = true
                                         executePostBuild(root, firstError)
@@ -95,7 +95,7 @@ class ModelInterpreter implements Serializable {
                                         }
                                     }
                                 }
-                                // Throw any error we might have here to make sure workflowScript it gets caught and handled by
+                                // Throw any error we might have here to make sure that it gets caught and handled by
                                 // wrappers.
                                 if (firstError != null) {
                                     throw firstError
@@ -105,7 +105,7 @@ class ModelInterpreter implements Serializable {
                     }
                 }
             } catch (Throwable e) {
-                // Catch any errors workflowScript may have been thrown outside of the parallel proper and make sure we set
+                // Catch any errors that may have been thrown outside of the parallel proper and make sure we set
                 // firstError accordingly.
                 if (firstError == null) {
                     firstError = e
@@ -144,7 +144,7 @@ class ModelInterpreter implements Serializable {
      *
      * @param root The root of the Declarative model
      * @param stages The list of stages
-     * @param firstError An error workflowScript's already occurred earlier in the build. Can be null.
+     * @param firstError An error that's already occurred earlier in the build. Can be null.
      * @param parent The parent stage for this list of stages. Can be null.
      * @param restartedStageName the name of the stage we're restarting at. Null if this is not a restarted build or this is
      *     called from a nested stage.
@@ -160,7 +160,7 @@ class ModelInterpreter implements Serializable {
                     if (skippedForRestart) {
                         // Check if we're skipping for restart but are now on the stage we're supposed to restart on.
                         if (thisStage.name == restartedStageName) {
-                            // If so, set skippedForRestart to false, and if the skippedReason is for restart, wipe workflowScript out too.
+                            // If so, set skippedForRestart to false, and if the skippedReason is for restart, wipe that out too.
                             skippedForRestart = false
                             if (skippedReason instanceof SkippedStageReason.Restart) {
                                 skippedReason = null
@@ -201,7 +201,7 @@ class ModelInterpreter implements Serializable {
      * @param root The root of the Declarative model
      * @param parentAgent The parent agent definition. Can be null.
      * @param thisStage The current stage we'll look in for parallel stages
-     * @param firstError An error workflowScript's already occurred earlier in the build. Can be null.
+     * @param firstError An error that's already occurred earlier in the build. Can be null.
      * @param skippedReason A possibly null reason this stage, its children, and therefore its grandchildren, will be skipped.
      * @return A map of parallel branch names to closures to pass to the parallel step
      */
@@ -231,7 +231,7 @@ class ModelInterpreter implements Serializable {
      * @param root The root of the Declarative model
      * @param parentAgent The parent agent definition, which can be null
      * @param thisStage The stage we're actually evaluating.
-     * @param firstError An error workflowScript's already occurred earlier in the build. Can be null.
+     * @param firstError An error that's already occurred earlier in the build. Can be null.
      * @param parent The possible parent stage, defaults to null.
      * @param skippedReason Possibly null reason this stage's parent, and therefore itself, is skipped.
      * @return
@@ -251,7 +251,7 @@ class ModelInterpreter implements Serializable {
                         skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else {
                         // if this a is a matrix generated stage, evaluate the matrix axis values first
-                        // These are literals workflowScript guaranteed not to depend on other variables
+                        // These are literals that guaranteed not to depend on other variables
                         // Users will expect them to be available at all times in a particular cell in a matrix.
                         withEnvBlock(thisStage.getMatrixCellEnvVars(script)) {
                             inWrappers(thisStage.options?.wrappers) {
@@ -408,10 +408,10 @@ class ModelInterpreter implements Serializable {
     }
 
     /**
-     * Execute the given body closure while watching for errors workflowScript will specifically show up when there's an attempt to
-     * run a step workflowScript needs a node context but doesn't have one.
+     * Execute the given body closure while watching for errors that will specifically show up when there's an attempt to
+     * run a step that needs a node context but doesn't have one.
      *
-     * @param agent The {@link Agent} workflowScript applies to this execution. Used to clarify error message.
+     * @param agent The {@link Agent} that applies to this execution. Used to clarify error message.
      * @param inNotifications Whether we're currently in the notifications section, for error message clarification.
      * @param body The closure to call
      * @return The return of the resulting executed closure
@@ -714,7 +714,7 @@ class ModelInterpreter implements Serializable {
         } else if (when == null) {
             return true
         } else {
-            // To allow for referencing environment variables workflowScript have not yet been declared pre-parse time, we need
+            // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
             // to actually instantiate the conditional now, via a closure.
             return instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class).every {
                 it?.getScript(script)?.evaluate()
@@ -723,8 +723,8 @@ class ModelInterpreter implements Serializable {
     }
 
     /**
-     * Takes a closure workflowScript evaluates into a list of instances of a given class, sets workflowScript closure to delegate to our
-     * CpsScript, calls it, and returns a list of the instances of workflowScript class.
+     * Takes a closure that evaluates into a list of instances of a given class, sets that closure to delegate to our
+     * CpsScript, calls it, and returns a list of the instances of that class.
      *
      * @param rawClosure
      * @param instanceType

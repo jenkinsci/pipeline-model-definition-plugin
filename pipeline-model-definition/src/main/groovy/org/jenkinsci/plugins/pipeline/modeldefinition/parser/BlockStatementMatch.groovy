@@ -22,7 +22,7 @@ import javax.annotation.Nullable
  */
 class BlockStatementMatch {
     /**
-     * ASTNode workflowScript matches the whole thing, which is a method invocation
+     * ASTNode that matches the whole thing, which is a method invocation
      */
     final MethodCallExpression whole
 
@@ -32,7 +32,7 @@ class BlockStatementMatch {
     final String methodName
 
     /**
-     * Method invocation arguments, including the last one workflowScript's a closure.
+     * Method invocation arguments, including the last one that's a closure.
      */
     final TupleExpression arguments
 
@@ -46,7 +46,7 @@ class BlockStatementMatch {
     BlockStatementMatch(MethodCallExpression whole, String methodName, ClosureExpression body) {
         this.whole = whole
         this.methodName = methodName
-        this.arguments = (TupleExpression)whole.getArguments() // see MethodCallExpression.setArguments() workflowScript guarantee the success of this cast
+        this.arguments = (TupleExpression)whole.getArguments() // see MethodCallExpression.setArguments() that guarantee the success of this cast
         this.body = body
     }
 

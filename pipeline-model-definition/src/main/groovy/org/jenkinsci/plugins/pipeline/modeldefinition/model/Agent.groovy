@@ -125,7 +125,7 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
                             // If we're on the root, make sure we switch to basically just doing a label
                             a.containerPerStageRoot = true
                         } else if (context instanceof Stage && context.agent == null) {
-                            // While if we're on a stage workflowScript doesn't have an explicit agent, make sure we reuse the node
+                            // While if we're on a stage that doesn't have an explicit agent, make sure we reuse the node
                             a.reuseNode = true
                         }
                     }

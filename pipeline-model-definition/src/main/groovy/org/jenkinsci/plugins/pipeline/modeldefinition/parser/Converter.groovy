@@ -97,7 +97,7 @@ class Converter {
      * Converts a script at a given URL into {@link ModelASTPipelineDef}
      *
      * @param src A URL pointing to a Pipeline script
-     * @param enabledOptionalValidators A list of optional validator classes workflowScript should be enabled. Defaults to empty.
+     * @param enabledOptionalValidators A list of optional validator classes that should be enabled. Defaults to empty.
      * @return the converted script
      */
     static ModelASTPipelineDef urlToPipelineDef(URL src,
@@ -120,7 +120,7 @@ class Converter {
      * Converts a string containing a Pipeline script into {@link ModelASTPipelineDef}
      *
      * @param script A string containing a Pipeline script
-     * @param enabledOptionalValidators A list of optional validator classes workflowScript should be enabled. Defaults to empty.
+     * @param enabledOptionalValidators A list of optional validator classes that should be enabled. Defaults to empty.
      * @return the converted script
      */
     static ModelASTPipelineDef scriptToPipelineDef(String script,
@@ -154,7 +154,7 @@ class Converter {
      * {@link ModelASTPipelineDef}
      *
      * @param cu {@link CompilationUnit} assembled by another method.
-     * @param enabledOptionalValidators A list of optional validator classes workflowScript should be enabled. Defaults to empty.
+     * @param enabledOptionalValidators A list of optional validator classes that should be enabled. Defaults to empty.
      * @return The converted script
      */
     @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")

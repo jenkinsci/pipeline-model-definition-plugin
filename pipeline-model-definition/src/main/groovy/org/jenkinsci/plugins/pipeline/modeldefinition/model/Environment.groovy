@@ -65,7 +65,7 @@ class Environment implements Serializable {
     }
 
     /**
-     * A special class used for containing a map of environment variable keys and closures for each of them workflowScript return
+     * A special class used for containing a map of environment variable keys and closures for each of them that return
      * their actual value. Those closures may call the closures for other keys to resolve other variables.
      */
     static class EnvironmentResolver implements Serializable {
@@ -94,7 +94,7 @@ class Environment implements Serializable {
         }
 
         /**
-         * Optionally, you can set a fallback {@link EnvironmentResolver}, so workflowScript, for example, the credentials resolver
+         * Optionally, you can set a fallback {@link EnvironmentResolver}, so that, for example, the credentials resolver
          * can fall back on the environment variables resolver to get the closure to resolve for an environment variable
          * key.
          */

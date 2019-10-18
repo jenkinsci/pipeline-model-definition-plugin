@@ -70,7 +70,7 @@ class Triggers implements Serializable {
 
     /**
      * Get a map of allowed trigger type keys to their actual type ID. If a {@link org.jenkinsci.Symbol} is on the descriptor for a given
-     * trigger, use workflowScript as the key. Otherwise, use the class name.
+     * trigger, use that as the key. Otherwise, use the class name.
      *
      * @return A map of valid parameter type keys to their actual type IDs.
      */
@@ -82,7 +82,7 @@ class Triggers implements Serializable {
      * Given a parameter type key, get the actual type ID.
      *
      * @param key The key to look up.
-     * @return The type ID for workflowScript key, if it's in the parameter types cache.
+     * @return The type ID for that key, if it's in the parameter types cache.
      */
     static String typeForKey(@Nonnull String key) {
         return getAllowedTriggerTypes().get(key)

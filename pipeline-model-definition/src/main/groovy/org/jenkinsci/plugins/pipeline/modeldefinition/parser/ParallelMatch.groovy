@@ -20,7 +20,7 @@ import org.codehaus.groovy.ast.stmt.Statement
  */
 class ParallelMatch {
     /**
-     * ASTNode workflowScript matches the whole thing, which is a method invocation
+     * ASTNode that matches the whole thing, which is a method invocation
      */
     final MethodCallExpression whole
 
