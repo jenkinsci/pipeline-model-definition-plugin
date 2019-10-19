@@ -183,6 +183,12 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         j.assertLogNotContains("Digit release", build);
     }
 
+    /**
+     * IMPORTANT: This appears to be the only test that runs multiple declarative pipeline jobs concurrently on one instance.
+     * You can change this script but make sure it always runs multiple jobs.
+     * It has detected cases where someone started to use static variables in places they shouldn't.
+     * @throws Exception
+     */
     @Test
     public void whenChangeRequest() throws Exception {
         MockSCMController controller = MockSCMController.create();

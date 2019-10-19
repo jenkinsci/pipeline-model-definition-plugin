@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.Variable
 import org.codehaus.groovy.ast.VariableScope
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
@@ -50,6 +51,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.CheckForNull
@@ -97,6 +99,15 @@ class RuntimeASTTransformer {
         return mappedMethod(type.nameWithoutPackage, type, listExpression)
     }
 
+    // TODO: This is gotten pretty involved, maybe the variable and class wrapping belongs in separate inner class?
+    /**
+     * Returns a n
+     * @param object
+     * @return
+     */
+    private int uniqueIdFor(Object object) {
+        return Math.abs(object.hashCode())
+    }
 
     /**
      * Turns an expression into a script bound variable declaration returned from a closure.
@@ -107,17 +118,32 @@ class RuntimeASTTransformer {
      * @return call to a function that returns the provided expression
      */
     Expression rootVarWrapper(Expression expression) {
-        String variableName = "__declarativePipelineRuntime_Expression_${pipelineElementHandles.size()}"
+        VariableExpression variable = asGlobalVariable(closureX(block(returnS(expression))))
+        return callX(variable, 'call')
+    }
+
+    /**
+     * Turns an expression into a script bound variable declaration returned from a closure.
+     * This delays the evaluation of that contents of these variables to when the closure is called,
+     * and also evaluates the contents in the context of the current script environment.
+     *
+     * @param expression the expression to be replaced with a variable
+     * @return call to a function that returns the provided expression
+     */
+    VariableExpression asGlobalVariable(Expression expression, String variableName = null) {
+
+        if (!variableName) {
+            variableName = "__declarativePipelineRuntime_${pipelineElementHandles.size()}_${uniqueIdFor(expression)}"
+        }
 
         VariableExpression variable = varX(variableName)
-        Expression assignedValue = closureX(block(returnS(expression)))
 
-        Expression declarationExpression = new BinaryExpression(variable, ASSIGN, assignedValue)
+        Expression declarationExpression = new BinaryExpression(variable, ASSIGN, expression)
         pipelineElementHandles.add(stmt(declarationExpression))
 
         variable = varX(new DynamicVariable(variableName, false))
 
-        return callX(variable, 'call')
+        return variable
     }
 
 
@@ -133,17 +159,24 @@ class RuntimeASTTransformer {
         // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
         // However, class loading isn't free, so we also don't want a single method per class
         ClassNode classNode = methodClassNode[groupName]
-        String className = null
         // If we don't have a classNode for this group name or if this class has reached groupSize, start a new class
         if (classNode == null || classNode.methods.size() >= groupSize) {
             // Get an uncreative unique class name
-            className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}__"
+            String className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}_${uniqueIdFor(returnXBody)}___"
             classNode = new ClassNode(className, ACC_PUBLIC, ClassHelper.make(RuntimeContainerBase.class))
-            classNode.addConstructor(ACC_PUBLIC, [] as Parameter[], [ClassHelper.make(IOException.class)] as ClassNode[], block(ctorSuperS()))
+            classNode.addConstructor(ACC_PUBLIC, [new Parameter(ClassHelper.make(CpsScript.class), "workflowScript")] as Parameter[], [ClassHelper.make(IOException.class)] as ClassNode[],
+                    block(ctorSuperS(varX("workflowScript"))))
+
             this.moduleNode.addClass(classNode)
+
+            // Add an instance of this class to the variables that can be referenced from anywhere in this script
+            asGlobalVariable(ctorX(classNode, args(varX('this'))), className + "v")
 
             methodClassNode[groupName] = classNode
         }
+
+        String className = classNode.nameWithoutPackage
+        Expression variable = varX(new DynamicVariable(className + "v", false))
 
         // Uncreative method naming is fine
         def methodCount = classNode.methods.size()
@@ -155,21 +188,11 @@ class RuntimeASTTransformer {
                         returnS(returnXBody)
                 )
 
-        // The instance method
-        MethodNode method = new MethodNode(name + "_", ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], methodBody)
+        // The instance method referenced via script binding
+        MethodNode method = new MethodNode(name, ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], methodBody)
         classNode.addMethod(method)
 
-        // A static method wrapping the instance method.
-        // This reduces the complexity at for the top level script, which is where method size most often causes problems.
-        method = new MethodNode(name, ACC_PUBLIC | ACC_STATIC, returnType, [] as Parameter[], [] as ClassNode[],
-                block(
-                        returnS(callX(callX(ClassHelper.make(RuntimeContainerBase.class), 'getInstance', args(classX(classNode))), name + "_"))
-                )
-        )
-        classNode.addMethod(method)
-
-        // Instead of the passed in expression, we return a function call that returns the passed in expression
-        return callX(classNode, name)
+        return callX(variable, name)
     }
 
 

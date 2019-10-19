@@ -25,30 +25,13 @@ import java.util.Map;
  * @author Liam Newman
  */
 public class RuntimeContainerBase extends CpsScript {
-    private static CpsScript workflowScript;
-    private static final Map<Class, RuntimeContainerBase> classMap = new HashMap<Class, RuntimeContainerBase>();
+    private CpsScript workflowScript;
 
     @Whitelisted
-    public RuntimeContainerBase() throws IOException {
+    public RuntimeContainerBase(CpsScript workflowScript) throws IOException {
         super();
-    }
-
-    @Whitelisted
-    public static void initialize(CpsScript script) {
-        workflowScript = script;
-    }
-
-    @Whitelisted
-    public static RuntimeContainerBase getInstance(Class instanceClass) {
-        if (!classMap.containsKey(instanceClass)) {
-            try {
-                classMap.put(instanceClass, (RuntimeContainerBase) instanceClass.getConstructor().newInstance());
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return classMap.get(instanceClass);
+        this.workflowScript = workflowScript;
+        this.setBinding(workflowScript.getBinding());
     }
 
     @Override
@@ -58,12 +41,16 @@ public class RuntimeContainerBase extends CpsScript {
 
     @Override
     public Binding getBinding() {
-        return workflowScript.getBinding();
+        // TODO: Comment on why this is here
+        if (workflowScript != null) {
+            return workflowScript.getBinding();
+        }
+        return super.getBinding();
     }
 
     @Override
     public void setBinding(Binding binding) {
-        workflowScript.setBinding(binding);
+        super.setBinding(binding);
     }
 
     @Override
