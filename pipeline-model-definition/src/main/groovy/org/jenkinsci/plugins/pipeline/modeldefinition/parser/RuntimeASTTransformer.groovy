@@ -1089,7 +1089,7 @@ class RuntimeASTTransformer {
             // If we don't have a classNode for this group name or if this class has reached groupSize, start a new class
             if (classNode == null || classNode.methods.size() >= groupSize) {
                 // Get an uncreative unique class name
-                String className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}_${uniqueIdFor(this.moduleNode.hashCode())}___"
+                String className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}__"
                 classNode = new ClassNode(className, ACC_PUBLIC, ClassHelper.make(RuntimeContainerBase.class))
                 classNode.addConstructor(ACC_PUBLIC, [new Parameter(ClassHelper.make(CpsScript.class), "workflowScript")] as Parameter[], [ClassHelper.make(IOException.class)] as ClassNode[],
                         block(ctorSuperS(varX("workflowScript"))))
