@@ -35,11 +35,8 @@ import org.codehaus.groovy.ast.DynamicVariable
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.Parameter
-import org.codehaus.groovy.ast.Variable
-import org.codehaus.groovy.ast.VariableScope
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
-import org.codehaus.groovy.classgen.VariableScopeVisitor
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.RuntimeContainerBase
@@ -60,7 +57,6 @@ import javax.annotation.Nonnull
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC
-import static org.objectweb.asm.Opcodes.ACC_STATIC
 
 /**
  * Transforms a given {@link ModelASTPipelineDef} into the {@link Root} used for actual runtime. Also attaches a
@@ -68,133 +64,11 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeASTTransformer {
-    SourceUnit sourceUnit
-    ModuleNode moduleNode
-    List<Statement> pipelineElementHandles = new ArrayList<>()
-    def methodClassNode = [:]
-    static def groupSize = 50
+    Wrapper wrapper
 
     RuntimeASTTransformer(SourceUnit sourceUnit) {
-        this.sourceUnit = sourceUnit
-        this.moduleNode = sourceUnit.AST
+        wrapper = new Wrapper(sourceUnit)
     }
-
-    /**
-     * Turns a constructor call into a function call that returns the constructed instance
-     * @param type the type to be instantiated
-     * @param args arguments to the constructor
-     * @return call to a function that returns an instance of type
-     */
-    Expression ctorXFunction(ClassNode type, Expression args) {
-        return mappedMethod(type.nameWithoutPackage, type, ctorX(type, args))
-    }
-
-    /**
-     * Turns a list expression into a function that returns a list expression
-     * @param listExpression the list expression to be wrapped in a function call
-     * @return call to a function that returns the provided ListExpression
-     */
-    Expression listExpressionFunction(ListExpression listExpression) {
-        def type = ClassHelper.make(ListExpression.class)
-        return mappedMethod(type.nameWithoutPackage, type, listExpression)
-    }
-
-    // TODO: This is gotten pretty involved, maybe the variable and class wrapping belongs in separate inner class?
-    /**
-     * Returns a n
-     * @param object
-     * @return
-     */
-    private int uniqueIdFor(Object object) {
-        return Math.abs(object.hashCode())
-    }
-
-    /**
-     * Turns an expression into a script bound variable declaration returned from a closure.
-     * This delays the evaluation of that contents of these variables to when the closure is called,
-     * and also evaluates the contents in the context of the current script environment.
-     *
-     * @param expression the expression to be replaced with a variable
-     * @return call to a function that returns the provided expression
-     */
-    Expression rootVarWrapper(Expression expression) {
-        VariableExpression variable = asGlobalVariable(closureX(block(returnS(expression))))
-        return callX(variable, 'call')
-    }
-
-    /**
-     * Turns an expression into a script bound variable declaration returned from a closure.
-     * This delays the evaluation of that contents of these variables to when the closure is called,
-     * and also evaluates the contents in the context of the current script environment.
-     *
-     * @param expression the expression to be replaced with a variable
-     * @return call to a function that returns the provided expression
-     */
-    VariableExpression asGlobalVariable(Expression expression, String variableName = null) {
-
-        if (!variableName) {
-            variableName = "__declarativePipelineRuntime_${pipelineElementHandles.size()}_${uniqueIdFor(expression)}"
-        }
-
-        VariableExpression variable = varX(variableName)
-
-        Expression declarationExpression = new BinaryExpression(variable, ASSIGN, expression)
-        pipelineElementHandles.add(stmt(declarationExpression))
-
-        variable = varX(new DynamicVariable(variableName, false))
-
-        return variable
-    }
-
-
-    /**
-     * Returns a call expression that will return the passed in expression.
-     * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
-     * @param groupName Name of the grouping to add this function to
-     * @param returnType return type of the function
-     * @param returnXBody expression to be returned
-     * @return callX that returns the value of returnXBody
-     */
-    Expression mappedMethod(String groupName, ClassNode returnType, Expression returnXBody) {
-        // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
-        // However, class loading isn't free, so we also don't want a single method per class
-        ClassNode classNode = methodClassNode[groupName]
-        // If we don't have a classNode for this group name or if this class has reached groupSize, start a new class
-        if (classNode == null || classNode.methods.size() >= groupSize) {
-            // Get an uncreative unique class name
-            String className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}_${uniqueIdFor(returnXBody)}___"
-            classNode = new ClassNode(className, ACC_PUBLIC, ClassHelper.make(RuntimeContainerBase.class))
-            classNode.addConstructor(ACC_PUBLIC, [new Parameter(ClassHelper.make(CpsScript.class), "workflowScript")] as Parameter[], [ClassHelper.make(IOException.class)] as ClassNode[],
-                    block(ctorSuperS(varX("workflowScript"))))
-
-            this.moduleNode.addClass(classNode)
-
-            // Add an instance of this class to the variables that can be referenced from anywhere in this script
-            asGlobalVariable(ctorX(classNode, args(varX('this'))), className + "v")
-
-            methodClassNode[groupName] = classNode
-        }
-
-        String className = classNode.nameWithoutPackage
-        Expression variable = varX(new DynamicVariable(className + "v", false))
-
-        // Uncreative method naming is fine
-        def methodCount = classNode.methods.size()
-        String name = "get${groupName}_${methodCount}"
-
-        // The only thing these methods need to do is contain something to return
-        Statement methodBody =
-                block(
-                        returnS(returnXBody)
-                )
-
-        // The instance method referenced via script binding
-        MethodNode method = new MethodNode(name, ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], methodBody)
-        classNode.addMethod(method)
-
-        return callX(variable, name)
-    }
-
 
     /**
      * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
@@ -215,16 +89,9 @@ class RuntimeASTTransformer {
             }
         }
 
-        BlockStatement result = block()
+        ClosureExpression result = wrapper.createPipelineClosureX(root)
 
-        // These variable handles are declared in this closure, but will still be bound to the script context
-        // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
-        result.addStatements(pipelineElementHandles)
-
-        // finally return the pipeline runtime elements
-        result.addStatement(returnS(root))
-
-        return args(closureX(result))
+        return args(result)
     }
 
     /**
@@ -276,7 +143,7 @@ class RuntimeASTTransformer {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            return ctorXFunction(ClassHelper.make(Agent.class), args(rootVarWrapper(closureX(block(returnS(m))))))
+            return wrapper.asClassMethod(ctorX(ClassHelper.make(Agent.class), args(wrapper.asWrappedGlobal(closureX(block(returnS(m)))))))
         }
 
         return constX(null)
@@ -305,11 +172,11 @@ class RuntimeASTTransformer {
      */
     Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, boolean disableWrapping = false) {
         if (!variables.isEmpty()) {
-            return ctorXFunction(ClassHelper.make(Environment.class),
+            return wrapper.asClassMethod(ctorX(ClassHelper.make(Environment.class),
                     args(
                             generateEnvironmentResolver(variables, ModelASTValue.class, disableWrapping),
                             generateEnvironmentResolver(variables, ModelASTInternalFunctionCall.class, disableWrapping)
-                    ))
+                    )))
         }
         return constX(null)
     }
@@ -362,7 +229,7 @@ class RuntimeASTTransformer {
         // in the case of Matrix Cell Environment blocks, we know they don't need to be inside a closure
         // they are all literal key-values with no external references allowed.
         if(!disableWrapping) {
-            result = rootVarWrapper(result)
+            result = wrapper.asWrappedGlobal(result)
         }
         return result
     }
@@ -774,7 +641,7 @@ class RuntimeASTTransformer {
      */
     Expression transformRoot(@CheckForNull ModelASTPipelineDef original) {
         if (isGroovyAST(original)) {
-            return ctorXFunction(ClassHelper.make(Root.class),
+            return wrapper.asClassMethod(ctorX(ClassHelper.make(Root.class),
                 args(transformAgent(original.agent),
                     transformStages(original.stages),
                     transformPostBuild(original.postBuild),
@@ -784,7 +651,7 @@ class RuntimeASTTransformer {
                     transformTriggers(original.triggers),
                     transformParameters(original.parameters),
                     transformLibraries(original.libraries),
-                    constX(original.stages.getUuid().toString())))
+                    constX(original.stages.getUuid().toString()))))
         }
 
         return constX(null)
@@ -821,7 +688,7 @@ class RuntimeASTTransformer {
                                 parallel,
                                 constX(null)))
             } else {
-                return ctorXFunction(ClassHelper.make(Stage.class),
+                return wrapper.asClassMethod(ctorX(ClassHelper.make(Stage.class),
                         args(constX(original.name),
                                 transformStepsFromStage(original),
                                 transformAgent(original.agent),
@@ -834,7 +701,7 @@ class RuntimeASTTransformer {
                                 transformStageInput(original.input, original.name),
                                 transformStages(original.stages),
                                 parallel,
-                                constX(null)))
+                                constX(null))))
             }
         }
 
@@ -883,16 +750,16 @@ class RuntimeASTTransformer {
                         (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
                             DeclarativeStageConditional.class, cond.name)
                     if (desc != null) {
-                        closList.addExpression(rootVarWrapper(desc.transformToRuntimeAST(cond)))
+                        closList.addExpression(wrapper.asWrappedGlobal(desc.transformToRuntimeAST(cond)))
                     }
                 }
             }
 
-            return ctorXFunction(ClassHelper.make(StageConditionals.class),
-                args(rootVarWrapper(closureX(block(returnS(closList)))),
+            return wrapper.asClassMethod(ctorX(ClassHelper.make(StageConditionals.class),
+                args(wrapper.asWrappedGlobal(closureX(block(returnS(closList)))),
                     constX(original.beforeAgent != null ? original.beforeAgent : false),
                     constX(original.beforeInput != null ? original.beforeInput : false)
-                ))
+                )))
         }
         return constX(null)
     }
@@ -918,7 +785,7 @@ class RuntimeASTTransformer {
             if (disableCtorXFunction) {
                 return ctorX(ClassHelper.make(Parallel.class), args(argList))
             } else {
-                return ctorXFunction(ClassHelper.make(Parallel.class), args(argList))
+                return wrapper.asClassMethod(ctorX(ClassHelper.make(Parallel.class), args(argList)))
             }
         }
 
@@ -942,35 +809,15 @@ class RuntimeASTTransformer {
             // remove excluded combinations
             filterExcludes(expansion, original.excludes)
 
-            // for each combination, generate a new cell
-            // We're generating this a ListExpression which is limited to 250 items.
-            // To circumvent this we will pass an array of lists to a var args.
-            def listLimit = 250
-            if (expansion.size() > listLimit * listLimit) {
-                throw new IllegalArgumentException("Matrix supports up to ${listLimit} cells. Found ${expansion.size()}.")
-            }
+            Expression stagesExpression = wrapper.asWrappedGlobal(transformStages(original.stages, true))
 
-
-            Expression stagesExpression = rootVarWrapper(transformStages(original.stages, true))
-
-            ListExpression expandedMatrixStages = new ListExpression()
             ArrayList<Expression> argList = new ArrayList<>()
-
-            def count = 0
             expansion.each { item ->
-                if (count++ >= listLimit) {
-                    count = 1
-                    argList.add(listExpressionFunction(expandedMatrixStages))
-                    expandedMatrixStages = new ListExpression()
-                }
-
-                expandedMatrixStages.addExpression(transformMatrixStage(item, original, stagesExpression))
+                argList.add(transformMatrixStage(item, original, stagesExpression))
             }
-
-            argList.add(listExpressionFunction(expandedMatrixStages))
 
             // return matrix class containing the list of generated stages
-            return ctorXFunction(ClassHelper.make(Matrix.class), args((Expression[])argList.toArray()))
+            return wrapper.asClassMethod(ctorX(ClassHelper.make(Matrix.class), args(wrapper.toArrayOfListExpressions(argList))))
         }
 
         return constX(null)
@@ -1026,7 +873,7 @@ class RuntimeASTTransformer {
             // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
             String name = "Matrix - " + cellLabels.join(", ")
 
-            return ctorXFunction(ClassHelper.make(Stage.class),
+            return wrapper.asClassMethod(ctorX(ClassHelper.make(Stage.class),
                     args(constX(name),
                             constX(null), // steps
                             transformAgent(original.agent),
@@ -1039,7 +886,7 @@ class RuntimeASTTransformer {
                             transformStageInput(original.input, name),
                             stagesExpression,
                             constX(null), // parallel
-                            transformEnvironmentMap(cell, true)))  //  matrixCellEnvironment holding values for this cell in the matrix
+                            transformEnvironmentMap(cell, true))))  //  matrixCellEnvironment holding values for this cell in the matrix
         }
 
         return constX(null)
@@ -1064,7 +911,7 @@ class RuntimeASTTransformer {
                     if (stepsMatch != null) {
                         Expression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
                         if (!disableWrapping) {
-                            transformedBody = rootVarWrapper(transformedBody)
+                            transformedBody = wrapper.asWrappedGlobal(transformedBody)
                         }
                         return callX(ClassHelper.make(Utils.class), "createStepsBlock",
                             args(transformedBody))
@@ -1126,6 +973,185 @@ class RuntimeASTTransformer {
      */
     Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
         return transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class)
+    }
+
+    private class Wrapper {
+        private SourceUnit sourceUnit
+        private ModuleNode moduleNode
+        private List<Statement> pipelineElementHandles = new ArrayList<>()
+        private def methodClassNode = [:]
+
+        private static final int groupSize = 50
+
+        Wrapper(SourceUnit sourceUnit) {
+            this.sourceUnit = sourceUnit
+            this.moduleNode = sourceUnit.AST
+        }
+
+        /**
+         *
+         * @param root
+         * @return
+         */
+        ClosureExpression createPipelineClosureX(Expression root) {
+
+            BlockStatement result = block()
+
+            // These variable handles are declared in this closure, but will still be bound to the script context
+            // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
+            result.addStatements(pipelineElementHandles)
+
+            // finally return the pipeline runtime elements
+            result.addStatement(returnS(root))
+
+            return closureX(result)
+
+        }
+
+        /**
+         * Turns a constructor call into a function call that returns the constructed instance
+         * @param type the type to be instantiated
+         * @param args arguments to the constructor
+         * @return call to a function that returns an instance of type
+         */
+        Expression asClassMethod(ConstructorCallExpression expression) {
+            wrapper.mappedMethod(expression.type.nameWithoutPackage, expression.type, expression)
+        }
+
+        /**
+         * Returns a n
+         * @param object
+         * @return
+         */
+        private int uniqueIdFor(Object object) {
+            return Math.abs(object.hashCode())
+        }
+
+        /**
+         * Turns an expression into a script bound variable declaration returned from a closure.
+         * This delays the evaluation of that contents of these variables to when the closure is called,
+         * and also evaluates the contents in the context of the current script environment.
+         *
+         * @param expression the expression to be replaced with a variable
+         * @return call to a function that returns the provided expression
+         */
+        Expression asWrappedGlobal(Expression expression) {
+            VariableExpression variable = asGlobalVariable(closureX(block(returnS(expression))))
+            return callX(variable, 'call')
+        }
+
+        /**
+         * Turns a list expression into a function that returns a list expression
+         * @param listExpression the list expression to be wrapped in a function call
+         * @return call to a function that returns the provided ListExpression
+         */
+        private Expression listExpressionFunction(ListExpression listExpression) {
+            def type = ClassHelper.make(ListExpression.class)
+            return mappedMethod(type.nameWithoutPackage, type, listExpression)
+        }
+
+        /**
+         * Turns an expression into a script bound variable declaration returned from a closure.
+         * This delays the evaluation of that contents of these variables to when the closure is called,
+         * and also evaluates the contents in the context of the current script environment.
+         *
+         * @param expression the expression to be replaced with a variable
+         * @return call to a function that returns the provided expression
+         */
+        VariableExpression asGlobalVariable(Expression expression, String variableName = null) {
+
+            if (!variableName) {
+                variableName = "__declarativePipelineRuntime_${pipelineElementHandles.size()}_${uniqueIdFor(expression)}"
+            }
+
+            VariableExpression variable = varX(variableName)
+
+            Expression declarationExpression = new BinaryExpression(variable, ASSIGN, expression)
+            pipelineElementHandles.add(stmt(declarationExpression))
+
+            variable = varX(new DynamicVariable(variableName, false))
+
+            return variable
+        }
+
+        /**
+         * Returns a call expression that will return the passed in expression.
+         * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
+         * @param groupName Name of the grouping to add this function to
+         * @param returnType return type of the function
+         * @param returnXBody expression to be returned
+         * @return callX that returns the value of returnXBody
+         */
+        Expression mappedMethod(String groupName, ClassNode returnType, Expression returnXBody) {
+            // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
+            // However, class loading isn't free, so we also don't want a single method per class
+            ClassNode classNode = methodClassNode[groupName]
+            // If we don't have a classNode for this group name or if this class has reached groupSize, start a new class
+            if (classNode == null || classNode.methods.size() >= groupSize) {
+                // Get an uncreative unique class name
+                String className = "__DeclarativePipelineRuntime_${groupName}_${this.moduleNode.classes.size()}_${uniqueIdFor(this.moduleNode.hashCode())}___"
+                classNode = new ClassNode(className, ACC_PUBLIC, ClassHelper.make(RuntimeContainerBase.class))
+                classNode.addConstructor(ACC_PUBLIC, [new Parameter(ClassHelper.make(CpsScript.class), "workflowScript")] as Parameter[], [ClassHelper.make(IOException.class)] as ClassNode[],
+                        block(ctorSuperS(varX("workflowScript"))))
+
+                this.moduleNode.addClass(classNode)
+
+                // Add an instance of this class to the variables that can be referenced from anywhere in this script
+                asGlobalVariable(ctorX(classNode, args(varX('this'))), className + "v")
+
+                methodClassNode[groupName] = classNode
+            }
+
+            String className = classNode.nameWithoutPackage
+            Expression variable = varX(new DynamicVariable(className + "v", false))
+
+            // Uncreative method naming is fine
+            def methodCount = classNode.methods.size()
+            String name = "get${groupName}_${methodCount}"
+
+            // The only thing these methods need to do is contain something to return
+            Statement methodBody =
+                    block(
+                            returnS(returnXBody)
+                    )
+
+            // The instance method referenced via script binding
+            MethodNode method = new MethodNode(name, ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], methodBody)
+            classNode.addMethod(method)
+
+            return callX(variable, name)
+        }
+
+        Expression[] toArrayOfListExpressions(ArrayList<Expression> expressions) {
+            ListExpression currentListExpression = new ListExpression()
+            ArrayList<Expression> listofLists = new ArrayList<>()
+
+            // for each combination, generate a new cell
+            // We're generating this as a ListExpression which is limited to 250 items.
+            // To circumvent this we will pass an array of lists to a var args.
+            def listLimit = 250
+            if (expressions.size() > listLimit * listLimit) {
+                throw new IllegalArgumentException("Matrix supports up to ${listLimit} cells. Found ${expressions.size()}.")
+            }
+
+            def count = 0
+            expressions.each { item ->
+                if (count++ >= listLimit) {
+                    count = 1
+                    listofLists.add(listExpressionFunction(currentListExpression))
+                    currentListExpression = new ListExpression()
+                }
+
+                currentListExpression.addExpression(item)
+            }
+
+            listofLists.add(listExpressionFunction(currentListExpression))
+
+            // return matrix class containing the list of generated stages
+            return (Expression[])listofLists.toArray()
+        }
+
+
     }
 
 }
