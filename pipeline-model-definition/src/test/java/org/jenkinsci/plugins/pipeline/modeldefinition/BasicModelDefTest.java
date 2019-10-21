@@ -81,6 +81,17 @@ public class BasicModelDefTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Issue("JENKINS-37984")
+    @Test
+    public void stages100WithOutsideVarAndFunc() throws Exception {
+        expect("basic/stages100WithOutsideVarAndFunc")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'a'",
+                "Hi there - This comes from a function")
+            .logNotContains("Method code too large!")
+            .go();
+    }
+
     @Test
     public void failingPipeline() throws Exception {
         expect(Result.FAILURE, "basic/failingPipeline")

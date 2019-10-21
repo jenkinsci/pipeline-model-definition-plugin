@@ -25,8 +25,7 @@
 pipeline {
     agent none
     stages {
-        stage("letters1 = 'a', letters10 = 'a', letters100 = 'a'") {
-            steps { echo "0" } }
+        stage("letters1 = 'a', letters10 = 'a', letters100 = 'a'") { steps { echo "0" } }
         stage("letters1 = 'b', letters10 = 'a', letters100 = 'a'") { steps { echo "0" } }
         stage("letters1 = 'c', letters10 = 'a', letters100 = 'a'") { steps { echo "0" } }
         stage("letters1 = 'd', letters10 = 'a', letters100 = 'a'") { steps { echo "0" } }
