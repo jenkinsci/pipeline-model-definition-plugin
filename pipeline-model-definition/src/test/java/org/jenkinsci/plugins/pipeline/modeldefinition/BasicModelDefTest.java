@@ -71,6 +71,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         s.setLabelString("some-label docker");
     }
 
+    @Issue("JENKINS-47363")
+    @Test
+    public void stages300() throws Exception {
+        expect("basic/stages300")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
+            .logNotContains("List expressions can only contain up to 250 elements")
+            .go();
+    }
+
     @Test
     public void failingPipeline() throws Exception {
         expect(Result.FAILURE, "basic/failingPipeline")
