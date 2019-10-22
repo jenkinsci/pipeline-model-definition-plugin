@@ -214,15 +214,6 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-    @Ignore("Too large for ci testing")
-    @Issue("JENKINS-37984")
-    @Test
-    public void matrix65200() throws Exception {
-        // This is the limit imposed by a list of ListExpression
-        expect("matrix/matrix65200")
-            .go();
-    }
-
     @Test
     public void matrixPipelineTwoAxis() throws Exception {
         expect("matrix/matrixPipelineTwoAxis")

@@ -44,7 +44,7 @@ pipeline {
                 stages {
                     stage("No agent needed") {
                         steps {
-                            echo "0"
+                            echo "exectuted: ${letters1} - ${letters10} - ${letters100}"
                         }
                     }
                 }

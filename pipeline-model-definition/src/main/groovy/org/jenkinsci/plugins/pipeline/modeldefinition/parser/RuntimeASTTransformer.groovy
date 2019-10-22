@@ -1010,7 +1010,14 @@ class RuntimeASTTransformer {
         private final Map<String, ClassNode> methodClassNode = new HashMap<>()
         private final Long pipelineId
 
+        // Group size is somewhat small.  Having more smaller classes is better than accidentally make a class too large
         private final int groupSize = 50
+
+        // Declaration grouping is a little larger.
+        // We don't want to end up with method too large errors, but we also can't have more than around 250 statements
+        // in the script initialization method.
+        private final int declarationGroupSize = 100
+
 
         Wrapper(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef) {
             this.sourceUnit = sourceUnit
@@ -1082,10 +1089,25 @@ class RuntimeASTTransformer {
          */
         @Nonnull
         private void declareClosureScopedHandles(@Nonnull BlockStatement pipelineBlock) {
-            if (moduleNode.statementBlock.statements.size() != 1) {
-                pipelineBlock.addStatements(pipelineElementHandles)
-                pipelineElementHandles.clear()
+            if (moduleNode.statementBlock.statements.size() == 1) {
+                return
             }
+
+            BlockStatement currentBlock = block()
+            int count = 0
+            pipelineElementHandles.each { item ->
+                if (count++ >= declarationGroupSize) {
+                    count = 1
+                    pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
+                    currentBlock = block()
+                }
+
+                currentBlock.addStatement(item)
+            }
+            // These variable handles are declared in functions, but will still be bound to the script context
+            // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
+            pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
+            pipelineElementHandles.clear()
         }
 
         /**
@@ -1102,7 +1124,7 @@ class RuntimeASTTransformer {
             BlockStatement currentBlock = block()
             int count = 0
             pipelineElementHandles.each { item ->
-                if (count++ >= groupSize) {
+                if (count++ >= declarationGroupSize) {
                     count = 1
                     pipelineBlock.addStatement(stmt(defineMethodAndCall("Variables", ClassHelper.VOID_TYPE, currentBlock)))
                     currentBlock = block()
@@ -1113,7 +1135,6 @@ class RuntimeASTTransformer {
 
             // These variable handles are declared in functions, but will still be bound to the script context
             // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
-
             pipelineBlock.addStatement(stmt(defineMethodAndCall("Variables", ClassHelper.VOID_TYPE, currentBlock)))
 
             pipelineElementHandles.clear()
@@ -1144,7 +1165,7 @@ class RuntimeASTTransformer {
          */
         @Nonnull
         Expression withExternalClassContext(@Nonnull List<Expression> listExpression) {
-            return withExternalClassContext("ListExpression", ClassHelper.make(Object.class), toListClosure(listExpression))
+            return toExternalListMethod(listExpression)
         }
 
         /**
@@ -1224,6 +1245,19 @@ class RuntimeASTTransformer {
          */
         @Nonnull
         Expression withExternalClassContext(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Expression expression) {
+            // The only thing these methods need to do is contain something to return
+            return withExternalClassContext(groupName, returnType, block(returnS(expression)))
+        }
+            /**
+         * Returns a call expression that will return the passed in expression.
+         * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
+         * @param groupName Name of the grouping to add this function to
+         * @param returnType return type of the function
+         * @param expression expression to be returned
+         * @return callX that returns the value of returnXBody
+         */
+        @Nonnull
+        Expression withExternalClassContext(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement methodBody) {
             // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
             // However, class loading isn't free, so we also don't want a single method per class
             ClassNode classNode = methodClassNode[groupName]
@@ -1251,12 +1285,6 @@ class RuntimeASTTransformer {
             int methodCount = classNode.methods.size()
             String name = "get${groupName}_${methodCount}"
 
-            // The only thing these methods need to do is contain something to return
-            Statement methodBody =
-                    block(
-                            returnS(expression)
-                    )
-
             // The instance method referenced via script binding
             MethodNode method = new MethodNode(name, ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], methodBody)
             classNode.addMethod(method)
@@ -1265,14 +1293,14 @@ class RuntimeASTTransformer {
         }
 
         /**
-         * Turns a list of expressions into a closure that returns a list (not a ListExpression)
+         * Turns a list of expressions into a method that returns a list (not a ListExpression)
          * Works around limitations on list expression literals
          * (literal "[item0, item1, ...]") being limited to 250 items.
          * @param expressions the list expressions to be wrapped in a function call
-         * @return call to a function that returns the provided ListExpression
+         * @return call to a method that returns the provided ListExpression
          */
         @Nonnull
-        Expression toListClosure(@Nonnull Iterable<Expression> expressions) {
+        private Expression toExternalListMethod(@Nonnull Iterable<Expression> expressions) {
             ListExpression currentListExpression = new ListExpression()
 
             final int listLimit = 250
@@ -1289,18 +1317,21 @@ class RuntimeASTTransformer {
             expressions.each { item ->
                 if (count++ >= listLimit) {
                     count = 1
-                    block.addStatement(stmt(callX(variable, 'addAll', args(currentListExpression))))
+                    block.addStatement(stmt(callX(variable, 'addAll', args(
+                            withExternalClassContext('listExpression', ClassHelper.make(Object.class), currentListExpression)
+                    ))))
                     currentListExpression = new ListExpression()
                 }
 
                 currentListExpression.addExpression(item)
             }
 
-            block.addStatement(stmt(callX(variable, 'addAll', args(currentListExpression))))
+            block.addStatement(stmt(callX(variable, 'addAll', args(
+                    withExternalClassContext('listExpression', ClassHelper.make(Object.class), currentListExpression)
+            ))))
             block.addStatement(returnS(variable))
 
-            return callX(closureX(block), 'call')
+            return withExternalClassContext('listExpression', ClassHelper.make(Object.class), block)
         }
-
     }
 }

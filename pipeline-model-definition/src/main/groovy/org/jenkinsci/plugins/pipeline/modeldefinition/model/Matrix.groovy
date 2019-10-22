@@ -40,7 +40,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 class Matrix extends Parallel {
 
     @Whitelisted
-    Matrix(List<Stage>... stages) {
+    Matrix(List<Stage> stages) {
         super(stages)
     }
 }
