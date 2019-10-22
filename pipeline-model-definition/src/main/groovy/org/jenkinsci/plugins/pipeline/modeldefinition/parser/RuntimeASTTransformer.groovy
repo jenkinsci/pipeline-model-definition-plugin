@@ -1098,7 +1098,6 @@ class RuntimeASTTransformer {
             if (pipelineElementHandles.size() == 0) {
                 return
             }
-            List<Statement> methodCalls = new ArrayList<>()
 
             BlockStatement currentBlock = block()
             int count = 0
@@ -1125,8 +1124,7 @@ class RuntimeASTTransformer {
          * The function is declared on a separate class, outside of the script context.
          * The function cannot reliably access script bindings except via handles to script context variables.
          *
-         * @param type the type to be instantiated
-         * @param args arguments to the constructor
+         * @param expression the constructor call to wrapped
          * @return call to a function that returns an instance of type
          */
         @Nonnull
@@ -1171,12 +1169,21 @@ class RuntimeASTTransformer {
          * @return a variable expression that evaluates to expression
          */
         @Nonnull
-        VariableExpression asScriptContextVariable(@Nonnull Expression expression, @CheckForNull String name = null) {
+        VariableExpression asScriptContextVariable(@Nonnull Expression expression) {
+            return createScriptContextVariable(expression, createStableUniqueName('Closure'))
+        }
 
-            if (!name) {
-                name = createStableUniqueName('Closure')
-            }
-
+        /**
+         * Turns an expression into a script bound variable declaration. This does not wrap in closure.
+         * Evaluation will occur at the start of the pipeline run.
+         * This private because the name is unchecked and could collide with others. Use with caution.
+         *
+         * @param expression the expression to be replaced with a variable
+         * @param name specific name to use for this variable.
+         * @return a variable expression that evaluates to expression
+         */
+        @Nonnull
+        private VariableExpression createScriptContextVariable(@Nonnull Expression expression, @Nonnull String name) {
             VariableExpression variable = varX(name)
 
             Expression declarationExpression = new BinaryExpression(variable, ASSIGN, expression)
@@ -1212,11 +1219,11 @@ class RuntimeASTTransformer {
          * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
          * @param groupName Name of the grouping to add this function to
          * @param returnType return type of the function
-         * @param returnXBody expression to be returned
+         * @param expression expression to be returned
          * @return callX that returns the value of returnXBody
          */
         @Nonnull
-        Expression withExternalClassContext(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Expression returnXBody) {
+        Expression withExternalClassContext(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Expression expression) {
             // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
             // However, class loading isn't free, so we also don't want a single method per class
             ClassNode classNode = methodClassNode[groupName]
@@ -1232,7 +1239,7 @@ class RuntimeASTTransformer {
                 this.moduleNode.addClass(classNode)
 
                 // Add an instance of this class to the variables that can be referenced from anywhere in this script
-                asScriptContextVariable(ctorX(classNode, args(varX('this'))), className)
+                createScriptContextVariable(ctorX(classNode, args(varX('this'))), className)
 
                 methodClassNode[groupName] = classNode
             }
@@ -1247,7 +1254,7 @@ class RuntimeASTTransformer {
             // The only thing these methods need to do is contain something to return
             Statement methodBody =
                     block(
-                            returnS(returnXBody)
+                            returnS(expression)
                     )
 
             // The instance method referenced via script binding
