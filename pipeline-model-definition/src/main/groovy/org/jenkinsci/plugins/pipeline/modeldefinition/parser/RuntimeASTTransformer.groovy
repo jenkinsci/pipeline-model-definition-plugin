@@ -73,6 +73,7 @@ class RuntimeASTTransformer {
      * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
      * run, and return an {@link ArgumentListExpression} containing a closure that returns the {@Root} we just created.
      */
+    @Nonnull
     ArgumentListExpression transform(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?, ?> run) {
         wrapper = new Wrapper(sourceUnit, pipelineDef)
         Expression root = transformRoot(pipelineDef)
@@ -101,6 +102,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for this container class, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformBuildConditionsContainer(@CheckForNull ModelASTBuildConditionsContainer original,
                                                  @Nonnull Class container) {
         if (isGroovyAST(original) && !original.conditions.isEmpty()) {
@@ -123,6 +125,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Agent}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformAgent(@CheckForNull ModelASTAgent original) {
         if (isGroovyAST(original) && original.agentType != null) {
             MapExpression m
@@ -155,6 +158,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Environment}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformEnvironment(@CheckForNull ModelASTEnvironment original) {
         if (isGroovyAST(original)) {
             return transformEnvironmentMap(original.variables)
@@ -169,6 +173,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Environment}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, boolean disableWrapping = false) {
         if (!variables.isEmpty()) {
             return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Environment.class),
@@ -187,6 +192,7 @@ class RuntimeASTTransformer {
      * @param valueType Either {@link ModelASTInternalFunctionCall} for credentials or {@link ModelASTValue} for env.
      * @return The AST for instantiating the resolver.
      */
+    @Nonnull
     private Expression generateEnvironmentResolver(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, @Nonnull Class valueType, boolean disableWrapping) {
         Set<String> keys = new HashSet<>()
 
@@ -466,6 +472,7 @@ class RuntimeASTTransformer {
         return null
     }
 
+    @CheckForNull
     private Statement translateClosureStatement(String targetVar, Statement s, Set<String> keys) {
         if (s == null) {
             return null
@@ -511,6 +518,7 @@ class RuntimeASTTransformer {
     /**
      * Generates the method call for fetching the closure for a given environment key and calling it.
      */
+    @Nonnull
     private MethodCallExpression environmentValueGetterCall(String name) {
         return callX(callThisX("getClosure", constX(name)), "call")
     }
@@ -522,6 +530,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Libraries}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformLibraries(@CheckForNull ModelASTLibraries original) {
         if (isGroovyAST(original) && !original.libs.isEmpty()) {
             ListExpression listArg = new ListExpression()
@@ -543,6 +552,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Options}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformOptions(@CheckForNull ModelASTOptions original) {
         if (isGroovyAST(original) && !original.options.isEmpty()) {
             List<ModelASTOption> jobProps = new ArrayList<>()
@@ -606,6 +616,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Parameters}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformParameters(@CheckForNull ModelASTBuildParameters original) {
         return transformDescribableContainer(original, original?.parameters, Parameters.class, ParameterDefinition.class)
     }
@@ -617,6 +628,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link PostBuild}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformPostBuild(@CheckForNull ModelASTPostBuild original) {
         return transformBuildConditionsContainer(original, PostBuild.class)
     }
@@ -628,6 +640,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link PostStage}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformPostStage(@CheckForNull ModelASTPostStage original) {
         return transformBuildConditionsContainer(original, PostStage.class)
     }
@@ -639,6 +652,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Root}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformRoot(@CheckForNull ModelASTPipelineDef original) {
         if (isGroovyAST(original)) {
             return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Root.class),
@@ -664,6 +678,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stage}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformStage(@CheckForNull ModelASTStage original, boolean disableWrapping = false) {
         if (isGroovyAST(original)) {
             // Matrix is a special form of parallel
@@ -708,6 +723,7 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
+    @Nonnull
     Expression transformStageInput(@CheckForNull ModelASTStageInput original, String stageName) {
         if (isGroovyAST(original)) {
             Expression paramsExpr = constX(null)
@@ -741,6 +757,7 @@ class RuntimeASTTransformer {
      * @param original
      * @return
      */
+    @Nonnull
     Expression transformStageConditionals(@CheckForNull ModelASTWhen original) {
         if (isGroovyAST(original) && !original.getConditions().isEmpty()) {
             ListExpression closList = new ListExpression()
@@ -771,6 +788,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stages}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformStages(@CheckForNull ModelASTStages original, boolean disableWrapping = false) {
         if (isGroovyAST(original) && !original.stages.isEmpty()) {
             ArrayList<Expression> argList = new ArrayList<>()
@@ -800,6 +818,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Matrix}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformMatrix(@CheckForNull ModelASTMatrix original) {
         if (isGroovyAST(original) && !original?.stages?.stages?.isEmpty() && !original?.axes?.axes?.isEmpty()) {
 
@@ -823,8 +842,9 @@ class RuntimeASTTransformer {
         return constX(null)
     }
 
-    Set<Map<ModelASTKey, ModelASTValue>> expandAxes(List<ModelASTAxis> axes) {
-        def result = new LinkedHashSet<Map<ModelASTKey, ModelASTValue>>()
+    @Nonnull
+    private Set<Map<ModelASTKey, ModelASTValue>> expandAxes(@Nonnull List<ModelASTAxis> axes) {
+        Set<Map<ModelASTKey, ModelASTValue>> result = new LinkedHashSet<>()
         // using LinkedHashMap to maintain insertion order
         // axes will be added in the order they are declared
         result.add(new LinkedHashMap<ModelASTKey, ModelASTValue>())
@@ -842,7 +862,8 @@ class RuntimeASTTransformer {
         return result
     }
 
-    void filterExcludes(Set<Map<ModelASTKey, ModelASTValue>> expansion, ModelASTExcludes excludes) {
+    @Nonnull
+    private void filterExcludes(@Nonnull Set<Map<ModelASTKey, ModelASTValue>> expansion, @Nonnull ModelASTExcludes excludes) {
         if (isGroovyAST(excludes)) {
             excludes.excludes.each { exclude ->
                 Set<Map<ModelASTKey, ModelASTValue>> filter = expansion.clone()
@@ -861,7 +882,8 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stage}, or the constant null expression if the original
      * cannot be transformed.
      */
-    Expression transformMatrixStage(@CheckForNull Map<ModelASTKey, ModelASTValue> cell, @CheckForNull ModelASTMatrix original, Expression stagesExpression) {
+    @Nonnull
+    Expression transformMatrixStage(@CheckForNull Map<ModelASTKey, ModelASTValue> cell, @Nonnull ModelASTMatrix original, @Nonnull Expression stagesExpression) {
         if (isGroovyAST(original)) {
 
             //     create a generated stage with unique name based on combination
@@ -900,6 +922,7 @@ class RuntimeASTTransformer {
      * @return A method call of {@link Utils#createStepsBlock(Closure)}, or a constant null expression if the original
      * is null.
      */
+    @Nonnull
     Expression transformStepsFromStage(@CheckForNull ModelASTStage original, boolean disableWrapping = false) {
         if (isGroovyAST(original)) {
             BlockStatementMatch stageMatch = matchBlockStatement((Statement) original.sourceLocation)
@@ -931,6 +954,7 @@ class RuntimeASTTransformer {
      * @return A method call of {@link Utils#createStepsBlock(Closure)}, or a constant null expression if the original
      * is null.
      */
+    @Nonnull
     Expression transformStepsFromBuildCondition(@CheckForNull ModelASTBuildCondition original) {
         if (isGroovyAST(original)) {
             BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
@@ -948,6 +972,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Tools}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformTools(@CheckForNull ModelASTTools original) {
         if (isGroovyAST(original) && !original.tools?.isEmpty()) {
             MapExpression toolsMap = new MapExpression()
@@ -972,6 +997,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Triggers}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
         return transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class)
     }
@@ -984,7 +1010,7 @@ class RuntimeASTTransformer {
         private final Map<String, ClassNode> methodClassNode = new HashMap<>()
         private final Long pipelineId
 
-        private static final int groupSize = 50
+        private final int groupSize = 50
 
         Wrapper(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef) {
             this.sourceUnit = sourceUnit
@@ -1014,7 +1040,8 @@ class RuntimeASTTransformer {
          * @param root the Root element generated by processing the pipeline ast
          * @return a closure to be passed as an arg to the Pipeline runtime
          */
-        ClosureExpression createPipelineClosureX(Expression root) {
+        @Nonnull
+        ClosureExpression createPipelineClosureX(@Nonnull Expression root) {
 
             BlockStatement pipelineBlock = block()
 
@@ -1053,7 +1080,8 @@ class RuntimeASTTransformer {
          *
          * @param pipelineBlock the block statement to add declarations to
          */
-        private void declareClosureScopedHandles(BlockStatement pipelineBlock) {
+        @Nonnull
+        private void declareClosureScopedHandles(@Nonnull BlockStatement pipelineBlock) {
             if (moduleNode.statementBlock.statements.size() != 1) {
                 pipelineBlock.addStatements(pipelineElementHandles)
                 pipelineElementHandles.clear()
@@ -1065,14 +1093,15 @@ class RuntimeASTTransformer {
          * Avoid "method code too large" errors and other compiler breaks related to Groovy, JVM, and CPS limitations.
          * @param pipelineBlock
          */
-        private void declareFunctionGroupedHandles(BlockStatement pipelineBlock) {
+        @Nonnull
+        private void declareFunctionGroupedHandles(@Nonnull BlockStatement pipelineBlock) {
             if (pipelineElementHandles.size() == 0) {
                 return
             }
             List<Statement> methodCalls = new ArrayList<>()
 
             BlockStatement currentBlock = block()
-            def count = 0
+            int count = 0
             pipelineElementHandles.each { item ->
                 if (count++ >= groupSize) {
                     count = 1
@@ -1100,7 +1129,8 @@ class RuntimeASTTransformer {
          * @param args arguments to the constructor
          * @return call to a function that returns an instance of type
          */
-        Expression withExternalClassContext(ConstructorCallExpression expression) {
+        @Nonnull
+        Expression withExternalClassContext(@Nonnull ConstructorCallExpression expression) {
             withExternalClassContext(expression.type.nameWithoutPackage, expression.type, expression)
         }
 
@@ -1114,7 +1144,8 @@ class RuntimeASTTransformer {
          * @param expressions the list of expressions to be wrapped in a closure call
          * @return call to a closure that returns the provided ListExpression
          */
-        Expression withExternalClassContext(List<Expression> listExpression) {
+        @Nonnull
+        Expression withExternalClassContext(@Nonnull List<Expression> listExpression) {
             return withExternalClassContext("ListExpression", ClassHelper.make(Object.class), toListClosure(listExpression))
         }
 
@@ -1126,7 +1157,8 @@ class RuntimeASTTransformer {
          * @param expression the expression to be replaced with a closure wrapped variable
          * @return call to a closure that returns the provided expression
          */
-        Expression asWrappedScriptContextVariable(Expression expression) {
+        @Nonnull
+        Expression asWrappedScriptContextVariable(@Nonnull Expression expression) {
             VariableExpression variable = asScriptContextVariable(closureX(block(returnS(expression))))
             return callX(variable, 'call')
         }
@@ -1138,7 +1170,8 @@ class RuntimeASTTransformer {
          * @param expression the expression to be replaced with a variable
          * @return a variable expression that evaluates to expression
          */
-        VariableExpression asScriptContextVariable(Expression expression, String name = null) {
+        @Nonnull
+        VariableExpression asScriptContextVariable(@Nonnull Expression expression, @CheckForNull String name = null) {
 
             if (!name) {
                 name = createStableUniqueName('Closure')
@@ -1162,7 +1195,8 @@ class RuntimeASTTransformer {
          * @param expression the expression to be replaced with a variable
          * @return call to a function that returns the provided expression
          */
-        Expression defineMethodAndCall(String groupName, ClassNode returnType, Statement statement) {
+        @Nonnull
+        Expression defineMethodAndCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement statement) {
 
             String name = createStableUniqueName(groupName)
 
@@ -1181,7 +1215,8 @@ class RuntimeASTTransformer {
          * @param returnXBody expression to be returned
          * @return callX that returns the value of returnXBody
          */
-        Expression withExternalClassContext(String groupName, ClassNode returnType, Expression returnXBody) {
+        @Nonnull
+        Expression withExternalClassContext(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Expression returnXBody) {
             // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
             // However, class loading isn't free, so we also don't want a single method per class
             ClassNode classNode = methodClassNode[groupName]
@@ -1206,7 +1241,7 @@ class RuntimeASTTransformer {
             Expression variable = varX(new DynamicVariable(className, false))
 
             // Uncreative method naming is fine
-            def methodCount = classNode.methods.size()
+            int methodCount = classNode.methods.size()
             String name = "get${groupName}_${methodCount}"
 
             // The only thing these methods need to do is contain something to return
@@ -1229,7 +1264,8 @@ class RuntimeASTTransformer {
          * @param expressions the list expressions to be wrapped in a function call
          * @return call to a function that returns the provided ListExpression
          */
-        Expression toListClosure(Iterable<Expression> expressions) {
+        @Nonnull
+        Expression toListClosure(@Nonnull Iterable<Expression> expressions) {
             ListExpression currentListExpression = new ListExpression()
 
             final int listLimit = 250
@@ -1242,7 +1278,7 @@ class RuntimeASTTransformer {
             BlockStatement block = block()
             block.addStatement(stmt(declarationExpression))
 
-            def count = 0
+            int count = 0
             expressions.each { item ->
                 if (count++ >= listLimit) {
                     count = 1
