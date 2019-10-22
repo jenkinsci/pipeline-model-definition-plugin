@@ -266,7 +266,7 @@ class ModelParser implements Parser {
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = new RuntimeASTTransformer(sourceUnit).transform(r, build)
+            pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(sourceUnit, r, build)
 
             // Variables require scoping or they'll throw "Unsupported expression for CPS transformation" errors at runtime
             VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(sourceUnit)

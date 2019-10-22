@@ -64,18 +64,17 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeASTTransformer {
-    Wrapper wrapper
+    Wrapper wrapper = null
 
-    RuntimeASTTransformer(SourceUnit sourceUnit) {
-        wrapper = new Wrapper(sourceUnit)
+    RuntimeASTTransformer() {
     }
 
     /**
      * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
      * run, and return an {@link ArgumentListExpression} containing a closure that returns the {@Root} we just created.
      */
-    ArgumentListExpression transform(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?, ?> run) {
-        wrapper.pipelineId = pipelineDef.toJSON().hashCode()
+    ArgumentListExpression transform(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?, ?> run) {
+        wrapper = new Wrapper(sourceUnit, pipelineDef)
         Expression root = transformRoot(pipelineDef)
         if (run != null) {
             ModelASTStages stages = pipelineDef.stages
@@ -985,11 +984,12 @@ class RuntimeASTTransformer {
 
         private static final int groupSize = 50
 
-        int pipelineId = 0
+        String pipelineId = "0"
 
-        Wrapper(SourceUnit sourceUnit) {
+        Wrapper(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef) {
             this.sourceUnit = sourceUnit
             this.moduleNode = sourceUnit.AST
+            pipelineId = pipelineDef.toGroovy().hashCode().toString().replace('-', '_')
         }
 
         /**
@@ -1250,7 +1250,6 @@ class RuntimeASTTransformer {
             block.addStatement(stmt(callX(variable, 'addAll', args(currentListExpression))))
             block.addStatement(returnS(variable))
 
-//            def type = ClassHelper.make(ListExpression.class)
             return callX(closureX(block), 'call')
         }
 

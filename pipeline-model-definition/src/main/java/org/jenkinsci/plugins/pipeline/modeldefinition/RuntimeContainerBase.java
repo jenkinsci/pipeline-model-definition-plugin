@@ -1,17 +1,14 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Binding;
-import groovy.lang.GroovyObject;
 import hudson.model.Run;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * IMPORTANT: This class must inherit from CpsScript or Declarative Pipeline will halt and catch fire.
@@ -25,10 +22,10 @@ import java.util.Map;
  * @author Liam Newman
  */
 public class RuntimeContainerBase extends CpsScript {
-    private CpsScript workflowScript;
+    private final CpsScript workflowScript;
 
     @Whitelisted
-    public RuntimeContainerBase(CpsScript workflowScript) throws IOException {
+    public RuntimeContainerBase(@Nonnull CpsScript workflowScript) throws IOException {
         super();
         this.workflowScript = workflowScript;
         this.setBinding(workflowScript.getBinding());
@@ -41,7 +38,9 @@ public class RuntimeContainerBase extends CpsScript {
 
     @Override
     public Binding getBinding() {
-        // TODO: Comment on why this is here
+        // When this class is first instantiated, getBinding is called inside super()
+        // At that time we get whatever binding has been set.
+        // Once workflowScript is set, we always use that binding.
         if (workflowScript != null) {
             return workflowScript.getBinding();
         }
