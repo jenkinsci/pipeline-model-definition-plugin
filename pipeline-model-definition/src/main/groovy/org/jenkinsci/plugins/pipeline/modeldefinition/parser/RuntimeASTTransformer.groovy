@@ -976,31 +976,36 @@ class RuntimeASTTransformer {
     }
 
     private class Wrapper {
-        private SourceUnit sourceUnit
-        private ModuleNode moduleNode
-        private long nameCount = 0
+        private final SourceUnit sourceUnit
+        private final ModuleNode moduleNode
+        private final Set<String> nameSet = new HashSet<>()
         private final List<Statement> pipelineElementHandles = new ArrayList<>()
-        private final def methodClassNode = [:]
+        private final Map<String, ClassNode> methodClassNode = new HashMap<>()
+        private final Long pipelineId
 
         private static final int groupSize = 50
-
-        String pipelineId = "0"
 
         Wrapper(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef) {
             this.sourceUnit = sourceUnit
             this.moduleNode = sourceUnit.AST
-            pipelineId = pipelineDef.toGroovy().hashCode().toString().replace('-', '_')
+            pipelineId = pipelineDef.toGroovy().hashCode().toLong()
         }
 
         /**
-         *
-         * @param groupName
-         * @param objects
-         * @return
+         * Create a unique name for an item
+         * @param groupName the name of the grouping of items mostly helps with debugging
+         * @return a unique name that won't conflict with any other in the script
          */
-        private String createStableUniqueName(String groupName) {
-            int id = Math.abs(Objects.hash(groupName, nameCount, pipelineId))
-            return "__PipelineRuntime_${groupName}_${nameCount++}_${id}__"
+        @Nonnull
+        private String createStableUniqueName(@Nonnull String groupName) {
+            long id = Math.abs(Objects.hash(groupName, nameSet.size(), pipelineId).toLong())
+            String name = "__model__${groupName}_${nameSet.size()}_${id}__"
+            // This method assumes single threaded generation.
+            // If the transform is multi-threaded, the naming would be non-deterministic.
+            if (!nameSet.add(name)) {
+                throw new RuntimeException("Name collision during runtime model generation. When did model generation become multi-threaded?")
+            }
+            return name
         }
 
         /**
