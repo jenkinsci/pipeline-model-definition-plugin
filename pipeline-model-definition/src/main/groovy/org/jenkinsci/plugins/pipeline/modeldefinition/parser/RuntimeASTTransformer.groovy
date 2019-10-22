@@ -108,10 +108,10 @@ class RuntimeASTTransformer {
             original.conditions.each { cond ->
                 Expression steps = transformStepsFromBuildCondition(cond)
                 if (steps != null) {
-                    nameToSteps.addMapEntryExpression(constX(cond.condition), steps)
+                    nameToSteps.addMapEntryExpression(constX(cond.condition), wrapper.asScriptContextVariable(steps))
                 }
             }
-            return ctorX(ClassHelper.make(container), args(nameToSteps))
+            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(container), args(nameToSteps)))
         }
         return constX(null)
     }
@@ -210,11 +210,17 @@ class RuntimeASTTransformer {
                     }
                     Expression expr = translateEnvironmentValue(k.key, toTransform, keys)
                     if (expr != null) {
-                        if (expr instanceof ClosureExpression) {
-                            closureMap.addMapEntryExpression(constX(k.key), expr)
-                        } else {
-                            closureMap.addMapEntryExpression(constX(k.key), closureX(block(returnS(expr))))
+                        if (!(expr instanceof ClosureExpression)) {
+                            expr = closureX(block(returnS(expr)))
                         }
+
+                        // in the case of Matrix Cell Environment blocks, we know they don't need to be inside a closure
+                        // they are all literal key-values with no external references allowed.
+                        if (!disableWrapping) {
+                            expr = wrapper.asWrappedScriptContextVariable(expr)
+                        }
+
+                        closureMap.addMapEntryExpression(constX(k.key), expr)
                     } else {
                         throw new IllegalArgumentException("Empty closure for ${k.key}")
                     }
@@ -225,11 +231,6 @@ class RuntimeASTTransformer {
         Expression result = callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
                 args(closureMap))
 
-        // in the case of Matrix Cell Environment blocks, we know they don't need to be inside a closure
-        // they are all literal key-values with no external references allowed.
-        if (!disableWrapping) {
-            result = wrapper.asWrappedScriptContextVariable(result)
-        }
         return result
     }
 
@@ -914,7 +915,7 @@ class RuntimeASTTransformer {
                             transformedBody = wrapper.asWrappedScriptContextVariable(transformedBody)
                         }
                         return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                                args(transformedBody))
+                                args(wrapper.asScriptContextVariable(transformedBody)))
                     }
                 }
             }
@@ -935,7 +936,7 @@ class RuntimeASTTransformer {
             BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
             ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
             return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                    args(transformedBody))
+                    args(wrapper.asScriptContextVariable(transformedBody)))
         }
         return constX(null)
     }
@@ -953,13 +954,13 @@ class RuntimeASTTransformer {
             original.tools.each { k, v ->
                 if (v.sourceLocation != null && v.sourceLocation instanceof Expression) {
                     if (v.sourceLocation instanceof ClosureExpression) {
-                        toolsMap.addMapEntryExpression(constX(k.key), (ClosureExpression) v.sourceLocation)
+                        toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable((ClosureExpression) v.sourceLocation))
                     } else {
-                        toolsMap.addMapEntryExpression(constX(k.key), closureX(block(returnS((Expression) v.sourceLocation))))
+                        toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable(closureX(block(returnS((Expression) v.sourceLocation)))))
                     }
                 }
             }
-            return ctorX(ClassHelper.make(Tools.class), args(toolsMap))
+            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Tools.class), args(toolsMap)))
         }
         return constX(null)
     }

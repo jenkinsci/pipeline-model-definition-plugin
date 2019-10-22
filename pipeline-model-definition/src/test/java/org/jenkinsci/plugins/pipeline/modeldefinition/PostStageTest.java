@@ -193,6 +193,14 @@ public class PostStageTest extends AbstractModelDefTest {
                 .logNotContains("PARALLEL STAGE POST").go();
     }
 
+    @Test
+    public void postWithOutsideVarAndFunc() throws Exception {
+        expect("postWithOutsideVarAndFunc")
+            .logContains("Hi there - This comes from a function")
+            .logNotContains("I FAILED")
+            .go();
+    }
+
     @Issue("JENKINS-48266")
     @Test
     public void postAfterParallel() throws Exception {
