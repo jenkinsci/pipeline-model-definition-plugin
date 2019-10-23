@@ -113,7 +113,7 @@ class RuntimeASTTransformer {
                     nameToSteps.addMapEntryExpression(constX(cond.condition), wrapper.asScriptContextVariable(steps))
                 }
             }
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(container), args(nameToSteps)))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(container), args(nameToSteps)))
         }
         return constX(null)
     }
@@ -145,7 +145,7 @@ class RuntimeASTTransformer {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Agent.class), args(wrapper.asWrappedScriptContextVariable(closureX(block(returnS(m)))))))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Agent.class), args(wrapper.asWrappedScriptContextVariable(closureX(block(returnS(m)))))))
         }
 
         return constX(null)
@@ -176,7 +176,7 @@ class RuntimeASTTransformer {
     @Nonnull
     Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, boolean disableWrapping = false) {
         if (!variables.isEmpty()) {
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Environment.class),
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Environment.class),
                     args(
                             generateEnvironmentResolver(variables, ModelASTValue.class, disableWrapping),
                             generateEnvironmentResolver(variables, ModelASTInternalFunctionCall.class, disableWrapping)
@@ -655,7 +655,7 @@ class RuntimeASTTransformer {
     @Nonnull
     Expression transformRoot(@CheckForNull ModelASTPipelineDef original) {
         if (isGroovyAST(original)) {
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Root.class),
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Root.class),
                 args(transformAgent(original.agent),
                     transformStages(original.stages),
                     transformPostBuild(original.postBuild),
@@ -703,7 +703,7 @@ class RuntimeASTTransformer {
                                 parallel,
                                 constX(null)))
             } else {
-                return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Stage.class),
+                return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Stage.class),
                         args(constX(original.name),
                                 transformStepsFromStage(original),
                                 transformAgent(original.agent),
@@ -772,7 +772,7 @@ class RuntimeASTTransformer {
                 }
             }
 
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(StageConditionals.class),
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageConditionals.class),
                     args(wrapper.asWrappedScriptContextVariable(closureX(block(returnS(closList)))),
                             constX(original.beforeAgent != null ? original.beforeAgent : false),
                             constX(original.beforeInput != null ? original.beforeInput : false)
@@ -801,9 +801,9 @@ class RuntimeASTTransformer {
                     ClassHelper.make(Stages.class)
 
             if (disableWrapping) {
-                return ctorX(classNode, args(wrapper.withExternalClassContext(argList)))
+                return ctorX(classNode, args(wrapper.asExternalMethodCall(argList)))
             } else {
-                return wrapper.withExternalClassContext(ctorX(classNode, args(wrapper.withExternalClassContext(argList))))
+                return wrapper.asExternalMethodCall(ctorX(classNode, args(wrapper.asExternalMethodCall(argList))))
             }
         }
 
@@ -836,7 +836,7 @@ class RuntimeASTTransformer {
             }
 
             // return matrix class containing the list of generated stages
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Matrix.class), args(wrapper.withExternalClassContext(argList))))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Matrix.class), args(wrapper.asExternalMethodCall(argList))))
         }
 
         return constX(null)
@@ -895,7 +895,7 @@ class RuntimeASTTransformer {
             // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
             String name = "Matrix - " + cellLabels.join(", ")
 
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Stage.class),
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Stage.class),
                     args(constX(name),
                             constX(null), // steps
                             transformAgent(original.agent),
@@ -985,7 +985,7 @@ class RuntimeASTTransformer {
                     }
                 }
             }
-            return wrapper.withExternalClassContext(ctorX(ClassHelper.make(Tools.class), args(toolsMap)))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Tools.class), args(toolsMap)))
         }
         return constX(null)
     }
@@ -1089,7 +1089,7 @@ class RuntimeASTTransformer {
          */
         @Nonnull
         private void declareClosureScopedHandles(@Nonnull BlockStatement pipelineBlock) {
-            if (moduleNode.statementBlock.statements.size() == 1) {
+            if (moduleNode.statementBlock.statements.size() == 1 || pipelineElementHandles.size() == 0) {
                 return
             }
 
@@ -1149,8 +1149,12 @@ class RuntimeASTTransformer {
          * @return call to a function that returns an instance of type
          */
         @Nonnull
-        Expression withExternalClassContext(@Nonnull ConstructorCallExpression expression) {
-            withExternalClassContext(expression.type.nameWithoutPackage, expression.type, expression)
+        Expression asExternalMethodCall(@Nonnull ConstructorCallExpression expression) {
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
+            asExternalMethodCall(expression.type.nameWithoutPackage, expression.type, expression)
         }
 
         /**
@@ -1164,7 +1168,11 @@ class RuntimeASTTransformer {
          * @return call to a closure that returns the provided ListExpression
          */
         @Nonnull
-        Expression withExternalClassContext(@Nonnull List<Expression> listExpression) {
+        Expression asExternalMethodCall(@Nonnull List<Expression> listExpression) {
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                return new ListExpression(listExpression)
+            }
+
             return toExternalListMethod(listExpression)
         }
 
@@ -1178,7 +1186,11 @@ class RuntimeASTTransformer {
          */
         @Nonnull
         Expression asWrappedScriptContextVariable(@Nonnull Expression expression) {
-            VariableExpression variable = asScriptContextVariable(closureX(block(returnS(expression))))
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
+            Expression variable = asScriptContextVariable(closureX(block(returnS(expression))))
             return callX(variable, 'call')
         }
 
@@ -1190,7 +1202,11 @@ class RuntimeASTTransformer {
          * @return a variable expression that evaluates to expression
          */
         @Nonnull
-        VariableExpression asScriptContextVariable(@Nonnull Expression expression) {
+        Expression asScriptContextVariable(@Nonnull Expression expression) {
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
             return createScriptContextVariable(expression, createStableUniqueName('Closure'))
         }
 
@@ -1204,7 +1220,11 @@ class RuntimeASTTransformer {
          * @return a variable expression that evaluates to expression
          */
         @Nonnull
-        private VariableExpression createScriptContextVariable(@Nonnull Expression expression, @Nonnull String name) {
+        private Expression createScriptContextVariable(@Nonnull Expression expression, @Nonnull String name) {
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
             VariableExpression variable = varX(name)
 
             Expression declarationExpression = new BinaryExpression(variable, ASSIGN, expression)
@@ -1225,6 +1245,9 @@ class RuntimeASTTransformer {
          */
         @Nonnull
         Expression defineMethodAndCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement statement) {
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                throw new RuntimeException("This function cannot be disabled. Pass through of original expression is not possible.")
+            }
 
             String name = createStableUniqueName(groupName)
 
@@ -1244,9 +1267,13 @@ class RuntimeASTTransformer {
          * @return callX that returns the value of returnXBody
          */
         @Nonnull
-        Expression withExternalClassContext(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Expression expression) {
+        Expression asExternalMethodCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Expression expression) {
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
             // The only thing these methods need to do is contain something to return
-            return withExternalClassContext(groupName, returnType, block(returnS(expression)))
+            return asExternalMethodCall(groupName, returnType, block(returnS(expression)))
         }
             /**
          * Returns a call expression that will return the passed in expression.
@@ -1257,7 +1284,11 @@ class RuntimeASTTransformer {
          * @return callX that returns the value of returnXBody
          */
         @Nonnull
-        Expression withExternalClassContext(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement methodBody) {
+        Expression asExternalMethodCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement methodBody) {
+            if (DISABLE_SCRIPT_SPLITTING_TRANSFORMATION) {
+                throw new RuntimeException("This function cannot be disabled. Pass through of original expression is not possible.")
+            }
+            methodBody
             // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
             // However, class loading isn't free, so we also don't want a single method per class
             ClassNode classNode = methodClassNode[groupName]
@@ -1318,7 +1349,7 @@ class RuntimeASTTransformer {
                 if (count++ >= listLimit) {
                     count = 1
                     block.addStatement(stmt(callX(variable, 'addAll', args(
-                            withExternalClassContext('listExpression', ClassHelper.make(Object.class), currentListExpression)
+                            asExternalMethodCall('listExpression', ClassHelper.make(Object.class), currentListExpression)
                     ))))
                     currentListExpression = new ListExpression()
                 }
@@ -1327,11 +1358,14 @@ class RuntimeASTTransformer {
             }
 
             block.addStatement(stmt(callX(variable, 'addAll', args(
-                    withExternalClassContext('listExpression', ClassHelper.make(Object.class), currentListExpression)
+                    asExternalMethodCall('listExpression', ClassHelper.make(Object.class), currentListExpression)
             ))))
             block.addStatement(returnS(variable))
 
-            return withExternalClassContext('listExpression', ClassHelper.make(Object.class), block)
+            return asExternalMethodCall('listExpression', ClassHelper.make(Object.class), block)
         }
     }
+
+    @SuppressFBWarnings(value="the real code for the non-final static vars are bad warning", justification="For access from script console")
+    public static boolean DISABLE_SCRIPT_SPLITTING_TRANSFORMATION = Boolean.getBoolean(RuntimeASTTransformer.class.getName() + ".DISABLE_SCRIPT_SPLITTING_TRANSFORMATION");
 }

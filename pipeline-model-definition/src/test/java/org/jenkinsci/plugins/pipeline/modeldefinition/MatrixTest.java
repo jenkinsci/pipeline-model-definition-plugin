@@ -196,7 +196,7 @@ public class MatrixTest extends AbstractModelDefTest {
     }
 
     @Issue("JENKINS-47363")
-    @Test
+    @Test(timeout=5 * 60 * 1000)
     public void matrix300() throws Exception {
         expect("matrix/matrix300")
             .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a', letters100 = 'a')",

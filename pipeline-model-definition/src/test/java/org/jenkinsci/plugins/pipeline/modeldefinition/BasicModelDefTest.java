@@ -33,6 +33,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
@@ -54,6 +55,7 @@ import org.jvnet.hudson.test.Issue;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -72,13 +74,28 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Issue("JENKINS-47363")
-    @Test
+    // Give this a longer timeout
+    @Test(timeout=5 * 60 * 1000)
     public void stages300() throws Exception {
         expect("basic/stages300")
             .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
                 "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
             .logNotContains("List expressions can only contain up to 250 elements")
             .go();
+    }
+
+    @Test
+    public void stages300NoSplit() throws Exception {
+        try {
+            RuntimeASTTransformer.DISABLE_SCRIPT_SPLITTING_TRANSFORMATION = true;
+            expect(Result.FAILURE, "basic/stages300")
+                .logNotContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                    "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
+                .logContains("List expressions can only contain up to 250 elements")
+                .go();
+        } finally {
+            RuntimeASTTransformer.DISABLE_SCRIPT_SPLITTING_TRANSFORMATION = false;
+        }
     }
 
     @Issue("JENKINS-37984")
