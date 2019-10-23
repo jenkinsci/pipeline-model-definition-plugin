@@ -33,7 +33,7 @@ public class RuntimeContainerBase extends CpsScript {
 
     @Override
     public Object run() {
-        return null;
+        throw new AssertionError("This is a helper script class.  It cannot be run.");
     }
 
     @Override
