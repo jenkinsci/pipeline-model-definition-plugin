@@ -536,10 +536,10 @@ class RuntimeASTTransformer {
             ListExpression listArg = new ListExpression()
             original.libs.each { l ->
                 if (l.sourceLocation instanceof Expression) {
-                    listArg.addExpression((Expression)l.sourceLocation)
+                    listArg.addExpression(wrapper.asWrappedScriptContextVariable((Expression)l.sourceLocation))
                 }
             }
-            return ctorX(ClassHelper.make(Libraries.class), args(listArg))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Libraries.class), args(listArg)))
         }
 
         return constX(null)
@@ -598,12 +598,17 @@ class RuntimeASTTransformer {
                 }
             }
 
+            Expression result
             if (original.inStage) {
-                return ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
+                result = ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
             } else {
-                return ctorX(ClassHelper.make(Options.class),
+                result = ctorX(ClassHelper.make(Options.class),
                     args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
             }
+
+            // This is not a large element but it may have script references,
+            // safe and simple to wrap in a context variable
+            return wrapper.asWrappedScriptContextVariable(result)
         }
 
         return constX(null)
@@ -618,7 +623,7 @@ class RuntimeASTTransformer {
      */
     @Nonnull
     Expression transformParameters(@CheckForNull ModelASTBuildParameters original) {
-        return transformDescribableContainer(original, original?.parameters, Parameters.class, ParameterDefinition.class)
+        return wrapper.asWrappedScriptContextVariable(transformDescribableContainer(original, original?.parameters, Parameters.class, ParameterDefinition.class))
     }
 
     /**
@@ -679,7 +684,7 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     @Nonnull
-    Expression transformStage(@CheckForNull ModelASTStage original, boolean disableWrapping = false) {
+    Expression transformStage(@CheckForNull ModelASTStage original) {
         if (isGroovyAST(original)) {
             // Matrix is a special form of parallel
             // At runtime, they behave the same
@@ -687,37 +692,20 @@ class RuntimeASTTransformer {
                     transformStages(original.parallel) :
                     transformMatrix(original.matrix)
 
-            if (disableWrapping) {
-                return ctorX(ClassHelper.make(Stage.class),
-                        args(constX(original.name),
-                                transformStepsFromStage(original, disableWrapping),
-                                transformAgent(original.agent),
-                                transformPostStage(original.post),
-                                transformStageConditionals(original.when),
-                                transformTools(original.tools),
-                                transformEnvironment(original.environment),
-                                constX(original.failFast != null ? original.failFast : false),
-                                transformOptions(original.options),
-                                transformStageInput(original.input, original.name),
-                                transformStages(original.stages),
-                                parallel,
-                                constX(null)))
-            } else {
-                return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Stage.class),
-                        args(constX(original.name),
-                                transformStepsFromStage(original),
-                                transformAgent(original.agent),
-                                transformPostStage(original.post),
-                                transformStageConditionals(original.when),
-                                transformTools(original.tools),
-                                transformEnvironment(original.environment),
-                                constX(original.failFast != null ? original.failFast : false),
-                                transformOptions(original.options),
-                                transformStageInput(original.input, original.name),
-                                transformStages(original.stages),
-                                parallel,
-                                constX(null))))
-            }
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Stage.class),
+                    args(constX(original.name),
+                            transformStepsFromStage(original),
+                            transformAgent(original.agent),
+                            transformPostStage(original.post),
+                            transformStageConditionals(original.when),
+                            transformTools(original.tools),
+                            transformEnvironment(original.environment),
+                            constX(original.failFast != null ? original.failFast : false),
+                            transformOptions(original.options),
+                            transformStageInput(original.input, original.name),
+                            transformStages(original.stages),
+                            parallel,
+                            constX(null))))
         }
 
         return constX(null)
@@ -789,22 +777,18 @@ class RuntimeASTTransformer {
      * cannot be transformed.
      */
     @Nonnull
-    Expression transformStages(@CheckForNull ModelASTStages original, boolean disableWrapping = false) {
+    Expression transformStages(@CheckForNull ModelASTStages original) {
         if (isGroovyAST(original) && !original.stages.isEmpty()) {
             ArrayList<Expression> argList = new ArrayList<>()
             original.stages.each { s ->
-                argList.add(transformStage(s, disableWrapping))
+                argList.add(transformStage(s))
             }
 
             ClassNode classNode = original instanceof ModelASTParallel ?
                     ClassHelper.make(Parallel.class) :
                     ClassHelper.make(Stages.class)
 
-            if (disableWrapping) {
-                return ctorX(classNode, args(wrapper.asExternalMethodCall(argList)))
-            } else {
-                return wrapper.asExternalMethodCall(ctorX(classNode, args(wrapper.asExternalMethodCall(argList))))
-            }
+            return wrapper.asExternalMethodCall(ctorX(classNode, args(wrapper.asExternalMethodCall(argList))))
         }
 
         return constX(null)
@@ -828,7 +812,7 @@ class RuntimeASTTransformer {
             // remove excluded combinations
             filterExcludes(expansion, original.excludes)
 
-            Expression stagesExpression = wrapper.asWrappedScriptContextVariable(transformStages(original.stages, true))
+            Expression stagesExpression = wrapper.asWrappedScriptContextVariable(transformStages(original.stages))
 
             ArrayList<Expression> argList = new ArrayList<>()
             expansion.each { item ->
@@ -978,11 +962,12 @@ class RuntimeASTTransformer {
             MapExpression toolsMap = new MapExpression()
             original.tools.each { k, v ->
                 if (v.sourceLocation != null && v.sourceLocation instanceof Expression) {
-                    if (v.sourceLocation instanceof ClosureExpression) {
-                        toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable((ClosureExpression) v.sourceLocation))
-                    } else {
-                        toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable(closureX(block(returnS((Expression) v.sourceLocation)))))
+                    Expression expr = (Expression)v.sourceLocation
+                    if (!(expr instanceof ClosureExpression)) {
+                        expr = closureX(block(returnS(expr)))
                     }
+                    toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable(expr))
+
                 }
             }
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Tools.class), args(toolsMap)))
@@ -999,7 +984,7 @@ class RuntimeASTTransformer {
      */
     @Nonnull
     Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
-        return transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class)
+        return wrapper.asWrappedScriptContextVariable(transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class))
     }
 
     private class Wrapper {

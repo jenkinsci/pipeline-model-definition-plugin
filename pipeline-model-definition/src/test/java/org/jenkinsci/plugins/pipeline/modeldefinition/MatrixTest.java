@@ -325,6 +325,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
@@ -361,6 +362,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
@@ -395,6 +397,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
@@ -431,6 +434,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
