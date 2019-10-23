@@ -195,8 +195,9 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Ignore("Too large for ci testing")
     @Issue("JENKINS-47363")
-    @Test(timeout=5 * 60 * 1000)
+    @Test
     public void matrix300() throws Exception {
         expect("matrix/matrix300")
             .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a', letters100 = 'a')",
