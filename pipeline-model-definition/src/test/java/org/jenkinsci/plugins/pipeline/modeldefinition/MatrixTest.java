@@ -43,9 +43,7 @@ import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -303,41 +301,37 @@ public class MatrixTest extends AbstractModelDefTest {
     @Test
     public void matrixStageDirectives() throws Exception {
         // ensure matrix still works with splitting transform turned off
-        try {
-            RuntimeASTTransformer.DISABLE_SCRIPT_SPLITTING_TRANSFORMATION = true;
-            expect("matrix/matrixStageDirectives")
-                .logContains("[Pipeline] { (foo)",
-                    "{ (Branch: Matrix - OS_VALUE = 'linux')",
-                    "{ (Branch: Matrix - OS_VALUE = 'windows')",
-                    "{ (Branch: Matrix - OS_VALUE = 'mac')",
-                    "First stage, mac agent",
-                    "First stage, do not override",
-                    "First stage, overrode once and done",
-                    "First stage, overrode twice, in first mac-os branch",
-                    "First stage, overrode per nested, in first mac-os branch",
-                    "First stage, declared per nested, in first mac-os branch",
-                    "First stage, windows agent",
-                    "First stage, do not override",
-                    "First stage, overrode once and done",
-                    "First stage, overrode twice, in first windows-os branch",
-                    "First stage, overrode per nested, in first windows-os branch",
-                    "First stage, declared per nested, in first windows-os branch",
-                    "First stage, linux agent",
-                    "First stage, do not override",
-                    "First stage, overrode once and done",
-                    "First stage, overrode twice, in first linux-os branch",
-                    "First stage, overrode per nested, in first linux-os branch",
-                    "First stage, declared per nested, in first linux-os branch",
-                    "Apache Maven 3.0.1",
-                    "Apache Maven 3.0.1",
-                    "Apache Maven 3.0.1")
-                .logNotContains("WE SHOULD NEVER GET HERE",
-                    "java.lang.IllegalArgumentException",
-                    "override in matrix axis")
-                .go();
-        } finally {
-            RuntimeASTTransformer.DISABLE_SCRIPT_SPLITTING_TRANSFORMATION = false;
-        }
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
+        expect("matrix/matrixStageDirectives")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
+                "override in matrix axis")
+            .go();
     }
 
 

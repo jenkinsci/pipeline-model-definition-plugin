@@ -55,7 +55,6 @@ import org.jvnet.hudson.test.Issue;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -86,16 +85,12 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Test
     public void stages300NoSplit() throws Exception {
-        try {
-            RuntimeASTTransformer.DISABLE_SCRIPT_SPLITTING_TRANSFORMATION = true;
-            expect(Result.FAILURE, "basic/stages300")
-                .logNotContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
-                    "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
-                .logContains("List expressions can only contain up to 250 elements")
-                .go();
-        } finally {
-            RuntimeASTTransformer.DISABLE_SCRIPT_SPLITTING_TRANSFORMATION = false;
-        }
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
+        expect(Result.FAILURE, "basic/stages300")
+            .logNotContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
+            .logContains("List expressions can only contain up to 250 elements")
+            .go();
     }
 
     @Issue("JENKINS-37984")

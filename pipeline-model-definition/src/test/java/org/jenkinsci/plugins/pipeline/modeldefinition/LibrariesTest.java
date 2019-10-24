@@ -152,6 +152,7 @@ public class LibrariesTest extends AbstractModelDefTest {
             .logContains("something special", "from another library")
             .go();
     }
+
     @Issue("JENKINS-42473")
     @Test
     public void folderLibraryParsing() throws Exception {
