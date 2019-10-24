@@ -177,6 +177,7 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Ignore("Too large for ci testing")
     @Issue("JENKINS-37984")
     @Test
     public void matrix50() throws Exception {
