@@ -62,14 +62,19 @@ class DockerPipelineFromDockerfileScript extends AbstractDockerPipelineScript<Do
 
     private Closure buildImage() {
         return {
-            def dockerfilePath = describable.getDockerfilePath(script.isUnix())
+            boolean isUnix = script.isUnix()
+            def dockerfilePath = describable.getDockerfilePath(isUnix)
             try {
                 RunWrapper runWrapper = (RunWrapper)script.getProperty("currentBuild")
                 def additionalBuildArgs = describable.getAdditionalBuildArgs() ? " ${describable.additionalBuildArgs}" : ""
                 def hash = Utils.stringToSHA1("${runWrapper.fullProjectName}\n${script.readFile("${dockerfilePath}")}\n${additionalBuildArgs}")
                 def imgName = "${hash}"
                 def commandLine = "docker build -t ${imgName}${additionalBuildArgs} -f \"${dockerfilePath}\" \"${describable.getActualDir()}\""
-                script.sh commandLine
+                if (isUnix)
+                    script.sh commandLine
+                else
+                    script.bat commandLine
+
                 return script.getProperty("docker").image(imgName)
             } catch (FileNotFoundException f) {
                 script.error("No Dockerfile found at ${dockerfilePath} in repository - failing.")
