@@ -66,6 +66,10 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeASTTransformer {
 
+    /**
+     * Enables or disables the script splitting behavior in {@Wrapper} which  
+     * mitigates "Method code too large" and "Class too large" errors. 
+     */
     @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="For access from script console")
     public static boolean SCRIPT_SPLITTING_TRANSFORMATION = SystemProperties.getBoolean(
             RuntimeASTTransformer.class.getName() + ".SCRIPT_SPLITTING_TRANSFORMATION",
@@ -118,7 +122,7 @@ class RuntimeASTTransformer {
             original.conditions.each { cond ->
                 Expression steps = transformStepsFromBuildCondition(cond)
                 if (steps != null) {
-                    nameToSteps.addMapEntryExpression(constX(cond.condition), wrapper.asScriptContextVariable(steps))
+                    nameToSteps.addMapEntryExpression(constX(cond.condition), steps)
                 }
             }
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(container), args(nameToSteps)))
@@ -954,9 +958,10 @@ class RuntimeASTTransformer {
     Expression transformStepsFromBuildCondition(@CheckForNull ModelASTBuildCondition original) {
         if (isGroovyAST(original)) {
             BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
-            ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
+            Expression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
+            transformedBody = wrapper.asWrappedScriptContextVariable(transformedBody)
             return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                    args(wrapper.asScriptContextVariable(transformedBody)))
+                    args(transformedBody))
         }
         return constX(null)
     }
@@ -978,7 +983,7 @@ class RuntimeASTTransformer {
                     if (!(expr instanceof ClosureExpression)) {
                         expr = closureX(block(returnS(expr)))
                     }
-                    toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable(expr))
+                    toolsMap.addMapEntryExpression(constX(k.key), wrapper.asWrappedScriptContextVariable(expr))
 
                 }
             }
@@ -999,7 +1004,55 @@ class RuntimeASTTransformer {
         return wrapper.asWrappedScriptContextVariable(transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class))
     }
 
-    private class Wrapper {
+    /**
+     * In order to reduce the occurrence of "Method code too large" and "Class too large" this class can
+     * attempt to split the generated code into multiple classes and methods.
+     *
+     * * "Method code too large" error is thrown when a single method exceeds the 64k byte-code per method limit.
+     *      This is generally caused by script initialization method which by default holds _all_ of the code in the script.
+     *      Mitigated by moving code into separate functions. Can even be functions that return closures that run the
+     *      same behaviors as before.
+     * * "Class too large" error is thrown when there are more that 64k constants in a single class.
+     *      A range of things can cause this but a large number of strings and closures, when
+     *      combined with CPS processing seems to exacerbate the issue.
+     *      Mitigated by moving code in to separate classes.  The classes are special passthrough containers which extend
+     *      {@link RuntimeContainerBase}.
+     *
+     * Neither of these can be prevented completely but they happen signifcantly less often.
+     *
+     * That said there are a number of limitations to where code can safely be moved. With deep analysis of all closures
+     * the script could be transformed in any number of ways. This code splitting functionality works mostly without deep
+     * knowledge of the closures provided by the user, instead relying mostly on the Declarative structure to guide it.
+     *
+     * This script uses three distinct strategies when to decide where to move code:
+     *
+     * 1. All code generated from sections and directives as part of the Declarative runtime is moved into methods on
+     *      automatically generated container classes. This is used for basically all the calls to classes in
+     *      org.jenkinsci.plugins.pipeline.modeldefinition.model -
+     *      {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Root} and so on.
+     *      These containers hold no binding state of their own, they only passthrough all their calls to their parent
+     *      WorkflowScript instance.  An instance of each of these classes is assigned to a variable in the parent script.
+     *      Code is moved into a method one of these classes and the code that was in the parent script is replaced
+     *      by a call to that method.  This moves a good amount of code and constants out of the parent script.
+     *
+     * 2. Expressions provided by the user (closures and values) are wrapped in generated closures that return
+     *      the user-provided expression when they are called. The wrapper closures are assigned to variables added to
+     *      the binding context of the WorkflowScript.  Wrapper closures can then safely be called from the methods of
+     *      the container classes generated in #1. Code inside the wrapper is considered to have been declared
+     *      inside the script. This enables #1 while guaranteeing that from the user perspective the transformed code
+     *      behaves the same as the original code.
+     *
+     * 3. The variable declarations from 1 and 2 are grouped into methods whose definitions are added to the script,
+     *      and which are then called at the start of the script exectution.
+     *      This results in these variables being added to the binding of the script, accessible at runtime.
+     *      This last step keeps the script initialization method from getting too large.
+     *      NOTE: Using methods here subtly changes the behavior of the script in a way that will break user provided
+     *      code from #2 one specific scenario (see {@link #declareClosureScopedHandles for details).
+     *      When Wrapper detects that scenario, it falls back to grouping the variables
+     *      declarations into closures instead of methods.
+     *      This is less effective, but still an improvement.
+     */
+    static final class Wrapper {
         private final SourceUnit sourceUnit
         private final ModuleNode moduleNode
         private final Set<String> nameSet = new HashSet<>()
@@ -1016,7 +1069,7 @@ class RuntimeASTTransformer {
         private final int declarationGroupSize = 100
 
 
-        Wrapper(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef) {
+        private Wrapper(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef) {
             this.sourceUnit = sourceUnit
             this.moduleNode = sourceUnit.AST
             pipelineId = pipelineDef.toGroovy().hashCode().toLong()
@@ -1067,20 +1120,53 @@ class RuntimeASTTransformer {
          * Adding all handle declarations directly to the Pipeline block/closure will error for 250 or more handles.
          * It will also often encounter "method code too large" errors long before that.
          *
-         * Moving groups of handle declarations to script-level functions still adds those handles to the script binding.
+         * Moving groups of handle declarations to script-level methods still adds those handles to the script binding.
          * and avoids "method code too large" errors.
-         * However function declared handles cannot access a script's local variables ("def someVar = 0").
-         * This is the only scenario in which function declared handles with script binding have problems.
          *
-         * To maintain some support for local variables, this method adds handles to the closure when it detects that is needed.
-         * Currently, it adds all handles if  if any if "pipeline {}" is not the only element in script.
-         * This is sufficient for now, but a better solution would be to:
+         * Using methods here subtly changes the behavior of the script in a way that will break user provided
+         * code in specific scenarios (see below). When this method detects one of those scenarios,
+         * it falls back to grouping the handle declarations into closures instead of methods.
+         *
+         * Problem scenarios:
+         *
+         * a. Handles declared inside methods cannot access a script's local variables ("def someVar = 0"). T
+         *      his is a limitation of Groovy itself.
+         *
+         * b. Methods declared in the script cannot be invoked from outside the script, because "invokeMethod()" is not
+         * whitelisted by the groovy sandbox.
+         *
+         * The sandbox limitation is already address by keeping any user provided code in closures declared inside the script.
+         * Any external container classes always call back into one of these closures which are able to call local methods.
+         *
+         * The script-local "def" variables are another matter.
+         *
+         *      def localVar = "script-local variable"
+         *      boundVar = "binding variable"
+         *      def localFunction() {
+         *          // Succeeds
+         *          println boundVar
+         *
+         *          // Fails
+         *          println localVar
+         *      }
+         *
+         * Variables like "boundVar" are held in the script's binding. Script-local "def" variables ("localVar" above)
+         * are defined on the WorkflowScript class itself and can only be access from inside the script or from closures defined
+         * in the initialization function of the script. They cannot be accessed from other functions or classes,
+         * nor from closures defined in other functions or classes.  Thus, when the wrapper puts the closure declarations
+         * into functions they can no longer access script-local "def" variables.
+         *
+         * To maintain some support for local variables, this method detects the presnce of script-local "def" variables
+         * and adds handles to closures instead of methods.
+         *
+         * Currently, it only checks if "pipeline {}" is not the only top level element in script, and in that case it
+         * add _all_ handles to closures.
+         *
+         * This solution is sufficient for now, but a better solution would be to:
          *
          * * Specifically detect that local variables are used
          * * Log a warning that this is no advised
-         * * detect which handles reference local variables and then only declare those handles in the closure.
-         *
-         * This would still hit method too large errors sooner or later, but it would be at quite a bit later.
+         * * detect which handles reference local variables and then only declare those handles in closures.
          *
          * @param pipelineBlock the block statement to add declarations to
          */
@@ -1204,7 +1290,7 @@ class RuntimeASTTransformer {
                 return expression
             }
 
-            return createScriptContextVariable(expression, createStableUniqueName('Variable'))
+            return asExternalMethodCall(createStableUniqueName('Variable'), expression.type, expression)
         }
 
         /**
@@ -1285,7 +1371,7 @@ class RuntimeASTTransformer {
             if (!SCRIPT_SPLITTING_TRANSFORMATION) {
                 throw new RuntimeException("This function cannot be disabled. Pass through of original expression is not possible.")
             }
-            methodBody
+
             // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
             // However, class loading isn't free, so we also don't want a single method per class
             ClassNode classNode = methodClassNode[groupName]
