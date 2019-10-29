@@ -218,7 +218,7 @@ public class DirectiveGeneratorTest {
 
     @Test
     public void whenBranch() throws Exception {
-        WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), true);
+        WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), true, false, false);
 
         assertGenerateDirective(when, "when {\n" +
                 "  branch 'some-pattern'\n" +
@@ -227,8 +227,28 @@ public class DirectiveGeneratorTest {
     }
 
     @Test
+    public void whenBranchBeforeInput() throws Exception {
+        WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), false, true, false);
+
+        assertGenerateDirective(when, "when {\n" +
+                "  branch 'some-pattern'\n" +
+                "  beforeInput true\n" +
+                "}");
+    }
+
+    @Test
+    public void whenBranchBeforeOptions() throws Exception {
+        WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), false, false, true);
+
+        assertGenerateDirective(when, "when {\n" +
+                "  branch 'some-pattern'\n" +
+                "  beforeOptions true\n" +
+                "}");
+    }
+
+    @Test
     public void whenEnvironment() throws Exception {
-        WhenDirective when = new WhenDirective(new EnvironmentConditional("SOME_VAR", "some value"), false);
+        WhenDirective when = new WhenDirective(new EnvironmentConditional("SOME_VAR", "some value"), false, false, false);
 
         assertGenerateDirective(when, "when {\n" +
                 "  environment name: 'SOME_VAR', value: 'some value'\n" +
@@ -237,7 +257,7 @@ public class DirectiveGeneratorTest {
 
     @Test
     public void whenChangelog() throws Exception {
-        WhenDirective when = new WhenDirective(new ChangeLogConditional("some-pattern"), false);
+        WhenDirective when = new WhenDirective(new ChangeLogConditional("some-pattern"), false, false, false);
         assertGenerateDirective(when, "when {\n" +
                 "  changelog 'some-pattern'\n" +
                 "}");
@@ -245,7 +265,7 @@ public class DirectiveGeneratorTest {
 
     @Test
     public void whenChangeset() throws Exception {
-        WhenDirective when = new WhenDirective(new ChangeSetConditional("some/file/in/changeset"), false);
+        WhenDirective when = new WhenDirective(new ChangeSetConditional("some/file/in/changeset"), false, false, false);
 
         assertGenerateDirective(when, "when {\n" +
                 "  changeset 'some/file/in/changeset'\n" +
@@ -254,7 +274,7 @@ public class DirectiveGeneratorTest {
 
     @Test
     public void whenNot() throws Exception {
-        WhenDirective when = new WhenDirective(new NotConditional(new BranchConditional("some-bad-branch")), false);
+        WhenDirective when = new WhenDirective(new NotConditional(new BranchConditional("some-bad-branch")), false, false, false);
 
         assertGenerateDirective(when, "when {\n" +
                 "  not {\n" +
@@ -268,7 +288,7 @@ public class DirectiveGeneratorTest {
         List<DeclarativeStageConditional<?>> nested = new ArrayList<>();
         nested.add(new BranchConditional("that-branch"));
         nested.add(new BranchConditional("this-branch"));
-        WhenDirective when = new WhenDirective(new AnyOfConditional(nested), true);
+        WhenDirective when = new WhenDirective(new AnyOfConditional(nested), true, false, false);
 
         assertGenerateDirective(when, "when {\n" +
                 "  anyOf {\n" +
@@ -284,7 +304,7 @@ public class DirectiveGeneratorTest {
         List<DeclarativeStageConditional<?>> nested = new ArrayList<>();
         nested.add(new BranchConditional("that-branch"));
         nested.add(new BranchConditional("this-branch"));
-        WhenDirective when = new WhenDirective(new AllOfConditional(nested), false);
+        WhenDirective when = new WhenDirective(new AllOfConditional(nested), false, false, false);
 
         assertGenerateDirective(when, "when {\n" +
                 "  allOf {\n" +
@@ -296,7 +316,7 @@ public class DirectiveGeneratorTest {
     
     @Test
     public void whenAllOfEmpty() throws Exception {
-        WhenDirective when = new WhenDirective(new AllOfConditional(null), false);
+        WhenDirective when = new WhenDirective(new AllOfConditional(null), false, false, false);
 
         assertGenerateDirective(when, "when {\n" +
                 "  allOf {\n" +
@@ -317,7 +337,7 @@ public class DirectiveGeneratorTest {
 
         nested.add(new AnyOfConditional(veryNested));
 
-        WhenDirective whenDirective = new WhenDirective(new AllOfConditional(nested), false);
+        WhenDirective whenDirective = new WhenDirective(new AllOfConditional(nested), false, false, false);
 
         assertGenerateDirective(whenDirective, "when {\n" +
                 "  allOf {\n" +
@@ -502,7 +522,7 @@ public class DirectiveGeneratorTest {
         List<DeclarativeStageConditional<?>> nested = new ArrayList<>();
         nested.add(new BranchConditional("that-branch"));
         nested.add(new BranchConditional("this-branch"));
-        WhenDirective when = new WhenDirective(new AllOfConditional(nested), false);
+        WhenDirective when = new WhenDirective(new AllOfConditional(nested), false, false, false);
         AgentDirective agent = new AgentDirective(new DockerPipeline("some-image"));
 
         StageDirective stage = new StageDirective(Arrays.asList(agent, when, env, tools, post), "bob", StageDirective.StageContentType.STEPS);
@@ -541,7 +561,7 @@ public class DirectiveGeneratorTest {
     @Issue("JENKINS-51932")
     @Test
     public void whenIsRestartedRun() throws Exception {
-        WhenDirective when = new WhenDirective(new IsRestartedRunConditional(), false);
+        WhenDirective when = new WhenDirective(new IsRestartedRunConditional(), false, false, false);
         assertGenerateDirective(when, "when {\n" +
                 "  isRestartedRun()\n" +
                 "}");
