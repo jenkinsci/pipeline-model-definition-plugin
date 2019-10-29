@@ -775,7 +775,7 @@ class RuntimeASTTransformer {
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageConditionals.class),
                     args(wrapper.asWrappedScriptContextVariable(closureX(block(returnS(closList)))),
                             constX(original.beforeAgent != null ? original.beforeAgent : false),
-                            constX(original.beforeInput != null ? original.beforeInput : false)
+                            constX(original.beforeInput != null ? original.beforeInput : false),
                             constX(original.beforeOptions != null ? original.beforeOptions : false)
                     )))
         }
@@ -826,6 +826,12 @@ class RuntimeASTTransformer {
             filterExcludes(expansion, original.excludes)
 
             Expression stagesExpression = transformStages(original.stages)
+
+            // With script splitting stagesExpression is a method that creates a new stages expression at runtime
+            // If disabled, we still want to make this a script closure call so we can reuse it instead of generating code for every cell
+            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+                stagesExpression = wrapper.asWrappedScriptContextVariable(stagesExpression, true)
+            }
 
             ArrayList<Expression> argList = new ArrayList<>()
             expansion.each { item ->
@@ -891,12 +897,6 @@ class RuntimeASTTransformer {
 
             // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
             String name = "Matrix - " + cellLabels.join(", ")
-
-            // Script splitting creates a new stages expression at runtime
-            // If disabled, this method needs to create a new stages expression for each cell during processing
-            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
-                stagesExpression = transformStages(original.stages)
-            }
 
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Stage.class),
                     args(constX(name),
@@ -1266,11 +1266,12 @@ class RuntimeASTTransformer {
          * and also evaluates the contents in the context of the current script environment.
          *
          * @param expression the expression to be replaced with a closure wrapped variable
+         * @param force ignore SCRIPT_SPLITTING_TRANSFORMATION and force the expression to be wrapped
          * @return call to a closure that returns the provided expression
          */
         @Nonnull
-        Expression asWrappedScriptContextVariable(@Nonnull Expression expression) {
-            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+        Expression asWrappedScriptContextVariable(@Nonnull Expression expression, boolean force = false) {
+            if (!SCRIPT_SPLITTING_TRANSFORMATION && !force) {
                 return expression
             }
 
@@ -1291,13 +1292,16 @@ class RuntimeASTTransformer {
                 return expression
             }
 
-            return asExternalMethodCall(createStableUniqueName('Variable'), expression.type, expression)
+            return createScriptContextVariable(expression, createStableUniqueName('Variable'))
         }
 
         /**
          * Turns an expression into a script bound variable declaration. This does not wrap in closure.
          * Evaluation will occur at the start of the pipeline run.
-         * This private because the name is unchecked and could collide with others. Use with caution.
+         *
+         * NOTE: This private because the name is unchecked and could collide with other names.
+         * It also does not check SCRIPT_SPLITTING_TRANSFORMATION, it depends on callers to do that.
+         * Use with caution.
          *
          * @param expression the expression to be replaced with a variable
          * @param name specific name to use for this variable.
@@ -1305,10 +1309,6 @@ class RuntimeASTTransformer {
          */
         @Nonnull
         private Expression createScriptContextVariable(@Nonnull Expression expression, @Nonnull String name) {
-            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
-                return expression
-            }
-
             VariableExpression variable = varX(name)
 
             Expression declarationExpression = new BinaryExpression(variable, ASSIGN, expression)
@@ -1324,14 +1324,14 @@ class RuntimeASTTransformer {
          * This delays the evaluation of that contents of these variables to when the closure is called,
          * and also evaluates the contents in the context of the current script environment.
          *
+         * NOTE:
+         * This method does not check SCRIPT_SPLITTING_TRANSFORMATION.
+         *
          * @param expression the expression to be replaced with a variable
          * @return call to a function that returns the provided expression
          */
         @Nonnull
-        Expression defineMethodAndCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement statement) {
-            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
-                throw new RuntimeException("This function cannot be disabled. Pass through of original expression is not possible.")
-            }
+        private Expression defineMethodAndCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement statement) {
 
             String name = createStableUniqueName(groupName)
 
