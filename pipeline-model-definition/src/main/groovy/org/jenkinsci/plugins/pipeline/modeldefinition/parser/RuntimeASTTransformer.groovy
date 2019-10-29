@@ -767,13 +767,13 @@ class RuntimeASTTransformer {
                             (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
                                     DeclarativeStageConditional.class, cond.name)
                     if (desc != null) {
-                        closList.addExpression(wrapper.asWrappedScriptContextVariable(desc.transformToRuntimeAST(cond)))
+                        closList.addExpression(desc.transformToRuntimeAST(cond))
                     }
                 }
             }
 
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageConditionals.class),
-                    args(wrapper.asWrappedScriptContextVariable(closureX(block(returnS(closList)))),
+                    args(wrapper.asScriptContextVariable(closureX(block(returnS(closList)))),
                             constX(original.beforeAgent != null ? original.beforeAgent : false),
                             constX(original.beforeInput != null ? original.beforeInput : false),
                             constX(original.beforeOptions != null ? original.beforeOptions : false)
@@ -937,7 +937,7 @@ class RuntimeASTTransformer {
                     BlockStatementMatch stepsMatch = matchBlockStatement(stepsMethod)
                     if (stepsMatch != null) {
                         Expression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
-                        transformedBody = wrapper.asWrappedScriptContextVariable(transformedBody)
+                        transformedBody = wrapper.asScriptContextVariable(transformedBody)
                         return callX(ClassHelper.make(Utils.class), "createStepsBlock",
                                 args(transformedBody))
                     }
@@ -960,7 +960,7 @@ class RuntimeASTTransformer {
         if (isGroovyAST(original)) {
             BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
             Expression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
-            transformedBody = wrapper.asWrappedScriptContextVariable(transformedBody)
+            transformedBody = wrapper.asScriptContextVariable(transformedBody)
             return callX(ClassHelper.make(Utils.class), "createStepsBlock",
                     args(transformedBody))
         }
@@ -984,7 +984,7 @@ class RuntimeASTTransformer {
                     if (!(expr instanceof ClosureExpression)) {
                         expr = closureX(block(returnS(expr)))
                     }
-                    toolsMap.addMapEntryExpression(constX(k.key), wrapper.asWrappedScriptContextVariable(expr))
+                    toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable(expr))
 
                 }
             }
