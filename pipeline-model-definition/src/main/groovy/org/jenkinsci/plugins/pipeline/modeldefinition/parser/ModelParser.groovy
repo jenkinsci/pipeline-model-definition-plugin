@@ -911,6 +911,8 @@ class ModelParser implements Parser {
                     w.beforeAgent = parseBooleanMethod(mc)
                 } else if (name == "beforeInput") {
                     w.beforeInput = parseBooleanMethod(mc)
+                } else if (name == "beforeOptions") {
+                    w.beforeOptions = parseBooleanMethod(mc)
                 } else {
                     w.conditions.add(parseWhenContent(s))
                 }

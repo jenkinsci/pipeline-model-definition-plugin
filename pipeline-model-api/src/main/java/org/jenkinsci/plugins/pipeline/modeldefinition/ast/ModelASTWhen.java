@@ -43,6 +43,8 @@ public class ModelASTWhen extends ModelASTElement {
 
     private Boolean beforeInput;
 
+    private Boolean beforeOptions;
+
     public ModelASTWhen(Object sourceLocation) {
         super(sourceLocation);
     }
@@ -71,12 +73,21 @@ public class ModelASTWhen extends ModelASTElement {
         this.beforeInput = beforeInput;
     }
 
+    public Boolean getBeforeOptions() {
+        return beforeOptions;
+    }
+
+    public void setBeforeOptions(Boolean beforeOptions) {
+        this.beforeOptions = beforeOptions;
+    }
+
     @Override
     public Object toJSON() {
         return new JSONObject()
                 .accumulate("conditions", toJSONArray(conditions))
                 .elementOpt("beforeAgent", beforeAgent)
-                .elementOpt("beforeInput", beforeInput);
+                .elementOpt("beforeInput", beforeInput)
+                .elementOpt("beforeOptions", beforeOptions);
     }
 
     @Override
@@ -87,6 +98,9 @@ public class ModelASTWhen extends ModelASTElement {
         }
         if (beforeInput != null && beforeInput) {
             result.append("beforeInput true\n");
+        }
+        if (beforeOptions != null && beforeOptions) {
+            result.append("beforeOptions true\n");
         }
         result.append(toGroovy(conditions));
         result.append("}\n");
@@ -105,6 +119,7 @@ public class ModelASTWhen extends ModelASTElement {
                 "conditions=" + conditions +
                 ", beforeAgent=" + beforeAgent +
                 ", beforeInput=" + beforeInput +
+                ", beforeOptions=" + beforeOptions +
                 "}";
     }
 

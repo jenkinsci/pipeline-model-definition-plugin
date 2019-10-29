@@ -776,6 +776,7 @@ class RuntimeASTTransformer {
                     args(wrapper.asWrappedScriptContextVariable(closureX(block(returnS(closList)))),
                             constX(original.beforeAgent != null ? original.beforeAgent : false),
                             constX(original.beforeInput != null ? original.beforeInput : false)
+                            constX(original.beforeOptions != null ? original.beforeOptions : false)
                     )))
         }
         return constX(null)

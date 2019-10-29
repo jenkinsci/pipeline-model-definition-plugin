@@ -418,6 +418,9 @@
         "beforeInput": {
           "type": "boolean"
         },
+        "beforeOptions": {
+          "type": "boolean"
+        },
         "conditions": {
           "type": "array",
           "minItems": 1,

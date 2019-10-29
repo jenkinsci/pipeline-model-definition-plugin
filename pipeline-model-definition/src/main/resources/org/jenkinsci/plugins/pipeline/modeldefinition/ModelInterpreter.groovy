@@ -25,6 +25,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
@@ -253,81 +255,55 @@ class ModelInterpreter implements Serializable {
                         // These are literals that guaranteed not to depend on other variables
                         // Users will expect them to be available at all times in a particular cell in a matrix.
                         withEnvBlock(thisStage.getMatrixCellEnvVars(script)) {
-                            inWrappers(thisStage.options?.wrappers) {
-                                if (thisStage?.parallel != null) {
-                                    stageInput(thisStage.input) {
-                                        if (evaluateWhen(thisStage.when)) {
-                                            withCredentialsBlock(thisStage.environment) {
-                                                withEnvBlock(thisStage.getEnvVars(script)) {
-                                                    script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
-                                                }
-                                            }
-                                        } else {
-                                            skippedReason = new SkippedStageReason.When(thisStage.name)
-                                            skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
-                                        }
-                                    }
-                                } else {
 
-                                    def stageBody = {
-                                        withCredentialsBlock(thisStage.environment) {
-                                            withEnvBlock(thisStage.getEnvVars(script)) {
-                                                toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                                    if (thisStage?.stages) {
-                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, null, null).call()
+                            def whenEvaluator = new WhenEvaluator(thisStage.when)
 
-                                                        // Propagate any possible error from the sequential stages as if it were an error thrown directly.
-                                                        if (nestedError != null) {
-                                                            throw nestedError
+                            if (whenEvaluator.passedOrNotEvaluatedBeforeOptions()) {
+                                inWrappers(thisStage.options?.wrappers) {
+                                    if (whenEvaluator.passedOrNotEvaluatedBeforeInput()) {
+                                        stageInput(thisStage.input) {
+                                            if (thisStage?.parallel != null) {
+                                                if (whenEvaluator.passedOrNotEvaluated()) {
+                                                    withCredentialsBlock(thisStage.environment) {
+                                                        withEnvBlock(thisStage.getEnvVars(script)) {
+                                                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
                                                         }
-                                                    } else {
-                                                        // Execute the actual stage and potential post-stage actions
-                                                        executeSingleStage(root, thisStage, parentAgent)
+                                                    }
+                                                }
+                                            } else {
+                                                if (whenEvaluator.passedOrNotEvaluatedBeforeAgent()) {
+                                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                        if (whenEvaluator.passedOrNotEvaluated()) {
+                                                            withCredentialsBlock(thisStage.environment) {
+                                                                withEnvBlock(thisStage.getEnvVars(script)) {
+                                                                    toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                                        if (thisStage?.stages) {
+                                                                            def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError,
+                                                                                                                       thisStage, null, null).call()
+
+                                                                            // Propagate any possible error from the sequential stages
+                                                                            // as if it were an error thrown directly.
+                                                                            if (nestedError != null) {
+                                                                                throw nestedError
+                                                                            }
+                                                                        } else {
+                                                                            // Execute the actual stage and potential post-stage actions
+                                                                            executeSingleStage(root, thisStage, parentAgent)
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
-
-                                    boolean isBeforeInput = thisStage.when?.beforeInput != null && thisStage.when?.beforeInput
-                                    boolean isBeforeAgent = thisStage.when?.beforeAgent != null && thisStage.when?.beforeAgent
-                                    boolean whenPassed = false
-
-                                    // if is beforeInput -> check when before anything
-                                    if (isBeforeInput) {
-                                        whenPassed = evaluateWhen(thisStage.when)
-                                        if (whenPassed) {
-                                            stageInput(thisStage.input) {
-                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                    stageBody.call()
-                                                }
-                                            }
-                                        }
-                                    } else if (isBeforeAgent) {
-                                        stageInput(thisStage.input) {
-                                            whenPassed = evaluateWhen(thisStage.when)
-                                            if (whenPassed) {
-                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                    stageBody.call()
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        stageInput(thisStage.input) {
-                                            inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                whenPassed = evaluateWhen(thisStage.when)
-                                                if (whenPassed) {
-                                                    stageBody.call()
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if (!whenPassed) {
-                                        skippedReason = new SkippedStageReason.When(thisStage.name)
-                                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
-                                    }
                                 }
+                            }
+                            if (!whenEvaluator.passed) {
+                                skippedReason = new SkippedStageReason.When(thisStage.name)
+                                skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                             }
                         }
                     }
@@ -705,23 +681,6 @@ class ModelInterpreter implements Serializable {
     }
 
     /**
-     *
-     */
-    def evaluateWhen(StageConditionals when, boolean skipDueToParent = false) {
-        if (skipDueToParent) {
-            return false
-        } else if (when == null) {
-            return true
-        } else {
-            // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
-            // to actually instantiate the conditional now, via a closure.
-            return instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class).every {
-                it?.getScript(script)?.evaluate()
-            }
-        }
-    }
-
-    /**
      * Takes a closure that evaluates into a list of instances of a given class, sets that closure to delegate to our
      * CpsScript, calls it, and returns a list of the instances of that class.
      *
@@ -846,5 +805,56 @@ class ModelInterpreter implements Serializable {
      */
     def executeProperties(Root root) {
         Utils.updateJobProperties(root.options?.properties, root.triggers?.triggers, root.parameters?.parameters, root.options?.options, script)
+    }
+
+    /**
+     * Provides convenience methods for the hierarchical evaluation of {@link StageConditionals} (before options, befor input, before agent or default).
+     *
+     * @author Falko Modler
+     */
+    @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+    private class WhenEvaluator implements Serializable {
+
+        final StageConditionals when
+        boolean passed
+
+        WhenEvaluator(StageConditionals when) {
+            if (when != null) {
+                this.when = when
+                this.passed = false
+            } else {
+                this.when = null
+                this.passed = true
+            }
+        }
+
+        def passedOrNotEvaluatedBeforeOptions() {
+            return evaluateWhen(when?.beforeOptions ?: false)
+        }
+
+        def passedOrNotEvaluatedBeforeInput() {
+            return evaluateWhen(when?.beforeInput ?: false)
+        }
+
+        def passedOrNotEvaluatedBeforeAgent() {
+            return evaluateWhen(when?.beforeAgent ?: false)
+        }
+
+        def passedOrNotEvaluated() {
+            return evaluateWhen()
+        }
+
+        private evaluateWhen(boolean evaluateNow = true) {
+            if (passed || !evaluateNow) {
+                return true
+            } else {
+                // To allow for referencing environment variables that have not yet been declared pre-parse time, we need
+                // to actually instantiate the conditional now, via a closure.
+                passed = instancesFromClosure(when.rawClosure, DeclarativeStageConditional.class).every {
+                    return it?.getScript(script)?.evaluate()
+                }
+                return passed
+            }
+        }
     }
 }
