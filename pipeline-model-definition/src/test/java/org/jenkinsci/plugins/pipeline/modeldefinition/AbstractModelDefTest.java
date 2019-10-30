@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -45,10 +46,7 @@ import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
 import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.junit.*;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
@@ -71,6 +69,9 @@ import static org.junit.Assert.assertThat;
  * @author Andrew Bayer
  */
 public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
+
+    private boolean defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
     @ClassRule
@@ -106,6 +107,21 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         }
         return null;
     }
+
+    @Before
+    public void setUpFeatureFlags() {
+        defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+
+        // For testing we want to default to exercising splitting
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
+    }
+
+    @After
+    public void cleanupFeatureFlags() {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = defaultScriptSplitting;
+    }
+
+
 
     @Before
     public void setUp() throws Exception {

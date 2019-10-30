@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,30 +20,42 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
 pipeline {
-    environment {
-        SOME_VAR = "SOME VALUE"
-        CRED1 = credentials("cred1")
-        INBETWEEN = "Something in between"
-        CRED2 = credentials("cred2")
-        OTHER_VAR = "OTHER VALUE"
-    }
-
-    agent any
-
+    agent none
     stages {
-        stage("foo") {
-            steps {
-                echo "SOME_VAR is $SOME_VAR"
-                echo "INBETWEEN is $INBETWEEN"
-                echo "OTHER_VAR is $OTHER_VAR"
-
-                writeFile file: "cred1.txt", text: "${CRED1}"
-                writeFile file: "cred2.txt", text: "${CRED2}"
-                archiveArtifacts "**/*.txt"
+        stage("Matrix Stage") {
+            matrix {
+                axes {
+                    axis {
+                        name 'letters1'
+                        values "a", "b", "c", "d"
+                    }
+                    axis {
+                        name 'letters4'
+                        values "a", "b", "c", "d"
+                    }
+                    axis {
+                        name 'letters16'
+                        values "a", "b", "c", "d"
+                    }
+                    axis {
+                        name 'letters64'
+                        values "a", "b", "c", "d"
+                    }
+                    axis {
+                        name 'letters256'
+                        values "a", "b", "c", "d"
+                    }
+                }
+                stages {
+                    stage("No agent needed") {
+                        steps {
+                            echo "exectuted: ${letters1} - ${letters4} - ${letters16} - ${letters64} - ${letters256}"
+                        }
+                    }
+                }
             }
         }
     }

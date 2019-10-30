@@ -176,6 +176,15 @@ public class OptionsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-44277")
+    @Test
+    public void checkoutToSubdirectoryWithOutsideVarAndFunc() throws Exception {
+        expect("options/checkoutToSubdirectoryWithOutsideVarAndFunc")
+            .logContains("[Pipeline] { (foo)",
+                "hello")
+            .go();
+    }
+
     @Test
     public void simpleWrapper() throws Exception {
         expect("options/simpleWrapper")

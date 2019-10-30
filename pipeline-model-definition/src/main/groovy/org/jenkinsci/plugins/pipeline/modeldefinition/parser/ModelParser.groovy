@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.classgen.VariableScopeVisitor
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
@@ -153,7 +154,7 @@ class ModelParser implements Parser {
         }
 
         if (pst != null) {
-            return parsePipelineStep(pst, secondaryRun)
+            return parsePipelineStep(src, pst, secondaryRun)
         } else {
             // Look for the pipeline step inside methods named call.
             MethodNode callMethod = src.methods.find { it.name == "call" }
@@ -164,7 +165,7 @@ class ModelParser implements Parser {
 
                 if (!pipelineSteps.isEmpty()) {
                     List<ModelASTPipelineDef> pipelineDefs = pipelineSteps.collect { p ->
-                        return parsePipelineStep(p, secondaryRun)
+                        return parsePipelineStep(src, p, secondaryRun)
                     }
                     // Even if there are multiple pipeline blocks, just return the first one - this return value is only
                     // used in a few places: tests, where there will only ever be one, and linting/converting, which also
@@ -181,7 +182,7 @@ class ModelParser implements Parser {
     }
 
     @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
-    private @CheckForNull ModelASTPipelineDef parsePipelineStep(Statement pst, boolean secondaryRun = false) {
+    private @CheckForNull ModelASTPipelineDef parsePipelineStep(ModuleNode src, Statement pst, boolean secondaryRun = false) {
         ModelASTPipelineDef r = new ModelASTPipelineDef(pst)
 
         def pipelineBlock = matchBlockStatement(pst)
@@ -265,7 +266,12 @@ class ModelParser implements Parser {
         // Only transform the pipeline {} to pipeline({ return root }) if this is being called in the compiler and there
         // are no errors.
         if (!secondaryRun && errorCollector.errorCount == 0) {
-            pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(r, build)
+            pipelineBlock.whole.arguments = new RuntimeASTTransformer().transform(sourceUnit, r, build)
+
+            // Variables require scoping or they'll throw "Unsupported expression for CPS transformation" errors at runtime
+            VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(sourceUnit)
+            scopeVisitor.visitClass(src.scriptClassDummy)
+
             // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
             astDebugLog {
                 "Transformed runtime AST: ${ -> prettyPrint(pipelineBlock.whole.arguments)}"

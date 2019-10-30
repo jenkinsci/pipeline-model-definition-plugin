@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2017, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,31 +20,28 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
+def someVar = "echo-utils"
+def someFunc() {
+    return "whereFrom"
+}
+
 pipeline {
-    environment {
-        SOME_VAR = "SOME VALUE"
-        CRED1 = credentials("cred1")
-        INBETWEEN = "Something in between"
-        CRED2 = credentials("cred2")
-        OTHER_VAR = "OTHER VALUE"
+    agent none
+    libraries {
+        lib("${someVar}@master")
+        lib("${someFunc()}")
     }
-
-    agent any
-
     stages {
         stage("foo") {
             steps {
-                echo "SOME_VAR is $SOME_VAR"
-                echo "INBETWEEN is $INBETWEEN"
-                echo "OTHER_VAR is $OTHER_VAR"
-
-                writeFile file: "cred1.txt", text: "${CRED1}"
-                writeFile file: "cred2.txt", text: "${CRED2}"
-                archiveArtifacts "**/*.txt"
+                myecho()
+                whereFrom()
             }
         }
     }
 }
+
+
+

@@ -200,7 +200,8 @@ public class ParallelTest extends AbstractModelDefTest {
                         "Second stage, overrode per nested, in second branch",
                         "Second stage, declared per nested, in second branch",
                         "Apache Maven 3.0.1")
-                .logNotContains("WE SHOULD NEVER GET HERE")
+                .logNotContains("WE SHOULD NEVER GET HERE",
+                    "java.lang.IllegalArgumentException")
                 .go();
     }
 

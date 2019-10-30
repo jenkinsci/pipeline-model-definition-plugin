@@ -29,6 +29,7 @@ import hudson.model.Slave;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.jenkinsci.plugins.pipeline.StageStatus;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
@@ -42,9 +43,7 @@ import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -177,6 +176,45 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Ignore("Too large for ci testing")
+    @Issue("JENKINS-37984")
+    @Test
+    public void matrix50() throws Exception {
+        expect("matrix/matrix50")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'j', letters10 = 'e')")
+            .go();
+    }
+
+    @Issue("JENKINS-37984")
+    @Test
+    public void matrix100() throws Exception {
+        expect("matrix/matrix100")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'j', letters10 = 'j')")
+            .go();
+    }
+
+    @Ignore("Too large for ci testing")
+    @Issue("JENKINS-47363")
+    @Test
+    public void matrix300() throws Exception {
+        expect("matrix/matrix300")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters10 = 'a', letters100 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'j', letters10 = 'j', letters100 = 'c')")
+            .go();
+    }
+
+    @Ignore("Too large for ci testing")
+    @Issue("JENKINS-37984")
+    @Test
+    public void matrix1024() throws Exception {
+        expect("matrix/matrix1024")
+            .logContains("{ (Branch: Matrix - letters1 = 'a', letters4 = 'a', letters16 = 'a', letters64 = 'a', letters256 = 'a')",
+                "{ (Branch: Matrix - letters1 = 'd', letters4 = 'd', letters16 = 'd', letters64 = 'd', letters256 = 'd')")
+            .go();
+    }
+
     @Test
     public void matrixPipelineTwoAxis() throws Exception {
         expect("matrix/matrixPipelineTwoAxis")
@@ -193,6 +231,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("Scenario covered by matrixPipelineTwoAxisExcludeNot ")
     @Test
     public void matrixPipelineTwoAxisOneExclude() throws Exception {
         expect("matrix/matrixPipelineTwoAxisOneExclude")
@@ -209,6 +248,7 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Ignore("Scenario covered by matrixPipelineTwoAxisExcludeNot ")
     @Test
     public void matrixPipelineTwoAxisTwoExcludes() throws Exception {
         expect("matrix/matrixPipelineTwoAxisTwoExcludes")
@@ -260,6 +300,8 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-41334")
     @Test
     public void matrixStageDirectives() throws Exception {
+        // ensure matrix still works with splitting transform turned off
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
         expect("matrix/matrixStageDirectives")
             .logContains("[Pipeline] { (foo)",
                 "{ (Branch: Matrix - OS_VALUE = 'linux')",
@@ -287,6 +329,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
@@ -323,6 +366,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
@@ -357,6 +401,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
@@ -393,6 +438,7 @@ public class MatrixTest extends AbstractModelDefTest {
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
             .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
                 "override in matrix axis")
             .go();
     }
