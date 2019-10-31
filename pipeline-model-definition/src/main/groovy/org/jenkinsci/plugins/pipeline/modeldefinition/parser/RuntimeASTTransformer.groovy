@@ -818,6 +818,7 @@ class RuntimeASTTransformer {
     @Nonnull
     Expression transformMatrix(@CheckForNull ModelASTMatrix original) {
         if (isGroovyAST(original) && !original?.stages?.stages?.isEmpty() && !original?.axes?.axes?.isEmpty()) {
+            throw new RuntimeException("'matrix' directive is not supported yet. Check the plugin update site or use the experimental update center to get the beta).")
 
             // generate matrix combinations of axes - cartesianProduct
             Set<Map<ModelASTKey, ModelASTValue>> expansion = expandAxes(original.axes.axes)
