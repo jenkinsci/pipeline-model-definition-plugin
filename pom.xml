@@ -85,7 +85,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.70</version>
+        <version>2.76-rc2455.7b292ae7a696</version> <!-- TODO: Pending release of https://github.com/jenkinsci/workflow-cps-plugin/pull/325 -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
