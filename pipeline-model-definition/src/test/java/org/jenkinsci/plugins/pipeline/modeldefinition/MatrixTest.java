@@ -86,6 +86,11 @@ public class MatrixTest extends AbstractModelDefTest {
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
     }
 
+    @Before
+    public void matrixDisabled() {
+        Assume.assumeFalse("Disabled matrix tests on this branch.", true);
+    }
+
     @Ignore
     @Issue("JENKINS-41334")
     @Test
