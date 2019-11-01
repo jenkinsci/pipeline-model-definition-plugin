@@ -1,5 +1,9 @@
 # Developer guide to the Declarative Pipeline plugins
 
+## Running Locally
+
+`cd pipeline-model-definition && mvn install && mvn hpi:run`
+
 ## Docker tests on OS X
 
 Docker for Mac out of the box will not be able to run the Docker tests due
