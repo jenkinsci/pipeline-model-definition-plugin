@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2018, CloudBees, Inc.
+  ~ Copyright (c) 2019, CloudBees, Inc., Elasticsearch B.V.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +20,17 @@
   ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   ~ THE SOFTWARE.
+  ~
   -->
 
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry field="pattern" title="Branch pattern">
-        <f:textbox/>
-    </f:entry>
-    <f:advanced>
-        <f:entry field="comparator" title="Comparator">
-            <f:select/>
-        </f:entry>
-    </f:advanced>
-</j:jelly>
+<p>
+    What way to compare the pattern specified to the actual value.
+    <!-- TODO Update when new Comparators are added-->
+    Possible values are:
+<ul>
+    <li><strong>EQUALS</strong> - A plain string comparison</li>
+    <li><strong>GLOB</strong> - <a href="https://ant.apache.org/manual/dirtasks.html#patterns">ANT style pattern</a></li>
+    <li><strong>REGEXP</strong> - <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html">Regular Expression</a></li>
+</ul>
+If not specified <strong>GLOB</strong> will be used as default.
+</p>

@@ -273,6 +273,75 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
     }
 
+    @Test
+    public void whenBranch() throws Exception {
+        MockSCMController controller = MockSCMController.create();
+        controller.createRepository("repoX");
+        controller.createBranch("repoX", "master");
+        controller.addFile("repoX", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenBranch").getBytes());
+        controller.cloneBranch("repoX", "master", "release-two");
+        controller.cloneBranch("repoX", "master", "release-2");
+        controller.cloneBranch("repoX", "master", "foo");
+
+        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
+        project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverBranches())));
+
+        waitFor(project.scheduleBuild2(0));
+        j.waitUntilNoActivity();
+
+        assertThat(project.getItems(), hasSize(4)); //Just tests the multibranch is correctly configured
+
+        // When EQUALS comparator
+        final WorkflowJob master = project.getItem("master");
+        WorkflowRun build = master.getLastBuild();
+        assertNotNull(master);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("master it (default)", build);
+        j.assertLogContains("master it (EQUALS)", build);
+        j.assertLogContains("Stage \"Four\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Five\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Six\" skipped due to when conditional", build);
+
+        // When GLOB comparator
+        WorkflowJob releaseJob = project.getItem("release-two");
+        assertNotNull(releaseJob);
+        build = releaseJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("release it (default)", build);
+        j.assertLogContains("release it (GLOB)", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Six\" skipped due to when conditional", build);
+
+        // When GLOB and REGEXP comparators
+        releaseJob = project.getItem("release-2");
+        assertNotNull(releaseJob);
+        build = releaseJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("release it (default)", build);
+        j.assertLogContains("release it (GLOB)", build);
+        j.assertLogContains("Digit release", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
+
+        // When no matches
+        WorkflowJob fooJob = project.getItem("foo");
+        assertNotNull(fooJob);
+        build = fooJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Four\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Five\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Six\" skipped due to when conditional", build);
+    }
 
     @TestExtension
     public static class TestChangeLogStrategy extends WhenStageTest.TestChangeLogStrategy {

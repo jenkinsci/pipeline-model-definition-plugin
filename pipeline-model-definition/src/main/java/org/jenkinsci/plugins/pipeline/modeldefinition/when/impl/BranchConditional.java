@@ -25,19 +25,22 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
-import org.apache.tools.ant.types.selectors.SelectorUtils;
+import hudson.util.ListBoxModel;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import java.io.File;
+import java.io.IOException;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -45,16 +48,51 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
  * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
  * As populated by {@link jenkins.branch.BranchNameContributor}
  */
+@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public class BranchConditional extends DeclarativeStageConditional<BranchConditional> {
-    private final String compare;
+    @Deprecated
+    private transient String compare;
+    private String pattern;
+    private String comparator;
 
     @DataBoundConstructor
-    public BranchConditional(String compare) {
-        this.compare = compare;
+    public BranchConditional(String pattern) {
+        this.pattern = pattern;
     }
 
+    @Deprecated
     public String getCompare() {
         return compare;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.compare != null) {
+            this.pattern = this.compare;
+        }
+        return this;
+    }
+
+    /**
+     * The {@link Comparator} to use.
+     * Default is {@link Comparator#GLOB}
+     * @return the name of the comparator or null if default.
+     */
+    public String getComparator() {
+        return comparator;
+    }
+
+    @DataBoundSetter
+    public void setComparator(String comparator) {
+        final Comparator c = Comparator.get(comparator, null);
+        if (c != null) {
+            this.comparator = c.name();
+        } else {
+            this.comparator = null;
+        }
     }
 
     public boolean branchMatches(String toCompare, String actualBranch) {
@@ -63,12 +101,9 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
         } else if (isEmpty(actualBranch) || isEmpty(toCompare)) {
             return false;
         }
-        // Replace the Git directory separator character (always '/')
-        // with the platform specific directory separator before
-        // invoking Ant's platform specific path matching.
-        String safeCompare = toCompare.replace('/', File.separatorChar);
-        String safeName = actualBranch.replace('/', File.separatorChar);
-        return SelectorUtils.matchPath(safeCompare, safeName, false);
+
+        Comparator c = Comparator.get(comparator, Comparator.GLOB);
+        return c.compare(toCompare, actualBranch);
     }
 
     @Extension
@@ -83,6 +118,10 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+        }
+
+        public ListBoxModel doFillComparatorItems() {
+            return Comparator.getSelectOptions(true, Comparator.GLOB);
         }
     }
 }
