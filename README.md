@@ -1,8 +1,8 @@
 # Declarative Jenkins Pipelines
 
-[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/pipeline-modeldefinition)](https://plugins.jenkins.io/pipeline-modeldefinition-plugin)
-[![Changelog](https://img.shields.io/github/v/tag/jenkinsci/pipeline-modeldefinition-plugin?label=changelog)](https://github.com/jenkinsci/pipeline-modeldefinition-plugin/blob/master/CHANGELOG.md)
-[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/pipeline-modeldefinition?color=blue)](https://plugins.jenkins.io/pipeline-modeldefinition)
+[![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/pipeline-model-definition)](https://plugins.jenkins.io/pipeline-model-definition)
+[![Changelog](https://img.shields.io/github/v/tag/jenkinsci/pipeline-model-definition-plugin?label=changelog)](https://github.com/jenkinsci/pipeline-model-definition-plugin/blob/master/CHANGELOG.md)
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/pipeline-model-definition?color=blue)](https://plugins.jenkins.io/pipeline-model-definition)
 
 A config-like syntax for defining Pipelines. See [the docs on jenkins.io](https://jenkins.io/doc/) for more information on how to use it.
 
@@ -17,9 +17,9 @@ following warnings before using an older version:
 
 ## Documentation
 
-* [Changelog](https://github.com/jenkinsci/pipeline-modeldefinition-plugin/blob/master/CHANGELOG.md)
-* [Developer Guide](https://github.com/jenkinsci/pipeline-modeldefinition-plugin/blob/master/DEV_GUIDE.md)
-* [Instructions for extending this plugin](https://github.com/jenkinsci/pipeline-modeldefinition-plugin/blob/master/EXTENDING.md)
+* [Changelog](https://github.com/jenkinsci/pipeline-model-definition-plugin/blob/master/CHANGELOG.md)
+* [Developer Guide](https://github.com/jenkinsci/pipeline-model-definition-plugin/blob/master/DEV_GUIDE.md)
+* [Instructions for extending this plugin](https://github.com/jenkinsci/pipeline-model-definition-plugin/blob/master/EXTENDING.md)
 
 
 ## License
