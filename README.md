@@ -1,10 +1,19 @@
-A config-like syntax for defining Pipelines. See [the
-docs on jenkins.io](https://jenkins.io/doc/)
-for more information on how to use it.
+# Pipeline Model Definition Plugin
 
-For developing this: 
+[![Contributors](https://img.shields.io/github/contributors/jenkinsci/pipeline-model-definition-plugin.svg)](https://github.com/jenkinsci/pipeline-model-definition-plugin/contributors)
 
+##Introduction
+The Pipeline Model Definition Plugin is a config-like syntax for defining Pipelines.
+
+###Documentation
+ For more information about plugin see documentation on the [jenkins.io](https://wiki.jenkins.io/display/JENKINS/Pipeline+Model+Definition+Plugin).
+
+
+### Developing
+- To start developing plugin: 
+- Clone the plugin repository
 `cd pipeline-model-definition && mvn install && mvn hpi:run`
 
-For extending, and the api information, consult [EXTENDING.md](EXTENDING.md)
+### API extension
+For functionality extending, and the API information, consult [EXTENDING.md](EXTENDING.md)
 
