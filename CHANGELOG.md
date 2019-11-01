@@ -356,7 +356,7 @@ to 1.2 will probably fail on resuming.
             Logs for `error` steps visible in Blue Ocean correctly.
         -   [JENKINS-45991](https://issues.jenkins-ci.org/browse/JENKINS-45991) - `environment` variables
             can be configured to have default values,
-            i.e., `FOO = FOO ?: "default"```
+            i.e., `FOO = FOO ?: "default"`
 -   [JENKINS-46065](https://issues.jenkins-ci.org/browse/JENKINS-46065) -
     Provide an extension point for contributing to Declarative
     validation.
