@@ -1,5 +1,21 @@
 # Changelog
 
+## Version 1.4.0
+
+(November 4, 2019)
+
+-   [JENKINS-59115](https://issues.jenkins-ci.org/browse/JENKINS-59115) -
+    Support comparator for the when branch @v1v (#351)
+-   [JENKINS-37984](https://issues.jenkins-ci.org/browse/JENKINS-37984) -
+    Mitigate "Method code too large! error"  @bitwiseman (#355)
+-   [JENKINS-51865](https://issues.jenkins-ci.org/browse/JENKINS-51865) -
+    Introduce beforeOptions in 'when' @famod (#356)
+-   [JENKINS-47703](https://issues.jenkins-ci.org/browse/JENKINS-47703) -
+    allow building dockerfile on Windows @casz (#354)
+-   [JENKINS-54322](https://issues.jenkins-ci.org/browse/JENKINS-54322) -
+    enable markStageSkippedForConditional within the scripted @v1v (#346)
+-   Remove call to System.err.println in ModelInterprer.groovy @dwnusbaum (#334)
+
 ## Version 1.3.9
 
 (June 7, 2019)
