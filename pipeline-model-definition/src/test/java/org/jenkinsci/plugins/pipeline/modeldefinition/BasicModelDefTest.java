@@ -72,13 +72,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         s.setLabelString("some-label docker");
     }
 
-    @Test
-    public void matrixPipelineDisabled() throws Exception {
-        expect(Result.FAILURE, "matrix/matrixPipeline")
-            .logContains("'matrix' directive is not supported yet.")
-            .go();
-    }
-
     @Issue("JENKINS-47363")
     // Give this a longer timeout
     @Test(timeout=5 * 60 * 1000)
