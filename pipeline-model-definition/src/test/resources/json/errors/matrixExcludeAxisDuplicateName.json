@@ -1,0 +1,153 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "matrix":     {
+      "axes":       [
+        {
+          "name": "OS_VALUE",
+          "values":           [
+            {
+              "isLiteral": true,
+              "value": "linux"
+            },
+            {
+              "isLiteral": true,
+              "value": "windows"
+            },
+            {
+              "isLiteral": true,
+              "value": "mac"
+            }
+          ]
+        },
+        {
+          "name": "BROWSER_VALUE",
+          "values":           [
+            {
+              "isLiteral": true,
+              "value": "firefox"
+            },
+            {
+              "isLiteral": true,
+              "value": "chrome"
+            },
+            {
+              "isLiteral": true,
+              "value": "safari"
+            },
+            {
+              "isLiteral": true,
+              "value": "ie"
+            }
+          ]
+        }
+      ],
+      "excludes":       [
+        [
+          {
+            "name": "OS_VALUE",
+            "values": [            {
+              "isLiteral": true,
+              "value": "linux"
+            }]
+          },
+          {
+            "name": "OS_VALUE",
+            "inverse": true,
+            "values":           [
+              {
+                "isLiteral": true,
+                "value": "windows"
+              },
+              {
+                "isLiteral": true,
+                "value": "mac"
+              }
+            ]
+          },
+          {
+            "name": "BROWSER_VALUE",
+            "values": [            {
+              "isLiteral": true,
+              "value": "safari"
+            }]
+          }
+        ],
+        [
+          {
+            "name": "OS_VALUE",
+            "values": [            {
+              "isLiteral": true,
+              "value": "windows"
+            }],
+            "inverse": true
+          },
+          {
+            "name": "BROWSER_VALUE",
+            "values": [            {
+              "isLiteral": true,
+              "value": "ie"
+            }]
+          }
+        ]
+      ],
+      "stages":       [
+        {
+          "name": "first",
+          "branches": [          {
+            "name": "default",
+            "steps":             [
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": true,
+                    "value": "First branch"
+                  }
+                }]
+              },
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": false,
+                    "value": "\"OS=${OS_VALUE}\""
+                  }
+                }]
+              },
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": false,
+                    "value": "\"BROWSER=${BROWSER_VALUE}\""
+                  }
+                }]
+              }
+            ]
+          }]
+        },
+        {
+          "name": "second",
+          "branches": [          {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "Second branch"
+                }
+              }]
+            }]
+          }]
+        }
+      ]
+    }
+  }],
+  "agent": {"type": "none"}
+}}

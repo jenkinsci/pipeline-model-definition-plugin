@@ -37,7 +37,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 @EqualsAndHashCode
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class Stages implements Serializable {
-    List<Stage> stages = []
+    private final List<Stage> stages = []
 
     @Whitelisted
     Stages(List<Stage> stages) {

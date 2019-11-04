@@ -1,0 +1,66 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "matrix":     {
+      "axes":       [
+      ],
+      "stages":       [
+        {
+          "name": "first",
+          "branches": [          {
+            "name": "default",
+            "steps":             [
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": true,
+                    "value": "First branch"
+                  }
+                }]
+              },
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": false,
+                    "value": "\"OS=${OS_VALUE}\""
+                  }
+                }]
+              },
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": false,
+                    "value": "\"BROWSER=${BROWSER_VALUE}\""
+                  }
+                }]
+              }
+            ]
+          }]
+        },
+        {
+          "name": "second",
+          "branches": [          {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "Second branch"
+                }
+              }]
+            }]
+          }]
+        }
+      ]
+    }
+  }],
+  "agent": {"type": "none"}
+}}

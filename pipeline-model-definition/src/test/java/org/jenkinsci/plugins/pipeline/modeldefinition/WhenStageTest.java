@@ -89,15 +89,6 @@ public class WhenStageTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void simpleWhen() throws Exception {
-        env(s).put("SECOND_STAGE", "NOPE").set();
-        ExpectationsBuilder expect = expect("when/conditions", "whenExpression").runFromRepo(false);
-        expect.logContains("One", "Hello", "Should I run?", "Two").logNotContains("World").go();
-        env(s).put("SECOND_STAGE", "RUN").set();
-        expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Should I run?", "Two", "World").go();
-    }
-
-    @Test
     public void whenException() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
         expect(Result.FAILURE, "when/conditions", "whenException").runFromRepo(false)
@@ -458,6 +449,26 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-51865")
+    @Test
+    public void whenBeforeOptionsTrue() throws Exception {
+        expect("when/whenBeforeOptionsTrue")
+                .logContains("Stage One here")
+                .logNotContains("Stage Two here")
+                .logNotContains("Timeout set to expire")
+                .go();
+    }
+
+    @Issue("JENKINS-51865")
+    @Test
+    public void whenBeforeOptionsFalse() throws Exception {
+        expect("when/whenBeforeOptionsFalse")
+                .logContains("Stage One here")
+                .logNotContains("Stage Two here")
+                .logContains("Timeout set to expire")
+                .go();
+    }
+
     @Issue("JENKINS-49226")
     @Test
     public void whenEquals() throws Exception {
@@ -603,25 +614,12 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     }
 
-    @Test
-    public void basicWhen() throws Exception {
-        expect("when/basicWhen")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
+    // basicWhen, skippedWhen, whenBranchFalse, whenBranchTrue, whenNot, whenOr, whenAnd are covered elsewhere
 
     @Test
     public void whenExprUsingOutsideVarAndFunc() throws Exception {
         expect("when/whenExprUsingOutsideVarAndFunc")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void skippedWhen() throws Exception {
-        expect("when/skippedWhen")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
                 .go();
     }
 
@@ -633,47 +631,10 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Test
-    public void whenBranchFalse() throws Exception {
-        expect("when/whenBranchFalse")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
-                .go();
-    }
-
-    @Test
-    public void whenBranchTrue() throws Exception {
-        expect("when/whenBranchTrue")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
     @Issue("JENKINS-42226")
     @Test
     public void whenBranchNull() throws Exception {
         expect("when/whenBranchNull")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
-                .go();
-    }
-
-    @Test
-    public void whenNot() throws Exception {
-        expect("when/whenNot")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenOr() throws Exception {
-        expect("when/whenOr")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenAnd() throws Exception {
-        expect("when/whenAnd")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
@@ -707,24 +668,10 @@ public class WhenStageTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void whenEnvTrue() throws Exception {
-        expect("when/whenEnvTrue")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenEnvIgnoreCase() throws Exception {
-        expect("when/whenEnvIgnoreCase")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenEnvFalse() throws Exception {
-        expect("when/whenEnvFalse")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
+    public void whenEnv() throws Exception {
+        expect("when/whenEnv")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World", "Ignore case worked")
+                .logNotContains("Should never be reached")
                 .go();
     }
 

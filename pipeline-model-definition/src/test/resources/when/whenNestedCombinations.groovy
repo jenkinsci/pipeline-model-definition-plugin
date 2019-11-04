@@ -60,7 +60,7 @@ pipeline {
                 anyOf {
                     allOf {
                         not {
-                            expression { false }
+                            branch "SOME_OTHER_BRANCH"
                         }
                         expression { true }
                     }

@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -23,42 +22,24 @@ public final class ModelASTTools extends ModelASTElement {
 
     @Override
     public JSONArray toJSON() {
-        final JSONArray a = new JSONArray();
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry: tools.entrySet()) {
-            JSONObject o = new JSONObject();
-            o.accumulate("key", entry.getKey().toJSON());
-            o.accumulate("value", entry.getValue().toJSON());
-            a.add(o);
-        }
-        return a;
+        return toJSONArray(tools);
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : tools.entrySet()) {
-            entry.getKey().validate(validator);
-            entry.getValue().validate(validator);
-        }
+        validate(validator, tools);
     }
 
     @Override
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("tools {\n");
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : tools.entrySet()) {
-            result.append(entry.getKey().toGroovy()).append(' ').append(entry.getValue().toGroovy()).append('\n');
-        }
-        result.append("}\n");
-        return result.toString();
+        return toGroovyBlock("tools", tools, " ");
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : tools.entrySet()) {
-            entry.getKey().removeSourceLocation();
-            entry.getValue().removeSourceLocation();
-        }
+        removeSourceLocationsFrom(tools);
     }
 
     public Map<ModelASTKey, ModelASTValue> getTools() {

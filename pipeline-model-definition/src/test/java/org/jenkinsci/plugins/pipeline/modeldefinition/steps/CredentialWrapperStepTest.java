@@ -148,18 +148,16 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .archives("cred2.txt", mixedEnvCred2U + ":" + mixedEnvCred2P).go();
     }
 
-    /* TODO: Re-enable once https://issues.jenkins-ci.org/browse/JENKINS-41004 is resolved
     @Test
     public void mixedEnvInFolder() throws Exception {
 
-        expect("credentials", "environment/mixedEnv").runFromRepo(false).inFolder(folder)
+        expect("environment/mixedEnv").runFromRepo(false).inFolder(folder)
                 .logContains("SOME_VAR is SOME VALUE",
                              "INBETWEEN is Something in between",
                              "OTHER_VAR is OTHER VALUE")
                 .archives("cred1.txt", mixedEnvInFolderCred1Secret)
                 .archives("cred2.txt", mixedEnvInFoldercred2U + ":" + mixedEnvInFolderCred2P).go();
     }
-    */
 
     @Test
     public void noBindingAvailable() throws Exception {

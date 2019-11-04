@@ -41,6 +41,6 @@ class BranchConditionalScript extends DeclarativeStageConditionalScript<BranchCo
             // fall back to GIT_LOCAL_BRANCH - note that GIT_BRANCH will have the remote on it, while BRANCH_NAME doesn't.
             branchName = (String)script.getProperty("env").getProperty("GIT_LOCAL_BRANCH")
         }
-        return describable.branchMatches(describable.compare, branchName)
+        return describable.branchMatches(describable.pattern, branchName)
     }
 }

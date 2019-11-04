@@ -193,6 +193,14 @@ public class PostStageTest extends AbstractModelDefTest {
                 .logNotContains("PARALLEL STAGE POST").go();
     }
 
+    @Test
+    public void postWithOutsideVarAndFunc() throws Exception {
+        expect("postWithOutsideVarAndFunc")
+            .logContains("Hi there - This comes from a function")
+            .logNotContains("I FAILED")
+            .go();
+    }
+
     @Issue("JENKINS-48266")
     @Test
     public void postAfterParallel() throws Exception {
@@ -236,7 +244,7 @@ public class PostStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-52114")
     @Test
     public void abortedShouldNotTriggerFailure() throws Exception {
-        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        assumeSh();
         WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
         job.setDefinition(new CpsFlowDefinition("" +
                 "pipeline {\n" +

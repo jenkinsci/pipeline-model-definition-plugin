@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -45,10 +46,7 @@ import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
 import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.junit.*;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
@@ -71,6 +69,9 @@ import static org.junit.Assert.assertThat;
  * @author Andrew Bayer
  */
 public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
+
+    private boolean defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
     @ClassRule
@@ -108,25 +109,35 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     }
 
     @Before
+    public void setUpFeatureFlags() {
+        defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+
+        // For testing we want to default to exercising splitting
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
+    }
+
+    @After
+    public void cleanupFeatureFlags() {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = defaultScriptSplitting;
+    }
+
+
+
+    @Before
     public void setUp() throws Exception {
         ToolInstallations.configureMaven3();
     }
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
-            "simplePipeline",
             "agent/agentAny",
             "agent/agentLabel",
             "agent/agentNoneWithNode",
             "steps/metaStepSyntax",
             "environment/simpleEnvironment",
             "simpleScript",
-            "basic/twoStagePipeline",
-            "steps/validStepParameters",
-            "parallel/parallelPipeline",
             "postStage/simplePostBuild",
             "simpleTools",
-            "steps/legacyMetaStepSyntax",
-            "perStageConfigAgent",
+            "agent/agentInStageAutoCheckout",
             "options/simpleJobProperties",
             "simpleTriggers",
             "simpleParameters",
@@ -136,18 +147,13 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "agent/multipleVariablesForAgent",
             "toolsInStage",
             "environment/environmentInStage",
-            "when/basicWhen",
-            "when/skippedWhen",
             "parallel/parallelPipelineWithFailFast",
-            "when/whenBranchFalse",
-            "when/whenEnvFalse",
+            "when/whenNestedCombinations",
+            "when/whenEnv",
             "parallel/parallelPipelineWithSpaceInBranch",
             "parallel/parallelPipelineQuoteEscaping",
             "steps/nestedTreeSteps",
             "agent/inCustomWorkspace",
-            "when/whenNot",
-            "when/whenOr",
-            "when/whenAnd",
             "when/whenBeforeAgentTrue",
             "when/whenBeforeInputFalse",
             "environment/usernamePassword",
@@ -157,7 +163,12 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "when/conditions/changelog/changelog",
             "when/conditions/changelog/changeset",
             "environment/backslashReductionInEnv",
-            "stageWrapper"
+            "stageWrapper",
+            "matrix/matrixPipeline",
+            "matrix/matrixPipelineTwoAxis",
+            "matrix/matrixPipelineTwoAxisOneExclude",
+            "matrix/matrixPipelineTwoAxisTwoExcludes",
+            "matrix/matrixPipelineTwoAxisExcludeNot"
     );
 
     public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(
@@ -226,6 +237,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
         result.add(new Object[]{"whenMissingRequiredParameter", Messages.ModelValidatorImpl_MissingRequiredStepParameter("value")});
         result.add(new Object[]{"whenUnknownParameter", Messages.ModelValidatorImpl_InvalidStepParameter("banana", "name")});
+
+        //parallel
         result.add(new Object[]{"parallelStagesAndSteps", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStagesAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
         result.add(new Object[]{"parallelStepsAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
@@ -233,6 +246,35 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"parallelStagesAgentTools", Messages.ModelValidatorImpl_AgentInNestedStages("foo")});
         result.add(new Object[]{"parallelStagesDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
         result.add(new Object[]{"parallelStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+
+        //matrix
+        // TODO: turn these back on when we update the json files
+        result.add(new Object[]{"matrixStagesAndGroups", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"matrixStagesAndSteps", Messages.ModelValidatorImpl_TwoOfStepsStagesParallel("foo")});
+        result.add(new Object[]{"matrixParallelStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"parallelMatrixStagesGroupsDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"matrixStagesDeepNesting", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+
+
+        result.add(new Object[]{"matrixTopLevel", Messages.JSONParser_MissingRequiredProperties("'stages'")});
+//        result.add(new Object[]{"matrixAxisDuplicateName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisDuplicateValue", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisMissingName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisMissingValues", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixAxisNonLiteralValue", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"matrixEmptyAxes", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"matrixEmptyExcludes", Messages.JSONParser_TooFewItems(0, 1)});
+        result.add(new Object[]{"matrixEmptyExclude",  Messages.JSONParser_TooFewItems(0, 1)});
+//        result.add(new Object[]{"matrixExcludeAxisDuplicateName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeAxisDuplicateValue", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeAxisMissingValues", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeAxisMissingName", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+//        result.add(new Object[]{"matrixExcludeValuesWithValuesNot", Messages.ModelValidatorImpl_NoNestedWithinNestedStages()});
+        result.add(new Object[]{"matrixMissingAxes", Messages.JSONParser_MissingRequiredProperties("'axes'")});
+        result.add(new Object[]{"matrixMissingStages", Messages.JSONParser_MissingRequiredProperties("'stages'")});
+
+
+
 
         // TODO: Better error messaging for these schema violations.
         result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});
@@ -500,37 +542,11 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             } else {
                 run = run.getParent().scheduleBuild2(0).waitForStart();
             }
-            try {
-                j.assertBuildStatus(result, j.waitForCompletion(run));
-            } catch (AssertionError e) {
-                // It appears that in some cases where the build result is set explictly, WorkflowRun.isBuilding()
-                // returns false too soon. Perhaps the reason is that we end up catching the Run in the middle of shutdown,
-                // so CpsFlowExecution.isComplete (and thus WorkflowRun.isInProgress() and WorkflowRun.isBuilding()) is false,
-                // but the WorkflowRun has not yet had its result set to whatever the result of the FlowEndNode is, so
-                // we see the manually-set result for a short amount of time.
-                // Here is an extract of logs where this happened while running BuildConditionResponderTest.postFailureAfterUnstable(),
-                // note that WorkflowRun#finish was called _after_ the build result was checked for the first time!
-                /*
-                  14.530 [test0 #1] [Pipeline] echo
-                  14.531 [test0 #1] I FAILED
-                  14.531 [test0 #1] [Pipeline] }
-                Build result did not initially match FAILURE
-                  14.583 [test0 #1] [Pipeline] // stage
-                  14.583 [test0 #1] [Pipeline] End of Pipeline
-                  14.589 [id=52]    INFO    o.j.p.workflow.job.WorkflowRun#finish: test0 #1 completed: FAILURE
-                  14.609 [test0 #1] ERROR: I AM FAILING NOW
-                  14.609 [test0 #1] Finished: FAILURE
-                But after 1s build result _did_ match FAILURE
-                  15.712 [id=15]    INFO    jenkins.model.Jenkins#cleanUp: Stopping Jenkins
-                  15.723 [id=52]    WARNING h.u.ExceptionCatchingThreadFactory#uncaughtException: Thread Computer.threadPoolForRemoting [#1] terminated unexpectedly
-                */
-                System.out.println("Build result did not initially match " + result);
-                Thread.sleep(1000);
-                j.assertBuildStatus(result, run);
-                System.out.println("But after 1s build result _did_ match " + result);
-            }
-            // To deal with some erratic failures due to error logs not showing up until after "completion"
-            Thread.sleep(100);
+            j.waitForCompletion(run);
+            // Calling `j.assertBuildStatus` directly after `j.waitForCompletion` is subject to race conditions in Pipeline jobs, so the call to `j.waitForMessage` is just here to ensure that the build is totally complete before checking the status.
+            // If that race condition is fixed, the call to `j.waitForMessage` can be removed.
+            j.waitForMessage("Finished: " + result, run); // like BuildListener.finished. 
+            j.assertBuildStatus(result, run); // just double-checking
 
             if (logContains != null) {
                 for (String entry : logContains) {

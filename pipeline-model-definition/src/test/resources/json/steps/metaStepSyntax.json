@@ -4,17 +4,17 @@
     "branches": [    {
       "name": "default",
       "steps":       [
-                {
+        {
           "name": "writeFile",
           "arguments":           [
-                        {
+            {
               "key": "text",
               "value":               {
                 "isLiteral": true,
                 "value": "hello world"
               }
             },
-                        {
+            {
               "key": "file",
               "value":               {
                 "isLiteral": true,
@@ -23,17 +23,36 @@
             }
           ]
         },
-                {
+        {
+          "name": "writeFile",
+          "arguments":           [
+            {
+              "key": "text",
+              "value":               {
+                "isLiteral": true,
+                "value": "goodbye world"
+              }
+            },
+            {
+              "key": "file",
+              "value":               {
+                "isLiteral": true,
+                "value": "msg2.out"
+              }
+            }
+          ]
+        },
+        {
           "name": "archiveArtifacts",
           "arguments":           [
-                        {
+            {
               "key": "allowEmptyArchive",
               "value":               {
                 "isLiteral": true,
                 "value": true
               }
             },
-                        {
+            {
               "key": "artifacts",
               "value":               {
                 "isLiteral": true,
@@ -43,12 +62,12 @@
           ]
         },
         {
-          "name": "script",
-          "arguments": [        {
-            "key": "scriptBlock",
-            "value":           {
-              "isLiteral": true,
-              "value": "if (isUnix()) {\n                        sh('echo ONAGENT=$ONAGENT')\n                    } else {\n                        bat('echo ONAGENT=%ONAGENT%')\n                    }"
+          "name": "step",
+          "arguments": [          {
+            "key": "delegate",
+            "value":             {
+              "isLiteral": false,
+              "value": "[$class: 'ArtifactArchiver', artifacts: 'msg2.out', fingerprint: true]"
             }
           }]
         }

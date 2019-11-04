@@ -65,9 +65,25 @@ public interface ModelValidator {
 
     boolean validateElement(ModelASTPipelineDef pipelineDef);
 
+    boolean validateElement(ModelASTStageBase stages);
+
     boolean validateElement(ModelASTStage stage, boolean isWithinParallel);
 
     boolean validateElement(ModelASTStages stages);
+
+    boolean validateElement(ModelASTParallel parallel);
+
+    boolean validateElement(ModelASTMatrix matrix);
+
+    boolean validateElement(ModelASTAxisContainer axes);
+
+    boolean validateElement(ModelASTAxis axis);
+
+    boolean validateElement(ModelASTExcludes excludes);
+
+    boolean validateElement(ModelASTExclude exclude);
+
+    boolean validateElement(ModelASTExcludeAxis axis);
 
     boolean validateElement(ModelASTLibraries libraries);
 

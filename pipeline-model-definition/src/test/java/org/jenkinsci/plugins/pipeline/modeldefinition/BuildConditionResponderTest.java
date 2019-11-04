@@ -273,7 +273,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-50652")
     @Test
     public void abortedShouldNotTriggerFailure() throws Exception {
-        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        assumeSh();
         WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
         job.setDefinition(new CpsFlowDefinition("" +
                 "pipeline {\n" +

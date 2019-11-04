@@ -25,7 +25,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -43,6 +42,8 @@ public class ModelASTWhen extends ModelASTElement {
     private Boolean beforeAgent;
 
     private Boolean beforeInput;
+
+    private Boolean beforeOptions;
 
     public ModelASTWhen(Object sourceLocation) {
         super(sourceLocation);
@@ -72,22 +73,21 @@ public class ModelASTWhen extends ModelASTElement {
         this.beforeInput = beforeInput;
     }
 
+    public Boolean getBeforeOptions() {
+        return beforeOptions;
+    }
+
+    public void setBeforeOptions(Boolean beforeOptions) {
+        this.beforeOptions = beforeOptions;
+    }
+
     @Override
     public Object toJSON() {
-        final JSONObject o = new JSONObject();
-        final JSONArray a = new JSONArray();
-        for (ModelASTWhenContent c : conditions) {
-            a.add(c.toJSON());
-        }
-        o.accumulate("conditions", a);
-
-        if (beforeAgent != null) {
-            o.accumulate("beforeAgent", beforeAgent);
-        }
-        if (beforeInput != null) {
-            o.accumulate("beforeInput", beforeInput);
-        }
-        return o;
+        return new JSONObject()
+                .accumulate("conditions", toJSONArray(conditions))
+                .elementOpt("beforeAgent", beforeAgent)
+                .elementOpt("beforeInput", beforeInput)
+                .elementOpt("beforeOptions", beforeOptions);
     }
 
     @Override
@@ -99,9 +99,10 @@ public class ModelASTWhen extends ModelASTElement {
         if (beforeInput != null && beforeInput) {
             result.append("beforeInput true\n");
         }
-        for (ModelASTWhenContent c : conditions) {
-            result.append(c.toGroovy()).append("\n");
+        if (beforeOptions != null && beforeOptions) {
+            result.append("beforeOptions true\n");
         }
+        result.append(toGroovy(conditions));
         result.append("}\n");
         return result.toString();
     }
@@ -109,9 +110,7 @@ public class ModelASTWhen extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTWhenContent c : conditions) {
-            c.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(conditions);
     }
 
     @Override
@@ -120,14 +119,13 @@ public class ModelASTWhen extends ModelASTElement {
                 "conditions=" + conditions +
                 ", beforeAgent=" + beforeAgent +
                 ", beforeInput=" + beforeInput +
+                ", beforeOptions=" + beforeOptions +
                 "}";
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTWhenContent c : conditions) {
-            c.validate(validator);
-        }
+        validate(validator, conditions);
     }
 }

@@ -33,6 +33,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
@@ -72,11 +73,42 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void simplePipeline() throws Exception {
-        expect("simplePipeline")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
-                .go();
+    public void matrixPipelineDisabled() throws Exception {
+        expect(Result.FAILURE, "matrix/matrixPipeline")
+            .logContains("'matrix' directive is not supported yet.")
+            .go();
+    }
+
+    @Issue("JENKINS-47363")
+    // Give this a longer timeout
+    @Test(timeout=5 * 60 * 1000)
+    public void stages300() throws Exception {
+        expect("basic/stages300")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
+            .logNotContains("List expressions can only contain up to 250 elements")
+            .go();
+    }
+
+    @Test
+    public void stages300NoSplit() throws Exception {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
+        expect(Result.FAILURE, "basic/stages300")
+            .logNotContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
+            .logContains("List expressions can only contain up to 250 elements")
+            .go();
+    }
+
+    @Issue("JENKINS-37984")
+    @Test
+    public void stages100WithOutsideVarAndFunc() throws Exception {
+        expect("basic/stages100WithOutsideVarAndFunc")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'a'",
+                "Hi there - This comes from a function")
+            .logNotContains("Method code too large!")
+            .go();
     }
 
     @Test
@@ -98,13 +130,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "goodbye",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .hasFailureCase()
-                .go();
-    }
-
-    @Test
-    public void twoStagePipeline() throws Exception {
-        expect("basic/twoStagePipeline")
-                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)", "goodbye")
                 .go();
     }
 
@@ -229,7 +254,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)", "image: ubuntu")
                 .go();
     }
-
 
     @Test
     public void syntheticStages() throws Exception {

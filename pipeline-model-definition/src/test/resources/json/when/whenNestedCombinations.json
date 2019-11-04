@@ -1,0 +1,158 @@
+{"pipeline": {
+  "stages":   [
+    {
+      "name": "One",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "First stage has no condition"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Two",
+      "when": {"conditions": [      {
+        "name": "allOf",
+        "children": [        {
+          "name": "branch",
+          "arguments":           {
+            "isLiteral": true,
+            "value": "master"
+          }
+        }]
+      }]},
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Second stage meets condition"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Three",
+      "when": {"conditions": [      {
+        "name": "allOf",
+        "children":         [
+          {
+            "name": "branch",
+            "arguments":             {
+              "isLiteral": true,
+              "value": "master"
+            }
+          },
+          {
+            "name": "expression",
+            "arguments": [            {
+              "key": "scriptBlock",
+              "value":               {
+                "isLiteral": true,
+                "value": "\"a\" == \"a\""
+              }
+            }]
+          },
+          {
+            "name": "expression",
+            "arguments": [            {
+              "key": "scriptBlock",
+              "value":               {
+                "isLiteral": true,
+                "value": "false"
+              }
+            }]
+          }
+        ]
+      }]},
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Third stage meets condition"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Four",
+      "when": {"conditions": [      {
+        "name": "anyOf",
+        "children":         [
+          {
+            "name": "allOf",
+            "children":             [
+              {
+                "name": "not",
+                "children": [                {
+                  "name": "branch",
+                  "arguments":                   {
+                    "isLiteral": true,
+                    "value": "SOME_OTHER_BRANCH"
+                  }
+                }]
+              },
+              {
+                "name": "expression",
+                "arguments": [                {
+                  "key": "scriptBlock",
+                  "value":                   {
+                    "isLiteral": true,
+                    "value": "true"
+                  }
+                }]
+              }
+            ]
+          },
+          {
+            "name": "expression",
+            "arguments": [            {
+              "key": "scriptBlock",
+              "value":               {
+                "isLiteral": true,
+                "value": "false"
+              }
+            }]
+          }
+        ]
+      }]},
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Fourth stage meets condition"
+            }
+          }]
+        }]
+      }]
+    }
+  ],
+  "environment": [  {
+    "key": "BRANCH_NAME",
+    "value":     {
+      "isLiteral": true,
+      "value": "master"
+    }
+  }],
+  "agent": {"type": "any"}
+}}

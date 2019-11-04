@@ -1,0 +1,33 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "matrix":     {
+      "axes":       [
+        {
+          "name": "OS_VALUE"
+        }
+      ],
+      "stages":       [
+        {
+          "name": "first",
+          "branches": [          {
+            "name": "default",
+            "steps":             [
+              {
+                "name": "echo",
+                "arguments": [                {
+                  "key": "message",
+                  "value":                   {
+                    "isLiteral": true,
+                    "value": "First branch"
+                  }
+                }]
+              }
+            ]
+          }]
+        }
+      ]
+    }
+  }],
+  "agent": {"type": "none"}
+}}

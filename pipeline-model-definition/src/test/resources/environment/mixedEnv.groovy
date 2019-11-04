@@ -43,7 +43,7 @@ pipeline {
 
                 writeFile file: "cred1.txt", text: "${CRED1}"
                 writeFile file: "cred2.txt", text: "${CRED2}"
-                archive "**/*.txt"
+                archiveArtifacts "**/*.txt"
             }
         }
     }

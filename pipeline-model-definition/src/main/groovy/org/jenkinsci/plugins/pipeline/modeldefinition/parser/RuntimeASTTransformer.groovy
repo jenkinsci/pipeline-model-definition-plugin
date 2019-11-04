@@ -29,11 +29,18 @@ import hudson.model.JobProperty
 import hudson.model.ParameterDefinition
 import hudson.model.Run
 import hudson.triggers.Trigger
+import jenkins.util.SystemProperties
 import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.DynamicVariable
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.ModuleNode
+import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
+import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
+import org.jenkinsci.plugins.pipeline.modeldefinition.RuntimeContainerBase
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
@@ -42,6 +49,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import javax.annotation.CheckForNull
@@ -49,6 +57,7 @@ import javax.annotation.Nonnull
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC
 
 /**
  * Transforms a given {@link ModelASTPipelineDef} into the {@link Root} used for actual runtime. Also attaches a
@@ -56,6 +65,19 @@ import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUti
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 class RuntimeASTTransformer {
+
+    /**
+     * Enables or disables the script splitting behavior in {@Wrapper} which  
+     * mitigates "Method code too large" and "Class too large" errors. 
+     */
+    @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="For access from script console")
+    public static boolean SCRIPT_SPLITTING_TRANSFORMATION = SystemProperties.getBoolean(
+            RuntimeASTTransformer.class.getName() + ".SCRIPT_SPLITTING_TRANSFORMATION",
+            false
+    )
+
+    Wrapper wrapper = null
+
     RuntimeASTTransformer() {
     }
 
@@ -63,7 +85,9 @@ class RuntimeASTTransformer {
      * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
      * run, and return an {@link ArgumentListExpression} containing a closure that returns the {@Root} we just created.
      */
-    ArgumentListExpression transform(@Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?,?> run) {
+    @Nonnull
+    ArgumentListExpression transform(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef, @CheckForNull Run<?, ?> run) {
+        wrapper = new Wrapper(sourceUnit, pipelineDef)
         Expression root = transformRoot(pipelineDef)
         if (run != null) {
             ModelASTStages stages = pipelineDef.stages
@@ -77,13 +101,9 @@ class RuntimeASTTransformer {
             }
         }
 
-        return args(
-            closureX(
-                block(
-                    returnS(root)
-                )
-            )
-        )
+        ClosureExpression result = wrapper.createPipelineClosureX(root)
+
+        return args(result)
     }
 
     /**
@@ -94,8 +114,9 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for this container class, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformBuildConditionsContainer(@CheckForNull ModelASTBuildConditionsContainer original,
-                                              @Nonnull Class container) {
+                                                 @Nonnull Class container) {
         if (isGroovyAST(original) && !original.conditions.isEmpty()) {
             MapExpression nameToSteps = new MapExpression()
             original.conditions.each { cond ->
@@ -104,7 +125,7 @@ class RuntimeASTTransformer {
                     nameToSteps.addMapEntryExpression(constX(cond.condition), steps)
                 }
             }
-            return ctorX(ClassHelper.make(container), args(nameToSteps))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(container), args(nameToSteps)))
         }
         return constX(null)
     }
@@ -116,6 +137,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Agent}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformAgent(@CheckForNull ModelASTAgent original) {
         if (isGroovyAST(original) && original.agentType != null) {
             MapExpression m
@@ -135,7 +157,7 @@ class RuntimeASTTransformer {
                     throw new IllegalArgumentException("Expected a BlockStatement for agent but got an instance of ${original.sourceLocation.class}")
                 }
             }
-            return ctorX(ClassHelper.make(Agent.class), args(closureX(block(returnS(m)))))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Agent.class), args(wrapper.asWrappedScriptContextVariable(closureX(block(returnS(m)))))))
         }
 
         return constX(null)
@@ -148,13 +170,29 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Environment}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformEnvironment(@CheckForNull ModelASTEnvironment original) {
-        if (isGroovyAST(original) && !original.variables.isEmpty()) {
-            return ctorX(ClassHelper.make(Environment.class),
-                args(
-                    generateEnvironmentResolver(original, ModelASTValue.class),
-                    generateEnvironmentResolver(original, ModelASTInternalFunctionCall.class)
-                ))
+        if (isGroovyAST(original)) {
+            return transformEnvironmentMap(original.variables)
+        }
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating an {@link Environment}.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link Environment}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    @Nonnull
+    Expression transformEnvironmentMap(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, boolean disableWrapping = false) {
+        if (!variables.isEmpty()) {
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Environment.class),
+                    args(
+                            generateEnvironmentResolver(variables, ModelASTValue.class, disableWrapping),
+                            generateEnvironmentResolver(variables, ModelASTInternalFunctionCall.class, disableWrapping)
+                    )))
         }
         return constX(null)
     }
@@ -166,15 +204,16 @@ class RuntimeASTTransformer {
      * @param valueType Either {@link ModelASTInternalFunctionCall} for credentials or {@link ModelASTValue} for env.
      * @return The AST for instantiating the resolver.
      */
-    private Expression generateEnvironmentResolver(@Nonnull ModelASTEnvironment original, @Nonnull Class valueType) {
+    @Nonnull
+    private Expression generateEnvironmentResolver(@Nonnull Map<ModelASTKey, ModelASTEnvironmentValue> variables, @Nonnull Class valueType, boolean disableWrapping) {
         Set<String> keys = new HashSet<>()
 
         // We need to keep track of the environment keys for use in
-        keys.addAll(original.variables.findAll { k, v -> v instanceof ModelASTValue }.collect { k, v -> k.key })
+        keys.addAll(variables.findAll { k, v -> v instanceof ModelASTValue }.collect { k, v -> k.key })
 
         MapExpression closureMap = new MapExpression()
 
-        original.variables.each { k, v ->
+        variables.each { k, v ->
             // Filter for only the desired value type - ModelASTValue for env vars, ModelASTInternalFunctionCall for
             // credentials.
             if (v instanceof ModelASTElement && valueType.isInstance(v) && v.sourceLocation != null) {
@@ -189,11 +228,17 @@ class RuntimeASTTransformer {
                     }
                     Expression expr = translateEnvironmentValue(k.key, toTransform, keys)
                     if (expr != null) {
-                        if (expr instanceof ClosureExpression) {
-                            closureMap.addMapEntryExpression(constX(k.key), expr)
-                        } else {
-                            closureMap.addMapEntryExpression(constX(k.key), closureX(block(returnS(expr))))
+                        if (!(expr instanceof ClosureExpression)) {
+                            expr = closureX(block(returnS(expr)))
                         }
+
+                        // in the case of Matrix Cell Environment blocks, we know they don't need to be inside a closure
+                        // they are all literal key-values with no external references allowed.
+                        if (!disableWrapping) {
+                            expr = wrapper.asWrappedScriptContextVariable(expr)
+                        }
+
+                        closureMap.addMapEntryExpression(constX(k.key), expr)
                     } else {
                         throw new IllegalArgumentException("Empty closure for ${k.key}")
                     }
@@ -201,8 +246,10 @@ class RuntimeASTTransformer {
             }
         }
 
-        return callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
-            args(closureMap))
+        Expression result = callX(ClassHelper.make(Environment.EnvironmentResolver.class), "instanceFromMap",
+                args(closureMap))
+
+        return result
     }
 
     /**
@@ -357,7 +404,7 @@ class RuntimeASTTransformer {
             MapEntryExpression m = (MapEntryExpression) expr
 
             return new MapEntryExpression(translateEnvironmentValueAndCall(targetVar, m.keyExpression, keys),
-                translateEnvironmentValueAndCall(targetVar, m.valueExpression, keys))
+                    translateEnvironmentValueAndCall(targetVar, m.valueExpression, keys))
         } else if (expr instanceof BitwiseNegationExpression) {
             // Translate the nested expression - note, no test coverage due to bitwiseNegate not being whitelisted
             return new BitwiseNegationExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
@@ -437,6 +484,7 @@ class RuntimeASTTransformer {
         return null
     }
 
+    @CheckForNull
     private Statement translateClosureStatement(String targetVar, Statement s, Set<String> keys) {
         if (s == null) {
             return null
@@ -482,6 +530,7 @@ class RuntimeASTTransformer {
     /**
      * Generates the method call for fetching the closure for a given environment key and calling it.
      */
+    @Nonnull
     private MethodCallExpression environmentValueGetterCall(String name) {
         return callX(callThisX("getClosure", constX(name)), "call")
     }
@@ -493,15 +542,16 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Libraries}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformLibraries(@CheckForNull ModelASTLibraries original) {
         if (isGroovyAST(original) && !original.libs.isEmpty()) {
             ListExpression listArg = new ListExpression()
             original.libs.each { l ->
                 if (l.sourceLocation instanceof Expression) {
-                    listArg.addExpression((Expression)l.sourceLocation)
+                    listArg.addExpression(wrapper.asWrappedScriptContextVariable((Expression)l.sourceLocation))
                 }
             }
-            return ctorX(ClassHelper.make(Libraries.class), args(listArg))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Libraries.class), args(listArg)))
         }
 
         return constX(null)
@@ -514,6 +564,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Options}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformOptions(@CheckForNull ModelASTOptions original) {
         if (isGroovyAST(original) && !original.options.isEmpty()) {
             List<ModelASTOption> jobProps = new ArrayList<>()
@@ -559,12 +610,17 @@ class RuntimeASTTransformer {
                 }
             }
 
+            Expression result
             if (original.inStage) {
-                return ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
+                result = ctorX(ClassHelper.make(StageOptions.class), args(optsMap, wrappersMap))
             } else {
-                return ctorX(ClassHelper.make(Options.class),
+                result = ctorX(ClassHelper.make(Options.class),
                     args(transformListOfDescribables(jobProps, JobProperty.class), optsMap, wrappersMap))
             }
+
+            // This is not a large element but it may have script references,
+            // safe and simple to wrap in a context variable
+            return wrapper.asWrappedScriptContextVariable(result)
         }
 
         return constX(null)
@@ -577,8 +633,9 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Parameters}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformParameters(@CheckForNull ModelASTBuildParameters original) {
-        return transformDescribableContainer(original, original?.parameters, Parameters.class, ParameterDefinition.class)
+        return wrapper.asWrappedScriptContextVariable(transformDescribableContainer(original, original?.parameters, Parameters.class, ParameterDefinition.class))
     }
 
     /**
@@ -588,6 +645,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link PostBuild}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformPostBuild(@CheckForNull ModelASTPostBuild original) {
         return transformBuildConditionsContainer(original, PostBuild.class)
     }
@@ -599,6 +657,7 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link PostStage}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformPostStage(@CheckForNull ModelASTPostStage original) {
         return transformBuildConditionsContainer(original, PostStage.class)
     }
@@ -610,9 +669,10 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Root}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformRoot(@CheckForNull ModelASTPipelineDef original) {
         if (isGroovyAST(original)) {
-            return ctorX(ClassHelper.make(Root.class),
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Root.class),
                 args(transformAgent(original.agent),
                     transformStages(original.stages),
                     transformPostBuild(original.postBuild),
@@ -622,7 +682,7 @@ class RuntimeASTTransformer {
                     transformTriggers(original.triggers),
                     transformParameters(original.parameters),
                     transformLibraries(original.libraries),
-                    constX(original.stages.getUuid().toString())))
+                    constX(original.stages.getUuid().toString()))))
         }
 
         return constX(null)
@@ -635,46 +695,56 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stage}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformStage(@CheckForNull ModelASTStage original) {
         if (isGroovyAST(original)) {
-            return ctorX(ClassHelper.make(Stage.class),
-                args(constX(original.name),
-                    transformStepsFromStage(original),
-                    transformAgent(original.agent),
-                    transformPostStage(original.post),
-                    transformStageConditionals(original.when),
-                    transformTools(original.tools),
-                    transformEnvironment(original.environment),
-                    constX(original.failFast != null ? original.failFast : false),
-                    transformOptions(original.options),
-                    transformStageInput(original.input, original.name),
-                    transformStages(original.stages),
-                    transformStages(original.parallel)))
+            // Matrix is a special form of parallel
+            // At runtime, they behave the same
+            Expression parallel = original.parallel != null ?
+                    transformStages(original.parallel) :
+                    transformMatrix(original.matrix)
+
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Stage.class),
+                    args(constX(original.name),
+                            transformStepsFromStage(original),
+                            transformAgent(original.agent),
+                            transformPostStage(original.post),
+                            transformStageConditionals(original.when),
+                            transformTools(original.tools),
+                            transformEnvironment(original.environment),
+                            constX(original.failFast != null ? original.failFast : false),
+                            transformOptions(original.options),
+                            transformStageInput(original.input, original.name),
+                            transformStages(original.stages),
+                            parallel,
+                            constX(null))))
         }
 
         return constX(null)
     }
 
+    @Nonnull
     Expression transformStageInput(@CheckForNull ModelASTStageInput original, String stageName) {
         if (isGroovyAST(original)) {
             Expression paramsExpr = constX(null)
             if (!original.parameters.isEmpty()) {
-                paramsExpr = transformListOfDescribables(original.parameters, ParameterDefinition.class)
+                paramsExpr = wrapper.asWrappedScriptContextVariable(transformListOfDescribables(original.parameters, ParameterDefinition.class))
             }
-            return ctorX(ClassHelper.make(StageInput.class),
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageInput.class),
                 args(valueOrNull(original.message),
                     valueOrNull(original.id, stageName),
                     valueOrNull(original.ok),
                     valueOrNull(original.submitter),
                     valueOrNull(original.submitterParameter),
-                    paramsExpr))
+                    paramsExpr)))
         }
         return constX(null)
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private Expression valueOrNull(@CheckForNull ModelASTValue value, Object defaultValue = null) {
         if (value?.sourceLocation instanceof Expression) {
-            return (Expression)value.sourceLocation
+            return wrapper.asWrappedScriptContextVariable((Expression) value.sourceLocation)
         } else {
             return constX(defaultValue)
         }
@@ -687,25 +757,27 @@ class RuntimeASTTransformer {
      * @param original
      * @return
      */
+    @Nonnull
     Expression transformStageConditionals(@CheckForNull ModelASTWhen original) {
         if (isGroovyAST(original) && !original.getConditions().isEmpty()) {
             ListExpression closList = new ListExpression()
             original.getConditions().each { cond ->
                 if (cond.name != null) {
                     DeclarativeStageConditionalDescriptor desc =
-                        (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
-                            DeclarativeStageConditional.class, cond.name)
+                            (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
+                                    DeclarativeStageConditional.class, cond.name)
                     if (desc != null) {
                         closList.addExpression(desc.transformToRuntimeAST(cond))
                     }
                 }
             }
 
-            return ctorX(ClassHelper.make(StageConditionals.class),
-                args(closureX(block(returnS(closList))),
-                    constX(original.beforeAgent != null ? original.beforeAgent : false),
-                    constX(original.beforeInput != null ? original.beforeInput : false)
-                ))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageConditionals.class),
+                    args(wrapper.asScriptContextVariable(closureX(block(returnS(closList)))),
+                            constX(original.beforeAgent != null ? original.beforeAgent : false),
+                            constX(original.beforeInput != null ? original.beforeInput : false),
+                            constX(original.beforeOptions != null ? original.beforeOptions : false)
+                    )))
         }
         return constX(null)
     }
@@ -717,18 +789,131 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Stages}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformStages(@CheckForNull ModelASTStages original) {
         if (isGroovyAST(original) && !original.stages.isEmpty()) {
-            ListExpression argList = new ListExpression()
+            ArrayList<Expression> argList = new ArrayList<>()
             original.stages.each { s ->
-                argList.addExpression(transformStage(s))
+                argList.add(transformStage(s))
             }
 
-            if (original instanceof ModelASTParallel) {
-                return ctorX(ClassHelper.make(Parallel.class), args(argList))
-            } else {
-                return ctorX(ClassHelper.make(Stages.class), args(argList))
+            ClassNode classNode = original instanceof ModelASTParallel ?
+                    ClassHelper.make(Parallel.class) :
+                    ClassHelper.make(Stages.class)
+
+            return wrapper.asExternalMethodCall(ctorX(classNode, args(wrapper.asExternalMethodCall(argList))))
+        }
+
+        return constX(null)
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating {@link Matrix}.
+     * Generates a synthetic stage for each combination of axes and excludes.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link Matrix}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    @Nonnull
+    Expression transformMatrix(@CheckForNull ModelASTMatrix original) {
+        if (isGroovyAST(original) && !original?.stages?.stages?.isEmpty() && !original?.axes?.axes?.isEmpty()) {
+            throw new RuntimeException("'matrix' directive is not supported yet. Check the plugin update site or use the experimental update center to get the beta).")
+
+            // generate matrix combinations of axes - cartesianProduct
+            Set<Map<ModelASTKey, ModelASTValue>> expansion = expandAxes(original.axes.axes)
+
+            // remove excluded combinations
+            filterExcludes(expansion, original.excludes)
+
+            Expression stagesExpression = transformStages(original.stages)
+
+            // With script splitting stagesExpression is a method that creates a new stages expression at runtime
+            // If disabled, we still want to make this a script closure call so we can reuse it instead of generating code for every cell
+            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+                stagesExpression = wrapper.asWrappedScriptContextVariable(stagesExpression, true)
             }
+
+            ArrayList<Expression> argList = new ArrayList<>()
+            expansion.each { item ->
+                argList.add(transformMatrixStage(item, original, stagesExpression))
+            }
+
+            // return matrix class containing the list of generated stages
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Matrix.class), args(wrapper.asExternalMethodCall(argList))))
+        }
+
+        return constX(null)
+    }
+
+    @Nonnull
+    private Set<Map<ModelASTKey, ModelASTValue>> expandAxes(@Nonnull List<ModelASTAxis> axes) {
+        Set<Map<ModelASTKey, ModelASTValue>> result = new LinkedHashSet<>()
+        // using LinkedHashMap to maintain insertion order
+        // axes will be added in the order they are declared
+        result.add(new LinkedHashMap<ModelASTKey, ModelASTValue>())
+        axes.each { axis ->
+            def interim = result
+            result = new LinkedHashSet<Map<ModelASTKey, ModelASTValue>>()
+            axis.values.each { value ->
+                interim.each {
+                    Map<ModelASTKey, ModelASTValue> generated = it.clone()
+                    generated.put(axis.name, value)
+                    result.add(generated)
+                }
+            }
+        }
+        return result
+    }
+
+    @Nonnull
+    private void filterExcludes(@Nonnull Set<Map<ModelASTKey, ModelASTValue>> expansion, @Nonnull ModelASTExcludes excludes) {
+        if (isGroovyAST(excludes)) {
+            excludes.excludes.each { exclude ->
+                Set<Map<ModelASTKey, ModelASTValue>> filter = expansion.clone()
+                exclude.getExcludeAxes().each { excludeAxis ->
+                    filter.removeAll { !excludeAxis.inverse ^ excludeAxis.values.contains(it.get(excludeAxis.name)) }
+                }
+                expansion.removeAll(filter)
+            }
+        }
+    }
+
+    /**
+     * Generates the AST (to be CPS-transformed) for instantiating {@link Stage}.
+     *
+     * @param original The parsed AST model
+     * @return The AST for a constructor call for {@link Stage}, or the constant null expression if the original
+     * cannot be transformed.
+     */
+    @Nonnull
+    Expression transformMatrixStage(@CheckForNull Map<ModelASTKey, ModelASTValue> cell, @Nonnull ModelASTMatrix original, @CheckForNull Expression stagesExpression) {
+        if (isGroovyAST(original)) {
+
+            //     create a generated stage with unique name based on combination
+            //     TODO: maybe if there is only one stage, use it as the template for these synthetic stages?  Avoid two layers of stages when one would do.
+
+            List<String> cellLabels = new ArrayList<>();
+            cell.each { cellLabels.add(it.key.key.toString() + " = '" + it.value.value.toString() + "'") }
+
+            // TODO: Do I need to create a new ModelASTStage each time?  I don't think so.
+            String name = "Matrix - " + cellLabels.join(", ")
+
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Stage.class),
+                    args(constX(name),
+                            constX(null), // steps
+                            transformAgent(original.agent),
+                            transformPostStage(original.post),
+                            transformStageConditionals(original.when),
+                            transformTools(original.tools),
+                            transformEnvironment(original.environment),
+                            constX(false), // failfast on serial is not interesting
+                            transformOptions(original.options),
+                            transformStageInput(original.input, name),
+                            stagesExpression,
+                            constX(null), // parallel
+                            transformEnvironmentMap(cell, true))))
+            //  matrixCellEnvironment holding values for this cell in the matrix
         }
 
         return constX(null)
@@ -741,9 +926,10 @@ class RuntimeASTTransformer {
      * @return A method call of {@link Utils#createStepsBlock(Closure)}, or a constant null expression if the original
      * is null.
      */
+    @Nonnull
     Expression transformStepsFromStage(@CheckForNull ModelASTStage original) {
         if (isGroovyAST(original)) {
-            BlockStatementMatch stageMatch = matchBlockStatement((Statement)original.sourceLocation)
+            BlockStatementMatch stageMatch = matchBlockStatement((Statement) original.sourceLocation)
             if (stageMatch != null) {
                 Statement stepsMethod = asBlock(stageMatch.body.code).statements.find { s ->
                     matchMethodCall(s)?.methodAsString == "steps"
@@ -751,9 +937,10 @@ class RuntimeASTTransformer {
                 if (stepsMethod != null) {
                     BlockStatementMatch stepsMatch = matchBlockStatement(stepsMethod)
                     if (stepsMatch != null) {
-                        ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
+                        Expression transformedBody = StepRuntimeTransformerContributor.transformStage(original, stepsMatch.body)
+                        transformedBody = wrapper.asScriptContextVariable(transformedBody)
                         return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                            args(transformedBody))
+                                args(transformedBody))
                     }
                 }
             }
@@ -769,12 +956,14 @@ class RuntimeASTTransformer {
      * @return A method call of {@link Utils#createStepsBlock(Closure)}, or a constant null expression if the original
      * is null.
      */
+    @Nonnull
     Expression transformStepsFromBuildCondition(@CheckForNull ModelASTBuildCondition original) {
         if (isGroovyAST(original)) {
             BlockStatementMatch condMatch = matchBlockStatement((Statement) original.sourceLocation)
-            ClosureExpression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
+            Expression transformedBody = StepRuntimeTransformerContributor.transformBuildCondition(original, condMatch.body)
+            transformedBody = wrapper.asScriptContextVariable(transformedBody)
             return callX(ClassHelper.make(Utils.class), "createStepsBlock",
-                args(transformedBody))
+                    args(transformedBody))
         }
         return constX(null)
     }
@@ -786,19 +975,21 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Tools}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformTools(@CheckForNull ModelASTTools original) {
         if (isGroovyAST(original) && !original.tools?.isEmpty()) {
             MapExpression toolsMap = new MapExpression()
             original.tools.each { k, v ->
                 if (v.sourceLocation != null && v.sourceLocation instanceof Expression) {
-                    if (v.sourceLocation instanceof ClosureExpression) {
-                        toolsMap.addMapEntryExpression(constX(k.key), (ClosureExpression) v.sourceLocation)
-                    } else {
-                        toolsMap.addMapEntryExpression(constX(k.key), closureX(block(returnS((Expression) v.sourceLocation))))
+                    Expression expr = (Expression)v.sourceLocation
+                    if (!(expr instanceof ClosureExpression)) {
+                        expr = closureX(block(returnS(expr)))
                     }
+                    toolsMap.addMapEntryExpression(constX(k.key), wrapper.asScriptContextVariable(expr))
+
                 }
             }
-            return ctorX(ClassHelper.make(Tools.class), args(toolsMap))
+            return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(Tools.class), args(toolsMap)))
         }
         return constX(null)
     }
@@ -810,8 +1001,453 @@ class RuntimeASTTransformer {
      * @return The AST for a constructor call for {@link Triggers}, or the constant null expression if the original
      * cannot be transformed.
      */
+    @Nonnull
     Expression transformTriggers(@CheckForNull ModelASTTriggers original) {
-        return transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class)
+        return wrapper.asWrappedScriptContextVariable(transformDescribableContainer(original, original?.triggers, Triggers.class, Trigger.class))
     }
 
+    /**
+     * In order to reduce the occurrence of "Method code too large" and "Class too large" this class can
+     * attempt to split the generated code into multiple classes and methods.
+     *
+     * * "Method code too large" error is thrown when a single method exceeds the 64k byte-code per method limit.
+     *      This is generally caused by script initialization method which by default holds _all_ of the code in the script.
+     *      Mitigated by moving code into separate functions. Can even be functions that return closures that run the
+     *      same behaviors as before.
+     * * "Class too large" error is thrown when there are more that 64k constants in a single class.
+     *      A range of things can cause this but a large number of strings and closures, when
+     *      combined with CPS processing seems to exacerbate the issue.
+     *      Mitigated by moving code in to separate classes.  The classes are special passthrough containers which extend
+     *      {@link RuntimeContainerBase}.
+     *
+     * Neither of these can be prevented completely but they happen signifcantly less often.
+     *
+     * That said there are a number of limitations to where code can safely be moved. With deep analysis of all closures
+     * the script could be transformed in any number of ways. This code splitting functionality works mostly without deep
+     * knowledge of the closures provided by the user, instead relying mostly on the Declarative structure to guide it.
+     *
+     * This script uses three distinct strategies when to decide where to move code:
+     *
+     * 1. All code generated from sections and directives as part of the Declarative runtime is moved into methods on
+     *      automatically generated container classes. This is used for basically all the calls to classes in
+     *      org.jenkinsci.plugins.pipeline.modeldefinition.model -
+     *      {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Root} and so on.
+     *      These containers hold no binding state of their own, they only passthrough all their calls to their parent
+     *      WorkflowScript instance.  An instance of each of these classes is assigned to a variable in the parent script.
+     *      Code is moved into a method one of these classes and the code that was in the parent script is replaced
+     *      by a call to that method.  This moves a good amount of code and constants out of the parent script.
+     *
+     * 2. Expressions provided by the user (closures and values) are wrapped in generated closures that return
+     *      the user-provided expression when they are called. The wrapper closures are assigned to variables added to
+     *      the binding context of the WorkflowScript.  Wrapper closures can then safely be called from the methods of
+     *      the container classes generated in #1. Code inside the wrapper is considered to have been declared
+     *      inside the script. This enables #1 while guaranteeing that from the user perspective the transformed code
+     *      behaves the same as the original code.
+     *
+     * 3. The variable declarations from 1 and 2 are grouped into methods whose definitions are added to the script,
+     *      and which are then called at the start of the script exectution.
+     *      This results in these variables being added to the binding of the script, accessible at runtime.
+     *      This last step keeps the script initialization method from getting too large.
+     *      NOTE: Using methods here subtly changes the behavior of the script in a way that will break user provided
+     *      code from #2 one specific scenario (see {@link #declareClosureScopedHandles for details).
+     *      When Wrapper detects that scenario, it falls back to grouping the variables
+     *      declarations into closures instead of methods.
+     *      This is less effective, but still an improvement.
+     */
+    static final class Wrapper {
+        private final SourceUnit sourceUnit
+        private final ModuleNode moduleNode
+        private final Set<String> nameSet = new HashSet<>()
+        private final List<Statement> pipelineElementHandles = new ArrayList<>()
+        private final Map<String, ClassNode> methodClassNode = new HashMap<>()
+        private final Long pipelineId
+
+        // Group size is somewhat small.  Having more smaller classes is better than accidentally make a class too large
+        private final int groupSize = 50
+
+        // Declaration grouping is a little larger.
+        // We don't want to end up with method too large errors, but we also can't have more than around 250 statements
+        // in the script initialization method.
+        private final int declarationGroupSize = 100
+
+
+        private Wrapper(@Nonnull SourceUnit sourceUnit, @Nonnull ModelASTPipelineDef pipelineDef) {
+            this.sourceUnit = sourceUnit
+            this.moduleNode = sourceUnit.AST
+            pipelineId = pipelineDef.toGroovy().hashCode().toLong()
+        }
+
+        /**
+         * Create a unique name for an item
+         * @param groupName the name of the grouping of items mostly helps with debugging
+         * @return a unique name that won't conflict with any other in the script
+         */
+        @Nonnull
+        private String createStableUniqueName(@Nonnull String groupName) {
+            long id = Math.abs(Objects.hash(groupName, nameSet.size(), pipelineId).toLong())
+            String name = "__model__${groupName}_${nameSet.size()}_${id}__"
+            // This method assumes single threaded generation.
+            // If the transform is multi-threaded, the naming would be non-deterministic.
+            if (!nameSet.add(name)) {
+                throw new RuntimeException("Name collision during runtime model generation. When did model generation become multi-threaded?")
+            }
+            return name
+        }
+
+        /**
+         * Creates the Pipeline closure including populating it with element handle declarations
+         * @param root the Root element generated by processing the pipeline ast
+         * @return a closure to be passed as an arg to the Pipeline runtime
+         */
+        @Nonnull
+        ClosureExpression createPipelineClosureX(@Nonnull Expression root) {
+
+            BlockStatement pipelineBlock = block()
+
+            declareClosureScopedHandles(pipelineBlock)
+
+            declareFunctionGroupedHandles(pipelineBlock)
+
+            // finally return the pipeline runtime elements
+            pipelineBlock.addStatement(returnS(root))
+
+            return closureX(pipelineBlock)
+
+        }
+
+
+        /**
+         * Adds handles to the Pipeline block directly, if needed.
+         *
+         * Adding all handle declarations directly to the Pipeline block/closure will error for 250 or more handles.
+         * It will also often encounter "method code too large" errors long before that.
+         *
+         * Moving groups of handle declarations to script-level methods still adds those handles to the script binding.
+         * and avoids "method code too large" errors.
+         *
+         * Using methods here subtly changes the behavior of the script in a way that will break user provided
+         * code in specific scenarios (see below). When this method detects one of those scenarios,
+         * it falls back to grouping the handle declarations into closures instead of methods.
+         *
+         * Problem scenarios:
+         *
+         * a. Handles declared inside methods cannot access a script's local variables ("def someVar = 0"). T
+         *      his is a limitation of Groovy itself.
+         *
+         * b. Methods declared in the script cannot be invoked from outside the script, because "invokeMethod()" is not
+         * whitelisted by the groovy sandbox.
+         *
+         * The sandbox limitation is already address by keeping any user provided code in closures declared inside the script.
+         * Any external container classes always call back into one of these closures which are able to call local methods.
+         *
+         * The script-local "def" variables are another matter.
+         *
+         *      def localVar = "script-local variable"
+         *      boundVar = "binding variable"
+         *      def localFunction() {
+         *          // Succeeds
+         *          println boundVar
+         *
+         *          // Fails
+         *          println localVar
+         *      }
+         *
+         * Variables like "boundVar" are held in the script's binding. Script-local "def" variables ("localVar" above)
+         * are defined on the WorkflowScript class itself and can only be access from inside the script or from closures defined
+         * in the initialization function of the script. They cannot be accessed from other functions or classes,
+         * nor from closures defined in other functions or classes.  Thus, when the wrapper puts the closure declarations
+         * into functions they can no longer access script-local "def" variables.
+         *
+         * To maintain some support for local variables, this method detects the presnce of script-local "def" variables
+         * and adds handles to closures instead of methods.
+         *
+         * Currently, it only checks if "pipeline {}" is not the only top level element in script, and in that case it
+         * add _all_ handles to closures.
+         *
+         * This solution is sufficient for now, but a better solution would be to:
+         *
+         * * Specifically detect that local variables are used
+         * * Log a warning that this is no advised
+         * * detect which handles reference local variables and then only declare those handles in closures.
+         *
+         * @param pipelineBlock the block statement to add declarations to
+         */
+        @Nonnull
+        private void declareClosureScopedHandles(@Nonnull BlockStatement pipelineBlock) {
+            if (moduleNode.statementBlock.statements.size() == 1 || pipelineElementHandles.size() == 0) {
+                return
+            }
+
+            BlockStatement currentBlock = block()
+            int count = 0
+            pipelineElementHandles.each { item ->
+                if (count++ >= declarationGroupSize) {
+                    count = 1
+                    pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
+                    currentBlock = block()
+                }
+
+                currentBlock.addStatement(item)
+            }
+            // These variable handles are declared in functions, but will still be bound to the script context
+            // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
+            pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
+            pipelineElementHandles.clear()
+        }
+
+        /**
+         * Adds groups of handle declarations to functions and adds calls to those functions to the pipeline block.
+         * Avoid "method code too large" errors and other compiler breaks related to Groovy, JVM, and CPS limitations.
+         * @param pipelineBlock
+         */
+        @Nonnull
+        private void declareFunctionGroupedHandles(@Nonnull BlockStatement pipelineBlock) {
+            if (pipelineElementHandles.size() == 0) {
+                return
+            }
+
+            BlockStatement currentBlock = block()
+            int count = 0
+            pipelineElementHandles.each { item ->
+                if (count++ >= declarationGroupSize) {
+                    count = 1
+                    pipelineBlock.addStatement(stmt(defineMethodAndCall("Declaration", ClassHelper.VOID_TYPE, currentBlock)))
+                    currentBlock = block()
+                }
+
+                currentBlock.addStatement(item)
+            }
+
+            // These variable handles are declared in functions, but will still be bound to the script context
+            // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
+            pipelineBlock.addStatement(stmt(defineMethodAndCall("Declaration", ClassHelper.VOID_TYPE, currentBlock)))
+
+            pipelineElementHandles.clear()
+        }
+
+        /**
+         * Turns a constructor call into a function call that returns the constructed instance.
+         * The function is declared on a separate class, outside of the script context.
+         * The function cannot reliably access script bindings except via handles to script context variables.
+         *
+         * @param expression the constructor call to wrapped
+         * @return call to a function that returns an instance of type
+         */
+        @Nonnull
+        Expression asExternalMethodCall(@Nonnull ConstructorCallExpression expression) {
+            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
+            return asExternalMethodCall(expression.type.nameWithoutPackage, expression.type, expression)
+        }
+
+        /**
+         * Turns a list of expressions into a closure that returns a list instance (not a ListExpression).
+         * The closure is defined outside the script context and cannot reliably access script bindings except via handles.
+         *
+         * Works around limitations on ListExpression literal declaration
+         * (literal "[item0, item1, ...]") being limited to 250 items.
+         *
+         * @param expressions the list of expressions to be wrapped in a closure call
+         * @return call to a closure that returns the provided ListExpression
+         */
+        @Nonnull
+        Expression asExternalMethodCall(@Nonnull List<Expression> listExpression) {
+            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+                return new ListExpression(listExpression)
+            }
+
+            return toExternalListMethod(listExpression)
+        }
+
+        /**
+         * Turns an expression into a script bound variable declaration returned from a closure.
+         * This delays the evaluation of that contents of these variables to when the closure is called,
+         * and also evaluates the contents in the context of the current script environment.
+         *
+         * @param expression the expression to be replaced with a closure wrapped variable
+         * @param force ignore SCRIPT_SPLITTING_TRANSFORMATION and force the expression to be wrapped
+         * @return call to a closure that returns the provided expression
+         */
+        @Nonnull
+        Expression asWrappedScriptContextVariable(@Nonnull Expression expression, boolean force = false) {
+            if (!SCRIPT_SPLITTING_TRANSFORMATION && !force) {
+                return expression
+            }
+
+            Expression variable = createScriptContextVariable(closureX(block(returnS(expression))), createStableUniqueName('Closure'))
+            return callX(variable, 'call')
+        }
+
+        /**
+         * Turns an expression into a script bound variable declaration. This does not wrap in closure.
+         * Evaluation will occur at the start of the pipeline run.
+         *
+         * @param expression the expression to be replaced with a variable
+         * @return a variable expression that evaluates to expression
+         */
+        @Nonnull
+        Expression asScriptContextVariable(@Nonnull Expression expression) {
+            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
+            return createScriptContextVariable(expression, createStableUniqueName('Variable'))
+        }
+
+        /**
+         * Turns an expression into a script bound variable declaration. This does not wrap in closure.
+         * Evaluation will occur at the start of the pipeline run.
+         *
+         * NOTE: This private because the name is unchecked and could collide with other names.
+         * It also does not check SCRIPT_SPLITTING_TRANSFORMATION, it depends on callers to do that.
+         * Use with caution.
+         *
+         * @param expression the expression to be replaced with a variable
+         * @param name specific name to use for this variable.
+         * @return a variable expression that evaluates to expression
+         */
+        @Nonnull
+        private Expression createScriptContextVariable(@Nonnull Expression expression, @Nonnull String name) {
+            VariableExpression variable = varX(name)
+
+            Expression declarationExpression = new BinaryExpression(variable, ASSIGN, expression)
+            pipelineElementHandles.add(stmt(declarationExpression))
+
+            variable = varX(new DynamicVariable(name, false))
+
+            return variable
+        }
+
+        /**
+         * Turns an expression into a script bound variable declaration returned from a closure.
+         * This delays the evaluation of that contents of these variables to when the closure is called,
+         * and also evaluates the contents in the context of the current script environment.
+         *
+         * NOTE:
+         * This method does not check SCRIPT_SPLITTING_TRANSFORMATION.
+         *
+         * @param expression the expression to be replaced with a variable
+         * @return call to a function that returns the provided expression
+         */
+        @Nonnull
+        private Expression defineMethodAndCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement statement) {
+
+            String name = createStableUniqueName(groupName)
+
+            // The instance method referenced via script binding
+            MethodNode method = new MethodNode(name, ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], statement)
+            moduleNode.getScriptClassDummy().addMethod(method)
+
+            return callThisX(name)
+        }
+
+        /**
+         * Returns a call expression that will return the passed in expression.
+         * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
+         * @param groupName Name of the grouping to add this function to
+         * @param returnType return type of the function
+         * @param expression expression to be returned
+         * @return callX that returns the value of returnXBody
+         */
+        @Nonnull
+        Expression asExternalMethodCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Expression expression) {
+            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+                return expression
+            }
+
+            // The only thing these methods need to do is contain something to return
+            return asExternalMethodCall(groupName, returnType, block(returnS(expression)))
+        }
+            /**
+         * Returns a call expression that will return the passed in expression.
+         * This allows us to split the pipeline ast into small enough chunks to avoid JVM class and method size limits
+         * @param groupName Name of the grouping to add this function to
+         * @param returnType return type of the function
+         * @param expression expression to be returned
+         * @return callX that returns the value of returnXBody
+         */
+        @Nonnull
+        Expression asExternalMethodCall(@Nonnull String groupName, @Nonnull ClassNode returnType, @Nonnull Statement methodBody) {
+            if (!SCRIPT_SPLITTING_TRANSFORMATION) {
+                throw new RuntimeException("This function cannot be disabled. Pass through of original expression is not possible.")
+            }
+
+            // We break the the ast graph into classes with static mathods to work around JVM class and method size limitations
+            // However, class loading isn't free, so we also don't want a single method per class
+            ClassNode classNode = methodClassNode[groupName]
+            // If we don't have a classNode for this group name or if this class has reached groupSize, start a new class
+            if (classNode == null || classNode.methods.size() >= groupSize) {
+                // Get an uncreative unique class name
+                String className = createStableUniqueName(groupName)
+
+                classNode = new ClassNode("generated." + className, ACC_PUBLIC, ClassHelper.make(RuntimeContainerBase.class))
+                classNode.addConstructor(ACC_PUBLIC, [new Parameter(ClassHelper.make(CpsScript.class), "workflowScript")] as Parameter[], [ClassHelper.make(IOException.class)] as ClassNode[],
+                        block(ctorSuperS(varX("workflowScript"))))
+
+                this.moduleNode.addClass(classNode)
+
+                // Add an instance of this class to the variables that can be referenced from anywhere in this script
+                createScriptContextVariable(ctorX(classNode, args(varX('this'))), className)
+
+                methodClassNode[groupName] = classNode
+            }
+
+            String className = classNode.nameWithoutPackage
+            Expression variable = varX(new DynamicVariable(className, false))
+
+            // Uncreative method naming is fine
+            int methodCount = classNode.methods.size()
+            String name = "get${groupName}_${methodCount}"
+
+            // The instance method referenced via script binding
+            MethodNode method = new MethodNode(name, ACC_PUBLIC, returnType, [] as Parameter[], [] as ClassNode[], methodBody)
+            classNode.addMethod(method)
+
+            return callX(variable, name)
+        }
+
+        /**
+         * Turns a list of expressions into a method that returns a list (not a ListExpression)
+         * Works around limitations on list expression literals
+         * (literal "[item0, item1, ...]") being limited to 250 items.
+         * @param expressions the list expressions to be wrapped in a function call
+         * @return call to a method that returns the provided ListExpression
+         */
+        @Nonnull
+        private Expression toExternalListMethod(@Nonnull Iterable<Expression> expressions) {
+            ListExpression currentListExpression = new ListExpression()
+
+            final int listLimit = 250
+
+            // Local variable in groovy ast is a variable that ... accesses itself.
+            VariableExpression variable = varX(createStableUniqueName('extendedList'))
+            variable.accessedVariable = variable
+
+            Expression declarationExpression = new DeclarationExpression(variable, ASSIGN, new ListExpression())
+            BlockStatement block = block()
+            block.addStatement(stmt(declarationExpression))
+
+            int count = 0
+            expressions.each { item ->
+                if (count++ >= listLimit) {
+                    count = 1
+                    block.addStatement(stmt(callX(variable, 'addAll', args(
+                            asExternalMethodCall('listExpression', ClassHelper.make(Object.class), currentListExpression)
+                    ))))
+                    currentListExpression = new ListExpression()
+                }
+
+                currentListExpression.addExpression(item)
+            }
+
+            block.addStatement(stmt(callX(variable, 'addAll', args(
+                    asExternalMethodCall('listExpression', ClassHelper.make(Object.class), currentListExpression)
+            ))))
+            block.addStatement(returnS(variable))
+
+            return asExternalMethodCall('listExpression', ClassHelper.make(Object.class), block)
+        }
+    }
 }

@@ -169,6 +169,8 @@ public abstract class AbstractDeclarativeTest {
     }
 
     protected void assumeDocker() throws Exception {
+        assumeSh();
+
         Launcher.LocalLauncher localLauncher = new Launcher.LocalLauncher(StreamTaskListener.NULL);
         try {
             Assume.assumeThat("Docker working", localLauncher.launch().cmds(DockerTool.getExecutable(null, null, null, null), "ps").join(), is(0));
@@ -178,6 +180,19 @@ public abstract class AbstractDeclarativeTest {
         DockerClient dockerClient = new DockerClient(localLauncher, null, null);
         Assume.assumeFalse("Docker version not < 1.3", dockerClient.version().isOlderThan(new VersionNumber("1.3")));
     }
+
+    protected void assumeSh() throws Exception {
+        Launcher.LocalLauncher localLauncher = new Launcher.LocalLauncher(StreamTaskListener.NULL);
+
+        if (!localLauncher.isUnix()) {
+            try {
+                Assume.assumeThat("Running sh command succeeds", localLauncher.launch().cmds("sh", "--version").join(), is(0));
+            } catch (IOException x) {
+                Assume.assumeNoException("Have have a shell variant (sh, bash, etc)", x);
+            }
+        }
+    }
+
 
     protected <T extends ParameterDefinition> T getParameterOfType(List<ParameterDefinition> params, Class<T> c) {
         for (ParameterDefinition p : params) {

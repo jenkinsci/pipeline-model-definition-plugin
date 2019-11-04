@@ -43,11 +43,15 @@ import java.util.Map;
 public class WhenDirective extends AbstractDirective<WhenDirective> {
     private DeclarativeStageConditional conditional;
     private boolean beforeAgent;
+    private boolean beforeInput;
+    private boolean beforeOptions;
 
     @DataBoundConstructor
-    public WhenDirective(DeclarativeStageConditional conditional, boolean beforeAgent) {
+    public WhenDirective(DeclarativeStageConditional conditional, boolean beforeAgent, boolean beforeInput, boolean beforeOptions) {
         this.conditional = conditional;
         this.beforeAgent = beforeAgent;
+        this.beforeInput = beforeInput;
+        this.beforeOptions = beforeOptions;
     }
 
     public DeclarativeStageConditional getConditional() {
@@ -56,6 +60,14 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
 
     public boolean isBeforeAgent() {
         return beforeAgent;
+    }
+
+    public boolean isBeforeInput() {
+        return beforeInput;
+    }
+
+    public boolean isBeforeOptions() {
+        return beforeOptions;
     }
 
     @Extension
@@ -107,6 +119,12 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
                         result.append("// ERROR TRANSLATING CONDITIONAL: ").append(e).append("\n");
                     }
 
+                    if (directive.isBeforeOptions()) {
+                        result.append("beforeOptions true\n");
+                    }
+                    if (directive.isBeforeInput()) {
+                        result.append("beforeInput true\n");
+                    }
                     if (directive.isBeforeAgent()) {
                         result.append("beforeAgent true\n");
                     }
