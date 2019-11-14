@@ -19,6 +19,7 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("key", toJSON(key))
@@ -31,6 +32,7 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return key.toGroovy() + ": " + value.toGroovy();
     }

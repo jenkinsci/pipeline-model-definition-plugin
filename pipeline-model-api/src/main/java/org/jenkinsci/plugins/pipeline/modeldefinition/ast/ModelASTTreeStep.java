@@ -21,6 +21,7 @@ public class ModelASTTreeStep extends ModelASTStep {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return super.toJSON().accumulate("children", toJSONArray(children));
     }
@@ -32,6 +33,7 @@ public class ModelASTTreeStep extends ModelASTStep {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock(super.toGroovy(), children);
     }

@@ -49,6 +49,7 @@ public final class ModelASTStageInput extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         final JSONObject o = new JSONObject()
             .accumulate("message", toJSON(message))
@@ -71,6 +72,7 @@ public final class ModelASTStageInput extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder("input {\n");
         result.append("message ").append(message.toGroovy()).append("\n");

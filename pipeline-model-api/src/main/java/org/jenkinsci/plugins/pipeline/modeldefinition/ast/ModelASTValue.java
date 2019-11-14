@@ -75,6 +75,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
             .accumulate("isLiteral", isLiteral())
@@ -133,6 +134,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
         }
 
         @Override
+        @Nonnull
         public String toGroovy() {
             if (getValue() instanceof String) {
                 String str = (String) getValue();
@@ -161,6 +163,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
         }
 
         @Override
+        @Nonnull
         public String toGroovy() {
             String gstring = (String)getValue();
             if (gstring.startsWith("${") && gstring.endsWith("}")) {

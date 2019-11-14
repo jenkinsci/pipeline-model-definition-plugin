@@ -33,8 +33,10 @@ import javax.annotation.Nonnull;
  * @author Andrew Bayer
  */
 public interface ModelASTMarkerInterface {
+    @Nonnull
     String toGroovy();
 
+    @Nonnull
     Object toJSON();
 
     void validate(@Nonnull ModelValidator validator);

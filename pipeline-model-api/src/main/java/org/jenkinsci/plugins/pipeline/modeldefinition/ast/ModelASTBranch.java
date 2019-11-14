@@ -24,6 +24,7 @@ public final class ModelASTBranch extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -37,6 +38,7 @@ public final class ModelASTBranch extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovy(steps);
     }

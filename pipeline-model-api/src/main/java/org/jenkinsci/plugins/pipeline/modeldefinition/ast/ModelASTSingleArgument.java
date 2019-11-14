@@ -21,6 +21,7 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public Object toJSON() {
         return toJSON(value);
     }
@@ -32,6 +33,7 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return value.toGroovy();
     }

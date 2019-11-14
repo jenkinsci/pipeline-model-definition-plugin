@@ -45,6 +45,7 @@ public class ModelASTStage extends ModelASTStageBase {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
 
         JSONObject o = super.toJSON()
@@ -73,6 +74,7 @@ public class ModelASTStage extends ModelASTStageBase {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder()
             // TODO decide if we need to support multiline names

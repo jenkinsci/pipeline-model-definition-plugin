@@ -44,6 +44,7 @@ public final class ModelASTClosureMap extends ModelASTElement implements ModelAS
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
         return toJSONArray(variables);
     }
@@ -55,6 +56,7 @@ public final class ModelASTClosureMap extends ModelASTElement implements ModelAS
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock(null, variables, " ");
     }

@@ -28,6 +28,7 @@ public class ModelASTParallel extends ModelASTStages {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock("parallel", getStages());
     }

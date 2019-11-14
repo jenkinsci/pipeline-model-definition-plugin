@@ -28,6 +28,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         JSONObject a = new JSONObject()
                 .elementOpt("stages", toJSON(stages))
@@ -50,6 +51,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder()
             .append("pipeline {\n")
