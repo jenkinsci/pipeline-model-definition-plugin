@@ -147,7 +147,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
             } else if (getValue() != null) {
                 return getValue().toString();
             } else {
-                return null;
+                return "null";
             }
         }
     }
