@@ -35,6 +35,7 @@ import hudson.model.*
 import hudson.triggers.Trigger
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.collections.CollectionUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.Statement
@@ -630,17 +631,24 @@ class Utils {
                 }
             }
 
-            // Remove the triggers/parameters properties regardless.
-            j.removeProperty(PipelineTriggersJobProperty.class)
+            def currentTriggerProp = j.getProperty(PipelineTriggersJobProperty.class)
+            def newTriggerProp = new PipelineTriggersJobProperty(triggersToApply)
+            // Only Remove/Add if the triggers are different.
+            if (!areTriggersInPipelineTriggerJobPropertiesEqual(currentTriggerProp, newTriggerProp)) {
+                j.removeProperty(PipelineTriggersJobProperty.class)
+                if (!triggersToApply.isEmpty()) {
+                    j.addProperty(newTriggerProp)
+                }
+            }
+
+
+            // Remove the parameters properties regardless.
             j.removeProperty(ParametersDefinitionProperty.class)
 
             // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
             propsToRemove.each { j.removeProperty(it) }
 
-            // If there are any triggers and if there are any parameters, add those properties.
-            if (!triggersToApply.isEmpty()) {
-                j.addProperty(new PipelineTriggersJobProperty(triggersToApply))
-            }
+            // if there are any parameters, add those properties.
             if (!parametersToApply.isEmpty()) {
                 j.addProperty(new ParametersDefinitionProperty(parametersToApply))
             }
@@ -661,6 +669,14 @@ class Utils {
         } finally {
             bc.abort()
         }
+    }
+
+    // Utility method to determine is triggers in PipelineTriggersJobProperties are equal
+    static boolean areTriggersInPipelineTriggerJobPropertiesEqual(PipelineTriggersJobProperty left, PipelineTriggersJobProperty right) {
+        if (left == right) return true;
+        if (left == null || right == null) return false;
+        boolean triggersEqual = CollectionUtils.isEqualCollection(left.triggers, right.triggers);
+        return triggersEqual;
     }
 
     /**

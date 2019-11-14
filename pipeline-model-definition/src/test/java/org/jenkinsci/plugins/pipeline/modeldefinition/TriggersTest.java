@@ -24,9 +24,14 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.Extension;
+import hudson.model.Item;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
+import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -34,13 +39,22 @@ import org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty
 import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.recipes.LocalData;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.*;
 
 public class TriggersTest extends AbstractModelDefTest {
+
+    private static CountDownLatch triggerLatch;
+
     @Test
     public void simpleTriggers() throws Exception {
         WorkflowRun b = expect("simpleTriggers")
@@ -162,4 +176,113 @@ public class TriggersTest extends AbstractModelDefTest {
         expect("actualTriggerCorrectScope")
                 .go();
     }
+
+    @LocalData
+    @Test
+    public void doNotRestartEqualTriggers() throws Exception {
+        // Create countdown latch to monitor how many times
+        // a trigger has been restarted.
+        triggerLatch = new CountDownLatch(2);
+
+        // Create the first build. The DeclarativeJobPropertyTrackerAction action will be created.
+        WorkflowRun b = getAndStartNonRepoBuild("simplePipelineWithTestTrigger");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        System.out.println("after build " + b.getId() + ": " + triggerLatch.getCount());
+
+        // Since the tracker action was not previously available,
+        // the trigger will get restarted and the latch will be decremented
+        assertTrue(triggerLatch.getCount() == 1);
+
+        WorkflowJob job = b.getParent();
+
+        // Build it again.
+        b = j.buildAndAssertSuccess(job);
+        System.out.println("after build " + b.getId() + ": " + triggerLatch.getCount());
+
+        // Since the trigger is the same (the config was not changed between builds),
+        // it will not get restarted,
+        // and the latch will NOT be decremented.
+        assertTrue(triggerLatch.getCount() == 1);
+
+        // Let simulate someone changing the trigger config
+        PipelineTriggersJobProperty triggersJobProperty = job.getProperty(PipelineTriggersJobProperty.class);
+        List<Trigger> newTriggers = new ArrayList<>();
+        TestTrigger myTrigger2 = new TestTrigger();
+        myTrigger2.setName("myTrigger2");
+        newTriggers.add(myTrigger2);
+        job.removeProperty(triggersJobProperty);
+        job.addProperty(new PipelineTriggersJobProperty(newTriggers));
+
+        // Build it again with a new trigger config
+        b = j.buildAndAssertSuccess(job);
+        System.out.println("after build " + b.getId() + ": " + triggerLatch.getCount());
+
+        // Since the trigger is now different (the config WAS changed between builds),
+        // it should get restarted,
+        // and the latch WILL be decremented.
+        assertTrue(triggerLatch.getCount() == 0);
+
+    }
+
+    @TestExtension("doNotRestartEqualTriggers")
+    public static class TestTrigger extends Trigger {
+
+        private String name;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TestTrigger that = (TestTrigger) o;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @DataBoundSetter
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @DataBoundConstructor
+        public TestTrigger() {
+        }
+
+        @Override
+        public void start(Item project, boolean newInstance) {
+            super.start(project, newInstance);
+            System.out.println("Calling START() for " + name);
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            System.out.println("Calling STOP() for " + name);
+            triggerLatch.countDown();
+        }
+
+        @Override
+        public TriggerDescriptor getDescriptor() {
+            return Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @Extension
+        @Symbol("testtrigger")
+        public static final class DescriptorImpl extends TriggerDescriptor {
+            @Override
+            public boolean isApplicable(Item item) {
+                return true;
+            }
+        }
+    }
+
+
 }
