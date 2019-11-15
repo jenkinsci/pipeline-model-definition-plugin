@@ -55,7 +55,7 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://git@github.com/jenkinsci/pipeline-model-definition-plugin.git</connection>
+    <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
     <tag>${scmTag}</tag>
