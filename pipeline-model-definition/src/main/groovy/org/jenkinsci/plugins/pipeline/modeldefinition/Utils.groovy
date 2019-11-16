@@ -85,6 +85,7 @@ import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
 /**
  * Utility methods for use primarily in CPS-transformed code to avoid excessive global whitelisting.
@@ -679,20 +680,14 @@ class Utils {
     private static List<Trigger> getTriggersToApply(@CheckForNull List<Trigger> newTriggers,
                                                     @Nonnull List<Trigger> existingTriggers,
                                                     @Nonnull Set<String> prevDefined) {
-        Set<String> seenTriggerClasses = new HashSet<>()
-        List<Trigger> toApply = []
-        if (newTriggers != null) {
-            toApply.addAll(newTriggers)
-            seenTriggerClasses.addAll(newTriggers.collect { it.descriptor.id })
-        }
-
-        // Find all existing triggers that aren't of classes we've explicitly defined, *and* aren't
-        // in the set of classes of triggers defined by the Jenkinsfile in the previous build. Add those too.
-        toApply.addAll(existingTriggers.findAll {
-            !(it.descriptor.id in seenTriggerClasses) && !(it.descriptor.id in prevDefined)
-        })
-
-        return toApply
+        //Store triggers with unique descriptor id (Class)
+        Set<Trigger> toApply = new TreeSet<>(Comparator.comparing({ Trigger t -> t.descriptor.id }))
+        toApply.addAll(existingTriggers)
+        //Remove all triggers defined in previous Jenkinsfile and may be deprecated
+        toApply.removeAll {it.name in prevDefined}
+        //Replace all triggers defined in current Jenkinsfile
+        toApply.addAll(newTriggers)
+        return toApply.asList()
     }
 
     /**
@@ -711,19 +706,14 @@ class Utils {
     private static List<ParameterDefinition> getParametersToApply(@CheckForNull List<ParameterDefinition> newParameters,
                                                                   @Nonnull List<ParameterDefinition> existingParameters,
                                                                   @Nonnull Set<String> prevDefined) {
-        Set<String> seenNames = new HashSet<>()
-        List<ParameterDefinition> toApply = []
-        if (newParameters != null) {
-            toApply.addAll(newParameters)
-            seenNames.addAll(newParameters.collect { it.name })
-        }
-        // Find all existing parameters that aren't of names we've explicitly defined, *and* aren't
-        // in the set of names of parameters defined by the Jenkinsfile in the previous build. Add those too.
-        toApply.addAll(existingParameters.findAll {
-            !(it.name in seenNames) && !(it.name in prevDefined)
-        })
-
-        return toApply
+        //Store parameters with unique name
+        Set<ParameterDefinition> toApply = new TreeSet<>(Comparator.comparing({ ParameterDefinition p -> p.name }))
+        toApply.addAll(existingParameters)
+        //Remove all parameters defined in previous Jenkinsfile and may be deprecated
+        toApply.removeAll {it.name in prevDefined}
+        //Replace all parameters defined in current Jenkinsfile
+        toApply.addAll(newParameters)
+        return toApply.asList()
     }
 
     /**
