@@ -85,7 +85,6 @@ import javax.annotation.Nonnull
 import javax.annotation.Nullable
 import javax.lang.model.SourceVersion
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantReadWriteLock
 
 /**
  * Utility methods for use primarily in CPS-transformed code to avoid excessive global whitelisting.
@@ -615,7 +614,9 @@ class Utils {
         }
 
         List<Trigger> triggersToApply = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
+
         List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters, previousParameters)
+        boolean isParametersChanged = isParametersListEquals(parametersToApply, existingParameters)
 
         BulkChange bc = new BulkChange(j)
         try {
@@ -631,9 +632,8 @@ class Utils {
                 }
             }
 
-            // Remove the triggers/parameters properties regardless.
+            // Remove the triggers properties regardless.
             j.removeProperty(PipelineTriggersJobProperty.class)
-            j.removeProperty(ParametersDefinitionProperty.class)
 
             // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
             propsToRemove.each { j.removeProperty(it) }
@@ -642,8 +642,13 @@ class Utils {
             if (!triggersToApply.isEmpty()) {
                 j.addProperty(new PipelineTriggersJobProperty(triggersToApply))
             }
-            if (!parametersToApply.isEmpty()) {
-                j.addProperty(new ParametersDefinitionProperty(parametersToApply))
+
+            //If any parameter changed replace all, due to parameter stateless
+            if(isParametersChanged) {
+                j.removeProperty(ParametersDefinitionProperty.class)
+                if (!parametersToApply.isEmpty()) {
+                    j.addProperty(new ParametersDefinitionProperty(parametersToApply))
+                }
             }
 
             // Now add all the other job properties we know need to be added.
@@ -662,6 +667,63 @@ class Utils {
         } finally {
             bc.abort()
         }
+    }
+
+    /**
+     * Compare lists of {@link ParameterDefinition}
+     *
+     * @param first  First list of parameter definitions
+     * @param second Second list of parameter definitions
+     *
+     * @return {@code true}, if both lists of {@link ParameterDefinition} are contain same elements; {@code false} otherwise
+     */
+    private static boolean isParametersListEquals(List<ParameterDefinition> first, List<ParameterDefinition> second) {
+        if(first.size() != second.size()){
+            return false
+        }
+        Map<String, ParameterDefinition> firstNameToParameterMap  = first.collectEntries {[(it.name): it]}
+        Map<String, ParameterDefinition> secondNameToParameterMap = second.collectEntries {[(it.name): it]}
+        //Check that all parameter's names are equals
+        if(firstNameToParameterMap.keySet() != secondNameToParameterMap.keySet()){
+            return false
+        }
+        //Check until first non-equal parameter
+        return !firstNameToParameterMap
+                .values()
+                .any {firstParam -> !isParametersEquals(firstParam, secondNameToParameterMap[firstParam.name])}
+    }
+
+    /**
+     * Compare {@link ParameterDefinition} objects
+     *
+     * @param first  First parameter definition
+     * @param second Second parameter definition
+     *
+     * @return {@code true}, if both {@link ParameterDefinition} objects are equals; {@code false} otherwise
+     */
+    private static boolean isParametersEquals(ParameterDefinition first, ParameterDefinition second){
+        if(first.descriptor.id != second.descriptor.id || first.description != second.description){
+            return false
+        }
+        return isObjectsEqualsXStream(first, second)
+    }
+
+    /**
+     * Compare objects' string representations after conversion to XML
+     *
+     * Used for objects:
+     * - all fields are unknown before comparison
+     * - without overwritten methods equals() and hashCode()
+     *
+     * @param first  First object for comparing
+     * @param second Second object for comparing
+     *
+     * @return {@code true} if string representation of objects in XML format are equals; {@code false} otherwise
+     */
+    private static boolean isObjectsEqualsXStream(Object first, Object second) {
+        String firstMarshaled  = Jenkins.get().XSTREAM2.toXML(first)
+        String secondMarshaled = Jenkins.get().XSTREAM2.toXML(second)
+        return first == second
     }
 
     /**
