@@ -563,9 +563,9 @@ class Utils {
             List<ParameterDefinition> existingParameters = existingParametersForJob(j)
 
             Set<String> previousProperties = new HashSet<>()
-            Set<String> previousTriggers = new HashSet<>()
+            Set<String> previousTriggers   = new HashSet<>()
             Set<String> previousParameters = new HashSet<>()
-            Set<String> previousOptions = new HashSet<>()
+            Set<String> previousOptions    = new HashSet<>()
 
             // First, use the action from the job if it's present.
             DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
@@ -598,28 +598,34 @@ class Utils {
             List<Trigger> triggersToUpdate = getTriggersToUpdate(currentTriggers, existingTriggers)
 
             List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters,
-                    previousParameters)
+                                                                               previousParameters)
             boolean isParametersChanged = !isParametersListEquals(parametersToApply, existingParameters)
 
             BulkChange bc = new BulkChange(j)
             try {
+                boolean isJobChanged = false
                 // Check if QuietPeriod option is specified
                 QuietPeriod quietPeriod = (QuietPeriod) rawOptions.find { it instanceof QuietPeriod }
+                Integer newQuietPeriod = null
                 if (quietPeriod != null) {
-                    j.setQuietPeriod(quietPeriod.quietPeriod)
+                    newQuietPeriod = quietPeriod.quietPeriod
                 } else {
                     String quietPeriodName = Jenkins.get().getDescriptorByType(QuietPeriod.DescriptorImpl.class)?.getName()
                     // If the quiet period was set by the previous build, wipe it out.
                     if (quietPeriodName != null && previousOptions.contains(quietPeriodName)) {
-                        j.setQuietPeriod(Jenkins.get().getQuietPeriod())
+                        newQuietPeriod = Jenkins.get().getQuietPeriod()
                     }
+                }
+                if(newQuietPeriod != null && j.quietPeriod != newQuietPeriod){
+                    j.quietPeriod = newQuietPeriod
+                    isJobChanged = true
                 }
 
 
                 // If there are any triggers add those properties.
-                if (currentTriggers.isEmpty()) {
+                if(currentTriggers.isEmpty()) {
                     // If there are no any triggers, try to remove PipelineTriggersJobProperty. It may no longer exists.
-                    j.removeProperty(PipelineTriggersJobProperty.class)
+                    isJobChanged != (j.removeProperty(PipelineTriggersJobProperty.class) != null)
                 } else {
                     // Get or add empty PipelineTriggersJobProperty.
                     PipelineTriggersJobProperty triggersJobProperty = j.getTriggersJobProperty()
@@ -628,6 +634,7 @@ class Utils {
                         Trigger t = triggersJobProperty.getTriggerForDescriptor(it.descriptor)
                         triggersJobProperty.removeTrigger(it)
                         t?.stop()
+                        isJobChanged = true
                     }
 
                     // Replace all job triggers we know need to be added or updated.
@@ -638,16 +645,18 @@ class Utils {
                 }
 
                 //If any parameter changed replace all, due to parameter stateless
-                if (isParametersChanged) {
+                if(isParametersChanged) {
                     j.removeProperty(ParametersDefinitionProperty.class)
                     if (!parametersToApply.isEmpty()) {
                         j.addProperty(new ParametersDefinitionProperty(parametersToApply))
                     }
+                    isJobChanged = true
                 }
 
                 // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
                 propsToRemove.each {
                     j.removeProperty(it)
+                    isJobChanged = true
                 }
 
                 // Now replace properties we know need to be added or updated.
@@ -658,12 +667,23 @@ class Utils {
                         // removed one, try again in case there is more
                     }
                     j.addProperty(p)
+                    isJobChanged = true
                 }
 
                 // Add the action tracking what we added (or empty otherwise)
-                j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters, rawOptions))
+                def newPropertyTrackerAction = new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters, rawOptions)
+                if(previousAction == null ||
+                        !(previousAction.jobProperties == newPropertyTrackerAction.jobProperties &&
+                          previousAction.parameters == newPropertyTrackerAction.parameters &&
+                          previousAction.options == newPropertyTrackerAction.options &&
+                          previousAction.triggers == newPropertyTrackerAction.triggers)) {
+                    j.replaceAction(newPropertyTrackerAction)
+                    isJobChanged = true
+                }
 
-                bc.commit()
+                if(isJobChanged){
+                    bc.commit()
+                }
             } finally {
                 bc.abort()
             }
