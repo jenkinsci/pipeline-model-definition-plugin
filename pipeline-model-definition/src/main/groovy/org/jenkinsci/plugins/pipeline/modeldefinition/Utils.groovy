@@ -613,7 +613,9 @@ class Utils {
             }
         }
 
-        List<Trigger> triggersToApply = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
+        List<Trigger> currentTriggers  = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
+        List<Trigger> triggersToRemove = getTriggersToRemove(currentTriggers, existingTriggers)
+        List<Trigger> triggersToUpdate = getTriggersToUpdate(currentTriggers, existingTriggers)
 
         List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters, previousParameters)
         boolean isParametersChanged = isParametersListEquals(parametersToApply, existingParameters)
@@ -632,15 +634,28 @@ class Utils {
                 }
             }
 
-            // Remove the triggers properties regardless.
-            j.removeProperty(PipelineTriggersJobProperty.class)
 
             // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
             propsToRemove.each { j.removeProperty(it) }
 
-            // If there are any triggers and if there are any parameters, add those properties.
-            if (!triggersToApply.isEmpty()) {
-                j.addProperty(new PipelineTriggersJobProperty(triggersToApply))
+            // If there are any triggers add those properties.
+            if(currentTriggers.isEmpty()) {
+                // If there are no any triggers, try to remove PipelineTriggersJobProperty. It may no longer exists.
+                j.removeProperty(PipelineTriggersJobProperty.class)
+            } else {
+                // Get or add empty PipelineTriggersJobProperty.
+                PipelineTriggersJobProperty triggersJobProperty = j.getTriggersJobProperty()
+                // Remove the job triggers we defined in previous Jenkinsfiles but don't any more.
+                triggersToRemove.each {
+                    Trigger t = triggersJobProperty.getTriggerForDescriptor(it.descriptor)
+                    triggersJobProperty.removeTrigger(it)
+                    t?.stop()
+                }
+
+                // Replace all job triggers we know need to be added or updated.
+                triggersToUpdate.each {
+                    j.addTrigger(it)
+                }
             }
 
             //If any parameter changed replace all, due to parameter stateless
@@ -750,6 +765,37 @@ class Utils {
         //Replace all triggers defined in current Jenkinsfile
         toApply.addAll(newTriggers)
         return toApply.asList()
+    }
+
+    /**
+     * Helper method for getting Triggers, which should be removed from a job.
+     *
+     * @param currentTriggers  Actual triggers for the job.
+     * @param existingTriggers Any triggers already defined on the job.
+     *
+     * @return A list of triggers to remove. May be empty.
+     */
+    @Nonnull
+    private static List<Trigger> getTriggersToRemove(@CheckForNull List<Trigger> currentTriggers,
+                                                     @Nonnull List<Trigger> existingTriggers) {
+        Set<String> currentTriggersDescriptors = currentTriggers.collect{ it.descriptor.id }
+        return existingTriggers.findAll{ it.descriptor.id in currentTriggersDescriptors}
+    }
+
+    /**
+     * Helper method for getting Triggers, which should be updated or added to a job.
+     *
+     * @param currentTriggers  Actual triggers for the job.
+     * @param existingTriggers Any triggers already defined on the job.
+     *
+     * @return A list of triggers to add/update. May be empty.
+     */
+    @Nonnull
+    private static List<Trigger> getTriggersToUpdate(@CheckForNull List<Trigger> currentTriggers,
+                                                     @Nonnull List<Trigger> existingTriggers) {
+        Map<String, Trigger> descriptorsToExistingTriggers = existingTriggers.collectEntries{ [(it.descriptor.id):it] }
+        return currentTriggers.findAll{ descriptorsToExistingTriggers[it.descriptor.id] == null ||
+                                        !isObjectsEqualsXStream(it, descriptorsToExistingTriggers[it.descriptor.id])}
     }
 
     /**
