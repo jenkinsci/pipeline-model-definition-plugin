@@ -557,112 +557,116 @@ class Utils {
         WorkflowRun r = script.$build()
         WorkflowJob j = r.getParent()
 
-        List<JobProperty> existingJobProperties = existingJobPropertiesForJob(j)
-        List<Trigger> existingTriggers = existingTriggersForJob(j)
-        List<ParameterDefinition> existingParameters = existingParametersForJob(j)
+        synchronized (j) {
+            List<JobProperty> existingJobProperties = existingJobPropertiesForJob(j)
+            List<Trigger> existingTriggers = existingTriggersForJob(j)
+            List<ParameterDefinition> existingParameters = existingParametersForJob(j)
 
-        Set<String> previousProperties = new HashSet<>()
-        Set<String> previousTriggers   = new HashSet<>()
-        Set<String> previousParameters = new HashSet<>()
-        Set<String> previousOptions    = new HashSet<>()
+            Set<String> previousProperties = new HashSet<>()
+            Set<String> previousTriggers = new HashSet<>()
+            Set<String> previousParameters = new HashSet<>()
+            Set<String> previousOptions = new HashSet<>()
 
-        // First, use the action from the job if it's present.
-        DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
+            // First, use the action from the job if it's present.
+            DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
 
-        // Fall back to previous build for compatibility reasons.
-        if (previousAction == null) {
-            WorkflowRun previousBuild = r.getPreviousCompletedBuild()
-            if (previousBuild != null) {
-                previousAction = previousBuild.getAction(DeclarativeJobPropertyTrackerAction.class)
-            }
-        }
-        if (previousAction != null) {
-            previousProperties.addAll(previousAction.getJobProperties())
-            previousTriggers.addAll(previousAction.getTriggers())
-            previousParameters.addAll(previousAction.getParameters())
-            previousOptions.addAll(previousAction.getOptions())
-        }
-
-        List<JobProperty> currentJobProperties = getPropertiesToApply(rawJobProperties, existingJobProperties,
-                                                                      previousProperties)
-        // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
-        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
-        // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
-        // And stash the property classes that should be removed aside as well.
-        List<JobProperty> propsToRemove = getPropertiesToRemove(currentJobProperties, existingJobProperties)
-        List<JobProperty> propsToUpdate = getPropertiesToUpdate(currentJobProperties, existingJobProperties)
-
-        List<Trigger> currentTriggers  = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
-        List<Trigger> triggersToRemove = getTriggersToRemove(currentTriggers, existingTriggers)
-        List<Trigger> triggersToUpdate = getTriggersToUpdate(currentTriggers, existingTriggers)
-
-        List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters,
-                                                                            previousParameters)
-        boolean isParametersChanged = !isParametersListEquals(parametersToApply, existingParameters)
-
-        BulkChange bc = new BulkChange(j)
-        try {
-            // Check if QuietPeriod option is specified
-            QuietPeriod quietPeriod = (QuietPeriod) rawOptions.find { it instanceof QuietPeriod }
-            if (quietPeriod != null) {
-                j.setQuietPeriod(quietPeriod.quietPeriod)
-            } else {
-                String quietPeriodName = Jenkins.get().getDescriptorByType(QuietPeriod.DescriptorImpl.class)?.getName()
-                // If the quiet period was set by the previous build, wipe it out.
-                if (quietPeriodName != null && previousOptions.contains(quietPeriodName)) {
-                    j.setQuietPeriod(Jenkins.get().getQuietPeriod())
+            // Fall back to previous build for compatibility reasons.
+            if (previousAction == null) {
+                WorkflowRun previousBuild = r.getPreviousCompletedBuild()
+                if (previousBuild != null) {
+                    previousAction = previousBuild.getAction(DeclarativeJobPropertyTrackerAction.class)
                 }
             }
-
-
-            // If there are any triggers add those properties.
-            if(currentTriggers.isEmpty()) {
-                // If there are no any triggers, try to remove PipelineTriggersJobProperty. It may no longer exists.
-                j.removeProperty(PipelineTriggersJobProperty.class)
-            } else {
-                // Get or add empty PipelineTriggersJobProperty.
-                PipelineTriggersJobProperty triggersJobProperty = j.getTriggersJobProperty()
-                // Remove the job triggers we defined in previous Jenkinsfiles but don't any more.
-                triggersToRemove.each {
-                    Trigger t = triggersJobProperty.getTriggerForDescriptor(it.descriptor)
-                    triggersJobProperty.removeTrigger(it)
-                    t?.stop()
-                }
-
-                // Replace all job triggers we know need to be added or updated.
-                triggersToUpdate.each {
-                    j.addTrigger(it)
-                }
+            if (previousAction != null) {
+                previousProperties.addAll(previousAction.getJobProperties())
+                previousTriggers.addAll(previousAction.getTriggers())
+                previousParameters.addAll(previousAction.getParameters())
+                previousOptions.addAll(previousAction.getOptions())
             }
 
-            //If any parameter changed replace all, due to parameter stateless
-            if(isParametersChanged) {
-                j.removeProperty(ParametersDefinitionProperty.class)
-                if (!parametersToApply.isEmpty()) {
-                    j.addProperty(new ParametersDefinitionProperty(parametersToApply))
+            List<JobProperty> currentJobProperties = getPropertiesToApply(rawJobProperties, existingJobProperties,
+                    previousProperties)
+            // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
+            // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
+            // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
+            // And stash the property classes that should be removed aside as well.
+            List<JobProperty> propsToRemove = getPropertiesToRemove(currentJobProperties, existingJobProperties)
+            List<JobProperty> propsToUpdate = getPropertiesToUpdate(currentJobProperties, existingJobProperties)
+
+            List<Trigger> currentTriggers = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
+            List<Trigger> triggersToRemove = getTriggersToRemove(currentTriggers, existingTriggers)
+            List<Trigger> triggersToUpdate = getTriggersToUpdate(currentTriggers, existingTriggers)
+
+            List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters,
+                    previousParameters)
+            boolean isParametersChanged = !isParametersListEquals(parametersToApply, existingParameters)
+
+            BulkChange bc = new BulkChange(j)
+            try {
+                // Check if QuietPeriod option is specified
+                QuietPeriod quietPeriod = (QuietPeriod) rawOptions.find { it instanceof QuietPeriod }
+                if (quietPeriod != null) {
+                    j.setQuietPeriod(quietPeriod.quietPeriod)
+                } else {
+                    String quietPeriodName = Jenkins.get().getDescriptorByType(QuietPeriod.DescriptorImpl.class)?.getName()
+                    // If the quiet period was set by the previous build, wipe it out.
+                    if (quietPeriodName != null && previousOptions.contains(quietPeriodName)) {
+                        j.setQuietPeriod(Jenkins.get().getQuietPeriod())
+                    }
                 }
-            }
 
-            // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
-            propsToRemove.each {
-                j.removeProperty(it)
-            }
 
-            // Now replace properties we know need to be added or updated.
-            propsToUpdate.each { p ->
-                // Remove the existing instance(s) of the property class before we add the new one. We're looping and
-                // removing multiple to deal with the results of JENKINS-44809.
-                while (j.removeProperty(p.class) != null) {
-                    // removed one, try again in case there is more
+                // If there are any triggers add those properties.
+                if (currentTriggers.isEmpty()) {
+                    // If there are no any triggers, try to remove PipelineTriggersJobProperty. It may no longer exists.
+                    j.removeProperty(PipelineTriggersJobProperty.class)
+                } else {
+                    // Get or add empty PipelineTriggersJobProperty.
+                    PipelineTriggersJobProperty triggersJobProperty = j.getTriggersJobProperty()
+                    // Remove the job triggers we defined in previous Jenkinsfiles but don't any more.
+                    triggersToRemove.each {
+                        Trigger t = triggersJobProperty.getTriggerForDescriptor(it.descriptor)
+                        triggersJobProperty.removeTrigger(it)
+                        t?.stop()
+                    }
+
+                    // Replace all job triggers we know need to be added or updated.
+                    triggersToUpdate.each {
+                        j.addTrigger(it)
+                        isJobChanged = true
+                    }
                 }
-                j.addProperty(p)
-            }
 
-            bc.commit()
-            // Add the action tracking what we added (or empty otherwise)
-            j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters, rawOptions))
-        } finally {
-            bc.abort()
+                //If any parameter changed replace all, due to parameter stateless
+                if (isParametersChanged) {
+                    j.removeProperty(ParametersDefinitionProperty.class)
+                    if (!parametersToApply.isEmpty()) {
+                        j.addProperty(new ParametersDefinitionProperty(parametersToApply))
+                    }
+                }
+
+                // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
+                propsToRemove.each {
+                    j.removeProperty(it)
+                }
+
+                // Now replace properties we know need to be added or updated.
+                propsToUpdate.each { p ->
+                    // Remove the existing instance(s) of the property class before we add the new one. We're looping and
+                    // removing multiple to deal with the results of JENKINS-44809.
+                    while (j.removeProperty(p.class) != null) {
+                        // removed one, try again in case there is more
+                    }
+                    j.addProperty(p)
+                }
+
+                // Add the action tracking what we added (or empty otherwise)
+                j.replaceAction(new DeclarativeJobPropertyTrackerAction(rawJobProperties, rawTriggers, rawParameters, rawOptions))
+
+                bc.commit()
+            } finally {
+                bc.abort()
+            }
         }
     }
 
