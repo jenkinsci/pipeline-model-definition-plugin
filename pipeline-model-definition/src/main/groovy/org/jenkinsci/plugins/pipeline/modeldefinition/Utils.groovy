@@ -733,9 +733,9 @@ class Utils {
      * @return {@code true} if string representation of objects in XML format are equals; {@code false} otherwise
      */
     private static boolean isObjectsEqualsXStream(Object first, Object second) {
-        String firstMarshaled  = Jenkins.get().XSTREAM2.toXML(first)
-        String secondMarshaled = Jenkins.get().XSTREAM2.toXML(second)
-        return first == second
+        String firstMarshaled  = Items.XSTREAM2.toXML(first)
+        String secondMarshaled = Items.XSTREAM2.toXML(second)
+        return firstMarshaled == secondMarshaled
     }
 
     /**
