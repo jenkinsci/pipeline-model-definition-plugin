@@ -562,9 +562,9 @@ class Utils {
         List<ParameterDefinition> existingParameters = existingParametersForJob(j)
 
         Set<String> previousProperties = new HashSet<>()
-        Set<String> previousTriggers = new HashSet<>()
+        Set<String> previousTriggers   = new HashSet<>()
         Set<String> previousParameters = new HashSet<>()
-        Set<String> previousOptions = new HashSet<>()
+        Set<String> previousOptions    = new HashSet<>()
 
         // First, use the action from the job if it's present.
         DeclarativeJobPropertyTrackerAction previousAction = j.getAction(DeclarativeJobPropertyTrackerAction.class)
@@ -583,34 +583,20 @@ class Utils {
             previousOptions.addAll(previousAction.getOptions())
         }
 
+        List<JobProperty> currentJobProperties = getPropertiesToApply(rawJobProperties, existingJobProperties,
+                                                                      previousProperties)
+        // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
+        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
+        // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
+        // And stash the property classes that should be removed aside as well.
+        List<JobProperty> propsToRemove = getPropertiesToRemove(currentJobProperties, existingJobProperties)
+        List<JobProperty> propsToUpdate = getPropertiesToUpdate(currentJobProperties, existingJobProperties)
+
         List<JobProperty> jobPropertiesToApply = []
         Set<String> seenClasses = new HashSet<>()
         if (rawJobProperties != null) {
             jobPropertiesToApply.addAll(rawJobProperties)
             seenClasses.addAll(rawJobProperties.collect { it.descriptor.id })
-        }
-        // Find all existing job properties that aren't of classes we've explicitly defined, *and* aren't
-        // in the set of classes of job properties defined by the Jenkinsfile in the previous build. Add those too.
-        // Oh, and ignore the PipelineTriggersJobProperty and ParameterDefinitionsProperty - we handle those separately.
-        // And stash the property classes that should be removed aside as well.
-        List<JobProperty> propsToRemove = []
-        existingJobProperties.each { p ->
-            // We only care about classes that we haven't already seen in the new properties list.
-            if (!(p.descriptor.id in seenClasses)) {
-                if (!(p.descriptor.id in previousProperties)) {
-                    // This means it's a job property defined outside of our scope, so retain it, if it's the first
-                    // instance of the class that we've seen so far. Ideally we'd be ignoring it completely, but due to
-                    // JENKINS-44809, we've created situations where tons of duplicate job property instances exist,
-                    // which need to be nuked, so go through normal cleanup.
-                    if (!jobPropertiesToApply.any { p.descriptor == it.descriptor }) {
-                        jobPropertiesToApply.add(p)
-                    }
-                } else {
-                    // This means we should be removing it - it was defined via the Jenkinsfile last time but is no
-                    // longer defined.
-                    propsToRemove.add(p)
-                }
-            }
         }
 
         List<Trigger> currentTriggers  = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
@@ -618,7 +604,7 @@ class Utils {
         List<Trigger> triggersToUpdate = getTriggersToUpdate(currentTriggers, existingTriggers)
 
         List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters, previousParameters)
-        boolean isParametersChanged = isParametersListEquals(parametersToApply, existingParameters)
+        boolean isParametersChanged = !isParametersListEquals(parametersToApply, existingParameters)
 
         BulkChange bc = new BulkChange(j)
         try {
@@ -663,8 +649,13 @@ class Utils {
                 }
             }
 
-            // Now add all the other job properties we know need to be added.
-            jobPropertiesToApply.each { p ->
+            // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
+            propsToRemove.each {
+                j.removeProperty(it)
+            }
+
+            // Now replace properties we know need to be added or updated.
+            propsToUpdate.each { p ->
                 // Remove the existing instance(s) of the property class before we add the new one. We're looping and
                 // removing multiple to deal with the results of JENKINS-44809.
                 while (j.removeProperty(p.class) != null) {
@@ -819,6 +810,65 @@ class Utils {
         //Replace all parameters defined in current Jenkinsfile
         toApply.addAll(newParameters)
         return toApply.asList()
+    }
+
+    /**
+     * Given the new parameters defined in the Jenkinsfile, the existing parameters already on the job, and the set of
+     * parameter names that may have been recorded as defined in the Jenkinsfile in the previous build, return a list of
+     * parameters that will actually be applied, including both the newly defined in Jenkinsfile parameters and any
+     * parameters defined outside of the Jenkinsfile.
+     *
+     * @param newProperties      New properties from the Jenkinsfile.
+     * @param existingProperties Any properties already defined on the job.
+     * @param prevDefined        Any property names recorded in a {@link DeclarativeJobPropertyTrackerAction} on the
+     * previous run.
+     *
+     * @return A list of parameters to apply. May be empty.
+     */
+    @Nonnull
+    private static List<JobProperty> getPropertiesToApply(@CheckForNull List<JobProperty> newProperties,
+                                                          @Nonnull List<JobProperty> existingProperties,
+                                                          @Nonnull Set<String> prevDefined) {
+        // Store properties with unique descriptor id (Class)
+        Set<JobProperty> toApply = new TreeSet<>(Comparator.comparing({ JobProperty p -> p.descriptor.id }))
+        toApply.addAll(existingProperties)
+        // Remove all properties defined in previous Jenkinsfile and may be no longer exist
+        toApply.removeAll {it.descriptor.id in prevDefined}
+        // Replace all properties defined in current Jenkinsfile
+        toApply.addAll(newProperties)
+        return toApply.asList()
+    }
+
+    /**
+     * Helper method for getting Triggers, which should be updated or added to a job.
+     *
+     * @param currentProperties  Actual triggers for the job.
+     * @param existingProperties Any triggers already defined on the job.
+     *
+     * @return A list of triggers to add/update. May be empty.
+     */
+    @Nonnull
+    private static List<JobProperty> getPropertiesToUpdate(@CheckForNull List<JobProperty> currentProperties,
+                                                           @Nonnull List<JobProperty> existingProperties) {
+        Map<String, JobProperty> descriptorsToExistingProperties =
+                existingProperties.collectEntries{ [(it.descriptor.id):it] }
+        return currentProperties.findAll{ descriptorsToExistingProperties[it.descriptor.id] == null ||
+                !isObjectsEqualsXStream(it, descriptorsToExistingProperties[it.descriptor.id])}
+    }
+
+    /**
+     * Helper method for getting Triggers, which should be removed from a job.
+     *
+     * @param currentTriggers  Actual triggers for the job.
+     * @param existingTriggers Any triggers already defined on the job.
+     *
+     * @return A list of triggers to remove. May be empty.
+     */
+    @Nonnull
+    private static List<JobProperty> getPropertiesToRemove(@CheckForNull List<JobProperty> currentTriggers,
+                                                           @Nonnull List<JobProperty> existingTriggers) {
+        Set<String> currentPropertiesDescriptors = currentTriggers.collect{ it.descriptor.id }
+        return existingTriggers.findAll{ !(it.descriptor.id in currentPropertiesDescriptors)}
     }
 
     /**
