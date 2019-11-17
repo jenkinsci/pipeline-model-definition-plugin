@@ -635,9 +635,6 @@ class Utils {
             }
 
 
-            // Remove the job properties we defined in previous Jenkinsfiles but don't any more.
-            propsToRemove.each { j.removeProperty(it) }
-
             // If there are any triggers add those properties.
             if(currentTriggers.isEmpty()) {
                 // If there are no any triggers, try to remove PipelineTriggersJobProperty. It may no longer exists.
@@ -761,7 +758,7 @@ class Utils {
         Set<Trigger> toApply = new TreeSet<>(Comparator.comparing({ Trigger t -> t.descriptor.id }))
         toApply.addAll(existingTriggers)
         //Remove all triggers defined in previous Jenkinsfile and may be deprecated
-        toApply.removeAll {it.name in prevDefined}
+        toApply.removeAll {it.descriptor.id in prevDefined}
         //Replace all triggers defined in current Jenkinsfile
         toApply.addAll(newTriggers)
         return toApply.asList()
@@ -779,7 +776,7 @@ class Utils {
     private static List<Trigger> getTriggersToRemove(@CheckForNull List<Trigger> currentTriggers,
                                                      @Nonnull List<Trigger> existingTriggers) {
         Set<String> currentTriggersDescriptors = currentTriggers.collect{ it.descriptor.id }
-        return existingTriggers.findAll{ it.descriptor.id in currentTriggersDescriptors}
+        return existingTriggers.findAll{ !(it.descriptor.id in currentTriggersDescriptors) }
     }
 
     /**
@@ -818,7 +815,7 @@ class Utils {
         Set<ParameterDefinition> toApply = new TreeSet<>(Comparator.comparing({ ParameterDefinition p -> p.name }))
         toApply.addAll(existingParameters)
         //Remove all parameters defined in previous Jenkinsfile and may be deprecated
-        toApply.removeAll {it.name in prevDefined}
+        toApply.removeAll { it.name in prevDefined }
         //Replace all parameters defined in current Jenkinsfile
         toApply.addAll(newParameters)
         return toApply.asList()
