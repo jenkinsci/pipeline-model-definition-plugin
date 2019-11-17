@@ -592,18 +592,12 @@ class Utils {
         List<JobProperty> propsToRemove = getPropertiesToRemove(currentJobProperties, existingJobProperties)
         List<JobProperty> propsToUpdate = getPropertiesToUpdate(currentJobProperties, existingJobProperties)
 
-        List<JobProperty> jobPropertiesToApply = []
-        Set<String> seenClasses = new HashSet<>()
-        if (rawJobProperties != null) {
-            jobPropertiesToApply.addAll(rawJobProperties)
-            seenClasses.addAll(rawJobProperties.collect { it.descriptor.id })
-        }
-
         List<Trigger> currentTriggers  = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
         List<Trigger> triggersToRemove = getTriggersToRemove(currentTriggers, existingTriggers)
         List<Trigger> triggersToUpdate = getTriggersToUpdate(currentTriggers, existingTriggers)
 
-        List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters, previousParameters)
+        List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters,
+                                                                            previousParameters)
         boolean isParametersChanged = !isParametersListEquals(parametersToApply, existingParameters)
 
         BulkChange bc = new BulkChange(j)
