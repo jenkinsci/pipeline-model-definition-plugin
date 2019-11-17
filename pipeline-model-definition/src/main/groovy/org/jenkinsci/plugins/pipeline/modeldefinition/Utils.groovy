@@ -691,38 +691,40 @@ class Utils {
     }
 
     /**
-     * Compare lists of {@link ParameterDefinition}
+     * Compare lists of {@link ParameterDefinition}.
      *
-     * @param first  First list of parameter definitions
-     * @param second Second list of parameter definitions
+     * @param first  First list of parameter definitions.
+     * @param second Second list of parameter definitions.
      *
-     * @return {@code true}, if both lists of {@link ParameterDefinition} are contain same elements; {@code false} otherwise
+     * @return {@code true}, if both lists of {@link ParameterDefinition} are contain same elements;
+     * {@code false} otherwise
      */
-    private static boolean isParametersListEquals(List<ParameterDefinition> first, List<ParameterDefinition> second) {
+    private static boolean isParametersListEquals(@Nonnull List<ParameterDefinition> first,
+                                                  @Nonnull List<ParameterDefinition> second) {
         if(first.size() != second.size()){
             return false
         }
         Map<String, ParameterDefinition> firstNameToParameterMap  = first.collectEntries {[(it.name): it]}
         Map<String, ParameterDefinition> secondNameToParameterMap = second.collectEntries {[(it.name): it]}
-        //Check that all parameter's names are equals
+        // Check that all parameter's names are equals.
         if(firstNameToParameterMap.keySet() != secondNameToParameterMap.keySet()){
             return false
         }
-        //Check until first non-equal parameter
+        // Check until first non-equal parameter.
         return !firstNameToParameterMap
                 .values()
                 .any {firstParam -> !isParametersEquals(firstParam, secondNameToParameterMap[firstParam.name])}
     }
 
     /**
-     * Compare {@link ParameterDefinition} objects
+     * Compare {@link ParameterDefinition} objects.
      *
-     * @param first  First parameter definition
-     * @param second Second parameter definition
+     * @param first  First parameter definition.
+     * @param second Second parameter definition.
      *
-     * @return {@code true}, if both {@link ParameterDefinition} objects are equals; {@code false} otherwise
+     * @return {@code true}, if both {@link ParameterDefinition} objects are equals; {@code false} otherwise.
      */
-    private static boolean isParametersEquals(ParameterDefinition first, ParameterDefinition second){
+    private static boolean isParametersEquals(@Nonnull ParameterDefinition first, @Nonnull ParameterDefinition second) {
         if(first.descriptor.id != second.descriptor.id || first.description != second.description){
             return false
         }
@@ -741,7 +743,11 @@ class Utils {
      *
      * @return {@code true} if string representation of objects in XML format are equals; {@code false} otherwise
      */
-    private static boolean isObjectsEqualsXStream(Object first, Object second) {
+    private static boolean isObjectsEqualsXStream(@Nonnull Object first, @Nonnull Object second) {
+        // Same object has same XML representation
+        if(first.is(second)){
+            return true
+        }
         String firstMarshaled  = Items.XSTREAM2.toXML(first)
         String secondMarshaled = Items.XSTREAM2.toXML(second)
         return firstMarshaled == secondMarshaled
