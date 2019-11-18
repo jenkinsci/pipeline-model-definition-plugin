@@ -16,7 +16,7 @@ import java.util.Map;
 public final class ModelASTSingleArgument extends ModelASTArgumentList {
 
     /**
-     * While not @Nonnull, if this field is null parsing or validation errors will occur before
+     * While not {@link Nonnull}, if this field is null then parsing/validation errors will occur before
      * {@link NullPointerException} would be thrown by {@link #toGroovy()} or {@link #toJSON()}.
      */
     private ModelASTValue value;
