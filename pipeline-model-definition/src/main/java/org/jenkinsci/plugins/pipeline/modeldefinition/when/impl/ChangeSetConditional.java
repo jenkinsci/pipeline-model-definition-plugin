@@ -26,17 +26,21 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import hudson.Extension;
+import hudson.scm.ChangeLogSet;
+import hudson.util.ListBoxModel;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 /**
  * Conditional that checks the affected file paths recorded in the changelog.
@@ -45,26 +49,68 @@ import javax.annotation.Nonnull;
  */
 public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetConditional> {
 
-    private String glob;
+    @Deprecated
+    private transient String glob;
+    private String pattern;
     private boolean caseSensitive;
+    private String comparator;
 
     @DataBoundConstructor
-    public ChangeSetConditional(String glob) {
-        this.glob = glob;
+    public ChangeSetConditional(String pattern) {
+        this.pattern = pattern;
         this.caseSensitive = false;
     }
 
+    @Deprecated
     public String getGlob() {
         return glob;
     }
 
+    @Deprecated
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
 
+    public String getPattern() {
+        return pattern;
+    }
+
+    /**
+     * The {@link Comparator} to use.
+     * Default is {@link Comparator#GLOB}
+     * @return the name of the comparator or null if default.
+     */
+    public String getComparator() {
+        return comparator;
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.glob != null) {
+            this.pattern = this.glob;
+        }
+        return this;
+    }
+
     @DataBoundSetter
+    public void setComparator(String comparator) {
+        final Comparator c = Comparator.get(comparator, null);
+        if (c != null) {
+            this.comparator = c.name();
+        } else {
+            this.comparator = null;
+        }
+    }
+
+    @DataBoundSetter
+    @Deprecated
     public void setCaseSensitive(boolean caseSensitive) {
         this.caseSensitive = caseSensitive;
+    }
+
+    public boolean changeSetMatches(ChangeLogSet.Entry change, String pattern) {
+        Comparator c = Comparator.get(comparator, Comparator.GLOB);
+
+        return change.getAffectedPaths().stream().anyMatch(path -> c.compare(pattern, path));
     }
 
     @Extension
@@ -79,6 +125,10 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
         @Override
         public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+        }
+
+        public ListBoxModel doFillComparatorItems() {
+            return Comparator.getSelectOptions(true, Comparator.GLOB);
         }
     }
 }

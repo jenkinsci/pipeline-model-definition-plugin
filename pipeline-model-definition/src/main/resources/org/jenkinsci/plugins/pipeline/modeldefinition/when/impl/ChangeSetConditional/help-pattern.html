@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2018, CloudBees, Inc.
+  ~ Copyright (c) 2017, CloudBees, Inc.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +22,11 @@
   ~ THE SOFTWARE.
   -->
 
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry field="pattern" title="File/path pattern to match against changeset">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="caseSensitive">
-        <f:checkbox title="Case-sensitive path/file matching" checked="false"/>
-    </f:entry>
-    <f:advanced>
-        <f:entry field="comparator" title="Comparator">
-            <f:select/>
-        </f:entry>
-    </f:advanced>
-</j:jelly>
+<p>
+    The pattern to compare the actual value with.
+</p>
+
+<p>
+    If <code>comparator</code> is not specified it will be evaluated as an <a href="http://ant.apache.org/manual/Types/fileset.html">Ant-style globs</a>.
+    E.g: **/*.java
+</p>
