@@ -1,0 +1,31 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "branches": [    {
+      "name": "default",
+      "steps":       [
+        {
+          "name": "milestone",
+          "arguments": [          {
+            "key": "ordinal",
+            "value":             {
+              "isLiteral": true,
+              "value": null
+            }
+          }]
+        },
+        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Null is no problem"
+            }
+          }]
+        }
+      ]
+    }]
+  }],
+  "agent": {"type": "none"}
+}}

@@ -43,6 +43,7 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -56,6 +57,7 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder(name);
         result.append('(');

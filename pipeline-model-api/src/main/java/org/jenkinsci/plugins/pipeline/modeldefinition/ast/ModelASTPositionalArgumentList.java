@@ -24,6 +24,7 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
         return toJSONArray(arguments);
     }
@@ -35,6 +36,7 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder();
         boolean first = true;

@@ -21,6 +21,7 @@ public final class ModelASTTools extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
         return toJSONArray(tools);
     }
@@ -32,6 +33,7 @@ public final class ModelASTTools extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock("tools", tools, " ");
     }

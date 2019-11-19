@@ -24,6 +24,7 @@ public final class ModelASTMatrix extends ModelASTStageBase {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         JSONObject o = super.toJSON()
                 .elementOpt("axes", toJSON(axes))
@@ -45,6 +46,7 @@ public final class ModelASTMatrix extends ModelASTStageBase {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder children = new StringBuilder()
             .append(toGroovy(axes))

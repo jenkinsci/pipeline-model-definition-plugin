@@ -22,24 +22,17 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-import javax.annotation.Nonnull;
-
-/**
- *
- * @author Andrew Bayer
- */
-public interface ModelASTMarkerInterface {
-    @Nonnull
-    String toGroovy();
-
-    @Nonnull
-    Object toJSON();
-
-    void validate(@Nonnull ModelValidator validator);
-
-    void removeSourceLocation();
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                milestone null
+                echo "Null is no problem"
+            }
+        }
+    }
 }
+
+
+

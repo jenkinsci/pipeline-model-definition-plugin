@@ -22,6 +22,7 @@ public final class ModelASTAgent extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         final JSONObject j = new JSONObject();
 
@@ -71,6 +72,7 @@ public final class ModelASTAgent extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder();
         if (variables == null ||

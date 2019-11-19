@@ -22,6 +22,7 @@ public class ModelASTExcludes extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
         return toJSONArray(excludes);
     }
@@ -33,6 +34,7 @@ public class ModelASTExcludes extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock("excludes", excludes);
     }
