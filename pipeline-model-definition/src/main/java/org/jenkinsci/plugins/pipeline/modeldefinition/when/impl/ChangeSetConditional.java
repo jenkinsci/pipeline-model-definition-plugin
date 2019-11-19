@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.scm.ChangeLogSet;
 import hudson.util.ListBoxModel;
@@ -47,6 +48,7 @@ import java.io.IOException;
  *
  * The build must first have collected the changelog via for example <code>checkout scm</code>.
  */
+@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetConditional> {
 
     @Deprecated
