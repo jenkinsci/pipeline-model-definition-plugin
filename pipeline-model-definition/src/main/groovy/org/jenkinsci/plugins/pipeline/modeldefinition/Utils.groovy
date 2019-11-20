@@ -874,7 +874,7 @@ class Utils {
      * @param currentProperties  Actual triggers for the job.
      * @param existingProperties Any triggers already defined on the job.
      *
-     * @return A list of triggers to add/update. May be empty.
+     * @return A list of properties to add/update. May be empty.
      */
     @Nonnull
     private static List<JobProperty> getPropertiesToUpdate(@CheckForNull List<JobProperty> currentProperties,
@@ -884,20 +884,19 @@ class Utils {
         return currentProperties.findAll{ descriptorsToExistingProperties[it.descriptor.id] == null ||
                 !isObjectsEqualsXStream(it, descriptorsToExistingProperties[it.descriptor.id])}
     }
-
     /**
      * Helper method for getting Triggers, which should be removed from a job.
      *
-     * @param currentTriggers  Actual triggers for the job.
-     * @param existingTriggers Any triggers already defined on the job.
+     * @param currentProperties  Actual triggers for the job.
+     * @param existingProperties Any triggers already defined on the job.
      *
-     * @return A list of triggers to remove. May be empty.
+     * @return A list of properties to remove. May be empty.
      */
     @Nonnull
-    private static List<JobProperty> getPropertiesToRemove(@CheckForNull List<JobProperty> currentTriggers,
-                                                           @Nonnull List<JobProperty> existingTriggers) {
-        Set<String> currentPropertiesDescriptors = currentTriggers.collect{ it.descriptor.id }
-        return existingTriggers.findAll{ !(it.descriptor.id in currentPropertiesDescriptors)}
+    private static List<JobProperty> getPropertiesToRemove(@CheckForNull List<JobProperty> currentProperties,
+                                                           @Nonnull List<JobProperty> existingProperties) {
+        Set<String> currentPropertiesDescriptors = currentProperties.collect{ it.descriptor.id }.toSet()
+        return existingProperties.findAll{ !(it.descriptor.id in currentPropertiesDescriptors)}
     }
 
     /**
