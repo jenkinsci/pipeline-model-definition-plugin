@@ -826,14 +826,19 @@ class Utils {
     private static List<ParameterDefinition> getParametersToApply(@CheckForNull List<ParameterDefinition> newParameters,
                                                                   @Nonnull List<ParameterDefinition> existingParameters,
                                                                   @Nonnull Set<String> prevDefined) {
-        //Store parameters with unique name
-        Set<ParameterDefinition> toApply = new TreeSet<>(Comparator.comparing({ ParameterDefinition p -> p.name }))
-        toApply.addAll(existingParameters)
-        //Remove all parameters defined in previous Jenkinsfile and may be deprecated
-        toApply.removeAll { it.name in prevDefined }
-        //Replace all parameters defined in current Jenkinsfile
-        toApply.addAll(newParameters)
-        return toApply.asList()
+        Set<String> seenNames = new HashSet<>()
+        List<ParameterDefinition> toApply = []
+        if (newParameters != null) {
+            toApply.addAll(newParameters)
+            seenNames.addAll(newParameters.collect { it.name })
+        }
+        // Find all existing parameters that aren't of names we've explicitly defined, *and* aren't
+        // in the set of names of parameters defined by the Jenkinsfile in the previous build. Add those too.
+        toApply.addAll(existingParameters.findAll {
+            !(it.name in seenNames) && !(it.name in prevDefined)
+        })
+
+        return toApply
     }
 
     /**
