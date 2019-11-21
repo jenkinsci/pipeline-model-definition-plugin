@@ -34,6 +34,7 @@ import hudson.ExtensionList
 import hudson.model.*
 import hudson.triggers.Trigger
 import jenkins.model.Jenkins
+import jnr.ffi.annotations.In
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -881,9 +882,17 @@ class Utils {
                                                            @Nonnull List<JobProperty> existingProperties) {
         Map<String, JobProperty> descriptorsToExistingProperties =
                 existingProperties.collectEntries{ [(it.descriptor.id):it] }
+        //Create map <DescriptorId, Count> for extract duplicated parameters
+        Map<String, Integer> countMap = new HashMap<>()
+        for(JobProperty property : existingProperties) {
+            countMap.compute(property.descriptor.id, {key, count -> count == null ? 1 : count + 1} )
+        }
+
         return currentProperties.findAll{ descriptorsToExistingProperties[it.descriptor.id] == null ||
+                countMap[it.descriptor.id] > 1 ||
                 !isObjectsEqualsXStream(it, descriptorsToExistingProperties[it.descriptor.id])}
     }
+
     /**
      * Helper method for getting Triggers, which should be removed from a job.
      *
