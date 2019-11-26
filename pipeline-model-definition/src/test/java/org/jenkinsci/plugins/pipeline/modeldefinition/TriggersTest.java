@@ -224,6 +224,24 @@ public class TriggersTest extends AbstractModelDefTest {
 
     }
 
+    @Test
+    public void sameTriggersNotOverride() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("simpleTriggers");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        WorkflowJob job = b.getParent();
+        PipelineTriggersJobProperty triggersJobProperty = job.getTriggersJobProperty();
+        assertNotNull(triggersJobProperty);
+        Trigger t = triggersJobProperty.getTriggers().get(0);
+
+        WorkflowRun b2 = job.scheduleBuild2(0).get();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        WorkflowJob job2 = b2.getParent();
+        PipelineTriggersJobProperty triggersJobProperty2 = job2.getTriggersJobProperty();
+        assertNotNull(triggersJobProperty2);
+        Trigger t2 = triggersJobProperty2.getTriggers().get(0);
+        assertSame(t, t2);
+    }
+
     @TestExtension("doNotRestartEqualTriggers")
     public static class TestTrigger extends Trigger {
 
@@ -268,9 +286,5 @@ public class TriggersTest extends AbstractModelDefTest {
                 return true;
             }
         }
-
-
     }
-
-
 }
