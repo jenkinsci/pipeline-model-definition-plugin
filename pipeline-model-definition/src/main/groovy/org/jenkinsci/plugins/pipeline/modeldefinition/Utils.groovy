@@ -34,7 +34,6 @@ import hudson.ExtensionList
 import hudson.model.*
 import hudson.triggers.Trigger
 import jenkins.model.Jenkins
-import jnr.ffi.annotations.In
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
@@ -729,11 +728,12 @@ class Utils {
         if(first.descriptor.id != second.descriptor.id || first.description != second.description){
             return false
         }
-        return isObjectsEqualsXStream(first, second)
+        return Objects.equals(first, second) || isObjectsEqualsXStream(first, second)
     }
 
     /**
      * Compare objects' string representations after conversion to XML
+     * Require to use after call equals()
      *
      * Used for objects:
      * - all fields are unknown before comparison
@@ -745,10 +745,6 @@ class Utils {
      * @return {@code true} if string representation of objects in XML format are equals; {@code false} otherwise
      */
     private static boolean isObjectsEqualsXStream(@Nonnull Object first, @Nonnull Object second) {
-        // Same object has same XML representation
-        if(first.is(second)){
-            return true
-        }
         String firstMarshaled  = Items.XSTREAM2.toXML(first)
         String secondMarshaled = Items.XSTREAM2.toXML(second)
         return firstMarshaled == secondMarshaled
@@ -808,7 +804,8 @@ class Utils {
                                                      @Nonnull List<Trigger> existingTriggers) {
         Map<String, Trigger> descriptorsToExistingTriggers = existingTriggers.collectEntries{ [(it.descriptor.id):it] }
         return currentTriggers.findAll{ descriptorsToExistingTriggers[it.descriptor.id] == null ||
-                                        !isObjectsEqualsXStream(it, descriptorsToExistingTriggers[it.descriptor.id])}
+                !(Objects.equals(it, descriptorsToExistingTriggers[it.descriptor.id]) ||
+                        isObjectsEqualsXStream(it, descriptorsToExistingTriggers[it.descriptor.id]))}
     }
 
     /**
@@ -890,7 +887,8 @@ class Utils {
 
         return currentProperties.findAll{ descriptorsToExistingProperties[it.descriptor.id] == null ||
                 countMap[it.descriptor.id] > 1 ||
-                !isObjectsEqualsXStream(it, descriptorsToExistingProperties[it.descriptor.id])}
+                !(Objects.equals(it, descriptorsToExistingProperties[it.descriptor.id]) ||
+                        isObjectsEqualsXStream(it, descriptorsToExistingProperties[it.descriptor.id]))}
     }
 
     /**
