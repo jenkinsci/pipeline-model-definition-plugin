@@ -45,13 +45,17 @@ public enum Comparator {
      */
     GLOB(Messages._Comparator_GLOB_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@Nonnull String pattern, String actual, boolean... caseSensitive) {
+            boolean isCaseSensitive = false;
+            if (caseSensitive.length > 0) {
+                isCaseSensitive = caseSensitive[0];
+            }
             actual = defaultIfBlank(actual, "");
             // replace with the platform specific directory separator before
             // invoking Ant's platform specific path matching.
             String safeCompare = pattern.replace('/', File.separatorChar);
             String safeName = actual.replace('/', File.separatorChar);
-            return SelectorUtils.matchPath(safeCompare, safeName, false);
+            return SelectorUtils.matchPath(safeCompare, safeName, isCaseSensitive);
         }
     },
     /**
@@ -59,7 +63,7 @@ public enum Comparator {
      */
     REGEXP(Messages._Comparator_REGEXP_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@Nonnull String pattern, String actual, boolean... caseSensitive) {
             actual = defaultIfBlank(actual, "");
             //TODO validation for pattern compile
             return actual.matches(pattern);
@@ -70,7 +74,7 @@ public enum Comparator {
      */
     EQUALS(Messages._Comparator_EQUALS_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@Nonnull String pattern, String actual, boolean... caseSensitive) {
             actual = defaultIfBlank(actual, "");
             return actual.equals(pattern);
         }
@@ -90,9 +94,10 @@ public enum Comparator {
      * Compare the two strings
      * @param pattern the pattern/value to check for
      * @param actual the value to check
+     * @param caseSensitive whether the comparison will be case-sensitive. Only for the GLOB comparator
      * @return true if matching
      */
-    public abstract boolean compare(String pattern, String actual);
+    public abstract boolean compare(String pattern, String actual, boolean... caseSensitive);
 
     public static Comparator get(String name, Comparator defaultValue) {
         if (StringUtils.isEmpty(name)) {

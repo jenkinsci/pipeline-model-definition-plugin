@@ -37,6 +37,6 @@ class ChangeSetConditionalScript extends AbstractChangelogConditionalScript<Chan
 
     @Override
     boolean matches(ChangeLogSet.Entry change) {
-        return describable.changeSetMatches(change, describable.pattern)
+        return describable.changeSetMatches(change, describable.pattern, describable.caseSensitive)
     }
 }

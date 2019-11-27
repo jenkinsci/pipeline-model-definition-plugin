@@ -30,6 +30,8 @@ public class ComparatorTest {
     assertFalse(comparator.compare("foo*", null));
     assertFalse(comparator.compare("foo*", ""));
     assertTrue(comparator.compare("foo*", "football"));
+    assertTrue(comparator.compare("foo*", "FOOtball"));
+    assertFalse(comparator.compare("foo*", "Football", true));
   }
 
   @Test

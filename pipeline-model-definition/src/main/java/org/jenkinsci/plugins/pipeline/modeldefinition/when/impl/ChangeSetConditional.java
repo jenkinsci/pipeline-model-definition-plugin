@@ -68,7 +68,6 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
         return glob;
     }
 
-    @Deprecated
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
@@ -104,15 +103,14 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
     }
 
     @DataBoundSetter
-    @Deprecated
     public void setCaseSensitive(boolean caseSensitive) {
         this.caseSensitive = caseSensitive;
     }
 
-    public boolean changeSetMatches(ChangeLogSet.Entry change, String pattern) {
+    public boolean changeSetMatches(ChangeLogSet.Entry change, String pattern, boolean caseSensitive) {
         Comparator c = Comparator.get(comparator, Comparator.GLOB);
 
-        return change.getAffectedPaths().stream().anyMatch(path -> c.compare(pattern, path));
+        return change.getAffectedPaths().stream().anyMatch(path -> c.compare(pattern, path, caseSensitive));
     }
 
     @Extension

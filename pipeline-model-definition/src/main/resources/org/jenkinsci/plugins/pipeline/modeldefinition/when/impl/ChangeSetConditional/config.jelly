@@ -29,7 +29,7 @@
         <f:textbox/>
     </f:entry>
     <f:entry field="caseSensitive">
-        <f:checkbox title="Case-sensitive path/file matching" checked="false"/>
+        <f:checkbox title="Case-sensitive path/file matching only for the GLOB comparator" checked="false"/>
     </f:entry>
     <f:advanced>
         <f:entry field="comparator" title="Comparator">
