@@ -91,7 +91,7 @@ import java.util.concurrent.TimeUnit
  *
  * @author Andrew Bayer
  */
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+@SuppressFBWarnings(value = ["SE_NO_SERIALVERSIONID", "LI_LAZY_INIT_STATIC"])
 class Utils {
 
     /**
