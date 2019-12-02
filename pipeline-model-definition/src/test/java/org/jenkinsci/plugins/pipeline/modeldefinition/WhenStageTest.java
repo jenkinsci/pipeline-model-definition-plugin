@@ -151,19 +151,26 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenChangeset() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/conditions/changelog", "changeset")
-                .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
-                .logNotContains("JS World");
+                .logContains(
+                        "Hello",
+                        "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
+                        "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("JS World", "With regexp");
         builder.go();
 
         builder.resetForNewRun(Result.SUCCESS);
 
         sampleRepo.write("webapp/js/somecode.js", "//fake file");
+        sampleRepo.write("somecode.js", "//fake file");
         sampleRepo.git("add", "webapp/js/somecode.js");
+        sampleRepo.git("add", "somecode.js");
         sampleRepo.git("commit", "--message=files");
 
-        builder.logContains("Hello", "JS World")
+        builder.logContains("Hello", "JS World", "With regexp")
                 .logNotContains(
                         "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
                         "Warning, empty changelog.",
                         "Examining changelog from all builds of this change request.")
                 .go();
@@ -173,8 +180,12 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenChangesetMoreCommits() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/conditions/changelog", "changeset")
-                .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
-                .logNotContains("JS World");
+                .logContains(
+                        "Hello",
+                        "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
+                        "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("JS World", "With regexp");
         builder.go();
 
         builder.resetForNewRun(Result.SUCCESS);
@@ -194,9 +205,14 @@ public class WhenStageTest extends AbstractModelDefTest {
         sampleRepo.git("add", "somefile2.txt");
         sampleRepo.git("commit", "--message=Irrelevant");
 
-        builder.logContains("Hello", "JS World")
+        sampleRepo.write("somefile.js", "//same file");
+        sampleRepo.git("add", "somefile.js");
+        sampleRepo.git("commit", "--message=same");
+
+        builder.logContains("Hello", "JS World", "With regexp")
                 .logNotContains(
                         "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
                         "Warning, empty changelog.",
                         "Examining changelog from all builds of this change request.")
                 .go();
@@ -225,7 +241,9 @@ public class WhenStageTest extends AbstractModelDefTest {
         assertNotNull(build);
         j.assertLogContains("Hello", build);
         j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
         j.assertLogNotContains("JS World", build);
+        j.assertLogNotContains("With regexp", build);
 
         controller.addFile("repoX", crNum,
                 "files",
@@ -238,7 +256,9 @@ public class WhenStageTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build2);
         j.assertLogContains("JS World", build2);
+        j.assertLogContains("With regexp", build2);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build2);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build2);
         j.assertLogNotContains("Warning, empty changelog", build2);
 
         controller.addFile("repoX", crNum,
@@ -252,8 +272,10 @@ public class WhenStageTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build3);
         j.assertLogContains("JS World", build3);
+        j.assertLogContains("With regexp", build3);
         j.assertLogContains("Examining changelog from all builds of this change request", build3);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build3);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build3);
         j.assertLogNotContains("Warning, empty changelog", build3);
     }
 

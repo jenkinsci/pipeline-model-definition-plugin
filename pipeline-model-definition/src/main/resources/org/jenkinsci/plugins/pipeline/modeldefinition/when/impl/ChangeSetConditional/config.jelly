@@ -25,10 +25,15 @@
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry field="glob" title="File/path glob pattern to match against changeset">
+    <f:entry field="pattern" title="File/path pattern to match against changeset">
         <f:textbox/>
     </f:entry>
     <f:entry field="caseSensitive">
-        <f:checkbox title="Case-sensitive path/file matching" checked="false"/>
+        <f:checkbox title="Case-sensitive path/file matching only for the GLOB comparator" checked="false"/>
     </f:entry>
+    <f:advanced>
+        <f:entry field="comparator" title="Comparator">
+            <f:select/>
+        </f:entry>
+    </f:advanced>
 </j:jelly>
