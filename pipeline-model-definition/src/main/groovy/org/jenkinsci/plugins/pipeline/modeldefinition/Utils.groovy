@@ -594,8 +594,7 @@ class Utils {
             List<JobProperty> propsToUpdate = getPropertiesToUpdate(currentJobProperties, existingJobProperties)
 
             List<Trigger> currentTriggers = getTriggersToApply(rawTriggers, existingTriggers, previousTriggers)
-            List<Trigger> triggersToRemove = getTriggersToRemove(currentTriggers, existingTriggers)
-            List<Trigger> triggersToUpdate = getTriggersToUpdate(currentTriggers, existingTriggers)
+            boolean isTriggersChanged = !isTriggersListEquals(currentTriggers, existingTriggers)
 
             List<ParameterDefinition> parametersToApply = getParametersToApply(rawParameters, existingParameters,
                                                                                previousParameters)
@@ -622,26 +621,17 @@ class Utils {
                 }
 
 
-                // If there are any triggers add those properties.
-                if(currentTriggers.isEmpty()) {
-                    // If there are no any triggers, try to remove PipelineTriggersJobProperty. It may no longer exists.
-                    isJobChanged != (j.removeProperty(PipelineTriggersJobProperty.class) != null)
-                } else {
-                    // Get or add empty PipelineTriggersJobProperty.
-                    PipelineTriggersJobProperty triggersJobProperty = j.getTriggersJobProperty()
-                    // Remove the job triggers we defined in previous Jenkinsfiles but don't any more.
-                    triggersToRemove.each {
-                        Trigger t = triggersJobProperty.getTriggerForDescriptor(it.descriptor)
-                        triggersJobProperty.removeTrigger(it)
-                        t?.stop()
-                        isJobChanged = true
+                // If there are any triggers update them if needed
+                // It would be cool to only add or remove individual triggers,
+                // however the "addTrigger()" method calls removeProperty and adds a new one.
+                // Example: Adding 3 single triggers causes the first trigger to be removed and added two extra times.
+                // and the second trigger to be removed and added one extra time
+                if(isTriggersChanged) {
+                    j.removeProperty(PipelineTriggersJobProperty.class)
+                    if (!currentTriggers.isEmpty()) {
+                        j.addProperty(new PipelineTriggersJobProperty(currentTriggers))
                     }
-
-                    // Replace all job triggers we know need to be added or updated.
-                    triggersToUpdate.each {
-                        j.addTrigger(it)
-                        isJobChanged = true
-                    }
+                    isJobChanged = true
                 }
 
                 //If any parameter changed replace all, due to parameter stateless
@@ -776,37 +766,31 @@ class Utils {
         return toApply.asList()
     }
 
-    /**
-     * Helper method for getting Triggers, which should be removed from a job.
-     *
-     * @param currentTriggers  Actual triggers for the job.
-     * @param existingTriggers Any triggers already defined on the job.
-     *
-     * @return A list of triggers to remove. May be empty.
-     */
-    @Nonnull
-    private static List<Trigger> getTriggersToRemove(@CheckForNull List<Trigger> currentTriggers,
-                                                     @Nonnull List<Trigger> existingTriggers) {
-        Set<String> currentTriggersDescriptors = currentTriggers.collect{ it.descriptor.id }
-        return existingTriggers.findAll{ !(it.descriptor.id in currentTriggersDescriptors) }
-    }
 
     /**
-     * Helper method for getting Triggers, which should be updated or added to a job.
+     * Compare lists of {@link Trigger}s.
      *
-     * @param currentTriggers  Actual triggers for the job.
-     * @param existingTriggers Any triggers already defined on the job.
+     * @param first  First list of triggers.
+     * @param second Second list of triggers.
      *
-     * @return A list of triggers to add/update. May be empty.
+     * @return {@code true}, if both lists of {@link Trigger}s contain same elements;
+     * {@code false} otherwise
      */
     @Nonnull
-    private static List<Trigger> getTriggersToUpdate(@CheckForNull List<Trigger> currentTriggers,
-                                                     @Nonnull List<Trigger> existingTriggers) {
-        Map<String, Trigger> descriptorsToExistingTriggers = existingTriggers.collectEntries{ [(it.descriptor.id):it] }
-        return currentTriggers.findAll{ descriptorsToExistingTriggers[it.descriptor.id] == null ||
-                !(Objects.equals(it, descriptorsToExistingTriggers[it.descriptor.id]) ||
-                        isObjectsEqualsXStream(it, descriptorsToExistingTriggers[it.descriptor.id]))}
+    private static boolean isTriggersListEquals(@Nonnull List<Trigger> first,
+                                                     @Nonnull List<Trigger> second) {
+        Map<String, Trigger> firstMap = first.collectEntries{ [(it.descriptor.id):it] }
+        Map<String, Trigger> secondMap = second.collectEntries{ [(it.descriptor.id):it] }
+
+        if (first.size() != second.size()) {
+            return false
+        }
+
+        return !secondMap.values().any { firstMap[it.descriptor.id] == null ||
+                !(Objects.equals(it, firstMap[it.descriptor.id]) ||
+                        isObjectsEqualsXStream(it, firstMap[it.descriptor.id]))}
     }
+
 
     /**
      * Given the new parameters defined in the Jenkinsfile, the existing parameters already on the job, and the set of

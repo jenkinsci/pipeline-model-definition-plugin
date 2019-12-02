@@ -25,7 +25,9 @@
 pipeline {
     agent none
     triggers {
+        cron('@daily')
         testtrigger(name: "myTrigger1")
+        testtriggerb(name: "myTrigger2")
     }
     stages {
         stage("foo") {

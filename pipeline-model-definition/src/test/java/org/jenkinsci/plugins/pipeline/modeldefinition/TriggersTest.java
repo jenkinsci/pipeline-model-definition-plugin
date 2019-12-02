@@ -179,9 +179,10 @@ public class TriggersTest extends AbstractModelDefTest {
     @LocalData
     @Test
     public void doNotRestartEqualTriggers() throws Exception {
+        final int startingLatch = 100;
         // Create countdown latch to monitor how many times
         // a trigger has been restarted.
-        triggerLatch = new CountDownLatch(2);
+        triggerLatch = new CountDownLatch(startingLatch);
 
         // Create the first build. The DeclarativeJobPropertyTrackerAction action will be created.
         WorkflowRun b = getAndStartNonRepoBuild("simplePipelineWithTestTrigger");
@@ -191,7 +192,7 @@ public class TriggersTest extends AbstractModelDefTest {
 
         // Since the tracker action was not previously available,
         // the trigger will get restarted and the latch will be decremented
-        assertTrue(triggerLatch.getCount() == 1);
+        assertTrue(triggerLatch.getCount() == startingLatch - 4);
 
         WorkflowJob job = b.getParent();
 
@@ -202,16 +203,24 @@ public class TriggersTest extends AbstractModelDefTest {
         // Since the trigger is the same (the config was not changed between builds),
         // it will not get restarted,
         // and the latch will NOT be decremented.
-        assertTrue(triggerLatch.getCount() == 1);
+        assertTrue(triggerLatch.getCount() == startingLatch - 4);
 
         // Let simulate someone changing the trigger config
         PipelineTriggersJobProperty triggersJobProperty = job.getProperty(PipelineTriggersJobProperty.class);
         List<Trigger> newTriggers = new ArrayList<>();
-        TestTrigger myTrigger2 = new TestTrigger();
-        myTrigger2.setName("myTrigger2");
-        newTriggers.add(myTrigger2);
+        TestTrigger myTrigger3 = new TestTrigger();
+        myTrigger3.setName("myTrigger3");
+        newTriggers.add(myTrigger3);
+
+        // This calls stop on the existing triggers triggers
         job.removeProperty(triggersJobProperty);
+
+        assertTrue(triggerLatch.getCount() == startingLatch - 8);
+
+
         job.addProperty(new PipelineTriggersJobProperty(newTriggers));
+        assertTrue(triggerLatch.getCount() == startingLatch - 9);
+
 
         // Build it again with a new trigger config
         b = j.buildAndAssertSuccess(job);
@@ -220,7 +229,8 @@ public class TriggersTest extends AbstractModelDefTest {
         // Since the trigger is now different (the config WAS changed between builds),
         // it should get restarted,
         // and the latch WILL be decremented.
-        assertTrue(triggerLatch.getCount() == 0);
+        // This stops 3 again, and also 1 and 2.
+        assertTrue(triggerLatch.getCount() == startingLatch - 14);
 
     }
 
@@ -280,6 +290,54 @@ public class TriggersTest extends AbstractModelDefTest {
 
         @Extension
         @Symbol("testtrigger")
+        public static final class DescriptorImpl extends TriggerDescriptor {
+            @Override
+            public boolean isApplicable(Item item) {
+                return true;
+            }
+        }
+    }
+
+    @TestExtension("doNotRestartEqualTriggers")
+    public static class TestTriggerB extends Trigger {
+
+        private String name;
+
+        public String getName() {
+            return name;
+        }
+
+        @DataBoundSetter
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @DataBoundConstructor
+        public TestTriggerB() {
+        }
+
+        @Override
+        public void start(Item project, boolean newInstance) {
+            super.start(project, newInstance);
+            System.out.println("Calling START() for " + name);
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            System.out.println("Calling STOP() for " + name);
+            triggerLatch.countDown();
+            triggerLatch.countDown();
+            triggerLatch.countDown();
+        }
+
+        @Override
+        public TriggerDescriptor getDescriptor() {
+            return Jenkins.get().getDescriptorByType(DescriptorImpl.class);
+        }
+
+        @Extension
+        @Symbol("testtriggerb")
         public static final class DescriptorImpl extends TriggerDescriptor {
             @Override
             public boolean isApplicable(Item item) {
