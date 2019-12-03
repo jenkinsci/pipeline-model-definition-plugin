@@ -1,8 +1,8 @@
 # Changelog
 
-## Version 1.4.0
+## Version 1.5.0
 
-(December, 2019)
+(December 3, 2019)
 
 -   Official release of Matrix for Declarative
 -   [JENKINS-49500](https://issues.jenkins-ci.org/browse/JENKINS-49500) - Update only changed Job Properties @gulyaev13 (#365)
