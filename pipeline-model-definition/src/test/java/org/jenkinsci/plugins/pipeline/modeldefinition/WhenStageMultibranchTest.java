@@ -76,7 +76,9 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         assertNotNull(build);
         j.assertLogContains("Hello", build);
         j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
         j.assertLogNotContains("JS World", build);
+        j.assertLogNotContains("With regexp", build);
 
         controller.addFile("repoX", crNum,
                 "files",
@@ -89,7 +91,9 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build2);
         j.assertLogContains("JS World", build2);
+        j.assertLogContains("With regexp", build2);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build2);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build2);
         j.assertLogNotContains("Warning, empty changelog", build2);
 
         controller.addFile("repoX", crNum,
@@ -103,8 +107,10 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build3);
         j.assertLogContains("JS World", build3);
+        j.assertLogContains("With regexp", build3);
         j.assertLogContains("Examining changelog from all builds of this change request", build3);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build3);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build3);
         j.assertLogNotContains("Warning, empty changelog", build3);
     }
 

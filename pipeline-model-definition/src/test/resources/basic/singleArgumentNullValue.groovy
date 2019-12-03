@@ -20,23 +20,19 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl
-
-import hudson.scm.ChangeLogSet
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-class ChangeSetConditionalScript extends AbstractChangelogConditionalScript<ChangeSetConditional> {
-    String glob
-
-    ChangeSetConditionalScript(CpsScript s, ChangeSetConditional c) {
-        super(s, c)
-    }
-
-    @Override
-    boolean matches(ChangeLogSet.Entry change) {
-        return describable.changeSetMatches(change, describable.pattern, describable.caseSensitive)
+pipeline {
+    agent none
+    stages {
+        stage("foo") {
+            steps {
+                milestone null
+                echo "Null is no problem"
+            }
+        }
     }
 }
+
+
+

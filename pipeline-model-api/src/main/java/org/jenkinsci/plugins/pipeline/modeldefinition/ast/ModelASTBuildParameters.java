@@ -20,6 +20,7 @@ public final class ModelASTBuildParameters extends ModelASTElement implements Mo
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return toJSONObject("parameters", parameters);
     }
@@ -31,6 +32,7 @@ public final class ModelASTBuildParameters extends ModelASTElement implements Mo
     }
 
     @Override
+    @Nonnull
     public String toGroovy() { return toGroovyBlock("parameters", parameters); }
 
     @Override

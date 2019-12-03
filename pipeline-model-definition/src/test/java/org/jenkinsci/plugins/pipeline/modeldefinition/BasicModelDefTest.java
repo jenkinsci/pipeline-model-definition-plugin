@@ -565,6 +565,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-60115")
+    @Test
+    public void singleArgumentNullValue() throws Exception {
+        expect("basic/singleArgumentNullValue")
+            .logContains("[Pipeline] { (foo)",
+                "Trying to pass milestone 0",
+                "Null is no problem")
+            .go();
+    }
+
     @Issue("JENKINS-51962")
     @Test
     public void failureInFirstOfSequential() throws Exception {

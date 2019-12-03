@@ -26,6 +26,7 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
     public abstract String getName();
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return toJSONObject("conditions", conditions);
     }
@@ -38,6 +39,7 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock(getName(), conditions);
     }

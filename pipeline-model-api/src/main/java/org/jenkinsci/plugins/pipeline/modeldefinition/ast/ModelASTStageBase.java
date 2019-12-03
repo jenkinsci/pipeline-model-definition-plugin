@@ -31,6 +31,7 @@ public abstract class ModelASTStageBase extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         JSONObject o = new JSONObject()
             .elementOpt("agent", toJSON(agent))
@@ -51,6 +52,7 @@ public abstract class ModelASTStageBase extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder()
             .append(toGroovy(agent))

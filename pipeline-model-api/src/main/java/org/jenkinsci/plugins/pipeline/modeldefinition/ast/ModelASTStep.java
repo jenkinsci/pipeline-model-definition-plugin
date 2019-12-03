@@ -55,6 +55,7 @@ public class ModelASTStep extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -68,6 +69,7 @@ public class ModelASTStep extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         // Default to using whatever the original args structure is.
         ModelASTArgumentList argList = args;

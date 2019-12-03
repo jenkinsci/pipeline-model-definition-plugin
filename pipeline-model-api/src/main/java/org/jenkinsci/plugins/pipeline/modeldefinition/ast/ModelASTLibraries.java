@@ -44,6 +44,7 @@ public final class ModelASTLibraries extends ModelASTElement implements ModelAST
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return toJSONObject("libraries", libs);
     }
@@ -55,6 +56,7 @@ public final class ModelASTLibraries extends ModelASTElement implements ModelAST
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder("libraries {\n");
         for (ModelASTValue v : libs) {

@@ -132,6 +132,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "agent/agentAny",
             "agent/agentLabel",
             "agent/agentNoneWithNode",
+            "basic/singleArgumentNullValue",
             "steps/metaStepSyntax",
             "environment/simpleEnvironment",
             "simpleScript",

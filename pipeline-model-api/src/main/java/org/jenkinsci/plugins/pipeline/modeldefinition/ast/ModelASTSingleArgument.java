@@ -14,6 +14,11 @@ import java.util.Map;
  * @author Andrew Bayer
  */
 public final class ModelASTSingleArgument extends ModelASTArgumentList {
+
+    /**
+     * While not {@link Nonnull}, if this field is null then parsing/validation errors will occur before
+     * {@link NullPointerException} would be thrown by {@link #toGroovy()} or {@link #toJSON()}.
+     */
     private ModelASTValue value;
 
     public ModelASTSingleArgument(Object sourceLocation) {
@@ -21,8 +26,9 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public Object toJSON() {
-        return toJSON(value);
+        return value.toJSON();
     }
 
     @Override
@@ -32,6 +38,7 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return value.toGroovy();
     }

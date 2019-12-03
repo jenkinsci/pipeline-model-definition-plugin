@@ -22,6 +22,7 @@ public class ModelASTExcludeAxis extends ModelASTAxis {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return super.toJSON()
             .elementOpt("inverse", inverse);
@@ -34,6 +35,7 @@ public class ModelASTExcludeAxis extends ModelASTAxis {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder()
             .append("name '").append(toGroovy(getName()) + "'\n");

@@ -20,6 +20,7 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("condition", condition)
@@ -33,6 +34,7 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock(condition, branch);
     }

@@ -46,6 +46,7 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -60,6 +61,7 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
 
         StringBuilder result = new StringBuilder();

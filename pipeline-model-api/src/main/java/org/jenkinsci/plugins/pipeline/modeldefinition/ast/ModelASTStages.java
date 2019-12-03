@@ -23,6 +23,7 @@ public class ModelASTStages extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public Object toJSON() {
         return toJSONArray(stages);
     }
@@ -40,6 +41,7 @@ public class ModelASTStages extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock("stages", stages);
     }

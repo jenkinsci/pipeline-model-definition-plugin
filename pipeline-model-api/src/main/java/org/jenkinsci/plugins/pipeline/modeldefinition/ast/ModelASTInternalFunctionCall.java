@@ -46,6 +46,7 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -59,6 +60,7 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder(name);
         result.append('(');

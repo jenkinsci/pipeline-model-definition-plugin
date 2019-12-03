@@ -23,6 +23,7 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
         return toJSONArray(arguments);
     }
@@ -63,6 +64,7 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyArgList(arguments, ": ");
     }

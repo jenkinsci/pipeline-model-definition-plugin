@@ -26,6 +26,7 @@ public class ModelASTAxis extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", toJSON(name))
@@ -38,6 +39,7 @@ public class ModelASTAxis extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder()
             .append("name '").append(toGroovy(name) + "'\n")

@@ -20,6 +20,7 @@ public final class ModelASTTriggers extends ModelASTElement implements ModelASTE
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return toJSONObject("triggers", triggers);
     }
@@ -31,6 +32,7 @@ public final class ModelASTTriggers extends ModelASTElement implements ModelASTE
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock("triggers", triggers);
     }

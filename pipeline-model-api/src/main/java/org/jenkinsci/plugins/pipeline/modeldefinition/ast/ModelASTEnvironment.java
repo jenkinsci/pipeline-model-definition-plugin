@@ -20,6 +20,7 @@ public final class ModelASTEnvironment extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
         return toJSONArray(variables);
     }
@@ -31,6 +32,7 @@ public final class ModelASTEnvironment extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock("environment", variables, " = ");
     }

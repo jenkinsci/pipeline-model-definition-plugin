@@ -41,7 +41,14 @@ pipeline {
                 script {
                     echo "JS World"
                 }
-
+            }
+        }
+        stage("Three") {
+            when {
+                changeset pattern: '.*\\.js', comparator: 'regexp'
+            }
+            steps {
+                echo "With regexp"
             }
         }
     }

@@ -21,6 +21,7 @@ public final class ModelASTOptions extends ModelASTElement implements ModelASTEl
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         return toJSONObject("options", options);
     }
@@ -32,6 +33,7 @@ public final class ModelASTOptions extends ModelASTElement implements ModelASTEl
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return toGroovyBlock("options", options);
     }

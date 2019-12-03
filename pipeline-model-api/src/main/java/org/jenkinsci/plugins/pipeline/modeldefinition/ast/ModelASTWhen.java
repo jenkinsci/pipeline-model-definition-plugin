@@ -82,6 +82,7 @@ public class ModelASTWhen extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public Object toJSON() {
         return new JSONObject()
                 .accumulate("conditions", toJSONArray(conditions))
@@ -91,6 +92,7 @@ public class ModelASTWhen extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder("when {\n");
         if (beforeAgent != null && beforeAgent) {
