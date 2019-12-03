@@ -2,6 +2,16 @@
 
 ## Version 1.4.0
 
+(December, 2019)
+
+-   Official release of Matrix for Declarative
+-   [JENKINS-49500](https://issues.jenkins-ci.org/browse/JENKINS-49500) - Update only changed Job Properties @gulyaev13 (#365)
+-   [JENKINS-60217](https://issues.jenkins-ci.org/browse/JENKINS-60217) - Support comparator pattern for the changeset directive @v1v (#366)
+-   [JENKINS-60115](https://issues.jenkins-ci.org/browse/JENKINS-60115) - Make toGroovy() and toJSON() @Nonnull @bitwiseman (#363)
+-   Update plugins.jenkins.io GitHub links @MarkEWaite (#364)
+
+## Version 1.4.0
+
 (November 4, 2019)
 
 -   [JENKINS-59115](https://issues.jenkins-ci.org/browse/JENKINS-59115) -
