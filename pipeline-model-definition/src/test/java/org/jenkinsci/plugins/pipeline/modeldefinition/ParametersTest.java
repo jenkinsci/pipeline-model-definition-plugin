@@ -148,4 +148,24 @@ public class ParametersTest extends AbstractModelDefTest {
         ParameterDefinition paramDef = newProp.getParameterDefinition("DO_NOT_DELETE");
         assertNotNull(paramDef);
     }
+
+    @Test
+    public void sameParametersNotOverride() throws Exception{
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        ParametersDefinitionProperty paramProp = job.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp);
+        BooleanParameterDefinition bpd = (BooleanParameterDefinition) paramProp.getParameterDefinitions().get(0);
+
+
+        WorkflowRun b2 = job.scheduleBuild2(0).get();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        WorkflowJob job2 = b2.getParent();
+        ParametersDefinitionProperty paramProp2 = job2.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp2);
+        BooleanParameterDefinition bpd2 = (BooleanParameterDefinition) paramProp2.getParameterDefinitions().get(0);
+        assertSame(bpd, bpd2);
+    }
 }

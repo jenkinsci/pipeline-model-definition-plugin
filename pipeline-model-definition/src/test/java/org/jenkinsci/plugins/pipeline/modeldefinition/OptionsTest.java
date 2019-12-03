@@ -525,6 +525,27 @@ public class OptionsTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void sameJobPropertiesNotOverride() throws Exception {
+        WorkflowRun b = getAndStartNonRepoBuild("options/simpleJobProperties");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+        WorkflowJob job = b.getParent();
+
+        BuildDiscarderProperty bdp = job.getProperty(BuildDiscarderProperty.class);
+        assertNotNull(bdp);
+        BuildDiscarder strategy = bdp.getStrategy();
+
+        WorkflowRun b2 = job.scheduleBuild2(0).get();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        WorkflowJob job2 = b2.getParent();
+
+        BuildDiscarderProperty bdp2 = job2.getProperty(BuildDiscarderProperty.class);
+        assertNotNull(bdp2);
+        BuildDiscarder strategy2 = bdp.getStrategy();
+
+        assertSame(strategy, strategy2);
+    }
+
 
     private static class DummyPrivateKey extends BaseCredentials implements SSHUserPrivateKey, Serializable {
 
