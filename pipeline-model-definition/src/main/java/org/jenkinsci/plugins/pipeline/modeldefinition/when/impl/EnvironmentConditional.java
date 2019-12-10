@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
@@ -32,34 +33,43 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import java.io.IOException;
 
 /**
  * Stage condition based on environment variable equality.
  */
+@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class EnvironmentConditional extends DeclarativeStageConditional<EnvironmentConditional> {
     private final String name;
-    private final String value;
+    @Deprecated
+    private transient String value;
+    private String pattern;
     private boolean ignoreCase = false;
+    private String comparator;
 
     @DataBoundConstructor
-    public EnvironmentConditional(String name, String value) {
+    public EnvironmentConditional(String name, String pattern) {
         this.name = name;
-        this.value = value;
+        this.pattern = pattern;
     }
 
     public String getName() {
         return name;
     }
 
+    @Deprecated
     public String getValue() {
         return value;
+    }
+
+    public String getPattern() {
+        return pattern;
     }
 
     public boolean isIgnoreCase() {
@@ -71,16 +81,35 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
         this.ignoreCase = ignoreCase;
     }
 
-    public boolean environmentMatches(String v, String var) {
-        if (isEmpty(var) && isEmpty(v)) {
-            return true;
-        } else if (isEmpty(var)) {
-            return false;
-        } else if (ignoreCase) {
-            return var.equalsIgnoreCase(v);
-        } else {
-            return var.equals(v);
+    /**
+     * The {@link Comparator} to use.
+     * Default is {@link Comparator#EQUALS}
+     * @return the name of the comparator or null if default.
+     */
+    public String getComparator() {
+        return comparator;
+    }
+
+    protected Object readResolve() throws IOException {
+        if (this.value != null) {
+            this.pattern = this.value;
         }
+        return this;
+    }
+
+    @DataBoundSetter
+    public void setComparator(String comparator) {
+        final Comparator c = Comparator.get(comparator, null);
+        if (c != null) {
+            this.comparator = c.name();
+        } else {
+            this.comparator = null;
+        }
+    }
+
+    public boolean environmentMatches(String v, String var) {
+        Comparator c = Comparator.get(comparator, Comparator.EQUALS);
+        return c.compare(v, var, !this.isIgnoreCase());
     }
 
     @Extension
@@ -89,7 +118,7 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
         @Override
         @Nonnull
         public String getDisplayName() {
-            return "Execute the stage if an environment variable exists and equals a value";
+            return "Execute the stage if an environment variable exist and matches a pattern";
         }
 
         @Override
