@@ -128,7 +128,7 @@ public class ExecutionModelAction extends InvisibleAction {
     }
 
     /**
-     * @deprecated Use {@link #addPipeline} instead.
+     * @deprecated Use {@link #addPipelineDef} instead.
      */
     @Deprecated
     public void addStages(ModelASTStages s) {
