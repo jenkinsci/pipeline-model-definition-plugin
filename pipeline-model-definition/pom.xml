@@ -35,7 +35,7 @@
   <packaging>hpi</packaging>
   <name>Pipeline: Declarative</name>
   <description>An opinionated, declarative Pipeline</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
+  <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
 
   <build>
     <plugins>
