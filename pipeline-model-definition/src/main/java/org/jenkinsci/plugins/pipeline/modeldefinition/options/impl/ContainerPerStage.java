@@ -35,7 +35,9 @@ public class ContainerPerStage extends DeclarativeOption {
     @DataBoundConstructor
     public ContainerPerStage() {}
 
-    @Extension @Symbol("newContainerPerStage")
+    public static final String SYMBOL = "newContainerPerStage";
+
+    @Extension @Symbol(SYMBOL)
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
 
     }
