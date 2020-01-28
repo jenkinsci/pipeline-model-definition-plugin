@@ -117,7 +117,7 @@ public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> exte
     }
 
     @Override
-    public boolean useRootAgent(Map<String, DeclarativeOption> options) {
+    public boolean reuseRootAgent(Map<String, DeclarativeOption> options) {
         return options.get(ContainerPerStage.SYMBOL) != null;
     }
 
