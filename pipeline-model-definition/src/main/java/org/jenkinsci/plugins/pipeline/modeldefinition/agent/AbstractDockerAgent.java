@@ -109,8 +109,10 @@ public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> exte
     public void initialize(Map<String, DeclarativeOption> options, boolean explicitAgentInStage) {
         if (options.get(ContainerPerStage.SYMBOL) != null) {
             if (!inStage) {
+                // If we're on the root, make sure we switch to basically just doing a label
                 containerPerStageRoot = true;
             } else if (!explicitAgentInStage) {
+                // While if we're on a stage that doesn't have an explicit agent, make sure we reuse the node
                 reuseNode = true;
             }
         }
