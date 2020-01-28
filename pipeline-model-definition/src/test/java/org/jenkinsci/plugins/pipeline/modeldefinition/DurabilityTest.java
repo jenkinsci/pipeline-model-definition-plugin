@@ -29,7 +29,6 @@ import hudson.model.labels.LabelAtom;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.hamcrest.Matchers;
-import org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.WorkspaceAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;

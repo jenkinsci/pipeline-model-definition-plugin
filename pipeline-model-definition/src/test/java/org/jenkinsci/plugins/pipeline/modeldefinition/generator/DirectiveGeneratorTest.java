@@ -24,6 +24,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import org.jenkinsci.plugins.docker.workflow.declarative.DockerPipelineFromDockerfile;
+import org.jenkinsci.plugins.docker.workflow.declarative.DockerPipeline;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
