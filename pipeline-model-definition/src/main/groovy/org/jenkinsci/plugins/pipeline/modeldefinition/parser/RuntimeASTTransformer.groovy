@@ -82,7 +82,7 @@ class RuntimeASTTransformer {
     }
 
     /**
-     * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTStages} for that {@link ModelASTPipelineDef} to the
+     * Given a run, transform a {@link ModelASTPipelineDef}, attach the {@link ModelASTPipelineDef} to the
      * run, and return an {@link ArgumentListExpression} containing a closure that returns the {@Root} we just created.
      */
     @Nonnull
@@ -90,13 +90,12 @@ class RuntimeASTTransformer {
         wrapper = new Wrapper(sourceUnit, pipelineDef)
         Expression root = transformRoot(pipelineDef)
         if (run != null) {
-            ModelASTStages stages = pipelineDef.stages
-            stages.removeSourceLocation()
+            pipelineDef.removeSourceLocation()
             ExecutionModelAction action = run.getAction(ExecutionModelAction.class)
             if (action == null) {
-                run.addAction(new ExecutionModelAction(stages))
+                run.addAction(new ExecutionModelAction(pipelineDef))
             } else {
-                action.addStages(stages)
+                action.addPipelineDef(pipelineDef)
                 run.save()
             }
         }

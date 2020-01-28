@@ -118,7 +118,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        removeSourceLocationsFrom(stages, libraries, postBuild, environment, tools, options, parameters, triggers);
+        removeSourceLocationsFrom(agent, stages, libraries, postBuild, environment, tools, options, parameters, triggers);
     }
 
     private static String indent(int count) {

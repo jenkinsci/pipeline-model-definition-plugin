@@ -166,14 +166,44 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
         assertNotNull(action);
         ModelASTStages stages = action.getStages();
-        assertNull(stages.getSourceLocation());
+        assertExecutionModelActionStageContents(b, stages);
+    }
+
+    @Test
+    public void executionModelActionFullPipeline() throws Exception {
+        WorkflowRun b = expect("executionModelAction").go();
+
+        ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
+        assertNotNull(action);
+        ModelASTPipelineDef pipeline = action.getPipelineDef();
+        assertNull(pipeline.getSourceLocation());
+
+        ModelASTAgent agent = pipeline.getAgent();
+        assertNotNull(agent);
+        assertEquals("none", agent.getAgentType().getKey());
+
+        ModelASTEnvironment env = pipeline.getEnvironment();
+        assertNotNull(env);
+        ModelASTKey var = new ModelASTKey(null);
+        var.setKey("VAR");
+        ModelASTValue val = (ModelASTValue) env.getVariables().get(var);
+        assertNotNull(val);
+        assertTrue(val.isLiteral());
+        assertEquals("VALUE", val.getValue());
+
+        ModelASTStages stages = pipeline.getStages();
+        assertExecutionModelActionStageContents(b, stages);
+    }
+
+    private void assertExecutionModelActionStageContents(WorkflowRun b, ModelASTStages stages) throws Exception {
         assertNotNull(stages);
+        assertNull(stages.getSourceLocation());
 
         assertEquals(1, stages.getStages().size());
 
         ModelASTStage stage = stages.getStages().get(0);
-        assertNull(stage.getSourceLocation());
         assertNotNull(stage);
+        assertNull(stage.getSourceLocation());
 
         assertEquals(2, stage.getBranches().size());
 
