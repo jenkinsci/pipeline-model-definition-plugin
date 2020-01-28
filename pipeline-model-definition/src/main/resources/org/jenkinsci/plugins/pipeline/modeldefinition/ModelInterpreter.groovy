@@ -579,7 +579,7 @@ class ModelInterpreter implements Serializable {
         }
         if (agent == null) {
             def declarativeAgent = root.agent.getDeclarativeAgent(root, root)
-            if (declarativeAgent != null && declarativeAgent.useRootAgent(root.options?.options ?: [:])) {
+            if (declarativeAgent != null && declarativeAgent.reuseRootAgent(root.options?.options ?: [:])) {
                 agent = root.agent
             }
         }

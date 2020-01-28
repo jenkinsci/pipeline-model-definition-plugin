@@ -64,7 +64,7 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
 
     public void initialize(Map<String, DeclarativeOption> options, boolean explicitAgentInStage) {}
 
-    public boolean useRootAgent(Map<String, DeclarativeOption> options) {
+    public boolean reuseRootAgent(Map<String, DeclarativeOption> options) {
         return false;
     }
 
