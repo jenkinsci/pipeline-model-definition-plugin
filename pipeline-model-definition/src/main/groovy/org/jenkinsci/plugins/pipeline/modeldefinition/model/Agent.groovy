@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.None
@@ -118,20 +117,9 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
                 if (subdir?.subdirectory != null && subdir?.subdirectory != "") {
                     a.setSubdirectory(subdir.subdirectory)
                 }
-                if (a instanceof AbstractDockerAgent) {
-                    ContainerPerStage containerPerStage = (ContainerPerStage) options.get("newContainerPerStage")
-                    if (containerPerStage != null) {
-                        if (context instanceof Root) {
-                            // If we're on the root, make sure we switch to basically just doing a label
-                            a.containerPerStageRoot = true
-                        } else if (context instanceof Stage && context.agent == null) {
-                            // While if we're on a stage that doesn't have an explicit agent, make sure we reuse the node
-                            a.reuseNode = true
-                        }
-                    }
-                }
             }
             a.setDoCheckout(doCheckout)
+            a.initialize(options, context instanceof Stage && context.agent != null)
 
             return a
         } else {
