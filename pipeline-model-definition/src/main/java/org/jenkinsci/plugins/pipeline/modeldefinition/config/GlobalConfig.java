@@ -45,7 +45,7 @@ import javax.annotation.Nullable;
  *
  * For example the system level {@link DockerLabelProvider}.
  */
-@Extension @Symbol("pipeline-model")
+@Extension @Symbol("pipeline-model-docker")
 public class GlobalConfig extends GlobalConfiguration {
     private String dockerLabel;
     private DockerRegistryEndpoint registry;
