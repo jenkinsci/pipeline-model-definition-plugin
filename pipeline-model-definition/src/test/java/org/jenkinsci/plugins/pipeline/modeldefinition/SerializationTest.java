@@ -67,7 +67,7 @@ public class SerializationTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(4);
-        s.setLabelString("some-label docker test");
+        s.setLabelString("some-label test");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
     }
 

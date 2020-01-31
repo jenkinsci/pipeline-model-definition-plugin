@@ -37,7 +37,7 @@ public class ScriptStepTest extends AbstractModelDefTest {
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
-        s.setLabelString("some-label docker");
+        s.setLabelString("some-label");
     }
 
     @Test
