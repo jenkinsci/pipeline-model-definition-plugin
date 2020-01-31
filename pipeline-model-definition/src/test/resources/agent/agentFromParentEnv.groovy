@@ -27,7 +27,7 @@ pipeline {
         label "docker"
     }
     environment {
-        PARENT_LABEL = "other-docker"
+        PARENT_LABEL = "other-label"
     }
     stages {
         stage("foo") {

@@ -46,7 +46,7 @@ pipeline {
                 label "${SECOND_LABEL}"
             }
             environment {
-                SECOND_LABEL = "other-docker"
+                SECOND_LABEL = "other-label"
             }
             steps {
                 script {
