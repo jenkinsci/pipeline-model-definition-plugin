@@ -48,15 +48,6 @@ public class ScriptStepTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void dockerGlobalVariableInScript() throws Exception {
-        assumeDocker();
-
-        expect("dockerGlobalVariableInScript")
-                .logContains("[Pipeline] { (foo)", "image: ubuntu")
-                .go();
-    }
-
-    @Test
     public void globalLibrarySuccessInScript() throws Exception {
 
         initGlobalLibrary();
