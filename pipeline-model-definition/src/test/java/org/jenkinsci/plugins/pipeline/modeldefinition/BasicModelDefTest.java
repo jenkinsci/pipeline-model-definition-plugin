@@ -270,15 +270,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void dockerGlobalVariable() throws Exception {
-        assumeDocker();
-
-        expect("dockerGlobalVariable")
-                .logContains("[Pipeline] { (foo)", "image: ubuntu")
-                .go();
-    }
-
-    @Test
     public void syntheticStages() throws Exception {
         WorkflowRun b = expect("syntheticStages")
                 .logContains("[Pipeline] { (" + SyntheticStageNames.toolInstall() + ")",
