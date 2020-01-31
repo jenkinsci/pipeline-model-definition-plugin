@@ -24,7 +24,7 @@
 
 pipeline {
     agent {
-        label "docker"
+        label "some-label"
     }
     environment {
         PARENT_LABEL = "other-label"

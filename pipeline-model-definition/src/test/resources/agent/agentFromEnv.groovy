@@ -27,7 +27,7 @@ pipeline {
         label "${FIRST_LABEL}"
     }
     environment {
-        FIRST_LABEL = "docker"
+        FIRST_LABEL = "some-label"
     }
     stages {
         stage("foo") {
