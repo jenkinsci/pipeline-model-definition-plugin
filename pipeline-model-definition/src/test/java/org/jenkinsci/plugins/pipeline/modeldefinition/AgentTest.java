@@ -169,7 +169,7 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void inCustomWorkspaceInStage() throws Exception {
         expect("agent/inCustomWorkspaceInStage")
-                .logMatches("Workspace dir is .*some-sub-dir")
+                .logMatches("Workspace dir is .*some-other-sub-dir")
                 .go();
     }
 
