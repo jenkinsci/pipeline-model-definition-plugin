@@ -408,16 +408,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         }
     }
 
-    @Issue("JENKINS-40226")
-    @Test
-    public void failureBeforeStages() throws Exception {
-        // This should fail whether we've got Docker available or not. Hopefully.
-        expect(Result.FAILURE, "failureBeforeStages")
-                .logContains("Dockerfile failed")
-                .logNotContains("This should never happen")
-                .go();
-    }
-
     public static Predicate<FlowNode> syntheticStagePredicate(String stageName,
                                                         String context) {
         return stageTagPredicate(stageName, Utils.getSyntheticStageMetadata().getTagName(), context);
