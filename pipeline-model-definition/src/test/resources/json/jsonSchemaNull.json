@@ -29,6 +29,21 @@
   }],
   "agent":   {
     "type": "label",
-    "label": null
+    "arguments":     [
+      {
+        "key": "label",
+        "value":         {
+          "isLiteral": true,
+          "value": "some-label"
+        }
+      },
+      {
+        "key": "customWorkspace",
+        "value":         {
+          "isLiteral": true,
+          "value": null
+        }
+      }
+    ]
   }
 }}

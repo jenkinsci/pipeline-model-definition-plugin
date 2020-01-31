@@ -24,7 +24,10 @@
 
 pipeline {
     agent {
-        label null
+        label {
+            label "some-label"
+            customWorkspace null
+        }
     }
     stages {
         stage("foo") {
