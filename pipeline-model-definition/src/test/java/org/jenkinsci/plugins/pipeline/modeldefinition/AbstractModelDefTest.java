@@ -138,7 +138,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "simpleScript",
             "postStage/simplePostBuild",
             "simpleTools",
-            "agent/agentInStageAutoCheckout",
             "options/simpleJobProperties",
             "simpleTriggers",
             "simpleParameters",
