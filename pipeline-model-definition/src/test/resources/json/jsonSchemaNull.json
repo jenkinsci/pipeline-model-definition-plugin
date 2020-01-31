@@ -28,7 +28,7 @@
     }]
   }],
   "agent":   {
-    "type": "label",
+    "type": "node",
     "arguments":     [
       {
         "key": "label",
