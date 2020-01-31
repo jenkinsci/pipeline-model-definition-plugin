@@ -28,22 +28,7 @@
     }]
   }],
   "agent":   {
-    "type": "docker",
-    "arguments":     [
-      {
-        "key": "image",
-        "value":         {
-          "isLiteral": true,
-          "value": "httpd:2.4.12"
-        }
-      },
-      {
-        "key": "args",
-        "value":         {
-          "isLiteral": true,
-          "value": null
-        }
-      }
-    ]
+    "type": "label",
+    "label": null
   }
 }}

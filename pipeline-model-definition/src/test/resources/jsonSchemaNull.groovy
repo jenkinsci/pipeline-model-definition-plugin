@@ -24,10 +24,7 @@
 
 pipeline {
     agent {
-        docker {
-            image "httpd:2.4.12"
-            args null
-        }
+        label null
     }
     stages {
         stage("foo") {
