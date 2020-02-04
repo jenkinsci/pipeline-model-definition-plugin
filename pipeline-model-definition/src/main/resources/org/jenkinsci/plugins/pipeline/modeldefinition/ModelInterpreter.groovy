@@ -185,7 +185,7 @@ class ModelInterpreter implements Serializable {
             } finally {
                 // And finally, run the post stage steps if this was a parallel parent.
                 if (skippedReason == null && parent != null &&
-                    root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
+                        root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
                     Utils.logToTaskListener("Post stage")
                     firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name)
                 }
@@ -210,13 +210,13 @@ class ModelInterpreter implements Serializable {
         thisStage?.parallel?.stages?.each { content ->
             if (skippedReason != null) {
                 parallelStages.put(content.name,
-                    evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name)))
+                        evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name)))
             } else {
                 parallelStages.put(content.name,
-                    evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null))
+                        evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null))
             }
         }
-        if (!parallelStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast") != null) ) {
+        if (!parallelStages.isEmpty() && (thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast") != null)) {
             parallelStages.put("failFast", true)
         }
 
@@ -278,7 +278,7 @@ class ModelInterpreter implements Serializable {
                                                                     toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
                                                                         if (thisStage?.stages) {
                                                                             def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError,
-                                                                                                                       thisStage, null, null).call()
+                                                                                    thisStage, null, null).call()
 
                                                                             // Propagate any possible error from the sequential stages
                                                                             // as if it were an error thrown directly.
@@ -314,7 +314,7 @@ class ModelInterpreter implements Serializable {
                 } finally {
                     // And finally, run the post stage steps if this was a parallel parent.
                     if (skippedReason == null &&
-                        root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
+                            root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
                             thisStage?.parallel != null) {
                         Utils.logToTaskListener("Post stage")
                         firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
@@ -332,7 +332,7 @@ class ModelInterpreter implements Serializable {
         if (input != null) {
             return {
                 def submitted = script.input(message: input.message, id: input.id, ok: input.ok, submitter: input.submitter,
-                    submitterParameter: input.submitterParameter, parameters: input.parameters)
+                        submitterParameter: input.submitterParameter, parameters: input.parameters)
                 if (input.parameters.isEmpty() && input.submitterParameter == null) {
                     // No parameters, so just proceed
                     body.call()
@@ -414,9 +414,9 @@ class ModelInterpreter implements Serializable {
         return skipUnstable(options?.options)
     }
 
-    boolean skipUnstable(Map<String,DeclarativeOption> options) {
+    boolean skipUnstable(Map<String, DeclarativeOption> options) {
         return script.getProperty("currentBuild").result == "UNSTABLE" &&
-            options?.get("skipStagesAfterUnstable") != null
+                options?.get("skipStagesAfterUnstable") != null
     }
 
     /**
@@ -426,15 +426,15 @@ class ModelInterpreter implements Serializable {
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withEnvBlock(Map<String,Closure> envVars, Closure body) {
+    def withEnvBlock(Map<String, Closure> envVars, Closure body) {
         if (envVars != null && !envVars.isEmpty()) {
             List<String> evaledEnv = envVars.collect { k, v ->
-                try{
+                try {
                     "${k}=${v.call()}"
-                }catch (NullPointerException e) {
-                    throw new IllegalArgumentException( Messages.ModelInterpreter_EnvironmentVariableFailed(k) )
+                } catch (NullPointerException e) {
+                    throw new IllegalArgumentException(Messages.ModelInterpreter_EnvironmentVariableFailed(k))
                 }
-            }.findAll { it != null}
+            }.findAll { it != null }
             return {
                 script.withEnv(evaledEnv) {
                     body.call()
@@ -455,11 +455,11 @@ class ModelInterpreter implements Serializable {
      * @return The return of the resulting executed closure
      */
     def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
-        Map<String,CredentialWrapper> creds = new HashMap<>()
+        Map<String, CredentialWrapper> creds = new HashMap<>()
 
         if (environment != null) {
             try {
-                RunWrapper currentBuild = (RunWrapper)script.getProperty("currentBuild")
+                RunWrapper currentBuild = (RunWrapper) script.getProperty("currentBuild")
                 Utils.getCredsFromResolver(environment, script).each { k, v ->
                     String id = (String) v.call()
                     CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild)
@@ -553,7 +553,7 @@ class ModelInterpreter implements Serializable {
 
         toolsList.each { l ->
             String k = l.get(0)
-            Closure v = (Closure)l.get(1)
+            Closure v = (Closure) l.get(1)
             String toolVer = delegateAndExecute(v)
 
             script.tool(name: toolVer, type: Tools.typeForKey(k))
@@ -588,9 +588,17 @@ class ModelInterpreter implements Serializable {
                 body.call()
             }.call()
         } else {
-            return agent.getDeclarativeAgent(root, context).getScript(script).run {
-                body.call()
-            }.call()
+            if (!agent.getMap().containsKey("none") && (context instanceof Root) ) {
+                applyTopLvelOptions(root.options) {
+                    agent.getDeclarativeAgent(root, context).getScript(script).run {
+                        body.call()
+                    }.call()
+                }
+            } else {
+                agent.getDeclarativeAgent(root, context).getScript(script).run {
+                    body.call()
+                }.call()
+            }
         }
     }
 
@@ -599,13 +607,29 @@ class ModelInterpreter implements Serializable {
         return inWrappers(options?.wrappers, body)
     }
 
+    def applyTopLvelOptions(Options options, Closure body) {
+        int provisioning = options.getOptions().keySet().findIndexOf { k ->
+            "provisioningTimeout".equals(k)
+        }
+        int timeout = options.wrappers.keySet().findIndexOf { k -> "timeout".equals(k) }
+
+        if (provisioning >= 0 && timeout >= 0) {
+            Object to = options.wrappers.remove("timeout")
+            return {
+                script."${"timeout"}"(to) {
+                    body.call()
+                }
+            }.call()
+        }
+        body.call()
+    }
     /**
      * Executes the given closure inside 0 or more wrapper blocks if appropriate
      * @param wrappers A map of wrapper names to wrappers
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def inWrappers(Map<String,Object> wrappers, Closure body) {
+    def inWrappers(Map<String, Object> wrappers, Closure body) {
         if (wrappers != null) {
             return {
                 recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
@@ -624,14 +648,13 @@ class ModelInterpreter implements Serializable {
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def recursiveWrappers(List<String> wrapperNames, Map<String,Object> wrappers, Closure body) {
+    def recursiveWrappers(List<String> wrapperNames, Map<String, Object> wrappers, Closure body) {
         if (wrapperNames.isEmpty()) {
             return {
                 body.call()
             }.call()
         } else {
             def thisWrapper = wrapperNames.remove(0)
-
             def wrapperArgs = wrappers.get(thisWrapper)
             if (wrapperArgs != null) {
                 return {
@@ -748,10 +771,10 @@ class ModelInterpreter implements Serializable {
             RunWrapper runWrapper = script.getProperty("currentBuild")
             String originalResultString = runWrapper.result
             Result originalResult = originalResultString == null ? null : Result.fromString(originalResultString)
-            Result logicalResult = BuildCondition.getCombinedResult((WorkflowRun)runWrapper.rawBuild, stageError, stageName)
+            Result logicalResult = BuildCondition.getCombinedResult((WorkflowRun) runWrapper.rawBuild, stageError, stageName)
             try {
                 Closure c = responder.closureForSatisfiedCondition(conditionName, runWrapper,
-                    stageName, stageError)
+                        stageName, stageError)
                 if (c != null) {
                     runWrapper.rawBuild.@result = logicalResult
                     catchRequiredContextForNode(agentContext) {
@@ -777,7 +800,8 @@ class ModelInterpreter implements Serializable {
                 // value. This seems ok since the logical result is the same and so
                 // will be reset for any later post conditions.
                 if (currentResult == logicalResult && logicalResult != originalResult) {
-                    runWrapper.rawBuild.@result = originalResult // Intentionally using .@ to bypass the setter which does not allow nulls.
+                    runWrapper.rawBuild.@result = originalResult
+                    // Intentionally using .@ to bypass the setter which does not allow nulls.
                 }
             }
         }
@@ -812,7 +836,7 @@ class ModelInterpreter implements Serializable {
      *
      * @author Falko Modler
      */
-    @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
+    @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
     private class WhenEvaluator implements Serializable {
 
         final StageConditionals when
