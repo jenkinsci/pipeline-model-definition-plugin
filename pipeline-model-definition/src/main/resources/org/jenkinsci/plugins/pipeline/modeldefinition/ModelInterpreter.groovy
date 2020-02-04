@@ -601,11 +601,12 @@ class ModelInterpreter implements Serializable {
         }
     }
 
-    @Deprecated
-    def inWrappers(Options options, Closure body) {
-        return inWrappers(options?.wrappers, body)
-    }
-
+    /**
+     * Applies timeout at top level, instead of within node, so provisioning time is included
+     * @param root options
+     * @param body The closure to execute
+     * @return
+     */
     def applyTopLevelProvisioningTimeout(Options options, Closure body) {
         int provisioning = options?.getOptions()?.keySet().findIndexOf { k ->
             "provisioningTimeout".equals(k)
@@ -620,8 +621,16 @@ class ModelInterpreter implements Serializable {
                 }
             }.call()
         }
+        if(provisioning >= 0){
+            Utils.logToTaskListener("provisioningTimeout must be used with a timeout in the top level options")
+        }
         body.call()
     }
+    @Deprecated
+    def inWrappers(Options options, Closure body) {
+        return inWrappers(options?.wrappers, body)
+    }
+
     /**
      * Executes the given closure inside 0 or more wrapper blocks if appropriate
      * @param wrappers A map of wrapper names to wrappers

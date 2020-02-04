@@ -53,6 +53,14 @@ public class ProvisioningTimeoutModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void provisioningTimeoutWithProvisioningOnly() throws Exception {
+
+        WorkflowRun run = expect("options/provisioningTimeoutWithProvisioningOnly")
+                .logContains("provisioningTimeout must be used with a timeout in the top level options")
+                .go();
+        log(run, "node");
+    }
+    @Test
     public void provisioningTimeoutNoOptions() throws Exception {
 
         WorkflowRun run = expect("options/provisioningTimeoutNoOptions")
