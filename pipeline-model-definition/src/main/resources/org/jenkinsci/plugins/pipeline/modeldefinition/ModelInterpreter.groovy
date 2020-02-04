@@ -31,7 +31,6 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
-import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -589,7 +588,7 @@ class ModelInterpreter implements Serializable {
             }.call()
         } else {
             if (!agent.getMap().containsKey("none") && (context instanceof Root) ) {
-                applyTopLvelOptions(root.options) {
+                applyTopLevelProvisioningTimeout(root.options) {
                     agent.getDeclarativeAgent(root, context).getScript(script).run {
                         body.call()
                     }.call()
@@ -607,11 +606,11 @@ class ModelInterpreter implements Serializable {
         return inWrappers(options?.wrappers, body)
     }
 
-    def applyTopLvelOptions(Options options, Closure body) {
-        int provisioning = options.getOptions().keySet().findIndexOf { k ->
+    def applyTopLevelProvisioningTimeout(Options options, Closure body) {
+        int provisioning = options?.getOptions()?.keySet().findIndexOf { k ->
             "provisioningTimeout".equals(k)
         }
-        int timeout = options.wrappers.keySet().findIndexOf { k -> "timeout".equals(k) }
+        int timeout = options?.wrappers?.keySet().findIndexOf { k -> "timeout".equals(k) }
 
         if (provisioning >= 0 && timeout >= 0) {
             Object to = options.wrappers.remove("timeout")
