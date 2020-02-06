@@ -75,10 +75,10 @@ class ModelInterpreter implements Serializable {
                 String restartedStage = Utils.getRestartedStage(script)
 
                 // Entire build, including notifications, runs in the agent.
-                inDeclarativeAgent(root, root, root.agent) {
-                    withCredentialsBlock(root.environment) {
-                        withEnvBlock(root.getEnvVars(script)) {
-                            inWrappers(root.options?.wrappers) {
+                inWrappers(root.options?.wrappers) {
+                    inDeclarativeAgent(root, root, root.agent) {
+                        withCredentialsBlock(root.environment) {
+                            withEnvBlock(root.getEnvVars(script)) {
                                 // Wipe out the error, since if we get here and it's not null, that means we're retrying
                                 // the whole pipeline and don't want firstError to be set.
                                 firstError = null
