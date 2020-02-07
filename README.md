@@ -26,6 +26,7 @@ following warnings before using an older version:
 ## Developing
 - To start developing plugin: 
 - Clone the plugin repository
+
 `cd pipeline-model-definition && mvn install && mvn hpi:run`
 
 ### API extension
