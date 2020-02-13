@@ -23,24 +23,26 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.Result;
 import hudson.model.Slave;
-import org.jenkinsci.plugins.workflow.actions.ArgumentsAction;
-import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import hudson.slaves.RetentionStrategy;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * @author Jose Taboada
+ *
+ * The goal of this test is check the nuances between top level and stage level agents regarding timeouts (options)
+ *  Top Level Agents: timeout is only for the build itself, therefore won't fail.
+ *  Stage Level Agents: timeout includes provisioning, in this example is +200ms
+ *
+ * Jira Ticket JENKINS-60994 to describe this problem.
  */
+@RunWith(Parameterized.class)
 public class ProvisioningTimeoutModelDefTest extends AbstractModelDefTest {
 
     private static Slave s;
@@ -48,82 +50,26 @@ public class ProvisioningTimeoutModelDefTest extends AbstractModelDefTest {
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
-        s.setNumExecutors(10);
+        s.setNumExecutors(1);
         s.setLabelString("some-label docker");
     }
 
-    @Test
-    public void provisioningTimeoutWithProvisioningOnly() throws Exception {
-
-        WorkflowRun run = expect("options/provisioningTimeoutWithProvisioningOnly")
-                .logContains("provisioningTimeout must be used with a timeout in the top level options")
-                .go();
-        log(run, "node");
-    }
-    @Test
-    public void provisioningTimeoutNoOptions() throws Exception {
-
-        WorkflowRun run = expect("options/provisioningTimeoutNoOptions")
-                .go();
-        log(run, "node");
+    @Parameterized.Parameters
+    public static Object[][] data() {
+        return new Object[10][0];
     }
 
     @Test
-    public void provisioningTimeoutFail() throws Exception {
-
-        WorkflowRun run = expect("options/provisioningTimeoutFail")
+    @Issue("JENKINS-60994")
+    public void topLevelAgent() throws Exception {
+        expect("options/topLevelAgentSuccessWithTimeout")
                 .go();
-        log(run, "node");
-    }
-    @Test
-    public void provisioningTimeoutWithAgentLabel() throws Exception {
-
-        WorkflowRun run = expect("options/provisioningTimeoutWithAgentLabel")
-                .go();
-        log(run, "timeout");
     }
 
     @Test
-    public void provisioningTimeoutHappyPath() throws Exception {
-
-        WorkflowRun run = expect("options/provisioningTimeout")
+    @Issue("JENKINS-60994")
+    public void stageLevelAgent() throws Exception {
+        expect(Result.ABORTED, "options/stageLevelAgentFailsWithTimeout")
                 .go();
-        log(run, "timeout");
-    }
-
-    @Test
-    public void provisioningTimeoutNoTopLevelAgent() throws Exception {
-
-        WorkflowRun run = expect("options/provisioningTimeoutWithNoTopLevelAgent")
-                .go();
-        log(run, "timeout");
-
-    }
-
-    private void log(WorkflowRun run, String firstCommand){
-        FlowGraphWalker walker = new FlowGraphWalker(run.getExecution());
-        Iterator<FlowNode> iterator = walker.iterator();
-        List<String> flow = new ArrayList<>();
-        while (iterator.hasNext()){
-            FlowNode next = iterator.next();
-            ArgumentsAction action = next.getAction(ArgumentsAction.class);
-            flow.add(String.format("%s %s " , next.getId() , next.getDisplayFunctionName(), action != null ? action.getArguments() : ""));
-        }
-
-        int indent = 0;
-        for(int i = flow.size()-1; i >= 0; i --){
-            String instruction = flow.get(i);
-            if(instruction.contains("{")) indent++;
-            if(instruction.contains("}")) indent--;
-            System.out.println( build(indent, instruction));
-        }
-
-        assertThat(flow.get(1), containsString("// "+firstCommand));
-    }
-
-    private String build(int indent, String instruction) {
-        if( indent > 0)
-            return " " + build(--indent,instruction);
-        return instruction;
     }
 }

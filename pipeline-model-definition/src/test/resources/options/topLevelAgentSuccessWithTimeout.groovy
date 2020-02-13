@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2017, CloudBees, Inc.
+ * Copyright (c) 2020, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,21 +25,14 @@
 pipeline {
     agent any
     options {
-        provisioningTimeout()
+        timeout(time: 1200, unit: "MILLISECONDS")
     }
     stages {
         stage("foo") {
-            steps {
+                steps {
                 echo "hello"
-            }
-        }
-        stage("boo") {
-            steps {
-                echo "hello"
+                sleep 1
             }
         }
     }
 }
-
-
-

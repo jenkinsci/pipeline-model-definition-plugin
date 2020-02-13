@@ -31,6 +31,7 @@ import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -587,45 +588,12 @@ class ModelInterpreter implements Serializable {
                 body.call()
             }.call()
         } else {
-            if (!agent.getMap().containsKey("none") && (context instanceof Root) ) {
-                applyTopLevelProvisioningTimeout(root.options) {
-                    agent.getDeclarativeAgent(root, context).getScript(script).run {
-                        body.call()
-                    }.call()
-                }
-            } else {
-                agent.getDeclarativeAgent(root, context).getScript(script).run {
-                    body.call()
-                }.call()
-            }
-        }
-    }
-
-    /**
-     * Applies timeout at top level, instead of within node, so provisioning time is included
-     * @param root options
-     * @param body The closure to execute
-     * @return
-     */
-    def applyTopLevelProvisioningTimeout(Options options, Closure body) {
-        int provisioning = options?.getOptions()?.keySet().findIndexOf { k ->
-            "provisioningTimeout".equals(k)
-        }
-        int timeout = options?.wrappers?.keySet().findIndexOf { k -> "timeout".equals(k) }
-
-        if (provisioning >= 0 && timeout >= 0) {
-            Object to = options.wrappers.remove("timeout")
-            return {
-                script."${"timeout"}"(to) {
-                    body.call()
-                }
+            return agent.getDeclarativeAgent(root, context).getScript(script).run {
+                body.call()
             }.call()
         }
-        if(provisioning >= 0){
-            Utils.logToTaskListener("provisioningTimeout must be used with a timeout in the top level options")
-        }
-        body.call()
     }
+
     @Deprecated
     def inWrappers(Options options, Closure body) {
         return inWrappers(options?.wrappers, body)
