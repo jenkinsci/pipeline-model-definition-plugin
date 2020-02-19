@@ -32,7 +32,6 @@ pipeline {
                 timeout(time: 1200, unit: "MILLISECONDS")
             }
             steps {
-                echo "hello"
                 sleep 1
             }
         }
