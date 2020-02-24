@@ -25,12 +25,11 @@
 pipeline {
     agent any
     options {
-        timeout(time: 1200, unit: "MILLISECONDS")
+        timeout(time: 1600, unit: "MILLISECONDS")
     }
     stages {
         stage("foo") {
                 steps {
-                echo "hello"
                 sleep 1
             }
         }

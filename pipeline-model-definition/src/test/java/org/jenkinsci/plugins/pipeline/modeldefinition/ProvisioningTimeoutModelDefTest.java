@@ -25,12 +25,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
 import hudson.model.Slave;
-import hudson.slaves.RetentionStrategy;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 
 /**
@@ -38,21 +38,15 @@ import org.jvnet.hudson.test.Issue;
  *
  * The goal of this test is check the nuances between top level and stage level agents regarding timeouts (options)
  *  Top Level Agents: timeout is only for the build itself, therefore won't fail.
- *  Stage Level Agents: timeout includes provisioning, in this example is +200ms
+ *  Stage Level Agents: timeout includes provisioning, in this example is +600ms
  *
  * Jira Ticket JENKINS-60994 to describe this problem.
  */
 @RunWith(Parameterized.class)
 public class ProvisioningTimeoutModelDefTest extends AbstractModelDefTest {
 
-    private static Slave s;
-
-    @BeforeClass
-    public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setNumExecutors(1);
-        s.setLabelString("some-label docker");
-    }
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
 
     @Parameterized.Parameters
     public static Object[][] data() {
