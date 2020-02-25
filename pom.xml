@@ -141,7 +141,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>docker-workflow</artifactId>
-        <version>1.22-rc452.c6ab7e23b1c4</version> <!-- TODO https://github.com/jenkinsci/docker-workflow-plugin/pull/202 -->
+        <version>1.22</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -377,4 +377,3 @@
     </pluginRepository>
   </pluginRepositories>
 </project>
-
