@@ -41,8 +41,10 @@ import jenkins.model.BuildDiscarderProperty;
 import jenkins.model.OptionalJobProperty;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.checkerframework.checker.units.qual.A;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.Matrix;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.*;
@@ -313,7 +315,7 @@ public class DirectiveGeneratorTest {
                 "  }\n" +
                 "}");
     }
-    
+
     @Test
     public void whenAllOfEmpty() throws Exception {
         WhenDirective when = new WhenDirective(new AllOfConditional(null), false, false, false);
@@ -567,13 +569,71 @@ public class DirectiveGeneratorTest {
                 "}");
     }
 
+    @Test
+    public void basicMatrix() throws Exception {
+        MatrixDirective directive = new MatrixDirective(
+                Arrays.asList(
+                        new AxesDirective(//axes
+                                Arrays.asList(
+                                        new AxisDirective("os", "linux, macos, win"),
+                                        new AxisDirective("browser", "safari, chrome, ie")
+                                )),
+                        new ExcludesDirective(
+                                Arrays.asList(new ExcludeDirective(
+                                        Arrays.asList(
+                                                new AxisDirective("os", "linux"),
+                                                new AxisDirective("browser", "safari")
+                                        )
+                                ))
+                        ),
+                        new StagesDirective(Arrays.asList(
+                                new StageDirective(
+                                    Arrays.asList(), "build-and-test", StageDirective.StageContentType.STEPS
+                                )
+                        ))
+                )
+        );
+
+        assertGenerateDirective(directive, "matrix {\n" +
+                "  axes {\n" +
+                "    axis {\n" +
+                "      name os\n" +
+                "      values linux, macos, win\n" +
+                "    }axis {\n" +
+                "      name browser\n" +
+                "      values safari, chrome, ie\n" +
+                "    }\n" +
+                "  }\n" +
+                "  excludes {\n" +
+                "    exclude {\n" +
+                "      axis {\n" +
+                "        name os\n" +
+                "        values linux\n" +
+                "      }\n" +
+                "      axis {\n" +
+                "        name browser\n" +
+                "        values safari\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "  stages {\n" +
+                "    stage('build-and-test') {\n" +
+                "      steps {\n" +
+                "        // One or more steps need to be included within the steps block.\n" +
+                "      }\n" +
+                "    }\n" +
+                "\n" +
+                "  }\n" +
+                "\n" +
+                "}");
+
+    }
+
     /**
      * Tests a form submitting part of the generator.
      *
-     * @param desc
-     *      The describable we'll translate to JSON.
-     * @param responseText
-     *      Expected directive snippet to be generated
+     * @param desc         The describable we'll translate to JSON.
+     * @param responseText Expected directive snippet to be generated
      */
     private void assertGenerateDirective(@Nonnull AbstractDirective desc, @Nonnull String responseText) throws Exception {
         // First, make sure the expected response text actually matches the toGroovy for the directive.
@@ -633,7 +693,7 @@ public class DirectiveGeneratorTest {
             Object v = getValue(param, d);
             if (v != null) {
                 if (v instanceof Describable) {
-                    o.accumulate(param.getName(), staplerJsonForDescr((Describable)v));
+                    o.accumulate(param.getName(), staplerJsonForDescr((Describable) v));
                 } else if (v instanceof List && !((List) v).isEmpty()) {
                     JSONArray a = new JSONArray();
                     for (Object obj : (List) v) {

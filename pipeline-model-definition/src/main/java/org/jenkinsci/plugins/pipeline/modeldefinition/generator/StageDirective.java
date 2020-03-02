@@ -111,6 +111,7 @@ public class StageDirective extends AbstractDirective<StageDirective> {
             descriptors.add(Jenkins.get().getDescriptorByType(WhenDirective.DescriptorImpl.class));
             descriptors.add(Jenkins.get().getDescriptorByType(ToolsDirective.DescriptorImpl.class));
             descriptors.add(Jenkins.get().getDescriptorByType(PostDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(MatrixDirective.DescriptorImpl.class));
 
             return descriptors;
         }
