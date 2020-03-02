@@ -593,7 +593,6 @@ public class DirectiveGeneratorTest {
                         ))
                 )
         );
-
         assertGenerateDirective(directive, "matrix {\n" +
                 "  axes {\n" +
                 "    axis {\n" +

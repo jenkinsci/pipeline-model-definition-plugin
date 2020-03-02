@@ -41,7 +41,6 @@ public class AxisDirective extends AbstractDirective<AxisDirective> {
         this.name = name;
         this.values = values;
     }
-
     @Nonnull
     public String getName() {
         return name;
@@ -74,12 +73,12 @@ public class AxisDirective extends AbstractDirective<AxisDirective> {
         @Override
         @Nonnull
         public String toGroovy(@Nonnull AxisDirective axis) {
-            return String.format(
-                    "axis {%n" +
-                    "name %s%n"+
-                    "values %s%n"+
-                    "}", axis.name, axis.values
-            );
+            StringBuffer sb = new StringBuffer();
+            sb.append("axis {\n");
+            sb.append("name "+ axis.name + "\n");
+            sb.append("values "+ axis.values + "\n");
+            sb.append("}");
+            return sb.toString();
         }
     }
 
