@@ -37,7 +37,7 @@ class EnvironmentConditionalScript extends DeclarativeStageConditionalScript<Env
     @Override
      boolean evaluate() {
         String n = describable.getName()
-        String v = describable.getPattern()
+        String v = describable.getValue()
         return describable.environmentMatches(v, (String)script.getProperty("env").getProperty(n))
     }
 }

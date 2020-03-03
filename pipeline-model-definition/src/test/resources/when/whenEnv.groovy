@@ -36,7 +36,7 @@ pipeline {
         }
         stage("Two") {
             when {
-                environment name: "FOO", pattern: "BAR"
+                environment name: "FOO", value: "BAR"
             }
             steps {
                 script {
@@ -47,7 +47,7 @@ pipeline {
         }
         stage("Three") {
             when {
-                environment name: "FOO", pattern: "SOME_OTHER_VALUE"
+                environment name: "FOO", value: "SOME_OTHER_VALUE"
             }
             steps {
                 echo "Should never be reached"
@@ -55,7 +55,7 @@ pipeline {
         }
         stage("Four") {
             when {
-                environment name: "FOO", pattern: "bar", ignoreCase: true
+                environment name: "FOO", value: "bar", ignoreCase: true
             }
             steps {
                 echo "Ignore case worked"
@@ -63,7 +63,7 @@ pipeline {
         }
         stage("Five") {
             when {
-                environment name: "FOO", pattern: "(?i).*bar", comparator: 'REGEXP'
+                environment name: "FOO", value: "(?i).*bar", comparator: 'REGEXP'
             }
             steps {
                 echo "Regexp case worked"
@@ -71,7 +71,7 @@ pipeline {
         }
         stage("Six") {
             when {
-                environment name: "FOO", pattern: "*ar", comparator: 'GLOB'
+                environment name: "FOO", value: "*ar", comparator: 'GLOB'
             }
             steps {
                 echo "Glob should never be reached"
@@ -79,7 +79,7 @@ pipeline {
         }
         stage("Seven") {
             when {
-                environment name: "FOO", pattern: "*ar", comparator: 'GLOB', ignoreCase: true
+                environment name: "FOO", value: "*ar", comparator: 'GLOB', ignoreCase: true
             }
             steps {
                 echo "Glob with ignore case worked"

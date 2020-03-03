@@ -47,29 +47,22 @@ import java.io.IOException;
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class EnvironmentConditional extends DeclarativeStageConditional<EnvironmentConditional> {
     private final String name;
-    @Deprecated
-    private transient String value;
-    private String pattern;
+    private String value;
     private boolean ignoreCase = false;
     private String comparator;
 
     @DataBoundConstructor
-    public EnvironmentConditional(String name, String pattern) {
+    public EnvironmentConditional(String name, String value) {
         this.name = name;
-        this.pattern = pattern;
+        this.value = value;
     }
 
     public String getName() {
         return name;
     }
 
-    @Deprecated
     public String getValue() {
         return value;
-    }
-
-    public String getPattern() {
-        return pattern;
     }
 
     public boolean isIgnoreCase() {
@@ -88,13 +81,6 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
      */
     public String getComparator() {
         return comparator;
-    }
-
-    protected Object readResolve() throws IOException {
-        if (this.value != null) {
-            this.pattern = this.value;
-        }
-        return this;
     }
 
     @DataBoundSetter
@@ -118,7 +104,7 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
         @Override
         @Nonnull
         public String getDisplayName() {
-            return "Execute the stage if an environment variable exist and matches a pattern";
+            return "Execute the stage if an environment variable exists and matches a pattern";
         }
 
         @Override
