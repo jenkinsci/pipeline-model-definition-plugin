@@ -47,7 +47,7 @@ import java.io.IOException;
 @SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class EnvironmentConditional extends DeclarativeStageConditional<EnvironmentConditional> {
     private final String name;
-    private String value;
+    private final String value;
     private boolean ignoreCase = false;
     private String comparator;
 
