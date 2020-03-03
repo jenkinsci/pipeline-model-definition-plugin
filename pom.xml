@@ -90,7 +90,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>script-security</artifactId>
-        <version>1.60</version>
+        <version>1.69</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -121,13 +121,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-scm-step</artifactId>
-        <version>2.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-scm-step</artifactId>
-        <version>2.6</version>
-        <classifier>tests</classifier>
+        <version>2.9</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -354,7 +348,7 @@
   </build>
 
   <properties>
-    <revision>1.5.1</revision>
+    <revision>1.5.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.150.1</jenkins.version>
     <java.level>8</java.level>

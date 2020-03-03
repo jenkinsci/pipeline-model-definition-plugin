@@ -24,10 +24,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
-import org.kohsuke.stapler.DataBoundSetter;
-
+import java.util.Map;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.ContainerPerStage;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> extends DeclarativeAgent<D> {
     protected String label;
@@ -102,4 +104,23 @@ public abstract class AbstractDockerAgent<D extends AbstractDockerAgent<D>> exte
     public void setContainerPerStageRoot(boolean containerPerStageRoot) {
         this.containerPerStageRoot = containerPerStageRoot;
     }
+
+    @Override
+    public void initialize(Map<String, DeclarativeOption> options, boolean explicitAgentInStage) {
+        if (options.get(ContainerPerStage.SYMBOL) != null) {
+            if (!inStage) {
+                // If we're on the root, make sure we switch to basically just doing a label
+                containerPerStageRoot = true;
+            } else if (!explicitAgentInStage) {
+                // While if we're on a stage that doesn't have an explicit agent, make sure we reuse the node
+                reuseNode = true;
+            }
+        }
+    }
+
+    @Override
+    public boolean reuseRootAgent(Map<String, DeclarativeOption> options) {
+        return options.get(ContainerPerStage.SYMBOL) != null;
+    }
+
 }
