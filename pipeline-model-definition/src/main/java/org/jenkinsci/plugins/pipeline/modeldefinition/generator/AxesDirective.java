@@ -46,6 +46,13 @@ public class AxesDirective extends AbstractDirective<AxesDirective> {
 
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<AxesDirective> {
+
+        @Nonnull
+        @Override
+        public boolean isTopLevel() {
+            return false;
+        }
+
         @Override
         @Nonnull
         public String getName() {

@@ -47,6 +47,13 @@ public class ExcludeDirective extends AbstractDirective<ExcludeDirective> {
 
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<ExcludeDirective> {
+
+        @Nonnull
+        @Override
+        public boolean isTopLevel() {
+            return false;
+        }
+
         @Override
         @Nonnull
         public String getName() {

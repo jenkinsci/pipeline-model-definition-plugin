@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.model.Action;
 import hudson.model.Descriptor;
@@ -53,6 +54,7 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Extension
 public class DirectiveGenerator extends Snippetizer {

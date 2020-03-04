@@ -575,20 +575,26 @@ public class DirectiveGeneratorTest {
                 Arrays.asList(
                         new AxesDirective(//axes
                                 Arrays.asList(
-                                        new AxisDirective("os", "linux, macos, win"),
-                                        new AxisDirective("browser", "safari, chrome, ie")
+                                        new AxisDirective("os", "linux, macos, win", false),
+                                        new AxisDirective("browser", "safari, chrome, ie", false)
                                 )),
                         new ExcludesDirective(
                                 Arrays.asList(new ExcludeDirective(
-                                        Arrays.asList(
-                                                new AxisDirective("os", "linux"),
-                                                new AxisDirective("browser", "safari")
-                                        )
-                                ))
+                                                Arrays.asList(
+                                                        new AxisDirective("os", "linux", false),
+                                                        new AxisDirective("browser", "safari", false)
+                                                )
+                                        ),
+                                        new ExcludeDirective(
+                                                Arrays.asList(
+                                                        new AxisDirective("os", "win", false),
+                                                        new AxisDirective("browser", "ie", true)
+                                                )
+                                        ))
                         ),
                         new StagesDirective(Arrays.asList(
                                 new StageDirective(
-                                    Arrays.asList(), "build-and-test", StageDirective.StageContentType.STEPS
+                                        Arrays.asList(), "build-and-test", StageDirective.StageContentType.STEPS
                                 )
                         ))
                 )
@@ -596,22 +602,32 @@ public class DirectiveGeneratorTest {
         assertGenerateDirective(directive, "matrix {\n" +
                 "  axes {\n" +
                 "    axis {\n" +
-                "      name os\n" +
-                "      values linux, macos, win\n" +
+                "      name 'os'\n" +
+                "      values 'linux','macos','win'\n" +
                 "    }axis {\n" +
-                "      name browser\n" +
-                "      values safari, chrome, ie\n" +
+                "      name 'browser'\n" +
+                "      values 'safari','chrome','ie'\n" +
                 "    }\n" +
                 "  }\n" +
                 "  excludes {\n" +
                 "    exclude {\n" +
                 "      axis {\n" +
-                "        name os\n" +
-                "        values linux\n" +
+                "        name 'os'\n" +
+                "        values 'linux'\n" +
                 "      }\n" +
                 "      axis {\n" +
-                "        name browser\n" +
-                "        values safari\n" +
+                "        name 'browser'\n" +
+                "        values 'safari'\n" +
+                "      }\n" +
+                "    }\n" +
+                "    exclude {\n" +
+                "      axis {\n" +
+                "        name 'os'\n" +
+                "        values 'win'\n" +
+                "      }\n" +
+                "      axis {\n" +
+                "        name 'browser'\n" +
+                "        notValues 'ie'\n" +
                 "      }\n" +
                 "    }\n" +
                 "  }\n" +

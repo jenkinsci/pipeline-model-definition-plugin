@@ -28,18 +28,23 @@ import hudson.model.Descriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AxisDirective extends AbstractDirective<AxisDirective> {
 
     private String name;
     private String values;
+    private boolean notValues;
 
     @DataBoundConstructor
-    public AxisDirective(String name, String values) {
+    public AxisDirective(String name, String values, boolean notValues) {
         this.name = name;
         this.values = values;
+        this.notValues = notValues;
+
     }
     @Nonnull
     public String getName() {
@@ -50,8 +55,27 @@ public class AxisDirective extends AbstractDirective<AxisDirective> {
         return values;
     }
 
+    public boolean isNotValues() {
+        return notValues;
+    }
+
+    static String tokenize(String values) {
+        return Arrays.asList(values.split("\\s*,\\s*"))
+                .stream()
+                .map(token -> String.format("'%s'", token))
+                .collect(Collectors.joining(","))
+                ;
+    }
+
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<AxisDirective> {
+
+        @Nonnull
+        @Override
+        public boolean isTopLevel() {
+            return false;
+        }
+
         @Override
         @Nonnull
         public String getName() {
@@ -75,8 +99,11 @@ public class AxisDirective extends AbstractDirective<AxisDirective> {
         public String toGroovy(@Nonnull AxisDirective axis) {
             StringBuffer sb = new StringBuffer();
             sb.append("axis {\n");
-            sb.append("name "+ axis.name + "\n");
-            sb.append("values "+ axis.values + "\n");
+            sb.append("name '" + axis.getName() + "'\n");
+            if (axis.notValues)
+                sb.append("notValues " + tokenize(axis.getValues()) + "\n");
+            else
+                sb.append("values " + tokenize(axis.getValues()) + "\n");
             sb.append("}");
             return sb.toString();
         }

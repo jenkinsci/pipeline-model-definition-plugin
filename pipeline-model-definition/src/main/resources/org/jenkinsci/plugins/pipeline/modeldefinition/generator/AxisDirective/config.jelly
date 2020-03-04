@@ -26,10 +26,15 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <f:block>
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#matrix-axes" target="_blank">the online documentation</a>
-        for more information on the <code>matrix axis</code> directive.
+        for more information on the <code>matrix axis</code> directive. ${allowNotValue}
         <f:entry field="name" title="${%Name}">
             <f:textbox/>
         </f:entry>
+        <j:if test="${allowNotValue}">
+            <f:entry field="notValues" title="${%Not Values}">
+                <f:checkbox/>
+            </f:entry>
+        </j:if>
         <f:entry field="values" title="${%Values}">
             <f:textbox/>
         </f:entry>

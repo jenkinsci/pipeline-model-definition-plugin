@@ -28,9 +28,9 @@
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#matrix-excludes" target="_blank">the online documentation</a>
         for more information on the <code>matrix exclusions</code> directive.
         <f:entry field="exclude">
-            <j:set var="inStage" value="true"/>
+            <j:set var="allowNotValue" value="true"/>
             <f:hetero-list name="exclude" items="${instance.exclude}" descriptors="${descriptor.getDescriptors()}"
-                           hasHeader="true" oneEach="false" capture="inStage"/>
+                           hasHeader="true" oneEach="false" capture="allowNotValue"/>
         </f:entry>
     </f:block>
 </j:jelly>
