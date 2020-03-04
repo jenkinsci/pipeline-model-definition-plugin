@@ -84,7 +84,7 @@ public class FolderConfig extends AbstractFolderProperty<AbstractFolder<?>> {
         this.registry = registry;
     }
 
-    @Extension @Symbol("pipeline-model")
+    @Extension @Symbol({"pipeline-model-docker", "pipeline-model"})
     public static class DescriptorImpl extends AbstractFolderPropertyDescriptor {
 
         @Nonnull

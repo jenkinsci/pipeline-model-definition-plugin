@@ -32,7 +32,6 @@ import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -578,10 +577,11 @@ class ModelInterpreter implements Serializable {
         if (agent != null) {
             agent.populateMap((Map<String,Object>)instanceFromClosure(agent.rawClosure, Map.class))
         }
-        if (agent == null
-            && root.agent.getDeclarativeAgent(root, root) instanceof AbstractDockerAgent
-            && root.options?.options?.get("newContainerPerStage") != null) {
-            agent = root.agent
+        if (agent == null) {
+            def declarativeAgent = root.agent.getDeclarativeAgent(root, root)
+            if (declarativeAgent != null && declarativeAgent.reuseRootAgent(root.options?.options ?: [:])) {
+                agent = root.agent
+            }
         }
         if (agent == null) {
             return {

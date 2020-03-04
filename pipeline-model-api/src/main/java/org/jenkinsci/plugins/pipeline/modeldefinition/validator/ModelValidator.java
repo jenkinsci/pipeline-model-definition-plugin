@@ -28,6 +28,16 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
 
 
+/**
+ * A visitor interface that can be used to traverse the AST of a Declarative Pipeline.
+ *
+ * Warning: Do not implement this interface directly in non-Declarative plugins, because this interface is unstable and
+ * may receive backwards-incompatible changes. Instead, use {@link AbstractModelValidator}, which will retain backwards
+ * compatibility.
+ *
+ * @see AbstractModelValidator
+ * @see ModelASTPipelineDef#validate
+ */
 public interface ModelValidator {
     boolean validateElement(ModelASTAgent agent);
 

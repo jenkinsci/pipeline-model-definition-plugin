@@ -35,7 +35,7 @@
   <packaging>hpi</packaging>
   <name>Pipeline: Declarative Extension Points API</name>
   <description>APIs for extension points used in Declarative Pipelines</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
+  <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
 
   <build>
     <plugins>
@@ -54,7 +54,7 @@
     <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
-    <tag>HEAD</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
   <dependencies>
