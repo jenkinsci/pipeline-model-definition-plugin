@@ -25,7 +25,7 @@
 pipeline {
     agent {
         label "some-label"
-        docker "ubuntu:lts"
+        none
     }
     stages {
         stage("foo") {

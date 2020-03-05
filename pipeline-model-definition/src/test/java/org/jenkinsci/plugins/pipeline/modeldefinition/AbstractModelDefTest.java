@@ -138,7 +138,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "simpleScript",
             "postStage/simplePostBuild",
             "simpleTools",
-            "agent/agentInStageAutoCheckout",
             "options/simpleJobProperties",
             "simpleTriggers",
             "simpleParameters",
@@ -175,7 +174,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simpleInput",
             "parametersInInput",
-            "agent/agentDocker",
             "libraries/globalLibrarySuccess",
             "jsonSchemaNull",
             "parallel/parallelStagesFailFast",

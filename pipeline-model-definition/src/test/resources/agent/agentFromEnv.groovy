@@ -27,7 +27,7 @@ pipeline {
         label "${FIRST_LABEL}"
     }
     environment {
-        FIRST_LABEL = "docker"
+        FIRST_LABEL = "some-label"
     }
     stages {
         stage("foo") {
@@ -46,7 +46,7 @@ pipeline {
                 label "${SECOND_LABEL}"
             }
             environment {
-                SECOND_LABEL = "other-docker"
+                SECOND_LABEL = "other-label"
             }
             steps {
                 script {

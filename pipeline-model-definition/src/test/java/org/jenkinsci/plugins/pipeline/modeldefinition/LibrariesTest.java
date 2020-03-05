@@ -54,7 +54,7 @@ public class LibrariesTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(10);
-        s.setLabelString("some-label docker");
+        s.setLabelString("some-label");
     }
 
     @Test

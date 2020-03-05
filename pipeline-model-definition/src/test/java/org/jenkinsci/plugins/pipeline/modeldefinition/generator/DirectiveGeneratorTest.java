@@ -151,72 +151,6 @@ public class DirectiveGeneratorTest {
     }
 
     @Test
-    public void simpleAgentDocker() throws Exception {
-        AgentDirective agent = new AgentDirective(new DockerPipeline("some-image"));
-        assertGenerateDirective(agent, "agent {\n" +
-                "  docker 'some-image'\n" +
-                "}");
-    }
-
-    @Test
-    public void fullAgentDocker() throws Exception {
-        DockerPipeline dockerPipeline = new DockerPipeline("some-image");
-        dockerPipeline.setAlwaysPull(true);
-        dockerPipeline.setArgs("--some-arg");
-        dockerPipeline.setCustomWorkspace("some/path");
-        dockerPipeline.setLabel("some-label");
-        dockerPipeline.setRegistryCredentialsId("some-cred-id");
-        dockerPipeline.setReuseNode(true);
-        dockerPipeline.setRegistryUrl("http://some.where");
-        AgentDirective agent = new AgentDirective(dockerPipeline);
-
-        assertGenerateDirective(agent, "agent {\n" +
-                "  docker {\n" +
-                "    alwaysPull true\n" +
-                "    args '--some-arg'\n" +
-                "    customWorkspace 'some/path'\n" +
-                "    image 'some-image'\n" +
-                "    label 'some-label'\n" +
-                "    registryCredentialsId 'some-cred-id'\n" +
-                "    registryUrl 'http://some.where'\n" +
-                "    reuseNode true\n" +
-                "  }\n" +
-                "}");
-    }
-
-    @Test
-    public void simpleAgentDockerfile() throws Exception {
-        AgentDirective agent = new AgentDirective(new DockerPipelineFromDockerfile());
-
-        assertGenerateDirective(agent, "agent {\n" +
-                "  dockerfile true\n" +
-                "}");
-    }
-
-    @Test
-    public void fullAgentDockerfile() throws Exception {
-        DockerPipelineFromDockerfile dp = new DockerPipelineFromDockerfile();
-        dp.setAdditionalBuildArgs("--additional-arg");
-        dp.setDir("some-sub/dir");
-        dp.setFilename("NotDockerfile");
-        dp.setArgs("--some-arg");
-        dp.setCustomWorkspace("/custom/workspace");
-        dp.setLabel("some-label");
-        AgentDirective agent = new AgentDirective(dp);
-
-        assertGenerateDirective(agent, "agent {\n" +
-                "  dockerfile {\n" +
-                "    additionalBuildArgs '--additional-arg'\n" +
-                "    args '--some-arg'\n" +
-                "    customWorkspace '/custom/workspace'\n" +
-                "    dir 'some-sub/dir'\n" +
-                "    filename 'NotDockerfile'\n" +
-                "    label 'some-label'\n" +
-                "  }\n" +
-                "}");
-    }
-
-    @Test
     public void whenBranch() throws Exception {
         WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), true, false, false);
 
@@ -523,7 +457,7 @@ public class DirectiveGeneratorTest {
         nested.add(new BranchConditional("that-branch"));
         nested.add(new BranchConditional("this-branch"));
         WhenDirective when = new WhenDirective(new AllOfConditional(nested), false, false, false);
-        AgentDirective agent = new AgentDirective(new DockerPipeline("some-image"));
+        AgentDirective agent = new AgentDirective(new Label("win"));
 
         StageDirective stage = new StageDirective(Arrays.asList(agent, when, env, tools, post), "bob", StageDirective.StageContentType.STEPS);
 
@@ -532,7 +466,7 @@ public class DirectiveGeneratorTest {
                 "    // One or more steps need to be included within the steps block.\n" +
                 "  }\n\n" +
                 "  agent {\n" +
-                "    docker 'some-image'\n" +
+                "    label 'win'\n" +
                 "  }\n\n" +
                 "  when {\n" +
                 "    allOf {\n" +

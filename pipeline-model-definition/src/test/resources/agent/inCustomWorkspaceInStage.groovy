@@ -29,7 +29,7 @@ pipeline {
             agent {
                 node {
                     label ""
-                    customWorkspace "some-sub-dir"
+                    customWorkspace "some-other-sub-dir"
                 }
             }
             steps {

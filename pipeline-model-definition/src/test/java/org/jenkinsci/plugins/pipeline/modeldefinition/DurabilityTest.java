@@ -29,7 +29,6 @@ import hudson.model.labels.LabelAtom;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import org.hamcrest.Matchers;
-import org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.WorkspaceAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -43,7 +42,6 @@ import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.*;
 import org.junit.runners.model.Statement;
 import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
@@ -68,26 +66,6 @@ public class DurabilityTest extends AbstractDeclarativeTest {
     @AfterClass
     public static void resetSplitting() {
         RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
-    }
-
-
-    @Issue("JENKINS-42027")
-    @Test
-    public void globalConfigPersists() throws Exception {
-        story.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                GlobalConfig.get().setDockerLabel("config_docker");
-                GlobalConfig.get().save();
-            }
-        });
-
-        story.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                assertEquals("config_docker", GlobalConfig.get().getDockerLabel());
-            }
-        });
     }
 
     @Test
