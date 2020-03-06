@@ -81,7 +81,6 @@ public class AxesDirective extends AbstractDirective<AxesDirective> {
             StringBuffer result = new StringBuffer("axes {\n");
             if(axes.axis != null){
                 axes.axis.stream().forEach( axis -> {
-//                    System.out.println("# " + axis.toGroovy(true));
                     result.append(axis.toGroovy(false));
                 });
             }
