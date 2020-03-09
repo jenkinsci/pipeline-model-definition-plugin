@@ -33,8 +33,14 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extends Descriptor<T> {
+    @Nonnull
+    public boolean isTopLevel(){
+        return true;
+    }
+
     @Nonnull
     public abstract String getName();
 

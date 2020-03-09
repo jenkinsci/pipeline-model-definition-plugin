@@ -48,6 +48,7 @@
                     <d:tag name="listDirectives">
                         <j:set var="inStage" value="false"/>
                         <j:forEach var="descriptor" items="${directives}">
+                            <j:if test="${descriptor.isTopLevel()}">
                             <f:dropdownListBlock title="${descriptor.name}: ${descriptor.displayName}" staplerClass="${descriptor.clazz.name}" lazy="descriptor,item,inStage">
                                 <l:ajax>
                                     <j:set var="it" value="${item}"/>
@@ -68,6 +69,7 @@
                                     </st:include>
                                 </l:ajax>
                             </f:dropdownListBlock>
+                            </j:if>
                         </j:forEach>
                     </d:tag>
                 </d:taglib>
