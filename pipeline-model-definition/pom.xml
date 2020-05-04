@@ -230,7 +230,6 @@
       <artifactId>pipeline-milestone-step</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>com.jcabi</groupId>
       <artifactId>jcabi-matchers</artifactId>

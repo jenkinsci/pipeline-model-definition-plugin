@@ -24,8 +24,8 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.endpoints;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.tree.SimpleJsonTree;
-import com.github.fge.jsonschema.util.JsonLoader;
+import com.github.fge.jsonschema.core.tree.SimpleJsonTree;
+import com.github.fge.jackson.JsonLoader;
 import com.google.common.collect.ImmutableList;
 import hudson.Extension;
 import hudson.model.RootAction;

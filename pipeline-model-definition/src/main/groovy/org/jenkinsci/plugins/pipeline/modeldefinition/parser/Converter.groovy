@@ -25,12 +25,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.fge.jsonschema.exceptions.ProcessingException
+import com.github.fge.jsonschema.core.exceptions.ProcessingException
 import com.github.fge.jsonschema.main.JsonSchema
-import com.github.fge.jsonschema.report.ProcessingReport
-import com.github.fge.jsonschema.tree.JsonTree
-import com.github.fge.jsonschema.tree.SimpleJsonTree
-import com.github.fge.jsonschema.util.JsonLoader
+import com.github.fge.jsonschema.core.report.ProcessingReport
+import com.github.fge.jsonschema.core.tree.JsonTree
+import com.github.fge.jsonschema.core.tree.SimpleJsonTree
+import com.github.fge.jackson.JsonLoader
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import jenkins.model.Jenkins
 import net.sf.json.JSONObject

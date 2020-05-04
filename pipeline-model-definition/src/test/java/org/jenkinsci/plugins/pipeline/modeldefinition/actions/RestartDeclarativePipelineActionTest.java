@@ -32,7 +32,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
-import com.github.fge.jsonschema.util.JsonLoader;
+import com.github.fge.jackson.JsonLoader;
 import hudson.model.*;
 import hudson.scm.ChangeLogSet;
 import hudson.security.ACL;
