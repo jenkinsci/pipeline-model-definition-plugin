@@ -30,7 +30,6 @@ import jenkins.model.ArtifactManager;
 import jenkins.util.VirtualFile;
 import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
@@ -106,17 +105,14 @@ public class HasArchived extends TypeSafeMatcher<Run> {
                 .appendText("]");
     }
 
-    @Factory
     public static Matcher<Run> hasArchived(Matcher<String> name, Matcher<?> content) {
         return new HasArchived(name, content);
     }
 
-    @Factory
     public static Matcher<Run> hasArchivedString(Matcher<String> name, Matcher<String> content, Charset encoding) {
         return hasArchived(name, InputStreamContainingString.inputStream(content, encoding));
     }
 
-    @Factory
     public static Matcher<Run> hasArchivedString(Matcher<String> name, Matcher<String> content) {
         return hasArchived(name, InputStreamContainingString.inputStream(content));
     }
