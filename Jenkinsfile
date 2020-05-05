@@ -1,1 +1,1 @@
-buildPlugin(useAci: true, configurations: buildPlugin.recommendedConfigurations(), timeout: 120)
+buildPlugin(configurations: buildPlugin.recommendedConfigurations(), timeout: 120)
