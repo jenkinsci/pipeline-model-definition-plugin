@@ -1,1 +1,1 @@
-buildPlugin(configurations: buildPlugin.recommendedConfigurations(), timeout: 120)
+buildPlugin(timeout: 120)
