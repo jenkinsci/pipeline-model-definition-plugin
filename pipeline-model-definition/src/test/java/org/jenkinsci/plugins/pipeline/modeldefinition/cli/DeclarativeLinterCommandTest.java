@@ -71,7 +71,7 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void invalidJenkinsfile() throws Exception {
+    public void invalidJenkinsfileEmptyAgent() throws Exception {
         File testPath = writeJenkinsfileToTmpFile("errors", "emptyAgent");
         j.jenkins.disableSecurity();
 
@@ -82,6 +82,19 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
         assertThat(result.stdout(), containsString("Errors encountered validating Jenkinsfile:"));
         assertThat(result.stdout(), containsString("Not a valid section definition: \"agent\". Some extra configuration is required"));
     }
+
+    // @Test
+    // public void invalidJenkinsfileEmptyPipeline() throws Exception {
+    //     File testPath = writeJenkinsfileToTmpFile("errors", "emptyPipeline");
+    //     j.jenkins.disableSecurity();
+
+    //     final CLICommandInvoker.Result result = command.withStdin(FileUtils.openInputStream(testPath)).invoke();
+
+    //     assertThat(result, failedWith(1));
+    //     assertThat(result, hasNoErrorOutput());
+    //     assertThat(result.stdout(), containsString("Errors encountered validating Jenkinsfile:"));
+    //     assertThat(result.stdout(), containsString("Not a valid section definition: \"Pipeline\". Some extra configuration is required"));
+    // }
 
     @Test
     public void invalidUser() throws Exception {
