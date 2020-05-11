@@ -31,7 +31,6 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -85,7 +84,6 @@ public class DeclarativeLinterCommandTest extends AbstractModelDefTest {
     }
 
      @Test
-     @Ignore
      public void invalidJenkinsfileEmptyPipeline() throws Exception {
          File testPath = writeJenkinsfileToTmpFile("errors", "emptyPipeline");
          j.jenkins.disableSecurity();
