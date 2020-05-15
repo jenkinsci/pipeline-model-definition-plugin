@@ -59,9 +59,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.jcabi.matchers.RegexMatchers.containsPattern;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.stringContainsInOrder;
-import static org.hamcrest.text.IsEqualIgnoringWhiteSpace.equalToIgnoringWhiteSpace;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
