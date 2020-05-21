@@ -188,7 +188,7 @@
       </exclusions>
     </dependency>
 
-    <!-- Fix Hamcrest version conflict -->
+    <!-- Fix Hamcrest version conflict  -->
     <dependency>
       <groupId>org.hamcrest</groupId>
       <artifactId>hamcrest-library</artifactId>
