@@ -35,6 +35,7 @@ import org.hamcrest.TypeSafeMatcher;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 
 /**
@@ -77,8 +78,10 @@ public class HasArchived extends TypeSafeMatcher<Run> {
                 }
             }
         } else if (nameMatcher.matches(fullName(file, root))) {
-            if (contentMatcher.matches(file.open())) {
-                return true;
+            try (InputStream stream = file.open()) {
+                if (contentMatcher.matches(stream)) {
+                    return true;
+                }
             }
         }
         return false;
