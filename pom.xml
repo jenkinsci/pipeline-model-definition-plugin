@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.44</version>
+    <version>4.2</version>
     <relativePath />
   </parent>
 
@@ -71,11 +71,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.kohsuke</groupId>
-        <artifactId>access-modifier-annotation</artifactId>
-        <version>1.12</version>
-      </dependency>
       <dependency>
         <!-- Require upper bound dependencies -->
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -244,6 +239,21 @@
         <version>1.20</version>
       </dependency>
       <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest</artifactId>
+        <version>2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest-core</artifactId>
+        <version>2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.hamcrest</groupId>
+        <artifactId>hamcrest-library</artifactId>
+        <version>2.2</version>
+      </dependency>
+      <dependency>
         <groupId>com.jcabi</groupId>
         <artifactId>jcabi-matchers</artifactId>
         <version>1.4</version>
@@ -284,11 +294,6 @@
         <version>1.23</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci</groupId>
-        <artifactId>annotation-indexer</artifactId>
-        <version>1.12</version>
-      </dependency>
-      <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-json-org</artifactId>
         <version>2.9.8</version>
@@ -302,33 +307,16 @@
   </dependencyManagement>
 
   <build>
-    <!-- gmaven is inherited from the parent-pom.  Set it to never run. -->
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.codehaus.gmaven</groupId>
-          <artifactId>gmaven-plugin</artifactId>
-          <executions>
-            <execution>
-              <phase>none</phase>
-            </execution>
-            <execution>
-              <id>test-in-groovy</id>
-              <phase>none</phase>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
           <groupId>org.codehaus.gmavenplus</groupId>
           <artifactId>gmavenplus-plugin</artifactId>
-          <version>1.7.1</version>
           <executions>
             <execution>
               <goals>
                 <goal>generateStubs</goal>
                 <goal>compile</goal>
-                <goal>generateTestStubs</goal>
-                <goal>compileTests</goal>
               </goals>
             </execution>
           </executions>
@@ -338,7 +326,6 @@
     <plugins>
       <plugin>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.5.3</version>
         <configuration>
           <!-- keep the tag names aligned with previous releases -->
           <tagNameFormat>pipeline-model-definition-@{project.version}</tagNameFormat>
@@ -350,7 +337,7 @@
   <properties>
     <revision>1.6.1</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.150.3</jenkins.version>
+    <jenkins.version>2.176.4</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
