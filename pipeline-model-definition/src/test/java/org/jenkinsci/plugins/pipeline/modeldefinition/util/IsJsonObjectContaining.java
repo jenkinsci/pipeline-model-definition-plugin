@@ -25,7 +25,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.util;
 
 import net.sf.json.JSONObject;
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
@@ -70,27 +69,22 @@ public class IsJsonObjectContaining extends TypeSafeMatcher<JSONObject> {
                 .appendText("]");
     }
 
-    @Factory
     public static Matcher<JSONObject> hasEntry(Matcher<String> keyMatcher, Matcher<?> valueMatcher) {
         return new IsJsonObjectContaining(keyMatcher, valueMatcher);
     }
 
-    @Factory
     public static Matcher<JSONObject> hasEntry(String key, Matcher<?> valueMatcher) {
         return new IsJsonObjectContaining(equalTo(key), valueMatcher);
     }
 
-    @Factory
     public static Matcher<JSONObject> hasEntry(String key, Object value) {
         return new IsJsonObjectContaining(equalTo(key), equalTo(value));
     }
 
-    @Factory
     public static Matcher<JSONObject> hasKey(Matcher<String> keyMatcher) {
         return new IsJsonObjectContaining(keyMatcher, anything());
     }
 
-    @Factory
     public static Matcher<JSONObject> hasKey(String key) {
         return new IsJsonObjectContaining(equalTo(key), anything());
     }

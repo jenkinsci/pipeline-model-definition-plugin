@@ -69,7 +69,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(10);
-        s.setLabelString("some-label docker");
+        s.setLabelString("some-label");
     }
 
     @Issue("JENKINS-47363")
@@ -270,15 +270,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void dockerGlobalVariable() throws Exception {
-        assumeDocker();
-
-        expect("dockerGlobalVariable")
-                .logContains("[Pipeline] { (foo)", "image: ubuntu")
-                .go();
-    }
-
-    @Test
     public void syntheticStages() throws Exception {
         WorkflowRun b = expect("syntheticStages")
                 .logContains("[Pipeline] { (" + SyntheticStageNames.toolInstall() + ")",
@@ -415,16 +406,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         for (FlowNode baz2 : baz2Stages) {
             assertTrue(stageStatusPredicate("baz2", StageStatus.getSkippedForFailure()).apply(baz2));
         }
-    }
-
-    @Issue("JENKINS-40226")
-    @Test
-    public void failureBeforeStages() throws Exception {
-        // This should fail whether we've got Docker available or not. Hopefully.
-        expect(Result.FAILURE, "failureBeforeStages")
-                .logContains("Dockerfile failed")
-                .logNotContains("This should never happen")
-                .go();
     }
 
     public static Predicate<FlowNode> syntheticStagePredicate(String stageName,

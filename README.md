@@ -7,15 +7,6 @@
 
 The Pipeline Model Definition Plugin provides a config-like syntax for defining Pipelines - thus Declarative Pipeline.
 
-This plugin requires Jenkins 2.121.1 or later
-
-**WARNING**:
-Older versions of this plugin may not be safe to use. Please review the
-following warnings before using an older version:
-
--   [Script Security sandbox
-    bypass](https://jenkins.io/security/advisory/2019-01-08/#SECURITY-1266)
-
 ## Documentation
 
 * [User guide and syntax reference](https://jenkins.io/doc/book/pipeline/)
@@ -26,6 +17,7 @@ following warnings before using an older version:
 ## Developing
 - To start developing plugin: 
 - Clone the plugin repository
+
 `cd pipeline-model-definition && mvn install && mvn hpi:run`
 
 ### API extension
@@ -34,7 +26,6 @@ For functionality extending, and the API information, consult [EXTENDING.md](EXT
 ## License
 
 [MIT License](https://opensource.org/licenses/mit-license.php)
-
 
 
 
