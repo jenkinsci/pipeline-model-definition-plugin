@@ -53,7 +53,6 @@ public class DeclarativeLinterCommand extends CLICommand {
 
         if (script != null) {
             try {
-                Converter.scriptToPipelineDef(script);
 
                 ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(script);
                 if (pipelineDef != null) {
