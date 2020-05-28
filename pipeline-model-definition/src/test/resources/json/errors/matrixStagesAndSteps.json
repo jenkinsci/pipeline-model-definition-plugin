@@ -1,0 +1,72 @@
+{"pipeline": {
+  "stages": [  {
+    "name": "foo",
+    "matrix":     {
+      "axes": [      {
+        "name": "OS_VALUE",
+        "values":         [
+          {
+            "isLiteral": true,
+            "value": "linux"
+          },
+          {
+            "isLiteral": true,
+            "value": "windows"
+          },
+          {
+            "isLiteral": true,
+            "value": "mac"
+          }
+        ]
+      }],
+      "stages":       [
+        {
+          "name": "first",
+          "branches": [          {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "First branch"
+                }
+              }]
+            }]
+          }]
+        },
+        {
+          "name": "second",
+          "branches": [          {
+            "name": "default",
+            "steps": [            {
+              "name": "echo",
+              "arguments": [              {
+                "key": "message",
+                "value":                 {
+                  "isLiteral": true,
+                  "value": "Second branch"
+                }
+              }]
+            }]
+          }]
+        }
+      ]
+    },
+    "branches": [    {
+      "name": "default",
+      "steps": [      {
+        "name": "echo",
+        "arguments": [        {
+          "key": "message",
+          "value":           {
+            "isLiteral": true,
+            "value": "This will never happen"
+          }
+        }]
+      }]
+    }]
+  }],
+  "agent": {"type": "none"}
+}}

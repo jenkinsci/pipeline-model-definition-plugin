@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -24,15 +23,9 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
-        final JSONArray a = new JSONArray();
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry: arguments.entrySet()) {
-            JSONObject o = new JSONObject();
-            o.accumulate("key", entry.getKey().toJSON());
-            o.accumulate("value", entry.getValue().toJSON());
-            a.add(o);
-        }
-        return a;
+        return toJSONArray(arguments);
     }
 
     /**
@@ -66,34 +59,20 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {
-            entry.getKey().validate(validator);
-            entry.getValue().validate(validator);
-        }
+        // Nothing to validate directly
+        validate(validator, arguments);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        boolean first = true;
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {
-            if (first) {
-                first = false;
-            } else {
-                result.append(", ");
-            }
-            result.append(entry.getKey().toGroovy()).append(": ").append(entry.getValue().toGroovy());
-        }
-        return result.toString();
+        return toGroovyArgList(arguments, ": ");
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (Map.Entry<ModelASTKey, ModelASTValue> entry : arguments.entrySet()) {
-            entry.getKey().removeSourceLocation();
-            entry.getValue().removeSourceLocation();
-        }
+        removeSourceLocationsFrom(arguments);
     }
 
     public Map<ModelASTKey, ModelASTValue> getArguments() {

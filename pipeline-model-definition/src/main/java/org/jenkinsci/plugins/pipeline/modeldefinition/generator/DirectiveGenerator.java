@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.Functions;
 import hudson.model.Action;
 import hudson.model.Descriptor;
@@ -53,6 +54,7 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Extension
 public class DirectiveGenerator extends Snippetizer {
@@ -76,7 +78,7 @@ public class DirectiveGenerator extends Snippetizer {
     public HttpResponse doGenerateDirective(StaplerRequest req, @QueryParameter String json) throws Exception {
         // TODO is there not an easier way to do this? Maybe Descriptor.newInstancesFromHeteroList on a one-element JSONArray?
         JSONObject jsonO = JSONObject.fromObject(json);
-        Jenkins j = Jenkins.getActiveInstance();
+        Jenkins j = Jenkins.get();
         Class<?> c = j.getPluginManager().uberClassLoader.loadClass(jsonO.getString("stapler-class"));
         DirectiveDescriptor descriptor = (DirectiveDescriptor)j.getDescriptor(c.asSubclass(AbstractDirective.class));
         if (descriptor == null) {

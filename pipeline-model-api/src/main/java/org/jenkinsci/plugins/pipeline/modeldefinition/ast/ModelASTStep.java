@@ -55,24 +55,21 @@ public class ModelASTStep extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        o.accumulate("name", name);
-        if (args != null) {
-            o.accumulate("arguments", args.toJSON());
-        }
-        return o;
+        return new JSONObject()
+                .accumulate("name", name)
+                .elementOpt("arguments", toJSON(args));
     }
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
-        if (args != null) {
-            args.validate(validator);
-        }
+        validate(validator, args);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         // Default to using whatever the original args structure is.
         ModelASTArgumentList argList = args;
@@ -124,9 +121,7 @@ public class ModelASTStep extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        if (args != null) {
-            args.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(args);
     }
 
     public String getName() {

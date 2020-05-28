@@ -25,7 +25,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -47,43 +46,27 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-        o.accumulate("name", name);
-        if (args != null) {
-            o.accumulate("arguments", args.toJSON());
-        }
-        if (!children.isEmpty()) {
-            final JSONArray a = new JSONArray();
-            for (ModelASTWhenContent child : children) {
-                a.add(child.toJSON());
-            }
-            o.accumulate("children", a);
-        }
-        return o;
+        return new JSONObject()
+                .accumulate("name", name)
+                .elementOpt("arguments", toJSON(args))
+                .elementOpt("children", nullIfEmpty(toJSONArray(children)));
     }
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
-        if (args != null) {
-            args.validate(validator);
-        }
-        for (ModelASTWhenContent c : children) {
-            c.validate(validator);
-        }
+        validate(validator, children, args);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
 
         StringBuilder result = new StringBuilder();
         if (!children.isEmpty()) {
-            result.append(name).append(" {\n");
-            for (ModelASTWhenContent child : children) {
-                result.append(child.toGroovy()).append("\n");
-            }
-            result.append("}\n");
+            result.append(toGroovyBlock(name, children));
         } else {
             result.append(name).append(" ").append(getArgs().toGroovy());
         }
@@ -93,12 +76,7 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        if (args != null) {
-            args.removeSourceLocation();
-        }
-        for (ModelASTWhenContent child : children) {
-            child.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(children, args);
     }
 
     public String getName() {

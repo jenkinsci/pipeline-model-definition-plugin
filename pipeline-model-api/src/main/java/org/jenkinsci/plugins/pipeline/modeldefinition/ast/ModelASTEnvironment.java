@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -21,44 +20,27 @@ public final class ModelASTEnvironment extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
-        final JSONArray a = new JSONArray();
-        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry: variables.entrySet()) {
-            JSONObject o = new JSONObject();
-            o.accumulate("key", entry.getKey().toJSON());
-            o.accumulate("value", entry.getValue().toJSON());
-            a.add(o);
-        }
-        return a;
-
+        return toJSONArray(variables);
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry : variables.entrySet()) {
-            entry.getKey().validate(validator);
-            entry.getValue().validate(validator);
-        }
+        validate(validator, variables);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("environment {\n");
-        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry : variables.entrySet()) {
-            result.append(entry.getKey().toGroovy()).append(" = ").append(entry.getValue().toGroovy()).append('\n');
-        }
-        result.append("}\n");
-        return result.toString();
+        return toGroovyBlock("environment", variables, " = ");
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (Map.Entry<ModelASTKey, ModelASTEnvironmentValue> entry : variables.entrySet()) {
-            entry.getKey().removeSourceLocation();
-            entry.getValue().removeSourceLocation();
-        }
+        removeSourceLocationsFrom(variables);
     }
 
     public Map<ModelASTKey, ModelASTEnvironmentValue> getVariables() {

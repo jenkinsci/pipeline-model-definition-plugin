@@ -1,0 +1,140 @@
+{"pipeline": {
+  "stages":   [
+    {
+      "name": "One",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Hello"
+            }
+          }]
+        }]
+      }]
+    },
+    {
+      "name": "Two",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "script",
+          "arguments": [          {
+            "key": "scriptBlock",
+            "value":             {
+              "isLiteral": true,
+              "value": "echo \"World\"\n                    echo \"Heal it\""
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "environment",
+        "arguments":         [
+          {
+            "key": "name",
+            "value":             {
+              "isLiteral": true,
+              "value": "FOO"
+            }
+          },
+          {
+            "key": "value",
+            "value":             {
+              "isLiteral": true,
+              "value": "BAR"
+            }
+          }
+        ]
+      }]}
+    },
+    {
+      "name": "Three",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Should never be reached"
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "environment",
+        "arguments":         [
+          {
+            "key": "name",
+            "value":             {
+              "isLiteral": true,
+              "value": "FOO"
+            }
+          },
+          {
+            "key": "value",
+            "value":             {
+              "isLiteral": true,
+              "value": "SOME_OTHER_VALUE"
+            }
+          }
+        ]
+      }]}
+    },
+    {
+      "name": "Four",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Ignore case worked"
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "environment",
+        "arguments":         [
+          {
+            "key": "name",
+            "value":             {
+              "isLiteral": true,
+              "value": "FOO"
+            }
+          },
+          {
+            "key": "value",
+            "value":             {
+              "isLiteral": true,
+              "value": "bar"
+            }
+          },
+          {
+            "key": "ignoreCase",
+            "value":             {
+              "isLiteral": true,
+              "value": "true"
+            }
+          }
+        ]
+      }]}
+    }
+  ],
+  "environment": [  {
+    "key": "FOO",
+    "value":     {
+      "isLiteral": true,
+      "value": "BAR"
+    }
+  }],
+  "agent": {"type": "any"}
+}}

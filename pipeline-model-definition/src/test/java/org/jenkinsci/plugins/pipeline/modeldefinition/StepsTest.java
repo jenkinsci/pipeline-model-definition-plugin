@@ -45,14 +45,7 @@ public class StepsTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(10);
-        s.setLabelString("some-label docker");
-    }
-
-    @Test
-    public void validStepParameters() throws Exception {
-        expect("steps/validStepParameters")
-                .logContains("[Pipeline] { (foo)", "[Pipeline] timeout", "hello")
-                .go();
+        s.setLabelString("some-label");
     }
 
     @Test
@@ -66,17 +59,8 @@ public class StepsTest extends AbstractModelDefTest {
     public void metaStepSyntax() throws Exception {
         env(s).set();
         expect("steps/metaStepSyntax")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
                 .archives("msg.out", "hello world")
-                .go();
-    }
-
-    @Test
-    public void legacyMetaStepSyntax() throws Exception {
-        env(s).set();
-        expect("steps/legacyMetaStepSyntax")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
-                .archives("msg.out", "hello world")
+                .archives("msg2.out", "goodbye world")
                 .go();
     }
 

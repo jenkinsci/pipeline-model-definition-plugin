@@ -28,104 +28,44 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        JSONObject a = new JSONObject();
-        a.put("stages", stages != null ? stages.toJSON() : null);
-        a.put("post", postBuild != null ? postBuild.toJSON() : null);
-        a.put("environment", environment != null ? environment.toJSON() : null);
-        a.put("agent", agent != null ? agent.toJSON() : null);
-        a.put("tools", tools != null ? tools.toJSON() : null);
-        if (options != null && !options.getOptions().isEmpty()) {
-            a.put("options", options.toJSON());
-        } else {
-            a.put("options", null);
-        }
-        if (parameters != null && !parameters.getParameters().isEmpty()) {
-            a.put("parameters", parameters.toJSON());
-        } else {
-            a.put("parameters", null);
-        }
-        if (triggers != null && !triggers.getTriggers().isEmpty()) {
-            a.put("triggers", triggers.toJSON());
-        } else {
-            a.put("triggers", null);
-        }
-        if (libraries != null && !libraries.getLibs().isEmpty()) {
-            a.put("libraries", libraries.toJSON());
-        } else {
-            a.put("libraries", null);
-        }
+        JSONObject a = new JSONObject()
+                .elementOpt("stages", toJSON(stages))
+                .elementOpt("post", toJSON(postBuild))
+                .elementOpt("environment", toJSON(environment))
+                .elementOpt("agent", toJSON(agent))
+                .elementOpt("tools", toJSON(tools))
+                .elementOpt("options", toJSONCheckEmpty(options))
+                .elementOpt("parameters", toJSONCheckEmpty(parameters))
+                .elementOpt("triggers", toJSONCheckEmpty(triggers))
+                .elementOpt("libraries", toJSONCheckEmpty(libraries));
+
         return new JSONObject().accumulate("pipeline", a);
     }
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
-
-        if (stages != null) {
-            stages.validate(validator);
-        }
-        if (postBuild != null) {
-            postBuild.validate(validator);
-        }
-        if (environment != null) {
-            environment.validate(validator);
-        }
-        if (agent != null) {
-            agent.validate(validator);
-        }
-        if (tools != null) {
-            tools.validate(validator);
-        }
-        if (options != null) {
-            options.validate(validator);
-        }
-        if (parameters != null) {
-            parameters.validate(validator);
-        }
-        if (triggers != null) {
-            triggers.validate(validator);
-        }
-        if (libraries != null) {
-            libraries.validate(validator);
-        }
+        validate(validator, stages, postBuild, environment, agent, tools, options, parameters, triggers, libraries);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        result.append("pipeline {\n");
-        if (agent != null) {
-            result.append(agent.toGroovy());
-        }
-        if (libraries != null) {
-            result.append(libraries.toGroovy());
-        }
-        if (stages != null) {
-            result.append("stages {\n");
-            result.append(stages.toGroovy());
-            result.append("}\n");
-        }
-        if (tools != null) {
-            result.append(tools.toGroovy());
-        }
-        if (environment != null) {
-            result.append(environment.toGroovy());
-        }
-        if (postBuild != null) {
-            result.append(postBuild.toGroovy());
-        }
-        if (options != null && !options.getOptions().isEmpty()) {
-            result.append(options.toGroovy());
-        }
-        if (parameters != null && !parameters.getParameters().isEmpty()) {
-            result.append(parameters.toGroovy());
-        }
-        if (triggers != null && !triggers.getTriggers().isEmpty()) {
-            result.append(triggers.toGroovy());
-        }
+        StringBuilder result = new StringBuilder()
+            .append("pipeline {\n")
+            .append(toGroovy(agent))
+            .append(toGroovy(libraries))
+            .append(toGroovy(stages))
+            .append(toGroovy(tools))
+            .append(toGroovy(environment))
+            .append(toGroovy(postBuild))
+            .append(toGroovyCheckEmpty(options))
+            .append(toGroovyCheckEmpty(parameters))
+            .append(toGroovyCheckEmpty(triggers))
+            .append("}\n");
 
-        result.append("}\n");
         return result.toString();
     }
 
@@ -178,30 +118,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        if (stages != null) {
-            stages.removeSourceLocation();
-        }
-        if (libraries != null) {
-            libraries.removeSourceLocation();
-        }
-        if (postBuild != null) {
-            postBuild.removeSourceLocation();
-        }
-        if (environment != null) {
-            environment.removeSourceLocation();
-        }
-        if (tools != null) {
-            tools.removeSourceLocation();
-        }
-        if (options != null) {
-            options.removeSourceLocation();
-        }
-        if (parameters != null) {
-            parameters.removeSourceLocation();
-        }
-        if (triggers != null) {
-            triggers.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(agent, stages, libraries, postBuild, environment, tools, options, parameters, triggers);
     }
 
     private static String indent(int count) {

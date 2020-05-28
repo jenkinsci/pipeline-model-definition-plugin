@@ -173,14 +173,6 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-46276")
     @Test
-    public void withAgentNoneAndAgentDocker() throws Exception {
-        assumeDocker();
-        expect("withAgentNoneAndAgentDocker")
-                .logNotContains("Required context class hudson.FilePath is missing").go();
-    }
-
-    @Issue("JENKINS-46276")
-    @Test
     public void withAgentNoneAndAgentAny() throws Exception {
         expect("withAgentNoneAndAgentAny")
                 .logNotContains("Required context class hudson.FilePath is missing").go();
@@ -191,6 +183,14 @@ public class PostStageTest extends AbstractModelDefTest {
     public void parallelParentPostFailure() throws Exception {
         expect(Result.FAILURE, "parallelParentPostFailure")
                 .logNotContains("PARALLEL STAGE POST").go();
+    }
+
+    @Test
+    public void postWithOutsideVarAndFunc() throws Exception {
+        expect("postWithOutsideVarAndFunc")
+            .logContains("Hi there - This comes from a function")
+            .logNotContains("I FAILED")
+            .go();
     }
 
     @Issue("JENKINS-48266")
@@ -236,7 +236,7 @@ public class PostStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-52114")
     @Test
     public void abortedShouldNotTriggerFailure() throws Exception {
-        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC);
+        assumeSh();
         WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
         job.setDefinition(new CpsFlowDefinition("" +
                 "pipeline {\n" +

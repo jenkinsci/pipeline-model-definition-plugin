@@ -24,7 +24,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -47,35 +46,25 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTValue arg: args) {
-            a.add(arg.toJSON());
-        }
-        return new JSONObject().accumulate("name", name).accumulate("arguments", a);
+        return new JSONObject()
+                .accumulate("name", name)
+                .accumulate("arguments", toJSONArray(args));
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTMethodArg arg : args) {
-            arg.validate(validator);
-        }
+        validate(validator, args);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder(name);
         result.append('(');
-        boolean first = true;
-        for (ModelASTValue arg : args) {
-            if (first) {
-                first = false;
-            } else {
-                result.append(", ");
-            }
-            result.append(arg.toGroovy());
-        }
+        result.append(toGroovyArgList(args));
         result.append(')');
         return result.toString();
     }
@@ -83,9 +72,7 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTValue arg : args) {
-            arg.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(args);
     }
 
     public String getName() {

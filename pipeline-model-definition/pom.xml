@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>1.3.9</version>
+    <version>${revision}${changelist}</version>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
@@ -35,7 +35,7 @@
   <packaging>hpi</packaging>
   <name>Pipeline: Declarative</name>
   <description>An opinionated, declarative Pipeline</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
+  <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
 
   <build>
     <plugins>
@@ -46,6 +46,10 @@
         <configuration>
           <compatibleSinceVersion>1.2-beta-4</compatibleSinceVersion>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.gmavenplus</groupId>
+        <artifactId>gmavenplus-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -66,9 +70,27 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemProperties combine.children="append">
+            <property>
+              <!-- some of the AbstractModelDefTest’s run for a long time with @ClassRule JenkinsRule -->
+              <name>jenkins.test.timeout</name>
+              <value>600</value>
+            </property>
+          </systemProperties>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
+    <tag>${scmTag}</tag>
+  </scm>
 
   <dependencies>
     <dependency>
@@ -117,6 +139,8 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>docker-workflow</artifactId>
+      <scope>runtime</scope> <!-- TODO unused, just here to encourage upgrades -->
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -133,6 +157,12 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps-global-lib</artifactId>
+      <exclusions>
+        <exclusion> <!-- pick up in test scope from jenkins-test-harness -->
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -149,13 +179,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>pipeline-input-step</artifactId>
-    </dependency>
-    <!-- Dependency on tombstoned declarative agent plugin to make sure we don't end up with a
-    bad old version installed -->
-    <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
-      <artifactId>pipeline-model-declarative-agent</artifactId>
-      <version>1.1.1</version>
     </dependency>
 
     <!-- TEST deps -->
@@ -242,12 +265,6 @@
       </exclusions>
     </dependency>
 
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-scm-step</artifactId>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
     <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-support</artifactId>

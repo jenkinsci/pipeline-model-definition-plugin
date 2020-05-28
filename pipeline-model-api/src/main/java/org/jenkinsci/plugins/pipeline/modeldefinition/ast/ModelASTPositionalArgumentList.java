@@ -24,23 +24,19 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTValue argument: arguments) {
-            a.add(argument.toJSON());
-        }
-        return a;
+        return toJSONArray(arguments);
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         // Nothing to validate directly
-        for (ModelASTValue argument : arguments) {
-            argument.validate(validator);
-        }
+        validate(validator, arguments);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder result = new StringBuilder();
         boolean first = true;
@@ -58,9 +54,7 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTValue argument : arguments) {
-            argument.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(arguments);
     }
 
     public List<ModelASTValue> getArguments() {

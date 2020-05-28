@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -51,6 +52,39 @@ public class StageInputTest extends AbstractModelDefTest {
         CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
 
         while (b.getAction(InputAction.class)==null) {
+            e.waitForSuspension();
+        }
+
+        // make sure we are pausing at the right state that reflects what we wrote in the program
+        InputAction a = b.getAction(InputAction.class);
+        assertEquals(1, a.getExecutions().size());
+
+        InputStepExecution is = a.getExecution("Foo");
+        assertEquals("Continue?", is.getInput().getMessage());
+        assertEquals(0, is.getInput().getParameters().size());
+        assertNull(is.getInput().getSubmitter());
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        HtmlPage page = wc.getPage(b, a.getUrlName());
+        j.submit(page.getFormByName(is.getId()), "proceed");
+        assertEquals(0, a.getExecutions().size());
+        q.get();
+
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        j.assertLogContains("hello", b);
+    }
+
+    @Test
+    public void simpleInputWithOutsideVarAndFunc() throws Exception {
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInputWithOutsideVarAndFunc");
+        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleInputWithOutsideVarAndFunc"), true));
+        // get the build going, and wait until workflow pauses
+        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+        WorkflowRun b = q.getStartCondition().get();
+        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+        while (b.getAction(InputAction.class) == null) {
             e.waitForSuspension();
         }
 

@@ -76,7 +76,9 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         assertNotNull(build);
         j.assertLogContains("Hello", build);
         j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
         j.assertLogNotContains("JS World", build);
+        j.assertLogNotContains("With regexp", build);
 
         controller.addFile("repoX", crNum,
                 "files",
@@ -89,7 +91,9 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build2);
         j.assertLogContains("JS World", build2);
+        j.assertLogContains("With regexp", build2);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build2);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build2);
         j.assertLogNotContains("Warning, empty changelog", build2);
 
         controller.addFile("repoX", crNum,
@@ -103,8 +107,10 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build3);
         j.assertLogContains("JS World", build3);
+        j.assertLogContains("With regexp", build3);
         j.assertLogContains("Examining changelog from all builds of this change request", build3);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build3);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build3);
         j.assertLogNotContains("Warning, empty changelog", build3);
     }
 
@@ -183,6 +189,12 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
         j.assertLogNotContains("Digit release", build);
     }
 
+    /**
+     * IMPORTANT: This appears to be the only test that runs multiple declarative pipeline jobs concurrently on one instance.
+     * You can change this script but make sure it always runs multiple jobs.
+     * It has detected cases where someone started to use static variables in places they shouldn't.
+     * @throws Exception
+     */
     @Test
     public void whenChangeRequest() throws Exception {
         MockSCMController controller = MockSCMController.create();
@@ -267,6 +279,75 @@ public class WhenStageMultibranchTest extends AbstractModelDefTest {
 
     }
 
+    @Test
+    public void whenBranch() throws Exception {
+        MockSCMController controller = MockSCMController.create();
+        controller.createRepository("repoX");
+        controller.createBranch("repoX", "master");
+        controller.addFile("repoX", "master", "Jenkinsfile", "Jenkinsfile", pipelineSourceFromResources("when/whenBranch").getBytes());
+        controller.cloneBranch("repoX", "master", "release-two");
+        controller.cloneBranch("repoX", "master", "release-2");
+        controller.cloneBranch("repoX", "master", "foo");
+
+        WorkflowMultiBranchProject project = j.createProject(WorkflowMultiBranchProject.class);
+        project.getSourcesList().add(new BranchSource(new MockSCMSource(controller, "repoX", new MockSCMDiscoverBranches())));
+
+        waitFor(project.scheduleBuild2(0));
+        j.waitUntilNoActivity();
+
+        assertThat(project.getItems(), hasSize(4)); //Just tests the multibranch is correctly configured
+
+        // When EQUALS comparator
+        final WorkflowJob master = project.getItem("master");
+        WorkflowRun build = master.getLastBuild();
+        assertNotNull(master);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("master it (default)", build);
+        j.assertLogContains("master it (EQUALS)", build);
+        j.assertLogContains("Stage \"Four\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Five\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Six\" skipped due to when conditional", build);
+
+        // When GLOB comparator
+        WorkflowJob releaseJob = project.getItem("release-two");
+        assertNotNull(releaseJob);
+        build = releaseJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("release it (default)", build);
+        j.assertLogContains("release it (GLOB)", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Six\" skipped due to when conditional", build);
+
+        // When GLOB and REGEXP comparators
+        releaseJob = project.getItem("release-2");
+        assertNotNull(releaseJob);
+        build = releaseJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("release it (default)", build);
+        j.assertLogContains("release it (GLOB)", build);
+        j.assertLogContains("Digit release", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
+
+        // When no matches
+        WorkflowJob fooJob = project.getItem("foo");
+        assertNotNull(fooJob);
+        build = fooJob.getLastBuild();
+        assertNotNull(build);
+        j.assertBuildStatusSuccess(build);
+        j.assertLogContains("Hello", build);
+        j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Four\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Five\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Six\" skipped due to when conditional", build);
+    }
 
     @TestExtension
     public static class TestChangeLogStrategy extends WhenStageTest.TestChangeLogStrategy {

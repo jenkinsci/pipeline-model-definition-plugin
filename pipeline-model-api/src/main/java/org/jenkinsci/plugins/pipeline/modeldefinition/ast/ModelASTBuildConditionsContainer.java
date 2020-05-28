@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -27,40 +26,28 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
     public abstract String getName();
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTBuildCondition condition: conditions) {
-            a.add(condition.toJSON());
-        }
-        return new JSONObject().accumulate("conditions", a);
+        return toJSONObject("conditions", conditions);
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTBuildCondition condition: conditions) {
-            condition.validate(validator);
-        }
+        validate(validator, conditions);
         super.validate(validator);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
-        StringBuilder result = new StringBuilder(getName());
-        result.append(" {\n");
-        for (ModelASTBuildCondition condition : conditions) {
-            result.append(condition.toGroovy()).append('\n');
-        }
-        result.append("}\n");
-        return result.toString();
+        return toGroovyBlock(getName(), conditions);
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTBuildCondition condition : conditions) {
-            condition.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(conditions);
     }
 
     public List<ModelASTBuildCondition> getConditions() {

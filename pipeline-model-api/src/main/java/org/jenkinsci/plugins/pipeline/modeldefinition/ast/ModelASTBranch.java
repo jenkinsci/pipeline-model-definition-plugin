@@ -1,12 +1,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a branch of Pipeline steps to execute, either as part of a parallel block, or on its own.
@@ -24,38 +24,29 @@ public final class ModelASTBranch extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTStep step: steps) {
-            a.add(step.toJSON());
-        }
-
-        return new JSONObject().accumulate("name", name).accumulate("steps", a);
+        return new JSONObject()
+                .accumulate("name", name)
+                .accumulate("steps", toJSONArray(steps));
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTStep step: steps) {
-            step.validate(validator);
-        }
+        validate(validator, steps);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
-        StringBuilder result = new StringBuilder();
-        for (ModelASTStep step: steps) {
-            result.append(step.toGroovy()).append("\n");
-        }
-        return result.toString();
+        return toGroovy(steps);
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTStep step: steps) {
-            step.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(steps);
     }
 
     public String getName() {
@@ -84,30 +75,16 @@ public final class ModelASTBranch extends ModelASTElement {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
+        if (this == o) return true;
+        if (!(o instanceof ModelASTBranch)) return false;
+        if (!super.equals(o)) return false;
         ModelASTBranch that = (ModelASTBranch) o;
-
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-        return getSteps() != null ? getSteps().equals(that.getSteps()) : that.getSteps() == null;
-
+        return Objects.equals(getName(), that.getName()) &&
+                Objects.equals(getSteps(), that.getSteps());
     }
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
-        return result;
+        return Objects.hash(super.hashCode(), getName(), getSteps());
     }
 }

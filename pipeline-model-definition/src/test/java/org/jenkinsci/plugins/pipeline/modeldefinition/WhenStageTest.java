@@ -89,15 +89,6 @@ public class WhenStageTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void simpleWhen() throws Exception {
-        env(s).put("SECOND_STAGE", "NOPE").set();
-        ExpectationsBuilder expect = expect("when/conditions", "whenExpression").runFromRepo(false);
-        expect.logContains("One", "Hello", "Should I run?", "Two").logNotContains("World").go();
-        env(s).put("SECOND_STAGE", "RUN").set();
-        expect.resetForNewRun(Result.SUCCESS).logContains("One", "Hello", "Should I run?", "Two", "World").go();
-    }
-
-    @Test
     public void whenException() throws Exception {
         env(s).put("SECOND_STAGE", "NOPE").set();
         expect(Result.FAILURE, "when/conditions", "whenException").runFromRepo(false)
@@ -160,19 +151,26 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenChangeset() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/conditions/changelog", "changeset")
-                .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
-                .logNotContains("JS World");
+                .logContains(
+                        "Hello",
+                        "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
+                        "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("JS World", "With regexp");
         builder.go();
 
         builder.resetForNewRun(Result.SUCCESS);
 
         sampleRepo.write("webapp/js/somecode.js", "//fake file");
+        sampleRepo.write("somecode.js", "//fake file");
         sampleRepo.git("add", "webapp/js/somecode.js");
+        sampleRepo.git("add", "somecode.js");
         sampleRepo.git("commit", "--message=files");
 
-        builder.logContains("Hello", "JS World")
+        builder.logContains("Hello", "JS World", "With regexp")
                 .logNotContains(
                         "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
                         "Warning, empty changelog.",
                         "Examining changelog from all builds of this change request.")
                 .go();
@@ -182,8 +180,12 @@ public class WhenStageTest extends AbstractModelDefTest {
     public void whenChangesetMoreCommits() throws Exception {
         //TODO JENKINS-46086 First time build always skips the changelog
         final ExpectationsBuilder builder = expect("when/conditions/changelog", "changeset")
-                .logContains("Hello", "Stage \"Two\" skipped due to when conditional", "Warning, empty changelog. Probably because this is the first build.")
-                .logNotContains("JS World");
+                .logContains(
+                        "Hello",
+                        "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
+                        "Warning, empty changelog. Probably because this is the first build.")
+                .logNotContains("JS World", "With regexp");
         builder.go();
 
         builder.resetForNewRun(Result.SUCCESS);
@@ -203,9 +205,14 @@ public class WhenStageTest extends AbstractModelDefTest {
         sampleRepo.git("add", "somefile2.txt");
         sampleRepo.git("commit", "--message=Irrelevant");
 
-        builder.logContains("Hello", "JS World")
+        sampleRepo.write("somefile.js", "//same file");
+        sampleRepo.git("add", "somefile.js");
+        sampleRepo.git("commit", "--message=same");
+
+        builder.logContains("Hello", "JS World", "With regexp")
                 .logNotContains(
                         "Stage \"Two\" skipped due to when conditional",
+                        "Stage \"Three\" skipped due to when conditional",
                         "Warning, empty changelog.",
                         "Examining changelog from all builds of this change request.")
                 .go();
@@ -234,7 +241,9 @@ public class WhenStageTest extends AbstractModelDefTest {
         assertNotNull(build);
         j.assertLogContains("Hello", build);
         j.assertLogContains("Stage \"Two\" skipped due to when conditional", build);
+        j.assertLogContains("Stage \"Three\" skipped due to when conditional", build);
         j.assertLogNotContains("JS World", build);
+        j.assertLogNotContains("With regexp", build);
 
         controller.addFile("repoX", crNum,
                 "files",
@@ -247,7 +256,9 @@ public class WhenStageTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build2);
         j.assertLogContains("JS World", build2);
+        j.assertLogContains("With regexp", build2);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build2);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build2);
         j.assertLogNotContains("Warning, empty changelog", build2);
 
         controller.addFile("repoX", crNum,
@@ -261,8 +272,10 @@ public class WhenStageTest extends AbstractModelDefTest {
 
         j.assertLogContains("Hello", build3);
         j.assertLogContains("JS World", build3);
+        j.assertLogContains("With regexp", build3);
         j.assertLogContains("Examining changelog from all builds of this change request", build3);
         j.assertLogNotContains("Stage \"Two\" skipped due to when conditional", build3);
+        j.assertLogNotContains("Stage \"Three\" skipped due to when conditional", build3);
         j.assertLogNotContains("Warning, empty changelog", build3);
     }
 
@@ -458,6 +471,26 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("JENKINS-51865")
+    @Test
+    public void whenBeforeOptionsTrue() throws Exception {
+        expect("when/whenBeforeOptionsTrue")
+                .logContains("Stage One here")
+                .logNotContains("Stage Two here")
+                .logNotContains("Timeout set to expire")
+                .go();
+    }
+
+    @Issue("JENKINS-51865")
+    @Test
+    public void whenBeforeOptionsFalse() throws Exception {
+        expect("when/whenBeforeOptionsFalse")
+                .logContains("Stage One here")
+                .logNotContains("Stage Two here")
+                .logContains("Timeout set to expire")
+                .go();
+    }
+
     @Issue("JENKINS-49226")
     @Test
     public void whenEquals() throws Exception {
@@ -603,25 +636,12 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     }
 
-    @Test
-    public void basicWhen() throws Exception {
-        expect("when/basicWhen")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
+    // basicWhen, skippedWhen, whenBranchFalse, whenBranchTrue, whenNot, whenOr, whenAnd are covered elsewhere
 
     @Test
     public void whenExprUsingOutsideVarAndFunc() throws Exception {
         expect("when/whenExprUsingOutsideVarAndFunc")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void skippedWhen() throws Exception {
-        expect("when/skippedWhen")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
                 .go();
     }
 
@@ -633,47 +653,10 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .go();
     }
 
-    @Test
-    public void whenBranchFalse() throws Exception {
-        expect("when/whenBranchFalse")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
-                .go();
-    }
-
-    @Test
-    public void whenBranchTrue() throws Exception {
-        expect("when/whenBranchTrue")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
     @Issue("JENKINS-42226")
     @Test
     public void whenBranchNull() throws Exception {
         expect("when/whenBranchNull")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
-                .go();
-    }
-
-    @Test
-    public void whenNot() throws Exception {
-        expect("when/whenNot")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenOr() throws Exception {
-        expect("when/whenOr")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenAnd() throws Exception {
-        expect("when/whenAnd")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
                 .logNotContains("World")
                 .go();
@@ -707,24 +690,10 @@ public class WhenStageTest extends AbstractModelDefTest {
     }
 
     @Test
-    public void whenEnvTrue() throws Exception {
-        expect("when/whenEnvTrue")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenEnvIgnoreCase() throws Exception {
-        expect("when/whenEnvIgnoreCase")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void whenEnvFalse() throws Exception {
-        expect("when/whenEnvFalse")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)")
-                .logNotContains("World")
+    public void whenEnv() throws Exception {
+        expect("when/whenEnv")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World", "Ignore case worked")
+                .logNotContains("Should never be reached")
                 .go();
     }
 

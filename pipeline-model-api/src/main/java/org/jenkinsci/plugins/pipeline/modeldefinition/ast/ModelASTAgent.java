@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -21,6 +22,7 @@ public final class ModelASTAgent extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
         final JSONObject j = new JSONObject();
 
@@ -28,15 +30,12 @@ public final class ModelASTAgent extends ModelASTElement {
         if (isEmptyStringLabelAgent()) {
             j.accumulate("type", "any");
         } else {
-            j.accumulate("type", agentType.toJSON());
+            j.accumulate("type", toJSON(agentType));
 
-            if (variables != null) {
-                if (variables instanceof ModelASTClosureMap &&
-                        !((ModelASTClosureMap) variables).getVariables().isEmpty()) {
-                    j.accumulate("arguments", variables.toJSON());
-                } else if (variables instanceof ModelASTValue) {
-                    j.accumulate("argument", variables.toJSON());
-                }
+            if (variables instanceof ModelASTClosureMap) {
+                j.elementOpt("arguments", nullIfEmpty((JSONArray)variables.toJSON()));
+            } else if (variables instanceof ModelASTValue) {
+                j.elementOpt("argument", variables.toJSON());
             }
         }
         return j;
@@ -69,12 +68,11 @@ public final class ModelASTAgent extends ModelASTElement {
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
-        if (variables != null) {
-            variables.validate(validator);
-        }
+        validate(validator, variables);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder();
         if (variables == null ||
@@ -95,12 +93,7 @@ public final class ModelASTAgent extends ModelASTElement {
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        if (agentType != null) {
-            agentType.removeSourceLocation();
-        }
-        if (variables != null) {
-            variables.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(agentType, variables);
     }
 
     public ModelASTKey getAgentType() {

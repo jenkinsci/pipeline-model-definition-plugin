@@ -19,17 +19,20 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        return new JSONObject().accumulate("key", key.toJSON()).accumulate("value", value.toJSON());
+        return new JSONObject()
+                .accumulate("key", toJSON(key))
+                .accumulate("value", toJSON(value));
     }
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
-        key.validate(validator);
-        value.validate(validator);
+        validate(validator, key, value);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
         return key.toGroovy() + ": " + value.toGroovy();
     }
@@ -37,8 +40,7 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        key.removeSourceLocation();
-        value.removeSourceLocation();
+        removeSourceLocationsFrom(key, value);
     }
 
     public ModelASTKey getKey() {

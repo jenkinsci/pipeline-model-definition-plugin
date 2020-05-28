@@ -25,7 +25,6 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import javax.annotation.Nonnull;
@@ -37,7 +36,7 @@ import java.util.Map;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTClosureMap extends ModelASTElement implements ModelASTMethodArg {
+public final class ModelASTClosureMap extends ModelASTElement implements ModelASTMethodArg, ModelASTElementContainer {
     private Map<ModelASTKey, ModelASTMethodArg> variables = new LinkedHashMap<>();
 
     public ModelASTClosureMap(Object sourceLocation) {
@@ -45,43 +44,32 @@ public final class ModelASTClosureMap extends ModelASTElement implements ModelAS
     }
 
     @Override
+    @Nonnull
     public JSONArray toJSON() {
-        final JSONArray a = new JSONArray();
-        for (Map.Entry<ModelASTKey, ModelASTMethodArg> entry: variables.entrySet()) {
-            JSONObject o = new JSONObject();
-            o.accumulate("key", entry.getKey().toJSON());
-            o.accumulate("value", entry.getValue().toJSON());
-            a.add(o);
-        }
-        return a;
-
+        return toJSONArray(variables);
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
-        for (Map.Entry<ModelASTKey, ModelASTMethodArg> entry : variables.entrySet()) {
-            entry.getKey().validate(validator);
-            entry.getValue().validate(validator);
-        }
+        // Nothing to immediately validate here
+        validate(validator, variables);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
-        StringBuilder result = new StringBuilder("{\n");
-        for (Map.Entry<ModelASTKey, ModelASTMethodArg> entry : variables.entrySet()) {
-            result.append(entry.getKey().toGroovy()).append(" ").append(entry.getValue().toGroovy()).append('\n');
-        }
-        result.append("}\n");
-        return result.toString();
+        return toGroovyBlock(null, variables, " ");
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (Map.Entry<ModelASTKey, ModelASTMethodArg> entry : variables.entrySet()) {
-            entry.getKey().removeSourceLocation();
-            entry.getValue().removeSourceLocation();
-        }
+        removeSourceLocationsFrom(variables);
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return variables.isEmpty();
     }
 
     public Map<ModelASTKey, ModelASTMethodArg> getVariables() {

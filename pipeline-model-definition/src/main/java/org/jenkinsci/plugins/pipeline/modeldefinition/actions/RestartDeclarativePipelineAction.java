@@ -171,7 +171,7 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     public String getCheckUrl() {
-        return Jenkins.getInstance().getRootUrl() + run.getUrl() + getUrlName() + "/" + "checkStageName";
+        return Jenkins.get().getRootUrl() + run.getUrl() + getUrlName() + "/" + "checkStageName";
     }
 
     public FormValidation doCheckStageName(@QueryParameter String value) {

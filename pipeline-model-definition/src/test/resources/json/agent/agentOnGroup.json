@@ -24,7 +24,7 @@
           "type": "label",
           "argument":           {
             "isLiteral": true,
-            "value": "other-docker"
+            "value": "other-label"
           }
         },
         "stages":         [

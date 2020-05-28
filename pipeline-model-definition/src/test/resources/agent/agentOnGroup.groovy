@@ -36,7 +36,7 @@ pipeline {
                 }
                 stage("other-agent") {
                     agent {
-                        label "other-docker"
+                        label "other-label"
                     }
                     stages {
                         stage("first-other") {

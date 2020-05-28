@@ -31,6 +31,7 @@ import com.github.fge.jsonschema.report.ProcessingReport
 import com.github.fge.jsonschema.tree.JsonTree
 import com.github.fge.jsonschema.tree.SimpleJsonTree
 import com.github.fge.jsonschema.util.JsonLoader
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import jenkins.model.Jenkins
 import net.sf.json.JSONObject
 import org.codehaus.groovy.control.CompilationFailedException
@@ -156,6 +157,7 @@ class Converter {
      * @param enabledOptionalValidators A list of optional validator classes that should be enabled. Defaults to empty.
      * @return The converted script
      */
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu,
                                                                     final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1]
@@ -185,6 +187,7 @@ class Converter {
         return compilationUnitToPlainSteps(cu, enabledOptionalValidators)
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private static List<ModelASTStep> compilationUnitToPlainSteps(CompilationUnit cu,
                                                                   final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         final List<ModelASTStep>[] model = new List<ModelASTStep>[1]

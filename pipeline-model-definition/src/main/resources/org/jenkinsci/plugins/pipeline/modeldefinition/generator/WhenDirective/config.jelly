@@ -40,6 +40,12 @@
             </f:dropdownListBlock>
         </j:forEach>
     </f:dropdownList>
+    <f:entry field="beforeOptions">
+        <f:checkbox title="${%Evaluate Before Options}"/>
+    </f:entry>
+    <f:entry field="beforeInput">
+        <f:checkbox title="${%Evaluate Before Input}"/>
+    </f:entry>
     <f:entry field="beforeAgent">
         <f:checkbox title="${%Evaluate Before Agent}"/>
     </f:entry>

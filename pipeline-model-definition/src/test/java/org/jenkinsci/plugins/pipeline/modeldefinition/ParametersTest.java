@@ -60,6 +60,31 @@ public class ParametersTest extends AbstractModelDefTest {
         assertTrue(bpd.isDefaultValue());
     }
 
+    @Test
+    public void simpleParametersWithOutsideVarAndFunc() throws Exception {
+        WorkflowRun b = expect("simpleParametersWithOutsideVarAndFunc")
+            .logContains("[Pipeline] { (foo)", "hello true: Hi there - This comes from a function")
+            .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+            .go();
+
+        WorkflowJob p = b.getParent();
+
+        ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(pdp);
+
+        assertEquals(2, pdp.getParameterDefinitions().size());
+        assertEquals(BooleanParameterDefinition.class, pdp.getParameterDefinitions().get(0).getClass());
+        BooleanParameterDefinition bpd = (BooleanParameterDefinition) pdp.getParameterDefinitions().get(0);
+        assertEquals("flag", bpd.getName());
+        assertTrue(bpd.isDefaultValue());
+
+        assertEquals(StringParameterDefinition.class, pdp.getParameterDefinitions().get(1).getClass());
+        StringParameterDefinition spd = (StringParameterDefinition) pdp.getParameterDefinitions().get(1);
+        assertEquals("JENKINS_LABEL", spd.getName());
+        assertEquals("Hi there - This comes from a function", spd.getDefaultValue());
+
+    }
+
     @Ignore("Parameters are set before withEnv is called.")
     @Test
     public void envVarInParameters() throws Exception {
@@ -122,5 +147,25 @@ public class ParametersTest extends AbstractModelDefTest {
         assertEquals(1, newProp.getParameterDefinitions().size());
         ParameterDefinition paramDef = newProp.getParameterDefinition("DO_NOT_DELETE");
         assertNotNull(paramDef);
+    }
+
+    @Test
+    public void sameParametersNotOverride() throws Exception{
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        ParametersDefinitionProperty paramProp = job.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp);
+        BooleanParameterDefinition bpd = (BooleanParameterDefinition) paramProp.getParameterDefinitions().get(0);
+
+
+        WorkflowRun b2 = job.scheduleBuild2(0).get();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        WorkflowJob job2 = b2.getParent();
+        ParametersDefinitionProperty paramProp2 = job2.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp2);
+        BooleanParameterDefinition bpd2 = (BooleanParameterDefinition) paramProp2.getParameterDefinitions().get(0);
+        assertSame(bpd, bpd2);
     }
 }

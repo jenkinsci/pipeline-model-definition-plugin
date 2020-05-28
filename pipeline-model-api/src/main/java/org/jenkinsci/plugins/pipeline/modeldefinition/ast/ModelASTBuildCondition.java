@@ -20,26 +20,29 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        return new JSONObject().accumulate("condition", condition).accumulate("branch", branch.toJSON());
+        return new JSONObject()
+                .accumulate("condition", condition)
+                .accumulate("branch", toJSON(branch));
     }
 
     @Override
     public void validate(@Nonnull ModelValidator validator) {
         validator.validateElement(this);
-
-        branch.validate(validator);
+        validate(validator, branch);
     }
 
     @Override
+    @Nonnull
     public String toGroovy() {
-        return condition + " {\n" + branch.toGroovy() + "\n}\n";
+        return toGroovyBlock(condition, branch);
     }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        branch.removeSourceLocation();
+        removeSourceLocationsFrom(branch);
     }
 
     public String getCondition() {

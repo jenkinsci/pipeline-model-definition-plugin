@@ -27,12 +27,18 @@ pipeline {
         label "${FIRST_LABEL}"
     }
     environment {
-        FIRST_LABEL = "docker"
+        FIRST_LABEL = "some-label"
     }
     stages {
         stage("foo") {
             steps {
-                sh('echo WHICH_AGENT=$WHICH_AGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo WHICH_AGENT=$WHICH_AGENT')
+                    } else {
+                        bat('echo WHICH_AGENT=%WHICH_AGENT%')
+                    }
+                }
             }
         }
         stage("bar") {
@@ -40,10 +46,16 @@ pipeline {
                 label "${SECOND_LABEL}"
             }
             environment {
-                SECOND_LABEL = "other-docker"
+                SECOND_LABEL = "other-label"
             }
             steps {
-                sh('echo WHICH_AGENT=$WHICH_AGENT')
+                script {
+                    if (isUnix()) {
+                        sh('echo WHICH_AGENT=$WHICH_AGENT')
+                    } else {
+                        bat('echo WHICH_AGENT=%WHICH_AGENT%')
+                    }
+                }
             }
         }
     }

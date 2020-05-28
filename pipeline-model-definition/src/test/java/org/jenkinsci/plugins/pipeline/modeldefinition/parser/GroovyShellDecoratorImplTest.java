@@ -24,7 +24,7 @@ public class GroovyShellDecoratorImplTest {
     public void errorInJenkinsfile() throws Exception {
         WorkflowJob job = j.createProject(WorkflowJob.class);
         // still a syntactically valid groovy code but no stage name
-        job.setDefinition(new CpsFlowDefinition("pipeline { stages { stage { sh './test.sh' } } }"));
+        job.setDefinition(new CpsFlowDefinition("pipeline { stages { stage { sh './test.sh' } } }", true));
         WorkflowRun b = j.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0).get());
 
         j.assertLogContains(Messages.ModelParser_ExpectedStringLiteral(), b);
@@ -40,7 +40,7 @@ public class GroovyShellDecoratorImplTest {
     public void v1() throws Exception {
         WorkflowJob job = j.createProject(WorkflowJob.class);
         // still a syntactically valid groovy code but no stage name
-        job.setDefinition(new CpsFlowDefinition("node { echo 'hello' }"));
+        job.setDefinition(new CpsFlowDefinition("node { echo 'hello' }", true));
         j.assertBuildStatusSuccess(job.scheduleBuild2(0));
     }
 }

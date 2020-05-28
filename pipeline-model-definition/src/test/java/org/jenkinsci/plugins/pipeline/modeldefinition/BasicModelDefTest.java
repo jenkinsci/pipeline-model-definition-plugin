@@ -33,6 +33,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
@@ -68,15 +69,39 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(10);
-        s.setLabelString("some-label docker");
+        s.setLabelString("some-label");
+    }
+
+    @Issue("JENKINS-47363")
+    // Give this a longer timeout
+    @Test(timeout=5 * 60 * 1000)
+    public void stages300() throws Exception {
+        expect("basic/stages300")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
+            .logNotContains("List expressions can only contain up to 250 elements")
+            .go();
     }
 
     @Test
-    public void simplePipeline() throws Exception {
-        expect("simplePipeline")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
-                .go();
+    public void stages300NoSplit() throws Exception {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
+        expect(Result.FAILURE, "basic/stages300")
+            .logNotContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
+            .logContains("List expressions can only contain up to 250 elements")
+            .go();
+    }
+
+    @Issue("JENKINS-37984")
+    @Test
+    public void stages100WithOutsideVarAndFunc() throws Exception {
+        expect("basic/stages100WithOutsideVarAndFunc")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'a'",
+                "Hi there - This comes from a function")
+            .logNotContains("Method code too large!")
+            .go();
     }
 
     @Test
@@ -98,13 +123,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "goodbye",
                         "[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
                 .hasFailureCase()
-                .go();
-    }
-
-    @Test
-    public void twoStagePipeline() throws Exception {
-        expect("basic/twoStagePipeline")
-                .logContains("[Pipeline] { (foo)", "hello", "[Pipeline] { (bar)", "goodbye")
                 .go();
     }
 
@@ -148,14 +166,44 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
         assertNotNull(action);
         ModelASTStages stages = action.getStages();
-        assertNull(stages.getSourceLocation());
+        assertExecutionModelActionStageContents(b, stages);
+    }
+
+    @Test
+    public void executionModelActionFullPipeline() throws Exception {
+        WorkflowRun b = expect("executionModelAction").go();
+
+        ExecutionModelAction action = b.getAction(ExecutionModelAction.class);
+        assertNotNull(action);
+        ModelASTPipelineDef pipeline = action.getPipelineDef();
+        assertNull(pipeline.getSourceLocation());
+
+        ModelASTAgent agent = pipeline.getAgent();
+        assertNotNull(agent);
+        assertEquals("none", agent.getAgentType().getKey());
+
+        ModelASTEnvironment env = pipeline.getEnvironment();
+        assertNotNull(env);
+        ModelASTKey var = new ModelASTKey(null);
+        var.setKey("VAR");
+        ModelASTValue val = (ModelASTValue) env.getVariables().get(var);
+        assertNotNull(val);
+        assertTrue(val.isLiteral());
+        assertEquals("VALUE", val.getValue());
+
+        ModelASTStages stages = pipeline.getStages();
+        assertExecutionModelActionStageContents(b, stages);
+    }
+
+    private void assertExecutionModelActionStageContents(WorkflowRun b, ModelASTStages stages) throws Exception {
         assertNotNull(stages);
+        assertNull(stages.getSourceLocation());
 
         assertEquals(1, stages.getStages().size());
 
         ModelASTStage stage = stages.getStages().get(0);
-        assertNull(stage.getSourceLocation());
         assertNotNull(stage);
+        assertNull(stage.getSourceLocation());
 
         assertEquals(2, stage.getBranches().size());
 
@@ -220,16 +268,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
         return null;
     }
-
-    @Test
-    public void dockerGlobalVariable() throws Exception {
-        assumeDocker();
-
-        expect("dockerGlobalVariable")
-                .logContains("[Pipeline] { (foo)", "image: ubuntu")
-                .go();
-    }
-
 
     @Test
     public void syntheticStages() throws Exception {
@@ -368,16 +406,6 @@ public class BasicModelDefTest extends AbstractModelDefTest {
         for (FlowNode baz2 : baz2Stages) {
             assertTrue(stageStatusPredicate("baz2", StageStatus.getSkippedForFailure()).apply(baz2));
         }
-    }
-
-    @Issue("JENKINS-40226")
-    @Test
-    public void failureBeforeStages() throws Exception {
-        // This should fail whether we've got Docker available or not. Hopefully.
-        expect(Result.FAILURE, "failureBeforeStages")
-                .logContains("Dockerfile failed")
-                .logNotContains("This should never happen")
-                .go();
     }
 
     public static Predicate<FlowNode> syntheticStagePredicate(String stageName,
@@ -546,6 +574,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                         "In stage bar in group foo",
                         "In stage baz in group foo")
                 .go();
+    }
+
+    @Issue("JENKINS-60115")
+    @Test
+    public void singleArgumentNullValue() throws Exception {
+        expect("basic/singleArgumentNullValue")
+            .logContains("[Pipeline] { (foo)",
+                "Trying to pass milestone 0",
+                "Null is no problem")
+            .go();
     }
 
     @Issue("JENKINS-51962")

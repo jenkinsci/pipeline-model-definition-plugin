@@ -40,7 +40,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
     public enum StageContentType {
         STEPS,
         PARALLEL,
-        STAGES;
+        STAGES,
+        MATRIX;
 
         public String getName() {
             // TODO: This could probably be easier, but I wanted to use a localized string and couldn't think of anything better.
@@ -50,6 +51,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
                 return Messages.StageDirective_Parallel_name();
             } else if (this == STAGES) {
                 return Messages.StageDirective_Stages_name();
+            } else if(this == MATRIX){
+                return Messages.StageDirective_Matrix_name();
             } else {
                 return "(unknown)";
             }
@@ -104,13 +107,13 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         @Nonnull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(AgentDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(InputDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(EnvironmentDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(OptionsDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(WhenDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(ToolsDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.getActiveInstance().getDescriptorByType(PostDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(AgentDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(InputDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(EnvironmentDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(OptionsDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(WhenDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(ToolsDirective.DescriptorImpl.class));
+            descriptors.add(Jenkins.get().getDescriptorByType(PostDirective.DescriptorImpl.class));
 
             return descriptors;
         }
@@ -142,6 +145,11 @@ public class StageDirective extends AbstractDirective<StageDirective> {
                 case STAGES:
                     result.append("stages {\n");
                     result.append("// One or more stages need to be included within the stages block.\n");
+                    result.append("}\n");
+                    break;
+                case MATRIX:
+                    result.append("matrix {\n");
+                    result.append("// matrix need to be included.\n");
                     result.append("}\n");
                     break;
                 default:

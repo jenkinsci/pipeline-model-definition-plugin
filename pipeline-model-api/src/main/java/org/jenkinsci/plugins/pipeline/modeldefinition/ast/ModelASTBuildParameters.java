@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -13,7 +12,7 @@ import java.util.List;
  *
  * @author Andrew Bayer
  */
-public final class ModelASTBuildParameters extends ModelASTElement {
+public final class ModelASTBuildParameters extends ModelASTElement implements ModelASTElementContainer {
     private List<ModelASTBuildParameter> parameters = new ArrayList<>();
 
     public ModelASTBuildParameters(Object sourceLocation) {
@@ -21,38 +20,29 @@ public final class ModelASTBuildParameters extends ModelASTElement {
     }
 
     @Override
+    @Nonnull
     public JSONObject toJSON() {
-        final JSONArray a = new JSONArray();
-        for (ModelASTBuildParameter parameter : parameters) {
-            a.add(parameter.toJSON());
-        }
-        return new JSONObject().accumulate("parameters", a);
+        return toJSONObject("parameters", parameters);
     }
 
     @Override
     public void validate(@Nonnull final ModelValidator validator) {
         validator.validateElement(this);
-        for (ModelASTBuildParameter parameter: parameters) {
-            parameter.validate(validator);
-        }
+        validate(validator, parameters);
     }
 
     @Override
-    public String toGroovy() {
-        StringBuilder result = new StringBuilder("parameters {\n");
-        for (ModelASTBuildParameter parameter : parameters) {
-            result.append(parameter.toGroovy()).append("\n");
-        }
-        result.append("}\n");
-        return result.toString();
-    }
+    @Nonnull
+    public String toGroovy() { return toGroovyBlock("parameters", parameters); }
 
     @Override
     public void removeSourceLocation() {
         super.removeSourceLocation();
-        for (ModelASTBuildParameter parameter: parameters) {
-            parameter.removeSourceLocation();
-        }
+        removeSourceLocationsFrom(parameters);
+    }
+
+    public boolean isEmpty() {
+        return parameters.isEmpty();
     }
 
     public List<ModelASTBuildParameter> getParameters() {

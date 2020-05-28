@@ -67,7 +67,11 @@ class ModelValidatorImpl implements ModelValidator {
     private transient FlowExecution execution
     private transient List<DeclarativeValidatorContributor> validatorContributors
 
-    ModelValidatorImpl(@Nonnull ErrorCollector e, FlowExecution execution = null) {
+    ModelValidatorImpl(@Nonnull ErrorCollector e) {
+        this(e, [], null)
+    }
+
+    ModelValidatorImpl(@Nonnull ErrorCollector e, FlowExecution execution) {
         this(e, [], execution)
     }
 
@@ -133,7 +137,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         // Only do the symbol lookup if we have a Jenkins instance and condition/branch aren't null. That only happens
         // when there's a failure at parse-time.
-        if (Jenkins.getInstance() != null && buildCondition.condition != null && buildCondition.branch != null) {
+        if (Jenkins.getInstanceOrNull() != null && buildCondition.condition != null && buildCondition.branch != null) {
             if (SymbolLookup.get().find(BuildCondition.class, buildCondition.condition) == null) {
                 errorCollector.error(buildCondition,
                     Messages.ModelValidatorImpl_InvalidBuildCondition(buildCondition.condition, BuildCondition.getOrderedConditionNames()))
@@ -183,7 +187,7 @@ class ModelValidatorImpl implements ModelValidator {
 
                 // Can't do tools validation without a Jenkins instance, so move on if that's not available, or if the tool value is a
                 // non-literal - we allow users to shoot themselves there.
-                if (Jenkins.getInstance() != null && v.isLiteral()) {
+                if (Jenkins.getInstanceOrNull() != null && v.isLiteral()) {
                     // Not bothering with a null check here since we could only get this far if the ToolDescriptor's available in the first place.
                     ToolDescriptor desc = ToolInstallation.all().find { it.getId() == Tools.typeForKey(k.key) }
                     def installer = desc.getInstallations().find { it.name == (String) v.value }
@@ -288,6 +292,7 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private boolean validateDescribable(ModelASTElement element, String name,
                                         ModelASTArgumentList args,
                                         DescribableModel<? extends Describable> model,
@@ -403,7 +408,7 @@ class ModelValidatorImpl implements ModelValidator {
 
         // We can't do step validation without a Jenkins instance, so move on.
         // Also, special casing of parallel due to it not having a DataBoundConstructor.
-        if (Jenkins.getInstance() != null && step.name != "parallel") {
+        if (Jenkins.getInstanceOrNull() != null && step.name != "parallel") {
             Descriptor desc = lookup.lookupStepFirstThenFunction(step.name)
             DescribableModel<? extends Describable> model = lookup.modelForStepFirstThenFunction(step.name)
 
@@ -418,7 +423,7 @@ class ModelValidatorImpl implements ModelValidator {
     boolean validateElement(@Nonnull ModelASTMethodCall meth) {
         boolean valid = true
 
-        if (Jenkins.getInstance() != null) {
+        if (Jenkins.getInstanceOrNull() != null) {
             DescribableModel<? extends Describable> model
 
             List<Class<? extends Describable>> parentDescribables = Utils.parentsForMethodCall(meth)
@@ -620,6 +625,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(opt, valid)
     }
 
+    @SuppressFBWarnings(value = ["REC_CATCH_EXCEPTION", "UPM_UNCALLED_PRIVATE_METHOD"])
     private boolean validateParameterType(ModelASTValue v, Class erasedType, ModelASTKey k = null) {
         if (v.isLiteral()) {
             try {
@@ -668,6 +674,10 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(pipelineDef, valid)
     }
 
+    boolean validateElement(ModelASTStageBase stage) {
+        return true
+    }
+
     boolean validateElement(@Nonnull ModelASTStage stage, boolean isWithinParallel) {
         boolean valid = true
         def stepsStagesParallelCount = 0
@@ -677,19 +687,19 @@ class ModelValidatorImpl implements ModelValidator {
         if (stage.parallel != null) {
             stepsStagesParallelCount += 1
         }
+        if (stage.matrix != null) {
+            stepsStagesParallelCount += 1
+        }
         if (stage.stages != null) {
             stepsStagesParallelCount += 1
         }
 
-        if (isWithinParallel && (stage.branches.size() > 1 || stage.parallel != null)) {
+        if (isWithinParallel && (stage.branches.size() > 1 || stage.parallel != null || stage.matrix != null)) {
             ModelASTElement errorElement
-            if (stage.parallel != null) {
-                def firstParallel = stage.parallel.stages.first()
-                if (firstParallel instanceof ModelASTElement) {
-                    errorElement = firstParallel
-                } else {
-                    errorElement = stage
-                }
+            if (stage.matrix != null) {
+                errorElement = stage.matrix
+            } else if (stage.parallel != null) {
+                errorElement = stage.parallel
             } else {
                 errorElement = stage.branches.first()
             }
@@ -701,7 +711,7 @@ class ModelValidatorImpl implements ModelValidator {
         } else if (stepsStagesParallelCount == 0) {
             errorCollector.error(stage, Messages.ModelValidatorImpl_NothingForStage(stage.name))
             valid = false
-        } else if (stage.parallel != null) {
+        } else if (stage.parallel != null || stage.matrix != null) {
             if (stage.agent != null) {
                 errorCollector.error(stage.agent, Messages.ModelValidatorImpl_AgentInNestedStages(stage.name))
                 valid = false
@@ -739,6 +749,115 @@ class ModelValidatorImpl implements ModelValidator {
         }
 
         return validateFromContributors(stages, valid)
+    }
+
+    boolean validateElement(@Nonnull ModelASTParallel parallel) {
+        return validateElement((ModelASTStages)parallel)
+    }
+
+    boolean validateElement(@Nonnull ModelASTMatrix matrix) {
+        boolean valid = true
+
+        if (matrix.axes == null) {
+            errorCollector.error(matrix, Messages.ModelValidatorImpl_RequiredSection("axes"))
+            valid = false
+        }
+
+        if (matrix.stages == null) {
+            errorCollector.error(matrix, Messages.ModelValidatorImpl_RequiredSection("stages"))
+            valid = false
+        }
+
+        return validateFromContributors(matrix, valid)
+    }
+
+    boolean validateElement(ModelASTAxisContainer axes) {
+        boolean valid = true
+
+        if (axes.axes.isEmpty()) {
+            errorCollector.error(axes, Messages.ModelValidatorImpl_NoAxes())
+            valid = false
+        }
+
+        def names = axes.axes.collect { s ->
+            s.name
+        }
+
+        names.findAll { it != null && it.key != null && it.key != '' && names.count(it) > 1 }.unique().each { name ->
+            errorCollector.error(name, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
+            valid = false
+        }
+
+        return validateFromContributors(axes, valid)
+    }
+
+    boolean validateElement(ModelASTAxis axis) {
+        boolean valid = true
+
+        if (axis.name == null) {
+            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("name"))
+            valid = false
+        } else if (!Utils.validEnvIdentifier(axis.name.key)) {
+            errorCollector.error(axis.name, Messages.ModelValidatorImpl_InvalidIdentifierInEnv(axis.name.key))
+            valid = false
+        }
+
+        if (axis.values.isEmpty()) {
+            errorCollector.error(axis, Messages.ModelValidatorImpl_RequiredSection("values"))
+        }
+
+        axis.values.findAll { axis.values.count(it) > 1 }.unique().each { value ->
+            errorCollector.error(value, Messages.ModelValidatorImpl_DuplicateAxisValue(value.value))
+            valid = false
+        }
+
+        axis.values.each { value ->
+            if (!value.literal) {
+                errorCollector.error(value, Messages.ModelParser_ExpectedStringLiteralButGot(value.value))
+                valid = false
+            }
+        }
+
+        return validateFromContributors(axis, valid)
+    }
+
+    boolean validateElement(ModelASTExcludes excludes) {
+        boolean valid = true
+
+        if (excludes.excludes.isEmpty()) {
+            errorCollector.error(excludes, Messages.ModelValidatorImpl_NoExcludes())
+            valid = false
+        }
+
+        return validateFromContributors(excludes, valid)
+    }
+
+    boolean validateElement(ModelASTExclude exclude) {
+        boolean valid = true
+
+        if (exclude.excludeAxes.isEmpty()) {
+            errorCollector.error(exclude, Messages.ModelValidatorImpl_NoAxes())
+            valid = false
+        }
+
+        def names = exclude.excludeAxes.collect { s ->
+            s.name
+        }
+
+        names.findAll { it != null && it.key != null && it.key != '' && names.count(it) > 1 }.unique().each { name ->
+            errorCollector.error(name, Messages.ModelValidatorImpl_DuplicateAxisName(name.getKey()))
+            valid = false
+        }
+
+        return validateFromContributors(exclude, valid)
+    }
+
+    boolean validateElement(ModelASTExcludeAxis axis) {
+        boolean valid = true
+
+        // validation is the  by ModelASTExcludeAxis
+
+        return validateFromContributors(axis, valid)
     }
 
     boolean validateElement(@Nonnull ModelASTAgent agent) {
@@ -792,6 +911,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(value, true)
     }
 
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
     private boolean validateFromContributors(ModelASTElement element, boolean isValid, boolean isNested = false) {
         boolean contributorsValid = getContributors().collect { contributor ->
             List<String> errors
