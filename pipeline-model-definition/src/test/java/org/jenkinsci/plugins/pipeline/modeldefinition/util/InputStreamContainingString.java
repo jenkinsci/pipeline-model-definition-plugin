@@ -27,7 +27,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.util;
 
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
@@ -68,12 +67,10 @@ public class InputStreamContainingString extends TypeSafeMatcher<InputStream> {
                 .appendDescriptionOf(contentMatcher);
     }
 
-    @Factory
     public static Matcher<InputStream> inputStream(Matcher<String> matcher, @CheckForNull Charset encoding) {
         return new InputStreamContainingString(matcher, encoding);
     }
 
-    @Factory
     public static Matcher<InputStream> inputStream(Matcher<String> matcher) {
         return inputStream(matcher, null);
     }
