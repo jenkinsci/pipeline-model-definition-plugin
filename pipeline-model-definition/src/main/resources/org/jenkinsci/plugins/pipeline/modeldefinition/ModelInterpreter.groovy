@@ -25,8 +25,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.FilePath
 import hudson.Launcher
 import hudson.model.Result
@@ -812,7 +810,6 @@ class ModelInterpreter implements Serializable {
      *
      * @author Falko Modler
      */
-    @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
     private class WhenEvaluator implements Serializable {
 
         final StageConditionals when

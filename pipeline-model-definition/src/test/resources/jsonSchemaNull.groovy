@@ -24,9 +24,9 @@
 
 pipeline {
     agent {
-        docker {
-            image "httpd:2.4.12"
-            args null
+        label {
+            label "some-label"
+            customWorkspace null
         }
     }
     stages {

@@ -28,17 +28,17 @@
     }]
   }],
   "agent":   {
-    "type": "docker",
+    "type": "node",
     "arguments":     [
       {
-        "key": "image",
+        "key": "label",
         "value":         {
           "isLiteral": true,
-          "value": "httpd:2.4.12"
+          "value": "some-label"
         }
       },
       {
-        "key": "args",
+        "key": "customWorkspace",
         "value":         {
           "isLiteral": true,
           "value": null

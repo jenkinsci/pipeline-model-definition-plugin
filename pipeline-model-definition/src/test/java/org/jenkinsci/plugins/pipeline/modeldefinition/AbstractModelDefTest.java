@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
 import static com.jcabi.matchers.RegexMatchers.containsPattern;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.stringContainsInOrder;
-import static org.hamcrest.text.IsEqualIgnoringWhiteSpace.equalToIgnoringWhiteSpace;
+import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
@@ -138,7 +138,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             "simpleScript",
             "postStage/simplePostBuild",
             "simpleTools",
-            "agent/agentInStageAutoCheckout",
             "options/simpleJobProperties",
             "simpleTriggers",
             "simpleParameters",
@@ -175,7 +174,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     public static final List<String> CONVERT_ONLY_SHOULD_PASS_CONFIGS = ImmutableList.of(
             "simpleInput",
             "parametersInInput",
-            "agent/agentDocker",
             "libraries/globalLibrarySuccess",
             "jsonSchemaNull",
             "parallel/parallelStagesFailFast",
@@ -516,7 +514,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         }
 
         public ExpectationsBuilder archives(String fileName, String content) {
-            return buildMatches(HasArchived.hasArchivedString(equalTo(fileName), equalToIgnoringWhiteSpace(content)));
+            return buildMatches(HasArchived.hasArchivedString(equalTo(fileName), equalToCompressingWhiteSpace(content)));
         }
 
         public ExpectationsBuilder archives(String fileName, Matcher<String> content) {

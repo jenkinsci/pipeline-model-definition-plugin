@@ -65,7 +65,7 @@ public class ParallelTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(10);
-        s.setLabelString("first-agent some-label docker");
+        s.setLabelString("first-agent some-label");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
         s2 = j.createOnlineSlave();
         s2.setLabelString("second-agent");
