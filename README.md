@@ -18,7 +18,7 @@ The Pipeline Model Definition Plugin provides a config-like syntax for defining 
 - To start developing plugin: 
 - Clone the plugin repository
 
-`cd pipeline-model-definition-plugin && mvn install && mvn hpi:run`
+`cd pipeline-model-definition && mvn install && mvn hpi:run`
 
 ### API extension
 For functionality extending, and the API information, consult [EXTENDING.md](EXTENDING.md)
@@ -26,7 +26,6 @@ For functionality extending, and the API information, consult [EXTENDING.md](EXT
 ## License
 
 [MIT License](https://opensource.org/licenses/mit-license.php)
-
 
 
 
