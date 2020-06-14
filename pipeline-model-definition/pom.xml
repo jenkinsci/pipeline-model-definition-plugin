@@ -278,6 +278,20 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Added to resolve failures in tests involving input() during the CI build -->
+    <dependency>
+      <groupId>org.jenkins-ci</groupId>
+      <artifactId>trilead-ssh2</artifactId>
+      <version>build-217-jenkins-14</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- And this is needed for the above -->
+    <dependency>
+      <groupId>net.i2p.crypto</groupId>
+      <artifactId>eddsa</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+
   </dependencies>
 
   <properties>
