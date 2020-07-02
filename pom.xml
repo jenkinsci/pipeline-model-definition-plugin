@@ -349,7 +349,7 @@
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
     <workflow-support-plugin.version>3.4</workflow-support-plugin.version>
     <scm-api.version>2.6.3</scm-api.version>
-    <workflow-cps.version>2.81-rc2492.83316f41dee4</workflow-cps.version><!-- https://github.com/jenkinsci/workflow-cps-plugin/pull/362 -->
+    <workflow-cps.version>2.81</workflow-cps.version>
   </properties>
 
   <repositories>
