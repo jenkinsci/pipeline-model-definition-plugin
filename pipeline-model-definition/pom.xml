@@ -180,11 +180,6 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>pipeline-input-step</artifactId>
     </dependency>
-    <!-- Added to resolve failures in tests. -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>ssh-credentials</artifactId>
-    </dependency>
 
     <!-- TEST deps -->
     <dependency>
@@ -281,19 +276,6 @@
       <artifactId>scm-api</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-    </dependency>
-
-    <!-- Added to resolve failures in tests. -->
-    <dependency>
-      <groupId>org.jenkins-ci</groupId>
-      <artifactId>trilead-ssh2</artifactId>
-      <version>build-217-jenkins-14</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.i2p.crypto</groupId>
-      <artifactId>eddsa</artifactId>
-      <version>0.3.0</version>
     </dependency>
 
   </dependencies>
