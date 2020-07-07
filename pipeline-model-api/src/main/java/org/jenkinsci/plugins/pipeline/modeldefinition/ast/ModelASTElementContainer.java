@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Interface for elements that contain other elements.

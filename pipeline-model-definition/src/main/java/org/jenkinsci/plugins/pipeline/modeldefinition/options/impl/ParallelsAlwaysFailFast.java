@@ -30,7 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class ParallelsAlwaysFailFast extends DeclarativeOption {
 
@@ -43,7 +43,7 @@ public class ParallelsAlwaysFailFast extends DeclarativeOption {
     @Extension @Symbol("parallelsAlwaysFailFast")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Parallel stages always fail fast";
         }

@@ -30,7 +30,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,26 +52,26 @@ public class EnvironmentDirective extends AbstractDirective<EnvironmentDirective
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<EnvironmentDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "environment";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Environment";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return Collections.emptyList();
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull EnvironmentDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull EnvironmentDirective directive) {
             StringBuilder result = new StringBuilder("environment {\n");
             if (!directive.getEnv().isEmpty()) {
                 for (NameAndValue e : directive.getEnv()) {

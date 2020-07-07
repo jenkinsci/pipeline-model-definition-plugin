@@ -32,8 +32,8 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*;
 
@@ -42,8 +42,8 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Construct the new {@link ClosureExpression} for the given stage.
      */
-    @Nonnull
-    public final ClosureExpression handleStage(@Nonnull ModelASTStage stage, @Nonnull ClosureExpression body) {
+    @NonNull
+    public final ClosureExpression handleStage(@NonNull ModelASTStage stage, @NonNull ClosureExpression body) {
         if (stage.getBranches().size() == 1) {
             ModelASTBranch branch = stage.getBranches().get(0);
             body.setCode(handleBranch(branch));
@@ -83,8 +83,8 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Construct the new {@link ClosureExpression} for the given build condition.
      */
-    @Nonnull
-    public final ClosureExpression handleBuildCondition(@Nonnull ModelASTBuildCondition condition, @Nonnull ClosureExpression body) {
+    @NonNull
+    public final ClosureExpression handleBuildCondition(@NonNull ModelASTBuildCondition condition, @NonNull ClosureExpression body) {
         body.setCode(handleBranch(condition.getBranch()));
         return body;
     }
@@ -92,8 +92,8 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Construct the new {@link BlockStatement} for the given branch.
      */
-    @Nonnull
-    public final BlockStatement handleBranch(@Nonnull ModelASTBranch branch) {
+    @NonNull
+    public final BlockStatement handleBranch(@NonNull ModelASTBranch branch) {
         BlockStatement newBlock = block();
 
         for (ModelASTStep s : branch.getSteps()) {
@@ -118,8 +118,8 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Call {@link #transformStep(ModelASTStep, MethodCallExpression)} if appropriate, after handling any nested steps as well.
      */
-    @Nonnull
-    public final MethodCallExpression handleStep(@Nonnull ModelASTStep step, @Nonnull MethodCallExpression methodCall) {
+    @NonNull
+    public final MethodCallExpression handleStep(@NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall) {
         // No transformation inside script blocks.
         if (step instanceof AbstractModelASTCodeBlock) {
             return methodCall;
@@ -150,11 +150,11 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
         return transformStep(step, methodCall);
     }
 
-    @Nonnull
-    public abstract MethodCallExpression transformStep(@Nonnull ModelASTStep step, @Nonnull MethodCallExpression methodCall);
+    @NonNull
+    public abstract MethodCallExpression transformStep(@NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall);
 
     @CheckForNull
-    private MethodCallExpression getParallelMethod(@Nonnull Statement stmt) {
+    private MethodCallExpression getParallelMethod(@NonNull Statement stmt) {
         // Make sure we've got a block.
         if (stmt instanceof BlockStatement) {
             BlockStatement block = (BlockStatement)stmt;
@@ -190,8 +190,8 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Apply step transformation to the given stage for all {@link StepRuntimeTransformerContributor}s.
      */
-    @Nonnull
-    public static ClosureExpression transformStage(@Nonnull ModelASTStage stage, @Nonnull ClosureExpression body) {
+    @NonNull
+    public static ClosureExpression transformStage(@NonNull ModelASTStage stage, @NonNull ClosureExpression body) {
         for (StepRuntimeTransformerContributor c : all()) {
             body = c.handleStage(stage, body);
         }
@@ -202,9 +202,9 @@ public abstract class StepRuntimeTransformerContributor implements ExtensionPoin
     /**
      * Apply step transformation to the given build condition for all {@link StepRuntimeTransformerContributor}s.
      */
-    @Nonnull
-    public static ClosureExpression transformBuildCondition(@Nonnull ModelASTBuildCondition condition,
-                                                            @Nonnull ClosureExpression body) {
+    @NonNull
+    public static ClosureExpression transformBuildCondition(@NonNull ModelASTBuildCondition condition,
+                                                            @NonNull ClosureExpression body) {
         for (StepRuntimeTransformerContributor c : all()) {
             body = c.handleBuildCondition(condition, body);
         }

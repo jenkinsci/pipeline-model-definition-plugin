@@ -38,7 +38,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 public class TagConditional extends DeclarativeStageConditional<TagConditional> {
     private final String pattern;

@@ -30,7 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 
@@ -64,8 +64,8 @@ public class StepRuntimeTransformerContributorTest extends AbstractModelDefTest 
     @TestExtension
     public static class EchoTransformer extends StepRuntimeTransformerContributor {
         @Override
-        @Nonnull
-        public MethodCallExpression transformStep(@Nonnull ModelASTStep step, @Nonnull MethodCallExpression methodCall) {
+        @NonNull
+        public MethodCallExpression transformStep(@NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall) {
             if (step.getName().equals("echo")) {
                 ArgumentListExpression newArgs = new ArgumentListExpression();
                 TupleExpression oldArgs = (TupleExpression)methodCall.getArguments();
@@ -86,8 +86,8 @@ public class StepRuntimeTransformerContributorTest extends AbstractModelDefTest 
     @TestExtension
     public static class TimeoutTransformer extends StepRuntimeTransformerContributor {
         @Override
-        @Nonnull
-        public MethodCallExpression transformStep(@Nonnull ModelASTStep step, @Nonnull MethodCallExpression methodCall) {
+        @NonNull
+        public MethodCallExpression transformStep(@NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall) {
             if (step.getName().equals("timeout")) {
                 ArgumentListExpression newArgs = new ArgumentListExpression();
                 TupleExpression oldArgs = (TupleExpression)methodCall.getArguments();

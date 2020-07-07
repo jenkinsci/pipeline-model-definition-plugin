@@ -11,7 +11,7 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -55,7 +55,7 @@ public class ModelASTStep extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -63,13 +63,13 @@ public class ModelASTStep extends ModelASTElement {
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, args);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         // Default to using whatever the original args structure is.
         ModelASTArgumentList argList = args;

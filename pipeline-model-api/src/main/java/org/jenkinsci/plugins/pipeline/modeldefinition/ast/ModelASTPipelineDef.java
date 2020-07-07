@@ -4,7 +4,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents the parsed pipeline definition for visual pipeline editor. Corresponds to {@code Root}.
@@ -28,7 +28,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         JSONObject a = new JSONObject()
                 .elementOpt("stages", toJSON(stages))
@@ -45,13 +45,13 @@ public final class ModelASTPipelineDef extends ModelASTElement {
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, stages, postBuild, environment, agent, tools, options, parameters, triggers, libraries);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder()
             .append("pipeline {\n")
@@ -78,7 +78,7 @@ public final class ModelASTPipelineDef extends ModelASTElement {
         return toIndentedGroovy(toGroovy());
     }
 
-    public static String toIndentedGroovy(@Nonnull String orig) {
+    public static String toIndentedGroovy(@NonNull String orig) {
         StringBuilder result = new StringBuilder();
 
         int indentCount = 0;

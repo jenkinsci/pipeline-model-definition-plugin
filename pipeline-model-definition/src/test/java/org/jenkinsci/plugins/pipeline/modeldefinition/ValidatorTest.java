@@ -47,8 +47,8 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 
 import static org.junit.Assert.assertNotNull;
@@ -886,13 +886,13 @@ public class ValidatorTest extends AbstractModelDefTest {
         public static int count = 0;
 
         @Override
-        public String validateElement(@Nonnull ModelASTPostBuild postBuild, @CheckForNull FlowExecution execution) {
+        public String validateElement(@NonNull ModelASTPostBuild postBuild, @CheckForNull FlowExecution execution) {
             count++;
             return "validate " + count;
         }
 
         @Override
-        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
+        public String validateElement(@NonNull ModelASTOption option, @CheckForNull FlowExecution execution) {
             count++;
             return "validate option " + count;
         }
@@ -901,7 +901,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     @TestExtension
     public static class RejectTestProperty extends DeclarativeValidatorContributor {
         @Override
-        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
+        public String validateElement(@NonNull ModelASTOption option, @CheckForNull FlowExecution execution) {
             if (option.getName() != null && option.getName().equals("testProperty")) {
                 return "testProperty is rejected";
             } else {
@@ -920,7 +920,7 @@ public class ValidatorTest extends AbstractModelDefTest {
         @Symbol("testProperty")
         public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
             @Override
-            @Nonnull
+            @NonNull
             public String getDisplayName() {
                 return "Test job property to be rejected by a validator contributor.";
             }
@@ -1080,7 +1080,7 @@ public class ValidatorTest extends AbstractModelDefTest {
     public static class RejectEchoStep extends DeclarativeValidatorContributor {
         @CheckForNull
         @Override
-        public String validateElement(@Nonnull ModelASTStep step, @CheckForNull FlowExecution execution) {
+        public String validateElement(@NonNull ModelASTStep step, @CheckForNull FlowExecution execution) {
             if (step.getName() != null && step.getName().equals("echo")) {
                 return "Echo is banned";
             }

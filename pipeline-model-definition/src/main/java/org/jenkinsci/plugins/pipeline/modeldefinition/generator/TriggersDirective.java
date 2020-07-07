@@ -33,7 +33,7 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -49,7 +49,7 @@ public class TriggersDirective extends AbstractDirective<TriggersDirective> {
         }
     }
 
-    @Nonnull
+    @NonNull
     public List<Trigger> getTriggers() {
         return triggers;
     }
@@ -57,19 +57,19 @@ public class TriggersDirective extends AbstractDirective<TriggersDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<TriggersDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "triggers";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Triggers";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return ExtensionList.lookup(TriggerDescriptor.class).stream()
                     .filter(d -> DirectiveDescriptor.symbolForDescriptor(d) != null)
@@ -78,8 +78,8 @@ public class TriggersDirective extends AbstractDirective<TriggersDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull TriggersDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull TriggersDirective directive) {
             StringBuilder result = new StringBuilder("triggers {\n");
             for (Trigger trigger : directive.triggers) {
                 result.append(Snippetizer.object2Groovy(UninstantiatedDescribable.from(trigger)));

@@ -58,7 +58,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -584,7 +584,7 @@ public class DirectiveGeneratorTest {
      * @param desc         The describable we'll translate to JSON.
      * @param responseText Expected directive snippet to be generated
      */
-    private void assertGenerateDirective(@Nonnull AbstractDirective desc, @Nonnull String responseText) throws Exception {
+    private void assertGenerateDirective(@NonNull AbstractDirective desc, @NonNull String responseText) throws Exception {
         // First, make sure the expected response text actually matches the toGroovy for the directive.
         assertEquals(desc.toGroovy(true), responseText);
 

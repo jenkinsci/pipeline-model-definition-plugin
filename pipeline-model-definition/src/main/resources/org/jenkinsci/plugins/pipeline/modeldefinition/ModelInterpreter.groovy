@@ -39,8 +39,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
 
@@ -490,7 +490,7 @@ class ModelInterpreter implements Serializable {
      */
     @NonCPS
     private List<Map<String, Object>> createWithCredentialsParameters(
-            @Nonnull Map<String, CredentialWrapper> credentials) {
+            @NonNull Map<String, CredentialWrapper> credentials) {
         List<Map<String, Object>> parameters = []
         credentials.each { k, v ->
             v.addParameters(k, parameters)
