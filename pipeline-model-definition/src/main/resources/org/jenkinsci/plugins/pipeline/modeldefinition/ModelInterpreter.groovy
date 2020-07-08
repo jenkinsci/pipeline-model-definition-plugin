@@ -44,7 +44,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
  * CPS-transformed code for actually performing the build.
  *
  * WARNING: Avoid using 3rd-party non-Jenkins dependencies (including annotations)
- * in this code, because even they work in tests, they may not be available at
+ * in this code, because even if they work in tests, they may not be available at
  * runtime due to class loading differences.
  *
  * @author Andrew Bayer
