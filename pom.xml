@@ -227,7 +227,7 @@
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
-    <jackson.version>2.9.8</jackson.version>
+    <jackson.version>2.11.0</jackson.version>
     <workflow-multibranch.version>2.16</workflow-multibranch.version>
     <workflow-cps.version>2.81</workflow-cps.version>
   </properties>
