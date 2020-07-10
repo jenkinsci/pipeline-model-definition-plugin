@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * An individual pair of a {@link ModelASTKey} and a {@link ModelASTMethodArg}
@@ -19,7 +19,7 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("key", toJSON(key))
@@ -27,12 +27,12 @@ public final class ModelASTKeyValueOrMethodCallPair extends ModelASTElement impl
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validate(validator, key, value);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return key.toGroovy() + ": " + value.toGroovy();
     }

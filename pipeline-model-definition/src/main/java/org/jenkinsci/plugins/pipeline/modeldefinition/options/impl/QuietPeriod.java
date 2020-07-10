@@ -30,7 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class QuietPeriod extends DeclarativeOption {
     private int quietPeriod;
@@ -47,7 +47,7 @@ public class QuietPeriod extends DeclarativeOption {
     @Extension @Symbol("quietPeriod")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Set the quiet period for the job";
         }

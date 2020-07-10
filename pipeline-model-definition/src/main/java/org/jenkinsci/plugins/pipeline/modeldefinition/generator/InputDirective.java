@@ -36,7 +36,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.List;
 
@@ -105,19 +105,19 @@ public class InputDirective extends AbstractDirective<InputDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<InputDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "input";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Input";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return Collections.singletonList(StepDescriptor.byFunctionName("input"));
         }
@@ -135,8 +135,8 @@ public class InputDirective extends AbstractDirective<InputDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull InputDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull InputDirective directive) {
             if (directive.getMessage() != null) {
                 StringBuilder result = new StringBuilder("input {\n");
                 result.append("message ").append(Snippetizer.object2Groovy(directive.getMessage())).append("\n");

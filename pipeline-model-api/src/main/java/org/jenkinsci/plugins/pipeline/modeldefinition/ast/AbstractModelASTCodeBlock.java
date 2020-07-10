@@ -25,7 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -45,7 +45,7 @@ public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder(getName()).append(" {\n");
         result.append(codeBlockAsString());

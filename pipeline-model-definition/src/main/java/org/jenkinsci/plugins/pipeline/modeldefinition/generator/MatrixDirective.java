@@ -28,7 +28,7 @@ import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,19 +48,19 @@ public class MatrixDirective extends AbstractDirective<MatrixDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<MatrixDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "matrix";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Matrix";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
             descriptors.add(Jenkins.get().getDescriptorByType(AxesDirective.DescriptorImpl.class));
@@ -78,8 +78,8 @@ public class MatrixDirective extends AbstractDirective<MatrixDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull MatrixDirective matrix) {
+        @NonNull
+        public String toGroovy(@NonNull MatrixDirective matrix) {
             StringBuilder result = new StringBuilder("matrix {\n" );
             if( matrix.axes != null){
                 matrix.axes.stream().forEach( a -> result.append(a.toGroovy(false)).append("\n"));

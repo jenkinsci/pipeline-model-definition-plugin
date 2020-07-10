@@ -45,7 +45,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.EnvironmentName
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.EnvironmentNames.*;

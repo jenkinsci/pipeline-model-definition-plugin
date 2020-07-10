@@ -30,8 +30,8 @@ import hudson.model.ParameterDefinition;
 import hudson.triggers.Trigger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -94,7 +94,7 @@ public class DeclarativeJobPropertyTrackerAction extends InvisibleAction {
      *
      * @param copyFrom a non-null {@link DeclarativeJobPropertyTrackerAction}
      */
-    public DeclarativeJobPropertyTrackerAction(@Nonnull DeclarativeJobPropertyTrackerAction copyFrom) {
+    public DeclarativeJobPropertyTrackerAction(@NonNull DeclarativeJobPropertyTrackerAction copyFrom) {
         this.jobProperties.addAll(copyFrom.getJobProperties());
         this.triggers.addAll(copyFrom.getTriggers());
         this.parameters.addAll(copyFrom.getParameters());

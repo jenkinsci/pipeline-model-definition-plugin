@@ -6,7 +6,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression
 import org.codehaus.groovy.ast.expr.TupleExpression
 import org.codehaus.groovy.ast.stmt.Statement
 
-import javax.annotation.Nullable
+import edu.umd.cs.findbugs.annotations.Nullable
 
 /**
  * Pattern match for the following Groovy construct:

@@ -34,7 +34,7 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -55,19 +55,19 @@ public class AgentDirective extends AbstractDirective<AgentDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<AgentDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "agent";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Agent";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
             List<DeclarativeAgentDescriptor> descs = DeclarativeAgentDescriptor.all().stream()
@@ -82,8 +82,8 @@ public class AgentDirective extends AbstractDirective<AgentDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull AgentDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull AgentDirective directive) {
             if (directive.agent != null) {
                 DeclarativeAgentDescriptor desc = directive.agent.getDescriptor();
 

@@ -28,7 +28,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +46,7 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -55,13 +55,13 @@ public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWh
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, children, args);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
 
         StringBuilder result = new StringBuilder();

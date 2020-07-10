@@ -31,7 +31,7 @@ import org.jenkinsci.plugins.credentialsbinding.impl.FileBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,19 +40,19 @@ import java.util.Map;
 @Extension
 public class FileCredentialsHandler extends CredentialsBindingHandler<FileCredentials> {
 
-    @Nonnull
+    @NonNull
     @Override
     public List<MultiBinding<FileCredentials>> toBindings(String varName, String credentialsId) {
         return Collections.<MultiBinding<FileCredentials>>singletonList(new FileBinding(varName, credentialsId));
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Class<? extends StandardCredentials> type() {
         return FileCredentials.class;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
         Map<String, Object> map = new HashMap<>();

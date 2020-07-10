@@ -68,7 +68,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -780,7 +780,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertFalse(json.get("data").get("success").asBoolean());
     }
 
-    private HtmlPage restartFromStageInUI(@Nonnull WorkflowRun original, @Nonnull String stageName) throws Exception {
+    private HtmlPage restartFromStageInUI(@NonNull WorkflowRun original, @NonNull String stageName) throws Exception {
         RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
         assertNotNull(action);
         assertTrue(action.isRestartEnabled());
@@ -792,7 +792,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         return j.submit(form);
     }
 
-    private void assertStageIsNotExecuted(@Nonnull String stageName, @Nonnull WorkflowRun run, @Nonnull FlowExecution execution) {
+    private void assertStageIsNotExecuted(@NonNull String stageName, @NonNull WorkflowRun run, @NonNull FlowExecution execution) {
         List<FlowNode> heads = execution.getCurrentHeads();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode startStage = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName(stageName));

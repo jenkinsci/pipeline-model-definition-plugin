@@ -38,8 +38,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -110,7 +110,7 @@ public class BranchConditional extends DeclarativeStageConditional<BranchConditi
     @Symbol("branch")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<BranchConditional> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Execute the stage if the current branch matches a pattern";
         }
