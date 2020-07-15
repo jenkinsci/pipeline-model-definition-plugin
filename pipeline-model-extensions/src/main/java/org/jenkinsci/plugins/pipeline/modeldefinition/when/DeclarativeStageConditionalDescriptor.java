@@ -32,9 +32,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescr
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -109,7 +109,7 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
      * @return The corresponding descriptor or null if not found.
      */
     @Nullable
-    public static DeclarativeStageConditionalDescriptor byName(@Nonnull String name) {
+    public static DeclarativeStageConditionalDescriptor byName(@NonNull String name) {
         return (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(DeclarativeStageConditional.class, name);
     }
 }

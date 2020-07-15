@@ -36,8 +36,8 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.regex.Pattern;
 
 /**
@@ -75,7 +75,7 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
     @Symbol("changelog")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeLogConditional> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Execute the stage if a commit message in the changelog matches";
         }

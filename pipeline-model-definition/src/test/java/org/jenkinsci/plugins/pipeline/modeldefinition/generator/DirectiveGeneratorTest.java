@@ -55,6 +55,8 @@ import org.jvnet.hudson.test.ToolInstallations;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -631,5 +633,92 @@ public class DirectiveGeneratorTest {
                 "\n" +
                 "}");
 
+    }
+
+    /**
+     * Tests a form submitting part of the generator.
+     *
+     * @param desc         The describable we'll translate to JSON.
+     * @param responseText Expected directive snippet to be generated
+     */
+    private void assertGenerateDirective(@NonNull AbstractDirective desc, @NonNull String responseText) throws Exception {
+        // First, make sure the expected response text actually matches the toGroovy for the directive.
+        assertEquals(desc.toGroovy(true), responseText);
+
+        // Then submit the form with the appropriate JSON (we generate it from the directive, but it matches the form JSON exactly)
+        JenkinsRule.WebClient wc = r.createWebClient();
+        WebRequest wrs = new WebRequest(new URL(r.getURL(), DirectiveGenerator.GENERATE_URL), HttpMethod.POST);
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", staplerJsonForDescr(desc).toString()));
+        // WebClient.addCrumb *replaces* rather than *adds*:
+        params.add(new NameValuePair(r.jenkins.getCrumbIssuer().getDescriptor().getCrumbRequestField(), r.jenkins.getCrumbIssuer().getCrumb(null)));
+        wrs.setRequestParameters(params);
+        WebResponse response = wc.getPage(wrs).getWebResponse();
+        assertEquals("text/plain", response.getContentType());
+        assertEquals(responseText, response.getContentAsString().trim());
+    }
+
+    private Object getValue(DescribableParameter p, Object o) {
+        Class<?> ownerClass = o.getClass();
+        try {
+            try {
+                return ownerClass.getField(p.getName()).get(o);
+            } catch (NoSuchFieldException x) {
+                // OK, check for getter instead
+            }
+            try {
+                return ownerClass.getMethod("get" + p.getCapitalizedName()).invoke(o);
+            } catch (NoSuchMethodException x) {
+                // one more check
+            }
+            try {
+                return ownerClass.getMethod("is" + p.getCapitalizedName()).invoke(o);
+            } catch (NoSuchMethodException x) {
+                throw new UnsupportedOperationException("no public field ‘" + p.getName() + "’ (or getter method) found in " + ownerClass);
+            }
+        } catch (UnsupportedOperationException x) {
+            throw x;
+        } catch (Exception x) {
+            throw new UnsupportedOperationException(x);
+        }
+    }
+
+    /**
+     * TODO: Should probably move this into structs, since it's pretty dang handy.
+     */
+    private JSONObject staplerJsonForDescr(Describable d) {
+        DescribableModel<?> m = DescribableModel.of(d.getClass());
+
+        JSONObject o = new JSONObject();
+        o.accumulate("stapler-class", d.getClass().getName());
+        o.accumulate("$class", d.getClass().getName());
+        if (d instanceof OptionalJobProperty) {
+            o.accumulate("specified", true);
+        }
+        for (DescribableParameter param : m.getParameters()) {
+            Object v = getValue(param, d);
+            if (v != null) {
+                if (v instanceof Describable) {
+                    o.accumulate(param.getName(), staplerJsonForDescr((Describable) v));
+                } else if (v instanceof List && !((List) v).isEmpty()) {
+                    JSONArray a = new JSONArray();
+                    for (Object obj : (List) v) {
+                        if (obj instanceof Describable) {
+                            a.add(staplerJsonForDescr((Describable) obj));
+                        } else if (obj instanceof Number) {
+                            a.add(obj.toString());
+                        } else {
+                            a.add(obj);
+                        }
+                    }
+                    o.accumulate(param.getName(), a);
+                } else if (v instanceof Number) {
+                    o.accumulate(param.getName(), v.toString());
+                } else {
+                    o.accumulate(param.getName(), v);
+                }
+            }
+        }
+        return o;
     }
 }

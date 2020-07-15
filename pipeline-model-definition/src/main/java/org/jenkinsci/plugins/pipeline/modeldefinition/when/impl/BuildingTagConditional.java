@@ -33,8 +33,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class BuildingTagConditional extends TagConditional {
 
@@ -56,7 +56,7 @@ public class BuildingTagConditional extends TagConditional {
             return ASTParserUtils.transformWhenContentToRuntimeAST(original);
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getScriptClass() {
             return TagConditional.class.getName() + "Script";

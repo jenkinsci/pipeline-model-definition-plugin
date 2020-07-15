@@ -49,7 +49,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
@@ -197,8 +197,8 @@ public class SerializationTest extends AbstractModelDefTest {
     public static class XStreamPickleFactory extends SingleTypedPickleFactory<Describable<?>> {
 
         @Override
-        @Nonnull
-        protected Pickle pickle(@Nonnull Describable<?> d) {
+        @NonNull
+        protected Pickle pickle(@NonNull Describable<?> d) {
             return new XStreamPickle(d);
         }
 

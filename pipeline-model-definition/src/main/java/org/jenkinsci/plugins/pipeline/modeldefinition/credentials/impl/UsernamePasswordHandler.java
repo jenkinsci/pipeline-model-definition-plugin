@@ -32,12 +32,12 @@ import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.*;
 
 @Extension
 public class UsernamePasswordHandler extends CredentialsBindingHandler<StandardUsernamePasswordCredentials> {
-    @Nonnull
+    @NonNull
     @Override
     public List<MultiBinding<StandardUsernamePasswordCredentials>> toBindings(String varName, String credentialsId) {
         List<MultiBinding<StandardUsernamePasswordCredentials>> bindings = new ArrayList<>();
@@ -48,13 +48,13 @@ public class UsernamePasswordHandler extends CredentialsBindingHandler<StandardU
         return bindings;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public Class<? extends StandardCredentials> type() {
         return StandardUsernamePasswordCredentials.class;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
         Map<String, Object> map = new HashMap<>();

@@ -52,8 +52,8 @@ import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -98,12 +98,12 @@ class ModelParser implements Parser {
         this(sourceUnit, [], execution)
     }
 
-    ModelParser(SourceUnit sourceUnit, @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators) {
+    ModelParser(SourceUnit sourceUnit, @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators) {
         this(sourceUnit, enabledOptionalValidators, null)
     }
 
     ModelParser(SourceUnit sourceUnit,
-                @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+                @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
                 @CheckForNull FlowExecution execution) {
         this.sourceUnit = sourceUnit
         this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
@@ -281,7 +281,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTStages parseStages(Statement stmt) {
+    @NonNull ModelASTStages parseStages(Statement stmt) {
         def r = new ModelASTStages(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -298,7 +298,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTParallel parseParallel(Statement stmt) {
+    @NonNull ModelASTParallel parseParallel(Statement stmt) {
         def r = new ModelASTParallel(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -315,7 +315,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTMatrix parseMatrix(Statement stmt) {
+    @NonNull ModelASTMatrix parseMatrix(Statement stmt) {
         def r = new ModelASTMatrix(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -379,7 +379,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTAxisContainer parseAxes(Statement stmt) {
+    @NonNull ModelASTAxisContainer parseAxes(Statement stmt) {
         def a = new ModelASTAxisContainer(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -396,7 +396,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTAxis parseAxis(Statement stmt) {
+    @NonNull ModelASTAxis parseAxis(Statement stmt) {
         def a = new ModelASTAxis(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -444,7 +444,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTExcludes parseExcludes(Statement stmt) {
+    @NonNull ModelASTExcludes parseExcludes(Statement stmt) {
         def a = new ModelASTExcludes(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -461,7 +461,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTExclude parseExclude(Statement stmt) {
+    @NonNull ModelASTExclude parseExclude(Statement stmt) {
         def a = new ModelASTExclude(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -478,7 +478,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTExcludeAxis parseExcludeAxis(Statement stmt) {
+    @NonNull ModelASTExcludeAxis parseExcludeAxis(Statement stmt) {
 //        return (ModelASTExcludeAxis) parseAxis(stmt)
         def a = new ModelASTExcludeAxis(stmt)
 
@@ -540,7 +540,7 @@ class ModelParser implements Parser {
     }
 
 
-    @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
+    @NonNull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -615,7 +615,7 @@ class ModelParser implements Parser {
      * assuming no errors were encountered on the various subexpressions, in which case it will return null.
      */
     @CheckForNull
-    private ModelASTValue envValueForStringConcat(@Nonnull BinaryExpression exp) {
+    private ModelASTValue envValueForStringConcat(@NonNull BinaryExpression exp) {
         StringBuilder builder = new StringBuilder()
         boolean isLiteral = true
 
@@ -651,7 +651,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
+    private boolean envValueFromArbitraryExpression(@NonNull Expression e, @NonNull StringBuilder builder) {
         if (e instanceof ConstantExpression || e instanceof GStringExpression) {
             ModelASTValue val = parseArgument(e)
             return appendAndIsLiteral(val, builder)
@@ -661,7 +661,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
+    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @NonNull StringBuilder builder) {
         if (val == null) {
             return true
         } else if (!val.isLiteral()) {
@@ -673,7 +673,7 @@ class ModelParser implements Parser {
 
     }
 
-    @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
+    @NonNull ModelASTLibraries parseLibraries(Statement stmt) {
         def r = new ModelASTLibraries(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -708,7 +708,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTTools parseTools(Statement stmt) {
+    @NonNull ModelASTTools parseTools(Statement stmt) {
         def r = new ModelASTTools(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -1302,7 +1302,7 @@ class ModelParser implements Parser {
     /**
      * Parses a statement into a {@link ModelASTAgent}
      */
-    @Nonnull ModelASTAgent parseAgent(Statement st) {
+    @NonNull ModelASTAgent parseAgent(Statement st) {
         ModelASTAgent agent = new ModelASTAgent(st)
         def m = matchBlockStatement(st)
         def mc = matchMethodCall(st)
@@ -1351,19 +1351,19 @@ class ModelParser implements Parser {
         return agent
     }
 
-    @Nonnull ModelASTPostBuild parsePostBuild(Statement stmt) {
+    @NonNull ModelASTPostBuild parsePostBuild(Statement stmt) {
         def r = new ModelASTPostBuild(stmt)
 
         return parseBuildConditionResponder(stmt, r)
     }
 
-    @Nonnull ModelASTPostStage parsePostStage(Statement stmt) {
+    @NonNull ModelASTPostStage parsePostStage(Statement stmt) {
         def r = new ModelASTPostStage(stmt)
 
         return parseBuildConditionResponder(stmt, r)
     }
 
-    @Nonnull
+    @NonNull
     <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(Statement stmt, R responder) {
         def m = matchBlockStatement(stmt)
 
@@ -1380,7 +1380,7 @@ class ModelParser implements Parser {
         return responder
     }
 
-    @Nonnull ModelASTBuildCondition parseBuildCondition(Statement st) {
+    @NonNull ModelASTBuildCondition parseBuildCondition(Statement st) {
         ModelASTBuildCondition b = new ModelASTBuildCondition(st)
         def m = matchBlockStatement(st)
         if (m == null) {

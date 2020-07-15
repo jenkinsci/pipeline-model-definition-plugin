@@ -28,7 +28,7 @@ import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,26 +48,26 @@ public class ExcludeDirective extends AbstractDirective<ExcludeDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<ExcludeDirective> {
 
-        @Nonnull
+        @NonNull
         @Override
         public boolean isTopLevel() {
             return false;
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "exclude";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Exclude";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
             descriptors.add(Jenkins.get().getDescriptorByType(AxisDirective.DescriptorImpl.class));
@@ -77,8 +77,8 @@ public class ExcludeDirective extends AbstractDirective<ExcludeDirective> {
 
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull ExcludeDirective axes) {
+        @NonNull
+        public String toGroovy(@NonNull ExcludeDirective axes) {
             StringBuilder result = new StringBuilder("exclude {\n");
             if (axes.exclude != null) {
                 axes.exclude.stream().forEach(excludes -> {

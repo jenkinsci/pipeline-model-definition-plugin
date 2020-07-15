@@ -34,7 +34,7 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,27 +73,27 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<WhenDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "when";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "When Condition";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             // For some reason, returning forGenerator directly won't cast from DeclarativeStageConditionalDescriptor to Descriptor. Fun.
             return new ArrayList<>(DeclarativeStageConditionalDescriptor.forGenerator());
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull WhenDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull WhenDirective directive) {
             if (directive.conditional != null) {
                 UninstantiatedDescribable ud = UninstantiatedDescribable.from(directive.conditional);
                 DescribableModel<? extends DeclarativeStageConditional> model = ud.getModel();
@@ -137,8 +137,8 @@ public class WhenDirective extends AbstractDirective<WhenDirective> {
         }
 
 
-        @Nonnull
-        private String conditionalToGroovy(@Nonnull DeclarativeStageConditional<?> conditional) {
+        @NonNull
+        private String conditionalToGroovy(@NonNull DeclarativeStageConditional<?> conditional) {
             DeclarativeStageConditionalDescriptor descriptor = conditional.getDescriptor();
 
             if (descriptor.getAllowedChildrenCount() == 0) {

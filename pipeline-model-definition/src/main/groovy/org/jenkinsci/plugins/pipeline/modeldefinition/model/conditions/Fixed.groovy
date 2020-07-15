@@ -29,7 +29,7 @@ import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 /**
  * A {@link BuildCondition} for matching builds where the previous build was not SUCCESS but the current build is.
@@ -40,12 +40,12 @@ import javax.annotation.Nonnull
 class Fixed extends BuildCondition {
     @Deprecated
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
+    boolean meetsCondition(@NonNull WorkflowRun r) {
         return meetsCondition(r, null, null)
     }
 
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
+    boolean meetsCondition(@NonNull WorkflowRun r, Object context, Throwable error) {
         // Only look at the previous completed build.
         WorkflowRun prev = r.getPreviousCompletedBuild()
 

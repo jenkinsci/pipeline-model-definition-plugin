@@ -35,8 +35,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
@@ -87,7 +87,7 @@ public class EnvironmentConditional extends DeclarativeStageConditional<Environm
     @Symbol("environment")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Execute the stage if an environment variable exists and equals a value";
         }
