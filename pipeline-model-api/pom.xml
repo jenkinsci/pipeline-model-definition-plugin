@@ -57,6 +57,13 @@
     <dependency>
       <groupId>com.github.fge</groupId>
       <artifactId>json-schema-validator</artifactId>
+      <exclusions>
+        <exclusion>
+          <!-- Conflicts with the version from Jenkins core in downstream plugins. -->
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
