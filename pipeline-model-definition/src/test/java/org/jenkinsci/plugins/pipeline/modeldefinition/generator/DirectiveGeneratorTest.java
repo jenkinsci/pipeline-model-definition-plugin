@@ -24,6 +24,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.WebResponse;
+import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.ExtensionList;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.BooleanParameterDefinition;
@@ -36,6 +40,9 @@ import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
 import jenkins.model.BuildDiscarderProperty;
+import jenkins.model.OptionalJobProperty;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
@@ -44,6 +51,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.*;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 import org.jenkinsci.plugins.workflow.steps.TimeoutStep;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
