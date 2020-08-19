@@ -107,10 +107,8 @@ public class DirectiveGenerator extends Snippetizer {
                 result.append(arg.getKey()).append(" ");
                 if (arg.getValue() instanceof Map) {
                     result.append(mapToClosure((Map<String, ?>) arg.getValue()));
-                } else if (arg.getValue() instanceof UninstantiatedDescribable) {
-                    result.append(mapToClosure(((UninstantiatedDescribable) arg.getValue()).getArguments()));
                 } else if (arg.getValue() != null) {
-                    result.append(Snippetizer.object2Groovy(arg.getValue())).append("\n");
+                    result.append(Snippetizer.object2Groovy(arg.getValue(), arg.getValue() instanceof UninstantiatedDescribable)).append("\n");
                 }
             }
         }

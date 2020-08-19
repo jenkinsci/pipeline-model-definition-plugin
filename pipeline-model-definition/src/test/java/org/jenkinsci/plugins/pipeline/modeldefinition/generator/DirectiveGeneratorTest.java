@@ -29,8 +29,10 @@ import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.WebResponse;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.ExtensionList;
+import hudson.model.AbstractDescribableImpl;
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.Describable;
+import hudson.model.Descriptor;
 import hudson.model.ParameterDefinition;
 import hudson.model.StringParameterDefinition;
 import hudson.tasks.LogRotator;
@@ -41,10 +43,11 @@ import jenkins.model.BuildDiscarderProperty;
 import jenkins.model.OptionalJobProperty;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.checkerframework.checker.units.qual.A;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.Matrix;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.SkipDefaultCheckout;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.*;
@@ -56,7 +59,10 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.hudson.test.ToolInstallations;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.net.URL;
@@ -70,12 +76,58 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class DirectiveGeneratorTest {
+    public static class TestDescribable extends AbstractDescribableImpl<TestDescribable> {
+        private String name;
+
+        @DataBoundConstructor
+        public TestDescribable(){
+
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        @DataBoundSetter
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @TestExtension @Symbol("test")
+        public static class DescriptorImpl extends Descriptor<TestDescribable> { }
+    }
+
+    public static class ComplexDeclarativeAgent extends DeclarativeAgent<ComplexDeclarativeAgent> {
+        private TestDescribable someField;
+
+        @DataBoundConstructor
+        public ComplexDeclarativeAgent() {
+        }
+
+        public TestDescribable getSomeField() {
+            return someField;
+        }
+
+        @DataBoundSetter
+        public void setSomeField(TestDescribable someField) {
+            this.someField = someField;
+        }
+
+        @TestExtension @Symbol("complex")
+        public static class DescriptorImpl extends DeclarativeAgentDescriptor<ComplexDeclarativeAgent> {
+
+        }
+    }
+
     @ClassRule
     public static JenkinsRule r = new JenkinsRule();
+
+    public static DirectiveGeneratorTester dg;
 
     @BeforeClass
     public static void setUp() throws Exception {
         ToolInstallations.configureMaven3();
+        dg = new DirectiveGeneratorTester(r);
     }
 
     @Issue("JENKINS-51027")
@@ -90,7 +142,7 @@ public class DirectiveGeneratorTest {
     @Test
     public void simpleInput() throws Exception {
         InputDirective input = new InputDirective("hello");
-        assertGenerateDirective(input,
+        dg.assertGenerateDirective(input,
                 "input {\n" +
                         "  message 'hello'\n" +
                         "}");
@@ -117,7 +169,7 @@ public class DirectiveGeneratorTest {
         params.add(new StringParameterDefinition("aString", "steve", "Hey, a string"));
         params.add(new BooleanParameterDefinition("aBool", true, "A boolean now"));
         input.setParameters(params);
-        assertGenerateDirective(input,
+        dg.assertGenerateDirective(input,
                 "input {\n" +
                         "  message 'hello'\n" +
                         "  id 'banana'\n" +
@@ -135,19 +187,19 @@ public class DirectiveGeneratorTest {
     @Test
     public void agentAny() throws Exception {
         AgentDirective agent = new AgentDirective(new Any());
-        assertGenerateDirective(agent, "agent any");
+        dg.assertGenerateDirective(agent, "agent any");
     }
 
     @Test
     public void agentNone() throws Exception {
         AgentDirective agent = new AgentDirective(new None());
-        assertGenerateDirective(agent, "agent none");
+        dg.assertGenerateDirective(agent, "agent none");
     }
 
     @Test
     public void agentLabel() throws Exception {
         AgentDirective agent = new AgentDirective(new Label("some-label"));
-        assertGenerateDirective(agent, "agent {\n" +
+        dg.assertGenerateDirective(agent, "agent {\n" +
                 "  label 'some-label'\n" +
                 "}");
     }
@@ -156,9 +208,23 @@ public class DirectiveGeneratorTest {
     public void whenBranch() throws Exception {
         WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), true, false, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  branch 'some-pattern'\n" +
                 "  beforeAgent true\n" +
+                "}");
+    }
+
+    @Test
+    public void agentComplex() throws Exception {
+        ComplexDeclarativeAgent complex = new ComplexDeclarativeAgent();
+        TestDescribable someField = new TestDescribable();
+        someField.setName("myName");
+        complex.setSomeField(someField);
+        AgentDirective agent = new AgentDirective(complex);
+        dg.assertGenerateDirective(agent, "agent {\n" +
+                "  complex {\n" +
+                "    someField test(name: 'myName')\n" +
+                "  }\n" +
                 "}");
     }
 
@@ -166,7 +232,7 @@ public class DirectiveGeneratorTest {
     public void whenBranchBeforeInput() throws Exception {
         WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), false, true, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  branch 'some-pattern'\n" +
                 "  beforeInput true\n" +
                 "}");
@@ -176,7 +242,7 @@ public class DirectiveGeneratorTest {
     public void whenBranchBeforeOptions() throws Exception {
         WhenDirective when = new WhenDirective(new BranchConditional("some-pattern"), false, false, true);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  branch 'some-pattern'\n" +
                 "  beforeOptions true\n" +
                 "}");
@@ -186,7 +252,7 @@ public class DirectiveGeneratorTest {
     public void whenEnvironment() throws Exception {
         WhenDirective when = new WhenDirective(new EnvironmentConditional("SOME_VAR", "some value"), false, false, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  environment name: 'SOME_VAR', value: 'some value'\n" +
                 "}");
     }
@@ -194,7 +260,7 @@ public class DirectiveGeneratorTest {
     @Test
     public void whenChangelog() throws Exception {
         WhenDirective when = new WhenDirective(new ChangeLogConditional("some-pattern"), false, false, false);
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  changelog 'some-pattern'\n" +
                 "}");
     }
@@ -203,7 +269,7 @@ public class DirectiveGeneratorTest {
     public void whenChangeset() throws Exception {
         WhenDirective when = new WhenDirective(new ChangeSetConditional("some/file/in/changeset"), false, false, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  changeset 'some/file/in/changeset'\n" +
                 "}");
     }
@@ -212,7 +278,7 @@ public class DirectiveGeneratorTest {
     public void whenNot() throws Exception {
         WhenDirective when = new WhenDirective(new NotConditional(new BranchConditional("some-bad-branch")), false, false, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  not {\n" +
                 "    branch 'some-bad-branch'\n" +
                 "  }\n" +
@@ -226,7 +292,7 @@ public class DirectiveGeneratorTest {
         nested.add(new BranchConditional("this-branch"));
         WhenDirective when = new WhenDirective(new AnyOfConditional(nested), true, false, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  anyOf {\n" +
                 "    branch 'that-branch'\n" +
                 "    branch 'this-branch'\n" +
@@ -242,7 +308,7 @@ public class DirectiveGeneratorTest {
         nested.add(new BranchConditional("this-branch"));
         WhenDirective when = new WhenDirective(new AllOfConditional(nested), false, false, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  allOf {\n" +
                 "    branch 'that-branch'\n" +
                 "    branch 'this-branch'\n" +
@@ -254,7 +320,7 @@ public class DirectiveGeneratorTest {
     public void whenAllOfEmpty() throws Exception {
         WhenDirective when = new WhenDirective(new AllOfConditional(null), false, false, false);
 
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  allOf {\n" +
                 "  }\n" +
                 "}");
@@ -275,7 +341,7 @@ public class DirectiveGeneratorTest {
 
         WhenDirective whenDirective = new WhenDirective(new AllOfConditional(nested), false, false, false);
 
-        assertGenerateDirective(whenDirective, "when {\n" +
+        dg.assertGenerateDirective(whenDirective, "when {\n" +
                 "  allOf {\n" +
                 "    branch 'that-branch'\n" +
                 "    branch 'this-branch'\n" +
@@ -299,7 +365,7 @@ public class DirectiveGeneratorTest {
 
         TriggersDirective triggers = new TriggersDirective(t);
 
-        assertGenerateDirective(triggers, "triggers {\n" +
+        dg.assertGenerateDirective(triggers, "triggers {\n" +
                 "  cron '@daily'\n" +
                 "}");
     }
@@ -312,7 +378,7 @@ public class DirectiveGeneratorTest {
 
         TriggersDirective triggers = new TriggersDirective(t);
 
-        assertGenerateDirective(triggers, "triggers {\n" +
+        dg.assertGenerateDirective(triggers, "triggers {\n" +
                 "  cron '@daily'\n" +
                 "  pollSCM '@hourly'\n" +
                 "}");
@@ -325,7 +391,7 @@ public class DirectiveGeneratorTest {
 
         ParametersDirective params = new ParametersDirective(p);
 
-        assertGenerateDirective(params, "parameters {\n" +
+        dg.assertGenerateDirective(params, "parameters {\n" +
                 "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'" + trimParamOrEmpty() + "\n" +
                 "}");
     }
@@ -338,7 +404,7 @@ public class DirectiveGeneratorTest {
 
         ParametersDirective params = new ParametersDirective(p);
 
-        assertGenerateDirective(params, "parameters {\n" +
+        dg.assertGenerateDirective(params, "parameters {\n" +
                 "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'" + trimParamOrEmpty() + "\n" +
                 "  booleanParam defaultValue: true, description: 'This will default to true.', name: 'SOME_BOOL'\n" +
                 "}");
@@ -355,7 +421,7 @@ public class DirectiveGeneratorTest {
 
         OptionsDirective options = new OptionsDirective(o);
 
-        assertGenerateDirective(options, "options {\n" +
+        dg.assertGenerateDirective(options, "options {\n" +
                 "  buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '4', numToKeepStr: '')\n" +
                 "  skipDefaultCheckout true\n" +
                 "  timeout(time: 10, unit: 'HOURS')\n" +
@@ -366,7 +432,7 @@ public class DirectiveGeneratorTest {
     public void tools() throws Exception {
         ToolsDirective tools = new ToolsDirective(Collections.singletonList(new ToolsDirective.SymbolAndName("maven::::apache-maven-3.0.1")));
 
-        assertGenerateDirective(tools, "tools {\n" +
+        dg.assertGenerateDirective(tools, "tools {\n" +
                 "  maven 'apache-maven-3.0.1'\n" +
                 "}");
     }
@@ -380,7 +446,7 @@ public class DirectiveGeneratorTest {
         libList.add(second);
         LibrariesDirective libs = new LibrariesDirective(libList);
 
-        assertGenerateDirective(libs, "libraries {\n" +
+        dg.assertGenerateDirective(libs, "libraries {\n" +
                 "  lib('first-lib')\n" +
                 "  lib('second-lib@master')\n" +
                 "}");
@@ -393,7 +459,7 @@ public class DirectiveGeneratorTest {
         envList.add(new EnvironmentDirective.NameAndValue("WHAT", "${BOB} says hi"));
         EnvironmentDirective env = new EnvironmentDirective(envList);
 
-        assertGenerateDirective(env, "environment {\n" +
+        dg.assertGenerateDirective(env, "environment {\n" +
                 "  BOB = \"steve\"\n" +
                 "  WHAT = \"${BOB} says hi\"\n" +
                 "}");
@@ -403,7 +469,7 @@ public class DirectiveGeneratorTest {
     public void post() throws Exception {
         PostDirective post = new PostDirective(Arrays.asList("always", "unstable"));
 
-        assertGenerateDirective(post, "post {\n" +
+        dg.assertGenerateDirective(post, "post {\n" +
                 "  always {\n" +
                 "    // One or more steps need to be included within each condition's block.\n" +
                 "  }\n" +
@@ -417,7 +483,7 @@ public class DirectiveGeneratorTest {
     public void simpleStage() throws Exception {
         StageDirective stage = new StageDirective(Collections.emptyList(), "bob", StageDirective.StageContentType.STEPS);
 
-        assertGenerateDirective(stage, "stage('bob') {\n" +
+        dg.assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  steps {\n" +
                 "    // One or more steps need to be included within the steps block.\n" +
                 "  }\n" +
@@ -428,7 +494,7 @@ public class DirectiveGeneratorTest {
     public void simpleParallelStage() throws Exception {
         StageDirective stage = new StageDirective(Collections.emptyList(), "bob", StageDirective.StageContentType.PARALLEL);
 
-        assertGenerateDirective(stage, "stage('bob') {\n" +
+        dg.assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  parallel {\n" +
                 "    // One or more stages need to be included within the parallel block.\n" +
                 "  }\n" +
@@ -440,7 +506,7 @@ public class DirectiveGeneratorTest {
     public void simpleSequentialStage() throws Exception {
         StageDirective stage = new StageDirective(Collections.emptyList(), "bob", StageDirective.StageContentType.STAGES);
 
-        assertGenerateDirective(stage, "stage('bob') {\n" +
+        dg.assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  stages {\n" +
                 "    // One or more stages need to be included within the stages block.\n" +
                 "  }\n" +
@@ -463,7 +529,7 @@ public class DirectiveGeneratorTest {
 
         StageDirective stage = new StageDirective(Arrays.asList(agent, when, env, tools, post), "bob", StageDirective.StageContentType.STEPS);
 
-        assertGenerateDirective(stage, "stage('bob') {\n" +
+        dg.assertGenerateDirective(stage, "stage('bob') {\n" +
                 "  steps {\n" +
                 "    // One or more steps need to be included within the steps block.\n" +
                 "  }\n\n" +
@@ -498,7 +564,7 @@ public class DirectiveGeneratorTest {
     @Test
     public void whenIsRestartedRun() throws Exception {
         WhenDirective when = new WhenDirective(new IsRestartedRunConditional(), false, false, false);
-        assertGenerateDirective(when, "when {\n" +
+        dg.assertGenerateDirective(when, "when {\n" +
                 "  isRestartedRun()\n" +
                 "}");
     }
@@ -533,7 +599,7 @@ public class DirectiveGeneratorTest {
                         ))
                 )
         );
-        assertGenerateDirective(directive, "matrix {\n" +
+        dg.assertGenerateDirective(directive, "matrix {\n" +
                 "  axes {\n" +
                 "    axis {\n" +
                 "      name 'os'\n" +
