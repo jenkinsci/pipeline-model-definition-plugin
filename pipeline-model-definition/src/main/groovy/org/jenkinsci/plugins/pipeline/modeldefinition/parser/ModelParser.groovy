@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.stmt.TryCatchStatement
 import org.codehaus.groovy.classgen.VariableScopeVisitor
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
@@ -172,6 +173,28 @@ class ModelParser implements Parser {
                     // are guaranteed to only have one, since we don't intend to support linting of pipelines defined in
                     // shared libraries.
                     return pipelineDefs.get(0)
+                }
+            }
+
+            /*
+             * If this is the Jenkins Templating Engine, the structure will be:
+             *   try{
+             *     ..
+             *     <user defined template> <-- might be pipeline block
+             *   } catch {
+             *     ..
+             *   }
+             */
+            def firstStatement = src.statementBlock.statements.get(0)
+            if (firstStatement instanceof BlockStatement) {
+                def maybeTry = firstStatement.getStatements().last()
+                if (maybeTry instanceof TryCatchStatement){
+                    def pipelineStatement = maybeTry.getTryStatement().statements.find{ stmt ->
+                        return isDeclarativePipelineStep(stmt)
+                    }
+                    if (pipelineStatement != null){
+                        return parsePipelineStep(src, pipelineStatement, secondaryRun)
+                    }
                 }
             }
         }
