@@ -185,15 +185,17 @@ class ModelParser implements Parser {
              *     ..
              *   }
              */
-            def firstStatement = src.statementBlock.statements.get(0)
-            if (firstStatement instanceof BlockStatement) {
-                def maybeTry = firstStatement.getStatements().last()
-                if (maybeTry instanceof TryCatchStatement){
-                    def pipelineStatement = maybeTry.getTryStatement().statements.find{ stmt ->
-                        return isDeclarativePipelineStep(stmt)
-                    }
-                    if (pipelineStatement != null){
-                        return parsePipelineStep(src, pipelineStatement, secondaryRun)
+            if(!src.statementBlock.statements.isEmpty()){
+                def firstStatement = src.statementBlock.statements.get(0)
+                if (firstStatement instanceof BlockStatement) {
+                    def maybeTry = firstStatement.getStatements().last()
+                    if (maybeTry instanceof TryCatchStatement){
+                        def pipelineStatement = maybeTry.getTryStatement().statements.find{ stmt ->
+                            return isDeclarativePipelineStep(stmt)
+                        }
+                        if (pipelineStatement != null){
+                            return parsePipelineStep(src, pipelineStatement, secondaryRun)
+                        }
                     }
                 }
             }
