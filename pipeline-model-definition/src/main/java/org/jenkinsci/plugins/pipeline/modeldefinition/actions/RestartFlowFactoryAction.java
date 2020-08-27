@@ -36,14 +36,14 @@ import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.List;
 
 public class RestartFlowFactoryAction extends InvisibleAction implements CpsFlowFactoryAction2, Queue.QueueAction {
     private String originRunId;
 
-    public RestartFlowFactoryAction(@Nonnull String originRunId) {
+    public RestartFlowFactoryAction(@NonNull String originRunId) {
         this.originRunId = originRunId;
     }
 

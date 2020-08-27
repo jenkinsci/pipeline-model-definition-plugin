@@ -49,7 +49,7 @@ import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 /**
  * Class for validating various AST elements. Contains the error collector as well as caches for steps, models, etc.
@@ -67,16 +67,16 @@ class ModelValidatorImpl implements ModelValidator {
     private transient FlowExecution execution
     private transient List<DeclarativeValidatorContributor> validatorContributors
 
-    ModelValidatorImpl(@Nonnull ErrorCollector e) {
+    ModelValidatorImpl(@NonNull ErrorCollector e) {
         this(e, [], null)
     }
 
-    ModelValidatorImpl(@Nonnull ErrorCollector e, FlowExecution execution) {
+    ModelValidatorImpl(@NonNull ErrorCollector e, FlowExecution execution) {
         this(e, [], execution)
     }
 
-    ModelValidatorImpl(@Nonnull ErrorCollector e,
-                       @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+    ModelValidatorImpl(@NonNull ErrorCollector e,
+                       @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
                        FlowExecution execution = null) {
         this.errorCollector = e
         this.enabledOptionalValidators.addAll(enabledOptionalValidators)
@@ -102,17 +102,17 @@ class ModelValidatorImpl implements ModelValidator {
         return execution
     }
 
-    boolean validateElement(@Nonnull ModelASTPostBuild postBuild) {
+    boolean validateElement(@NonNull ModelASTPostBuild postBuild) {
         // post specific validation
         return validateFromContributors(postBuild, true)
     }
 
-    boolean validateElement(@Nonnull ModelASTPostStage post) {
+    boolean validateElement(@NonNull ModelASTPostStage post) {
         // post stage specific validation
         return validateFromContributors(post, true)
     }
 
-    boolean validateElement(@Nonnull ModelASTBuildConditionsContainer post) {
+    boolean validateElement(@NonNull ModelASTBuildConditionsContainer post) {
         boolean valid = true
 
         if (post.conditions.isEmpty()) {
@@ -132,7 +132,7 @@ class ModelValidatorImpl implements ModelValidator {
         return valid
     }
 
-    boolean validateElement(@Nonnull ModelASTBuildCondition buildCondition) {
+    boolean validateElement(@NonNull ModelASTBuildCondition buildCondition) {
         boolean valid = true
 
         // Only do the symbol lookup if we have a Jenkins instance and condition/branch aren't null. That only happens
@@ -148,7 +148,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(buildCondition, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTEnvironment env) {
+    boolean validateElement(@NonNull ModelASTEnvironment env) {
         boolean valid = true
 
         if (env.variables.isEmpty()) {
@@ -165,12 +165,12 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(env, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTInternalFunctionCall call) {
+    boolean validateElement(@NonNull ModelASTInternalFunctionCall call) {
         // TODO: Make this real validation when JENKINS-41759 lands
         return validateFromContributors(call, true)
     }
 
-    boolean validateElement(@Nonnull ModelASTTools t) {
+    boolean validateElement(@NonNull ModelASTTools t) {
         boolean valid = true
 
         if (t.tools.isEmpty()) {
@@ -403,7 +403,7 @@ class ModelValidatorImpl implements ModelValidator {
         }
     }
 
-    boolean validateElement(@Nonnull ModelASTStep step) {
+    boolean validateElement(@NonNull ModelASTStep step) {
         boolean valid = true
 
         // We can't do step validation without a Jenkins instance, so move on.
@@ -420,7 +420,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(step, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTMethodCall meth) {
+    boolean validateElement(@NonNull ModelASTMethodCall meth) {
         boolean valid = true
 
         if (Jenkins.getInstanceOrNull() != null) {
@@ -509,7 +509,7 @@ class ModelValidatorImpl implements ModelValidator {
         }
     }
 
-    boolean validateElement(@Nonnull ModelASTOptions opts) {
+    boolean validateElement(@NonNull ModelASTOptions opts) {
         boolean valid = true
         if (opts.options.isEmpty()) {
             errorCollector.error(opts, Messages.ModelValidatorImpl_EmptySection("options"))
@@ -539,7 +539,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(opts, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTTrigger trig) {
+    boolean validateElement(@NonNull ModelASTTrigger trig) {
         boolean valid = true
         if (trig.name == null) {
             // This means that we failed at compilation time so can move on.
@@ -557,7 +557,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(trig, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTTriggers triggers) {
+    boolean validateElement(@NonNull ModelASTTriggers triggers) {
         boolean valid = true
         if (triggers.triggers.isEmpty()) {
             errorCollector.error(triggers, Messages.ModelValidatorImpl_EmptySection("triggers"))
@@ -573,7 +573,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(triggers, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTBuildParameter param) {
+    boolean validateElement(@NonNull ModelASTBuildParameter param) {
         boolean valid = true
 
         if (param.name == null) {
@@ -592,7 +592,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(param, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTBuildParameters params) {
+    boolean validateElement(@NonNull ModelASTBuildParameters params) {
         boolean valid = true
         if (params.parameters.isEmpty()) {
             errorCollector.error(params, Messages.ModelValidatorImpl_EmptySection("parameters"))
@@ -602,7 +602,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(params, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTStageInput input) {
+    boolean validateElement(@NonNull ModelASTStageInput input) {
         boolean valid = true
         if (input.message == null) {
             errorCollector.error(input, Messages.ModelValidatorImpl_MissingInputMessage())
@@ -612,7 +612,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(input, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTOption opt) {
+    boolean validateElement(@NonNull ModelASTOption opt) {
         boolean valid = true
 
         if (opt.name == null) {
@@ -649,7 +649,7 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
-    boolean validateElement(@Nonnull ModelASTBranch branch) {
+    boolean validateElement(@NonNull ModelASTBranch branch) {
         boolean valid = true
 
         if (branch.steps.isEmpty()) {
@@ -660,7 +660,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(branch, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTPipelineDef pipelineDef) {
+    boolean validateElement(@NonNull ModelASTPipelineDef pipelineDef) {
         boolean valid = true
 
         if (pipelineDef.stages == null) {
@@ -678,7 +678,7 @@ class ModelValidatorImpl implements ModelValidator {
         return true
     }
 
-    boolean validateElement(@Nonnull ModelASTStage stage, boolean isWithinParallel) {
+    boolean validateElement(@NonNull ModelASTStage stage, boolean isWithinParallel) {
         boolean valid = true
         def stepsStagesParallelCount = 0
         if (!stage.branches.isEmpty()) {
@@ -731,7 +731,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(stage, valid, isWithinParallel)
     }
 
-    boolean validateElement(@Nonnull ModelASTStages stages) {
+    boolean validateElement(@NonNull ModelASTStages stages) {
         boolean valid = true
 
         if (stages.stages.isEmpty()) {
@@ -751,11 +751,11 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(stages, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTParallel parallel) {
+    boolean validateElement(@NonNull ModelASTParallel parallel) {
         return validateElement((ModelASTStages)parallel)
     }
 
-    boolean validateElement(@Nonnull ModelASTMatrix matrix) {
+    boolean validateElement(@NonNull ModelASTMatrix matrix) {
         boolean valid = true
 
         if (matrix.axes == null) {
@@ -860,7 +860,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(axis, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTAgent agent) {
+    boolean validateElement(@NonNull ModelASTAgent agent) {
         boolean valid = true
 
         Map<String, DescribableModel> possibleModels = DeclarativeAgentDescriptor.describableModels
@@ -907,7 +907,7 @@ class ModelValidatorImpl implements ModelValidator {
         return validateFromContributors(agent, valid)
     }
 
-    boolean validateElement(@Nonnull ModelASTValue value) {
+    boolean validateElement(@NonNull ModelASTValue value) {
         return validateFromContributors(value, true)
     }
 

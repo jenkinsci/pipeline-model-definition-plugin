@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents a list of {@code BuildCondition} and {@code StepsBlock} pairs to be called, depending on whether the build
@@ -28,7 +28,7 @@ public final class ModelASTPostStage extends ModelASTBuildConditionsContainer {
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
         super.validate(validator);
     }

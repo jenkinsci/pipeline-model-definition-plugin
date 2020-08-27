@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
 import java.util.Map;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
@@ -84,7 +84,7 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
         return subdirectory;
     }
 
-    public void copyFlags(@Nonnull DeclarativeAgent a) {
+    public void copyFlags(@NonNull DeclarativeAgent a) {
         setInStage(a.isInStage());
         setDoCheckout(a.isDoCheckout());
         setSubdirectory(a.getSubdirectory());

@@ -30,8 +30,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Map;
 
 @Extension
@@ -57,7 +57,7 @@ public class BlockedStepsAndMethodCalls extends DeclarativeValidatorContributor 
 
     @Override
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTMethodCall method, @CheckForNull FlowExecution execution) {
+    public String validateElement(@NonNull ModelASTMethodCall method, @CheckForNull FlowExecution execution) {
         if (method.getName() != null) {
             if (blockedInMethodCalls().keySet().contains(method.getName())) {
                 return org.jenkinsci.plugins.pipeline.modeldefinition.Messages.ModelValidatorImpl_BlockedStep(method.getName(),
@@ -70,7 +70,7 @@ public class BlockedStepsAndMethodCalls extends DeclarativeValidatorContributor 
 
     @Override
     @CheckForNull
-    public String validateElement(@Nonnull ModelASTStep step, @CheckForNull FlowExecution execution) {
+    public String validateElement(@NonNull ModelASTStep step, @CheckForNull FlowExecution execution) {
         if (step.getName() != null) {
             if (blockedInSteps().keySet().contains(step.getName())) {
                 return org.jenkinsci.plugins.pipeline.modeldefinition.Messages.ModelValidatorImpl_BlockedStep(step.getName(),

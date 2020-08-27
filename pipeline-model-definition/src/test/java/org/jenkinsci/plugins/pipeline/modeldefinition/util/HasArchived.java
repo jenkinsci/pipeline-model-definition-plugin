@@ -33,7 +33,7 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -46,7 +46,7 @@ public class HasArchived extends TypeSafeMatcher<Run> {
     private final Matcher<String> nameMatcher;
     private final Matcher<?> contentMatcher;
 
-    public HasArchived(@Nonnull Matcher<String> nameMatcher, @Nonnull Matcher<?> contentMatcher) {
+    public HasArchived(@NonNull Matcher<String> nameMatcher, @NonNull Matcher<?> contentMatcher) {
         this.nameMatcher = nameMatcher;
         this.contentMatcher = contentMatcher;
     }

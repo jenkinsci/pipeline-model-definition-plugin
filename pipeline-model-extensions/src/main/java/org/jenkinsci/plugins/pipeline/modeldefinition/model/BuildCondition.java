@@ -39,8 +39,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.StreamSupport;
@@ -53,7 +53,7 @@ import java.util.stream.StreamSupport;
 public abstract class BuildCondition implements Serializable, ExtensionPoint {
 
     @Deprecated
-    public boolean meetsCondition(@Nonnull WorkflowRun r) {
+    public boolean meetsCondition(@NonNull WorkflowRun r) {
         if (Util.isOverridden(BuildCondition.class, getClass(), "meetsCondition", WorkflowRun.class, Object.class, Throwable.class)) {
             return meetsCondition(r, null, null);
         } else {
@@ -61,40 +61,40 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         }
     }
 
-    public boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
+    public boolean meetsCondition(@NonNull WorkflowRun r, Object context, Throwable error) {
         return meetsCondition(r);
     }
 
     @Deprecated
-    public boolean meetsCondition(@Nonnull Object runWrapperObj) {
+    public boolean meetsCondition(@NonNull Object runWrapperObj) {
         return meetsCondition(runWrapperObj, null, null);
     }
 
-    public boolean meetsCondition(@Nonnull Object runWrapperObj, Object context, Throwable error) {
+    public boolean meetsCondition(@NonNull Object runWrapperObj, Object context, Throwable error) {
         RunWrapper runWrapper = (RunWrapper)runWrapperObj;
         WorkflowRun run = (WorkflowRun)runWrapper.getRawBuild();
         return run != null && meetsCondition(run, context, error);
     }
 
     @Deprecated
-    @Nonnull
-    protected final Result combineResults(@Nonnull WorkflowRun run) {
+    @NonNull
+    protected final Result combineResults(@NonNull WorkflowRun run) {
         return combineResults(run, null);
     }
 
     @Deprecated
-    @Nonnull
-    protected final Result combineResults(@Nonnull WorkflowRun run, @CheckForNull Throwable error) {
+    @NonNull
+    protected final Result combineResults(@NonNull WorkflowRun run, @CheckForNull Throwable error) {
         return combineResults(run, error, null);
     }
 
-    @Nonnull
-    protected final Result combineResults(@Nonnull WorkflowRun run, @CheckForNull Throwable error, @CheckForNull Object context) {
+    @NonNull
+    protected final Result combineResults(@NonNull WorkflowRun run, @CheckForNull Throwable error, @CheckForNull Object context) {
         return BuildCondition.getCombinedResult(run, error, context);
     }
 
     @CheckForNull
-    protected Result getExecutionResult(@Nonnull WorkflowRun r) {
+    protected Result getExecutionResult(@NonNull WorkflowRun r) {
         return BuildCondition.getFlowExecutionResult(r);
     }
 
@@ -142,13 +142,13 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
     }
 
     @Deprecated
-    @Nonnull
-    public static Result getCombinedResult(@Nonnull WorkflowRun run, @CheckForNull Throwable error) {
+    @NonNull
+    public static Result getCombinedResult(@NonNull WorkflowRun run, @CheckForNull Throwable error) {
         return getCombinedResult(run, error, null);
     }
 
-    @Nonnull
-    public static Result getCombinedResult(@Nonnull WorkflowRun run, @CheckForNull Throwable error, @CheckForNull Object context) {
+    @NonNull
+    public static Result getCombinedResult(@NonNull WorkflowRun run, @CheckForNull Throwable error, @CheckForNull Object context) {
         Result errorResult = Result.SUCCESS;
         if (context instanceof String) {
             String stageName = (String)context;
@@ -187,7 +187,7 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
     }
 
     @CheckForNull
-    public static Result getFlowExecutionResult(@Nonnull WorkflowRun r) {
+    public static Result getFlowExecutionResult(@NonNull WorkflowRun r) {
         FlowExecution execution = r.getExecution();
         if (execution instanceof CpsFlowExecution) {
             return ((CpsFlowExecution) execution).getResult();

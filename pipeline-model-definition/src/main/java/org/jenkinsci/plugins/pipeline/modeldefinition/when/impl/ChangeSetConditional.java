@@ -39,8 +39,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 
 /**
@@ -136,7 +136,7 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
     @Symbol("changeset")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ChangeSetConditional> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Execute the stage if the changeset contains a file matching a pattern";
         }

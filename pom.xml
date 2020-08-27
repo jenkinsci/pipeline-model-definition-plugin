@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.2</version>
+    <version>4.3</version>
     <relativePath />
   </parent>
 
@@ -72,61 +72,33 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <!-- Require upper bound dependencies -->
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>cloudbees-folder</artifactId>
-        <version>6.9</version>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom-2.176.x</artifactId>
+        <version>10</version>
+        <scope>import</scope>
+        <type>pom</type>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>2.76</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>script-security</artifactId>
-        <version>1.69</version>
+        <version>${workflow-cps.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-job</artifactId>
-        <version>2.33</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-api</artifactId>
-        <version>2.36</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>branch-api</artifactId>
-        <version>2.1.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-multibranch</artifactId>
-        <version>2.16</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-multibranch</artifactId>
-        <version>2.16</version>
+        <artifactId>workflow-cps</artifactId>
         <classifier>tests</classifier>
+        <version>${workflow-cps.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-scm-step</artifactId>
-        <version>2.9</version>
+        <artifactId>workflow-multibranch</artifactId>
+        <version>${workflow-multibranch.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-basic-steps</artifactId>
-        <version>2.18</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-durable-task-step</artifactId>
-        <version>2.31</version>
+        <artifactId>workflow-multibranch</artifactId>
+        <version>${workflow-multibranch.version}</version>
+        <classifier>tests</classifier>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -137,48 +109,6 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>docker-workflow</artifactId>
         <version>1.22</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials-binding</artifactId>
-        <version>1.13</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>ssh-credentials</artifactId>
-        <version>1.13</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials</artifactId>
-        <version>2.1.16</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-support</artifactId>
-        <version>${workflow-support-plugin.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-support</artifactId>
-        <version>${workflow-support-plugin.version}</version>
-        <classifier>tests</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>scm-api</artifactId>
-        <version>${scm-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>scm-api</artifactId>
-        <version>${scm-api.version}</version>
-        <classifier>tests</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps-global-lib</artifactId>
-        <version>2.9</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
@@ -192,13 +122,8 @@
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>pipeline-build-step</artifactId>
-        <version>2.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>jackson2-api</artifactId>
-        <version>2.9.8</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -206,77 +131,31 @@
         <version>1.12</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>git</artifactId>
-        <version>3.7.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>git</artifactId>
-        <version>3.7.0</version>
-        <classifier>tests</classifier>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-step-api</artifactId>
-        <version>2.22</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>structs</artifactId>
-        <version>1.20</version>
-      </dependency>
-      <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest</artifactId>
-        <version>2.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-core</artifactId>
-        <version>2.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-library</artifactId>
         <version>2.2</version>
       </dependency>
       <dependency>
         <groupId>com.jcabi</groupId>
         <artifactId>jcabi-matchers</artifactId>
         <version>1.4</version>
+        <exclusions>
+          <exclusion>
+            <!-- replaced by org.hamcrest:hamcrest -->
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+          </exclusion>
+          <exclusion>
+            <!-- replaced by org.hamcrest:hamcrest -->
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>pipeline-milestone-step</artifactId>
         <version>1.3.1</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>pipeline-input-step</artifactId>
-        <version>2.8</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>mailer</artifactId>
-        <version>1.20</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>git-client</artifactId>
-        <version>2.7.0</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -289,19 +168,26 @@
         <version>1.39</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>junit</artifactId>
-        <version>1.23</version>
-      </dependency>
-      <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-json-org</artifactId>
-        <version>2.9.8</version>
+        <version>${jackson.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.fge</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>2.0.4</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.13</version>
+        <exclusions>
+          <exclusion>
+            <!-- replaced by org.hamcrest:hamcrest -->
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -335,14 +221,15 @@
   </build>
 
   <properties>
-    <revision>1.6.1</revision>
+    <revision>1.7.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.176.4</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
-    <workflow-support-plugin.version>3.3</workflow-support-plugin.version>
-    <scm-api.version>2.4.1</scm-api.version>
+    <jackson.version>2.9.8</jackson.version>
+    <workflow-multibranch.version>2.16</workflow-multibranch.version>
+    <workflow-cps.version>2.81</workflow-cps.version>
   </properties>
 
   <repositories>

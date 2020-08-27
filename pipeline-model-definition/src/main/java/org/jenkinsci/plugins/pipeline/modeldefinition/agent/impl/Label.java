@@ -35,9 +35,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class Label extends DeclarativeAgent<Label> {
     private String label;
@@ -66,7 +66,7 @@ public class Label extends DeclarativeAgent<Label> {
     @Extension(ordinal = -800) @Symbol({"label","node"})
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Run on an agent matching a label";
         }

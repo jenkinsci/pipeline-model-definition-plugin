@@ -44,8 +44,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,7 +78,7 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
     @Extension @Symbol("preserveStashes")
     public static class DescriptorImpl extends OptionalJobPropertyDescriptor {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Preserve stashes from completed builds";
         }
@@ -98,7 +98,7 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
     public static final class SaveStashes extends StashManager.StashBehavior {
 
         @Override
-        public boolean shouldClearAll(@Nonnull Run<?,?> build) {
+        public boolean shouldClearAll(@NonNull Run<?,?> build) {
             if (build instanceof WorkflowRun) {
                 WorkflowRun r = (WorkflowRun)build;
                 WorkflowJob j = r.getParent();
@@ -143,7 +143,7 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
     public static class ValidatorImpl extends DeclarativeValidatorContributor {
         @Override
         @CheckForNull
-        public String validateElement(@Nonnull ModelASTOption option, @CheckForNull FlowExecution execution) {
+        public String validateElement(@NonNull ModelASTOption option, @CheckForNull FlowExecution execution) {
             if (option.getName() != null && option.getName().equals("preserveStashes")) {
                 for (ModelASTMethodArg arg : option.getArgs()) {
                     if (arg instanceof ModelASTKeyValueOrMethodCallPair) {
