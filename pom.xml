@@ -80,6 +80,17 @@
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-cps</artifactId>
+        <version>${workflow-cps.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-cps</artifactId>
+        <classifier>tests</classifier>
+        <version>${workflow-cps.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-multibranch</artifactId>
         <version>${workflow-multibranch.version}</version>
       </dependency>
@@ -218,6 +229,7 @@
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
     <jackson.version>2.9.8</jackson.version>
     <workflow-multibranch.version>2.16</workflow-multibranch.version>
+    <workflow-cps.version>2.81</workflow-cps.version>
   </properties>
 
   <repositories>
