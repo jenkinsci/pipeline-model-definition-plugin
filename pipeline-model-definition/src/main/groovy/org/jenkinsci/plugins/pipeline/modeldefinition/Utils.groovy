@@ -32,6 +32,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
 import hudson.model.*
+import hudson.util.Secret
 import hudson.triggers.Trigger
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
@@ -454,7 +455,26 @@ class Utils {
     @Restricted(NoExternalUse.class)
     static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
         DescribableModel<T> model = new DescribableModel<>(c)
+        // Special case for JENKINS-63499.
+        if (model != null && model.type == PasswordParameterDefinition.class && model.getParameter("defaultValueAsSecret") != null) {
+            args = transformPasswordParameterDefinitionArgs(args)
+        }
         return model?.instantiate(args)
+    }
+
+    /**
+     * Convert structure of password parameter definition arguments to fix JENKINS-63499.
+     */
+    private static <T> Map<String, Object> transformPasswordParameterDefinitionArgs(Map<String, ?> args) {
+        Map<String, Object> newArgs = new HashMap<>()
+        for (Map.Entry<String, ?> entry : args.entrySet()) {
+            if (entry.getKey().equals("defaultValue") && entry.getValue() instanceof String) {
+                newArgs.put("defaultValueAsSecret", Secret.fromString((String)entry.getValue()))
+            } else {
+                newArgs.put(entry.getKey(), entry.getValue())
+            }
+        }
+        newArgs
     }
 
     /**
