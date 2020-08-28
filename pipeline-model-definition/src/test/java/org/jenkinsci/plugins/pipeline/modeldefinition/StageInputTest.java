@@ -135,15 +135,15 @@ public class StageInputTest extends AbstractModelDefTest {
         HtmlPage page = wc.getPage(b, a.getUrlName());
         HtmlForm form = page.getFormByName(is.getId());
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='fruit']");
+        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='fruit'] | //div[div/div/input/@value='fruit']");
         assertNotNull(element);
 
         HtmlTextInput stringParameterInput = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
         assertEquals("banana", stringParameterInput.getAttribute("value"));
-        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name']")).getTextContent());
+        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name'] | div[contains(@class,'setting-name')]")).getTextContent());
         stringParameterInput.setAttribute("value", "pear");
 
-        element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag']");
+        element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
         assertNotNull(element);
 
         Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
@@ -187,7 +187,7 @@ public class StageInputTest extends AbstractModelDefTest {
         HtmlPage page = wc.getPage(b, a.getUrlName());
         HtmlForm form = page.getFormByName(is.getId());
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag']");
+        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
         assertNotNull(element);
 
         Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
