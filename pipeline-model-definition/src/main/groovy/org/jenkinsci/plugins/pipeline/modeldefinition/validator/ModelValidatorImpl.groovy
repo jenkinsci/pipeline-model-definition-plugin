@@ -28,6 +28,7 @@ import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 import hudson.model.Describable
 import hudson.model.Descriptor
+import hudson.model.PasswordParameterDefinition
 import hudson.tools.ToolDescriptor
 import hudson.tools.ToolInstallation
 import hudson.util.EditDistance
@@ -454,6 +455,14 @@ class ModelValidatorImpl implements ModelValidator {
                             return
                         }
                         ModelASTKeyValueOrMethodCallPair kvm = (ModelASTKeyValueOrMethodCallPair) a
+
+                        // Special case, see JENKINS-63499.
+                        if (model.type == PasswordParameterDefinition.class && "defaultValue".equals(kvm.key.key)) {
+                            if (!validateParameterType((ModelASTValue) kvm.value, String.class, kvm.key)) {
+                                valid = false
+                            }
+                            return
+                        }
 
                         if (!isValidStepParameter(model, kvm.key.key, kvm.key)) {
                             valid = false
