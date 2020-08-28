@@ -233,6 +233,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("See https://github.com/jenkinsci/pipeline-model-definition-plugin/pull/404#issuecomment-682933947")
     @Issue("JENKINS-52850")
     @Test
     public void sshCredentialsInEnv() throws Exception {
