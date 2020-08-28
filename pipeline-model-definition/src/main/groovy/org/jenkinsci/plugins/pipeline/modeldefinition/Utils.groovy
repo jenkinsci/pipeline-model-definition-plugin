@@ -34,6 +34,7 @@ import hudson.ExtensionList
 import hudson.model.*
 import hudson.util.Secret
 import hudson.triggers.Trigger
+import java.util.function.Function
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
@@ -457,24 +458,24 @@ class Utils {
         DescribableModel<T> model = new DescribableModel<>(c)
         // Special case for JENKINS-63499.
         if (model != null && model.type == PasswordParameterDefinition.class && model.getParameter("defaultValueAsSecret") != null) {
-            args = transformPasswordParameterDefinitionArgs(args)
+            args = copyMapReplacingEntry(args, "defaultValue", "defaultValueAsSecret", String.class, { s -> Secret.fromString(s) })
         }
         return model?.instantiate(args)
     }
 
     /**
-     * Convert structure of password parameter definition arguments to fix JENKINS-63499.
+     * Copy a map, replacing the entry with the specified key if it matches the specified type.
      */
-    private static <T> Map<String, Object> transformPasswordParameterDefinitionArgs(Map<String, ?> args) {
-        Map<String, Object> newArgs = new HashMap<>()
-        for (Map.Entry<String, ?> entry : args.entrySet()) {
-            if (entry.getKey().equals("defaultValue") && entry.getValue() instanceof String) {
-                newArgs.put("defaultValueAsSecret", Secret.fromString((String)entry.getValue()))
+    public static <T> Map<String, Object> copyMapReplacingEntry(Map<String, ?> map, String oldKey, String newKey, Class<T> requiredValueType, Function<T, Object> replacer) {
+        Map<String, Object> newMap = new TreeMap<>()
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            if (entry.getKey().equals(oldKey) && requiredValueType.isInstance(entry.getValue())) {
+                newMap.put(newKey, replacer.apply(requiredValueType.cast(entry.getValue())))
             } else {
-                newArgs.put(entry.getKey(), entry.getValue())
+                newMap.put(entry.getKey(), entry.getValue())
             }
         }
-        newArgs
+        newMap
     }
 
     /**
