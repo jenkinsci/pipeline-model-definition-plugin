@@ -76,6 +76,16 @@ class RuntimeASTTransformer {
             false
     )
 
+    /**
+     * Enables or disables allowing local variable declarations while script splitting.
+     * This severely reduces the effectiveness of script splitting.
+     */
+    @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="For access from script console")
+    public static boolean SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = SystemProperties.getBoolean(
+            RuntimeASTTransformer.class.getName() + ". SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES",
+            false
+    )
+
     Wrapper wrapper = null
 
     RuntimeASTTransformer() {
@@ -1156,7 +1166,7 @@ class RuntimeASTTransformer {
          * nor from closures defined in other functions or classes.  Thus, when the wrapper puts the closure declarations
          * into functions they can no longer access script-local "def" variables.
          *
-         * To maintain some support for local variables, this method detects the presnce of script-local "def" variables
+         * To maintain some support for local variables, this method detects the presence of script-local "def" variables
          * and adds handles to closures instead of methods.
          *
          * Currently, it only checks if "pipeline {}" is not the only top level element in script, and in that case it
@@ -1165,20 +1175,21 @@ class RuntimeASTTransformer {
          * This solution is sufficient for now, but a better solution would be to:
          *
          * * Specifically detect that local variables are used
-         * * Log a warning that this is no advised
+         * * Log a warning that this is not advised
          * * detect which handles reference local variables and then only declare those handles in closures.
          *
          * @param pipelineBlock the block statement to add declarations to
          */
         @NonNull
         private void declareClosureScopedHandles(@NonNull BlockStatement pipelineBlock) {
-            if (moduleNode.statementBlock.statements.size() == 1 || pipelineElementHandles.size() == 0) {
+            def closureScopedHandles = prepareClosureScopedHandles()
+            if (closureScopedHandles.size() == 0) {
                 return
             }
 
             BlockStatement currentBlock = block()
             int count = 0
-            pipelineElementHandles.each { item ->
+            closureScopedHandles.each { item ->
                 if (count++ >= declarationGroupSize) {
                     count = 1
                     pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
@@ -1190,10 +1201,37 @@ class RuntimeASTTransformer {
             // These variable handles are declared in functions, but will still be bound to the script context
             // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
             pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
-            pipelineElementHandles.clear()
         }
 
-        /**
+        @NonNull
+        private List<Statement> prepareClosureScopedHandles(@NonNull BlockStatement pipelineBlock) {
+            ArrayList<Statement> result = new ArrayList<Statement>()
+            if (SCRIPT_SPLITTING_TRANSFORMATION) {
+                ArrayList<DeclarationExpression> declarations = new ArrayList<DeclarationExpression>()
+                moduleNode.statementBlock.statements.each { item ->
+                    if (((ExpressionStatement) item).expression instanceof DeclarationExpression) {
+                        declarations.add((DeclarationExpression) ((ExpressionStatement) item).expression)
+                    }
+                }
+
+                if (declarations.size() != 0) {
+                    if (SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES) {
+                        result.addAll(pipelineElementHandles)
+                        pipelineElementHandles.clear()
+                    } else {
+                        throw new IllegalStateException("SCRIPT_SPLITTING_TRANSFORMATION is incompatible with local variable declarations. " +
+                                "Add the the '@Field' annotation to local variable declarations: " +
+                                declarations.join(", ") + ".")
+                    }
+                }
+            }
+
+            // In a future version, it may be possible to detect closures that reference script-local variables
+            // and then only use closure scoped handles for those closures.
+            return result
+        }
+
+            /**
          * Adds groups of handle declarations to functions and adds calls to those functions to the pipeline block.
          * Avoid "method code too large" errors and other compiler breaks related to Groovy, JVM, and CPS limitations.
          * @param pipelineBlock
