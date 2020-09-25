@@ -89,6 +89,8 @@ class ModelParser implements Parser {
 
     private final Run<?,?> build
 
+    private final Map<String,DescribableModel> zeroArgModels = new HashMap<>()
+
     @Deprecated
     ModelParser(SourceUnit sourceUnit) {
         this(sourceUnit, [], null)
@@ -106,10 +108,25 @@ class ModelParser implements Parser {
     ModelParser(SourceUnit sourceUnit,
                 @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
                 @CheckForNull FlowExecution execution) {
+        this(sourceUnit, enabledOptionalValidators, execution, new SourceUnitErrorCollector(sourceUnit))
+    }
+
+    ModelParser(SourceUnit sourceUnit,
+                @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+                @CheckForNull FlowExecution execution,
+                @CheckForNull ErrorCollector errorCollector) {
+        this(sourceUnit, execution, errorCollector, new ModelValidatorImpl(errorCollector, enabledOptionalValidators, execution), DescriptorLookupCache.getPublicCache())
+    }
+
+    ModelParser(SourceUnit sourceUnit,
+                @CheckForNull FlowExecution execution,
+                @CheckForNull ErrorCollector errorCollector,
+                @CheckForNull ModelValidator validator,
+                @CheckForNull DescriptorLookupCache lookupCache) {
         this.sourceUnit = sourceUnit
-        this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
-        this.validator = new ModelValidatorImpl(errorCollector, enabledOptionalValidators, execution)
-        this.lookup = DescriptorLookupCache.getPublicCache()
+        this.errorCollector = errorCollector
+        this.validator = validator
+        this.lookup = lookupCache
         Queue.Executable executable = null
         if (execution != null) {
             executable = execution.getOwner().getExecutable()
@@ -118,6 +135,12 @@ class ModelParser implements Parser {
             this.build = (Run) executable
         } else {
             this.build = null
+        }
+        zeroArgModels.putAll(DeclarativeAgentDescriptor.zeroArgModels())
+        // Fall back on the default zero-arg model names for when run outside of Jenkins
+        if (zeroArgModels.size() == 0) {
+            zeroArgModels.put("none", null)
+            zeroArgModels.put("any", null)
         }
     }
 
@@ -153,7 +176,6 @@ class ModelParser implements Parser {
         def pst = src.statementBlock.statements.find {
             return isDeclarativePipelineStep(it)
         }
-
         if (pst != null) {
             return parsePipelineStep(src, pst, secondaryRun)
         } else {
@@ -1343,7 +1365,7 @@ class ModelParser implements Parser {
                     errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                 } else {
                     def agentCode = parseKey(args[0])
-                    if (!(agentCode.key in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
+                    if (!(agentCode.key in zeroArgModels.keySet())) {
                         errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                     } else {
                         agent.agentType = agentCode
@@ -1481,7 +1503,7 @@ class ModelParser implements Parser {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {
-            if (e.name in DeclarativeAgentDescriptor.zeroArgModels().keySet()) {
+            if (e.name in zeroArgModels.keySet()) {
                 return ModelASTValue.fromConstant(e.name, e)
             }
         }
