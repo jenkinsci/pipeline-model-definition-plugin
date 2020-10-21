@@ -27,7 +27,7 @@ import hudson.Extension;
 import hudson.model.Descriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +46,7 @@ public class AxisDirective extends AbstractDirective<AxisDirective> {
         this.notValues = notValues;
 
     }
-    @Nonnull
+    @NonNull
     public String getName() {
         return name;
     }
@@ -70,33 +70,33 @@ public class AxisDirective extends AbstractDirective<AxisDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<AxisDirective> {
 
-        @Nonnull
+        @NonNull
         @Override
         public boolean isTopLevel() {
             return false;
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "axis";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Axis";
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public List<Descriptor> getDescriptors() {
             return Collections.emptyList();
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull AxisDirective axis) {
+        @NonNull
+        public String toGroovy(@NonNull AxisDirective axis) {
             StringBuffer sb = new StringBuffer();
             sb.append("axis {\n");
             sb.append("name '" + axis.getName() + "'\n");

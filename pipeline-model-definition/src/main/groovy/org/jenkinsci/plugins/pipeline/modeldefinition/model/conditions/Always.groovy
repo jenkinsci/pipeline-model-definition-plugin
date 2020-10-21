@@ -28,7 +28,7 @@ import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 /**
  * A {@link BuildCondition} for matching all builds regardless of status.
@@ -39,12 +39,12 @@ import javax.annotation.Nonnull
 class Always extends BuildCondition {
     @Deprecated
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r) {
+    boolean meetsCondition(@NonNull WorkflowRun r) {
         return meetsCondition(r, null, null)
     }
 
     @Override
-    boolean meetsCondition(@Nonnull WorkflowRun r, Object context, Throwable error) {
+    boolean meetsCondition(@NonNull WorkflowRun r, Object context, Throwable error) {
         return true
     }
 

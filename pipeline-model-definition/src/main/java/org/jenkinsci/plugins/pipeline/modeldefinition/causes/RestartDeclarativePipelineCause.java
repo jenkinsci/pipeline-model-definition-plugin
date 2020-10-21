@@ -27,15 +27,15 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.causes;
 import hudson.model.Cause;
 import hudson.model.Run;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class RestartDeclarativePipelineCause extends Cause {
     private int originRunNumber;
     private String originStage;
     private transient Run<?,?> run;
 
-    public RestartDeclarativePipelineCause(@Nonnull Run<?,?> original, @Nonnull String originStage) {
+    public RestartDeclarativePipelineCause(@NonNull Run<?,?> original, @NonNull String originStage) {
         this.originRunNumber = original.getNumber();
         this.originStage = originStage;
     }
@@ -54,7 +54,7 @@ public class RestartDeclarativePipelineCause extends Cause {
         return originRunNumber;
     }
 
-    @Nonnull
+    @NonNull
     public String getOriginStage() {
         return originStage;
     }

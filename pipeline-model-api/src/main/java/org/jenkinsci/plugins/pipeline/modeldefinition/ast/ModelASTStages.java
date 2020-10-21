@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,13 +23,13 @@ public class ModelASTStages extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public Object toJSON() {
         return toJSONArray(stages);
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validate(validator, false);
     }
 
@@ -41,7 +41,7 @@ public class ModelASTStages extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock("stages", stages);
     }

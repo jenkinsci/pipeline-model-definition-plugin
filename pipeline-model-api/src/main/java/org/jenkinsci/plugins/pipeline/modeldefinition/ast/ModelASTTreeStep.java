@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,19 +21,19 @@ public class ModelASTTreeStep extends ModelASTStep {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         return super.toJSON().accumulate("children", toJSONArray(children));
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         super.validate(validator);
         validate(validator, children);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock(super.toGroovy(), children);
     }

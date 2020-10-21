@@ -30,8 +30,8 @@ import org.jenkinsci.Symbol
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 /**
  * A map of tool types to tool name (i.e., specific installation's configured name) to install and add to the path and
@@ -57,7 +57,7 @@ class Tools extends MappedClosure<Closure,Tools> implements Serializable {
      *
      * @return A list of type/name
      */
-    @Nonnull
+    @NonNull
     List<List<Object>> mergeToolEntries(@CheckForNull Tools other) {
         Map<String,Object> mergedMap = [:]
         if (other != null) {
@@ -85,7 +85,7 @@ class Tools extends MappedClosure<Closure,Tools> implements Serializable {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the tool types cache.
      */
-    static String typeForKey(@Nonnull String key) {
+    static String typeForKey(@NonNull String key) {
         return getAllowedToolTypes().get(key)
     }
 }

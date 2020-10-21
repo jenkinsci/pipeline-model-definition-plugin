@@ -34,8 +34,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 
 /**
@@ -54,7 +54,7 @@ public class NotConditional extends DeclarativeStageConditional<NotConditional> 
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
         return ImmutableList.of(child);
     }
@@ -63,7 +63,7 @@ public class NotConditional extends DeclarativeStageConditional<NotConditional> 
     @Symbol("not")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<NotConditional> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Execute the stage if the nested condition is false";
         }

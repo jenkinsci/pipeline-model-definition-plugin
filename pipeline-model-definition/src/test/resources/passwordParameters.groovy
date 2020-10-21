@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2018, CloudBees, Inc.
+ * Copyright (c) 2020, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,39 +22,16 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
-
-import hudson.Extension;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
-import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-public class QuietPeriod extends DeclarativeOption {
-    private int quietPeriod;
-
-    @DataBoundConstructor
-    public QuietPeriod(int quietPeriod) {
-        this.quietPeriod = quietPeriod;
+pipeline {
+    agent none
+    parameters {
+        password(defaultValue: 'mySecret', description: 'myDescription', name: 'myPassword')
     }
-
-    public int getQuietPeriod() {
-        return quietPeriod;
-    }
-
-    @Extension @Symbol("quietPeriod")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Set the quiet period for the job";
-        }
-
-        @Override
-        public boolean canUseInStage() {
-            return false;
+    stages {
+        stage("foo") {
+            steps {
+                echo "Password is ${params.myPassword}"
+            }
         }
     }
 }

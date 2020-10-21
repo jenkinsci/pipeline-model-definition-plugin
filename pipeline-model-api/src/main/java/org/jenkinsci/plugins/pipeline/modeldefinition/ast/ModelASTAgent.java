@@ -4,7 +4,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Map;
 
 /**
@@ -22,7 +22,7 @@ public final class ModelASTAgent extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         final JSONObject j = new JSONObject();
 
@@ -66,13 +66,13 @@ public final class ModelASTAgent extends ModelASTElement {
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, variables);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder();
         if (variables == null ||

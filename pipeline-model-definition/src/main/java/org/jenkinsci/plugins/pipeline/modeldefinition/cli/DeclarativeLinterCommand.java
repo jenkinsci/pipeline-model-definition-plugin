@@ -28,6 +28,7 @@ import hudson.Extension;
 import hudson.cli.CLICommand;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 
@@ -52,9 +53,15 @@ public class DeclarativeLinterCommand extends CLICommand {
 
         if (script != null) {
             try {
-                Converter.scriptToPipelineDef(script);
-                output.add("Jenkinsfile successfully validated.");
-                retVal = 0;
+
+                ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(script);
+                if (pipelineDef != null) {
+                    output.add("Jenkinsfile successfully validated.");
+                    retVal = 0;
+                } else {
+                    output.add("Jenkinsfile content '" + script + "' did not contain the 'pipeline' step");
+                    retVal = 1;
+                }
             } catch (Exception e) {
                 output.add("Errors encountered validating Jenkinsfile:");
                 retVal = 1;

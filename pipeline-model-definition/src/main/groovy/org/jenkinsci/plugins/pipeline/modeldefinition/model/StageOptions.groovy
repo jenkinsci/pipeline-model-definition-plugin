@@ -33,7 +33,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 
 /**
@@ -49,7 +49,7 @@ class StageOptions implements Serializable {
     private Map<String, Object> wrappers = [:]
 
     @Whitelisted
-    StageOptions(@Nonnull Map<String, DeclarativeOption> options, @Nonnull Map<String, Object> wrappers) {
+    StageOptions(@NonNull Map<String, DeclarativeOption> options, @NonNull Map<String, Object> wrappers) {
         this.options.putAll(options)
         this.wrappers.putAll(wrappers)
     }
@@ -81,7 +81,7 @@ class StageOptions implements Serializable {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the option types cache.
      */
-    static String typeForKey(@Nonnull String key) {
+    static String typeForKey(@NonNull String key) {
         return getAllowedOptionTypes().get(key)
     }
 

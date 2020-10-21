@@ -28,14 +28,19 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.model.ParameterDefinition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.PasswordParameterDefinition;
+import hudson.util.Secret;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ParametersDirective extends AbstractDirective<ParametersDirective> {
@@ -48,7 +53,7 @@ public class ParametersDirective extends AbstractDirective<ParametersDirective> 
         }
     }
 
-    @Nonnull
+    @NonNull
     public List<ParameterDefinition> getParameters() {
         return parameters;
     }
@@ -56,19 +61,19 @@ public class ParametersDirective extends AbstractDirective<ParametersDirective> 
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<ParametersDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "parameters";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Parameters";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return ExtensionList.lookup(ParameterDefinition.ParameterDescriptor.class).stream()
                     .filter(d -> DirectiveDescriptor.symbolForDescriptor(d) != null)
@@ -77,15 +82,27 @@ public class ParametersDirective extends AbstractDirective<ParametersDirective> 
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull ParametersDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull ParametersDirective directive) {
             StringBuilder result = new StringBuilder("parameters {\n");
             for (ParameterDefinition param : directive.parameters) {
-                result.append(Snippetizer.object2Groovy(UninstantiatedDescribable.from(param)));
+                result.append(Snippetizer.object2Groovy(customUninstantiate(param)));
                 result.append("\n");
             }
             result.append("}\n");
             return result.toString();
+        }
+
+        /**
+         * Compatibility hack for JENKINS-63516.
+         */
+        public UninstantiatedDescribable customUninstantiate(ParameterDefinition param) {
+            UninstantiatedDescribable step = UninstantiatedDescribable.from(param);
+            if (param instanceof PasswordParameterDefinition && DescribableModel.of(PasswordParameterDefinition.class).getParameter("defaultValue") == null) {
+                Map<String, Object> newParamArgs = Utils.copyMapReplacingEntry(step.getArguments(), "defaultValueAsSecret", "defaultValue", Secret.class, Secret::getPlainText);
+                return step.withArguments(newParamArgs);
+            }
+            return step;
         }
     }
 }

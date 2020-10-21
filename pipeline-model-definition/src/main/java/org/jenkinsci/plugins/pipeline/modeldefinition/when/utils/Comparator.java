@@ -31,7 +31,7 @@ import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jvnet.localizer.Localizable;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
@@ -45,11 +45,11 @@ public enum Comparator {
      */
     GLOB(Messages._Comparator_GLOB_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@NonNull String pattern, String actual) {
             return compare(pattern, actual, false);
         }
         @Override
-        public boolean compare(@Nonnull String pattern, String actual, boolean caseSensitive) {
+        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
             actual = defaultIfBlank(actual, "");
             // replace with the platform specific directory separator before
             // invoking Ant's platform specific path matching.
@@ -63,13 +63,13 @@ public enum Comparator {
      */
     REGEXP(Messages._Comparator_REGEXP_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@NonNull String pattern, String actual) {
             actual = defaultIfBlank(actual, "");
             //TODO validation for pattern compile
             return actual.matches(pattern);
         }
         @Override
-        public boolean compare(@Nonnull String pattern, String actual, boolean caseSensitive) {
+        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
             return compare(pattern, actual);
         }
     },
@@ -78,12 +78,12 @@ public enum Comparator {
      */
     EQUALS(Messages._Comparator_EQUALS_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@NonNull String pattern, String actual) {
             actual = defaultIfBlank(actual, "");
             return actual.equals(pattern);
         }
         @Override
-        public boolean compare(@Nonnull String pattern, String actual, boolean caseSensitive) {
+        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
             return compare(pattern, actual);
         }
     };

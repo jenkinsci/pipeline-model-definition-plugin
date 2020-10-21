@@ -4,7 +4,7 @@ import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,19 +24,19 @@ public final class ModelASTPositionalArgumentList extends ModelASTArgumentList {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONArray toJSON() {
         return toJSONArray(arguments);
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         // Nothing to validate directly
         validate(validator, arguments);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder();
         boolean first = true;

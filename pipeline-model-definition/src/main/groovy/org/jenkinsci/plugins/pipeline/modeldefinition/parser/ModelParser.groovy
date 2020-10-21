@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.stmt.TryCatchStatement
 import org.codehaus.groovy.classgen.VariableScopeVisitor
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.syntax.Types
@@ -52,8 +53,8 @@ import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.DescribableParameter
 import org.jenkinsci.plugins.workflow.flow.FlowExecution
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -88,6 +89,8 @@ class ModelParser implements Parser {
 
     private final Run<?,?> build
 
+    private final Map<String,DescribableModel> zeroArgModels = new HashMap<>()
+
     @Deprecated
     ModelParser(SourceUnit sourceUnit) {
         this(sourceUnit, [], null)
@@ -98,17 +101,32 @@ class ModelParser implements Parser {
         this(sourceUnit, [], execution)
     }
 
-    ModelParser(SourceUnit sourceUnit, @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators) {
+    ModelParser(SourceUnit sourceUnit, @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators) {
         this(sourceUnit, enabledOptionalValidators, null)
     }
 
     ModelParser(SourceUnit sourceUnit,
-                @Nonnull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+                @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
                 @CheckForNull FlowExecution execution) {
+        this(sourceUnit, enabledOptionalValidators, execution, new SourceUnitErrorCollector(sourceUnit))
+    }
+
+    ModelParser(SourceUnit sourceUnit,
+                @NonNull List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators,
+                @CheckForNull FlowExecution execution,
+                @CheckForNull ErrorCollector errorCollector) {
+        this(sourceUnit, execution, errorCollector, new ModelValidatorImpl(errorCollector, enabledOptionalValidators, execution), DescriptorLookupCache.getPublicCache())
+    }
+
+    ModelParser(SourceUnit sourceUnit,
+                @CheckForNull FlowExecution execution,
+                @CheckForNull ErrorCollector errorCollector,
+                @CheckForNull ModelValidator validator,
+                @CheckForNull DescriptorLookupCache lookupCache) {
         this.sourceUnit = sourceUnit
-        this.errorCollector = new SourceUnitErrorCollector(sourceUnit)
-        this.validator = new ModelValidatorImpl(errorCollector, enabledOptionalValidators, execution)
-        this.lookup = DescriptorLookupCache.getPublicCache()
+        this.errorCollector = errorCollector
+        this.validator = validator
+        this.lookup = lookupCache
         Queue.Executable executable = null
         if (execution != null) {
             executable = execution.getOwner().getExecutable()
@@ -117,6 +135,12 @@ class ModelParser implements Parser {
             this.build = (Run) executable
         } else {
             this.build = null
+        }
+        zeroArgModels.putAll(DeclarativeAgentDescriptor.zeroArgModels())
+        // Fall back on the default zero-arg model names for when run outside of Jenkins
+        if (zeroArgModels.size() == 0) {
+            zeroArgModels.put("none", null)
+            zeroArgModels.put("any", null)
         }
     }
 
@@ -152,7 +176,6 @@ class ModelParser implements Parser {
         def pst = src.statementBlock.statements.find {
             return isDeclarativePipelineStep(it)
         }
-
         if (pst != null) {
             return parsePipelineStep(src, pst, secondaryRun)
         } else {
@@ -172,6 +195,30 @@ class ModelParser implements Parser {
                     // are guaranteed to only have one, since we don't intend to support linting of pipelines defined in
                     // shared libraries.
                     return pipelineDefs.get(0)
+                }
+            }
+
+            /*
+             * If this is the Jenkins Templating Engine, the structure will be:
+             *   try{
+             *     ..
+             *     <user defined template> <-- might be pipeline block
+             *   } catch {
+             *     ..
+             *   }
+             */
+            if(!src.statementBlock.statements.isEmpty()){
+                def firstStatement = src.statementBlock.statements.get(0)
+                if (firstStatement instanceof BlockStatement) {
+                    def maybeTry = firstStatement.getStatements().last()
+                    if (maybeTry instanceof TryCatchStatement){
+                        def pipelineStatement = maybeTry.getTryStatement().statements.find{ stmt ->
+                            return isDeclarativePipelineStep(stmt)
+                        }
+                        if (pipelineStatement != null){
+                            return parsePipelineStep(src, pipelineStatement, secondaryRun)
+                        }
+                    }
                 }
             }
         }
@@ -281,7 +328,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTStages parseStages(Statement stmt) {
+    @NonNull ModelASTStages parseStages(Statement stmt) {
         def r = new ModelASTStages(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -298,7 +345,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTParallel parseParallel(Statement stmt) {
+    @NonNull ModelASTParallel parseParallel(Statement stmt) {
         def r = new ModelASTParallel(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -315,7 +362,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTMatrix parseMatrix(Statement stmt) {
+    @NonNull ModelASTMatrix parseMatrix(Statement stmt) {
         def r = new ModelASTMatrix(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -379,7 +426,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTAxisContainer parseAxes(Statement stmt) {
+    @NonNull ModelASTAxisContainer parseAxes(Statement stmt) {
         def a = new ModelASTAxisContainer(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -396,7 +443,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTAxis parseAxis(Statement stmt) {
+    @NonNull ModelASTAxis parseAxis(Statement stmt) {
         def a = new ModelASTAxis(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -444,7 +491,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTExcludes parseExcludes(Statement stmt) {
+    @NonNull ModelASTExcludes parseExcludes(Statement stmt) {
         def a = new ModelASTExcludes(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -461,7 +508,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTExclude parseExclude(Statement stmt) {
+    @NonNull ModelASTExclude parseExclude(Statement stmt) {
         def a = new ModelASTExclude(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -478,7 +525,7 @@ class ModelParser implements Parser {
         return a
     }
 
-    @Nonnull ModelASTExcludeAxis parseExcludeAxis(Statement stmt) {
+    @NonNull ModelASTExcludeAxis parseExcludeAxis(Statement stmt) {
 //        return (ModelASTExcludeAxis) parseAxis(stmt)
         def a = new ModelASTExcludeAxis(stmt)
 
@@ -540,7 +587,7 @@ class ModelParser implements Parser {
     }
 
 
-    @Nonnull ModelASTEnvironment parseEnvironment(Statement stmt) {
+    @NonNull ModelASTEnvironment parseEnvironment(Statement stmt) {
         def r = new ModelASTEnvironment(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -615,7 +662,7 @@ class ModelParser implements Parser {
      * assuming no errors were encountered on the various subexpressions, in which case it will return null.
      */
     @CheckForNull
-    private ModelASTValue envValueForStringConcat(@Nonnull BinaryExpression exp) {
+    private ModelASTValue envValueForStringConcat(@NonNull BinaryExpression exp) {
         StringBuilder builder = new StringBuilder()
         boolean isLiteral = true
 
@@ -651,7 +698,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean envValueFromArbitraryExpression(@Nonnull Expression e, @Nonnull StringBuilder builder) {
+    private boolean envValueFromArbitraryExpression(@NonNull Expression e, @NonNull StringBuilder builder) {
         if (e instanceof ConstantExpression || e instanceof GStringExpression) {
             ModelASTValue val = parseArgument(e)
             return appendAndIsLiteral(val, builder)
@@ -661,7 +708,7 @@ class ModelParser implements Parser {
         }
     }
 
-    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @Nonnull StringBuilder builder) {
+    private boolean appendAndIsLiteral(@CheckForNull ModelASTValue val, @NonNull StringBuilder builder) {
         if (val == null) {
             return true
         } else if (!val.isLiteral()) {
@@ -673,7 +720,7 @@ class ModelParser implements Parser {
 
     }
 
-    @Nonnull ModelASTLibraries parseLibraries(Statement stmt) {
+    @NonNull ModelASTLibraries parseLibraries(Statement stmt) {
         def r = new ModelASTLibraries(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -708,7 +755,7 @@ class ModelParser implements Parser {
         return r
     }
 
-    @Nonnull ModelASTTools parseTools(Statement stmt) {
+    @NonNull ModelASTTools parseTools(Statement stmt) {
         def r = new ModelASTTools(stmt)
 
         def m = matchBlockStatement(stmt)
@@ -1302,7 +1349,7 @@ class ModelParser implements Parser {
     /**
      * Parses a statement into a {@link ModelASTAgent}
      */
-    @Nonnull ModelASTAgent parseAgent(Statement st) {
+    @NonNull ModelASTAgent parseAgent(Statement st) {
         ModelASTAgent agent = new ModelASTAgent(st)
         def m = matchBlockStatement(st)
         def mc = matchMethodCall(st)
@@ -1318,7 +1365,7 @@ class ModelParser implements Parser {
                     errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                 } else {
                     def agentCode = parseKey(args[0])
-                    if (!(agentCode.key in DeclarativeAgentDescriptor.zeroArgModels().keySet())) {
+                    if (!(agentCode.key in zeroArgModels.keySet())) {
                         errorCollector.error(agent, Messages.ModelParser_InvalidAgent())
                     } else {
                         agent.agentType = agentCode
@@ -1351,19 +1398,19 @@ class ModelParser implements Parser {
         return agent
     }
 
-    @Nonnull ModelASTPostBuild parsePostBuild(Statement stmt) {
+    @NonNull ModelASTPostBuild parsePostBuild(Statement stmt) {
         def r = new ModelASTPostBuild(stmt)
 
         return parseBuildConditionResponder(stmt, r)
     }
 
-    @Nonnull ModelASTPostStage parsePostStage(Statement stmt) {
+    @NonNull ModelASTPostStage parsePostStage(Statement stmt) {
         def r = new ModelASTPostStage(stmt)
 
         return parseBuildConditionResponder(stmt, r)
     }
 
-    @Nonnull
+    @NonNull
     <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(Statement stmt, R responder) {
         def m = matchBlockStatement(stmt)
 
@@ -1380,7 +1427,7 @@ class ModelParser implements Parser {
         return responder
     }
 
-    @Nonnull ModelASTBuildCondition parseBuildCondition(Statement st) {
+    @NonNull ModelASTBuildCondition parseBuildCondition(Statement st) {
         ModelASTBuildCondition b = new ModelASTBuildCondition(st)
         def m = matchBlockStatement(st)
         if (m == null) {
@@ -1456,7 +1503,7 @@ class ModelParser implements Parser {
             return ModelASTValue.fromGString(getSourceText(e), e)
         }
         if (e instanceof VariableExpression) {
-            if (e.name in DeclarativeAgentDescriptor.zeroArgModels().keySet()) {
+            if (e.name in zeroArgModels.keySet()) {
                 return ModelASTValue.fromConstant(e.name, e)
             }
         }

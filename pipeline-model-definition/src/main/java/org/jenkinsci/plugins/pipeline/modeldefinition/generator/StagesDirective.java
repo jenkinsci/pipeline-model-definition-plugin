@@ -29,7 +29,7 @@ import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,19 +48,19 @@ public class StagesDirective extends AbstractDirective<StagesDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<StagesDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "stages";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Stages";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
             descriptors.add(Jenkins.get().getDescriptorByType(StageDirective.DescriptorImpl.class));
@@ -69,8 +69,8 @@ public class StagesDirective extends AbstractDirective<StagesDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull StagesDirective stages) {
+        @NonNull
+        public String toGroovy(@NonNull StagesDirective stages) {
             StringBuilder result = new StringBuilder("stages {\n" );
             if( stages.stages != null){
                 stages.stages.stream().forEach( a -> result.append(a.toGroovy(false)).append("\n"));
