@@ -28,13 +28,13 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.GlobalStageConditiona
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 
-class GlobalTestConditionalScript extends GlobalStageConditionalScript<RuntimeASTTransformerTest.GlobalTestConditional> {
-    GlobalTestConditionalScript(CpsScript s, RuntimeASTTransformerTest.GlobalTestConditional g) {
+class GlobalStepCountTestConditionalScript extends GlobalStageConditionalScript<RuntimeASTTransformerTest.GlobalStepCountTestConditional> {
+    GlobalStepCountTestConditionalScript(CpsScript s, RuntimeASTTransformerTest.GlobalStepCountTestConditional g) {
         super(s, g)
     }
 
     @Override
     boolean evaluate() {
-        return describable.skipStageName != describable.stageName
+        return describable.evaluate()
     }
 }

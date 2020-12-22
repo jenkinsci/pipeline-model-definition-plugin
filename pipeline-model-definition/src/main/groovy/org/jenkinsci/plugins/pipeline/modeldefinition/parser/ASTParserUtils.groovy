@@ -40,7 +40,6 @@ import org.codehaus.groovy.ast.stmt.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
@@ -350,9 +349,6 @@ class ASTParserUtils {
             DeclarativeStageConditionalDescriptor parentDesc =
                 (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
                     DeclarativeStageConditional.class, original.name)
-            if (parentDesc instanceof GlobalStageConditionalDescriptor) {
-
-            }
             if (original instanceof ModelASTWhenCondition) {
                 ModelASTWhenCondition cond = (ModelASTWhenCondition) original
                 if (cond.children.isEmpty()) {

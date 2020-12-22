@@ -22,22 +22,19 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent none
-    stages {
-        stage("hello") {
-            steps {
-                echo "hello world"
-            }
-        }
-        stage("goodbye") {
-            steps {
-                echo "goodbye world"
-                echo "no, really, we're leaving"
-            }
-        }
+package org.jenkinsci.plugins.pipeline.modeldefinition.parser
+
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.GlobalStageConditionalScript
+import org.jenkinsci.plugins.workflow.cps.CpsScript
+
+
+class GlobalStageNameTestConditionalScript extends GlobalStageConditionalScript<RuntimeASTTransformerTest.GlobalStageNameTestConditional> {
+    GlobalStageNameTestConditionalScript(CpsScript s, RuntimeASTTransformerTest.GlobalStageNameTestConditional g) {
+        super(s, g)
+    }
+
+    @Override
+    boolean evaluate() {
+        return describable.skipStageName != describable.stageName
     }
 }
-
-
-

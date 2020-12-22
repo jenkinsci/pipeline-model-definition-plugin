@@ -26,40 +26,36 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.InvisibleGlobalWhenCondition;
-import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.GlobalStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.GlobalStageConditionalDescriptor;
-import org.jenkinsci.plugins.structs.SymbolLookup;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
-
 public class RuntimeASTTransformerTest extends AbstractModelDefTest {
+    private void setupGlobalConditionals(String skipStageName, int maxStepCount) throws Exception {
+        GlobalStageNameTestConditional.GlobalStageNameTestConditionalDescriptor nameDesc = ExtensionList.lookupSingleton(GlobalStageNameTestConditional.GlobalStageNameTestConditionalDescriptor.class);
+        nameDesc.skipStageName = skipStageName;
+
+        GlobalStepCountTestConditional.GlobalStepCountTestConditionalDescriptor stepDesc = ExtensionList.lookupSingleton(GlobalStepCountTestConditional.GlobalStepCountTestConditionalDescriptor.class);
+        stepDesc.maxStepCount = maxStepCount;
+    }
 
     @Test
     public void globalConditionalNoWhensMatching() throws Exception {
-        GlobalTestConditional.GlobalTestConditionalDescriptor desc = ExtensionList.lookupSingleton(GlobalTestConditional.GlobalTestConditionalDescriptor.class);
-        desc.skipStageName = "hello";
+        setupGlobalConditionals("hello", 0);
 
         expect("twoStages")
             .logNotContains("hello world")
@@ -69,8 +65,7 @@ public class RuntimeASTTransformerTest extends AbstractModelDefTest {
 
     @Test
     public void globalConditionalNoWhensNotMatching() throws Exception {
-        GlobalTestConditional.GlobalTestConditionalDescriptor desc = ExtensionList.lookupSingleton(GlobalTestConditional.GlobalTestConditionalDescriptor.class);
-        desc.skipStageName = "something else";
+        setupGlobalConditionals("something else", 0);
 
         expect("twoStages")
             .logContains("hello world", "goodbye world")
@@ -78,9 +73,26 @@ public class RuntimeASTTransformerTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void globalConditionalStageInspectionMatching() throws Exception {
+        setupGlobalConditionals(null, 1);
+
+        expect("twoStages")
+            .logContains("hello world")
+            .logNotContains("goodbye world")
+            .go();
+    }
+
+    @Test
+    public void globalConditionalStageInspectionNotMatching() throws Exception {
+        setupGlobalConditionals(null, 0);
+        expect("twoStages")
+            .logContains("hello world", "goodbye world")
+            .go();
+    }
+
+    @Test
     public void globalConditionalExistingWhensMatching() throws Exception {
-        GlobalTestConditional.GlobalTestConditionalDescriptor desc = ExtensionList.lookupSingleton(GlobalTestConditional.GlobalTestConditionalDescriptor.class);
-        desc.skipStageName = "Two";
+        setupGlobalConditionals("Two", 0);
 
         expect("when/whenEnv")
             .logNotContains("Heal it", "Should never be reached")
@@ -90,8 +102,7 @@ public class RuntimeASTTransformerTest extends AbstractModelDefTest {
 
     @Test
     public void globalConditionalExistingWhensNotMatching() throws Exception {
-        GlobalTestConditional.GlobalTestConditionalDescriptor desc = ExtensionList.lookupSingleton(GlobalTestConditional.GlobalTestConditionalDescriptor.class);
-        desc.skipStageName = "something else";
+        setupGlobalConditionals("something else", 0);
 
         expect("when/whenEnv")
             .logNotContains("Should never be reached")
@@ -99,12 +110,12 @@ public class RuntimeASTTransformerTest extends AbstractModelDefTest {
             .go();
     }
 
-    public static class GlobalTestConditional extends GlobalStageConditional<GlobalTestConditional> {
-        private String skipStageName;
+    public static class GlobalStageNameTestConditional extends GlobalStageConditional<GlobalStageNameTestConditional> {
+        private final String skipStageName;
         private String stageName;
 
         @DataBoundConstructor
-        public GlobalTestConditional(String skipStageName) {
+        public GlobalStageNameTestConditional(String skipStageName) {
             this.skipStageName = skipStageName;
         }
 
@@ -122,15 +133,15 @@ public class RuntimeASTTransformerTest extends AbstractModelDefTest {
         }
 
         @TestExtension
-        @Symbol("globalTest")
-        public static class GlobalTestConditionalDescriptor extends GlobalStageConditionalDescriptor<GlobalTestConditional> {
+        @Symbol("globalStageNameTest")
+        public static class GlobalStageNameTestConditionalDescriptor extends GlobalStageConditionalDescriptor<GlobalStageNameTestConditional> {
             public String skipStageName;
 
             @Override
             public Map<String, Object> argMapForCondition(@NonNull InvisibleGlobalWhenCondition when) {
                 Map<String,Object> argMap = new TreeMap<>();
 
-                if (when.getName().equals("globalTest")) {
+                if (when.getName().equals("globalStageNameTest")) {
                     argMap.put("skipStageName", skipStageName);
                     argMap.put("stageName", when.getStageName());
                 }
@@ -141,7 +152,64 @@ public class RuntimeASTTransformerTest extends AbstractModelDefTest {
             @NonNull
             @Override
             public String getScriptClass() {
-                return getClass().getPackage().getName() + ".GlobalTestConditionalScript";
+                return getClass().getPackage().getName() + ".GlobalStageNameTestConditionalScript";
+            }
+        }
+    }
+
+    public static class GlobalStepCountTestConditional extends GlobalStageConditional<GlobalStepCountTestConditional> {
+        private final int maxStepCount;
+        private String stageJSON;
+
+        @DataBoundConstructor
+        public GlobalStepCountTestConditional(int maxStepCount) {
+            this.maxStepCount = maxStepCount;
+        }
+
+        public int getMaxStepCount() {
+            return maxStepCount;
+        }
+
+        @DataBoundSetter
+        public void setStageJSON(String stageJSON) {
+            this.stageJSON = stageJSON;
+        }
+
+        public boolean evaluate() throws Exception {
+            if (stageJSON != null && maxStepCount > 0) {
+                ModelASTStage stage = Utils.parseStageFromJSON(stageJSON);
+                if (stage != null && stage.getBranches().size() > 0) {
+                    for (ModelASTBranch branch : stage.getBranches()) {
+                        if (branch.getSteps().size() > maxStepCount) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        @TestExtension
+        @Symbol("globalStepCountTest")
+        public static class GlobalStepCountTestConditionalDescriptor extends GlobalStageConditionalDescriptor<GlobalStepCountTestConditional> {
+            public int maxStepCount;
+
+            @Override
+            public Map<String, Object> argMapForCondition(@NonNull InvisibleGlobalWhenCondition when) {
+                Map<String,Object> argMap = new TreeMap<>();
+
+                if (when.getName().equals("globalStepCountTest") && when.getStage() instanceof ModelASTStage) {
+                    argMap.put("maxStepCount", maxStepCount);
+                    argMap.put("stageJSON", when.getStage().toJSON().toString());
+                }
+
+                return argMap;
+            }
+
+            @NonNull
+            @Override
+            public String getScriptClass() {
+                return getClass().getPackage().getName() + ".GlobalStepCountTestConditionalScript";
             }
         }
     }

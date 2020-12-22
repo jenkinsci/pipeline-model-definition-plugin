@@ -802,26 +802,20 @@ class RuntimeASTTransformer {
         if (invisibles.size() == 0) {
             return when
         }
-        if (when == null) {
-            ModelASTWhen newWhen = new InvisibleWhen()
+        ModelASTWhen newWhen = new InvisibleWhen()
+        List<ModelASTWhenContent> newConditions = new ArrayList<>(invisibles)
 
-            newWhen.setConditions(invisibles)
-
-            return newWhen
-        } else {
+        if (when != null) {
             List<ModelASTWhenContent> originalConditions = when.getConditions()
-            List<ModelASTWhenContent> newConditions = new ArrayList<>(invisibles)
             newConditions.addAll(originalConditions)
-
-            ModelASTWhenCondition newParent = new InvisibleGlobalWhenCondition()
-            newParent.setName(SymbolLookup.getSymbolValue(AllOfConditional.class).first())
-            newParent.setChildren(newConditions)
-
-            ModelASTWhen newWhen = new InvisibleWhen()
             newWhen.setOriginalWhen(when)
-            newWhen.setConditions(Collections.singletonList(newParent))
-            return newWhen
         }
+        ModelASTWhenCondition newParent = new InvisibleGlobalWhenCondition()
+        newParent.setName(SymbolLookup.getSymbolValue(AllOfConditional.class).first())
+        newParent.setChildren(newConditions)
+
+        newWhen.setConditions(Collections.singletonList(newParent))
+        return newWhen
     }
 
     @CheckForNull
