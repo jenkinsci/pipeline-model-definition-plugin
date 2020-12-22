@@ -32,10 +32,12 @@ import hudson.model.Descriptor
 import hudson.model.JobProperty
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.*
+import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils
 import org.jenkinsci.plugins.pipeline.modeldefinition.DescriptorLookupCache
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
@@ -44,6 +46,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Parameters
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.Triggers
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.GlobalStageConditionalDescriptor
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
@@ -98,7 +101,7 @@ class ASTParserUtils {
                 s << prettyPrint(it, ind)
             }
         } else if (n instanceof ConstructorCallExpression) {
-            s << printer("- constructor of ${n.type.typeClass}:", ind)
+            s << printer("- constructor of ${n.type.name}:", ind)
             n.arguments.each {
                 s << prettyPrint(it, ind)
             }
@@ -143,6 +146,8 @@ class ASTParserUtils {
             n.methods.each { s << prettyPrint(it, ind) }
             s << printer("- statements:", ind)
             n.statementBlock.statements.each { s << prettyPrint(it, ind) }
+            s << printer("- classes:", ind)
+            n.classes.each { s << prettyPrint(it, ind) }
         } else if (n instanceof MethodNode) {
             s << printer("- methodNode:", ind)
             s << prettyPrint(n.code, ind)
@@ -208,6 +213,20 @@ class ASTParserUtils {
             s << prettyPrint(n.trueExpression, ind + 1)
             s << printer("- false:", ind + 1)
             s << prettyPrint(n.falseExpression, ind + 1)
+        } else if (n instanceof ClassNode && (n.name == "WorkflowScript" || n.name.startsWith("generated."))) {
+            s << printer("- class: ${n.name}", ind)
+            s << printer("- methods:", ind + 1)
+            n.methods.each { m ->
+                s << prettyPrint(m, ind + 1)
+            }
+            s << printer("- properties:", ind + 1)
+            n.properties.each { p ->
+                s << prettyPrint(p, ind + 1)
+            }
+            s << printer("- object initializers:", ind + 1)
+            n.objectInitializerStatements.each { o ->
+                s << prettyPrint(o, ind + 1)
+            }
         } else {
             s << printer("- ${n}", ind)
         }
@@ -327,35 +346,40 @@ class ASTParserUtils {
      * Transform a when condition, and its children if any exist, into instantiation AST.
      */
     static Expression transformWhenContentToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-        if (original instanceof ModelASTElement && isGroovyAST((ModelASTElement)original)) {
+        if (original instanceof ModelASTElement && (isGroovyAST((ModelASTElement)original) || original instanceof InvisibleGlobalWhenCondition)) {
             DeclarativeStageConditionalDescriptor parentDesc =
                 (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
                     DeclarativeStageConditional.class, original.name)
+            if (parentDesc instanceof GlobalStageConditionalDescriptor) {
+
+            }
             if (original instanceof ModelASTWhenCondition) {
                 ModelASTWhenCondition cond = (ModelASTWhenCondition) original
-                if (cond.getSourceLocation() != null && cond.getSourceLocation() instanceof Statement) {
-                    MethodCallExpression methCall = matchMethodCall((Statement) cond.getSourceLocation())
+                if (cond.children.isEmpty()) {
+                    if (cond.getSourceLocation() != null && cond.getSourceLocation() instanceof Statement) {
+                        MethodCallExpression methCall = matchMethodCall((Statement) cond.getSourceLocation())
 
-                    if (methCall != null) {
-                        if (cond.children.isEmpty()) {
+                        if (methCall != null) {
                             return methodCallToDescribable(methCall, null)
-                        } else {
-                            MapExpression argMap = new MapExpression()
-                            if (parentDesc.allowedChildrenCount == 1) {
-                                argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
-                                    transformWhenContentToRuntimeAST(cond.children.first()))
-                            } else {
-                                argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
-                                    new ListExpression(cond.children.collect { transformWhenContentToRuntimeAST(it) }))
-                            }
-                            return callX(ClassHelper.make(Utils.class),
-                                "instantiateDescribable",
-                                args(
-                                    classX(parentDesc.clazz),
-                                    argMap
-                                ))
                         }
+                    } else {
+                        return parentDesc.transformToRuntimeAST(original)
                     }
+                } else {
+                    MapExpression argMap = new MapExpression()
+                    if (parentDesc.allowedChildrenCount == 1) {
+                        argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
+                            transformWhenContentToRuntimeAST(cond.children.first()))
+                    } else {
+                        argMap.addMapEntryExpression(constX(UninstantiatedDescribable.ANONYMOUS_KEY),
+                            new ListExpression(cond.children.collect { transformWhenContentToRuntimeAST(it) }))
+                    }
+                    return callX(ClassHelper.make(CommonUtils.class),
+                        "instantiateDescribable",
+                        args(
+                            classX(parentDesc.clazz),
+                            argMap
+                        ))
                 }
             } else if (original instanceof ModelASTWhenExpression) {
                 return parentDesc.transformToRuntimeAST(original)
@@ -438,7 +462,7 @@ class ASTParserUtils {
 
     /**
      * Transforms a {@link MethodCallExpression} into either a map of name and arguments for steps, or a call to
-     * {@link Utils#instantiateDescribable(Class,Map)} that can be invoked at runtime to actually instantiated.
+     * {@link org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils#instantiateDescribable(Class < T >, Map < String, } that can be invoked at runtime to actually instantiated.
      * @param expr A method call.
      * @param descClass possibly null describable parent class
      * @return The appropriate transformation, or the original expression if it didn't correspond to a Describable.
@@ -463,7 +487,7 @@ class ASTParserUtils {
             // Ok, now it's a non-executable descriptor. Phew.
             Class<? extends Describable> descType = funcDesc.clazz
 
-            return callX(ClassHelper.make(Utils.class), "instantiateDescribable",
+            return callX(ClassHelper.make(CommonUtils.class), "instantiateDescribable",
                 args(classX(descType), argsMap(methArgs)))
         } else {
             // Not a describable at all!

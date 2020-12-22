@@ -452,31 +452,6 @@ class Utils {
         return knownTypes
     }
 
-    @Whitelisted
-    @Restricted(NoExternalUse.class)
-    static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
-        DescribableModel<T> model = new DescribableModel<>(c)
-        // Special case for JENKINS-63499.
-        if (model != null && model.type == PasswordParameterDefinition.class && model.getParameter("defaultValueAsSecret") != null) {
-            args = copyMapReplacingEntry(args, "defaultValue", "defaultValueAsSecret", String.class, { s -> Secret.fromString(s) })
-        }
-        return model?.instantiate(args)
-    }
-
-    /**
-     * Copy a map, replacing the entry with the specified key if it matches the specified type.
-     */
-    public static <T> Map<String, Object> copyMapReplacingEntry(Map<String, ?> map, String oldKey, String newKey, Class<T> requiredValueType, Function<T, Object> replacer) {
-        Map<String, Object> newMap = new TreeMap<>()
-        for (Map.Entry<String, ?> entry : map.entrySet()) {
-            if (entry.getKey().equals(oldKey) && requiredValueType.isInstance(entry.getValue())) {
-                newMap.put(newKey, replacer.apply(requiredValueType.cast(entry.getValue())))
-            } else {
-                newMap.put(entry.getKey(), entry.getValue())
-            }
-        }
-        newMap
-    }
 
     /**
      * @param c The closure to wrap.

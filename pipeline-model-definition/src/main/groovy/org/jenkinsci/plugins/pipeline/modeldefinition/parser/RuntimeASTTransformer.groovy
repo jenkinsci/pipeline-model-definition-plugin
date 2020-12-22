@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.AllOfConditional
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
@@ -708,7 +709,7 @@ class RuntimeASTTransformer {
                             transformStepsFromStage(original),
                             transformAgent(original.agent),
                             transformPostStage(original.post),
-                            transformStageConditionals(original.when),
+                            transformStageConditionals(original.when, original.name, original),
                             transformTools(original.tools),
                             transformEnvironment(original.environment),
                             constX(original.failFast != null ? original.failFast : false),
@@ -757,10 +758,13 @@ class RuntimeASTTransformer {
      * @return
      */
     @NonNull
-    Expression transformStageConditionals(@CheckForNull ModelASTWhen original) {
-        if (isGroovyAST(original) && !original.getConditions().isEmpty()) {
+    Expression transformStageConditionals(@CheckForNull ModelASTWhen original, String stageName, ModelASTStageBase stage) {
+        ModelASTWhen when = handleInvisibleWhenConditions(original, stageName, stage)
+
+        // Handle either cases of Groovy AST transformation or auto-generated InvisibleWhen containers.
+        if ((isGroovyAST(when) || when instanceof InvisibleWhen) && !when.getConditions().isEmpty()) {
             ListExpression closList = new ListExpression()
-            original.getConditions().each { cond ->
+            when.getConditions().each { cond ->
                 if (cond.name != null) {
                     DeclarativeStageConditionalDescriptor desc =
                             (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
@@ -773,12 +777,62 @@ class RuntimeASTTransformer {
 
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageConditionals.class),
                     args(wrapper.asScriptContextVariable(closureX(block(returnS(closList)))),
-                            constX(original.beforeAgent != null ? original.beforeAgent : false),
-                            constX(original.beforeInput != null ? original.beforeInput : false),
-                            constX(original.beforeOptions != null ? original.beforeOptions : false)
+                            constX(when.beforeAgent != null ? when.beforeAgent : false),
+                            constX(when.beforeInput != null ? when.beforeInput : false),
+                            constX(when.beforeOptions != null ? when.beforeOptions : false)
                     )))
         }
         return constX(null)
+    }
+
+    /**
+     * Add any invisible global when conditions to an auto-generated {@link InvisibleWhen}. The new invisible conditions
+     * will need to be satisfied as well as any existing conditions. If there are existing conditions, the new container
+     * will delegate everything other than condition listing to the original container.
+     *
+     * @param when The original, possibly null, when container.
+     * @return The new when container with any invisible conditions added.
+     */
+    @CheckForNull
+    final ModelASTWhen handleInvisibleWhenConditions(@CheckForNull ModelASTWhen when, String stageName, ModelASTStageBase stage) {
+        List<ModelASTWhenContent> invisibles = DeclarativeStageConditionalDescriptor.allInvisible()
+            .findAll { it != null }
+            .collect { whenConditionForDescriptor(it, stageName, stage) }
+
+        if (invisibles.size() == 0) {
+            return when
+        }
+        if (when == null) {
+            ModelASTWhen newWhen = new InvisibleWhen()
+
+            newWhen.setConditions(invisibles)
+
+            return newWhen
+        } else {
+            List<ModelASTWhenContent> originalConditions = when.getConditions()
+            List<ModelASTWhenContent> newConditions = new ArrayList<>(invisibles)
+            newConditions.addAll(originalConditions)
+
+            ModelASTWhenCondition newParent = new InvisibleGlobalWhenCondition()
+            newParent.setName(SymbolLookup.getSymbolValue(AllOfConditional.class).first())
+            newParent.setChildren(newConditions)
+
+            ModelASTWhen newWhen = new InvisibleWhen()
+            newWhen.setOriginalWhen(when)
+            newWhen.setConditions(Collections.singletonList(newParent))
+            return newWhen
+        }
+    }
+
+    @CheckForNull
+    private ModelASTWhenContent whenConditionForDescriptor(@NonNull DeclarativeStageConditionalDescriptor d, String stageName, ModelASTStageBase stage) {
+        Set<String> symbols = SymbolLookup.getSymbolValue(d)
+        if (symbols.isEmpty()) {
+            return null
+        }
+        ModelASTWhenCondition condition = new InvisibleGlobalWhenCondition(stageName, stage)
+        condition.setName(symbols.first())
+        return condition
     }
 
     /**
@@ -902,7 +956,7 @@ class RuntimeASTTransformer {
                             constX(null), // steps
                             transformAgent(original.agent),
                             transformPostStage(original.post),
-                            transformStageConditionals(original.when),
+                            transformStageConditionals(original.when, name, original),
                             transformTools(original.tools),
                             transformEnvironment(original.environment),
                             constX(false), // failfast on serial is not interesting
