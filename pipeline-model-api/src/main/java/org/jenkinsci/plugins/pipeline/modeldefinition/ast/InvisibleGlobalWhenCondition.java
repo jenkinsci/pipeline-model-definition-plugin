@@ -28,6 +28,8 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
+import java.util.Objects;
+
 /**
  * Special case of a {@link ModelASTWhenCondition} generated for a globally defined when condition.
  */
@@ -110,8 +112,8 @@ public class InvisibleGlobalWhenCondition extends ModelASTWhenCondition {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (getStageName() != null ? getStageName().hashCode() : 0);
-        result = 31 * result + (getStage() != null ? getStage().hashCode() : 0);
+        result = 31 * result + Objects.hashCode(getStage());
+        result = 31 * result + Objects.hashCode(getStageName());
         return result;
     }
 }
