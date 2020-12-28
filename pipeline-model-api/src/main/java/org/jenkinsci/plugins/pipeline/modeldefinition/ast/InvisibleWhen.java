@@ -29,9 +29,10 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
- * When container generated when adding invisible global when conditions to a stage, containing the new conditions and
- * any explicitly defined ones. When created with existing conditions, the existing when container is stored for use as
- * well. This is used as a marker to avoid validation, JSON/Groovy generation, etc for the generated container.
+ * {@code when} container generated when adding invisible global {@code when} conditions to a stage, containing the new
+ * invisible conditions and any explicitly defined ones. When created with existing conditions, the existing {@code when}
+ * container is stored for use as well. This is used as a marker to avoid validation, JSON/Groovy generation, etc for
+ * the generated container.
  */
 public class InvisibleWhen extends ModelASTWhen {
     /**

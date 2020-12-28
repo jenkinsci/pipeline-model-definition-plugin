@@ -34,9 +34,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTBranch;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.GlobalStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.GlobalStageConditionalDescriptor;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -45,7 +43,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class RuntimeASTTransformerTest extends AbstractModelDefTest {
-    private void setupGlobalConditionals(String skipStageName, int maxStepCount) throws Exception {
+    private void setupGlobalConditionals(String skipStageName, int maxStepCount) {
         GlobalStageNameTestConditional.GlobalStageNameTestConditionalDescriptor nameDesc = ExtensionList.lookupSingleton(GlobalStageNameTestConditional.GlobalStageNameTestConditionalDescriptor.class);
         nameDesc.skipStageName = skipStageName;
 
