@@ -54,8 +54,8 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
@@ -226,8 +226,8 @@ public class RestartDeclarativePipelineAction implements Action {
         }
 
         @Override
-        @Nonnull
-        public Collection<? extends Action> createFor(@Nonnull WorkflowRun run) {
+        @NonNull
+        public Collection<? extends Action> createFor(@NonNull WorkflowRun run) {
             return Collections.<Action>singleton(new RestartDeclarativePipelineAction(run));
         }
     }

@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents the collection of {@code Stage}s to be executed in the build in parallel. Corresponds to {@code Stages}.
@@ -17,7 +17,7 @@ public class ModelASTParallel extends ModelASTStages {
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validate(validator, true);
     }
 
@@ -28,6 +28,7 @@ public class ModelASTParallel extends ModelASTStages {
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock("parallel", getStages());
     }

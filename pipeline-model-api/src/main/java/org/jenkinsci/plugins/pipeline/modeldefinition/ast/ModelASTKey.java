@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 /**
  * Represents the key in a key/value pair, as used in {@link ModelASTEnvironment}, {@link ModelASTNamedArgumentList} and elsewhere.
  *
@@ -13,11 +15,13 @@ public class ModelASTKey extends ModelASTElement {
     }
 
     @Override
+    @NonNull
     public Object toJSON() {
         return key;
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         return key;
     }

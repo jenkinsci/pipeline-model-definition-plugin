@@ -38,6 +38,29 @@
           "value": "**/*.js"
         }
       }]}
+    },
+    {
+      "name": "Three",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "With regexp"
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "changeset",
+        "arguments":         {
+          "isLiteral": true,
+          "value": ".*\\.js"
+        }
+      }]}
     }
   ],
   "agent":   {

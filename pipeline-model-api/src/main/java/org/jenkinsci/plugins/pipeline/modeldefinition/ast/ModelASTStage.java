@@ -4,7 +4,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +45,7 @@ public class ModelASTStage extends ModelASTStageBase {
     }
 
     @Override
+    @NonNull
     public JSONObject toJSON() {
 
         JSONObject o = super.toJSON()
@@ -59,7 +60,7 @@ public class ModelASTStage extends ModelASTStageBase {
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validate(validator, false);
     }
 
@@ -73,6 +74,7 @@ public class ModelASTStage extends ModelASTStageBase {
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder()
             // TODO decide if we need to support multiline names

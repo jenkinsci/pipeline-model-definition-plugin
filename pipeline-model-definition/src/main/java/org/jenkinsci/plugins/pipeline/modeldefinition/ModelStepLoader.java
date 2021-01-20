@@ -31,7 +31,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Loads the main "pipeline" step as well as the additional CPS-transformed code it depends on.
@@ -43,14 +43,14 @@ public class ModelStepLoader extends GlobalVariable {
     public static final String STEP_NAME = "pipeline";
 
     @Override
-    @Nonnull
+    @NonNull
     public String getName() {
         return STEP_NAME;
     }
 
     @Override
-    @Nonnull
-    public Object getValue(@Nonnull CpsScript script) throws Exception {
+    @NonNull
+    public Object getValue(@NonNull CpsScript script) throws Exception {
         CpsThread c = CpsThread.current();
         if (c == null)
             throw new IllegalStateException("Expected to be called from CpsThread");

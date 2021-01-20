@@ -127,8 +127,8 @@ public class SuccessfulEndpointOpsTest extends AbstractModelDefTest {
         JSONObject resultData = result.getJSONObject("data");
         assertNotNull(resultData);
 
-        String rawGroovy = resultData.getString("jenkinsfile");
-        assertNotNull(rawGroovy);
+        String rawGroovy = resultData.optString("jenkinsfile", null);
+        assertNotNull(resultData.toString(2), rawGroovy);
 
         ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(rawGroovy);
         assertNotNull(pipelineDef);

@@ -35,7 +35,7 @@
   <packaging>hpi</packaging>
   <name>Pipeline: Declarative</name>
   <description>An opinionated, declarative Pipeline</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Pipeline+Model+Definition+Plugin</url>
+  <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
 
   <build>
     <plugins>
@@ -85,6 +85,13 @@
     </plugins>
   </build>
 
+  <scm>
+    <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
+    <tag>${scmTag}</tag>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>
@@ -102,8 +109,18 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>structs</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -132,6 +149,8 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>docker-workflow</artifactId>
+      <scope>runtime</scope> <!-- TODO unused, just here to encourage upgrades -->
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -170,13 +189,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>pipeline-input-step</artifactId>
-    </dependency>
-    <!-- Dependency on tombstoned declarative agent plugin to make sure we don't end up with a
-    bad old version installed -->
-    <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
-      <artifactId>pipeline-model-declarative-agent</artifactId>
-      <version>1.1.1</version>
     </dependency>
 
     <!-- TEST deps -->
@@ -263,12 +275,6 @@
       </exclusions>
     </dependency>
 
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-scm-step</artifactId>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
     <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-support</artifactId>

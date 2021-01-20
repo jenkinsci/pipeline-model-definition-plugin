@@ -67,7 +67,7 @@ public class MatrixTest extends AbstractModelDefTest {
     @BeforeClass
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
-        s.setLabelString("agent-one some-label docker");
+        s.setLabelString("agent-one some-label");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
         s.setNumExecutors(10);
@@ -84,11 +84,6 @@ public class MatrixTest extends AbstractModelDefTest {
         windows.setLabelString("windows-agent");
         windows.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
-    }
-
-    @Before
-    public void matrixDisabled() {
-        Assume.assumeFalse("Disabled matrix tests on this branch.", true);
     }
 
     @Ignore

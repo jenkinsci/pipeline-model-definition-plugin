@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents a single BuildCondition to be checked and possibly executed in either the PostBuild or
@@ -20,6 +20,7 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     }
 
     @Override
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("condition", condition)
@@ -27,12 +28,13 @@ public final class ModelASTBuildCondition extends ModelASTElement {
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, branch);
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock(condition, branch);
     }

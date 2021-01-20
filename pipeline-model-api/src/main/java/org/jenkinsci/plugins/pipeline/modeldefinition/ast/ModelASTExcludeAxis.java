@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,18 +22,20 @@ public class ModelASTExcludeAxis extends ModelASTAxis {
     }
 
     @Override
+    @NonNull
     public JSONObject toJSON() {
         return super.toJSON()
             .elementOpt("inverse", inverse);
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         super.validate(validator);
         validator.validateElement(this);
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder()
             .append("name '").append(toGroovy(getName()) + "'\n");

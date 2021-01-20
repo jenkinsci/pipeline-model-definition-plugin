@@ -27,6 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.PasswordParameterDefinition;
 import hudson.model.StringParameterDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -38,7 +39,14 @@ import org.jvnet.hudson.test.Issue;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class ParametersTest extends AbstractModelDefTest {
     @Test
@@ -147,5 +155,42 @@ public class ParametersTest extends AbstractModelDefTest {
         assertEquals(1, newProp.getParameterDefinitions().size());
         ParameterDefinition paramDef = newProp.getParameterDefinition("DO_NOT_DELETE");
         assertNotNull(paramDef);
+    }
+
+    @Test
+    public void sameParametersNotOverride() throws Exception{
+        WorkflowRun b = getAndStartNonRepoBuild("simpleParameters");
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+        WorkflowJob job = b.getParent();
+        ParametersDefinitionProperty paramProp = job.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp);
+        BooleanParameterDefinition bpd = (BooleanParameterDefinition) paramProp.getParameterDefinitions().get(0);
+
+
+        WorkflowRun b2 = job.scheduleBuild2(0).get();
+        j.assertBuildStatusSuccess(j.waitForCompletion(b2));
+        WorkflowJob job2 = b2.getParent();
+        ParametersDefinitionProperty paramProp2 = job2.getProperty(ParametersDefinitionProperty.class);
+        assertNotNull(paramProp2);
+        BooleanParameterDefinition bpd2 = (BooleanParameterDefinition) paramProp2.getParameterDefinitions().get(0);
+        assertSame(bpd, bpd2);
+    }
+
+    @Issue("JENKINS-63499")
+    @Test
+    public void passwordParameters() throws Exception {
+        WorkflowRun b = expect("passwordParameters")
+                .runFromRepo(false)
+                .logContains("Password is mySecret")
+                .go();
+        WorkflowJob p = b.getParent();
+
+        ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
+        assertThat(pdp.getParameterDefinitions(), hasSize(1));
+        PasswordParameterDefinition param = (PasswordParameterDefinition) pdp.getParameterDefinitions().get(0);
+        assertEquals("myPassword", param.getName());
+        assertEquals("mySecret", param.getDefaultValue());
+        assertEquals("myDescription", param.getDescription());
     }
 }

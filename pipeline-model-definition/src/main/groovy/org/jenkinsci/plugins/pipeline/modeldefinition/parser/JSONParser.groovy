@@ -39,8 +39,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollect
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 /**
  * Parses input JSON into a {@link ModelASTPipelineDef}.
@@ -693,7 +693,7 @@ class JSONParser implements Parser {
         return parseBuildConditionResponder(j, post)
     }
 
-    @Nonnull
+    @NonNull
     <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(JsonTree j, R responder) {
         JsonTree conds = j.append(JsonPointer.of("conditions"))
         conds.node.eachWithIndex { JsonNode entry, int i ->

@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +40,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
     public enum StageContentType {
         STEPS,
         PARALLEL,
-        STAGES;
+        STAGES,
+        MATRIX;
 
         public String getName() {
             // TODO: This could probably be easier, but I wanted to use a localized string and couldn't think of anything better.
@@ -50,6 +51,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
                 return Messages.StageDirective_Parallel_name();
             } else if (this == STAGES) {
                 return Messages.StageDirective_Stages_name();
+            } else if(this == MATRIX){
+                return Messages.StageDirective_Matrix_name();
             } else {
                 return "(unknown)";
             }
@@ -61,7 +64,7 @@ public class StageDirective extends AbstractDirective<StageDirective> {
     private StageContentType contentType;
 
     @DataBoundConstructor
-    public StageDirective(List<AbstractDirective> directives, @Nonnull String name, StageContentType contentType) {
+    public StageDirective(List<AbstractDirective> directives, @NonNull String name, StageContentType contentType) {
         if (directives != null) {
             this.directives.addAll(directives);
         }
@@ -69,7 +72,7 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         this.contentType = contentType;
     }
 
-    @Nonnull
+    @NonNull
     public String getName() {
         return name;
     }
@@ -81,7 +84,7 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         return contentType;
     }
 
-    @Nonnull
+    @NonNull
     public List<AbstractDirective> getDirectives() {
         return directives;
     }
@@ -89,19 +92,19 @@ public class StageDirective extends AbstractDirective<StageDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<StageDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "stage";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Stage";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
             descriptors.add(Jenkins.get().getDescriptorByType(AgentDirective.DescriptorImpl.class));
@@ -124,8 +127,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull StageDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull StageDirective directive) {
             StringBuilder result = new StringBuilder("stage(");
             result.append("'").append(directive.name).append("') {\n");
             switch (directive.contentType) {
@@ -142,6 +145,11 @@ public class StageDirective extends AbstractDirective<StageDirective> {
                 case STAGES:
                     result.append("stages {\n");
                     result.append("// One or more stages need to be included within the stages block.\n");
+                    result.append("}\n");
+                    break;
+                case MATRIX:
+                    result.append("matrix {\n");
+                    result.append("// matrix need to be included.\n");
                     result.append("}\n");
                     break;
                 default:

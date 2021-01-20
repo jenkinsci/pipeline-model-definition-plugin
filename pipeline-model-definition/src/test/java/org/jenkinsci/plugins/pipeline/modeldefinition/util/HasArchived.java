@@ -30,12 +30,12 @@ import jenkins.model.ArtifactManager;
 import jenkins.util.VirtualFile;
 import org.apache.commons.lang.StringUtils;
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 
 /**
@@ -46,7 +46,7 @@ public class HasArchived extends TypeSafeMatcher<Run> {
     private final Matcher<String> nameMatcher;
     private final Matcher<?> contentMatcher;
 
-    public HasArchived(@Nonnull Matcher<String> nameMatcher, @Nonnull Matcher<?> contentMatcher) {
+    public HasArchived(@NonNull Matcher<String> nameMatcher, @NonNull Matcher<?> contentMatcher) {
         this.nameMatcher = nameMatcher;
         this.contentMatcher = contentMatcher;
     }
@@ -78,8 +78,10 @@ public class HasArchived extends TypeSafeMatcher<Run> {
                 }
             }
         } else if (nameMatcher.matches(fullName(file, root))) {
-            if (contentMatcher.matches(file.open())) {
-                return true;
+            try (InputStream stream = file.open()) {
+                if (contentMatcher.matches(stream)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -106,17 +108,14 @@ public class HasArchived extends TypeSafeMatcher<Run> {
                 .appendText("]");
     }
 
-    @Factory
     public static Matcher<Run> hasArchived(Matcher<String> name, Matcher<?> content) {
         return new HasArchived(name, content);
     }
 
-    @Factory
     public static Matcher<Run> hasArchivedString(Matcher<String> name, Matcher<String> content, Charset encoding) {
         return hasArchived(name, InputStreamContainingString.inputStream(content, encoding));
     }
 
-    @Factory
     public static Matcher<Run> hasArchivedString(Matcher<String> name, Matcher<String> content) {
         return hasArchived(name, InputStreamContainingString.inputStream(content));
     }

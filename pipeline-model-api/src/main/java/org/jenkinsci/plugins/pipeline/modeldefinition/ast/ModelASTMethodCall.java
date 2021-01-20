@@ -5,7 +5,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,6 +43,7 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     }
 
     @Override
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -50,12 +51,13 @@ public class ModelASTMethodCall extends ModelASTElement implements ModelASTMetho
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, args);
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder(name);
         result.append('(');

@@ -26,14 +26,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.Launcher;
 import hudson.model.ParameterDefinition;
 import hudson.util.StreamTaskListener;
-import hudson.util.VersionNumber;
 import jenkins.plugins.git.GitSampleRepoRule;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.SystemUtils;
-import org.jenkinsci.plugins.docker.commons.tools.DockerTool;
-import org.jenkinsci.plugins.docker.workflow.client.DockerClient;
 import org.junit.Assume;
 import org.junit.Rule;
 
@@ -166,19 +163,6 @@ public abstract class AbstractDeclarativeTest {
         sampleRepo.git("add", "Jenkinsfile");
 
         sampleRepo.git("commit", "--message=files");
-    }
-
-    protected void assumeDocker() throws Exception {
-        assumeSh();
-
-        Launcher.LocalLauncher localLauncher = new Launcher.LocalLauncher(StreamTaskListener.NULL);
-        try {
-            Assume.assumeThat("Docker working", localLauncher.launch().cmds(DockerTool.getExecutable(null, null, null, null), "ps").join(), is(0));
-        } catch (IOException x) {
-            Assume.assumeNoException("have Docker installed", x);
-        }
-        DockerClient dockerClient = new DockerClient(localLauncher, null, null);
-        Assume.assumeFalse("Docker version not < 1.3", dockerClient.version().isOlderThan(new VersionNumber("1.3")));
     }
 
     protected void assumeSh() throws Exception {

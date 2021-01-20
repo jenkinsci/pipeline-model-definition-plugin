@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,18 +26,20 @@ public abstract class ModelASTBuildConditionsContainer extends ModelASTElement {
     public abstract String getName();
 
     @Override
+    @NonNull
     public JSONObject toJSON() {
         return toJSONObject("conditions", conditions);
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, conditions);
         super.validate(validator);
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock(getName(), conditions);
     }

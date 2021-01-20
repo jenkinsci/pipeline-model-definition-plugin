@@ -29,8 +29,8 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -117,7 +117,7 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      * @param name The name for the descriptor to look up
      * @return The corresponding descriptor or null if not found.
      */
-    public static @Nullable DeclarativeAgentDescriptor byName(@Nonnull String name) {
+    public static @Nullable DeclarativeAgentDescriptor byName(@NonNull String name) {
         return (DeclarativeAgentDescriptor) SymbolLookup.get().findDescriptor(DeclarativeAgent.class, name);
     }
 
@@ -129,7 +129,7 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      * @return The instantiated {@link DeclarativeAgent} instance, or null if the name isn't found.
      * @throws Exception if there are issues instantiating from the descriptor
      */
-    public static @Nullable DeclarativeAgent<?> instanceForName(@Nonnull String name,
+    public static @Nullable DeclarativeAgent<?> instanceForName(@NonNull String name,
                                                              Map<String,Object> arguments) throws Exception {
         DeclarativeAgentDescriptor descriptor = byName(name);
 
@@ -148,7 +148,7 @@ public abstract class DeclarativeAgentDescriptor<A extends DeclarativeAgent<A>> 
      * @return The instantiated {@link DeclarativeAgent} instance.
      * @throws Exception if there are issues instantiating from the descriptor
      */
-    public static @Nonnull DeclarativeAgent<?> instanceForDescriptor(@Nonnull DeclarativeAgentDescriptor<?> descriptor,
+    public static @NonNull DeclarativeAgent<?> instanceForDescriptor(@NonNull DeclarativeAgentDescriptor<?> descriptor,
                                                                    Map<String,Object> arguments) throws Exception {
         if (zeroArgModels().keySet().contains(descriptor.getName()) ||
                 (noRequiredArgsModels().keySet().contains(descriptor.getName()) &&

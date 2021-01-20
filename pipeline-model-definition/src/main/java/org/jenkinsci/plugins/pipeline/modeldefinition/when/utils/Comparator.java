@@ -31,7 +31,7 @@ import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jvnet.localizer.Localizable;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 
 import static org.apache.commons.lang.StringUtils.defaultIfBlank;
@@ -45,13 +45,17 @@ public enum Comparator {
      */
     GLOB(Messages._Comparator_GLOB_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@NonNull String pattern, String actual) {
+            return compare(pattern, actual, false);
+        }
+        @Override
+        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
             actual = defaultIfBlank(actual, "");
             // replace with the platform specific directory separator before
             // invoking Ant's platform specific path matching.
             String safeCompare = pattern.replace('/', File.separatorChar);
             String safeName = actual.replace('/', File.separatorChar);
-            return SelectorUtils.matchPath(safeCompare, safeName, false);
+            return SelectorUtils.matchPath(safeCompare, safeName, caseSensitive);
         }
     },
     /**
@@ -59,10 +63,14 @@ public enum Comparator {
      */
     REGEXP(Messages._Comparator_REGEXP_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@NonNull String pattern, String actual) {
             actual = defaultIfBlank(actual, "");
             //TODO validation for pattern compile
             return actual.matches(pattern);
+        }
+        @Override
+        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
+            return compare(pattern, actual);
         }
     },
     /**
@@ -70,9 +78,13 @@ public enum Comparator {
      */
     EQUALS(Messages._Comparator_EQUALS_DisplayName()) {
         @Override
-        public boolean compare(@Nonnull String pattern, String actual) {
+        public boolean compare(@NonNull String pattern, String actual) {
             actual = defaultIfBlank(actual, "");
             return actual.equals(pattern);
+        }
+        @Override
+        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
+            return compare(pattern, actual);
         }
     };
 
@@ -85,6 +97,15 @@ public enum Comparator {
     public Localizable getDisplayName() {
         return displayName;
     }
+
+    /**
+     * Compare the two strings
+     * @param pattern the pattern/value to check for
+     * @param actual the value to check
+     * @param caseSensitive whether the comparison will be case-sensitive. Only for the GLOB comparator
+     * @return true if matching
+     */
+    public abstract boolean compare(String pattern, String actual, boolean caseSensitive);
 
     /**
      * Compare the two strings

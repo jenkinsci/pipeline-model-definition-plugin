@@ -27,7 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,17 +44,19 @@ public final class ModelASTLibraries extends ModelASTElement implements ModelAST
     }
 
     @Override
+    @NonNull
     public JSONObject toJSON() {
         return toJSONObject("libraries", libs);
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, libs);
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder("libraries {\n");
         for (ModelASTValue v : libs) {

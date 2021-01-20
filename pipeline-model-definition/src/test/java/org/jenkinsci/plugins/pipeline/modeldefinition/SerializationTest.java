@@ -49,7 +49,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
@@ -67,7 +67,7 @@ public class SerializationTest extends AbstractModelDefTest {
     public static void setUpAgent() throws Exception {
         s = j.createOnlineSlave();
         s.setNumExecutors(4);
-        s.setLabelString("some-label docker test");
+        s.setLabelString("some-label test");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
     }
 
@@ -197,8 +197,8 @@ public class SerializationTest extends AbstractModelDefTest {
     public static class XStreamPickleFactory extends SingleTypedPickleFactory<Describable<?>> {
 
         @Override
-        @Nonnull
-        protected Pickle pickle(@Nonnull Describable<?> d) {
+        @NonNull
+        protected Pickle pickle(@NonNull Describable<?> d) {
             return new XStreamPickle(d);
         }
 

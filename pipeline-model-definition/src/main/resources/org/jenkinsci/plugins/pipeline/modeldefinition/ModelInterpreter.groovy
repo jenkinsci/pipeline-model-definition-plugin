@@ -25,14 +25,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.cloudbees.groovy.cps.impl.CpsClosure
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.FilePath
+import hudson.Functions
 import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.AbstractDockerAgent
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -42,13 +40,12 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
-
-import static org.apache.commons.lang.exception.ExceptionUtils.getFullStackTrace
-
 /**
  * CPS-transformed code for actually performing the build.
+ *
+ * WARNING: Avoid using 3rd-party non-Jenkins dependencies (including annotations)
+ * in this code, because even if they work in tests, they may not be available at
+ * runtime due to class loading differences.
  *
  * @author Andrew Bayer
  */
@@ -455,7 +452,7 @@ class ModelInterpreter implements Serializable {
      * @param body The closure to execute
      * @return The return of the resulting executed closure
      */
-    def withCredentialsBlock(@CheckForNull Environment environment, Closure body) {
+    def withCredentialsBlock(Environment environment, Closure body) {
         Map<String,CredentialWrapper> creds = new HashMap<>()
 
         if (environment != null) {
@@ -493,7 +490,7 @@ class ModelInterpreter implements Serializable {
      */
     @NonCPS
     private List<Map<String, Object>> createWithCredentialsParameters(
-            @Nonnull Map<String, CredentialWrapper> credentials) {
+            Map<String, CredentialWrapper> credentials) {
         List<Map<String, Object>> parameters = []
         credentials.each { k, v ->
             v.addParameters(k, parameters)
@@ -578,10 +575,11 @@ class ModelInterpreter implements Serializable {
         if (agent != null) {
             agent.populateMap((Map<String,Object>)instanceFromClosure(agent.rawClosure, Map.class))
         }
-        if (agent == null
-            && root.agent.getDeclarativeAgent(root, root) instanceof AbstractDockerAgent
-            && root.options?.options?.get("newContainerPerStage") != null) {
-            agent = root.agent
+        if (agent == null) {
+            def declarativeAgent = root.agent.getDeclarativeAgent(root, root)
+            if (declarativeAgent != null && declarativeAgent.reuseRootAgent(root.options?.options ?: [:])) {
+                agent = root.agent
+            }
         }
         if (agent == null) {
             return {
@@ -763,7 +761,7 @@ class ModelInterpreter implements Serializable {
                     Utils.markStageFailedAndContinued(stageName)
                 }
                 Utils.logToTaskListener("Error when executing ${conditionName} post condition:")
-                Utils.logToTaskListener(getFullStackTrace(e))
+                Utils.logToTaskListener(Functions.printThrowable(e))
                 if (stageError == null) {
                     stageError = e
                 }
@@ -812,7 +810,6 @@ class ModelInterpreter implements Serializable {
      *
      * @author Falko Modler
      */
-    @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
     private class WhenEvaluator implements Serializable {
 
         final StageConditionals when

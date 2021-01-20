@@ -30,34 +30,40 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extends Descriptor<T> {
-    @Nonnull
+    @NonNull
+    public boolean isTopLevel(){
+        return true;
+    }
+
+    @NonNull
     public abstract String getName();
 
-    @Nonnull
+    @NonNull
     public abstract String getDisplayName();
 
-    @Nonnull
+    @NonNull
     public abstract List<Descriptor> getDescriptors();
 
-    @Nonnull
+    @NonNull
     public static ExtensionList<DirectiveDescriptor> all() {
         return ExtensionList.lookup(DirectiveDescriptor.class);
     }
 
-    @Nonnull
-    public abstract String toGroovy(@Nonnull T directive);
+    @NonNull
+    public abstract String toGroovy(@NonNull T directive);
 
-    @Nonnull
-    public final String toIndentedGroovy(@Nonnull T directive) {
+    @NonNull
+    public final String toIndentedGroovy(@NonNull T directive) {
         return ModelASTPipelineDef.toIndentedGroovy(toGroovy(directive));
     }
 
-    public static String symbolForDescriptor(@Nonnull Descriptor d) {
+    public static String symbolForDescriptor(@NonNull Descriptor d) {
         if (d instanceof StepDescriptor) {
             return ((StepDescriptor) d).getFunctionName();
         } else {

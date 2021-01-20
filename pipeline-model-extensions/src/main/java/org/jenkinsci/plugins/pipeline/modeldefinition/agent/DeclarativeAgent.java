@@ -25,12 +25,13 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
+import java.util.Map;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
-
-import javax.annotation.Nonnull;
 
 /**
  * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
@@ -61,6 +62,12 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
         return inStage;
     }
 
+    public void initialize(Map<String, DeclarativeOption> options, boolean explicitAgentInStage) {}
+
+    public boolean reuseRootAgent(Map<String, DeclarativeOption> options) {
+        return false;
+    }
+
     public void setDoCheckout(boolean doCheckout) {
         this.doCheckout = doCheckout;
     }
@@ -77,7 +84,7 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
         return subdirectory;
     }
 
-    public void copyFlags(@Nonnull DeclarativeAgent a) {
+    public void copyFlags(@NonNull DeclarativeAgent a) {
         setInStage(a.isInStage());
         setDoCheckout(a.isDoCheckout());
         setSubdirectory(a.getSubdirectory());

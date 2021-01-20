@@ -24,6 +24,9 @@
 
 pipeline {
     agent none
+    environment {
+        VAR = "VALUE"
+    }
     stages {
         stage("foo") {
             steps {

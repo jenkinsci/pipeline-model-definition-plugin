@@ -27,7 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +46,7 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     }
 
     @Override
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", name)
@@ -53,12 +54,13 @@ public class ModelASTInternalFunctionCall extends ModelASTElement implements Mod
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, args);
     }
 
     @Override
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder(name);
         result.append('(');

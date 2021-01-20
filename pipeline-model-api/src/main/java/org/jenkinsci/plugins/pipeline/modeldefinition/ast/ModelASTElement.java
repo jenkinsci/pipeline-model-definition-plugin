@@ -28,8 +28,8 @@ import net.sf.json.JSONObject;
 import org.codehaus.groovy.ast.ASTNode;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.*;
 
 
@@ -58,6 +58,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      * @return Generally a {@link JSONObject} or {@link JSONArray} but for some leaf nodes, may be a {@link String} or
      *     other simple class.
      */
+    @NonNull
     public abstract Object toJSON();
 
     @CheckForNull
@@ -70,7 +71,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
         return item != null && !item.isEmpty() ? item.toJSON() : null;
     }
 
-    @Nonnull
+    @NonNull
     protected static <T extends ModelASTMarkerInterface> JSONArray toJSONArray(@CheckForNull Collection<T> list) {
         JSONArray a = new JSONArray();
         if (list != null) {
@@ -81,7 +82,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
         return a;
     }
 
-    @Nonnull
+    @NonNull
     protected static <K extends ModelASTMarkerInterface, V extends ModelASTMarkerInterface> JSONArray toJSONArray(@CheckForNull Map<K, V> map) {
         final JSONArray a = new JSONArray();
         if (map != null) {
@@ -95,8 +96,8 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
         return a;
     }
 
-    @Nonnull
-    protected static <T extends ModelASTMarkerInterface> JSONObject toJSONObject(@Nonnull String key, @CheckForNull Collection<T> list) {
+    @NonNull
+    protected static <T extends ModelASTMarkerInterface> JSONObject toJSONObject(@NonNull String key, @CheckForNull Collection<T> list) {
         return new JSONObject().accumulate(key, toJSONArray(list));
     }
 
@@ -110,6 +111,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     public abstract String toGroovy();
 
 
@@ -118,6 +120,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static String toGroovy(@CheckForNull ModelASTMarkerInterface item) {
         return item != null ? item.toGroovy() : "";
     }
@@ -127,6 +130,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static String toGroovyCheckEmpty(@CheckForNull ModelASTElementContainer item) {
         return item != null && !item.isEmpty() ? item.toGroovy() : "";
     }
@@ -136,6 +140,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static <T extends ModelASTMarkerInterface> String toGroovy(List<T> list) {
         StringBuilder result = new StringBuilder();
         for (T item: list) {
@@ -149,6 +154,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static <T extends ModelASTMarkerInterface> String toGroovyArgList(Collection<T> list) {
         StringBuilder result = new StringBuilder();
         boolean first = true;
@@ -168,6 +174,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static <K extends ModelASTMarkerInterface, V extends  ModelASTMarkerInterface>  String toGroovyArgList(Map<K, V> map, String separator) {
         StringBuilder result = new StringBuilder();
         boolean first = true;
@@ -188,6 +195,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static String toGroovyBlock(String name, ModelASTMarkerInterface item) {
         StringBuilder result = new StringBuilder();
         if (name != null) {
@@ -204,6 +212,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static <T extends ModelASTMarkerInterface> String toGroovyBlock(String name, List<T> list) {
         StringBuilder result = new StringBuilder();
         if (name != null) {
@@ -220,6 +229,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @return A simple {@link String} of Groovy code for this element and its children.
      */
+    @NonNull
     protected static <K extends ModelASTMarkerInterface, V extends  ModelASTMarkerInterface> String toGroovyBlock(String name, Map<K, V> map, String separator) {
         StringBuilder result = new StringBuilder();
         if (name != null) {
@@ -238,17 +248,17 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
      *
      * @param validator A {@link ModelValidator} to use for more complicated validation.
      */
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         // No-op
     }
 
-    protected static void validate(@Nonnull ModelValidator validator, @CheckForNull ModelASTMarkerInterface... items) {
+    protected static void validate(@NonNull ModelValidator validator, @CheckForNull ModelASTMarkerInterface... items) {
         if (items != null && items.length > 0) {
             validate(validator, Arrays.asList(items));
         }
     }
 
-    protected static <T extends ModelASTMarkerInterface> void validate(@Nonnull ModelValidator validator, @CheckForNull List<T> list, @CheckForNull ModelASTMarkerInterface... items) {
+    protected static <T extends ModelASTMarkerInterface> void validate(@NonNull ModelValidator validator, @CheckForNull List<T> list, @CheckForNull ModelASTMarkerInterface... items) {
         validate(validator, items);
         if (list != null) {
             for (T item : list) {
@@ -259,7 +269,7 @@ public abstract class ModelASTElement implements ModelASTMarkerInterface {
         }
     }
 
-    protected static <K extends  ModelASTMarkerInterface, V extends  ModelASTMarkerInterface> void validate(@Nonnull ModelValidator validator, @CheckForNull Map<K, V> map, @CheckForNull ModelASTMarkerInterface... items) {
+    protected static <K extends  ModelASTMarkerInterface, V extends  ModelASTMarkerInterface> void validate(@NonNull ModelValidator validator, @CheckForNull Map<K, V> map, @CheckForNull ModelASTMarkerInterface... items) {
         validate(validator, items);
         if (map != null) {
             for (Map.Entry<K, V> entry : map.entrySet()) {
