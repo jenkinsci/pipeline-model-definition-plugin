@@ -80,17 +80,6 @@
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>${workflow-cps.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <classifier>tests</classifier>
-        <version>${workflow-cps.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-multibranch</artifactId>
         <version>${workflow-multibranch.version}</version>
       </dependency>
@@ -119,10 +108,6 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>pipeline-graph-analysis</artifactId>
         <version>1.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>jackson2-api</artifactId>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -171,18 +156,6 @@
         <artifactId>json-schema-validator</artifactId>
         <version>2.0.4</version>
       </dependency>
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.13</version>
-        <exclusions>
-          <exclusion>
-            <!-- replaced by org.hamcrest:hamcrest -->
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -217,12 +190,11 @@
   <properties>
     <revision>1.7.3</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.176.4</jenkins.version>
+    <jenkins.version>2.190.3</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
     <workflow-multibranch.version>2.16</workflow-multibranch.version>
-    <workflow-cps.version>2.81</workflow-cps.version>
   </properties>
 
   <repositories>
