@@ -61,20 +61,36 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         return !"config.jelly".equals(getConfigPage());
     }
 
+    /**
+     * Whether this conditional is an invisible global conditional. Defaults to false.
+     */
+    public boolean isInvisible() {
+        return false;
+    }
+
     public abstract Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original);
 
     /**
      * Get all {@link DeclarativeStageConditionalDescriptor}s.
      *
-     * @return a list of all {@link DeclarativeStageConditionalDescriptor}s registered.`
+     * @return a list of all {@link DeclarativeStageConditionalDescriptor}s registered, except for invisible global conditionals.
      */
     public static List<DeclarativeStageConditionalDescriptor> all() {
-        ExtensionList<DeclarativeStageConditionalDescriptor> descs = ExtensionList.lookup(DeclarativeStageConditionalDescriptor.class);
-        return descs.stream().sorted(Comparator.comparing(DeclarativeStageConditionalDescriptor::getName)).collect(Collectors.toList());
+        return allIncludingInvisible().stream().filter(d -> !d.isInvisible()).collect(Collectors.toList());
     }
 
     public static List<DeclarativeStageConditionalDescriptor> forGenerator() {
         return all().stream().filter(DeclarativeStageConditionalDescriptor::inDirectiveGenerator).collect(Collectors.toList());
+    }
+
+    private static List<DeclarativeStageConditionalDescriptor> allIncludingInvisible() {
+        ExtensionList<DeclarativeStageConditionalDescriptor> descs = ExtensionList.lookup(DeclarativeStageConditionalDescriptor.class);
+        return descs.stream()
+            .sorted(Comparator.comparing(DeclarativeStageConditionalDescriptor::getName)).collect(Collectors.toList());
+    }
+
+    public static List<DeclarativeStageConditionalDescriptor> allInvisible() {
+        return allIncludingInvisible().stream().filter(DeclarativeStageConditionalDescriptor::isInvisible).collect(Collectors.toList());
     }
 
     public static List<String> allNames() {
