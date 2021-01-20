@@ -24,6 +24,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.github.fge.jsonschema.tree.JsonTree
+import com.github.fge.jsonschema.tree.SimpleJsonTree
+import com.github.fge.jsonschema.util.JsonLoader
 import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -34,6 +38,9 @@ import hudson.ExtensionList
 import hudson.model.*
 import hudson.util.Secret
 import hudson.triggers.Trigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser
+
 import java.util.function.Function
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
@@ -452,31 +459,6 @@ class Utils {
         return knownTypes
     }
 
-    @Whitelisted
-    @Restricted(NoExternalUse.class)
-    static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
-        DescribableModel<T> model = new DescribableModel<>(c)
-        // Special case for JENKINS-63499.
-        if (model != null && model.type == PasswordParameterDefinition.class && model.getParameter("defaultValueAsSecret") != null) {
-            args = copyMapReplacingEntry(args, "defaultValue", "defaultValueAsSecret", String.class, { s -> Secret.fromString(s) })
-        }
-        return model?.instantiate(args)
-    }
-
-    /**
-     * Copy a map, replacing the entry with the specified key if it matches the specified type.
-     */
-    public static <T> Map<String, Object> copyMapReplacingEntry(Map<String, ?> map, String oldKey, String newKey, Class<T> requiredValueType, Function<T, Object> replacer) {
-        Map<String, Object> newMap = new TreeMap<>()
-        for (Map.Entry<String, ?> entry : map.entrySet()) {
-            if (entry.getKey().equals(oldKey) && requiredValueType.isInstance(entry.getValue())) {
-                newMap.put(newKey, replacer.apply(requiredValueType.cast(entry.getValue())))
-            } else {
-                newMap.put(entry.getKey(), entry.getValue())
-            }
-        }
-        newMap
-    }
 
     /**
      * @param c The closure to wrap.
@@ -1024,5 +1006,18 @@ class Utils {
         RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
 
         return cause?.originStage
+    }
+
+    /**
+     * Convenience method for parsing a {@link ModelASTStage} from a JSON string
+     * @param stageJSON The JSON string representing the stage
+     * @return The parsed result of the JSON, or null
+     * @throws Exception If anything goes wrong in parsing the JSON.
+     */
+    static ModelASTStage parseStageFromJSON(String stageJSON) throws Exception {
+        JsonNode json = JsonLoader.fromString(stageJSON)
+        JsonTree jsonTree = new SimpleJsonTree(json)
+        JSONParser parser = new JSONParser(null)
+        return parser.parseStage(jsonTree)
     }
 }
