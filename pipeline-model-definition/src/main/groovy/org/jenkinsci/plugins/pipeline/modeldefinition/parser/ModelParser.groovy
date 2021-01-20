@@ -321,7 +321,7 @@ class ModelParser implements Parser {
 
             // Lazily evaluate prettyPrint(...) - i.e., only if AST_DEBUG_LOGGING is true.
             astDebugLog {
-                "Transformed runtime AST:\n${ -> prettyPrint(pipelineBlock.whole.arguments)}"
+                "Transformed runtime AST:\n${ -> prettyPrint(src)}"
             }
         }
 

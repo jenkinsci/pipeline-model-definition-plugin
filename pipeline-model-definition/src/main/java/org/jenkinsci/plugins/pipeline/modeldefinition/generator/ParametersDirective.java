@@ -28,7 +28,7 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.model.ParameterDefinition;
-import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
@@ -99,7 +99,7 @@ public class ParametersDirective extends AbstractDirective<ParametersDirective> 
         public UninstantiatedDescribable customUninstantiate(ParameterDefinition param) {
             UninstantiatedDescribable step = UninstantiatedDescribable.from(param);
             if (param instanceof PasswordParameterDefinition && DescribableModel.of(PasswordParameterDefinition.class).getParameter("defaultValue") == null) {
-                Map<String, Object> newParamArgs = Utils.copyMapReplacingEntry(step.getArguments(), "defaultValueAsSecret", "defaultValue", Secret.class, Secret::getPlainText);
+                Map<String, Object> newParamArgs = CommonUtils.copyMapReplacingEntry(step.getArguments(), "defaultValueAsSecret", "defaultValue", Secret.class, Secret::getPlainText);
                 return step.withArguments(newParamArgs);
             }
             return step;
