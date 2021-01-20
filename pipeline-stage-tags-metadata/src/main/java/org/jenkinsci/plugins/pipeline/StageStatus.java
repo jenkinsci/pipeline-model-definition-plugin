@@ -28,7 +28,7 @@ import hudson.Extension;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,7 +58,7 @@ public class StageStatus extends StageTagsMetadata {
         return skippedStages();
     }
 
-    @Nonnull
+    @NonNull
     public static List<String> skippedStages() {
         return Arrays.asList(getSkippedForConditional(), getSkippedForFailure(), getSkippedForUnstable(),
                 getSkippedForRestart());
@@ -84,7 +84,7 @@ public class StageStatus extends StageTagsMetadata {
         return "SKIPPED_FOR_RESTART";
     }
 
-    public static boolean isSkippedStage(@Nonnull FlowNode node) {
+    public static boolean isSkippedStage(@NonNull FlowNode node) {
         TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
         if (tagsAction != null) {
             String tagValue = tagsAction.getTagValue(TAG_NAME);
@@ -94,7 +94,7 @@ public class StageStatus extends StageTagsMetadata {
         return false;
     }
 
-    public static boolean isSkippedStageForReason(@Nonnull FlowNode node, @Nonnull String reason) {
+    public static boolean isSkippedStageForReason(@NonNull FlowNode node, @NonNull String reason) {
         if (skippedStages().contains(reason)) {
             TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
             if (tagsAction != null) {

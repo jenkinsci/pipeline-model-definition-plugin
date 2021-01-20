@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -20,19 +20,19 @@ public final class ModelASTEnvironment extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONArray toJSON() {
         return toJSONArray(variables);
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, variables);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock("environment", variables, " = ");
     }

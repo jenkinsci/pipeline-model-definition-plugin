@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class MultipleUnnamedParametersTest extends AbstractModelDefTest {
 
@@ -69,7 +69,7 @@ public class MultipleUnnamedParametersTest extends AbstractModelDefTest {
         @Symbol("multiArgCtorProp")
         public static class MultiArgCtorPropDescriptor extends JobPropertyDescriptor {
             @Override
-            @Nonnull
+            @NonNull
             public String getDisplayName() {
                 return "Test property with multiple parameters to DataBoundConstructor";
             }

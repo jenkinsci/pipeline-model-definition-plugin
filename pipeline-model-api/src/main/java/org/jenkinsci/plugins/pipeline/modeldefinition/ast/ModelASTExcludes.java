@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,19 +22,19 @@ public class ModelASTExcludes extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONArray toJSON() {
         return toJSONArray(excludes);
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, excludes);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock("excludes", excludes);
     }

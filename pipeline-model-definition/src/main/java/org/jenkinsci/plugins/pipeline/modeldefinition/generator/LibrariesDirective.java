@@ -33,7 +33,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -55,26 +55,26 @@ public class LibrariesDirective extends AbstractDirective<LibrariesDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<LibrariesDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "libraries";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Shared Libraries";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return Collections.emptyList();
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull LibrariesDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull LibrariesDirective directive) {
             StringBuilder result = new StringBuilder("libraries {\n");
             if (!directive.getLibs().isEmpty()) {
                 for (NameAndVersion l : directive.getLibs()) {

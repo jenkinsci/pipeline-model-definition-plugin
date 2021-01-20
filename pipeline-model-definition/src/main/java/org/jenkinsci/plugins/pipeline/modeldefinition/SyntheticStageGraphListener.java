@@ -38,7 +38,7 @@ import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -89,7 +89,7 @@ public final class SyntheticStageGraphListener implements GraphListener {
         }
     }
 
-    private synchronized boolean isDeclarativeRun(@Nonnull FlowExecution execution) {
+    private synchronized boolean isDeclarativeRun(@NonNull FlowExecution execution) {
         if (!declarativeRuns.containsKey(execution)) {
             boolean isDeclarative = false;
             try {

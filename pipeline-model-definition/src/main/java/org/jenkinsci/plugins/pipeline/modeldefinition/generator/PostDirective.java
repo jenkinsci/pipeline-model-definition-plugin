@@ -30,7 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.*;
 
 public class PostDirective extends AbstractDirective<PostDirective> {
@@ -50,24 +50,24 @@ public class PostDirective extends AbstractDirective<PostDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<PostDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "post";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Post Stage or Build Conditions";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return Collections.emptyList();
         }
 
-        @Nonnull
+        @NonNull
         public Set<Map.Entry<String,String>> getPossibleConditions() {
             Map<String,String> conditionMap = new HashMap<>();
 
@@ -82,8 +82,8 @@ public class PostDirective extends AbstractDirective<PostDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull PostDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull PostDirective directive) {
             StringBuilder result = new StringBuilder("post {\n");
             if (!directive.getConditions().isEmpty()) {
                 for (String bc : directive.getConditions()) {

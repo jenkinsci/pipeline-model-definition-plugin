@@ -27,7 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +49,7 @@ public final class ModelASTStageInput extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         final JSONObject o = new JSONObject()
             .accumulate("message", toJSON(message))
@@ -66,13 +66,13 @@ public final class ModelASTStageInput extends ModelASTElement {
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, parameters);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder("input {\n");
         result.append("message ").append(message.toGroovy()).append("\n");

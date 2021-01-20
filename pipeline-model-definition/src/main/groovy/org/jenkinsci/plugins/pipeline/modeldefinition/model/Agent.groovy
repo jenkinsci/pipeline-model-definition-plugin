@@ -36,7 +36,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 
-import javax.annotation.CheckForNull
+import edu.umd.cs.findbugs.annotations.CheckForNull
 
 /**
  * What context the build should run in - i.e., on a given label, within a container of a given Docker agent, or without

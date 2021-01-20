@@ -62,7 +62,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
@@ -711,7 +711,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         }
 
         @Override
-        protected boolean shouldExamineAllBuilds(@Nonnull SCMHead head) {
+        protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
             if (mockPr != null && head.getClass().isAssignableFrom(mockPr)) {
                 return true;
             }
@@ -722,7 +722,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @TestExtension
     public static class WhenConditionPickleFactory extends SingleTypedPickleFactory<DeclarativeStageConditional<?>> {
         @Override
-        @Nonnull
+        @NonNull
         protected Pickle pickle(DeclarativeStageConditional<?> d) {
             return new XStreamPickle(d);
         }

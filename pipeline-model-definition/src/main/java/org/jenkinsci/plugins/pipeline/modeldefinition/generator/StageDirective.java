@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,7 +64,7 @@ public class StageDirective extends AbstractDirective<StageDirective> {
     private StageContentType contentType;
 
     @DataBoundConstructor
-    public StageDirective(List<AbstractDirective> directives, @Nonnull String name, StageContentType contentType) {
+    public StageDirective(List<AbstractDirective> directives, @NonNull String name, StageContentType contentType) {
         if (directives != null) {
             this.directives.addAll(directives);
         }
@@ -72,7 +72,7 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         this.contentType = contentType;
     }
 
-    @Nonnull
+    @NonNull
     public String getName() {
         return name;
     }
@@ -84,7 +84,7 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         return contentType;
     }
 
-    @Nonnull
+    @NonNull
     public List<AbstractDirective> getDirectives() {
         return directives;
     }
@@ -92,19 +92,19 @@ public class StageDirective extends AbstractDirective<StageDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<StageDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "stage";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Stage";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
             descriptors.add(Jenkins.get().getDescriptorByType(AgentDirective.DescriptorImpl.class));
@@ -127,8 +127,8 @@ public class StageDirective extends AbstractDirective<StageDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull StageDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull StageDirective directive) {
             StringBuilder result = new StringBuilder("stage(");
             result.append("'").append(directive.name).append("') {\n");
             switch (directive.contentType) {

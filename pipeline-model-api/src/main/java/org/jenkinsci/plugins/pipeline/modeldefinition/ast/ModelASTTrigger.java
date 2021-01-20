@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * A single trigger, corresponding eventually to a {@code Trigger}
@@ -15,7 +15,7 @@ public class ModelASTTrigger extends ModelASTMethodCall {
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         super.validate(validator);
     }

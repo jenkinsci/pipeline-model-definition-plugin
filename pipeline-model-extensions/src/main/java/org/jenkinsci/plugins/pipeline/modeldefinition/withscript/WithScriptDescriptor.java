@@ -28,7 +28,7 @@ import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,7 +44,7 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
      *
      * @return The name.
      */
-    public @Nonnull String getName() {
+    public @NonNull String getName() {
         Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
         if (symbolValues.isEmpty()) {
             throw new IllegalArgumentException(clazz.getSimpleName() + " descriptor class " + this.getClass().getName()
@@ -59,7 +59,7 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
      *
      * @return The class name, defaulting to the {@link WithScriptDescribable} {@link #clazz} class name with "Script" appended.
      */
-    public @Nonnull String getScriptClass() {
+    public @NonNull String getScriptClass() {
         return clazz.getName() + "Script";
     }
 

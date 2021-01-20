@@ -34,7 +34,7 @@ import hudson.triggers.TriggerDescriptor
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 /**
  * A container for lists of triggers.
@@ -84,7 +84,7 @@ class Triggers implements Serializable {
      * @param key The key to look up.
      * @return The type ID for that key, if it's in the parameter types cache.
      */
-    static String typeForKey(@Nonnull String key) {
+    static String typeForKey(@NonNull String key) {
         return getAllowedTriggerTypes().get(key)
     }
 }

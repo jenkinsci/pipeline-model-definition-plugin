@@ -28,7 +28,7 @@ import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 public abstract class DeclarativeOptionDescriptor extends Descriptor<DeclarativeOption> {
 
-    public @Nonnull String getName() {
+    public @NonNull String getName() {
         Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
         if (symbolValues.isEmpty()) {
             throw new IllegalArgumentException("Declarative Option descriptor class " + this.getClass().getName()

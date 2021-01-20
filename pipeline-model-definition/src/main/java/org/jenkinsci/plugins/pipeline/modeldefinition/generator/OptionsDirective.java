@@ -42,7 +42,7 @@ import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -62,7 +62,7 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
         }
     }
 
-    @Nonnull
+    @NonNull
     public List<Describable> getOptions() {
         return options;
     }
@@ -70,24 +70,24 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<OptionsDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "options";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Options";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return getDescriptorsForContext(false);
         }
 
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptorsForContext(boolean inStage) {
             List<Descriptor> descriptors = new ArrayList<>();
 
@@ -131,8 +131,8 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull OptionsDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull OptionsDirective directive) {
             StringBuilder result = new StringBuilder("options {\n");
             for (Describable d : directive.options) {
                 if (d instanceof Step) {

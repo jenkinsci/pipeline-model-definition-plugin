@@ -28,7 +28,7 @@ import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,26 +47,26 @@ public class AxesDirective extends AbstractDirective<AxesDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<AxesDirective> {
 
-        @Nonnull
+        @NonNull
         @Override
         public boolean isTopLevel() {
             return false;
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "axes";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Axes";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             List<Descriptor> descriptors = new ArrayList<>();
             descriptors.add(Jenkins.get().getDescriptorByType(AxisDirective.DescriptorImpl.class));
@@ -76,8 +76,8 @@ public class AxesDirective extends AbstractDirective<AxesDirective> {
 
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull AxesDirective axes) {
+        @NonNull
+        public String toGroovy(@NonNull AxesDirective axes) {
             StringBuffer result = new StringBuffer("axes {\n");
             if(axes.axis != null){
                 axes.axis.stream().forEach( axis -> {
