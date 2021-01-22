@@ -109,7 +109,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     public void stages100WithOutsideVarAndFuncNotAllowed() throws Exception {
         RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = false;
         expect(Result.FAILURE,"basic/stages100WithOutsideVarAndFunc")
-            .logContains("Add the the '@Field' annotation to local variable declarations")
+            .logContains("Add the '@Field' annotation to local variable declarations")
             .logNotContains("Method code too large!")
             .go();
     }
