@@ -23,7 +23,7 @@
   ~ THE SOFTWARE.
   -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:local="local">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:local="local" xmlns:ttd="/org/jenkinsci/plugins/pipeline/modeldefinition/generator">
     <f:block>
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#tools" target="_blank">the online documentation</a>
         for more information on the <code>tools</code> directive.
@@ -31,15 +31,15 @@
         <d:taglib uri="local">
             <d:tag name="body">
                 <j:set var="help" value="${d.helpFile}" />
-                <table style="width:100%">
-                    <tr>
-                        <td colspan="3">
+                <ttd:blockWrapper>
+                    <ttd:row>
+                        <ttd:td>
                             <div class="dd-handle">
                                 <b>${d.displayName}</b>
                             </div>
-                        </td>
+                        </ttd:td>
                         <f:helpLink url="${help}"/>
-                    </tr>
+                    </ttd:row>
                     <!-- TODO: help support is unintuitive; people should be able to see help from drop-down menu -->
                     <j:if test="${help!=null}">
                         <f:helpArea />
@@ -52,7 +52,7 @@
                             <f:repeatableDeleteButton value="${attrs.deleteCaption}" />
                         </div>
                     </f:block>
-                </table>
+                </ttd:blockWrapper>
             </d:tag>
         </d:taglib>
 

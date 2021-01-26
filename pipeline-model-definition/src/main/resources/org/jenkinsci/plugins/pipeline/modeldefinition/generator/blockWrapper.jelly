@@ -1,0 +1,16 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:l="/lib/layout">
+  <!-- TODO remove this once https://github.com/jenkinsci/jenkins/pull/3895 is in the core baseline -->
+  <j:choose>
+    <j:when test="${divBasedFormLayout}">
+      <div>
+        <d:invokeBody/>
+      </div>
+    </j:when>
+    <j:otherwise>
+      <table style="width:100%">
+        <d:invokeBody/>
+      </table>
+    </j:otherwise>
+  </j:choose>
+</j:jelly>

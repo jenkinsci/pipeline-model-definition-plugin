@@ -24,7 +24,7 @@
   -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:local="local">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:local="local" xmlns:ttd="/org/jenkinsci/plugins/pipeline/modeldefinition/generator">
     <l:layout title="${%Pipeline Syntax: Directive Generator}" norefresh="true">
         <st:include page="sidepanel"/>
         <l:main-panel>
@@ -45,6 +45,7 @@
                 <!-- Similar to f:dropdownDescriptorSelector, but adds fallback content to block, and JENKINS-25130 adds per-selection help: -->
                 <j:set var="item" value="${it.getItem(request)}"/>
                 <d:taglib uri="local">
+
                     <d:tag name="listDirectives">
                         <j:set var="inStage" value="false"/>
                         <j:forEach var="descriptor" items="${directives}">
@@ -56,10 +57,10 @@
                                     <j:set var="help" value="${descriptor.helpFile}"/>
                                     <j:set var="inStage" value="false"/>
                                     <j:if test="${help != null}">
-                                        <tr>
-                                            <td colspan="3"/>
+                                        <ttd:row>
+                                            <ttd:td colspan="3"/>
                                             <f:helpLink url="${help}"/>
-                                        </tr>
+                                        </ttd:row>
                                         <f:helpArea/>
                                     </j:if>
                                     <st:include from="${descriptor}" page="${descriptor.configPage}" optional="true">
