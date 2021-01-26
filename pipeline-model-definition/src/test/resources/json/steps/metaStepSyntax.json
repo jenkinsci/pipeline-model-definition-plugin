@@ -70,6 +70,23 @@
               "value": "[$class: 'ArtifactArchiver', artifacts: 'msg2.out', fingerprint: true]"
             }
           }]
+        },
+        {
+          "name": "rhombus",
+          "arguments":           {
+            "isLiteral": true,
+            "value": 123
+          },
+          "children": [          {
+            "name": "echo",
+            "arguments": [            {
+              "key": "message",
+              "value":               {
+                "isLiteral": true,
+                "value": "hi from in rhombus"
+              }
+            }]
+          }]
         }
       ]
     }]
