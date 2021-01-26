@@ -33,6 +33,9 @@ pipeline {
                 writeFile text: 'goodbye world', file: 'msg2.out'
                 archiveArtifacts(allowEmptyArchive: true, artifacts: 'msg.out')
                 step([$class: 'ArtifactArchiver', artifacts: 'msg2.out', fingerprint: true])
+                rhombus(123) {
+                    echo 'hi from in rhombus'
+                }
             }
         }
     }
