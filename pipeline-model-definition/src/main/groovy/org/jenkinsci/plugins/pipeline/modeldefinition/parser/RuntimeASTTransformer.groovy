@@ -1262,7 +1262,7 @@ class RuntimeASTTransformer {
                     }
                 }
 
-                if (declarations.size() != 0) {
+                if (!declarations.isEmpty()) {
                     if (SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES) {
                         result.addAll(pipelineElementHandles)
                         pipelineElementHandles.clear()
