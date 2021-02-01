@@ -1268,7 +1268,7 @@ class RuntimeASTTransformer {
                         pipelineElementHandles.clear()
                     } else {
                         throw new IllegalStateException("[JENKINS-34987] SCRIPT_SPLITTING_TRANSFORMATION is an experimental feature of Declarative Pipeline and is incompatible with local variable declarations inside a Jenkinsfile. " +
-                                "Local variable declarations found: " + declarations.join(", ") + ". "
+                                "Local variable declarations found: " + declarations.join(", ") + ". " +
                                  "As a temporary workaround, you can add the '@Field' annotation to these local variable declarations. " +
                                  "However, use of Groovy variables in Declarative pipeline, with or without the '@Field' annotation, is not recommended or supported. " + 
                                  "To use less effective script splitting which allows local variable declarations without changing your pipeline code, set SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES=true .")
