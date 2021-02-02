@@ -23,6 +23,7 @@
  */
 
 def someVar = "Hi there"
+def (firstVar, secondVar) = [1, 2]
 def someFunc() {
     return "This comes from a function"
 }
