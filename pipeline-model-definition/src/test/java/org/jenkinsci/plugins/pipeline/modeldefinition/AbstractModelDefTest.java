@@ -71,6 +71,7 @@ import static org.junit.Assert.assertThat;
 public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     private boolean defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+    private boolean defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
 
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
@@ -111,14 +112,18 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Before
     public void setUpFeatureFlags() {
         defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+        defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
 
         // For testing we want to default to exercising splitting
+        // and not allowing local variables
         RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
     }
 
     @After
     public void cleanupFeatureFlags() {
         RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = defaultScriptSplitting;
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = defaultScriptSplittingAllowLocalVariables;
     }
 
 

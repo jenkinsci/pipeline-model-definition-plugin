@@ -104,6 +104,16 @@ public class BasicModelDefTest extends AbstractModelDefTest {
             .go();
     }
 
+    @Issue("JENKINS-37984")
+    @Test
+    public void stages100WithOutsideVarAndFuncNotAllowed() throws Exception {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = false;
+        expect(Result.FAILURE,"basic/stages100WithOutsideVarAndFunc")
+            .logContains("add the '@Field' annotation to these local variable declarations")
+            .logNotContains("Method code too large!")
+            .go();
+    }
+
     @Test
     public void failingPipeline() throws Exception {
         expect(Result.FAILURE, "basic/failingPipeline")
