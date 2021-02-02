@@ -1257,8 +1257,11 @@ class RuntimeASTTransformer {
             if (SCRIPT_SPLITTING_TRANSFORMATION) {
                 ArrayList<DeclarationExpression> declarations = new ArrayList<DeclarationExpression>()
                 moduleNode.statementBlock.statements.each { item ->
-                    if (((ExpressionStatement) item).expression instanceof DeclarationExpression) {
-                        declarations.add((DeclarationExpression) ((ExpressionStatement) item).expression)
+                    if (item instanceof ExpressionStatement) {
+                        ExpressionStatement es = (ExpressionStatement) item
+                        if (es.expression instanceof DeclarationExpression) {
+                            declarations.add((DeclarationExpression) es.expression)
+                        }
                     }
                 }
 
