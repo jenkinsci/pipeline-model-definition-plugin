@@ -85,7 +85,7 @@ class RuntimeASTTransformer {
      */
     @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="For access from script console")
     public static boolean SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = SystemProperties.getBoolean(
-            RuntimeASTTransformer.class.getName() + ". SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES",
+            RuntimeASTTransformer.class.getName() + ".SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES",
             false
     )
 
