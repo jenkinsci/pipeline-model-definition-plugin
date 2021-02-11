@@ -334,7 +334,6 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-
     // Behavior should be identical to previous, just expressed differently
     @Issue("JENKINS-41334")
     @Test
@@ -362,6 +361,85 @@ public class MatrixTest extends AbstractModelDefTest {
                 "First stage, overrode twice, in first linux-os branch",
                 "First stage, overrode per nested, in first linux-os branch",
                 "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
+                "override in matrix axis")
+            .go();
+    }
+
+    @Issue("JENKINS-64846")
+    @Test
+    public void matrixStageDirectivesOutsideVarAndFunc() throws Exception {
+        expect("matrix/matrixStageDirectivesOutsideVarAndFunc")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "First stage, Hi there - This comes from a function",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
+                "override in matrix axis")
+            .go();
+    }
+
+    @Issue("JENKINS-64846")
+    @Test
+    public void matrixStageDirectivesOutsideVarAndFuncNoSplitting() throws Exception {
+        // ensure vars in matrix still works with splitting transform turned off
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
+
+        expect("matrix/matrixStageDirectivesOutsideVarAndFunc")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "First stage, Hi there - This comes from a function",
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")

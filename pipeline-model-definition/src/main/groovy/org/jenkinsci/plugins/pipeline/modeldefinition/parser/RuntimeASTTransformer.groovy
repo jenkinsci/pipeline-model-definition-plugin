@@ -70,8 +70,8 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC
 class RuntimeASTTransformer {
 
     /**
-     * Enables or disables the script splitting behavior in {@Wrapper} which  
-     * mitigates "Method code too large" and "Class too large" errors. 
+     * Enables or disables the script splitting behavior in {@Wrapper} which
+     * mitigates "Method code too large" and "Class too large" errors.
      */
     @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="For access from script console")
     public static boolean SCRIPT_SPLITTING_TRANSFORMATION = SystemProperties.getBoolean(
@@ -1256,47 +1256,47 @@ class RuntimeASTTransformer {
         @NonNull
         private List<Statement> prepareClosureScopedHandles(@NonNull BlockStatement pipelineBlock) {
             ArrayList<Statement> result = new ArrayList<Statement>()
-            if (SCRIPT_SPLITTING_TRANSFORMATION) {
-                ArrayList<DeclarationExpression> declarations = new ArrayList<DeclarationExpression>()
-                moduleNode.statementBlock.statements.each { item ->
-                    if (item instanceof ExpressionStatement) {
-                        ExpressionStatement es = (ExpressionStatement) item
-                        if (es.expression instanceof DeclarationExpression) {
-                            declarations.add((DeclarationExpression) es.expression)
-                        }
-                    }
-                }
-
-                if (!declarations.isEmpty()) {
-                    if (SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES) {
-                        result.addAll(pipelineElementHandles)
-                        pipelineElementHandles.clear()
-                    } else {
-                        def declarationNames = []
-                        declarations.each { item ->
-                            def left = item.getLeftExpression()
-                            if (left instanceof VariableExpression) {
-                                declarationNames.add(((VariableExpression)left).getName())
-                            } else if (left instanceof ArgumentListExpression) {
-                                left.each { arg ->
-                                    if (arg instanceof VariableExpression) {
-                                        declarationNames.add(((VariableExpression) arg).getName())
-                                    } else {
-                                        declarationNames.add("Unrecognized expression: " + arg.toString())
-                                    }
-                                }
-                            } else {
-                                declarationNames.add("Unrecognized declaration structure: " + left.toString())
-                            }
-                        }
-                        throw new IllegalStateException("[JENKINS-34987] SCRIPT_SPLITTING_TRANSFORMATION is an experimental feature of Declarative Pipeline and is incompatible with local variable declarations inside a Jenkinsfile. " +
-                                "As a temporary workaround, you can add the '@Field' annotation to these local variable declarations. " +
-                                "However, use of Groovy variables in Declarative pipeline, with or without the '@Field' annotation, is not recommended or supported. " +
-                                "To use less effective script splitting which allows local variable declarations without changing your pipeline code, set SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES=true . " +
-                                "Local variable declarations found: " + declarationNames.sort().join(", ") + ". ")
+            ArrayList<DeclarationExpression> declarations = new ArrayList<DeclarationExpression>()
+            moduleNode.statementBlock.statements.each { item ->
+                if (item instanceof ExpressionStatement) {
+                    ExpressionStatement es = (ExpressionStatement) item
+                    if (es.expression instanceof DeclarationExpression) {
+                        declarations.add((DeclarationExpression) es.expression)
                     }
                 }
             }
+
+            // if we're not doing script splitting, keep the old behavior that preserves declared variable functionality in matrix
+            if (!declarations.isEmpty()) {
+                result.addAll(pipelineElementHandles)
+                pipelineElementHandles.clear()
+            }
+
+            if (SCRIPT_SPLITTING_TRANSFORMATION && !SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES) {
+                def declarationNames = []
+                declarations.each { item ->
+                    def left = item.getLeftExpression()
+                    if (left instanceof VariableExpression) {
+                        declarationNames.add(((VariableExpression)left).getName())
+                    } else if (left instanceof ArgumentListExpression) {
+                        left.each { arg ->
+                            if (arg instanceof VariableExpression) {
+                                declarationNames.add(((VariableExpression) arg).getName())
+                            } else {
+                                declarationNames.add("Unrecognized expression: " + arg.toString())
+                            }
+                        }
+                    } else {
+                        declarationNames.add("Unrecognized declaration structure: " + left.toString())
+                    }
+                }
+                throw new IllegalStateException("[JENKINS-34987] SCRIPT_SPLITTING_TRANSFORMATION is an experimental feature of Declarative Pipeline and is incompatible with local variable declarations inside a Jenkinsfile. " +
+                        "As a temporary workaround, you can add the '@Field' annotation to these local variable declarations. " +
+                        "However, use of Groovy variables in Declarative pipeline, with or without the '@Field' annotation, is not recommended or supported. " +
+                        "To use less effective script splitting which allows local variable declarations without changing your pipeline code, set SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES=true . " +
+                        "Local variable declarations found: " + declarationNames.sort().join(", ") + ". ")
+            }
+
 
             // In a future version, it may be possible to detect closures that reference script-local variables
             // and then only use closure scoped handles for those closures.
