@@ -1270,31 +1270,31 @@ class RuntimeASTTransformer {
             if (!declarations.isEmpty()) {
                 result.addAll(pipelineElementHandles)
                 pipelineElementHandles.clear()
-            }
 
-            if (SCRIPT_SPLITTING_TRANSFORMATION && !SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES) {
-                def declarationNames = []
-                declarations.each { item ->
-                    def left = item.getLeftExpression()
-                    if (left instanceof VariableExpression) {
-                        declarationNames.add(((VariableExpression)left).getName())
-                    } else if (left instanceof ArgumentListExpression) {
-                        left.each { arg ->
-                            if (arg instanceof VariableExpression) {
-                                declarationNames.add(((VariableExpression) arg).getName())
-                            } else {
-                                declarationNames.add("Unrecognized expression: " + arg.toString())
+                if (SCRIPT_SPLITTING_TRANSFORMATION && !SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES) {
+                    def declarationNames = []
+                    declarations.each { item ->
+                        def left = item.getLeftExpression()
+                        if (left instanceof VariableExpression) {
+                            declarationNames.add(((VariableExpression) left).getName())
+                        } else if (left instanceof ArgumentListExpression) {
+                            left.each { arg ->
+                                if (arg instanceof VariableExpression) {
+                                    declarationNames.add(((VariableExpression) arg).getName())
+                                } else {
+                                    declarationNames.add("Unrecognized expression: " + arg.toString())
+                                }
                             }
+                        } else {
+                            declarationNames.add("Unrecognized declaration structure: " + left.toString())
                         }
-                    } else {
-                        declarationNames.add("Unrecognized declaration structure: " + left.toString())
                     }
+                    throw new IllegalStateException("[JENKINS-34987] SCRIPT_SPLITTING_TRANSFORMATION is an experimental feature of Declarative Pipeline and is incompatible with local variable declarations inside a Jenkinsfile. " +
+                            "As a temporary workaround, you can add the '@Field' annotation to these local variable declarations. " +
+                            "However, use of Groovy variables in Declarative pipeline, with or without the '@Field' annotation, is not recommended or supported. " +
+                            "To use less effective script splitting which allows local variable declarations without changing your pipeline code, set SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES=true . " +
+                            "Local variable declarations found: " + declarationNames.sort().join(", ") + ". ")
                 }
-                throw new IllegalStateException("[JENKINS-34987] SCRIPT_SPLITTING_TRANSFORMATION is an experimental feature of Declarative Pipeline and is incompatible with local variable declarations inside a Jenkinsfile. " +
-                        "As a temporary workaround, you can add the '@Field' annotation to these local variable declarations. " +
-                        "However, use of Groovy variables in Declarative pipeline, with or without the '@Field' annotation, is not recommended or supported. " +
-                        "To use less effective script splitting which allows local variable declarations without changing your pipeline code, set SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES=true . " +
-                        "Local variable declarations found: " + declarationNames.sort().join(", ") + ". ")
             }
 
 

@@ -373,6 +373,9 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-64846")
     @Test
     public void matrixStageDirectivesOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("matrix/matrixStageDirectivesOutsideVarAndFunc")
             .logContains("[Pipeline] { (foo)",
                 "{ (Branch: Matrix - OS_VALUE = 'linux')",
