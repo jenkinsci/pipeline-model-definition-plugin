@@ -106,6 +106,18 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-37984")
     @Test
+    public void stages100WithOutsideVarAndFuncNoSplitting() throws Exception {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
+        expect("basic/stages100WithOutsideVarAndFunc")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'a'",
+                "Hi there - This comes from a function")
+            .logNotContains("Method code too large!")
+            .go();
+    }
+
+    @Issue("JENKINS-37984")
+    @Test
     public void stages100WithOutsideVarAndFuncNotAllowed() throws Exception {
         RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = false;
         expect(Result.FAILURE,"basic/stages100WithOutsideVarAndFunc")
