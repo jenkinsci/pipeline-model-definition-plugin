@@ -40,6 +40,7 @@ import jenkins.branch.RateLimitBranchProperty;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -179,6 +180,9 @@ public class OptionsTest extends AbstractModelDefTest {
     @Issue("JENKINS-44277")
     @Test
     public void checkoutToSubdirectoryWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("options/checkoutToSubdirectoryWithOutsideVarAndFunc")
             .logContains("[Pipeline] { (foo)",
                 "hello")
@@ -484,6 +488,9 @@ public class OptionsTest extends AbstractModelDefTest {
     @Issue("JENKINS-46354")
     @Test
     public void topLevelRetryExecutesAllStages() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("options/topLevelRetryExecutesAllStages")
                 .logContains("Actually executing stage Bar")
                 .go();
@@ -492,6 +499,9 @@ public class OptionsTest extends AbstractModelDefTest {
     @Issue("JENKINS-46354")
     @Test
     public void parentStageRetryExecutesAllChildStages() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("options/parentStageRetryExecutesAllChildStages")
                 .logContains("Actually executing stage Bar", "Actually executing stage Baz")
                 .go();

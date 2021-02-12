@@ -44,6 +44,7 @@ import jenkins.scm.impl.mock.MockSCMDiscoverChangeRequests;
 import jenkins.scm.impl.mock.MockSCMSource;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -640,6 +641,9 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     @Test
     public void whenExprUsingOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("when/whenExprUsingOutsideVarAndFunc")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
                 .go();

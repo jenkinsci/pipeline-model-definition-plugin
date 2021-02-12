@@ -113,11 +113,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     public void setUpFeatureFlags() {
         defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
         defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
-
-        // For testing we want to default to exercising splitting
-        // and not allowing local variables
-        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
-        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
     }
 
     @After

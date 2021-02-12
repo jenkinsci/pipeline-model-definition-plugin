@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.gargoylesoftware.htmlunit.html.*;
 import hudson.model.queue.QueueTaskFuture;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -77,6 +78,9 @@ public class StageInputTest extends AbstractModelDefTest {
 
     @Test
     public void simpleInputWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInputWithOutsideVarAndFunc");
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleInputWithOutsideVarAndFunc"), true));
         // get the build going, and wait until workflow pauses

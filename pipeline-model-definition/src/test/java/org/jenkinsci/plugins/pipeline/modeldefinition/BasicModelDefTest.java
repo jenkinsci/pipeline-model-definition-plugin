@@ -48,6 +48,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.GenericStatus;
 import org.jenkinsci.plugins.workflow.pipelinegraphanalysis.StatusAndTiming;
 import org.jenkinsci.plugins.workflow.steps.ErrorStep;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -56,6 +57,7 @@ import org.jvnet.hudson.test.Issue;
 import java.util.Collection;
 import java.util.List;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
 /**
@@ -76,6 +78,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     // Give this a longer timeout
     @Test(timeout=5 * 60 * 1000)
     public void stages300() throws Exception {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
         expect("basic/stages300")
             .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
                 "letters1 = 'j', letters10 = 'j', letters100 = 'c'")
@@ -96,6 +99,20 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-37984")
     @Test
     public void stages100WithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+        expect("basic/stages100WithOutsideVarAndFunc")
+            .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
+                "letters1 = 'j', letters10 = 'j', letters100 = 'a'",
+                "Hi there - This comes from a function")
+            .logNotContains("Method code too large!")
+            .go();
+    }
+
+    @Issue("JENKINS-37984")
+    @Test
+    public void stages100WithOutsideVarAndFuncNoSplitting() throws Exception {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
         expect("basic/stages100WithOutsideVarAndFunc")
             .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
                 "letters1 = 'j', letters10 = 'j', letters100 = 'a'",
@@ -107,6 +124,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     @Issue("JENKINS-37984")
     @Test
     public void stages100WithOutsideVarAndFuncNotAllowed() throws Exception {
+        // this test only works if script splitting is enabled
+        Assume.assumeThat(RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION, is(true));
+
         RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = false;
         expect(Result.FAILURE,"basic/stages100WithOutsideVarAndFunc")
             .logContains("add the '@Field' annotation to these local variable declarations")

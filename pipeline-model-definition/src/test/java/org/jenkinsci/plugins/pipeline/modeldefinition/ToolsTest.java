@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.JDK;
 import hudson.model.Slave;
 import hudson.tasks.Maven;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -121,6 +122,9 @@ public class ToolsTest extends AbstractModelDefTest {
     @Issue("JENKINS-46809")
     @Test
     public void toolsWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         Maven.MavenInstallation maven301 = ToolInstallations.configureMaven3();
 
         j.jenkins.getDescriptorByType(Maven.DescriptorImpl.class).setInstallations(maven301);
