@@ -143,6 +143,41 @@
             </execution>
           </executions>
         </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>2.12.2</version>
+          <executions>
+            <execution>
+              <id>spotless-check</id>
+              <!-- runs in verify phase by default -->
+              <goals>
+                <!-- can be disabled using -Dspotless.check.skip=true -->
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <java>
+              <googleJavaFormat>
+                <style>GOOGLE</style>
+                <!-- Last version that supports Java 8, the plugin does handle this internally
+                     but it will give different versions based off of the JVM version, not good for CI
+                 -->
+                <version>1.7</version>
+              </googleJavaFormat>
+            </java>
+            <groovy>
+              <includes>
+                <include>src/main/groovy/**/*.groovy</include>
+                <include>src/test/groovy/**/*.groovy</include>
+              </includes>
+
+              <importOrder />
+              <greclipse />
+            </groovy>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -152,6 +187,10 @@
           <!-- keep the tag names aligned with previous releases -->
           <tagNameFormat>pipeline-model-definition-@{project.version}</tagNameFormat>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
@@ -222,6 +261,32 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+        <id>check-format-early</id>
+        <activation>
+            <property>
+                <name>set.changelist</name>
+            </property>
+        </activation>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>com.diffplug.spotless</groupId>
+                    <artifactId>spotless-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>spotless-check</id>
+                            <!-- In CI, run check early in the build -->
+                            <phase>process-sources</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
     </profile>
   </profiles>
   <repositories>
