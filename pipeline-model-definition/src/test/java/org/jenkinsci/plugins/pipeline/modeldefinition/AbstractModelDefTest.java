@@ -71,6 +71,7 @@ import static org.junit.Assert.assertThat;
 public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     private boolean defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+    private boolean defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
 
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
@@ -111,14 +112,13 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Before
     public void setUpFeatureFlags() {
         defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
-
-        // For testing we want to default to exercising splitting
-        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
+        defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
     }
 
     @After
     public void cleanupFeatureFlags() {
         RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = defaultScriptSplitting;
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = defaultScriptSplittingAllowLocalVariables;
     }
 
 
@@ -219,7 +219,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("'steps'")});
         result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
 
-        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, docker, dockerfile, label, none, otherField]")});
+        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, label, none, otherField]")});
 
         // Not using the full message here due to issues with the test extension in MultipleUnnamedParametersTest bleeding over in some situations.
         // That resulted in multiArgCtorProp sometimes showing up in the list of valid options, but not always. We still have the full test in

@@ -51,10 +51,6 @@
       <artifactId>jackson2-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-json-org</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.github.fge</groupId>
       <artifactId>json-schema-validator</artifactId>
       <exclusions>
@@ -72,6 +68,22 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
 
     <dependency>

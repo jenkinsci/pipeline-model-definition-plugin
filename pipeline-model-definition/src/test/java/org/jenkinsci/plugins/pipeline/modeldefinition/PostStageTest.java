@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.model.Result;
 import hudson.model.Slave;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -187,6 +188,9 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @Test
     public void postWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("postWithOutsideVarAndFunc")
             .logContains("Hi there - This comes from a function")
             .logNotContains("I FAILED")

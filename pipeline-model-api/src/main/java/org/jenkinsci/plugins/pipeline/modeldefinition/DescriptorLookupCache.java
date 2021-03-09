@@ -119,7 +119,19 @@ public class DescriptorLookupCache {
             return null;
         } else if (describable == null) {
             if (!describableMap.containsKey(n)) {
-                Descriptor<? extends Describable> d = SymbolLookup.get().findDescriptor(Describable.class, n);
+                Descriptor<? extends Describable> d = null;
+
+                // Prefer metasteps, falling back on any old describable.
+                for (StepDescriptor metaStep : StepDescriptor.metaStepsOf(n)) {
+                    d = SymbolLookup.get().findDescriptor(metaStep.getMetaStepArgumentType(), n);
+                    if (d != null) {
+                        break;
+                    }
+                }
+                // Fall back on a non-metastep describable
+                if (d == null) {
+                    d = SymbolLookup.get().findDescriptor(Describable.class, n);
+                }
                 describableMap.put(n, d);
             }
 
