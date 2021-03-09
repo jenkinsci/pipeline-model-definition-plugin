@@ -25,8 +25,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.google.common.base.Predicate;
-import groovy.lang.Closure;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import hudson.model.PasswordParameterDefinition;
+import hudson.util.Secret;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
@@ -38,9 +40,14 @@ import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import java.util.ArrayList;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.function.Function;
 
 public class CommonUtils {
     public static Predicate<FlowNode> isStageWithOptionalName(final String stageName) {
@@ -110,5 +117,34 @@ public class CommonUtils {
             }
 
         };
+    }
+
+    @Whitelisted
+    @Restricted(NoExternalUse.class)
+    public static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
+        DescribableModel<T> model = new DescribableModel<T>(c);
+        // Special case for JENKINS-63499.
+        if (model.getType().equals(PasswordParameterDefinition.class) && model.getParameter("defaultValueAsSecret") != null) {
+            args = copyMapReplacingEntry(args, "defaultValue", "defaultValueAsSecret", String.class, Secret::fromString);
+        }
+
+        return model.instantiate(args);
+    }
+
+    /**
+     * Copy a map, replacing the entry with the specified key if it matches the specified type.
+     */
+    public static <T> Map<String, Object> copyMapReplacingEntry(Map<String, ?> map, String oldKey, String newKey, Class<T> requiredValueType, Function<T, Object> replacer) {
+        Map<String, Object> newMap = new TreeMap<>();
+        for (Map.Entry<String, ?> entry : map.entrySet()) {
+            if (entry.getKey().equals(oldKey) && requiredValueType.isInstance(entry.getValue())) {
+                newMap.put(newKey, replacer.apply(requiredValueType.cast(entry.getValue())));
+            } else {
+                newMap.put(entry.getKey(), entry.getValue());
+            }
+
+        }
+
+        return newMap;
     }
 }

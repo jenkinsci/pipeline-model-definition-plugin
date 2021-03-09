@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2021, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,24 +22,15 @@
  * THE SOFTWARE.
  */
 
-pipeline {
-    agent {
-        label "some-label"
-    }
-    stages {
-        stage("foo") {
-            steps {
-                writeFile text: 'hello world', file: 'msg.out'
-                writeFile text: 'goodbye world', file: 'msg2.out'
-                archiveArtifacts(allowEmptyArchive: true, artifacts: 'msg.out')
-                step([$class: 'ArtifactArchiver', artifacts: 'msg2.out', fingerprint: true])
-                rhombus(123) {
-                    echo 'hi from in rhombus'
-                }
-            }
-        }
+package org.jenkinsci.plugins.pipeline.modeldefinition.when;
+
+/**
+ * Globally defined conditionals which are checked for all stages in all builds of all jobs.
+ */
+public abstract class GlobalStageConditional<S extends GlobalStageConditional<S>> extends DeclarativeStageConditional<S> {
+
+    @Override
+    public GlobalStageConditionalDescriptor getDescriptor() {
+        return (GlobalStageConditionalDescriptor) super.getDescriptor();
     }
 }
-
-
-

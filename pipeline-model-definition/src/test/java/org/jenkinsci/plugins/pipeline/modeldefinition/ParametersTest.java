@@ -27,7 +27,9 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.model.PasswordParameterDefinition;
 import hudson.model.StringParameterDefinition;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -38,7 +40,14 @@ import org.jvnet.hudson.test.Issue;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class ParametersTest extends AbstractModelDefTest {
     @Test
@@ -62,6 +71,9 @@ public class ParametersTest extends AbstractModelDefTest {
 
     @Test
     public void simpleParametersWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         WorkflowRun b = expect("simpleParametersWithOutsideVarAndFunc")
             .logContains("[Pipeline] { (foo)", "hello true: Hi there - This comes from a function")
             .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
@@ -167,5 +179,22 @@ public class ParametersTest extends AbstractModelDefTest {
         assertNotNull(paramProp2);
         BooleanParameterDefinition bpd2 = (BooleanParameterDefinition) paramProp2.getParameterDefinitions().get(0);
         assertSame(bpd, bpd2);
+    }
+
+    @Issue("JENKINS-63499")
+    @Test
+    public void passwordParameters() throws Exception {
+        WorkflowRun b = expect("passwordParameters")
+                .runFromRepo(false)
+                .logContains("Password is mySecret")
+                .go();
+        WorkflowJob p = b.getParent();
+
+        ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
+        assertThat(pdp.getParameterDefinitions(), hasSize(1));
+        PasswordParameterDefinition param = (PasswordParameterDefinition) pdp.getParameterDefinitions().get(0);
+        assertEquals("myPassword", param.getName());
+        assertEquals("mySecret", param.getDefaultValue());
+        assertEquals("myDescription", param.getDescription());
     }
 }

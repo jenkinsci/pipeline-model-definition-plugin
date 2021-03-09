@@ -24,6 +24,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.github.fge.jsonschema.tree.JsonTree
+import com.github.fge.jsonschema.tree.SimpleJsonTree
+import com.github.fge.jsonschema.util.JsonLoader
 import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -32,7 +36,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
 import hudson.model.*
+import hudson.util.Secret
 import hudson.triggers.Trigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser
+
+import java.util.function.Function
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
@@ -450,12 +459,6 @@ class Utils {
         return knownTypes
     }
 
-    @Whitelisted
-    @Restricted(NoExternalUse.class)
-    static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
-        DescribableModel<T> model = new DescribableModel<>(c)
-        return model?.instantiate(args)
-    }
 
     /**
      * @param c The closure to wrap.
@@ -1003,5 +1006,18 @@ class Utils {
         RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
 
         return cause?.originStage
+    }
+
+    /**
+     * Convenience method for parsing a {@link ModelASTStage} from a JSON string
+     * @param stageJSON The JSON string representing the stage
+     * @return The parsed result of the JSON, or null
+     * @throws Exception If anything goes wrong in parsing the JSON.
+     */
+    static ModelASTStage parseStageFromJSON(String stageJSON) throws Exception {
+        JsonNode json = JsonLoader.fromString(stageJSON)
+        JsonTree jsonTree = new SimpleJsonTree(json)
+        JSONParser parser = new JSONParser(null)
+        return parser.parseStage(jsonTree)
     }
 }

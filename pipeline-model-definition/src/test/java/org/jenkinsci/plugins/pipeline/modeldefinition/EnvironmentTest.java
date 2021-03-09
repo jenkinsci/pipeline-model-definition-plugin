@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -194,6 +195,9 @@ public class EnvironmentTest extends AbstractModelDefTest {
     @Issue("JENKINS-42753")
     @Test
     public void stmtExprInEnvironment() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("environment/stmtExprInEnvironment")
                 .logContains("FOO is BAR",
                         "LIST_EXP is [a, BAR, c]",
@@ -211,6 +215,9 @@ public class EnvironmentTest extends AbstractModelDefTest {
 
     @Test
     public void nonLiteralEnvironment() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         initGlobalLibrary();
 
         expect("environment/nonLiteralEnvironment")

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright (c) 2021, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,19 +23,17 @@
  */
 
 pipeline {
-    agent {
-        label "some-label"
-    }
+    agent none
     stages {
-        stage("foo") {
+        stage("hello") {
             steps {
-                writeFile text: 'hello world', file: 'msg.out'
-                writeFile text: 'goodbye world', file: 'msg2.out'
-                archiveArtifacts(allowEmptyArchive: true, artifacts: 'msg.out')
-                step([$class: 'ArtifactArchiver', artifacts: 'msg2.out', fingerprint: true])
-                rhombus(123) {
-                    echo 'hi from in rhombus'
-                }
+                echo "hello world"
+            }
+        }
+        stage("goodbye") {
+            steps {
+                echo "goodbye world"
+                echo "no, really, we're leaving"
             }
         }
     }

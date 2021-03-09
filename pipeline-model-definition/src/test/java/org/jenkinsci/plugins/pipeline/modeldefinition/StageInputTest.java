@@ -26,6 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.gargoylesoftware.htmlunit.html.*;
 import hudson.model.queue.QueueTaskFuture;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -77,6 +78,9 @@ public class StageInputTest extends AbstractModelDefTest {
 
     @Test
     public void simpleInputWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInputWithOutsideVarAndFunc");
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleInputWithOutsideVarAndFunc"), true));
         // get the build going, and wait until workflow pauses
@@ -135,15 +139,15 @@ public class StageInputTest extends AbstractModelDefTest {
         HtmlPage page = wc.getPage(b, a.getUrlName());
         HtmlForm form = page.getFormByName(is.getId());
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='fruit']");
+        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='fruit'] | //div[div/div/input/@value='fruit']");
         assertNotNull(element);
 
         HtmlTextInput stringParameterInput = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
         assertEquals("banana", stringParameterInput.getAttribute("value"));
-        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name']")).getTextContent());
+        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name'] | div[contains(@class,'setting-name')]")).getTextContent());
         stringParameterInput.setAttribute("value", "pear");
 
-        element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag']");
+        element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
         assertNotNull(element);
 
         Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
@@ -187,7 +191,7 @@ public class StageInputTest extends AbstractModelDefTest {
         HtmlPage page = wc.getPage(b, a.getUrlName());
         HtmlForm form = page.getFormByName(is.getId());
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag']");
+        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
         assertNotNull(element);
 
         Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");

@@ -48,12 +48,15 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.impl.AllOfConditional
 import org.jenkinsci.plugins.structs.SymbolLookup
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 
 import edu.umd.cs.findbugs.annotations.CheckForNull
 import edu.umd.cs.findbugs.annotations.NonNull
+
+import java.util.stream.Collectors
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
@@ -67,12 +70,22 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC
 class RuntimeASTTransformer {
 
     /**
-     * Enables or disables the script splitting behavior in {@Wrapper} which  
-     * mitigates "Method code too large" and "Class too large" errors. 
+     * Enables or disables the script splitting behavior in {@Wrapper} which
+     * mitigates "Method code too large" and "Class too large" errors.
      */
     @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="For access from script console")
     public static boolean SCRIPT_SPLITTING_TRANSFORMATION = SystemProperties.getBoolean(
             RuntimeASTTransformer.class.getName() + ".SCRIPT_SPLITTING_TRANSFORMATION",
+            false
+    )
+
+    /**
+     * Enables or disables allowing local variable declarations while script splitting.
+     * This severely reduces the effectiveness of script splitting.
+     */
+    @SuppressFBWarnings(value="MS_SHOULD_BE_FINAL", justification="For access from script console")
+    public static boolean SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = SystemProperties.getBoolean(
+            RuntimeASTTransformer.class.getName() + ".SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES",
             false
     )
 
@@ -708,7 +721,7 @@ class RuntimeASTTransformer {
                             transformStepsFromStage(original),
                             transformAgent(original.agent),
                             transformPostStage(original.post),
-                            transformStageConditionals(original.when),
+                            transformStageConditionals(original.when, original.name, original),
                             transformTools(original.tools),
                             transformEnvironment(original.environment),
                             constX(original.failFast != null ? original.failFast : false),
@@ -757,10 +770,13 @@ class RuntimeASTTransformer {
      * @return
      */
     @NonNull
-    Expression transformStageConditionals(@CheckForNull ModelASTWhen original) {
-        if (isGroovyAST(original) && !original.getConditions().isEmpty()) {
+    Expression transformStageConditionals(@CheckForNull ModelASTWhen original, String stageName, ModelASTStageBase stage) {
+        ModelASTWhen when = handleInvisibleWhenConditions(original, stageName, stage)
+
+        // Handle either cases of Groovy AST transformation or auto-generated InvisibleWhen containers.
+        if ((isGroovyAST(when) || when instanceof InvisibleWhen) && !when.getConditions().isEmpty()) {
             ListExpression closList = new ListExpression()
-            original.getConditions().each { cond ->
+            when.getConditions().each { cond ->
                 if (cond.name != null) {
                     DeclarativeStageConditionalDescriptor desc =
                             (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(
@@ -773,12 +789,56 @@ class RuntimeASTTransformer {
 
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageConditionals.class),
                     args(wrapper.asScriptContextVariable(closureX(block(returnS(closList)))),
-                            constX(original.beforeAgent != null ? original.beforeAgent : false),
-                            constX(original.beforeInput != null ? original.beforeInput : false),
-                            constX(original.beforeOptions != null ? original.beforeOptions : false)
+                            constX(when.beforeAgent != null ? when.beforeAgent : false),
+                            constX(when.beforeInput != null ? when.beforeInput : false),
+                            constX(when.beforeOptions != null ? when.beforeOptions : false)
                     )))
         }
         return constX(null)
+    }
+
+    /**
+     * Add any invisible global when conditions to an auto-generated {@link InvisibleWhen}. The new invisible conditions
+     * will need to be satisfied as well as any existing conditions. If there are existing conditions, the new container
+     * will delegate everything other than condition listing to the original container.
+     *
+     * @param when The original, possibly null, when container.
+     * @return The new when container with any invisible conditions added.
+     */
+    @CheckForNull
+    final ModelASTWhen handleInvisibleWhenConditions(@CheckForNull ModelASTWhen when, String stageName, ModelASTStageBase stage) {
+        List<ModelASTWhenContent> invisibles = DeclarativeStageConditionalDescriptor.allInvisible()
+            .findAll { it != null }
+            .collect { whenConditionForDescriptor(it, stageName, stage) }
+
+        if (invisibles.size() == 0) {
+            return when
+        }
+        ModelASTWhen newWhen = new InvisibleWhen()
+        List<ModelASTWhenContent> newConditions = new ArrayList<>(invisibles)
+
+        if (when != null) {
+            List<ModelASTWhenContent> originalConditions = when.getConditions()
+            newConditions.addAll(originalConditions)
+            newWhen.setOriginalWhen(when)
+        }
+        ModelASTWhenCondition newParent = new InvisibleGlobalWhenCondition()
+        newParent.setName(SymbolLookup.getSymbolValue(AllOfConditional.class).first())
+        newParent.setChildren(newConditions)
+
+        newWhen.setConditions(Collections.singletonList(newParent))
+        return newWhen
+    }
+
+    @CheckForNull
+    private ModelASTWhenContent whenConditionForDescriptor(@NonNull DeclarativeStageConditionalDescriptor d, String stageName, ModelASTStageBase stage) {
+        Set<String> symbols = SymbolLookup.getSymbolValue(d)
+        if (symbols.isEmpty()) {
+            return null
+        }
+        ModelASTWhenCondition condition = new InvisibleGlobalWhenCondition(stageName, stage)
+        condition.setName(symbols.first())
+        return condition
     }
 
     /**
@@ -902,7 +962,7 @@ class RuntimeASTTransformer {
                             constX(null), // steps
                             transformAgent(original.agent),
                             transformPostStage(original.post),
-                            transformStageConditionals(original.when),
+                            transformStageConditionals(original.when, name, original),
                             transformTools(original.tools),
                             transformEnvironment(original.environment),
                             constX(false), // failfast on serial is not interesting
@@ -1156,7 +1216,7 @@ class RuntimeASTTransformer {
          * nor from closures defined in other functions or classes.  Thus, when the wrapper puts the closure declarations
          * into functions they can no longer access script-local "def" variables.
          *
-         * To maintain some support for local variables, this method detects the presnce of script-local "def" variables
+         * To maintain some support for local variables, this method detects the presence of script-local "def" variables
          * and adds handles to closures instead of methods.
          *
          * Currently, it only checks if "pipeline {}" is not the only top level element in script, and in that case it
@@ -1165,20 +1225,21 @@ class RuntimeASTTransformer {
          * This solution is sufficient for now, but a better solution would be to:
          *
          * * Specifically detect that local variables are used
-         * * Log a warning that this is no advised
+         * * Log a warning that this is not advised
          * * detect which handles reference local variables and then only declare those handles in closures.
          *
          * @param pipelineBlock the block statement to add declarations to
          */
         @NonNull
         private void declareClosureScopedHandles(@NonNull BlockStatement pipelineBlock) {
-            if (moduleNode.statementBlock.statements.size() == 1 || pipelineElementHandles.size() == 0) {
+            def closureScopedHandles = prepareClosureScopedHandles()
+            if (closureScopedHandles.size() == 0) {
                 return
             }
 
             BlockStatement currentBlock = block()
             int count = 0
-            pipelineElementHandles.each { item ->
+            closureScopedHandles.each { item ->
                 if (count++ >= declarationGroupSize) {
                     count = 1
                     pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
@@ -1190,10 +1251,59 @@ class RuntimeASTTransformer {
             // These variable handles are declared in functions, but will still be bound to the script context
             // Doing this here ensures the variables make the trip across to run time - if they don't make it, neither did this pipeline
             pipelineBlock.addStatement(stmt(callX(closureX(currentBlock), 'call')))
-            pipelineElementHandles.clear()
         }
 
-        /**
+        @NonNull
+        private List<Statement> prepareClosureScopedHandles(@NonNull BlockStatement pipelineBlock) {
+            ArrayList<Statement> result = new ArrayList<Statement>()
+            ArrayList<DeclarationExpression> declarations = new ArrayList<DeclarationExpression>()
+            moduleNode.statementBlock.statements.each { item ->
+                if (item instanceof ExpressionStatement) {
+                    ExpressionStatement es = (ExpressionStatement) item
+                    if (es.expression instanceof DeclarationExpression) {
+                        declarations.add((DeclarationExpression) es.expression)
+                    }
+                }
+            }
+
+            // if we're not doing script splitting, keep the old behavior that preserves declared variable functionality in matrix
+            if (!declarations.isEmpty()) {
+                result.addAll(pipelineElementHandles)
+                pipelineElementHandles.clear()
+
+                if (SCRIPT_SPLITTING_TRANSFORMATION && !SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES) {
+                    def declarationNames = []
+                    declarations.each { item ->
+                        def left = item.getLeftExpression()
+                        if (left instanceof VariableExpression) {
+                            declarationNames.add(((VariableExpression) left).getName())
+                        } else if (left instanceof ArgumentListExpression) {
+                            left.each { arg ->
+                                if (arg instanceof VariableExpression) {
+                                    declarationNames.add(((VariableExpression) arg).getName())
+                                } else {
+                                    declarationNames.add("Unrecognized expression: " + arg.toString())
+                                }
+                            }
+                        } else {
+                            declarationNames.add("Unrecognized declaration structure: " + left.toString())
+                        }
+                    }
+                    throw new IllegalStateException("[JENKINS-34987] SCRIPT_SPLITTING_TRANSFORMATION is an experimental feature of Declarative Pipeline and is incompatible with local variable declarations inside a Jenkinsfile. " +
+                            "As a temporary workaround, you can add the '@Field' annotation to these local variable declarations. " +
+                            "However, use of Groovy variables in Declarative pipeline, with or without the '@Field' annotation, is not recommended or supported. " +
+                            "To use less effective script splitting which allows local variable declarations without changing your pipeline code, set SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES=true . " +
+                            "Local variable declarations found: " + declarationNames.sort().join(", ") + ". ")
+                }
+            }
+
+
+            // In a future version, it may be possible to detect closures that reference script-local variables
+            // and then only use closure scoped handles for those closures.
+            return result
+        }
+
+            /**
          * Adds groups of handle declarations to functions and adds calls to those functions to the pipeline block.
          * Avoid "method code too large" errors and other compiler breaks related to Groovy, JVM, and CPS limitations.
          * @param pipelineBlock

@@ -111,7 +111,7 @@ class Converter {
         return compilationUnitToPipelineDef(cu, enabledOptionalValidators)
     }
 
-    private static GroovyClassLoader getCompilationClassLoader() {
+    static GroovyClassLoader getCompilationClassLoader() {
         return CpsThread.current()?.getExecution()?.getShell()?.classLoader ?:
             new GroovyClassLoader(Jenkins.instance.getPluginManager().uberClassLoader)
     }
@@ -134,7 +134,7 @@ class Converter {
         return compilationUnitToPipelineDef(cu, enabledOptionalValidators)
     }
 
-    private static CompilerConfiguration makeCompilerConfiguration() {
+    static CompilerConfiguration makeCompilerConfiguration() {
         CompilerConfiguration cc = GroovySandbox.createBaseCompilerConfiguration()
 
         ImportCustomizer ic = new ImportCustomizer()
@@ -158,7 +158,7 @@ class Converter {
      * @return The converted script
      */
     @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
-    private static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu,
+    static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu,
                                                                     final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1]
 
