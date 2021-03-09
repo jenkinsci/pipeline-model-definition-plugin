@@ -44,7 +44,7 @@
         <artifactId>maven-hpi-plugin</artifactId>
         <extensions>true</extensions>
         <configuration>
-          <compatibleSinceVersion>1.2-beta-4</compatibleSinceVersion>
+          <compatibleSinceVersion>1.6.0</compatibleSinceVersion>
         </configuration>
       </plugin>
       <plugin>
@@ -109,8 +109,18 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>structs</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-cps</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -135,12 +145,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>pipeline-stage-step</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>docker-workflow</artifactId>
-      <scope>runtime</scope> <!-- TODO unused, just here to encourage upgrades -->
-      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -179,13 +183,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>pipeline-input-step</artifactId>
-    </dependency>
-    <!-- Dependency on tombstoned declarative agent plugin to make sure we don't end up with a
-    bad old version installed -->
-    <dependency>
-      <groupId>org.jenkinsci.plugins</groupId>
-      <artifactId>pipeline-model-declarative-agent</artifactId>
-      <version>1.1.1</version>
     </dependency>
 
     <!-- TEST deps -->

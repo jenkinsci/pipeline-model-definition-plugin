@@ -7,7 +7,7 @@ import org.codehaus.groovy.runtime.InvokerHelper;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -24,11 +24,11 @@ public class RuntimeContainerBase extends Script implements Serializable {
 
     // The parent script instance.
     // On restart this is serialized and deserialized.
-    @Nonnull
+    @NonNull
     private final CpsScript workflowScript;
 
     @Whitelisted
-    protected RuntimeContainerBase(@Nonnull CpsScript workflowScript) {
+    protected RuntimeContainerBase(@NonNull CpsScript workflowScript) {
         super();
         this.workflowScript = workflowScript;
     }

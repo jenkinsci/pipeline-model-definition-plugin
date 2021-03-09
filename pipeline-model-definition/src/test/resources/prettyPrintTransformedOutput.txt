@@ -1,0 +1,299 @@
+- module:
+  - methods:
+  - statements:
+      - method 'ConstantExpression[pipeline]':
+        - var:
+          - name: this
+          - accessedVariable: null
+        - args:
+          - closure:
+            - block
+                - method 'ConstantExpression[__model__Declaration_19_something__]':
+                  - var:
+                    - name: this
+                    - accessedVariable: null
+                  - tuples:
+              - return:
+                - method 'ConstantExpression[getRoot_0]':
+                  - var:
+                    - name: __model__Root_18_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+  - classes:
+    - whenEnv
+    - class: generated.__model__Agent_1_something__
+      - methods:
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Agent:
+                - method 'ConstantExpression[call]':
+                  - var:
+                    - name: __model__Closure_0_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+      - properties:
+      - object initializers:
+    - class: generated.__model__Stage_3_something__
+      - methods:
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage:
+                - ConstantExpression[One]
+                - static method 'createStepsBlock':
+                  - org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+                  - args:
+                    - var:
+                      - name: __model__Variable_2_something__
+                      - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[false]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage:
+                - ConstantExpression[Two]
+                - static method 'createStepsBlock':
+                  - org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+                  - args:
+                    - var:
+                      - name: __model__Variable_4_something__
+                      - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - method 'ConstantExpression[getStageConditionals_0]':
+                  - var:
+                    - name: __model__StageConditionals_6_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[false]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage:
+                - ConstantExpression[Three]
+                - static method 'createStepsBlock':
+                  - org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+                  - args:
+                    - var:
+                      - name: __model__Variable_7_something__
+                      - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - method 'ConstantExpression[getStageConditionals_1]':
+                  - var:
+                    - name: __model__StageConditionals_6_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[false]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage:
+                - ConstantExpression[Four]
+                - static method 'createStepsBlock':
+                  - org.jenkinsci.plugins.pipeline.modeldefinition.Utils
+                  - args:
+                    - var:
+                      - name: __model__Variable_9_something__
+                      - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - method 'ConstantExpression[getStageConditionals_2]':
+                  - var:
+                    - name: __model__StageConditionals_6_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[false]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+      - properties:
+      - object initializers:
+    - class: generated.__model__StageConditionals_6_something__
+      - methods:
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals:
+                - var:
+                  - name: __model__Variable_5_something__
+                  - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                - ConstantExpression[false]
+                - ConstantExpression[false]
+                - ConstantExpression[false]
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals:
+                - var:
+                  - name: __model__Variable_8_something__
+                  - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                - ConstantExpression[false]
+                - ConstantExpression[false]
+                - ConstantExpression[false]
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.StageConditionals:
+                - var:
+                  - name: __model__Variable_10_something__
+                  - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                - ConstantExpression[false]
+                - ConstantExpression[false]
+                - ConstantExpression[false]
+      - properties:
+      - object initializers:
+    - class: generated.__model__listExpression_12_something__
+      - methods:
+        - methodNode:
+          - block
+            - return:
+              - list:
+                - method 'ConstantExpression[getStage_0]':
+                  - var:
+                    - name: __model__Stage_3_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - method 'ConstantExpression[getStage_1]':
+                  - var:
+                    - name: __model__Stage_3_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - method 'ConstantExpression[getStage_2]':
+                  - var:
+                    - name: __model__Stage_3_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - method 'ConstantExpression[getStage_3]':
+                  - var:
+                    - name: __model__Stage_3_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+        - methodNode:
+          - block
+              - binary:
+                - left:
+                - var:
+                  - name: __model__extendedList_11_something__
+                  - accessedVariable: org.codehaus.groovy.ast.expr.VariableExpression@something
+               - op: ("=":  "=" )
+                - right:
+                - list:
+              - method 'ConstantExpression[addAll]':
+                - var:
+                  - name: __model__extendedList_11_something__
+                  - accessedVariable: org.codehaus.groovy.ast.expr.VariableExpression@something
+                - args:
+                  - method 'ConstantExpression[getlistExpression_0]':
+                    - var:
+                      - name: __model__listExpression_12_something__
+                      - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                    - tuples:
+            - return:
+              - var:
+                - name: __model__extendedList_11_something__
+                - accessedVariable: org.codehaus.groovy.ast.expr.VariableExpression@something
+      - properties:
+      - object initializers:
+    - class: generated.__model__Stages_13_something__
+      - methods:
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Stages:
+                - method 'ConstantExpression[getlistExpression_1]':
+                  - var:
+                    - name: __model__listExpression_12_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+      - properties:
+      - object initializers:
+    - class: generated.__model__Environment_15_something__
+      - methods:
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment:
+                - static method 'instanceFromMap':
+                  - org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment$EnvironmentResolver
+                  - args:
+                    - map:
+                        - ConstantExpression[FOO]
+                        - method 'ConstantExpression[call]':
+                          - var:
+                            - name: __model__Closure_14_something__
+                            - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                          - tuples:
+                - static method 'instanceFromMap':
+                  - org.jenkinsci.plugins.pipeline.modeldefinition.model.Environment$EnvironmentResolver
+                  - args:
+                    - map:
+      - properties:
+      - object initializers:
+    - class: generated.__model__Root_18_something__
+      - methods:
+        - methodNode:
+          - block
+            - return:
+              - constructor of org.jenkinsci.plugins.pipeline.modeldefinition.model.Root:
+                - method 'ConstantExpression[getAgent_0]':
+                  - var:
+                    - name: __model__Agent_1_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - method 'ConstantExpression[getStages_0]':
+                  - var:
+                    - name: __model__Stages_13_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - ConstantExpression[null]
+                - method 'ConstantExpression[getEnvironment_0]':
+                  - var:
+                    - name: __model__Environment_15_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - ConstantExpression[null]
+                - ConstantExpression[null]
+                - method 'ConstantExpression[call]':
+                  - var:
+                    - name: __model__Closure_16_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - method 'ConstantExpression[call]':
+                  - var:
+                    - name: __model__Closure_17_something__
+                    - accessedVariable: org.codehaus.groovy.ast.DynamicVariable@something
+                  - tuples:
+                - ConstantExpression[null]
+                - ConstantExpression[some-uuid]
+      - properties:
+      - object initializers:

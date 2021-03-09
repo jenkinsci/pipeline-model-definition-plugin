@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Map;
 import java.util.Objects;
 
@@ -24,7 +24,7 @@ public final class ModelASTMatrix extends ModelASTStageBase {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         JSONObject o = super.toJSON()
                 .elementOpt("axes", toJSON(axes))
@@ -46,7 +46,7 @@ public final class ModelASTMatrix extends ModelASTStageBase {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder children = new StringBuilder()
             .append(toGroovy(axes))

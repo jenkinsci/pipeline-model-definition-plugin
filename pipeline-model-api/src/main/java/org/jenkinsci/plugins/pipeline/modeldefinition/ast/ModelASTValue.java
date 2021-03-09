@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents the value in a key/value pair, as used in {@link ModelASTEnvironment}, {@link ModelASTNamedArgumentList} and elsewhere.
@@ -70,12 +70,12 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
             .accumulate("isLiteral", isLiteral())
@@ -134,7 +134,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String toGroovy() {
             if (getValue() instanceof String) {
                 String str = (String) getValue();
@@ -163,7 +163,7 @@ public abstract class ModelASTValue extends ModelASTElement implements ModelASTM
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String toGroovy() {
             String gstring = (String)getValue();
             if (gstring.startsWith("${") && gstring.endsWith("}")) {

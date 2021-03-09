@@ -29,7 +29,7 @@ import hudson.Extension;
 import jenkins.scm.api.SCMHead;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 @Extension
 public class DefaultChangeLogStrategy extends ChangeLogStrategy {
@@ -51,7 +51,7 @@ public class DefaultChangeLogStrategy extends ChangeLogStrategy {
     }
 
     @Override
-    protected boolean shouldExamineAllBuilds(@Nonnull SCMHead head) {
+    protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
         if (githubPr != null && head.getClass().isAssignableFrom(githubPr)) {
             return true;
         }

@@ -27,12 +27,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.util;
 
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -42,12 +41,12 @@ import java.nio.charset.Charset;
  */
 public class InputStreamContainingString extends TypeSafeMatcher<InputStream> {
 
-    @Nonnull
+    @NonNull
     private final Matcher<String> contentMatcher;
     @CheckForNull
     private final Charset encoding;
 
-    public InputStreamContainingString(@Nonnull Matcher<String> contentMatcher, @CheckForNull Charset encoding) {
+    public InputStreamContainingString(@NonNull Matcher<String> contentMatcher, @CheckForNull Charset encoding) {
         this.contentMatcher = contentMatcher;
         this.encoding = encoding;
     }
@@ -68,12 +67,10 @@ public class InputStreamContainingString extends TypeSafeMatcher<InputStream> {
                 .appendDescriptionOf(contentMatcher);
     }
 
-    @Factory
     public static Matcher<InputStream> inputStream(Matcher<String> matcher, @CheckForNull Charset encoding) {
         return new InputStreamContainingString(matcher, encoding);
     }
 
-    @Factory
     public static Matcher<InputStream> inputStream(Matcher<String> matcher) {
         return inputStream(matcher, null);
     }

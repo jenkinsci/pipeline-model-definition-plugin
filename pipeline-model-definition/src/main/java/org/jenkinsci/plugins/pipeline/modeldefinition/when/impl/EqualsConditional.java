@@ -33,8 +33,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Stage condition based on object equality.
@@ -61,7 +61,7 @@ public class EqualsConditional extends DeclarativeStageConditional<EqualsConditi
     @Symbol("equals")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EqualsConditional> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Execute the stage if two values are equal";
         }

@@ -27,7 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef
 
-import javax.annotation.CheckForNull
+import edu.umd.cs.findbugs.annotations.CheckForNull
 
 
 interface Parser {
