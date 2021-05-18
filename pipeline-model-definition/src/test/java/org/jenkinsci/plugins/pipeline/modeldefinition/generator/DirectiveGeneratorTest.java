@@ -39,7 +39,9 @@ import hudson.tasks.LogRotator;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
+import hudson.util.VersionNumber;
 import jenkins.model.BuildDiscarderProperty;
+import jenkins.model.Jenkins;
 import jenkins.model.OptionalJobProperty;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -150,11 +152,11 @@ public class DirectiveGeneratorTest {
 
     // TODO: Remove once we move to a baseline of 2.90 or later
     private String trimParamOrEmpty() {
-        try {
-            StringParameterDefinition.class.getMethod("isTrim");
-            return ", trim: false";
-        } catch (NoSuchMethodException e) {
+        if (Jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.281"))) {
             return "";
+        }
+        else {
+            return ", trim: false";
         }
     }
 
