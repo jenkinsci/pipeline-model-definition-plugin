@@ -150,7 +150,7 @@ public class DirectiveGeneratorTest {
                         "}");
     }
 
-    // TODO: Remove once we move to a baseline of 2.90 or later
+    // TODO: Remove once we move to a baseline of 2.281 or later
     private String trimParamOrEmpty() {
         if (Jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.281"))) {
             return "";
