@@ -23,7 +23,7 @@
   ~ THE SOFTWARE.
   -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:local="local">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout" xmlns:d="jelly:define" xmlns:local="local" xmlns:p="/lib/pipelinemodeldefinition">
     <f:block>
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#tools" target="_blank">the online documentation</a>
         for more information on the <code>tools</code> directive.
@@ -31,15 +31,29 @@
         <d:taglib uri="local">
             <d:tag name="body">
                 <j:set var="help" value="${d.helpFile}" />
-                <table style="width:100%">
-                    <tr>
-                        <td colspan="3">
-                            <div class="dd-handle">
-                                <b>${d.displayName}</b>
+                <p:blockWrapper>
+                    <j:choose>
+                        <j:when test="${divBasedFormLayout}">
+                            <div class="tr">
+                                <div colspan="3">
+                                    <div class="dd-handle">
+                                        <b>${d.displayName}</b>
+                                    </div>
+                                </div>
+                                <f:helpLink url="${help}"/>
                             </div>
-                        </td>
-                        <f:helpLink url="${help}"/>
-                    </tr>
+                        </j:when>
+                        <j:otherwise>
+                            <tr>
+                                <td colspan="3">
+                                    <div class="dd-handle">
+                                        <b>${d.displayName}</b>
+                                    </div>
+                                </td>
+                                <f:helpLink url="${help}"/>
+                            </tr>
+                        </j:otherwise>
+                    </j:choose>
                     <!-- TODO: help support is unintuitive; people should be able to see help from drop-down menu -->
                     <j:if test="${help!=null}">
                         <f:helpArea />
@@ -52,7 +66,7 @@
                             <f:repeatableDeleteButton value="${attrs.deleteCaption}" />
                         </div>
                     </f:block>
-                </table>
+                </p:blockWrapper>
             </d:tag>
         </d:taglib>
 
@@ -73,7 +87,7 @@
                     <div name="tools" title="${symbol}: ${d.displayName}" tooltip="${d.tooltip}" descriptorId="${d.id}">
                         <j:set var="capture" value="" />
                         <local:body>
-                            <l:renderOnDemand tag="tr" clazz="config-page" capture="d,it,instance,symbol,${capture}">
+                            <l:renderOnDemand tag="${divBasedFormLayout ? 'div' : 'tr'}" clazz="config-page" capture="d,it,instance,symbol,${capture}">
                                 <l:ajax>
                                     <f:entry title="${%Version}">
                                         <select class="setting-input" name="symbolAndName">
