@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>1.8.5</version>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
@@ -54,7 +54,7 @@
     <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
-    <tag>${scmTag}</tag>
+    <tag>pipeline-model-definition-1.8.5</tag>
   </scm>
 
   <dependencies>
