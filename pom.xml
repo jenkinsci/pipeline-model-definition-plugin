@@ -55,9 +55,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
+    <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+    <url>https://github.com/${gitHubRepo}</url>
     <tag>${scmTag}</tag>
   </scm>
 
@@ -79,35 +79,9 @@
         <type>pom</type>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-multibranch</artifactId>
-        <version>${workflow-multibranch.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-multibranch</artifactId>
-        <version>${workflow-multibranch.version}</version>
-        <classifier>tests</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>pipeline-stage-step</artifactId>
-        <version>2.3</version>
-      </dependency>
-      <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness-tools</artifactId>
         <version>2.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>pipeline-graph-analysis</artifactId>
-        <version>1.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>htmlpublisher</artifactId>
-        <version>1.12</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
@@ -185,11 +159,11 @@
   <properties>
     <revision>1.8.6</revision>
     <changelist>-SNAPSHOT</changelist>
+    <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jenkins.version>2.222.4</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
-    <workflow-multibranch.version>2.16</workflow-multibranch.version>
   </properties>
 
   <profiles>
