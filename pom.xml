@@ -74,7 +74,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.235.x</artifactId>
-        <version>841.vd6e713d848ab</version>
+        <version>887.vae9c8ac09ff7</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -101,7 +101,7 @@
       <dependency>
         <groupId>com.jcabi</groupId>
         <artifactId>jcabi-matchers</artifactId>
-        <version>1.4</version>
+        <version>1.5.3</version>
         <exclusions>
           <exclusion>
             <!-- replaced by org.hamcrest:hamcrest -->
@@ -123,7 +123,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>ant</artifactId>
-        <version>1.7</version>
+        <version>1.11</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
