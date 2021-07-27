@@ -78,11 +78,6 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
-      <dependency> <!-- TODO pending https://github.com/jenkinsci/bom/pull/533 -->
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials-binding</artifactId>
-        <version>1.25</version>
-      </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness-tools</artifactId>
