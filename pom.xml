@@ -90,11 +90,6 @@
         <classifier>tests</classifier>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>pipeline-stage-step</artifactId>
-        <version>2.5</version>
-      </dependency>
-      <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness-tools</artifactId>
         <version>2.2</version>
