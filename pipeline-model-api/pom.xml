@@ -51,7 +51,7 @@
       <artifactId>jackson2-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.github.fge</groupId>
+      <groupId>com.github.java-json-tools</groupId>
       <artifactId>json-schema-validator</artifactId>
       <exclusions>
         <exclusion>

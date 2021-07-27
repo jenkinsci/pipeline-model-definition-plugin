@@ -25,13 +25,14 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.fge.jsonschema.tree.JsonTree
-import com.github.fge.jsonschema.tree.SimpleJsonTree
-import com.github.fge.jsonschema.util.JsonLoader
+import com.github.fge.jsonschema.core.tree.JsonTree
+import com.github.fge.jsonschema.core.tree.SimpleJsonTree
+import com.github.fge.jackson.JsonLoader
 import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
