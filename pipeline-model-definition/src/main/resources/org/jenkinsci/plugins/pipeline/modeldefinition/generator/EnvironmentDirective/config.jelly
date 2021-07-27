@@ -23,13 +23,13 @@
   ~ THE SOFTWARE.
   -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:l="/lib/layout" xmlns:c="/lib/credentials" xmlns:st="jelly:stapler">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:p="/lib/pipelinemodeldefinition">
     <f:block>
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#environment" target="_blank">the online documentation</a>
         for more information on the <code>environment</code> directive.
         <f:entry title="${%Environment Variables}" help="${descriptor.getHelpPage()}">
             <f:repeatable var="env" items="${instance.getEnv()}">
-                <table width="100%">
+                <p:blockWrapper>
                     <f:entry title="${%Name}" help="${descriptor.getEnvHelp('name')}">
                         <f:textbox name="env.name" value="${env.name}" />
                     </f:entry>
@@ -42,7 +42,7 @@
                             <f:repeatableDeleteButton />
                         </div>
                     </f:entry>
-                </table>
+                </p:blockWrapper>
             </f:repeatable>
         </f:entry>
     </f:block>
