@@ -54,6 +54,8 @@ public class AgentTest extends AbstractModelDefTest {
         s2.setLabelString("other-label");
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
                 new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second")));
+
+        j.jenkins.setNodes(j.jenkins.getNodes());
     }
 
     @Issue("JENKINS-37932")
