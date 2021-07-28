@@ -159,7 +159,7 @@
   <properties>
     <revision>1.8.6</revision>
     <changelist>-SNAPSHOT</changelist>
-    <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+    <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.235.5</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
