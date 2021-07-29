@@ -586,7 +586,12 @@ class ModelInterpreter implements Serializable {
                 body.call()
             }.call()
         } else {
-            return agent.getDeclarativeAgent(root, context).getScript(script).run {
+            def declarativeAgent = agent.getDeclarativeAgent(root, context)
+            if (declarativeAgent == null) {
+                script.error 'Unrecognized agent type'
+                return null
+            }
+            return declarativeAgent.getScript(script).run {
                 body.call()
             }.call()
         }
