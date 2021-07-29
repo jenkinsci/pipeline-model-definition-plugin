@@ -20,7 +20,7 @@ public class DeclarativePipelineTest {
         r.then(DeclarativePipelineTest::smokes_run);
     }
 
-    public static void smokes_run(JenkinsRule j) throws Throwable {
+    private static void smokes_run(JenkinsRule j) throws Throwable {
         final WorkflowRun run = runPipeline(j, m(
                 "pipeline {",
                 "  agent none",
