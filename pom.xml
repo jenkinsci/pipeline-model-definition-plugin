@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.21</version>
+    <version>4.22</version>
     <relativePath />
   </parent>
 
@@ -157,7 +157,7 @@
   </build>
 
   <properties>
-    <revision>1.9.1</revision>
+    <revision>1.9.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.235.5</jenkins.version>
