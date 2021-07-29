@@ -33,7 +33,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-parent</artifactId>
-  <version>1.9.1</version>
+  <version>${revision}${changelist}</version>
   <packaging>pom</packaging>
   <name>Pipeline: Model Parent POM</name>
   <description>An opinionated, declarative Pipeline</description>
@@ -58,7 +58,7 @@
     <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
-    <tag>pipeline-model-definition-1.9.1</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
 
@@ -157,7 +157,7 @@
   </build>
 
   <properties>
-    <revision>1.9.1</revision>
+    <revision>1.9.2</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.235.5</jenkins.version>
