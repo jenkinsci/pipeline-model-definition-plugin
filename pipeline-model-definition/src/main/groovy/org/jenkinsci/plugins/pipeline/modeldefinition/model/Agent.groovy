@@ -82,6 +82,9 @@ class Agent extends MappedClosure<Object,Agent> implements Serializable {
         String foundSymbol = findSymbol()
         if (foundSymbol != null) {
             DeclarativeAgentDescriptor foundDescriptor = DeclarativeAgentDescriptor.byName(foundSymbol)
+            if (foundDescriptor == null) {
+                return null
+            }
             def val = getMap().get(foundSymbol)
             def argMap = [:]
             if (val instanceof Map) {
