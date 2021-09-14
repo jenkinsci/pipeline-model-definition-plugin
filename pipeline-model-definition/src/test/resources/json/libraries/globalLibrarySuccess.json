@@ -77,10 +77,6 @@
     }]
   }],
   "agent":   {
-    "type": "label",
-    "argument":     {
-      "isLiteral": true,
-      "value": "master"
-    }
+    "type": "any"
   }
 }}

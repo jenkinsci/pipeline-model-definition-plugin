@@ -24,9 +24,7 @@
 
 
 pipeline {
-    agent {
-        label "master"
-    }
+    agent any
     stages {
         stage("foo") {
             steps {
