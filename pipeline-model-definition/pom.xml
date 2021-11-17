@@ -85,13 +85,6 @@
     </plugins>
   </build>
 
-  <scm>
-    <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
-    <tag>${scmTag}</tag>
-  </scm>
-
   <dependencies>
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>
