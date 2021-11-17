@@ -144,7 +144,7 @@ public class StageInputTest extends AbstractModelDefTest {
 
         HtmlTextInput stringParameterInput = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
         assertEquals("banana", stringParameterInput.getAttribute("value"));
-        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name'] | div[contains(@class,'setting-name')]")).getTextContent());
+        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name'] | div[contains(@class,'setting-name')] | div[contains(@class,'jenkins-form-label')]")).getTextContent());
         stringParameterInput.setAttribute("value", "pear");
 
         element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
