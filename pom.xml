@@ -157,7 +157,7 @@
   </build>
 
   <properties>
-    <revision>1.9.3</revision>
+    <revision>1.9.4</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.235.5</jenkins.version>
