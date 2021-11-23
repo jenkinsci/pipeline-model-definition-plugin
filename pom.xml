@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
@@ -26,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.29</version>
+    <version>4.31</version>
     <relativePath />
   </parent>
 
@@ -42,7 +43,7 @@
   <licenses>
     <license>
         <name>MIT</name>
-        <url>http://opensource.org/licenses/MIT</url>
+        <url>https://opensource.org/licenses/MIT</url>
         <distribution>repo</distribution>
     </license>
   </licenses>
@@ -73,8 +74,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.235.x</artifactId>
-        <version>918.vae501d2cdc99</version>
+        <artifactId>bom-2.319.x</artifactId>
+        <version>1013.vf8058992a042</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -121,9 +122,9 @@
         <version>1.46.1</version>
       </dependency>
       <dependency>
-        <groupId>com.github.fge</groupId>
+        <groupId>com.github.java-json-tools</groupId>
         <artifactId>json-schema-validator</artifactId>
-        <version>2.0.4</version>
+        <version>2.2.14</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -160,7 +161,7 @@
     <revision>1.9.4</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
-    <jenkins.version>2.235.5</jenkins.version>
+    <jenkins.version>2.321</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>

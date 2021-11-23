@@ -23,8 +23,8 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator
 
-import com.github.fge.jsonschema.jsonpointer.JsonPointer
-import com.github.fge.jsonschema.tree.JsonTree
+import com.github.fge.jackson.jsonpointer.JsonPointer
+import com.github.fge.jsonschema.core.tree.JsonTree
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import net.sf.json.JSONArray
 import net.sf.json.JSONObject

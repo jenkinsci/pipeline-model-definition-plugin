@@ -24,7 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.github.fge.jsonschema.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import hudson.Extension;
