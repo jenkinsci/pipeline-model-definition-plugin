@@ -39,7 +39,6 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.ForkScanner;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -53,7 +52,7 @@ public class CommonUtils {
     public static Predicate<FlowNode> isStageWithOptionalName(final String stageName) {
         return new Predicate<FlowNode>() {
             @Override
-            public boolean apply(@Nullable FlowNode input) {
+            public boolean apply(FlowNode input) {
                 if (input != null) {
                     if (input instanceof StepStartNode
                             && ((StepStartNode) input).getDescriptor() instanceof StageStep.DescriptorImpl
@@ -108,7 +107,7 @@ public class CommonUtils {
     public static Predicate<FlowNode> isSomewhereWithinStage(final FlowNode stageStartNode) {
         return new Predicate<FlowNode>() {
             @Override
-            public boolean apply(@Nullable FlowNode input) {
+            public boolean apply(FlowNode input) {
                 if (input != null && stageStartNode instanceof BlockStartNode) {
                     return input.getEnclosingBlocks().contains(stageStartNode);
                 }
