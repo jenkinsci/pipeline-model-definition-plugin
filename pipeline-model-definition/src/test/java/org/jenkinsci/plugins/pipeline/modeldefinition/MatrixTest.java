@@ -68,7 +68,7 @@ public class MatrixTest extends AbstractModelDefTest {
     private static String password;
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        assumeFalse("TODO frequent failures in CI on Windows", Functions.isWindows());
+        assumeFalse("TODO frequent failures in CI on Windows", Functions.isWindows() && System.getenv("CI") != null);
         s = j.createOnlineSlave();
         s.setLabelString("agent-one some-label");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
