@@ -34,7 +34,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-parent</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${revision}${changelist}-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Pipeline: Model Parent POM</name>
   <description>An opinionated, declarative Pipeline</description>
