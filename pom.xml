@@ -75,7 +75,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.319.x</artifactId>
-        <version>1013.vf8058992a042</version>
+        <version>1090.v0a_33df40457a_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -83,6 +83,11 @@
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness-tools</artifactId>
         <version>2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.main</groupId>
+        <artifactId>jenkins-test-harness</artifactId>
+	<version>1692.v41c59b_73de66-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
@@ -164,7 +169,6 @@
     <jenkins.version>2.321</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
-    <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
   </properties>
 
   <profiles>
