@@ -9,7 +9,7 @@ import org.jenkinsci.plugins.structs.describable.DescribableParameter;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -28,7 +28,7 @@ public class DirectiveGeneratorTester extends SnippetizerTester {
      * @param desc         The describable we'll translate to JSON.
      * @param expected     Expected directive snippet to be generated
      */
-    public void assertGenerateDirective(@Nonnull AbstractDirective desc, @Nonnull String expected) throws Exception {
+    public void assertGenerateDirective(@NonNull AbstractDirective desc, @NonNull String expected) throws Exception {
         assertEquals(expected, desc.toGroovy(true));
         assertGenerateSnippet(DirectiveGenerator.GENERATE_URL, describable2StaplerJson(desc).toString(), expected, null);
     }
