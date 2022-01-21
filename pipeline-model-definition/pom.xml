@@ -184,7 +184,6 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
       <scope>test</scope>
-      <version>4.10.3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.httpcomponents</groupId>
@@ -256,7 +255,6 @@
       <artifactId>git</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
-      <version>4.10.3</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.httpcomponents</groupId>
