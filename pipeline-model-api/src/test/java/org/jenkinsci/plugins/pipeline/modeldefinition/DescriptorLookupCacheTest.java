@@ -35,7 +35,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import static org.junit.Assert.assertEquals;
 
@@ -78,7 +78,7 @@ public class DescriptorLookupCacheTest {
         @Symbol("rhombus")
         @TestExtension
         public static class DescriptorImpl extends Descriptor<Curve> {
-            @Nonnull
+            @NonNull
             @Override
             public String getDisplayName() {
                 return "rhombus curve";
