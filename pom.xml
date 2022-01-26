@@ -34,7 +34,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jenkinsci.plugins</groupId>
   <artifactId>pipeline-model-parent</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${revision}.${changelist}</version>
   <packaging>pom</packaging>
   <name>Pipeline: Model Parent POM</name>
   <description>An opinionated, declarative Pipeline</description>
@@ -158,8 +158,8 @@
   </build>
 
   <properties>
-    <revision>1.9.4</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <revision>2</revision>
+    <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.321</jenkins.version>
     <java.level>8</java.level>
