@@ -105,7 +105,7 @@
             <artifactId>hamcrest-core</artifactId>
           </exclusion>
           <exclusion>
-            <!-- provided by xstream in Jenkins core -->
+            <!-- only needed for tests -->
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
           </exclusion>
