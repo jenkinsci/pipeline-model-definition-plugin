@@ -84,6 +84,7 @@
         <artifactId>jenkins-test-harness-tools</artifactId>
         <version>2.2</version>
       </dependency>
+      <!-- TODO remove this dependency when it is available in the plugin-pom -->
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness</artifactId>
