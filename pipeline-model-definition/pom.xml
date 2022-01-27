@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
@@ -84,13 +85,6 @@
       </plugin>
     </plugins>
   </build>
-
-  <scm>
-    <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
-    <tag>${scmTag}</tag>
-  </scm>
 
   <dependencies>
     <dependency>

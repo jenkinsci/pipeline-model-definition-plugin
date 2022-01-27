@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
@@ -26,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.29</version>
+    <version>4.31</version>
     <relativePath />
   </parent>
 
@@ -42,7 +43,7 @@
   <licenses>
     <license>
         <name>MIT</name>
-        <url>http://opensource.org/licenses/MIT</url>
+        <url>https://opensource.org/licenses/MIT</url>
         <distribution>repo</distribution>
     </license>
   </licenses>
@@ -54,7 +55,7 @@
     </developer>
   </developers>
 
-  <scm>
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
     <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
@@ -73,8 +74,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.235.x</artifactId>
-        <version>918.vae501d2cdc99</version>
+        <artifactId>bom-2.319.x</artifactId>
+        <version>1117.v62a_f6a_01de98</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -82,6 +83,12 @@
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness-tools</artifactId>
         <version>2.2</version>
+      </dependency>
+      <!-- TODO remove this dependency when it is available in the plugin-pom -->
+      <dependency>
+        <groupId>org.jenkins-ci.main</groupId>
+        <artifactId>jenkins-test-harness</artifactId>
+        <version>1697.v6b_1e34cb_4ee6</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
@@ -112,18 +119,13 @@
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>ant</artifactId>
-        <version>1.11</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>copyartifact</artifactId>
         <version>1.46.2</version>
       </dependency>
       <dependency>
-        <groupId>com.github.fge</groupId>
+        <groupId>com.github.java-json-tools</groupId>
         <artifactId>json-schema-validator</artifactId>
-        <version>2.0.4</version>
+        <version>2.2.14</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -157,13 +159,12 @@
   </build>
 
   <properties>
-    <revision>1.9.3</revision>
+    <revision>1.9.4</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
-    <jenkins.version>2.235.5</jenkins.version>
+    <jenkins.version>2.321</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
-    <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
   </properties>
 
   <profiles>

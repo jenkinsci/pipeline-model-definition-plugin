@@ -25,9 +25,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.fge.jsonschema.tree.JsonTree
-import com.github.fge.jsonschema.tree.SimpleJsonTree
-import com.github.fge.jsonschema.util.JsonLoader
+import com.github.fge.jsonschema.core.tree.JsonTree
+import com.github.fge.jsonschema.core.tree.SimpleJsonTree
+import com.github.fge.jackson.JsonLoader
 import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -91,7 +91,6 @@ import org.kohsuke.accmod.restrictions.NoExternalUse
 
 import edu.umd.cs.findbugs.annotations.CheckForNull
 import edu.umd.cs.findbugs.annotations.NonNull
-import edu.umd.cs.findbugs.annotations.Nullable
 import javax.lang.model.SourceVersion
 import java.util.concurrent.TimeUnit
 
@@ -158,7 +157,7 @@ class Utils {
     static Predicate<FlowNode> nodeIdNotEquals(final FlowNode original) {
         return new Predicate<FlowNode>() {
             @Override
-            boolean apply(@Nullable FlowNode input) {
+            boolean apply(FlowNode input) {
                 return input == null || original == null || original.id != input.id
             }
         }
@@ -167,7 +166,7 @@ class Utils {
     static Predicate<FlowNode> endNodeForStage(final BlockStartNode startNode) {
         return new Predicate<FlowNode>() {
             @Override
-            boolean apply(@Nullable FlowNode input) {
+            boolean apply(FlowNode input) {
                 return input != null &&
                     input instanceof BlockEndNode &&
                     input.getStartNode() == startNode
@@ -212,7 +211,7 @@ class Utils {
     static Predicate<FlowNode> isParallelBranchFlowNode(final String stageName, FlowExecution execution = null) {
         return new Predicate<FlowNode>() {
             @Override
-            boolean apply(@Nullable FlowNode input) {
+            boolean apply(FlowNode input) {
                 if (input != null) {
                     if (input.getAction(LabelAction.class) != null &&
                         input.getAction(ThreadNameAction.class) != null &&

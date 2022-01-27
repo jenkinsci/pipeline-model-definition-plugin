@@ -64,6 +64,7 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * @author Andrew Bayer
@@ -109,7 +110,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         return null;
     }
 
-    @Before
+    @Before // TODO rather use FlagRule
     public void setUpFeatureFlags() {
         defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
         defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
@@ -126,6 +127,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Before
     public void setUp() throws Exception {
         ToolInstallations.configureMaven3();
+        for (Node n : j.jenkins.getNodes()) {
+            assumeTrue(n + " was offline", n.toComputer().isOnline());
+        }
     }
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
@@ -217,7 +221,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         result.add(new Object[]{"perStageConfigEmptySteps", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("'steps'")});
-        result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
+        result.add(new Object[]{"perStageConfigUnknownSection", "object instance has properties which are not allowed by the schema"});
 
         result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, label, none, otherField]")});
 
@@ -230,7 +234,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes)});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]")});
-        result.add(new Object[]{"notificationsSectionRemoved", "additional properties are not allowed"});
+        result.add(new Object[]{"notificationsSectionRemoved", "object instance has properties which are not allowed by the schema"});
         result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
                 "allOf, anyOf, branch, buildingTag, changeRequest, changelog, changeset, environment, equals, expression, isRestartedRun, not, tag")});
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
@@ -276,8 +280,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
 
         // TODO: Better error messaging for these schema violations.
-        result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});
-        result.add(new Object[]{"invalidWhenWithChildren", "instance failed to match at least one schema"});
+        result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one required schema among 2"});
+        result.add(new Object[]{"invalidWhenWithChildren", "instance failed to match at least one required schema among 2"});
 
         result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
 
