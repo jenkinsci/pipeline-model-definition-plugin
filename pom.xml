@@ -88,7 +88,7 @@
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness</artifactId>
-        <version>1697.v6b_1e34cb_4ee6</version>
+        <version>1698.vc58b_4e102e41</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
