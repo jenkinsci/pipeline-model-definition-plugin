@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
+import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.Slave;
 import jenkins.plugins.git.GitSCMSource;
@@ -43,6 +44,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * @author Andrew Bayer
@@ -160,6 +162,7 @@ public class LibrariesTest extends AbstractModelDefTest {
     @Issue("JENKINS-42473")
     @Test
     public void folderLibraryParsing() throws Exception {
+        assumeFalse("TODO Filename too long errors on Windows", Functions.isWindows());
         otherRepo.init();
         otherRepo.git("checkout", "-b", "test");
         otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
@@ -259,6 +262,7 @@ public class LibrariesTest extends AbstractModelDefTest {
     @Issue("JENKINS-46547")
     @Test
     public void pipelineDefinedInLibraryInFolder() throws Exception {
+        assumeFalse("TODO Filename too long errors on Windows", Functions.isWindows());
         otherRepo.init();
         otherRepo.write("vars/fromLib.groovy", pipelineSourceFromResources("libraries/libForPipelineDefinedInLibrary"));
         otherRepo.git("add", "vars");
