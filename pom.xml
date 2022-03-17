@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.31</version>
+    <version>4.37</version>
     <relativePath />
   </parent>
 
@@ -74,8 +74,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.319.x</artifactId>
-        <version>1117.v62a_f6a_01de98</version>
+        <artifactId>bom-2.332.x</artifactId>
+        <version>1198.v387c834fca_1a_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -83,12 +83,6 @@
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness-tools</artifactId>
         <version>2.2</version>
-      </dependency>
-      <!-- TODO remove this dependency when it is available in the plugin-pom -->
-      <dependency>
-        <groupId>org.jenkins-ci.main</groupId>
-        <artifactId>jenkins-test-harness</artifactId>
-        <version>1697.v6b_1e34cb_4ee6</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
@@ -100,6 +94,11 @@
         <artifactId>jcabi-matchers</artifactId>
         <version>1.5.3</version>
         <exclusions>
+          <exclusion>
+            <!-- RequireUpperBoundDeps conflict with XStream -->
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+          </exclusion>
           <exclusion>
             <!-- replaced by org.hamcrest:hamcrest -->
             <groupId>org.hamcrest</groupId>
@@ -161,7 +160,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
-    <jenkins.version>2.321</jenkins.version>
+    <jenkins.version>2.332.1</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
   </properties>
