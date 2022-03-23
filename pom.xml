@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.31</version>
+    <version>4.38</version>
     <relativePath />
   </parent>
 
@@ -84,12 +84,6 @@
         <artifactId>jenkins-test-harness-tools</artifactId>
         <version>2.2</version>
       </dependency>
-      <!-- TODO remove this dependency when it is available in the plugin-pom -->
-      <dependency>
-        <groupId>org.jenkins-ci.main</groupId>
-        <artifactId>jenkins-test-harness</artifactId>
-        <version>1697.v6b_1e34cb_4ee6</version>
-      </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest</artifactId>
@@ -100,6 +94,11 @@
         <artifactId>jcabi-matchers</artifactId>
         <version>1.5.3</version>
         <exclusions>
+          <exclusion>
+            <!-- RequireUpperBoundDeps conflict with XStream -->
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+          </exclusion>
           <exclusion>
             <!-- replaced by org.hamcrest:hamcrest -->
             <groupId>org.hamcrest</groupId>
