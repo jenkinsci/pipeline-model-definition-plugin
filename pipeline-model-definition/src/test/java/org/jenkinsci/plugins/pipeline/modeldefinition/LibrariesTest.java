@@ -161,6 +161,8 @@ public class LibrariesTest extends AbstractModelDefTest {
     @Test
     public void folderLibraryParsing() throws Exception {
         otherRepo.init();
+        // longpaths to support longer filenames for windows. Only needs to be set once.
+        otherRepo.git("config", "--global", "core.longpaths", "true");
         otherRepo.git("checkout", "-b", "test");
         otherRepo.write("src/org/foo/Zot.groovy", "package org.foo;\n" +
                 "\n" +
