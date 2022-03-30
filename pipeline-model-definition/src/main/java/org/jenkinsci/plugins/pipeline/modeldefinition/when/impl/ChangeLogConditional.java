@@ -38,7 +38,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Objects;
 import java.util.regex.Pattern;
+import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 
 /**
  * Conditional that checks the messages in the changelog.
@@ -89,5 +91,19 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
     @Restricted(NoExternalUse.class)
     public static String expandForMultiLine(String pattern) {
         return "(?m)(?s)^[^\\r\\n]*?" + pattern + "[^\\r\\n]*?$";
+    }
+
+    /**
+     * AbstractChangelogConditionalScriptAllowlist.groovy is a superclass of the Groovy scripts for some subclasses of
+     * {@link DeclarativeStageConditional}, but does not have any direct equivalent Java class, so we just allow it here.
+     */
+    @Extension
+    public static class ChangelogConditionalScriptAllowlist extends GroovySourceFileAllowlist {
+        private final String scriptUrl = Objects.requireNonNull(getClass().getClassLoader().getResource("org/jenkinsci/plugins/pipeline/modeldefinition/when/impl/AbstractChangelogConditionalScript.groovy")).toString();
+
+        @Override
+        public boolean isAllowed(String groovyResourceUrl) {
+            return groovyResourceUrl.equals(scriptUrl);
+        }
     }
 }

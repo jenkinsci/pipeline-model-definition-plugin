@@ -27,9 +27,16 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.Extension;
+import hudson.ExtensionList;
+import java.net.URL;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -38,6 +45,10 @@ import java.util.Set;
  * @author Andrew Bayer
  */
 public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> extends Descriptor<T> {
+
+    protected WithScriptDescriptor() {
+        ExtensionList.lookupSingleton(WithScriptAllowlist.class).registerScript(getScriptResource());
+    }
 
     /**
      * The name for this type. Defaults to the first string in the {@code Symbol} on the class.
@@ -63,6 +74,13 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
         return clazz.getName() + "Script";
     }
 
+    @SuppressFBWarnings(value = "UI_INHERITANCE_UNSAFE_GETRESOURCE", justification = "We intentionally want to use the class loader for the subclass in this case")
+    protected @NonNull URL getScriptResource() {
+        String scriptFile = getScriptClass().replace('.', '/') + ".groovy";
+        return Objects.requireNonNull(getClass().getClassLoader().getResource(scriptFile),
+                () -> "Unable to find resource file: " + scriptFile);
+    }
+
     /**
      * Creates an instance of the corresponding {@link WithScriptDescribable} from the given arguments.
      *
@@ -82,5 +100,19 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
      */
     public T newInstance() throws Exception {
         return clazz.newInstance();
+    }
+
+    @Extension
+    public static class WithScriptAllowlist extends GroovySourceFileAllowlist {
+        private final Set<String> scriptUrls = new HashSet<>();
+
+        private void registerScript(URL scriptUrl) {
+            scriptUrls.add(scriptUrl.toString());
+        }
+
+        @Override
+        public boolean isAllowed(String groovyResourceUrl) {
+            return scriptUrls.contains(groovyResourceUrl);
+        }
     }
 }

@@ -94,6 +94,23 @@
         <artifactId>json-schema-validator</artifactId>
         <version>2.2.14</version>
       </dependency>
+      <dependency>
+        <!-- TODO: Remove once this version is included in BOM -->
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>script-security</artifactId>
+        <version>1172.v35f6a_0b_8207e</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-cps</artifactId>
+        <version>2699.v7231c3b_4a_231</version> <!-- TODO: https://github.com/jenkinsci/workflow-cps-plugin/pull/538 -->
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-cps</artifactId>
+        <version>2699.v7231c3b_4a_231</version> <!-- TODO: https://github.com/jenkinsci/workflow-cps-plugin/pull/538 -->
+        <classifier>tests</classifier>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
