@@ -90,28 +90,6 @@
         <version>2.2</version>
       </dependency>
       <dependency>
-        <groupId>com.jcabi</groupId>
-        <artifactId>jcabi-matchers</artifactId>
-        <version>1.5.3</version>
-        <exclusions>
-          <exclusion>
-            <!-- RequireUpperBoundDeps conflict with XStream -->
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <!-- replaced by org.hamcrest:hamcrest -->
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-library</artifactId>
-          </exclusion>
-          <exclusion>
-            <!-- replaced by org.hamcrest:hamcrest -->
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>pipeline-milestone-step</artifactId>
         <version>100.v60a_03cd446e1</version>
