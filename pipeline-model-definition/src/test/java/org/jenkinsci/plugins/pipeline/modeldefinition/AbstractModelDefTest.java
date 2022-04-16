@@ -58,13 +58,13 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.jcabi.matchers.RegexMatchers.containsPattern;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
+import static org.jvnet.hudson.test.JenkinsMatchers.matchesPattern;
 
 /**
  * @author Andrew Bayer
@@ -564,7 +564,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             if (logMatches != null) {
                 String log = JenkinsRule.getLog(run);
                 for (String pattern : logMatches) {
-                    assertThat(log, containsPattern(pattern));
+                    assertThat(log, matchesPattern(pattern));
                 }
             }
             if (hasFailureCause) {
