@@ -39,6 +39,8 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
+import org.jenkinsci.plugins.pipeline.modeldefinition.properties.DisableRestartFromStageJobProperty;
+import org.jenkinsci.plugins.pipeline.modeldefinition.properties.PreserveStashesJobProperty;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
@@ -59,13 +61,17 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 @ExportedBean
 public class RestartDeclarativePipelineAction implements Action {
 
+    private static final Logger LOGGER = Logger.getLogger(RestartDeclarativePipelineAction.class.getName());
+
     private final Run run;
 
     private RestartDeclarativePipelineAction(Run run) {
+        LOGGER.info("Action initiated");
         this.run = run;
     }
 
@@ -152,8 +158,16 @@ public class RestartDeclarativePipelineAction implements Action {
 
     @Exported
     public List<String> getRestartableStages() {
+        LOGGER.info("Loading restartable stages");
         List<String> stages = new ArrayList<>();
         FlowExecution execution = getExecution();
+
+        LOGGER.info("################################## ");
+        DisableRestartFromStageJobProperty disableRestartFromStage = (DisableRestartFromStageJobProperty) run.getParent().getProperty(DisableRestartFromStageJobProperty.class);
+        LOGGER.info("" + disableRestartFromStage);
+        LOGGER.info("" + disableRestartFromStage.isDisableRestartFromStage());
+        LOGGER.info("################################## ");
+
         if (execution != null) {
             ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
             if (execAction != null) {

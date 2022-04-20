@@ -55,7 +55,8 @@
     </developer>
   </developers>
 
-  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+  <scm>
+<!--  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">-->
     <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
@@ -158,7 +159,7 @@
   </build>
 
   <properties>
-    <changelist>999999-SNAPSHOT</changelist>
+    <changelist>2.2064.v5eef7d0982b_e</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.332.1</jenkins.version>
     <java.level>8</java.level>
@@ -169,7 +170,7 @@
     <profile>
       <id>no-script-splitting</id>
       <activation>
-        <jdk>[,1.9)</jdk>
+        <jdk>[,1.8)</jdk>
       </activation>
       <build>
         <plugins>
@@ -188,7 +189,7 @@
     <profile>
       <id>script-splitting</id>
       <activation>
-        <jdk>[1.9,)</jdk>
+        <jdk>[1.8,)</jdk>
       </activation>
       <build>
         <plugins>
