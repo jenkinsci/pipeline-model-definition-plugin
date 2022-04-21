@@ -92,7 +92,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>pipeline-milestone-step</artifactId>
-        <version>100.v60a_03cd446e1</version>
+        <version>101.vd572fef9d926</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
