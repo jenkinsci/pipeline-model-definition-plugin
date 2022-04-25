@@ -4,20 +4,28 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.RestartDeclarativePipelineAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class DisableRestartFromStage extends DeclarativeOption {
+import java.util.logging.Logger;
 
-    private Boolean disableRestartFromStage;
+public class DisableRestartFromStage extends DeclarativeOption {
+    private static final Logger LOGGER = Logger.getLogger(RestartDeclarativePipelineAction.class.getName());
+
+    private Boolean disableRestartFromStage = Boolean.FALSE;
 
     @DataBoundConstructor
     public DisableRestartFromStage(@Nullable Boolean disableRestartFromStage) {
-        this.disableRestartFromStage = disableRestartFromStage;
+        if(disableRestartFromStage == null || disableRestartFromStage){
+            this.disableRestartFromStage = Boolean.TRUE;
+        } else {
+            this.disableRestartFromStage = Boolean.FALSE;
+        }
     }
 
-    public boolean isDisableRestartFromStage() { return disableRestartFromStage == null || disableRestartFromStage; }
+    public boolean isDisableRestartFromStage() { return disableRestartFromStage; }
 
     @Extension @Symbol("disableRestartFromStage")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {

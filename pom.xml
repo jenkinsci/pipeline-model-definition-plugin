@@ -73,6 +73,13 @@
 
   <dependencyManagement>
     <dependencies>
+<!--      <dependency>-->
+<!--        <groupId>org.jenkins-ci.plugins.workflow</groupId>-->
+<!--        <artifactId>workflow-job</artifactId>-->
+<!--        <version>999999-SNAPSHOT</version>-->
+<!--        <scope>test</scope>-->
+<!--      </dependency>-->
+
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.332.x</artifactId>

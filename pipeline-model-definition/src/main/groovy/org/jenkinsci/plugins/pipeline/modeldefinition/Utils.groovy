@@ -39,6 +39,7 @@ import hudson.model.*
 import hudson.util.Secret
 import hudson.triggers.Trigger
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser
 
 import java.util.function.Function
@@ -619,6 +620,12 @@ class Utils {
                 }
                 if(newQuietPeriod != null && j.quietPeriod != newQuietPeriod){
                     j.quietPeriod = newQuietPeriod
+                    isJobChanged = true
+                }
+
+                DisableRestartFromStage disableRestartFromStage = (DisableRestartFromStage) rawOptions.find { it instanceof DisableRestartFromStage }
+                if(disableRestartFromStage != null){
+                    j.disableRestartFromStage = disableRestartFromStage.isDisableRestartFromStage()
                     isJobChanged = true
                 }
 
