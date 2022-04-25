@@ -109,11 +109,11 @@ public class RestartDeclarativePipelineAction implements Action {
                 run.hasPermission(Item.BUILD) &&
                 run.getParent().isBuildable() &&
                 getExecution() != null &&
-                !isRestartFromStageDisabled();
+                isRestartableFromStage();
     }
 
-    private boolean isRestartFromStageDisabled() {
-        return ((WorkflowJob)this.run.getParent()).isDisableRestartFromStage();
+    private boolean isRestartableFromStage() {
+        return ((WorkflowJob)this.run.getParent()).isRestartableFromStage();
     }
 
     public Api getApi() {

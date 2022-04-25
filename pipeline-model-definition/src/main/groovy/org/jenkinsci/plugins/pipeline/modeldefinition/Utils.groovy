@@ -624,11 +624,16 @@ class Utils {
                 }
 
                 DisableRestartFromStage disableRestartFromStage = (DisableRestartFromStage) rawOptions.find { it instanceof DisableRestartFromStage }
+                Boolean newDisableRestartFromStage = null;
                 if(disableRestartFromStage != null){
-                    j.disableRestartFromStage = disableRestartFromStage.isDisableRestartFromStage()
+                    newDisableRestartFromStage = disableRestartFromStage.isDisableRestartFromStage()
+                } else {
+                    newDisableRestartFromStage = false;
+                }
+                if(j.disableRestartFromStage != newDisableRestartFromStage){
+                    j.disableRestartFromStage = newDisableRestartFromStage
                     isJobChanged = true
                 }
-
 
                 // If there are any triggers update them if needed
                 // It would be cool to only add or remove individual triggers,

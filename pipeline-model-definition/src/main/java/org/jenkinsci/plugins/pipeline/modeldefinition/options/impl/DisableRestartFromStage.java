@@ -12,9 +12,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.util.logging.Logger;
 
 public class DisableRestartFromStage extends DeclarativeOption {
-    private static final Logger LOGGER = Logger.getLogger(RestartDeclarativePipelineAction.class.getName());
 
-    private Boolean disableRestartFromStage = Boolean.FALSE;
+    private Boolean disableRestartFromStage;
 
     @DataBoundConstructor
     public DisableRestartFromStage(@Nullable Boolean disableRestartFromStage) {
