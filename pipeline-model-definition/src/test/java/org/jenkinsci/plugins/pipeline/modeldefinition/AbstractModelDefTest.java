@@ -596,10 +596,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     }
 
     public class EnvBuilder {
-        private final Slave agent;
+        private final agent;
         private Map<String, String> env;
 
-        protected EnvBuilder(Slave agent) {
+        protected EnvBuilder(agent) {
             this.agent = agent;
             this.env = new HashMap<>();
             env.put("ONAGENT", "true");

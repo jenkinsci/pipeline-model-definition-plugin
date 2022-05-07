@@ -95,7 +95,7 @@ import javax.lang.model.SourceVersion
 import java.util.concurrent.TimeUnit
 
 /**
- * Utility methods for use primarily in CPS-transformed code to avoid excessive global whitelisting.
+ * Utility methods for use primarily in CPS-transformed code to avoid excessive global allowlisting.
  *
  * @author Andrew Bayer
  */

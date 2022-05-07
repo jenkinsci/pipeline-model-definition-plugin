@@ -184,7 +184,7 @@ class ModelValidatorImpl implements ModelValidator {
                 errorCollector.error(k, Messages.ModelValidatorImpl_InvalidSectionType("tool", k.key, Tools.getAllowedToolTypes().keySet()))
                 valid = false
             } else {
-                // Don't bother checking whether the tool exists in this Jenkins master if we know it isn't an allowed tool type.
+                // Don't bother checking whether the tool exists in this Jenkins controller if we know it isn't an allowed tool type.
 
                 // Can't do tools validation without a Jenkins instance, so move on if that's not available, or if the tool value is a
                 // non-literal - we allow users to shoot themselves there.

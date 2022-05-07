@@ -418,7 +418,7 @@ public class RuntimeASTTransformer {
             return new MapEntryExpression(translateEnvironmentValueAndCall(targetVar, m.keyExpression, keys),
                     translateEnvironmentValueAndCall(targetVar, m.valueExpression, keys))
         } else if (expr instanceof BitwiseNegationExpression) {
-            // Translate the nested expression - note, no test coverage due to bitwiseNegate not being whitelisted
+            // Translate the nested expression - note, no test coverage due to bitwiseNegate not being allowlisted
             return new BitwiseNegationExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
         } else if (expr instanceof NotExpression) {
             // Translate the nested expression
@@ -468,7 +468,7 @@ public class RuntimeASTTransformer {
             }
             return new TupleExpression(expressions)
         } else if (expr instanceof UnaryMinusExpression) {
-            // Translate the nested expression - unary ops are also not whitelisted and so aren't tested
+            // Translate the nested expression - unary ops are also not allowlisted and so aren't tested
             return new UnaryMinusExpression(translateEnvironmentValueAndCall(targetVar, expr.expression, keys))
         } else if (expr instanceof UnaryPlusExpression) {
             // Translate the nested expression
@@ -1193,7 +1193,7 @@ public class RuntimeASTTransformer {
          *      his is a limitation of Groovy itself.
          *
          * b. Methods declared in the script cannot be invoked from outside the script, because "invokeMethod()" is not
-         * whitelisted by the groovy sandbox.
+         * allowlisted by the groovy sandbox.
          *
          * The sandbox limitation is already address by keeping any user provided code in closures declared inside the script.
          * Any external container classes always call back into one of these closures which are able to call local methods.
