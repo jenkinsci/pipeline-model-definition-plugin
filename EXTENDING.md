@@ -16,7 +16,7 @@ All API endpoints are exposed under `JENKINS_URL/pipeline-model-schema` or `JENK
 * *Method*: POST
 * *Content-Type*: application/x-www-form-urlencoded
 * *Parameters*: `jenkinsfile` - the `Jenkinsfile` contents
-* *Info*: Takes a `Jenkinsfile` and validates its syntax, semantics, steps, parameters etc on the Jenkins master.
+* *Info*: Takes a `Jenkinsfile` and validates its syntax, semantics, steps, parameters etc on the Jenkins controller.
 * *Returns*: JSON with a `result` field that will either be `success` or `failure`. If `failure`, there'll be an additional array in the `errors` field of the error messages encountered.
 
 ### Validation of JSON representation
@@ -24,7 +24,7 @@ All API endpoints are exposed under `JENKINS_URL/pipeline-model-schema` or `JENK
 * *Method*: POST
 * *Content-Type*: application/x-www-form-urlencoded
 * *Parameters*: `json` - the JSON representation
-* *Info*: Takes a JSON representation of the model and validates its syntax, semantics, steps, parameters etc on the Jenkins master.
+* *Info*: Takes a JSON representation of the model and validates its syntax, semantics, steps, parameters etc on the Jenkins controller.
 * *Returns*: JSON with a `result` field that will either be `success` or `failure`. If `failure`, there'll be an additional array in the `errors` field of the error messages encountered.
 
 ### Conversion to JSON representation from Jenkinsfile
