@@ -43,8 +43,7 @@ public class PostStageTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setLabelString("here");
+        s = j.createSlave("here", null);
     }
 
     @Test

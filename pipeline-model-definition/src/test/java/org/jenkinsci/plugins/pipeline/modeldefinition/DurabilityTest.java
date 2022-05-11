@@ -76,8 +76,7 @@ public class DurabilityTest extends AbstractDeclarativeTest {
             @Override public void evaluate() throws Throwable {
                 RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
                 logger.record(CpsFlowExecution.class, Level.WARNING).capture(100);
-                DumbSlave s = story.j.createOnlineSlave();
-                s.setLabelString("remote quick");
+                DumbSlave s = story.j.createSlave("remote quick", null);
                 s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
 
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "demo");
@@ -169,8 +168,7 @@ public class DurabilityTest extends AbstractDeclarativeTest {
         story.addStep(new Statement() {
             @Override public void evaluate() throws Throwable {
                 logger.record(CpsFlowExecution.class, Level.WARNING).capture(100);
-                DumbSlave s = story.j.createOnlineSlave();
-                s.setLabelString("remote quick");
+                DumbSlave s = story.j.createSlave("remote quick", null);
                 s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
 
                 WorkflowJob p = story.j.jenkins.createProject(WorkflowJob.class, "demo");
