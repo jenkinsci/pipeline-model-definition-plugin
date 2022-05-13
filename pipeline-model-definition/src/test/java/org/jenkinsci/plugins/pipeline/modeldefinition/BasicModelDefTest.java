@@ -69,9 +69,9 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
+        s = j.createSlave("some-label", null);
         s.setNumExecutors(10);
-        s.setLabelString("some-label");
+        j.waitOnline(s);
     }
 
     @Issue("JENKINS-47363")
