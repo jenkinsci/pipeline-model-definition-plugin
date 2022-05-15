@@ -65,8 +65,7 @@ public class ValidatorTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setLabelString("some-label");
+        s = j.createSlave("some-label", null);
     }
 
     @Issue("JENKINS-39011")

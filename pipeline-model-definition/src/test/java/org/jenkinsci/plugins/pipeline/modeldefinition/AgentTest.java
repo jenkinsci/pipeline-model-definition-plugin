@@ -44,18 +44,18 @@ public class AgentTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setLabelString("some-label");
+        s = j.createSlave("some-label", null);
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
                 new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
         s.setNumExecutors(2);
 
-        s2 = j.createOnlineSlave();
-        s2.setLabelString("other-label");
+        s2 = j.createSlave("other-label", null);
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
                 new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second")));
 
         j.jenkins.setNodes(j.jenkins.getNodes());
+        j.waitOnline(s);
+        j.waitOnline(s2);
     }
 
     @Issue("JENKINS-37932")

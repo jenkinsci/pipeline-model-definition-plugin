@@ -66,22 +66,18 @@ public class MatrixTest extends AbstractModelDefTest {
     private static String password;
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setLabelString("agent-one some-label");
+        s = j.createSlave("agent-one some-label", null);
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
         s.setNumExecutors(10);
 
-        linux = j.createOnlineSlave();
-        linux.setLabelString("linux-agent");
+        linux = j.createSlave("linux-agent", null);
         linux.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "linux agent")));
-        mac = j.createOnlineSlave();
-        mac.setLabelString("mac-agent");
+        mac = j.createSlave("mac-agent", null);
         mac.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "mac agent")));
-        windows = j.createOnlineSlave();
-        windows.setLabelString("windows-agent");
+        windows = j.createSlave("windows-agent", null);
         windows.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
     }
@@ -529,12 +525,10 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-46809")
     @Test
     public void matrixStagesGroupsAndStages() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
+        Slave s = j.createSlave("first-agent", null);
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
 
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
+        Slave s2 = j.createSlave("second-agent", null);
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
 
         WorkflowRun b = expect("matrix/matrixStagesGroupsAndStages")
@@ -609,12 +603,10 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-53734")
     @Test
     public void matrixStagesNestedInSequential() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
+        Slave s = j.createSlave("first-agent", null);
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
 
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
+        Slave s2 = j.createSlave("second-agent", null);
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
 
         expect("matrix/matrixStagesNestedInSequential")

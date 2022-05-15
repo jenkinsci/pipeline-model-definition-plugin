@@ -65,9 +65,8 @@ public class SerializationTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
+        s = j.createSlave("some-label test", null);
         s.setNumExecutors(4);
-        s.setLabelString("some-label test");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
     }
 

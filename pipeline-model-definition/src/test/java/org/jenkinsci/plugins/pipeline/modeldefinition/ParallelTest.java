@@ -63,12 +63,10 @@ public class ParallelTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
+        s = j.createSlave("first-agent some-label", null);
         s.setNumExecutors(10);
-        s.setLabelString("first-agent some-label");
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
-        s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
+        s2 = j.createSlave("second-agent", null);
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
     }
 
