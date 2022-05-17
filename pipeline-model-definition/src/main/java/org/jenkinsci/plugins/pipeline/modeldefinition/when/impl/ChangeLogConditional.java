@@ -32,15 +32,14 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Objects;
 import java.util.regex.Pattern;
-import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 
 /**
  * Conditional that checks the messages in the changelog.
@@ -99,7 +98,7 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
      */
     @Extension
     public static class ChangelogConditionalScriptAllowlist extends GroovySourceFileAllowlist {
-        private final String scriptUrl = Objects.requireNonNull(getClass().getClassLoader().getResource("org/jenkinsci/plugins/pipeline/modeldefinition/when/impl/AbstractChangelogConditionalScript.groovy")).toString();
+        private final String scriptUrl = ChangeLogConditional.class.getResource("/org/jenkinsci/plugins/pipeline/modeldefinition/when/impl/AbstractChangelogConditionalScript.groovy").toString();
 
         @Override
         public boolean isAllowed(String groovyResourceUrl) {

@@ -28,7 +28,6 @@ import hudson.ExtensionPoint;
 import java.util.Map;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import java.util.Objects;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
@@ -109,7 +108,7 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
 
     @Extension
     public static class CheckoutScriptAllowlist extends GroovySourceFileAllowlist {
-        private final String scriptUrl = Objects.requireNonNull(getClass().getClassLoader().getResource("org/jenkinsci/plugins/pipeline/modeldefinition/agent/CheckoutScript.groovy")).toString();
+        private final String scriptUrl = DeclarativeAgent.class.getResource("/org/jenkinsci/plugins/pipeline/modeldefinition/agent/CheckoutScript.groovy").toString();
 
         @Override
         public boolean isAllowed(String groovyResourceUrl) {
