@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.collect.ImmutableList;
+import hudson.FilePath;
 import hudson.model.*;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
@@ -42,8 +43,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
-import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
-import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.*;
@@ -51,16 +50,19 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
+import jenkins.model.Jenkins;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.LibraryRetriever;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
@@ -82,12 +84,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
     protected static String legalAgentTypes = "";
-
-    @Inject
-    WorkflowLibRepository globalLibRepo;
-
-    @Inject
-    UserDefinedGlobalVariableList uvl;
 
     @BeforeClass
     public static void setUpPreClass() throws Exception {
@@ -345,9 +341,12 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     }
 
     protected void initGlobalLibrary() throws IOException {
-        // Need to do the injection by hand because we're not running with a RestartableJenkinsRule.
-        j.jenkins.getInjector().injectMembers(this);
-        File vars = new File(globalLibRepo.workspace, "vars");
+        File lib = new File(Jenkins.get().getRootDir(), "somelib");
+        LibraryConfiguration cfg = new LibraryConfiguration("somelib", new LocalRetriever(lib));
+        cfg.setImplicit(true);
+        cfg.setDefaultVersion("fixed");
+        GlobalLibraries.get().setLibraries(Arrays.asList(cfg));
+        File vars = new File(lib, "vars");
         vars.mkdirs();
         FileUtils.writeStringToFile(new File(vars, "acmeVar.groovy"), StringUtils.join(Arrays.asList(
                 "def hello(name) {echo \"Hello ${name}\"}",
@@ -380,11 +379,21 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                 "  echo 'title was '+config.title",
                 "}")
                 , "\n"));
-
-        // simulate the effect of push
-        uvl.rebuild();
     }
 
+    // TODO copied from GrapeTest along with body of libroot(); could make sense as a *-tests.jar utility
+    private static final class LocalRetriever extends LibraryRetriever {
+        private final File lib;
+        LocalRetriever(File lib) {
+            this.lib = lib;
+        }
+        @Override public void retrieve(String name, String version, boolean changelog, FilePath target, Run<?, ?> run, TaskListener listener) throws Exception {
+            new FilePath(lib).copyRecursiveTo(target);
+        }
+        @Override public void retrieve(String name, String version, FilePath target, Run<?, ?> run, TaskListener listener) throws Exception {
+            retrieve(name, version, false, target, run, listener);
+        }
+    }
 
     protected <T extends ParameterDefinition> T getParameterOfType(List<ParameterDefinition> params, Class<T> c) {
         for (ParameterDefinition p : params) {
