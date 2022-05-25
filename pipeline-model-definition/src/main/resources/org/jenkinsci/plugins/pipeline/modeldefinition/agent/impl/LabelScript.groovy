@@ -54,3 +54,22 @@ class LabelScript extends DeclarativeAgentScript<Label> {
         }
     }
 }
+
+/* TODO after #529 could extend RetryableDeclarativeAgentScript:
+    @Override
+    Closure run(Closure body) {
+        runWithRetries(body)
+    }
+    @Override
+    Closure runOnce(Closure body) {
+        return {
+            script.node(describable?.label) {
+                CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
+            }
+        }
+    }
+    @Override
+    List conditions() {
+        [script.agent(), script.nonresumable()]
+    }
+ */

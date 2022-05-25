@@ -22,25 +22,30 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
+package org.jenkinsci.plugins.pipeline.modeldefinition.agent
 
-import org.kohsuke.stapler.DataBoundSetter;
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-/**
- * A type of {@code agent} option that supports automatic retries.
- * Also use {@code RetryableDeclarativeAgentScript}.
- */
-public abstract class RetryableDeclarativeAgent<A extends RetryableDeclarativeAgent<A>> extends DeclarativeAgent<A> {
+abstract class RetryableDeclarativeAgentScript<A extends RetryableDeclarativeAgent<A>> extends DeclarativeAgentScript<A> {
 
-    private int retries = 1;
-
-    public int getRetries() {
-        return retries;
+    protected RetryableDeclarativeAgentScript(CpsScript s, A a) {
+        super(s, a)
     }
 
-    @DataBoundSetter
-    public void setRetries(int retries) {
-        this.retries = retries;
+    protected final Closure runWithRetries(Closure body) {
+        if (describable.retries > 1) {
+            return {
+                script.retry(count: describable.retries, conditions: conditions()) {
+                    runOnce(body).call()
+                }
+            }
+        } else {
+            runOnce(body)
+        }
     }
+
+    protected abstract Closure runOnce(Closure body)
+
+    protected abstract List/*<UninstantiatedDescribable of ErrorCondition>*/ conditions()
 
 }
