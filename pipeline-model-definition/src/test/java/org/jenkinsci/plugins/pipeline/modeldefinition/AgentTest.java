@@ -23,8 +23,12 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.model.Node;
+import hudson.model.Queue;
 import hudson.model.Result;
 import hudson.model.Slave;
+import hudson.model.queue.CauseOfBlockage;
+import hudson.model.queue.QueueTaskDispatcher;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
@@ -37,6 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.InboundAgentRule;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.TestExtension;
 
 /**
  * @author Andrew Bayer
@@ -180,28 +185,65 @@ public class AgentTest extends AbstractModelDefTest {
                 .go();
     }
 
-    // TODO retryAny
+    @Issue("JENKINS-49707")
+    @Test
+    public void retryAny() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC); // TODO Windows equivalent to sleep
+        Slave dumbo = inboundAgents.createAgent(j, "dumbo");
+        WorkflowJob p = j.createProject(WorkflowJob.class);
+        // TODO convert to expect…go idiom (but need to figure out how to insert logic into middle of build)
+        // Due to the way DeclarativeAgentDescriptor.zeroArgModels defines syntax, we cannot offer retries on actual agent any.
+        // However it is legal to simply specify no label!
+        p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label null; retries 2}}; stages {stage('main') {steps {sh 'sleep 10'}}}}", true));
+        j.jenkins.updateNode(j.jenkins); // to force setNumExecutors to be honored
+        WorkflowRun b;
+        RunOnlyOnDumbo.active = true;
+        try {
+            b = p.scheduleBuild2(0).waitForStart();
+            j.waitForMessage("Running on dumbo in ", b);
+            j.waitForMessage("+ sleep", b);
+            inboundAgents.stop("dumbo1");
+            j.jenkins.removeNode(dumbo);
+        } finally {
+            RunOnlyOnDumbo.active = false;
+        }
+        j.waitForMessage("Retrying", b);
+        j.waitForMessage("Running on " /* Jenkins or one of the other agents */, b);
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+    }
+
+    @TestExtension
+    public static final class RunOnlyOnDumbo extends QueueTaskDispatcher {
+        static boolean active;
+        @Override
+        public CauseOfBlockage canTake(Node node, Queue.BuildableItem item) {
+            if (active && !node.getNodeName().equals("dumbo")) {
+                return new CauseOfBlockage.BecauseNodeIsNotAcceptingTasks(node);
+            } else {
+                return null;
+            }
+        }
+    }
 
     @Issue("JENKINS-49707")
     @Test
     public void retryLabel() throws Exception {
         onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC); // TODO Windows equivalent to sleep
-        Slave s = inboundAgents.createAgent(j, "dumbo1");
-        s.setLabelString("dumb");
+        Slave dumbo = inboundAgents.createAgent(j, "dumbo1");
+        dumbo.setLabelString("dumb");
         WorkflowJob p = j.createProject(WorkflowJob.class);
-        // TODO convert to expect…go idiom (but need to figure out how to insert logic into middle of build)
+        // TODO convert to expect…go idiom as above
         p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label 'dumb'; retries 2}}; stages {stage('main') {steps {sh 'sleep 10'}}}}", true));
         WorkflowRun b = p.scheduleBuild2(0).waitForStart();
         j.waitForMessage("+ sleep", b);
         inboundAgents.stop("dumbo1");
-        j.jenkins.removeNode(s);
+        j.jenkins.removeNode(dumbo);
         j.waitForMessage("Retrying", b);
-        s = inboundAgents.createAgent(j, "dumbo2");
-        s.setLabelString("dumb");
-        j.jenkins.updateNode(s); // to force setLabelString to be honored
+        dumbo = inboundAgents.createAgent(j, "dumbo2");
+        dumbo.setLabelString("dumb");
+        j.jenkins.updateNode(dumbo); // to force setLabelString to be honored
         j.waitForMessage("Running on dumbo2 in ", b);
         j.assertBuildStatusSuccess(j.waitForCompletion(b));
     }
-
 
 }
