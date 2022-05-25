@@ -134,14 +134,9 @@
       <artifactId>scm-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-cps-global-lib</artifactId>
-      <exclusions>
-        <exclusion> <!-- pick up in test scope from jenkins-test-harness -->
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-lang3</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>pipeline-groovy-lib</artifactId>
+      <version>589.vb_a_b_4a_a_8c443c</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
