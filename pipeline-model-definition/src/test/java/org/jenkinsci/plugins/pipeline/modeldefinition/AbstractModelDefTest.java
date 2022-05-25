@@ -65,7 +65,6 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 import static org.jvnet.hudson.test.JenkinsMatchers.matchesPattern;
 
 /**
@@ -123,9 +122,6 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Before
     public void setUp() throws Exception {
         ToolInstallations.configureMaven3();
-        for (Node n : j.jenkins.getNodes()) {
-            assumeTrue(n + " was offline", n.toComputer().isOnline());
-        }
     }
 
     public static final List<String> SHOULD_PASS_CONFIGS = ImmutableList.of(
