@@ -24,10 +24,10 @@
   -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
     <f:entry field="label" title="Label">
         <f:textbox/>
     </f:entry>
+    <st:include page="retries" class="${descriptor.clazz}"/>
     <!-- TODO customWorkspace -->
-    <!-- TODO retries -->
 </j:jelly>
