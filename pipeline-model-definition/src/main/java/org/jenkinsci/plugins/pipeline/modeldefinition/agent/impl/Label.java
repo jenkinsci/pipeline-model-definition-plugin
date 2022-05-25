@@ -42,6 +42,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 public class Label extends DeclarativeAgent<Label> {
     private String label;
     private String customWorkspace;
+    private int retries = 1;
 
     @DataBoundConstructor
     public Label(String label) {
@@ -61,6 +62,15 @@ public class Label extends DeclarativeAgent<Label> {
     @DataBoundSetter
     public void setCustomWorkspace(String customWorkspace) {
         this.customWorkspace = customWorkspace;
+    }
+
+    public int getRetries() {
+        return retries;
+    }
+
+    @DataBoundSetter
+    public void setRetries(int retries) {
+        this.retries = retries;
     }
 
     @Extension(ordinal = -800) @Symbol({"label","node"})

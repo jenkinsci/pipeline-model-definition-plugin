@@ -26,13 +26,17 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import java.io.File;
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.InboundAgentRule;
 import org.jvnet.hudson.test.Issue;
-
-import java.io.File;
 
 /**
  * @author Andrew Bayer
@@ -41,6 +45,7 @@ public class AgentTest extends AbstractModelDefTest {
 
     private static Slave s;
     private static Slave s2;
+    @Rule public InboundAgentRule inboundAgents = new InboundAgentRule();
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
@@ -174,5 +179,29 @@ public class AgentTest extends AbstractModelDefTest {
                 .logMatches("Workspace dir is .*some-other-sub-dir")
                 .go();
     }
+
+    // TODO retryAny
+
+    @Issue("JENKINS-49707")
+    @Test
+    public void retryLabel() throws Exception {
+        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC); // TODO Windows equivalent to sleep
+        Slave s = inboundAgents.createAgent(j, "dumbo1");
+        s.setLabelString("dumb");
+        WorkflowJob p = j.createProject(WorkflowJob.class);
+        // TODO convert to expect…go idiom (but need to figure out how to insert logic into middle of build)
+        p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label 'dumb'; retries 2}}; stages {stage('main') {steps {sh 'sleep 10'}}}}", true));
+        WorkflowRun b = p.scheduleBuild2(0).waitForStart();
+        j.waitForMessage("+ sleep", b);
+        inboundAgents.stop("dumbo1");
+        j.jenkins.removeNode(s);
+        j.waitForMessage("Retrying", b);
+        s = inboundAgents.createAgent(j, "dumbo2");
+        s.setLabelString("dumb");
+        j.jenkins.updateNode(s); // to force setLabelString to be honored
+        j.waitForMessage("Running on dumbo2 in ", b);
+        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+    }
+
 
 }

@@ -28,4 +28,6 @@
     <f:entry field="label" title="Label">
         <f:textbox/>
     </f:entry>
+    <!-- TODO customWorkspace -->
+    <!-- TODO retries -->
 </j:jelly>
