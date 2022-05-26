@@ -108,7 +108,7 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
 
     @Extension
     public static class CheckoutScriptAllowlist extends GroovySourceFileAllowlist {
-        private final String scriptUrl = DeclarativeAgent.class.getResource("/org/jenkinsci/plugins/pipeline/modeldefinition/agent/CheckoutScript.groovy").toString();
+        private final String scriptUrl = DeclarativeAgent.class.getResource("CheckoutScript.groovy").toString();
 
         @Override
         public boolean isAllowed(String groovyResourceUrl) {

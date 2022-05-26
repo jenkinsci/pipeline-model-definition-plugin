@@ -98,7 +98,7 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
      */
     @Extension
     public static class ChangelogConditionalScriptAllowlist extends GroovySourceFileAllowlist {
-        private final String scriptUrl = ChangeLogConditional.class.getResource("/org/jenkinsci/plugins/pipeline/modeldefinition/when/impl/AbstractChangelogConditionalScript.groovy").toString();
+        private final String scriptUrl = ChangeLogConditional.class.getResource("AbstractChangelogConditionalScript.groovy").toString();
 
         @Override
         public boolean isAllowed(String groovyResourceUrl) {

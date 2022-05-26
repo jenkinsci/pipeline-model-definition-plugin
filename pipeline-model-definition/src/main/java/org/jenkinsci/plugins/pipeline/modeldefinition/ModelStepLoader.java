@@ -75,7 +75,7 @@ public class ModelStepLoader extends GlobalVariable {
 
     @Extension
     public static class ModelInterpreterAllowlist extends GroovySourceFileAllowlist {
-        private final String scriptUrl = ModelStepLoader.class.getResource("/org/jenkinsci/plugins/pipeline/modeldefinition/ModelInterpreter.groovy").toString();
+        private final String scriptUrl = ModelStepLoader.class.getResource("ModelInterpreter.groovy").toString();
 
         @Override
         public boolean isAllowed(String groovyResourceUrl) {

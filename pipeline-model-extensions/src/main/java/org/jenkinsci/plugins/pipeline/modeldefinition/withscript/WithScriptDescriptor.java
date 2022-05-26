@@ -75,9 +75,9 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
     }
 
     @SuppressFBWarnings(value = "UI_INHERITANCE_UNSAFE_GETRESOURCE", justification = "We intentionally want to use the class loader for the subclass in this case")
-    protected @NonNull URL getScriptResource() {
-        String scriptFile = getScriptClass().replace('.', '/') + ".groovy";
-        return Objects.requireNonNull(getClass().getClassLoader().getResource(scriptFile),
+    private @NonNull URL getScriptResource() {
+        String scriptFile = '/' + getScriptClass().replace('.', '/') + ".groovy";
+        return Objects.requireNonNull(getClass().getResource(scriptFile),
                 () -> "Unable to find resource file: " + scriptFile);
     }
 
