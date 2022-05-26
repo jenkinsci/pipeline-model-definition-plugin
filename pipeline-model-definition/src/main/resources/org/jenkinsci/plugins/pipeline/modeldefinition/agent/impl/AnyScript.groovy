@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
@@ -36,11 +37,10 @@ class AnyScript extends DeclarativeAgentScript<Any> {
 
     @Override
     Closure run(Closure body) {
-        Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: null])
-        l.copyFlags(describable)
-        LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
+        return {
+            script.node {
+                CheckoutScript.doCheckout(script, describable, null, body).call()
+            }
         }
     }
 }
