@@ -24,8 +24,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyCodeSource;
 import hudson.model.AbstractDescribableImpl;
 import org.apache.commons.lang.reflect.ConstructorUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
@@ -33,7 +31,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsThread;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.net.URL;
 
 /**
  * Implementations for {@link WithScriptDescriptor} - pluggable script backends for Declarative Pipelines.
@@ -55,20 +52,7 @@ public abstract class WithScriptDescribable<T extends WithScriptDescribable<T>> 
         if (c == null)
             throw new IllegalStateException("Expected to be called from CpsThread");
 
-        Class clz;
-        try {
-            clz = cpsScript.getClass().getClassLoader().loadClass(getDescriptor().getScriptClass());
-        } catch (ClassNotFoundException e) {
-            // This is special casing to deal with PluginFirstClassLoaders, which don't have a functional findResource method.
-            // That results in GroovyClassLoader.loadClass failing to find resources to parse and load.
-            // TODO delete JENKINS-44898 workaround as of Jenkins 2.66
-            URL res = getDescriptor().getClass().getClassLoader().getResource(getDescriptor().getScriptClass().replace('.', '/') + ".groovy");
-            if (res != null) {
-                clz = ((GroovyClassLoader) cpsScript.getClass().getClassLoader()).parseClass(new GroovyCodeSource(res));
-            } else {
-                throw e;
-            }
-        }
+        Class clz = cpsScript.getClass().getClassLoader().loadClass(getDescriptor().getScriptClass());
         final Constructor constructor = ConstructorUtils.getMatchingAccessibleConstructor(clz, new Class[]{CpsScript.class, this.getClass()});
         if (constructor == null) {
             //Restoring same behaviour as Class.getConstructor
