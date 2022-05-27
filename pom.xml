@@ -147,7 +147,7 @@
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.332.1</jenkins.version>
     <groovy.version>2.4.12</groovy.version>
-    <workflow-cps-plugin.version>2692.v76b_089ccd026</workflow-cps-plugin.version> <!-- TODO: Delete this property and the dependencyManagement entries that use it once this version is included in the BOM -->
+    <workflow-cps-plugin.version>2706.v71dd22b_c5a_a_2</workflow-cps-plugin.version> <!-- TODO: Delete this property and the dependencyManagement entries that use it once this version is included in the BOM -->
   </properties>
 
   <profiles>
