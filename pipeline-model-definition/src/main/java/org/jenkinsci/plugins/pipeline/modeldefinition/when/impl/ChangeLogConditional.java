@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
+import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -89,5 +90,19 @@ public class ChangeLogConditional extends DeclarativeStageConditional<ChangeLogC
     @Restricted(NoExternalUse.class)
     public static String expandForMultiLine(String pattern) {
         return "(?m)(?s)^[^\\r\\n]*?" + pattern + "[^\\r\\n]*?$";
+    }
+
+    /**
+     * AbstractChangelogConditionalScriptAllowlist.groovy is a superclass of the Groovy scripts for some subclasses of
+     * {@link DeclarativeStageConditional}, but does not have any direct equivalent Java class, so we just allow it here.
+     */
+    @Extension
+    public static class ChangelogConditionalScriptAllowlist extends GroovySourceFileAllowlist {
+        private final String scriptUrl = ChangeLogConditional.class.getResource("AbstractChangelogConditionalScript.groovy").toString();
+
+        @Override
+        public boolean isAllowed(String groovyResourceUrl) {
+            return groovyResourceUrl.equals(scriptUrl);
+        }
     }
 }
