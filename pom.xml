@@ -97,32 +97,17 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-api</artifactId>
-        <version>1166.v459a_d69b_3271</version> <!-- TODO https://github.com/jenkinsci/workflow-api-plugin/pull/217 -->
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>2713.v8b_f3c8cb_97a_0</version> <!-- TODO https://github.com/jenkinsci/workflow-cps-plugin/pull/534 -->
+        <version>1171.vc28585a_716e7</version> <!-- TODO https://github.com/jenkinsci/workflow-api-plugin/pull/217 -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-durable-task-step</artifactId>
-        <version>1204.v2a_40b_1127a_a_8</version> <!-- TODO https://github.com/jenkinsci/workflow-durable-task-step-plugin/pull/180 -->
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-job</artifactId>
-        <version>1183.vf1b_f64585092</version> <!-- TODO https://github.com/jenkinsci/workflow-job-plugin/pull/260 -->
+        <version>1145.ve842533f4d9a_</version> <!-- TODO https://github.com/jenkinsci/workflow-durable-task-step-plugin/pull/231 -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-basic-steps</artifactId>
-        <version>967.v241f45274471</version> <!-- TODO https://github.com/jenkinsci/workflow-basic-steps-plugin/pull/195 -->
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>script-security</artifactId>
-        <version>1172.v35f6a_0b_8207e</version> <!-- TODO until in BOM -->
+        <version>958.vde579c5541ed</version> <!-- TODO https://github.com/jenkinsci/workflow-basic-steps-plugin/pull/203 -->
       </dependency>
     </dependencies>
   </dependencyManagement>
