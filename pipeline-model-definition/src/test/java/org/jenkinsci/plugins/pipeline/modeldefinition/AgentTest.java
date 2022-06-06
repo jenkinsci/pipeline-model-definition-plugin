@@ -188,13 +188,12 @@ public class AgentTest extends AbstractModelDefTest {
     @Issue("JENKINS-49707")
     @Test
     public void retryAny() throws Exception {
-        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC); // TODO Windows equivalent to sleep
         Slave dumbo = inboundAgents.createAgent(j, "dumbo");
         WorkflowJob p = j.createProject(WorkflowJob.class);
         // TODO convert to expect…go idiom (but need to figure out how to insert logic into middle of build)
         // Due to the way DeclarativeAgentDescriptor.zeroArgModels defines syntax, we cannot offer retries on actual agent any.
         // However it is legal to simply specify no label!
-        p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label null; retries 2}}; stages {stage('main') {steps {sh 'sleep 10'}}}}", true));
+        p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label null; retries 2}}; stages {stage('main') {steps {script {if (isUnix()) {sh 'sleep 10'} else {powershell 'echo \"+ sleep\"; sleep 10'}}}}}}", true));
         j.jenkins.updateNode(j.jenkins); // to force setNumExecutors to be honored
         WorkflowRun b;
         RunOnlyOnDumbo.active = true;
@@ -228,12 +227,11 @@ public class AgentTest extends AbstractModelDefTest {
     @Issue("JENKINS-49707")
     @Test
     public void retryLabel() throws Exception {
-        onAllowedOS(PossibleOS.LINUX, PossibleOS.MAC); // TODO Windows equivalent to sleep
         Slave dumbo = inboundAgents.createAgent(j, "dumbo1");
         dumbo.setLabelString("dumb");
         WorkflowJob p = j.createProject(WorkflowJob.class);
         // TODO convert to expect…go idiom as above
-        p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label 'dumb'; retries 2}}; stages {stage('main') {steps {sh 'sleep 10'}}}}", true));
+        p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label 'dumb'; retries 2}}; stages {stage('main') {steps {script {if (isUnix()) {sh 'sleep 10'} else {powershell 'echo \"+ sleep\"; sleep 10'}}}}}}", true));
         WorkflowRun b = p.scheduleBuild2(0).waitForStart();
         j.waitForMessage("+ sleep", b);
         inboundAgents.stop("dumbo1");
