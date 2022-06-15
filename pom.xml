@@ -75,7 +75,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.332.x</artifactId>
-        <version>1289.v5c4b_1c43511b_</version>
+        <version>1409.v7659b_c072f18</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -93,23 +93,6 @@
         <groupId>com.github.java-json-tools</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>2.2.14</version>
-      </dependency>
-      <dependency>
-        <!-- TODO: Remove once this version is included in BOM -->
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>script-security</artifactId>
-        <version>1172.v35f6a_0b_8207e</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>${workflow-cps-plugin.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>${workflow-cps-plugin.version}</version>
-        <classifier>tests</classifier>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -146,8 +129,6 @@
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.332.1</jenkins.version>
-    <groovy.version>2.4.12</groovy.version>
-    <workflow-cps-plugin.version>2692.v76b_089ccd026</workflow-cps-plugin.version> <!-- TODO: Delete this property and the dependencyManagement entries that use it once this version is included in the BOM -->
   </properties>
 
   <profiles>
