@@ -22,25 +22,19 @@
  * THE SOFTWARE.
  */
 
-
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
-
-class AnyScript extends DeclarativeAgentScript<Any> {
-
-    AnyScript(CpsScript s, Any a) {
-        super(s, a)
+pipeline {
+    agent none
+    options {
+        disableRestartFromStage(false)
     }
-
-    @Override
-    Closure run(Closure body) {
-        return {
-            script.node {
-                CheckoutScript.doCheckout(script, describable, null, body).call()
+    stages {
+        stage("foo") {
+            steps {
+                echo "hello"
             }
         }
     }
 }
+
+
+

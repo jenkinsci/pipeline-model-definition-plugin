@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.model.Options;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
+import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -70,6 +71,16 @@ public class ModelStepLoader extends GlobalVariable {
     @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
     public static void invalidateOptionTypeCaches() {
         Options.invalidateCaches();
+    }
+
+    @Extension
+    public static class ModelInterpreterAllowlist extends GroovySourceFileAllowlist {
+        private final String scriptUrl = ModelStepLoader.class.getResource("ModelInterpreter.groovy").toString();
+
+        @Override
+        public boolean isAllowed(String groovyResourceUrl) {
+            return groovyResourceUrl.equals(scriptUrl);
+        }
     }
 
 }
