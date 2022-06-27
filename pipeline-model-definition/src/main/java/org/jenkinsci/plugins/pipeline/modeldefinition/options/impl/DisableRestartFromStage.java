@@ -13,18 +13,8 @@ import java.util.logging.Logger;
 
 public class DisableRestartFromStage extends DeclarativeOption {
 
-    private Boolean disableRestartFromStage;
-
     @DataBoundConstructor
-    public DisableRestartFromStage(@Nullable Boolean disableRestartFromStage) {
-        if(disableRestartFromStage == null || disableRestartFromStage){
-            this.disableRestartFromStage = Boolean.TRUE;
-        } else {
-            this.disableRestartFromStage = Boolean.FALSE;
-        }
-    }
-
-    public boolean isDisableRestartFromStage() { return disableRestartFromStage; }
+    public DisableRestartFromStage() {}
 
     @Extension @Symbol("disableRestartFromStage")
     public static class DescriptorImpl extends DeclarativeOptionDescriptor {

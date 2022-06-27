@@ -623,15 +623,10 @@ class Utils {
                     isJobChanged = true
                 }
 
-                DisableRestartFromStage disableRestartFromStage = (DisableRestartFromStage) rawOptions.find { it instanceof DisableRestartFromStage }
-                Boolean newDisableRestartFromStage = null;
-                if(disableRestartFromStage != null){
-                    newDisableRestartFromStage = disableRestartFromStage.isDisableRestartFromStage()
-                } else {
-                    newDisableRestartFromStage = false;
-                }
-                if(j.disableRestartFromStage != newDisableRestartFromStage){
-                    j.disableRestartFromStage = newDisableRestartFromStage
+                DisableRestartFromStage disableRestartFromStageOption = (DisableRestartFromStage) rawOptions.find { it instanceof DisableRestartFromStage }
+                boolean  disableRestartFromStage = (disableRestartFromStageOption != null)
+                if(j.disableRestartFromStage != disableRestartFromStage){
+                    j.disableRestartFromStage = disableRestartFromStage
                     isJobChanged = true
                 }
 
