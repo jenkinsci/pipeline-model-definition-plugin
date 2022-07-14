@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.40</version>
+    <version>4.42</version>
     <relativePath />
   </parent>
 
@@ -75,7 +75,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.332.x</artifactId>
-        <version>1370.vfa_e23fe119c3</version>
+        <version>1478.v81d3dc4f9a_43</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -93,38 +93,6 @@
         <groupId>com.github.java-json-tools</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>2.2.14</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-api</artifactId>
-        <version>1171.vc28585a_716e7</version> <!-- TODO https://github.com/jenkinsci/workflow-api-plugin/pull/217 -->
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-durable-task-step</artifactId>
-        <version>1145.ve842533f4d9a_</version> <!-- TODO https://github.com/jenkinsci/workflow-durable-task-step-plugin/pull/231 -->
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-basic-steps</artifactId>
-        <version>958.vde579c5541ed</version> <!-- TODO https://github.com/jenkinsci/workflow-basic-steps-plugin/pull/203 -->
-      </dependency>
-      <dependency>
-        <!-- TODO: Remove once this version is included in BOM -->
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>script-security</artifactId>
-        <version>1172.v35f6a_0b_8207e</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>${workflow-cps-plugin.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>${workflow-cps-plugin.version}</version>
-        <classifier>tests</classifier>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -161,9 +129,6 @@
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.version>2.332.1</jenkins.version>
-    <groovy.version>2.4.12</groovy.version>
-    <jenkins-test-harness.version>1746.v2b_3c5d1983b_e</jenkins-test-harness.version> <!-- TODO until in plugin-pom -->
-    <workflow-cps-plugin.version>2692.v76b_089ccd026</workflow-cps-plugin.version> <!-- TODO: Delete this property and the dependencyManagement entries that use it once this version is included in the BOM -->
   </properties>
 
   <profiles>
