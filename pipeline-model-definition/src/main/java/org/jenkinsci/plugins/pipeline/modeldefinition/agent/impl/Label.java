@@ -29,7 +29,6 @@ import hudson.Util;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -38,8 +37,9 @@ import org.kohsuke.stapler.QueryParameter;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.RetryableDeclarativeAgent;
 
-public class Label extends DeclarativeAgent<Label> {
+public class Label extends RetryableDeclarativeAgent<Label> {
     private String label;
     private String customWorkspace;
 
@@ -63,7 +63,7 @@ public class Label extends DeclarativeAgent<Label> {
         this.customWorkspace = customWorkspace;
     }
 
-    @Extension(ordinal = -800) @Symbol({"label","node"})
+    @Extension(ordinal = -800) @Symbol({"label","node"}) // TODO perhaps put node first, for AgentDirective
     public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
         @Override
         @NonNull

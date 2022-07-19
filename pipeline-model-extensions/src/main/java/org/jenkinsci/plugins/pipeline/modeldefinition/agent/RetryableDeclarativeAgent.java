@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2016, CloudBees, Inc.
+ * Copyright 2022 CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,35 +22,40 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import org.kohsuke.stapler.DataBoundSetter;
 
+/**
+ * A type of {@code agent} option that supports automatic retries.
+ * Usage from your {@link DeclarativeAgentScript#run} would look something like:
+ * <pre>{@code
+ * Closure run = {
+ *     script.node {
+ *         CheckoutScript.doCheckout(script, describable, null, body).call()
+ *     }
+ * }
+ * if (describable.retries > 1) {
+ *     return {
+ *         script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
+ *             run.call()
+ *         }
+ *     }
+ * } else {
+ *     run
+ * }}</pre>
+ */
+public abstract class RetryableDeclarativeAgent<A extends RetryableDeclarativeAgent<A>> extends DeclarativeAgent<A> {
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+    private int retries = 1;
 
-class LabelScript extends DeclarativeAgentScript<Label> {
-
-    LabelScript(CpsScript s, Label a) {
-        super(s, a)
+    public int getRetries() {
+        return retries;
     }
 
-    @Override
-    Closure run(Closure body) {
-        Closure run = {
-            script.node(describable?.label) {
-                CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
-            }
-        }
-        if (describable.retries > 1) {
-            return {
-                script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
-                    run.call()
-                }
-            }
-        } else {
-            run
-        }
+    @DataBoundSetter
+    public void setRetries(int retries) {
+        this.retries = retries;
     }
+
 }
