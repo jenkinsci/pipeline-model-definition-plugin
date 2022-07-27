@@ -33,9 +33,6 @@ public class DeclarativePipeline2Test {
                 "  }",
                 "}"));
 
-        System.out.println("1. " + run);
-        System.out.println("2. "+ run.getParent());
-        System.out.println("3. " + run.getParent().isRestartableFromStage());
         j.assertBuildStatusSuccess(run);
         j.assertLogContains("Ran on RealJenkins right here!", run);
     }
