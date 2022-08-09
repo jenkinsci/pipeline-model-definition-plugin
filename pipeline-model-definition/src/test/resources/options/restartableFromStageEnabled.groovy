@@ -24,9 +24,6 @@
 
 pipeline {
     agent none
-    options {
-        disableRestartFromStage(true)
-    }
     stages {
         stage("foo") {
             steps {

@@ -40,6 +40,9 @@ import jenkins.branch.RateLimitBranchProperty;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DisableRestartFromStageAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
@@ -554,6 +557,24 @@ public class OptionsTest extends AbstractModelDefTest {
         BuildDiscarder strategy2 = bdp.getStrategy();
 
         assertSame(strategy, strategy2);
+    }
+
+    @Issue("JENKINS-54250")
+    @Test
+    public void verifyDisableRestartFromStageActionIsAdded() throws Exception {
+        WorkflowRun b = expect("options/restartableFromStageDisabled").go();
+
+        DisableRestartFromStageAction action = b.getParent().getAction(DisableRestartFromStageAction.class);
+        assertNotNull(action);
+    }
+
+    @Issue("JENKINS-54250")
+    @Test
+    public void verifyDisableRestartFromStageActionIsNotAdded() throws Exception {
+        WorkflowRun b = expect("options/restartableFromStageEnabled").go();
+
+        DisableRestartFromStageAction action = b.getParent().getAction(DisableRestartFromStageAction.class);
+        assertNull(action);
     }
 
 

@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
@@ -60,17 +61,13 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Logger;
 
 @ExportedBean
 public class RestartDeclarativePipelineAction implements Action {
 
-    private static final Logger LOGGER = Logger.getLogger(RestartDeclarativePipelineAction.class.getName());
-
     private final Run run;
 
     private RestartDeclarativePipelineAction(Run run) {
-        LOGGER.info("Action initiated");
         this.run = run;
     }
 
@@ -113,7 +110,7 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     private boolean isRestartableFromStage() {
-        return ((WorkflowJob)this.run.getParent()).isRestartableFromStage();
+        return run.getParent().getAction(DisableRestartFromStageAction.class) == null;
     }
 
     public Api getApi() {
