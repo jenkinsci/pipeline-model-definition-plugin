@@ -625,10 +625,11 @@ class Utils {
                 }
 
                 DisableRestartFromStage declaredDisableRestartFromStageOption = (DisableRestartFromStage) rawOptions.find { it instanceof DisableRestartFromStage }
-                if(j.getAction(DisableRestartFromStageAction.class) == null && declaredDisableRestartFromStageOption != null){
+                DisableRestartFromStageAction currentRestartFromStageAction = j.getAction(DisableRestartFromStageAction.class);
+                if(currentRestartFromStageAction == null && declaredDisableRestartFromStageOption != null){
                     j.addAction(new DisableRestartFromStageAction())
-                } else if(j.getAction(DisableRestartFromStageAction.class) != null && declaredDisableRestartFromStageOption == null) {
-                    j.removeAction(j.getAction(DisableRestartFromStageAction.class))
+                } else if(currentRestartFromStageAction != null && declaredDisableRestartFromStageOption == null) {
+                    j.removeAction(currentRestartFromStageAction)
                 }
 
                 // If there are any triggers update them if needed
