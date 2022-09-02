@@ -17,7 +17,7 @@ public class DisableRestartFromStage extends DeclarativeOption {
         @Override
         @NonNull
         public String getDisplayName() {
-            return "Disable Restart From Stage button for single pipeline";
+            return "Disable the ability to restart this Pipeline from a specific stage";
         }
 
         @Override
