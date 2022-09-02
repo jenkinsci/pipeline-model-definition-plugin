@@ -575,8 +575,12 @@ public class OptionsTest extends AbstractModelDefTest {
 
         DisableRestartFromStageAction action = b.getParent().getAction(DisableRestartFromStageAction.class);
         assertNull(action);
-    }
 
+        b.getParent().addAction(new DisableRestartFromStageAction());
+        b = expect("options/restartableFromStageEnabled").go();
+        action = b.getParent().getAction(DisableRestartFromStageAction.class);
+        assertNull(action);
+    }
 
     private static class DummyPrivateKey extends BaseCredentials implements SSHUserPrivateKey, Serializable {
 
