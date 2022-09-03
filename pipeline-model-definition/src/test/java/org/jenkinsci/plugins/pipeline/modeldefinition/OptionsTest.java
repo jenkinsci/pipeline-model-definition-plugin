@@ -571,14 +571,15 @@ public class OptionsTest extends AbstractModelDefTest {
     @Issue("JENKINS-54250")
     @Test
     public void verifyDisableRestartFromStageActionIsNotAdded() throws Exception {
-        WorkflowRun b = expect("options/restartableFromStageEnabled").go();
+        ExpectationsBuilder expectationsBuilder = expect("options/restartableFromStageEnabled");
+        WorkflowRun run = expectationsBuilder.go();
+        DisableRestartFromStageAction action = run.getParent().getAction(DisableRestartFromStageAction.class);
 
-        DisableRestartFromStageAction action = b.getParent().getAction(DisableRestartFromStageAction.class);
         assertNull(action);
 
-        b.getParent().addAction(new DisableRestartFromStageAction());
-        b = expect("options/restartableFromStageEnabled").go();
-        action = b.getParent().getAction(DisableRestartFromStageAction.class);
+        run.getParent().addAction(new DisableRestartFromStageAction());
+        run = expectationsBuilder.go();
+        action = run.getParent().getAction(DisableRestartFromStageAction.class);
         assertNull(action);
     }
 
