@@ -25,7 +25,7 @@
 pipeline {
     agent none
     options {
-        parallelsAlwaysFailFast()
+        parallelsAlwaysFailFast true
     }
     stages {
         stage("foo") {
