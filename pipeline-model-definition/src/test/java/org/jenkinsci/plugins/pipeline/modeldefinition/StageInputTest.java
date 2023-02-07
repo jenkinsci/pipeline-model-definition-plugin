@@ -25,7 +25,9 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.gargoylesoftware.htmlunit.html.*;
+import hudson.Util;
 import hudson.model.queue.QueueTaskFuture;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
@@ -60,7 +62,7 @@ public class StageInputTest extends AbstractModelDefTest {
         InputAction a = b.getAction(InputAction.class);
         assertEquals(1, a.getExecutions().size());
 
-        InputStepExecution is = a.getExecution("Foo");
+        InputStepExecution is = a.getExecution(StringUtils.capitalize(Util.getDigestOf("foo")));
         assertEquals("Continue?", is.getInput().getMessage());
         assertEquals(0, is.getInput().getParameters().size());
         assertNull(is.getInput().getSubmitter());
@@ -96,7 +98,7 @@ public class StageInputTest extends AbstractModelDefTest {
         InputAction a = b.getAction(InputAction.class);
         assertEquals(1, a.getExecutions().size());
 
-        InputStepExecution is = a.getExecution("Foo");
+        InputStepExecution is = a.getExecution(StringUtils.capitalize(Util.getDigestOf("foo")));
         assertEquals("Continue?", is.getInput().getMessage());
         assertEquals(0, is.getInput().getParameters().size());
         assertNull(is.getInput().getSubmitter());
