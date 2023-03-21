@@ -87,7 +87,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>copyartifact</artifactId>
-        <version>1.46.4</version>
+        <version>686.v6fd37018d7c2</version>
       </dependency>
       <dependency>
         <groupId>com.github.java-json-tools</groupId>
