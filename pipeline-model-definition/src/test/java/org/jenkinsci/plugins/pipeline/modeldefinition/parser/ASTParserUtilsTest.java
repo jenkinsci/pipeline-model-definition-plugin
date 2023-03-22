@@ -86,6 +86,6 @@ public class ASTParserUtilsTest extends BaseParserLoaderTest {
             .replaceAll("(__model__.*?_\\d+)_\\d+__", "$1_something__")
             .replaceAll("ConstantExpression\\[\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}", "ConstantExpression[some-uuid");
         String expected = fileContentsFromResources("prettyPrintTransformedOutput.txt");
-        assertEquals(expected.split("\\n"), prettyPrint.split("\\n"));
+        assertEquals(expected.split("\\R"), prettyPrint.split("\\R"));
     }
 }
