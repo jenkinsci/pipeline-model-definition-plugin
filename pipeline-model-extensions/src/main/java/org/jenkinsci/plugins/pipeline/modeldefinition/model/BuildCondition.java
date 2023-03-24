@@ -30,6 +30,7 @@ import hudson.Util;
 import hudson.model.Result;
 import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils;
 import org.jenkinsci.plugins.structs.SymbolLookup;
+import org.jenkinsci.plugins.workflow.actions.ArgumentsAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -147,6 +148,24 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         return getCombinedResult(run, error, null);
     }
 
+    private static boolean hasPropagateFalseArgument(@NonNull FlowNode node) {
+        Map<String, Object> arguments = ArgumentsAction.getArguments(node);
+        if (arguments == null || arguments.isEmpty()) {
+            return false;
+        }
+
+        Object propagate = arguments.get("propagate");
+        if (propagate == null) {
+            return false;
+        }
+
+        if (!(propagate instanceof Boolean)) {
+            return false;
+        }
+
+        return !((Boolean) propagate);
+    }
+
     @NonNull
     public static Result getCombinedResult(@NonNull WorkflowRun run, @CheckForNull Throwable error, @CheckForNull Object context) {
         Result errorResult = Result.SUCCESS;
@@ -158,6 +177,7 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
                 DepthFirstScanner scanner = new DepthFirstScanner();
                 if (scanner.setup(startAndEnd.get(1), Collections.singletonList(startAndEnd.get(0)))) {
                     WarningAction warningAction = StreamSupport.stream(scanner.spliterator(), false)
+                            .filter(node -> !hasPropagateFalseArgument(node))
                             .map(node -> node.getPersistentAction(WarningAction.class))
                             .filter(Objects::nonNull)
                             .max(Comparator.comparing(warning -> warning.getResult().ordinal))
