@@ -76,7 +76,7 @@ public class RestartDeclarativePipelineAction implements Action {
     }
 
     @Override public String getIconFileName() {
-        return isRestartEnabled() ? "plugin/pipeline-model-definition/images/svgs/restart-stage.svg" : null;
+        return isRestartEnabled() ? "symbol-refresh plugin-ionicons-api" : null;
     }
 
     @Override public String getUrlName() {
