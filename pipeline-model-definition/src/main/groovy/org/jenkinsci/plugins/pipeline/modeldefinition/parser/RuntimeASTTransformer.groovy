@@ -25,6 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import hudson.Util
 import hudson.model.JobProperty
 import hudson.model.ParameterDefinition
 import hudson.model.Run
@@ -742,9 +743,15 @@ public class RuntimeASTTransformer {
             if (!original.parameters.isEmpty()) {
                 paramsExpr = wrapper.asWrappedScriptContextVariable(transformListOfDescribables(original.parameters, ParameterDefinition.class))
             }
+
+            String id = stageName
+            if (stageName != null && !SystemProperties.getBoolean(RuntimeASTTransformer.class.name + '.retainOriginalStageNameForInputId')) {
+                id = Util.getDigestOf(stageName)
+            }
+
             return wrapper.asExternalMethodCall(ctorX(ClassHelper.make(StageInput.class),
                 args(valueOrNull(original.message),
-                    valueOrNull(original.id, stageName),
+                    valueOrNull(original.id, id),
                     valueOrNull(original.ok),
                     valueOrNull(original.submitter),
                     valueOrNull(original.submitterParameter),

@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.45</version>
+    <version>4.62</version>
     <relativePath />
   </parent>
 
@@ -74,8 +74,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.332.x</artifactId>
-        <version>1478.v81d3dc4f9a_43</version>
+        <artifactId>bom-2.361.x</artifactId>
+        <version>2025.v816d28f1e04f</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -85,14 +85,19 @@
         <version>2.2</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>copyartifact</artifactId>
-        <version>1.46.4</version>
-      </dependency>
-      <dependency>
         <groupId>com.github.java-json-tools</groupId>
         <artifactId>json-schema-validator</artifactId>
         <version>2.2.14</version>
+      </dependency>
+      <dependency>
+        <!-- XRAY-178804 indirect dependency of json-schema-validator.
+              No new version of json-schema-validator is available and seems abandoned.
+              The XXE is not reachable from this plugin and a new schema validator library is needed,
+              but in the meantime manage the rhino dependency to satisfy security scanners.
+        -->
+        <groupId>org.mozilla</groupId>
+        <artifactId>rhino</artifactId>
+        <version>1.7.14</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -128,7 +133,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
-    <jenkins.version>2.332.1</jenkins.version>
+    <jenkins.version>2.361.4</jenkins.version>
   </properties>
 
   <profiles>

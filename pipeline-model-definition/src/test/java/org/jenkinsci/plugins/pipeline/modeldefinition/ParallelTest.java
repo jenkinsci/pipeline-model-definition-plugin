@@ -24,10 +24,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.Util;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -415,12 +417,12 @@ public class ParallelTest extends AbstractModelDefTest {
         InputAction a = b.getAction(InputAction.class);
         assertEquals(2, a.getExecutions().size());
 
-        InputStepExecution is1 = a.getExecution("One");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("One")));
         assertEquals("Continue One?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
 
-        InputStepExecution is2 = a.getExecution("Two");
+        InputStepExecution is2 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Two")));
         assertEquals("Continue Two?", is2.getInput().getMessage());
         assertEquals(0, is2.getInput().getParameters().size());
         assertNull(is2.getInput().getSubmitter());

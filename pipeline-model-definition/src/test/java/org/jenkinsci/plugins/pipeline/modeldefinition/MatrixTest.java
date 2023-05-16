@@ -24,10 +24,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.Util;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
@@ -774,7 +776,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'A'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -784,7 +786,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Matrix - AXIS_VALUE = 'B'");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'B'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -824,7 +826,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Cell");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -834,7 +836,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Cell");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -874,7 +876,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'A'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -884,7 +886,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Matrix - AXIS_VALUE = 'B'");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'B'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -925,7 +927,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Cell");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -935,7 +937,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Cell");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -976,7 +978,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'A'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -1017,7 +1019,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Cell");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
