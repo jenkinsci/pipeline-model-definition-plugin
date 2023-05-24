@@ -376,7 +376,7 @@ class JSONParser implements Parser {
         JsonTree libsTree = j.append(JsonPointer.of("libraries"))
         libsTree.node.eachWithIndex { JsonNode entry, int i ->
             JsonTree thisNode = libsTree.append(JsonPointer.of(i))
-            l.libs.add(ModelASTValue.fromConstant(thisNode.node.asText(), thisNode))
+            l.libs.add(ModelASTValue.fromConstant(thisNode.node.get("value"), thisNode))
         }
 
         return l
