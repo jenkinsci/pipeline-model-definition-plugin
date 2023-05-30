@@ -107,7 +107,7 @@ public class PreserveStashesJobProperty extends OptionalJobProperty<WorkflowJob>
                     int bc = prop.getBuildCount();
                     if (bc > 0) {
                         for (WorkflowRun recentRun : j.getBuilds().completedOnly().limit(bc)) {
-                            if (recentRun != null && recentRun.equals(r)) {
+                            if (recentRun != null && recentRun.getNumber() == r.getNumber()) {
                                 return false;
                             }
                         }
