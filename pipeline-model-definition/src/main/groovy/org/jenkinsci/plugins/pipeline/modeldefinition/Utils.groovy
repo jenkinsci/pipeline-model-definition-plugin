@@ -38,7 +38,9 @@ import hudson.ExtensionList
 import hudson.model.*
 import hudson.util.Secret
 import hudson.triggers.Trigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DisableRestartFromStageAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser
 
 import java.util.function.Function
@@ -622,6 +624,13 @@ class Utils {
                     isJobChanged = true
                 }
 
+                DisableRestartFromStage declaredDisableRestartFromStageOption = (DisableRestartFromStage) rawOptions.find { it instanceof DisableRestartFromStage }
+                DisableRestartFromStageAction currentRestartFromStageAction = j.getAction(DisableRestartFromStageAction.class);
+                if(currentRestartFromStageAction == null && declaredDisableRestartFromStageOption != null){
+                    j.addAction(new DisableRestartFromStageAction())
+                } else if(currentRestartFromStageAction != null && declaredDisableRestartFromStageOption == null) {
+                    j.removeAction(currentRestartFromStageAction)
+                }
 
                 // If there are any triggers update them if needed
                 // It would be cool to only add or remove individual triggers,
