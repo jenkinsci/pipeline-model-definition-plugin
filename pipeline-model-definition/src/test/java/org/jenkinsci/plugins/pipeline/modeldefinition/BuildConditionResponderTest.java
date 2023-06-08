@@ -23,7 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
 import jenkins.model.Jenkins;

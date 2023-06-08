@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.google.common.base.Predicate;
+import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.tasks.LogRotator;
@@ -59,6 +60,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * @author Andrew Bayer
@@ -78,6 +80,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
     // Give this a longer timeout
     @Test(timeout=5 * 60 * 1000)
     public void stages300() throws Exception {
+        assumeFalse("can exceed even 5m timeout", Functions.isWindows());
         RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
         expect("basic/stages300")
             .logContains("letters1 = 'a', letters10 = 'a', letters100 = 'a'",
