@@ -60,8 +60,8 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
-      <!-- TODO: Remove version declaration when workflow-cps plugin 3691.v28b_14c465a_b_b_ or newer is in plugin BOM -->
-      <version>3691.v28b_14c465a_b_b_</version>
+      <!-- TODO: Remove version declaration when workflow-cps plugin 3697.vb_470e454c232 or newer is in plugin BOM -->
+      <version>3697.vb_470e454c232</version>
       <exclusions>
         <exclusion>
           <!-- TODO: Remove exclusion when workflow cps requires git plugin 5.1.0 or newer -->
