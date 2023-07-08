@@ -67,28 +67,18 @@ public class PreserveStashesJobPropertyLoadTest extends AbstractDeclarativeTest 
             public void evaluate() throws Throwable {
                 WorkflowJob p = (WorkflowJob)story.j.jenkins.getItem("stashWithLoadCount");
                 assertNotNull(p);
-                RunLoadCounter.prepare(p);
 
-                // PreserveStashesJobProperty.StashClearingListener and .SaveStashes shouldn't trigger a full load.
-                assertEquals(0, RunLoadCounter.countLoads(p, new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            story.j.buildAndAssertSuccess(p);
-                        } catch (Exception e) {
-                            // This will never happen.
-                            assert false;
-                        }
-                    }
-                }));
+                RunLoadCounter.assertMaxLoads(p, /* TODO 2.407+ should be just 1 */4, () -> {
+                    // The last build will get loaded via Queue.maintain as shown in https://github.com/jenkinsci/jenkins/pull/7998 anyway:
+                    assertEquals(10, p.getLastBuild().getNumber());
+                    // (until 2.407+, so will #7, #8, and #9, for a total of 4 loaded builds)
+                    // PreserveStashesJobProperty.StashClearingListener and .SaveStashes shouldn't trigger a full load.
+                    return story.j.buildAndAssertSuccess(p);
+                });
 
-                // This is here largely to demonstrate that we do still do loads. We're using countLoads so as not to
-                // blow up later when we check stashes.
-                assertEquals(1, RunLoadCounter.countLoads(p, new Runnable() {
-                    @Override
-                    public void run() {
-                        p.getLastFailedBuild().getNumber();
-                    }
+                // This is here largely to demonstrate that we do still do loads.
+                assertEquals(1, RunLoadCounter.countLoads(p, () -> {
+                    assertEquals(7, p.getLastFailedBuild().getNumber());
                 }));
 
                 // The first nine builds shouldn't have stashes any more.

@@ -24,7 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.gargoylesoftware.htmlunit.html.*;
+import org.htmlunit.html.*;
 import hudson.Util;
 import hudson.model.queue.QueueTaskFuture;
 import org.apache.commons.lang.StringUtils;
@@ -147,7 +147,7 @@ public class StageInputTest extends AbstractModelDefTest {
         HtmlTextInput stringParameterInput = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
         assertEquals("banana", stringParameterInput.getAttribute("value"));
         assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name'] | div[contains(@class,'setting-name')] | div[contains(@class,'jenkins-form-label')]")).getTextContent());
-        stringParameterInput.setAttribute("value", "pear");
+        stringParameterInput.setValue("pear");
 
         element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
         assertNotNull(element);
