@@ -167,8 +167,8 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git</artifactId>
       <scope>test</scope>
-      <!-- TODO: Remove version declaration when git plugin 5.1.0 or newer is in plugin BOM -->
-      <version>5.1.0</version>
+      <!-- TODO: Remove version declaration when git plugin 5.2.0 or newer is in plugin BOM -->
+      <version>5.2.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.httpcomponents</groupId>
