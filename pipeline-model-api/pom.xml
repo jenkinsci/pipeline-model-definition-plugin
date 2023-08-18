@@ -67,8 +67,8 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps</artifactId>
       <scope>test</scope>
-      <!-- TODO: Remove version declaration when workflow-cps plugin 3691.v28b_14c465a_b_b_ or newer is in plugin BOM -->
-      <version>3691.v28b_14c465a_b_b_</version>
+      <!-- TODO: Remove version declaration when workflow-cps plugin 3769.v8b_e595e4d40d or newer is in plugin BOM -->
+      <version>3769.v8b_e595e4d40d</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
