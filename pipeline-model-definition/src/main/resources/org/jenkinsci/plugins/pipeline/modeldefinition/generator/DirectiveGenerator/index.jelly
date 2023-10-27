@@ -78,34 +78,10 @@
                 </f:dropdownList>
                 <j:set var="id" value="${h.generateId()}"/>
                 <f:block>
-                    <input type="button" value="${%Generate Declarative Directive}" onclick="handlePrototype_${id}(); return false" class="submit-button primary"/>
+                    <span class="directive-generator-button-reference-holder" data-id="${id}" data-fullurl="${rootURL}/${it.GENERATE_URL}" />
+                    <input id="prototypeButton_${id}" type="button" value="${%Generate Declarative Directive}" class="submit-button primary"/>
                     <f:textarea id="prototypeText_${id}" readonly="true" style="margin-top: 10px" />
-                    <script>
-                        function handlePrototype_${id}() {
-                        buildFormTree(document.forms.config);
-                        // TODO JSON.stringify fails in some circumstances: https://gist.github.com/jglick/70ec4b15c1f628fdf2e9 due to Array.prototype.toJSON
-                        // TODO simplify when Prototype.js is removed
-                        var json = Object.toJSON ? Object.toJSON(JSON.parse(document.forms.config.elements.json.value).prototype) : JSON.stringify(JSON.parse(document.forms.config.elements.json.value).prototype);
-                        if (!json) {
-                        return; // just a separator
-                        }
-                        fetch('${rootURL}/${it.GENERATE_URL}', {
-                            method: 'post',
-                            headers: crumb.wrap({
-                                "Content-Type": "application/x-www-form-urlencoded",
-                            }),
-                            body: new URLSearchParams({
-                                json: json,
-                            }),
-                        }).then((rsp) => {
-                            if (rsp.ok) {
-                                rsp.text().then((responseText) => {
-                                    document.getElementById('prototypeText_${id}').value = responseText;
-                                });
-                            }
-                        });
-                        }
-                    </script>
+                    <st:adjunct includes="org.jenkinsci.plugins.pipeline.modeldefinition.generator.DirectiveGenerator.indexScript"/>
                 </f:block>
             </f:form>
         </l:main-panel>
