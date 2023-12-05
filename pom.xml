@@ -133,7 +133,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
-    <jenkins.version>2.426</jenkins.version>
+    <jenkins.version>2.426.1</jenkins.version>
   </properties>
 
   <profiles>
