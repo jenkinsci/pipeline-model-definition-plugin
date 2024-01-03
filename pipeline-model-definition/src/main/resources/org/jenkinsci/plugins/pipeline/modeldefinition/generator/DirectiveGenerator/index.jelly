@@ -81,6 +81,7 @@
                     <span class="directive-generator-button-reference-holder" data-id="${id}" data-fullurl="${rootURL}/${it.GENERATE_URL}" />
                     <input id="prototypeButton_${id}" type="button" value="${%Generate Declarative Directive}" class="submit-button primary"/>
                     <f:textarea id="prototypeText_${id}" readonly="true" style="margin-top: 10px" />
+                    <l:copyButton text="" clazz="jenkins-hidden jenkins-!-margin-top-1 copyPrototypeButton_${id}"/>
                     <st:adjunct includes="org.jenkinsci.plugins.pipeline.modeldefinition.generator.DirectiveGenerator.indexScript"/>
                 </f:block>
             </f:form>

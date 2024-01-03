@@ -28,6 +28,9 @@ function handlePrototype(url,id) {
         if (rsp.ok) {
             rsp.text().then((responseText) => {
                 document.getElementById('prototypeText_'+id).value = responseText;
+                copybutton = document.querySelector('.copyPrototypeButton_'+id);
+                copybutton.setAttribute("text", responseText);
+                copybutton.classList.remove('jenkins-hidden');
             });
         }
     });
