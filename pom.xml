@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.73</version>
+    <version>4.76</version>
     <relativePath />
   </parent>
 
@@ -75,7 +75,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.426.x</artifactId>
-        <version>2555.v3190a_8a_c60c6</version>
+        <version>2675.v1515e14da_7a_6</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -133,7 +133,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
-    <jenkins.version>2.426</jenkins.version>
+    <jenkins.version>2.426.1</jenkins.version>
   </properties>
 
   <profiles>
