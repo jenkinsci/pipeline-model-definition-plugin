@@ -39,9 +39,7 @@ import hudson.tasks.LogRotator;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
-import hudson.util.VersionNumber;
 import jenkins.model.BuildDiscarderProperty;
-import jenkins.model.Jenkins;
 import jenkins.model.OptionalJobProperty;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -150,16 +148,6 @@ public class DirectiveGeneratorTest {
                         "}");
     }
 
-    // TODO: Remove once we move to a baseline of 2.281 or later
-    private String trimParamOrEmpty() {
-        if (Jenkins.getVersion().isNewerThanOrEqualTo(new VersionNumber("2.281"))) {
-            return "";
-        }
-        else {
-            return ", trim: false";
-        }
-    }
-
     @Test
     public void fullInput() throws Exception {
         InputDirective input = new InputDirective("hello");
@@ -180,7 +168,7 @@ public class DirectiveGeneratorTest {
                         "  submitterParameter 'subParam'\n" +
                         "  parameters {\n" +
                         // StringParameterDefinition added trim field in 2.90
-                        "    string defaultValue: 'steve', description: 'Hey, a string', name: 'aString'" + trimParamOrEmpty() + "\n" +
+                        "    string defaultValue: 'steve', description: 'Hey, a string', name: 'aString'\n" +
                         "    booleanParam defaultValue: true, description: 'A boolean now', name: 'aBool'\n" +
                         "  }\n" +
                         "}");
@@ -394,7 +382,7 @@ public class DirectiveGeneratorTest {
         ParametersDirective params = new ParametersDirective(p);
 
         dg.assertGenerateDirective(params, "parameters {\n" +
-                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'" + trimParamOrEmpty() + "\n" +
+                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'\n" +
                 "}");
     }
 
@@ -407,7 +395,7 @@ public class DirectiveGeneratorTest {
         ParametersDirective params = new ParametersDirective(p);
 
         dg.assertGenerateDirective(params, "parameters {\n" +
-                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'" + trimParamOrEmpty() + "\n" +
+                "  string defaultValue: 'some default', description: 'Hey, a description with a \\' in it.', name: 'SOME_STRING'\n" +
                 "  booleanParam defaultValue: true, description: 'This will default to true.', name: 'SOME_BOOL'\n" +
                 "}");
     }
