@@ -24,8 +24,11 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.gargoylesoftware.htmlunit.html.*;
+import org.htmlunit.html.*;
+import hudson.Util;
 import hudson.model.queue.QueueTaskFuture;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -59,7 +62,7 @@ public class StageInputTest extends AbstractModelDefTest {
         InputAction a = b.getAction(InputAction.class);
         assertEquals(1, a.getExecutions().size());
 
-        InputStepExecution is = a.getExecution("Foo");
+        InputStepExecution is = a.getExecution(StringUtils.capitalize(Util.getDigestOf("foo")));
         assertEquals("Continue?", is.getInput().getMessage());
         assertEquals(0, is.getInput().getParameters().size());
         assertNull(is.getInput().getSubmitter());
@@ -77,6 +80,9 @@ public class StageInputTest extends AbstractModelDefTest {
 
     @Test
     public void simpleInputWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInputWithOutsideVarAndFunc");
         p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleInputWithOutsideVarAndFunc"), true));
         // get the build going, and wait until workflow pauses
@@ -92,7 +98,7 @@ public class StageInputTest extends AbstractModelDefTest {
         InputAction a = b.getAction(InputAction.class);
         assertEquals(1, a.getExecutions().size());
 
-        InputStepExecution is = a.getExecution("Foo");
+        InputStepExecution is = a.getExecution(StringUtils.capitalize(Util.getDigestOf("foo")));
         assertEquals("Continue?", is.getInput().getMessage());
         assertEquals(0, is.getInput().getParameters().size());
         assertNull(is.getInput().getSubmitter());
@@ -135,15 +141,15 @@ public class StageInputTest extends AbstractModelDefTest {
         HtmlPage page = wc.getPage(b, a.getUrlName());
         HtmlForm form = page.getFormByName(is.getId());
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='fruit']");
+        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='fruit'] | //div[div/div/input/@value='fruit']");
         assertNotNull(element);
 
         HtmlTextInput stringParameterInput = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
         assertEquals("banana", stringParameterInput.getAttribute("value"));
-        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name']")).getTextContent());
-        stringParameterInput.setAttribute("value", "pear");
+        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name'] | div[contains(@class,'setting-name')] | div[contains(@class,'jenkins-form-label')]")).getTextContent());
+        stringParameterInput.setValue("pear");
 
-        element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag']");
+        element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
         assertNotNull(element);
 
         Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
@@ -187,7 +193,7 @@ public class StageInputTest extends AbstractModelDefTest {
         HtmlPage page = wc.getPage(b, a.getUrlName());
         HtmlForm form = page.getFormByName(is.getId());
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag']");
+        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
         assertNotNull(element);
 
         Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");

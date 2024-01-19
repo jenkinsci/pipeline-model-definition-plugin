@@ -31,11 +31,10 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Run;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.Serializable;
 import java.util.*;
 
@@ -52,23 +51,18 @@ public abstract class CredentialsBindingHandler<C extends StandardCredentials> i
         return handles(c.getClass());
     }
 
-    @Nonnull
-    public List<MultiBinding<C>> toBindings(String varName, String credentialsId) {
-        return Collections.emptyList();
-    }
-
-    @Nonnull
+    @NonNull
     public abstract Class<? extends StandardCredentials> type();
 
-    @Nonnull
+    @NonNull
     public abstract List<Map<String, Object>> getWithCredentialsParameters(String credentialsId);
 
-    @Nonnull
+    @NonNull
     public static ExtensionList<CredentialsBindingHandler> all() {
         return ExtensionList.lookup(CredentialsBindingHandler.class);
     }
 
-    @Nonnull
+    @NonNull
     public static Set<Class<? extends StandardCredentials>> supportedTypes() {
         Set<Class<? extends StandardCredentials>> set = new HashSet<>();
         for (CredentialsBindingHandler<?> handler : all()) {
@@ -77,7 +71,7 @@ public abstract class CredentialsBindingHandler<C extends StandardCredentials> i
         return set;
     }
 
-    @Nonnull
+    @NonNull
     public static Set<String> supportedTypeNames() {
         Set<String> set = new HashSet<>();
         for (Class<? extends StandardCredentials> c : supportedTypes()) {
@@ -96,7 +90,7 @@ public abstract class CredentialsBindingHandler<C extends StandardCredentials> i
         return null;
     }
 
-    @Nonnull
+    @NonNull
     public static CredentialsBindingHandler forId(String id, Run context) throws CredentialNotFoundException {
         IdCredentials cred = CredentialsProvider.findCredentialById(id, IdCredentials.class, context);
         if (cred==null) {

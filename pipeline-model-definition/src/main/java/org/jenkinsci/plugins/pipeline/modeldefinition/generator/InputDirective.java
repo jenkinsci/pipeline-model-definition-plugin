@@ -36,7 +36,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.List;
 
@@ -105,19 +105,19 @@ public class InputDirective extends AbstractDirective<InputDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<InputDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "input";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Input";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return Collections.singletonList(StepDescriptor.byFunctionName("input"));
         }
@@ -134,9 +134,47 @@ public class InputDirective extends AbstractDirective<InputDirective> {
             }
         }
 
+        public FormValidation doCheckId(@QueryParameter String id) {
+            // TODO post SECURITY-2880 update the pipeline-input-step dependency and call the InputStep descriptor check
+
+            // https://www.rfc-editor.org/rfc/rfc3986.txt
+            // URLs may only contain ascii
+            // and only some parts are allowed
+            //      segment       = *pchar
+            //      segment-nz    = 1*pchar
+            //      segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
+            //                      ; non-zero-length segment without any colon ":"
+            //      pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+            //      unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
+            //      sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+            //                      / "*" / "+" / "," / ";" / "="
+
+            // but we are not allowing pct-encoded here.
+            // additionally "." and ".." should be rejected.
+            // and as we are using html / javascript in places we disallow "'"
+            // and to prevent escaping hell disallow "&"
+
+            // as well as anything unsafe we disallow . and .. (but we can have a dot inside the string so foo.bar is ok)
+            // also Jenkins dissallows ; in the request parameter so don't allow that either.
+            if (id == null || id.isEmpty()) {
+                // the id will be provided by a hash of the message
+                return FormValidation.ok();
+            }
+            if (id.equals(".")) {
+                return FormValidation.error("The ID is required to be URL safe and is limited to the characters a-z A-Z, the digits 0-9 and additionally the characters ':' '@' '=' '+' '$' ',' '-' '_' '.' '!' '~' '*' '(' ')'.");
+            }
+            if (id.equals("..")) {
+                return FormValidation.error("The ID is required to be URL safe and is limited to the characters a-z A-Z, the digits 0-9 and additionally the characters ':' '@' '=' '+' '$' ',' '-' '_' '.' '!' '~' '*' '(' ')'.");
+            }
+            if (!id.matches("^[a-zA-Z0-9[-]._~!$()*+,:@=]+$")) { // escape the - inside another [] so it does not become a range of , - _
+                return FormValidation.error("The ID is required to be URL safe and is limited to the characters a-z A-Z, the digits 0-9 and additionally the characters ':' '@' '=' '+' '$' ',' '-' '_' '.' '!' '~' '*' '(' ')'.");
+            }
+            return FormValidation.ok();
+        }
+
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull InputDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull InputDirective directive) {
             if (directive.getMessage() != null) {
                 StringBuilder result = new StringBuilder("input {\n");
                 result.append("message ").append(Snippetizer.object2Groovy(directive.getMessage())).append("\n");

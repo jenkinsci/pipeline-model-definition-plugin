@@ -25,11 +25,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.collect.ImmutableList;
+import hudson.FilePath;
 import hudson.model.*;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 import hudson.util.DescribableList;
+import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSampleRepoRule;
 import jenkins.plugins.git.GitStep;
 import org.apache.commons.io.FileUtils;
@@ -42,28 +44,28 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
-import org.jenkinsci.plugins.workflow.cps.global.UserDefinedGlobalVariableList;
-import org.jenkinsci.plugins.workflow.cps.global.WorkflowLibRepository;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.LibraryRetriever;
 import org.junit.*;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.ToolInstallations;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.jcabi.matchers.RegexMatchers.containsPattern;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.jvnet.hudson.test.JenkinsMatchers.matchesPattern;
 
 /**
  * @author Andrew Bayer
@@ -71,6 +73,7 @@ import static org.junit.Assert.assertThat;
 public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     private boolean defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
+    private boolean defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
 
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
@@ -79,25 +82,22 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
-    protected static String legalAgentTypes = "";
+    protected String legalAgentTypes = "";
 
-    @Inject
-    WorkflowLibRepository globalLibRepo;
+    @Before
+    public void setUpPreClass() {
+        // Ensure that the agent types expected to be contributed by this plugin are present
+        NavigableSet<String> agentTypes = new TreeSet<>(List.of("any", "label", "none", "otherField"));
 
-    @Inject
-    UserDefinedGlobalVariableList uvl;
-
-    @BeforeClass
-    public static void setUpPreClass() throws Exception {
-        List<String> agentTypes = new ArrayList<>();
-
+        // Allow agent types to be contributed by other plugins; for example, the Kubernetes plugin PCT context
         for (DeclarativeAgentDescriptor d : j.jenkins.getExtensionList(DeclarativeAgentDescriptor.class)) {
             String symbol = symbolFromDescriptor(d);
             if (symbol != null) {
                 agentTypes.add(symbol);
             }
         }
-        legalAgentTypes = "[" + StringUtils.join(agentTypes.stream().sorted().collect(Collectors.toList()), ", ") + "]";
+
+        legalAgentTypes = "[" + String.join(", ", agentTypes) + "]";
     }
 
     private static String symbolFromDescriptor(Descriptor d) {
@@ -108,17 +108,16 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         return null;
     }
 
-    @Before
+    @Before // TODO rather use FlagRule
     public void setUpFeatureFlags() {
         defaultScriptSplitting = RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION;
-
-        // For testing we want to default to exercising splitting
-        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;
+        defaultScriptSplittingAllowLocalVariables = RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES;
     }
 
     @After
     public void cleanupFeatureFlags() {
         RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = defaultScriptSplitting;
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = defaultScriptSplittingAllowLocalVariables;
     }
 
 
@@ -217,9 +216,9 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
         result.add(new Object[]{"perStageConfigEmptySteps", Messages.JSONParser_TooFewItems(0, 1)});
         result.add(new Object[]{"perStageConfigMissingSteps", Messages.JSONParser_MissingRequiredProperties("'steps'")});
-        result.add(new Object[]{"perStageConfigUnknownSection", "additional properties are not allowed"});
+        result.add(new Object[]{"perStageConfigUnknownSection", "object instance has properties which are not allowed by the schema"});
 
-        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, docker, dockerfile, label, none, otherField]")});
+        result.add(new Object[]{"unknownAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, label, none, otherField]")});
 
         // Not using the full message here due to issues with the test extension in MultipleUnnamedParametersTest bleeding over in some situations.
         // That resulted in multiArgCtorProp sometimes showing up in the list of valid options, but not always. We still have the full test in
@@ -227,10 +226,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"invalidWrapperType", "Invalid option type \"echo\". Valid option types:"});
         result.add(new Object[]{"invalidStageWrapperType", "Invalid option type \"echo\". Valid option types:"});
 
-        result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes)});
+        result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, label, none, otherField]")});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]")});
-        result.add(new Object[]{"notificationsSectionRemoved", "additional properties are not allowed"});
+        result.add(new Object[]{"notificationsSectionRemoved", "object instance has properties which are not allowed by the schema"});
         result.add(new Object[]{"unknownWhenConditional", Messages.ModelValidatorImpl_UnknownWhenConditional("banana",
                 "allOf, anyOf, branch, buildingTag, changeRequest, changelog, changeset, environment, equals, expression, isRestartedRun, not, tag")});
         result.add(new Object[]{"whenInvalidParameterType", Messages.ModelValidatorImpl_InvalidUnnamedParameterType("class java.lang.String", 4, Integer.class)});
@@ -276,8 +275,8 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
 
         // TODO: Better error messaging for these schema violations.
-        result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one schema"});
-        result.add(new Object[]{"invalidWhenWithChildren", "instance failed to match at least one schema"});
+        result.add(new Object[]{"nestedWhenWithArgs", "instance failed to match at least one required schema among 2"});
+        result.add(new Object[]{"invalidWhenWithChildren", "instance failed to match at least one required schema among 2"});
 
         result.add(new Object[]{"malformed", "Unexpected close marker ']': expected '}'"});
 
@@ -341,9 +340,12 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     }
 
     protected void initGlobalLibrary() throws IOException {
-        // Need to do the injection by hand because we're not running with a RestartableJenkinsRule.
-        j.jenkins.getInjector().injectMembers(this);
-        File vars = new File(globalLibRepo.workspace, "vars");
+        File lib = new File(Jenkins.get().getRootDir(), "somelib");
+        LibraryConfiguration cfg = new LibraryConfiguration("somelib", new LocalRetriever(lib));
+        cfg.setImplicit(true);
+        cfg.setDefaultVersion("fixed");
+        GlobalLibraries.get().setLibraries(Arrays.asList(cfg));
+        File vars = new File(lib, "vars");
         vars.mkdirs();
         FileUtils.writeStringToFile(new File(vars, "acmeVar.groovy"), StringUtils.join(Arrays.asList(
                 "def hello(name) {echo \"Hello ${name}\"}",
@@ -376,11 +378,21 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                 "  echo 'title was '+config.title",
                 "}")
                 , "\n"));
-
-        // simulate the effect of push
-        uvl.rebuild();
     }
 
+    // TODO copied from GrapeTest along with body of libroot(); could make sense as a *-tests.jar utility
+    private static final class LocalRetriever extends LibraryRetriever {
+        private final File lib;
+        LocalRetriever(File lib) {
+            this.lib = lib;
+        }
+        @Override public void retrieve(String name, String version, boolean changelog, FilePath target, Run<?, ?> run, TaskListener listener) throws Exception {
+            new FilePath(lib).copyRecursiveTo(target);
+        }
+        @Override public void retrieve(String name, String version, FilePath target, Run<?, ?> run, TaskListener listener) throws Exception {
+            retrieve(name, version, false, target, run, listener);
+        }
+    }
 
     protected <T extends ParameterDefinition> T getParameterOfType(List<ParameterDefinition> params, Class<T> c) {
         for (ParameterDefinition p : params) {
@@ -560,7 +572,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             if (logMatches != null) {
                 String log = JenkinsRule.getLog(run);
                 for (String pattern : logMatches) {
-                    assertThat(log, containsPattern(pattern));
+                    assertThat(log, matchesPattern(pattern));
                 }
             }
             if (hasFailureCause) {

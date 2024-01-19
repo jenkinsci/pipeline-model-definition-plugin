@@ -23,11 +23,13 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
+import hudson.Util;
 import hudson.model.Result;
 import hudson.model.Slave;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
@@ -66,22 +68,18 @@ public class MatrixTest extends AbstractModelDefTest {
     private static String password;
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setLabelString("agent-one some-label");
+        s = j.createSlave("agent-one some-label", null);
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first")));
         s.setNumExecutors(10);
 
-        linux = j.createOnlineSlave();
-        linux.setLabelString("linux-agent");
+        linux = j.createSlave("linux-agent", null);
         linux.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "linux agent")));
-        mac = j.createOnlineSlave();
-        mac.setLabelString("mac-agent");
+        mac = j.createSlave("mac-agent", null);
         mac.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "mac agent")));
-        windows = j.createOnlineSlave();
-        windows.setLabelString("windows-agent");
+        windows = j.createSlave("windows-agent", null);
         windows.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true"),
             new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "windows agent")));
     }
@@ -334,7 +332,6 @@ public class MatrixTest extends AbstractModelDefTest {
             .go();
     }
 
-
     // Behavior should be identical to previous, just expressed differently
     @Issue("JENKINS-41334")
     @Test
@@ -362,6 +359,88 @@ public class MatrixTest extends AbstractModelDefTest {
                 "First stage, overrode twice, in first linux-os branch",
                 "First stage, overrode per nested, in first linux-os branch",
                 "First stage, declared per nested, in first linux-os branch",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
+                "override in matrix axis")
+            .go();
+    }
+
+    @Issue("JENKINS-64846")
+    @Test
+    public void matrixStageDirectivesOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
+        expect("matrix/matrixStageDirectivesOutsideVarAndFunc")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "First stage, Hi there - This comes from a function",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1",
+                "Apache Maven 3.0.1")
+            .logNotContains("WE SHOULD NEVER GET HERE",
+                "java.lang.IllegalArgumentException",
+                "override in matrix axis")
+            .go();
+    }
+
+    @Issue("JENKINS-64846")
+    @Test
+    public void matrixStageDirectivesOutsideVarAndFuncNoSplitting() throws Exception {
+        // ensure vars in matrix still works with splitting transform turned off
+        RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = false;
+
+        expect("matrix/matrixStageDirectivesOutsideVarAndFunc")
+            .logContains("[Pipeline] { (foo)",
+                "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                "{ (Branch: Matrix - OS_VALUE = 'mac')",
+                "First stage, mac agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first mac-os branch",
+                "First stage, overrode per nested, in first mac-os branch",
+                "First stage, declared per nested, in first mac-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, windows agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first windows-os branch",
+                "First stage, overrode per nested, in first windows-os branch",
+                "First stage, declared per nested, in first windows-os branch",
+                "First stage, Hi there - This comes from a function",
+                "First stage, linux agent",
+                "First stage, do not override",
+                "First stage, overrode once and done",
+                "First stage, overrode twice, in first linux-os branch",
+                "First stage, overrode per nested, in first linux-os branch",
+                "First stage, declared per nested, in first linux-os branch",
+                "First stage, Hi there - This comes from a function",
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1",
                 "Apache Maven 3.0.1")
@@ -448,12 +527,10 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-46809")
     @Test
     public void matrixStagesGroupsAndStages() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
+        Slave s = j.createSlave("first-agent", null);
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
 
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
+        Slave s2 = j.createSlave("second-agent", null);
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
 
         WorkflowRun b = expect("matrix/matrixStagesGroupsAndStages")
@@ -528,12 +605,10 @@ public class MatrixTest extends AbstractModelDefTest {
     @Issue("JENKINS-53734")
     @Test
     public void matrixStagesNestedInSequential() throws Exception {
-        Slave s = j.createOnlineSlave();
-        s.setLabelString("first-agent");
+        Slave s = j.createSlave("first-agent", null);
         s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "first agent")));
 
-        Slave s2 = j.createOnlineSlave();
-        s2.setLabelString("second-agent");
+        Slave s2 = j.createSlave("second-agent", null);
         s2.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("WHICH_AGENT", "second agent")));
 
         expect("matrix/matrixStagesNestedInSequential")
@@ -701,7 +776,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'A'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -711,7 +786,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Matrix - AXIS_VALUE = 'B'");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'B'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -751,7 +826,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Cell");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -761,7 +836,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Cell");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -801,7 +876,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'A'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -811,7 +886,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Matrix - AXIS_VALUE = 'B'");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'B'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -852,7 +927,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Cell");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -862,7 +937,7 @@ public class MatrixTest extends AbstractModelDefTest {
 
         assertEquals(1, a.getExecutions().size());
 
-        is1 = a.getExecution("Cell");
+        is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -903,7 +978,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Matrix - AXIS_VALUE = 'A'");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Matrix - AXIS_VALUE = 'A'")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());
@@ -944,7 +1019,7 @@ public class MatrixTest extends AbstractModelDefTest {
         JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page;
 
-        InputStepExecution is1 = a.getExecution("Cell");
+        InputStepExecution is1 = a.getExecution(StringUtils.capitalize(Util.getDigestOf("Cell")));
         assertEquals("Continue?", is1.getInput().getMessage());
         assertEquals(0, is1.getInput().getParameters().size());
         assertNull(is1.getInput().getSubmitter());

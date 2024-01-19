@@ -32,9 +32,9 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescr
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -61,20 +61,36 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
         return !"config.jelly".equals(getConfigPage());
     }
 
+    /**
+     * Whether this conditional is an invisible global conditional. Defaults to false.
+     */
+    public boolean isInvisible() {
+        return false;
+    }
+
     public abstract Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original);
 
     /**
      * Get all {@link DeclarativeStageConditionalDescriptor}s.
      *
-     * @return a list of all {@link DeclarativeStageConditionalDescriptor}s registered.`
+     * @return a list of all {@link DeclarativeStageConditionalDescriptor}s registered, except for invisible global conditionals.
      */
     public static List<DeclarativeStageConditionalDescriptor> all() {
-        ExtensionList<DeclarativeStageConditionalDescriptor> descs = ExtensionList.lookup(DeclarativeStageConditionalDescriptor.class);
-        return descs.stream().sorted(Comparator.comparing(DeclarativeStageConditionalDescriptor::getName)).collect(Collectors.toList());
+        return allIncludingInvisible().stream().filter(d -> !d.isInvisible()).collect(Collectors.toList());
     }
 
     public static List<DeclarativeStageConditionalDescriptor> forGenerator() {
         return all().stream().filter(DeclarativeStageConditionalDescriptor::inDirectiveGenerator).collect(Collectors.toList());
+    }
+
+    private static List<DeclarativeStageConditionalDescriptor> allIncludingInvisible() {
+        ExtensionList<DeclarativeStageConditionalDescriptor> descs = ExtensionList.lookup(DeclarativeStageConditionalDescriptor.class);
+        return descs.stream()
+            .sorted(Comparator.comparing(DeclarativeStageConditionalDescriptor::getName)).collect(Collectors.toList());
+    }
+
+    public static List<DeclarativeStageConditionalDescriptor> allInvisible() {
+        return allIncludingInvisible().stream().filter(DeclarativeStageConditionalDescriptor::isInvisible).collect(Collectors.toList());
     }
 
     public static List<String> allNames() {
@@ -109,7 +125,7 @@ public abstract class DeclarativeStageConditionalDescriptor<S extends Declarativ
      * @return The corresponding descriptor or null if not found.
      */
     @Nullable
-    public static DeclarativeStageConditionalDescriptor byName(@Nonnull String name) {
+    public static DeclarativeStageConditionalDescriptor byName(@NonNull String name) {
         return (DeclarativeStageConditionalDescriptor) SymbolLookup.get().findDescriptor(DeclarativeStageConditional.class, name);
     }
 }

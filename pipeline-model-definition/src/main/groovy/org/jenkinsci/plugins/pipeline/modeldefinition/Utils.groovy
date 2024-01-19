@@ -24,6 +24,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.github.fge.jsonschema.core.tree.JsonTree
+import com.github.fge.jsonschema.core.tree.SimpleJsonTree
+import com.github.fge.jackson.JsonLoader
 import com.google.common.base.Predicate
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -32,7 +36,14 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
 import hudson.model.*
+import hudson.util.Secret
 import hudson.triggers.Trigger
+import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DisableRestartFromStageAction
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser
+
+import java.util.function.Function
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
@@ -80,9 +91,8 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor
 import org.kohsuke.accmod.Restricted
 import org.kohsuke.accmod.restrictions.NoExternalUse
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
-import javax.annotation.Nullable
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
 import javax.lang.model.SourceVersion
 import java.util.concurrent.TimeUnit
 
@@ -122,9 +132,9 @@ class Utils {
      * @param environment The environment to pull credentials from
      * @return A non-null but possibly empty map of strings to {@link CredentialWrapper}s
      */
-    @Nonnull
+    @NonNull
     @Restricted(NoExternalUse.class)
-    static Map<String, CredentialWrapper> getLegacyEnvCredentials(@Nonnull Environment environment) {
+    static Map<String, CredentialWrapper> getLegacyEnvCredentials(@NonNull Environment environment) {
         Map<String, CredentialWrapper> m = [:]
         environment.each {k, v ->
             if (v instanceof  CredentialWrapper) {
@@ -149,7 +159,7 @@ class Utils {
     static Predicate<FlowNode> nodeIdNotEquals(final FlowNode original) {
         return new Predicate<FlowNode>() {
             @Override
-            boolean apply(@Nullable FlowNode input) {
+            boolean apply(FlowNode input) {
                 return input == null || original == null || original.id != input.id
             }
         }
@@ -158,7 +168,7 @@ class Utils {
     static Predicate<FlowNode> endNodeForStage(final BlockStartNode startNode) {
         return new Predicate<FlowNode>() {
             @Override
-            boolean apply(@Nullable FlowNode input) {
+            boolean apply(FlowNode input) {
                 return input != null &&
                     input instanceof BlockEndNode &&
                     input.getStartNode() == startNode
@@ -203,7 +213,7 @@ class Utils {
     static Predicate<FlowNode> isParallelBranchFlowNode(final String stageName, FlowExecution execution = null) {
         return new Predicate<FlowNode>() {
             @Override
-            boolean apply(@Nullable FlowNode input) {
+            boolean apply(FlowNode input) {
                 if (input != null) {
                     if (input.getAction(LabelAction.class) != null &&
                         input.getAction(ThreadNameAction.class) != null &&
@@ -353,7 +363,7 @@ class Utils {
         }
     }
 
-    static boolean stageHasStatusOf(@Nonnull String stageName, @Nonnull FlowExecution execution, @Nonnull String... statuses) {
+    static boolean stageHasStatusOf(@NonNull String stageName, @NonNull FlowExecution execution, @NonNull String... statuses) {
         return findStageFlowNodes(stageName, execution).every { n ->
             return statuses.contains(n.getAction(TagsAction.class)?.getTagValue(StageStatus.TAG_NAME))
         }
@@ -450,12 +460,6 @@ class Utils {
         return knownTypes
     }
 
-    @Whitelisted
-    @Restricted(NoExternalUse.class)
-    static <T> T instantiateDescribable(Class<T> c, Map<String, ?> args) {
-        DescribableModel<T> model = new DescribableModel<>(c)
-        return model?.instantiate(args)
-    }
 
     /**
      * @param c The closure to wrap.
@@ -502,7 +506,7 @@ class Utils {
      * instantiated to instances of the class.
      * @return The list of instances. May be empty.
      */
-    @Nonnull
+    @NonNull
     @Restricted(NoExternalUse.class)
     private static <T extends Describable> List<T> instantiateList(Class<T> clazz, List<Object> toInstantiate) {
         List<T> l = []
@@ -522,7 +526,7 @@ class Utils {
     static void updateJobProperties(@CheckForNull List<Object> propsOrUninstantiated,
                                     @CheckForNull List<Object> trigsOrUninstantiated,
                                     @CheckForNull List<Object> paramsOrUninstantiated,
-                                    @Nonnull CpsScript script) {
+                                    @NonNull CpsScript script) {
         updateJobProperties(propsOrUninstantiated, trigsOrUninstantiated, paramsOrUninstantiated, null, script)
     }
 
@@ -548,7 +552,7 @@ class Utils {
                                     @CheckForNull List<Object> trigsOrUninstantiated,
                                     @CheckForNull List<Object> paramsOrUninstantiated,
                                     @CheckForNull Map<String,DeclarativeOption> optionsOrUninstantiated,
-                                    @Nonnull CpsScript script) {
+                                    @NonNull CpsScript script) {
         List<JobProperty> rawJobProperties = instantiateList(JobProperty.class, propsOrUninstantiated ?: [])
         List<Trigger> rawTriggers = instantiateList(Trigger.class, trigsOrUninstantiated ?: [])
         List<ParameterDefinition> rawParameters = instantiateList(ParameterDefinition.class, paramsOrUninstantiated ?: [])
@@ -620,6 +624,13 @@ class Utils {
                     isJobChanged = true
                 }
 
+                DisableRestartFromStage declaredDisableRestartFromStageOption = (DisableRestartFromStage) rawOptions.find { it instanceof DisableRestartFromStage }
+                DisableRestartFromStageAction currentRestartFromStageAction = j.getAction(DisableRestartFromStageAction.class);
+                if(currentRestartFromStageAction == null && declaredDisableRestartFromStageOption != null){
+                    j.addAction(new DisableRestartFromStageAction())
+                } else if(currentRestartFromStageAction != null && declaredDisableRestartFromStageOption == null) {
+                    j.removeAction(currentRestartFromStageAction)
+                }
 
                 // If there are any triggers update them if needed
                 // It would be cool to only add or remove individual triggers,
@@ -689,8 +700,8 @@ class Utils {
      * @return {@code true}, if both lists of {@link ParameterDefinition} are contain same elements;
      * {@code false} otherwise
      */
-    private static boolean isParametersListEquals(@Nonnull List<ParameterDefinition> first,
-                                                  @Nonnull List<ParameterDefinition> second) {
+    private static boolean isParametersListEquals(@NonNull List<ParameterDefinition> first,
+                                                  @NonNull List<ParameterDefinition> second) {
         if(first.size() != second.size()){
             return false
         }
@@ -714,7 +725,7 @@ class Utils {
      *
      * @return {@code true}, if both {@link ParameterDefinition} objects are equals; {@code false} otherwise.
      */
-    private static boolean isParametersEquals(@Nonnull ParameterDefinition first, @Nonnull ParameterDefinition second) {
+    private static boolean isParametersEquals(@NonNull ParameterDefinition first, @NonNull ParameterDefinition second) {
         if(first.descriptor.id != second.descriptor.id || first.description != second.description){
             return false
         }
@@ -734,7 +745,7 @@ class Utils {
      *
      * @return {@code true} if string representation of objects in XML format are equals; {@code false} otherwise
      */
-    private static boolean isObjectsEqualsXStream(@Nonnull Object first, @Nonnull Object second) {
+    private static boolean isObjectsEqualsXStream(@NonNull Object first, @NonNull Object second) {
         String firstMarshaled  = Items.XSTREAM2.toXML(first)
         String secondMarshaled = Items.XSTREAM2.toXML(second)
         return firstMarshaled == secondMarshaled
@@ -752,10 +763,10 @@ class Utils {
      *
      * @return A list of triggers to apply. May be empty.
      */
-    @Nonnull
+    @NonNull
     private static List<Trigger> getTriggersToApply(@CheckForNull List<Trigger> newTriggers,
-                                                    @Nonnull List<Trigger> existingTriggers,
-                                                    @Nonnull Set<String> prevDefined) {
+                                                    @NonNull List<Trigger> existingTriggers,
+                                                    @NonNull Set<String> prevDefined) {
         //Store triggers with unique descriptor id (Class)
         Set<Trigger> toApply = new TreeSet<>(Comparator.comparing({ Trigger t -> t.descriptor.id }))
         toApply.addAll(existingTriggers)
@@ -776,9 +787,9 @@ class Utils {
      * @return {@code true}, if both lists of {@link Trigger}s contain same elements;
      * {@code false} otherwise
      */
-    @Nonnull
-    private static boolean isTriggersListEquals(@Nonnull List<Trigger> first,
-                                                     @Nonnull List<Trigger> second) {
+    @NonNull
+    private static boolean isTriggersListEquals(@NonNull List<Trigger> first,
+                                                     @NonNull List<Trigger> second) {
         Map<String, Trigger> firstMap = first.collectEntries{ [(it.descriptor.id):it] }
         Map<String, Trigger> secondMap = second.collectEntries{ [(it.descriptor.id):it] }
 
@@ -804,10 +815,10 @@ class Utils {
      *
      * @return A list of parameters to apply. May be empty.
      */
-    @Nonnull
+    @NonNull
     private static List<ParameterDefinition> getParametersToApply(@CheckForNull List<ParameterDefinition> newParameters,
-                                                                  @Nonnull List<ParameterDefinition> existingParameters,
-                                                                  @Nonnull Set<String> prevDefined) {
+                                                                  @NonNull List<ParameterDefinition> existingParameters,
+                                                                  @NonNull Set<String> prevDefined) {
         Set<String> seenNames = new HashSet<>()
         List<ParameterDefinition> toApply = []
         if (newParameters != null) {
@@ -836,10 +847,10 @@ class Utils {
      *
      * @return A list of parameters to apply. May be empty.
      */
-    @Nonnull
+    @NonNull
     private static List<JobProperty> getPropertiesToApply(@CheckForNull List<JobProperty> newProperties,
-                                                          @Nonnull List<JobProperty> existingProperties,
-                                                          @Nonnull Set<String> prevDefined) {
+                                                          @NonNull List<JobProperty> existingProperties,
+                                                          @NonNull Set<String> prevDefined) {
         // Store properties with unique descriptor id (Class)
         Set<JobProperty> toApply = new TreeSet<>(Comparator.comparing({ JobProperty p -> p.descriptor.id }))
         toApply.addAll(existingProperties)
@@ -858,9 +869,9 @@ class Utils {
      *
      * @return A list of properties to add/update. May be empty.
      */
-    @Nonnull
+    @NonNull
     private static List<JobProperty> getPropertiesToUpdate(@CheckForNull List<JobProperty> currentProperties,
-                                                           @Nonnull List<JobProperty> existingProperties) {
+                                                           @NonNull List<JobProperty> existingProperties) {
         Map<String, JobProperty> descriptorsToExistingProperties =
                 existingProperties.collectEntries{ [(it.descriptor.id):it] }
         //Create map <DescriptorId, Count> for extract duplicated parameters
@@ -883,9 +894,9 @@ class Utils {
      *
      * @return A list of properties to remove. May be empty.
      */
-    @Nonnull
+    @NonNull
     private static List<JobProperty> getPropertiesToRemove(@CheckForNull List<JobProperty> currentProperties,
-                                                           @Nonnull List<JobProperty> existingProperties) {
+                                                           @NonNull List<JobProperty> existingProperties) {
         Set<String> currentPropertiesDescriptors = currentProperties.collect{ it.descriptor.id }.toSet()
         return existingProperties.findAll{ !(it.descriptor.id in currentPropertiesDescriptors)}
     }
@@ -897,8 +908,8 @@ class Utils {
      * @return A list of all {@link JobProperty}s on the given job, other than ones specifically excluded because we're
      * handling them elsewhere. May be empty.
      */
-    @Nonnull
-    private static List<JobProperty> existingJobPropertiesForJob(@Nonnull WorkflowJob j) {
+    @NonNull
+    private static List<JobProperty> existingJobPropertiesForJob(@NonNull WorkflowJob j) {
         List<JobProperty> existing = []
         existing.addAll(j.getAllProperties().findAll {
             !(it instanceof PipelineTriggersJobProperty) && !(it instanceof ParametersDefinitionProperty)
@@ -913,8 +924,8 @@ class Utils {
      * @param j a job
      * @return A list of all {@link Trigger}s defined in the job's {@link PipelineTriggersJobProperty}. May be empty.
      */
-    @Nonnull
-    private static List<Trigger> existingTriggersForJob(@Nonnull WorkflowJob j) {
+    @NonNull
+    private static List<Trigger> existingTriggersForJob(@NonNull WorkflowJob j) {
         List<Trigger> existing = []
         if (j.getProperty(PipelineTriggersJobProperty.class) != null) {
             existing.addAll(j.getProperty(PipelineTriggersJobProperty.class)?.getTriggers())
@@ -929,8 +940,8 @@ class Utils {
      * @return A list of all {@link ParameterDefinition}s defined in the job's {@link ParametersDefinitionProperty}. May
      * be empty.
      */
-    @Nonnull
-    private static List<ParameterDefinition> existingParametersForJob(@Nonnull WorkflowJob j) {
+    @NonNull
+    private static List<ParameterDefinition> existingParametersForJob(@NonNull WorkflowJob j) {
         List<ParameterDefinition> existing = []
         if (j.getProperty(ParametersDefinitionProperty.class) != null) {
             existing.addAll(j.getProperty(ParametersDefinitionProperty.class)?.getParameterDefinitions())
@@ -942,7 +953,7 @@ class Utils {
     /**
      * Obtains the source text of the given {@link org.codehaus.groovy.ast.ASTNode}.
      */
-    static String getSourceTextForASTNode(@Nonnull ASTNode n, @Nonnull SourceUnit sourceUnit) {
+    static String getSourceTextForASTNode(@NonNull ASTNode n, @NonNull SourceUnit sourceUnit) {
         def result = new StringBuilder()
         int beginLine = n.getLineNumber()
         int endLine = n.getLastLineNumber()
@@ -979,8 +990,8 @@ class Utils {
         return result.toString().trim()
     }
 
-    @Nonnull
-    static List<Class<? extends Describable>> parentsForMethodCall(@Nonnull ModelASTMethodCall meth) {
+    @NonNull
+    static List<Class<? extends Describable>> parentsForMethodCall(@NonNull ModelASTMethodCall meth) {
         if (meth instanceof ModelASTTrigger) {
             return [Trigger.class]
         } else if (meth instanceof ModelASTBuildParameter) {
@@ -997,11 +1008,24 @@ class Utils {
      * @param script The script from ModelInterpreter
      * @return The name of the stage we're restarting at, if defined, and null otherwise.
      */
-    static String getRestartedStage(@Nonnull CpsScript script) {
+    static String getRestartedStage(@NonNull CpsScript script) {
         WorkflowRun r = script.$build()
 
         RestartDeclarativePipelineCause cause = r.getCause(RestartDeclarativePipelineCause.class)
 
         return cause?.originStage
+    }
+
+    /**
+     * Convenience method for parsing a {@link ModelASTStage} from a JSON string
+     * @param stageJSON The JSON string representing the stage
+     * @return The parsed result of the JSON, or null
+     * @throws Exception If anything goes wrong in parsing the JSON.
+     */
+    static ModelASTStage parseStageFromJSON(String stageJSON) throws Exception {
+        JsonNode json = JsonLoader.fromString(stageJSON)
+        JsonTree jsonTree = new SimpleJsonTree(json)
+        JSONParser parser = new JSONParser(null)
+        return parser.parseStage(jsonTree)
     }
 }

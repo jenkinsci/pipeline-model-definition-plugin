@@ -36,7 +36,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -65,7 +65,7 @@ public class ToolsDirective extends AbstractDirective<ToolsDirective> {
                 .collect(Collectors.toList());
     }
 
-    private static ToolInstallation installationFromParam(@Nonnull SymbolAndName symbolAndName) {
+    private static ToolInstallation installationFromParam(@NonNull SymbolAndName symbolAndName) {
         String symbol = symbolAndName.getSymbol();
         String name = symbolAndName.getName();
         if (!StringUtils.isEmpty(symbol) && !StringUtils.isEmpty(name)) {
@@ -84,19 +84,19 @@ public class ToolsDirective extends AbstractDirective<ToolsDirective> {
     @Extension
     public static class DescriptorImpl extends DirectiveDescriptor<ToolsDirective> {
         @Override
-        @Nonnull
+        @NonNull
         public String getName() {
             return "tools";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Tools";
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public List<Descriptor> getDescriptors() {
             return ExtensionList.lookup(ToolDescriptor.class).stream().filter(t ->
                 t.getInstallations().length > 0 && DirectiveGenerator.getSymbolForDescriptor(t) != null
@@ -104,8 +104,8 @@ public class ToolsDirective extends AbstractDirective<ToolsDirective> {
         }
 
         @Override
-        @Nonnull
-        public String toGroovy(@Nonnull ToolsDirective directive) {
+        @NonNull
+        public String toGroovy(@NonNull ToolsDirective directive) {
             StringBuilder result = new StringBuilder("tools {\n");
             if (!directive.getTools().isEmpty()) {
                 for (ToolInstallation tool : directive.getToolInstallations()) {

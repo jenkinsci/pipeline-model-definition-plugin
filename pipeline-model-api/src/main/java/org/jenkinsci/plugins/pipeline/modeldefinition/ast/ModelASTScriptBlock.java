@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Represents the special step for {@code ScriptStep}, which are executed without validation against the declarative subset.
@@ -15,7 +15,7 @@ public class ModelASTScriptBlock extends AbstractModelASTCodeBlock {
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
     }
 }

@@ -4,7 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,7 +23,7 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONArray toJSON() {
         return toJSONArray(arguments);
     }
@@ -34,14 +34,14 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
      * @param keyName The name of a key to check for.
      * @return True if a {@link ModelASTKey} with that name is present in the map.
      */
-    public boolean containsKeyName(@Nonnull String keyName) {
+    public boolean containsKeyName(@NonNull String keyName) {
         for (ModelASTKey key: arguments.keySet()) {
             if (keyName.equals(key.getKey())) return true;
         }
         return false;
     }
 
-    public ModelASTKey keyForName(@Nonnull String keyName) {
+    public ModelASTKey keyForName(@NonNull String keyName) {
         for (ModelASTKey key : arguments.keySet()) {
             if (keyName.equals(key.getKey())) {
                 return key;
@@ -50,7 +50,7 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
         return null;
     }
 
-    public ModelASTValue valueForName(@Nonnull String keyName) {
+    public ModelASTValue valueForName(@NonNull String keyName) {
         if (containsKeyName(keyName)) {
             return arguments.get(keyForName(keyName));
         }
@@ -58,13 +58,13 @@ public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         // Nothing to validate directly
         validate(validator, arguments);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return toGroovyArgList(arguments, ": ");
     }

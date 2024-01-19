@@ -39,9 +39,11 @@ import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
+import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -54,8 +56,8 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
@@ -103,7 +105,8 @@ public class RestartDeclarativePipelineAction implements Action {
                 !run.isBuilding() &&
                 run.hasPermission(Item.BUILD) &&
                 run.getParent().isBuildable() &&
-                getExecution() != null;
+                getExecution() != null &&
+                run.getParent().getAction(DisableRestartFromStageAction.class) == null;
     }
 
     public Api getApi() {
@@ -226,8 +229,8 @@ public class RestartDeclarativePipelineAction implements Action {
         }
 
         @Override
-        @Nonnull
-        public Collection<? extends Action> createFor(@Nonnull WorkflowRun run) {
+        @NonNull
+        public Collection<? extends Action> createFor(@NonNull WorkflowRun run) {
             return Collections.<Action>singleton(new RestartDeclarativePipelineAction(run));
         }
     }

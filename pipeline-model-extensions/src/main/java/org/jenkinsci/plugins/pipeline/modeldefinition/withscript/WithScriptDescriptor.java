@@ -27,9 +27,16 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 import hudson.model.Descriptor;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.Extension;
+import hudson.ExtensionList;
+import java.net.URL;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -39,12 +46,16 @@ import java.util.Set;
  */
 public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> extends Descriptor<T> {
 
+    protected WithScriptDescriptor() {
+        ExtensionList.lookupSingleton(WithScriptAllowlist.class).registerScript(getScriptResource());
+    }
+
     /**
      * The name for this type. Defaults to the first string in the {@code Symbol} on the class.
      *
      * @return The name.
      */
-    public @Nonnull String getName() {
+    public @NonNull String getName() {
         Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
         if (symbolValues.isEmpty()) {
             throw new IllegalArgumentException(clazz.getSimpleName() + " descriptor class " + this.getClass().getName()
@@ -59,8 +70,15 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
      *
      * @return The class name, defaulting to the {@link WithScriptDescribable} {@link #clazz} class name with "Script" appended.
      */
-    public @Nonnull String getScriptClass() {
+    public @NonNull String getScriptClass() {
         return clazz.getName() + "Script";
+    }
+
+    @SuppressFBWarnings(value = "UI_INHERITANCE_UNSAFE_GETRESOURCE", justification = "We intentionally want to use the class loader for the subclass in this case")
+    private @NonNull URL getScriptResource() {
+        String scriptFile = '/' + getScriptClass().replace('.', '/') + ".groovy";
+        return Objects.requireNonNull(getClass().getResource(scriptFile),
+                () -> "Unable to find resource file: " + scriptFile);
     }
 
     /**
@@ -82,5 +100,19 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
      */
     public T newInstance() throws Exception {
         return clazz.newInstance();
+    }
+
+    @Extension
+    public static class WithScriptAllowlist extends GroovySourceFileAllowlist {
+        private final Set<String> scriptUrls = new HashSet<>();
+
+        private void registerScript(URL scriptUrl) {
+            scriptUrls.add(scriptUrl.toString());
+        }
+
+        @Override
+        public boolean isAllowed(String groovyResourceUrl) {
+            return scriptUrls.contains(groovyResourceUrl);
+        }
     }
 }

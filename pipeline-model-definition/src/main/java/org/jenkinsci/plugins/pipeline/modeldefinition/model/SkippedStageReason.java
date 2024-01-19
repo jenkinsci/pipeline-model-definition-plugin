@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 
 import org.jenkinsci.plugins.pipeline.StageStatus;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.Serializable;
 
 /**
@@ -36,7 +36,7 @@ import java.io.Serializable;
 public abstract class SkippedStageReason implements Serializable {
     protected String stageName;
 
-    public SkippedStageReason(@Nonnull String stageName) {
+    public SkippedStageReason(@NonNull String stageName) {
         this.stageName = stageName;
     }
 
@@ -44,40 +44,40 @@ public abstract class SkippedStageReason implements Serializable {
         return false;
     }
 
-    @Nonnull
+    @NonNull
     public abstract String getMessage();
 
-    @Nonnull
+    @NonNull
     public abstract String getStageStatus();
 
-    @Nonnull
-    public abstract SkippedStageReason cloneWithNewStage(@Nonnull String newStage);
+    @NonNull
+    public abstract SkippedStageReason cloneWithNewStage(@NonNull String newStage);
 
-    @Nonnull
+    @NonNull
     public String getStageName() {
         return stageName;
     }
 
     public static class Failure extends SkippedStageReason {
-        public Failure(@Nonnull String stageName) {
+        public Failure(@NonNull String stageName) {
             super(stageName);
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getMessage() {
             return Messages.SkippedStageReason_FAILURE_Message(stageName);
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getStageStatus() {
             return StageStatus.getSkippedForFailure();
         }
 
         @Override
-        @Nonnull
-        public SkippedStageReason cloneWithNewStage(@Nonnull String newStage) {
+        @NonNull
+        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
             return new Failure(newStage);
         }
 
@@ -85,25 +85,25 @@ public abstract class SkippedStageReason implements Serializable {
     }
 
     public static class Unstable extends SkippedStageReason {
-        public Unstable(@Nonnull String stageName) {
+        public Unstable(@NonNull String stageName) {
             super(stageName);
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getMessage() {
             return Messages.SkippedStageReason_UNSTABLE_Message(stageName);
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getStageStatus() {
             return StageStatus.getSkippedForUnstable();
         }
 
         @Override
-        @Nonnull
-        public SkippedStageReason cloneWithNewStage(@Nonnull String newStage) {
+        @NonNull
+        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
             return new Unstable(newStage);
         }
 
@@ -111,25 +111,25 @@ public abstract class SkippedStageReason implements Serializable {
     }
 
     public static class When extends SkippedStageReason {
-        public When(@Nonnull String stageName) {
+        public When(@NonNull String stageName) {
             super(stageName);
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getMessage() {
             return Messages.SkippedStageReason_WHEN_Message(stageName);
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getStageStatus() {
             return StageStatus.getSkippedForConditional();
         }
 
         @Override
-        @Nonnull
-        public SkippedStageReason cloneWithNewStage(@Nonnull String newStage) {
+        @NonNull
+        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
             return new When(newStage);
         }
 
@@ -139,7 +139,7 @@ public abstract class SkippedStageReason implements Serializable {
     public static class Restart extends SkippedStageReason {
         private String restartedStage;
 
-        public Restart(@Nonnull String stageName, @Nonnull String restartedStage) {
+        public Restart(@NonNull String stageName, @NonNull String restartedStage) {
             super(stageName);
             this.restartedStage = restartedStage;
         }
@@ -154,20 +154,20 @@ public abstract class SkippedStageReason implements Serializable {
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getMessage() {
             return Messages.SkippedStageReason_RESTART_Message(stageName, restartedStage);
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getStageStatus() {
             return StageStatus.getSkippedForRestart();
         }
 
         @Override
-        @Nonnull
-        public SkippedStageReason cloneWithNewStage(@Nonnull String newStage) {
+        @NonNull
+        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
             return new Restart(newStage, restartedStage);
         }
 

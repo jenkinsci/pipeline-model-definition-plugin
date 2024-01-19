@@ -23,11 +23,12 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.endpoints;
 
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.util.NameValuePair;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -73,6 +74,17 @@ public class ErrorsEndpointOpsTest extends AbstractModelDefTest {
         JSONObject resultData = result.getJSONObject("data");
         assertNotNull(resultData);
         assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
+
+        /*
+         * If the error message contains the list of legal agent types, ensure that agent types contributed by other
+         * plugins (for example, the Kubernetes plugin in PCT context) are present. Note that we can't do this from
+         * AbstractModelDefTest#configsWithErrors because determining this list requires Jenkins to be started, and
+         * Jenkins has not yet been started when we are determining the parameters for the JUnit parameterized test.
+         */
+        if (expectedError.equals(
+                Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, label, none, otherField]"))) {
+            expectedError = Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes);
+        }
 
         assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
                 foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));

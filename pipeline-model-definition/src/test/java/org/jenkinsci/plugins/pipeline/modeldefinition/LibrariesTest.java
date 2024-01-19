@@ -29,6 +29,7 @@ import hudson.model.Slave;
 import jenkins.plugins.git.GitSCMSource;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.FolderLibraries;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
@@ -52,9 +53,8 @@ public class LibrariesTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
+        s = j.createSlave("some-label", null);
         s.setNumExecutors(10);
-        s.setLabelString("some-label");
     }
 
     @Test
@@ -130,6 +130,9 @@ public class LibrariesTest extends AbstractModelDefTest {
     @Issue("JENKINS-38110")
     @Test
     public void librariesDirectiveWithOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         otherRepo.init();
         otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
         otherRepo.write("vars/myecho.txt", "Says something very special!");

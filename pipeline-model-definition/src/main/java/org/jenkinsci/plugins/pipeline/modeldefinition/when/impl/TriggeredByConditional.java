@@ -35,8 +35,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
   This conditional prevents the current job of continuing if is not triggered by the cause provided
@@ -67,7 +67,7 @@ public class TriggeredByConditional extends DeclarativeStageConditional<Triggere
     @Symbol("triggeredBy")
     public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TriggeredByConditional> {
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Execute the stage if the job has been triggered by 'cause'";
         }

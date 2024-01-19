@@ -25,10 +25,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.util.NameValuePair;
 import hudson.model.Cause.UserIdCause;
 import hudson.model.CauseAction;
 import hudson.model.Queue;
@@ -44,6 +44,7 @@ import jenkins.scm.impl.mock.MockSCMDiscoverChangeRequests;
 import jenkins.scm.impl.mock.MockSCMSource;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -62,7 +63,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
@@ -84,8 +85,7 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     @BeforeClass
     public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setLabelString("here");
+        s = j.createSlave("here", null);
     }
 
     @Test
@@ -640,6 +640,9 @@ public class WhenStageTest extends AbstractModelDefTest {
 
     @Test
     public void whenExprUsingOutsideVarAndFunc() throws Exception {
+        // this should have same behavior whether script splitting is enable or not
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+
         expect("when/whenExprUsingOutsideVarAndFunc")
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
                 .go();
@@ -711,7 +714,7 @@ public class WhenStageTest extends AbstractModelDefTest {
         }
 
         @Override
-        protected boolean shouldExamineAllBuilds(@Nonnull SCMHead head) {
+        protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
             if (mockPr != null && head.getClass().isAssignableFrom(mockPr)) {
                 return true;
             }
@@ -722,7 +725,7 @@ public class WhenStageTest extends AbstractModelDefTest {
     @TestExtension
     public static class WhenConditionPickleFactory extends SingleTypedPickleFactory<DeclarativeStageConditional<?>> {
         @Override
-        @Nonnull
+        @NonNull
         protected Pickle pickle(DeclarativeStageConditional<?> d) {
             return new XStreamPickle(d);
         }

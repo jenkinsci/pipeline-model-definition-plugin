@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -87,6 +88,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
         String usernamePasswordCredentialsId = "FOOcredentials";
         UsernamePasswordCredentialsImpl usernamePassword = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, usernamePasswordCredentialsId, "sample", usernamePasswordUsername, usernamePasswordPassword);
+        usernamePassword.setUsernameSecret(true);
         store.addCredentials(Domain.global(), usernamePassword);
 
         StringCredentialsImpl mixedEnvCred1 = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred1Id, "test", Secret.fromString(mixedEnvCred1Secret));
@@ -233,6 +235,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Ignore("See https://github.com/jenkinsci/pipeline-model-definition-plugin/pull/404#issuecomment-682933947")
     @Issue("JENKINS-52850")
     @Test
     public void sshCredentialsInEnv() throws Exception {

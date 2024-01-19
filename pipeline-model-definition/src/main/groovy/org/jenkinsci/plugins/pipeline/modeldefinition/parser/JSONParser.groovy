@@ -24,12 +24,12 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.fge.jsonschema.exceptions.JsonReferenceException
-import com.github.fge.jsonschema.exceptions.ProcessingException
-import com.github.fge.jsonschema.jsonpointer.JsonPointer
-import com.github.fge.jsonschema.report.ProcessingMessage
-import com.github.fge.jsonschema.report.ProcessingReport
-import com.github.fge.jsonschema.tree.JsonTree
+import com.github.fge.jsonschema.core.exceptions.JsonReferenceException
+import com.github.fge.jsonschema.core.exceptions.ProcessingException
+import com.github.fge.jackson.jsonpointer.JsonPointer
+import com.github.fge.jsonschema.core.report.ProcessingMessage
+import com.github.fge.jsonschema.core.report.ProcessingReport
+import com.github.fge.jsonschema.core.tree.JsonTree
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
 import org.jenkinsci.plugins.pipeline.modeldefinition.ModelStepLoader
@@ -39,8 +39,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.validator.JSONErrorCollect
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl
 
-import javax.annotation.CheckForNull
-import javax.annotation.Nonnull
+import edu.umd.cs.findbugs.annotations.CheckForNull
+import edu.umd.cs.findbugs.annotations.NonNull
 
 /**
  * Parses input JSON into a {@link ModelASTPipelineDef}.
@@ -693,7 +693,7 @@ class JSONParser implements Parser {
         return parseBuildConditionResponder(j, post)
     }
 
-    @Nonnull
+    @NonNull
     <R extends ModelASTBuildConditionsContainer> R parseBuildConditionResponder(JsonTree j, R responder) {
         JsonTree conds = j.append(JsonPointer.of("conditions"))
         conds.node.eachWithIndex { JsonNode entry, int i ->

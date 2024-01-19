@@ -26,12 +26,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
 import hudson.ExtensionPoint;
 import java.util.Map;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
+import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 
 /**
  * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
@@ -84,7 +86,7 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
         return subdirectory;
     }
 
-    public void copyFlags(@Nonnull DeclarativeAgent a) {
+    public void copyFlags(@NonNull DeclarativeAgent a) {
         setInStage(a.isInStage());
         setDoCheckout(a.isDoCheckout());
         setSubdirectory(a.getSubdirectory());
@@ -102,6 +104,16 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
     @Override
     public DeclarativeAgentDescriptor getDescriptor() {
         return (DeclarativeAgentDescriptor) super.getDescriptor();
+    }
+
+    @Extension
+    public static class CheckoutScriptAllowlist extends GroovySourceFileAllowlist {
+        private final String scriptUrl = DeclarativeAgent.class.getResource("CheckoutScript.groovy").toString();
+
+        @Override
+        public boolean isAllowed(String groovyResourceUrl) {
+            return groovyResourceUrl.equals(scriptUrl);
+        }
     }
 
 }

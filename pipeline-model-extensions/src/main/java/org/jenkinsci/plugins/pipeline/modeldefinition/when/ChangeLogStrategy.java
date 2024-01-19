@@ -29,7 +29,7 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import jenkins.scm.api.SCMHead;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Extension point for what strategy to use when examining the changelog.
@@ -44,11 +44,11 @@ public class ChangeLogStrategy implements ExtensionPoint {
      * @param head the head in question
      * @return {@code true} if all builds changelogs should be examined.
      */
-    protected boolean shouldExamineAllBuilds(@Nonnull SCMHead head) {
+    protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
         return false;
     }
 
-    public static boolean isExamineAllBuilds(@Nonnull SCMHead head) {
+    public static boolean isExamineAllBuilds(@NonNull SCMHead head) {
         for (ChangeLogStrategy s : ExtensionList.lookup(ChangeLogStrategy.class)) {
             if (s.shouldExamineAllBuilds(head)) {
                 return true;

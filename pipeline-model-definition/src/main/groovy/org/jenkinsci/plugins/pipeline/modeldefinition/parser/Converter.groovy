@@ -25,12 +25,12 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.parser
 
 import com.cloudbees.groovy.cps.NonCPS
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.fge.jsonschema.exceptions.ProcessingException
+import com.github.fge.jsonschema.core.exceptions.ProcessingException
 import com.github.fge.jsonschema.main.JsonSchema
-import com.github.fge.jsonschema.report.ProcessingReport
-import com.github.fge.jsonschema.tree.JsonTree
-import com.github.fge.jsonschema.tree.SimpleJsonTree
-import com.github.fge.jsonschema.util.JsonLoader
+import com.github.fge.jsonschema.core.report.ProcessingReport
+import com.github.fge.jsonschema.core.tree.JsonTree
+import com.github.fge.jsonschema.core.tree.SimpleJsonTree
+import com.github.fge.jackson.JsonLoader
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import jenkins.model.Jenkins
 import net.sf.json.JSONObject
@@ -111,7 +111,7 @@ class Converter {
         return compilationUnitToPipelineDef(cu, enabledOptionalValidators)
     }
 
-    private static GroovyClassLoader getCompilationClassLoader() {
+    static GroovyClassLoader getCompilationClassLoader() {
         return CpsThread.current()?.getExecution()?.getShell()?.classLoader ?:
             new GroovyClassLoader(Jenkins.instance.getPluginManager().uberClassLoader)
     }
@@ -134,7 +134,7 @@ class Converter {
         return compilationUnitToPipelineDef(cu, enabledOptionalValidators)
     }
 
-    private static CompilerConfiguration makeCompilerConfiguration() {
+    static CompilerConfiguration makeCompilerConfiguration() {
         CompilerConfiguration cc = GroovySandbox.createBaseCompilerConfiguration()
 
         ImportCustomizer ic = new ImportCustomizer()
@@ -158,7 +158,7 @@ class Converter {
      * @return The converted script
      */
     @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD")
-    private static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu,
+    static ModelASTPipelineDef compilationUnitToPipelineDef(CompilationUnit cu,
                                                                     final List<Class<? extends DeclarativeValidatorContributor>> enabledOptionalValidators = []) {
         final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1]
 

@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,19 +21,19 @@ public final class ModelASTOptions extends ModelASTElement implements ModelASTEl
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         return toJSONObject("options", options);
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, options);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return toGroovyBlock("options", options);
     }

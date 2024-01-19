@@ -24,8 +24,8 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.tree.SimpleJsonTree;
-import com.github.fge.jsonschema.util.JsonLoader;
+import com.github.fge.jsonschema.core.tree.SimpleJsonTree;
+import com.github.fge.jackson.JsonLoader;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Janitor;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;

@@ -28,7 +28,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,7 +82,7 @@ public class ModelASTWhen extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public Object toJSON() {
         return new JSONObject()
                 .accumulate("conditions", toJSONArray(conditions))
@@ -92,7 +92,7 @@ public class ModelASTWhen extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder result = new StringBuilder("when {\n");
         if (beforeAgent != null && beforeAgent) {
@@ -126,7 +126,7 @@ public class ModelASTWhen extends ModelASTElement {
     }
 
     @Override
-    public void validate(@Nonnull final ModelValidator validator) {
+    public void validate(@NonNull final ModelValidator validator) {
         validator.validateElement(this);
         validate(validator, conditions);
     }

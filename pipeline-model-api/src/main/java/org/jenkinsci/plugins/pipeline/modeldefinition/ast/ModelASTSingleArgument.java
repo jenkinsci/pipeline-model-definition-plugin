@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.Map;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 public final class ModelASTSingleArgument extends ModelASTArgumentList {
 
     /**
-     * While not {@link Nonnull}, if this field is null then parsing/validation errors will occur before
+     * While not {@link NonNull}, if this field is null then parsing/validation errors will occur before
      * {@link NullPointerException} would be thrown by {@link #toGroovy()} or {@link #toJSON()}.
      */
     private ModelASTValue value;
@@ -26,19 +26,19 @@ public final class ModelASTSingleArgument extends ModelASTArgumentList {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public Object toJSON() {
         return value.toJSON();
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         // Nothing to immediately validate here
         validate(validator, value);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         return value.toGroovy();
     }

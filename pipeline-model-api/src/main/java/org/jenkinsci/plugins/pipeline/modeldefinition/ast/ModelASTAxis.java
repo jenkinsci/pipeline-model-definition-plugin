@@ -5,7 +5,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,7 @@ public class ModelASTAxis extends ModelASTElement {
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public JSONObject toJSON() {
         return new JSONObject()
                 .accumulate("name", toJSON(name))
@@ -34,12 +34,12 @@ public class ModelASTAxis extends ModelASTElement {
     }
 
     @Override
-    public void validate(@Nonnull ModelValidator validator) {
+    public void validate(@NonNull ModelValidator validator) {
         validator.validateElement(this);
     }
 
     @Override
-    @Nonnull
+    @NonNull
     public String toGroovy() {
         StringBuilder argStr = new StringBuilder()
             .append("name '").append(toGroovy(name) + "'\n")

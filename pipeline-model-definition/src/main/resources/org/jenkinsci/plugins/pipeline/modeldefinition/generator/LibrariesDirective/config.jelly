@@ -23,13 +23,13 @@
   ~ THE SOFTWARE.
   -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:p="/lib/pipelinemodeldefinition">
     <f:block>
         See <a href="https://jenkins.io/doc/book/pipeline/syntax/#libraries" target="_blank">the online documentation</a>
         for more information on the <code>libraries</code> directive.
         <f:entry title="${%Libraries}" help="${descriptor.getHelpPage()}">
             <f:repeatable var="libs" items="${instance.getLibs()}">
-                <table width="100%">
+                <p:blockWrapper>
                     <f:entry title="${%Name}" help="${descriptor.getLibHelp('name')}">
                         <f:textbox name="libs.name" value="${libs.name}" />
                     </f:entry>
@@ -41,7 +41,7 @@
                             <f:repeatableDeleteButton />
                         </div>
                     </f:entry>
-                </table>
+                </p:blockWrapper>
             </f:repeatable>
         </f:entry>
 

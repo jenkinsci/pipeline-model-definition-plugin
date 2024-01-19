@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
@@ -27,7 +28,7 @@
   <parent>
     <groupId>org.jenkinsci.plugins</groupId>
     <artifactId>pipeline-model-parent</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>${changelist}</version>
   </parent>
 
   <groupId>org.jenkinsci.plugins</groupId>
@@ -50,13 +51,6 @@
     </plugins>
   </build>
   
-  <scm>
-    <connection>scm:git:https://github.com/jenkinsci/pipeline-model-definition-plugin</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/pipeline-model-definition-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
-    <tag>${scmTag}</tag>
-  </scm>
-
   <dependencies>
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>
@@ -82,6 +76,16 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>pipeline-stage-step</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>apache-httpcomponents-client-4-api</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
     
