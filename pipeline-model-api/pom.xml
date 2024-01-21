@@ -53,7 +53,16 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
         </exclusion>
+        <exclusion>
+          <!-- Provided by joda-time-api plugin -->
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>joda-time-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
