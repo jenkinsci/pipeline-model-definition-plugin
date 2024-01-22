@@ -70,8 +70,6 @@
             </d:tag>
         </d:taglib>
 
-        <st:adjunct includes="lib.form.hetero-list.hetero-list"/>
-
         <j:set var="targetType" value="${it.class}"/>
         <div class="hetero-list-container with-drag-drop one-each">
             <div class="repeatable-insertion-point" />

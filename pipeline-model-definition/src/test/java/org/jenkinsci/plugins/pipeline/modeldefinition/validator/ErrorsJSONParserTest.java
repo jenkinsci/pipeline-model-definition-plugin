@@ -25,6 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
+import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -46,6 +47,17 @@ public class ErrorsJSONParserTest extends BaseParserLoaderTest {
 
     @Test
     public void parseAndValidateJSONWithError() throws Exception {
+        /*
+         * If the error message contains the list of legal agent types, ensure that agent types contributed by other
+         * plugins (for example, the Kubernetes plugin in PCT context) are present. Note that we can't do this from
+         * AbstractModelDefTest#configsWithErrors because determining this list requires Jenkins to be started, and
+         * Jenkins has not yet been started when we are determining the parameters for the JUnit parameterized test.
+         */
+        if (expectedError.equals(
+                Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, label, none, otherField]"))) {
+            expectedError = Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes);
+        }
+
         findErrorInJSON(expectedError, configName);
     }
 }

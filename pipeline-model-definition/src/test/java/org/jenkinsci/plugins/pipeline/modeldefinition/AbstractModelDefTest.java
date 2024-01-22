@@ -82,19 +82,22 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
     @Rule public GitSampleRepoRule otherRepo = new GitSampleRepoRule();
     @Rule public GitSampleRepoRule thirdRepo = new GitSampleRepoRule();
 
-    protected static String legalAgentTypes = "";
+    protected String legalAgentTypes = "";
 
-    @BeforeClass
-    public static void setUpPreClass() throws Exception {
-        List<String> agentTypes = new ArrayList<>();
+    @Before
+    public void setUpPreClass() {
+        // Ensure that the agent types expected to be contributed by this plugin are present
+        NavigableSet<String> agentTypes = new TreeSet<>(List.of("any", "label", "none", "otherField"));
 
+        // Allow agent types to be contributed by other plugins; for example, the Kubernetes plugin PCT context
         for (DeclarativeAgentDescriptor d : j.jenkins.getExtensionList(DeclarativeAgentDescriptor.class)) {
             String symbol = symbolFromDescriptor(d);
             if (symbol != null) {
                 agentTypes.add(symbol);
             }
         }
-        legalAgentTypes = "[" + StringUtils.join(agentTypes.stream().sorted().collect(Collectors.toList()), ", ") + "]";
+
+        legalAgentTypes = "[" + String.join(", ", agentTypes) + "]";
     }
 
     private static String symbolFromDescriptor(Descriptor d) {
@@ -223,7 +226,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
         result.add(new Object[]{"invalidWrapperType", "Invalid option type \"echo\". Valid option types:"});
         result.add(new Object[]{"invalidStageWrapperType", "Invalid option type \"echo\". Valid option types:"});
 
-        result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", legalAgentTypes)});
+        result.add(new Object[]{"unknownBareAgentType", Messages.ModelValidatorImpl_InvalidAgentType("foo", "[any, label, none, otherField]")});
         result.add(new Object[]{"agentMissingRequiredParam", Messages.ModelValidatorImpl_MultipleAgentParameters("otherField", "[label, otherField]")});
         result.add(new Object[]{"agentUnknownParamForType", Messages.ModelValidatorImpl_InvalidAgentParameter("fruit", "otherField", "[label, otherField, nested]")});
         result.add(new Object[]{"notificationsSectionRemoved", "object instance has properties which are not allowed by the schema"});
