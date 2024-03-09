@@ -36,14 +36,11 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import hudson.BulkChange
 import hudson.ExtensionList
 import hudson.model.*
-import hudson.util.Secret
 import hudson.triggers.Trigger
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.DisableRestartFromStageAction
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.JSONParser
-
-import java.util.function.Function
 import jenkins.model.Jenkins
 import org.apache.commons.codec.digest.DigestUtils
 import org.codehaus.groovy.ast.ASTNode
@@ -68,7 +65,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.QuietPeriod
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted
 import org.jenkinsci.plugins.structs.SymbolLookup
-import org.jenkinsci.plugins.structs.describable.DescribableModel
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable
 import org.jenkinsci.plugins.workflow.actions.LabelAction
 import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction
@@ -227,7 +223,7 @@ class Utils {
         }
     }
 
-    static List<FlowNode> findStageFlowNodes(String stageName, FlowExecution execution = null) {
+    static List<FlowNode> findStageFlowNodes(String stageName, FlowNode head, FlowExecution execution = null) {
         if (execution == null) {
             CpsThread thread = CpsThread.current()
             execution = thread.execution
@@ -235,9 +231,7 @@ class Utils {
 
         List<FlowNode> nodes = []
 
-        ForkScanner scanner = new ForkScanner()
-
-        FlowNode stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
+        FlowNode stage = scanForStageFlowNode(head, execution, stageName)
 
         if (stage != null) {
             nodes.add(stage)
@@ -254,6 +248,33 @@ class Utils {
         }
 
         return nodes
+    }
+
+    private static FlowNode scanForStageFlowNode(FlowNode parentFlowNode, FlowExecution execution, String stageName) {
+        ForkScanner scanner = new ForkScanner()
+
+        FlowNode stage = null
+        if (parentFlowNode != null) {
+            // find potential heads stopping when parent reached
+            def result = scanner.filteredNodes(execution.currentHeads, [parentFlowNode], CommonUtils.isStageWithOptionalName(stageName))
+
+            result.find {
+                // work back to parent and make sure head is parented to the stage
+                def match = scanner.findFirstMatch(it, { flowNode -> flowNode.getId() == parentFlowNode.getId() })
+                if (match != null) {
+                    stage = it
+                    return true
+                }
+                return false
+            }
+        } else {
+            stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
+        }
+        stage
+    }
+
+    static List<FlowNode> findStageFlowNodes(String stageName, FlowExecution execution = null) {
+        return findStageFlowNodes(stageName, null, execution)
     }
 
     /**
@@ -308,8 +329,19 @@ class Utils {
         }
     }
 
-    static void markStageWithTag(String stageName, String tagName, String tagValue) {
-        List<FlowNode> matched = findStageFlowNodes(stageName)
+    static void markStageWithTag(String stageName, String parentStageName, String tagName, String tagValue) {
+        if (parentStageName != null) {
+            findStageFlowNodes(parentStageName).each { currentNode ->
+                markStageWithTag(stageName, currentNode, tagName, tagValue)
+            }
+        } else {
+            markStageWithTag(stageName, tagName, tagValue)
+        }
+
+    }
+
+    static void markStageWithTag(String stageName, FlowNode head, String tagName, String tagValue) {
+        List<FlowNode> matched = findStageFlowNodes(stageName, head)
 
         matched.each { currentNode ->
             if (currentNode != null) {
@@ -324,6 +356,10 @@ class Utils {
                 }
             }
         }
+    }
+
+    static void markStageWithTag(String stageName, String tagName, String tagValue) {
+        markStageWithTag(stageName, (FlowNode) null, tagName, tagValue)
     }
 
     static void markStartAndEndNodesInStageAsNotExecuted(String stageName, FlowExecution execution = null) {
