@@ -332,7 +332,7 @@ class Utils {
 
     }
 
-    private static void markStageWithTag(String stageName, FlowNode parentStageFlowNode, String tagName, String tagValue) {
+    static void markStageWithTag(String stageName, FlowNode parentStageFlowNode, String tagName, String tagValue) {
         List<FlowNode> matched = findStageFlowNodes(stageName, null, parentStageFlowNode)
 
         matched.each { currentNode ->
