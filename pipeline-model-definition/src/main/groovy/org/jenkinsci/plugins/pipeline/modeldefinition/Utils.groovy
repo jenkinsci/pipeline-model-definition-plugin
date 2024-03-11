@@ -251,20 +251,18 @@ class Utils {
     }
 
     private static FlowNode scanForStageFlowNode(FlowNode parentFlowNode, FlowExecution execution, String stageName) {
-        DepthFirstScanner scanner = new DepthFirstScanner()
-
         FlowNode stage
         if (parentFlowNode != null) {
             // find potential heads stopping when parent reached
-            def result = scanner.filteredNodes(execution.currentHeads, [parentFlowNode], CommonUtils.isStageWithOptionalName(stageName))
+            def result = new DepthFirstScanner().filteredNodes(execution.currentHeads, [parentFlowNode], CommonUtils.isStageWithOptionalName(stageName))
 
             stage = result.find {
                 // work back to parent and make sure head is parented to the stage
-                def match = scanner.findFirstMatch(it, { flowNode -> flowNode.getId() == parentFlowNode.getId() })
+                def match = new DepthFirstScanner().findFirstMatch(it, { flowNode -> flowNode.getId() == parentFlowNode.getId() })
                 return match != null
             }
         } else {
-            stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
+            stage = new DepthFirstScanner().findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
         }
         stage
     }
