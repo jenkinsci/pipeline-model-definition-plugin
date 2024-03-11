@@ -314,30 +314,16 @@ class Utils {
 
         def stepContextFlowNode = execution.getNode(stepContextFlowNodeId)
 
-        List<FlowNode> nodes = []
-
-        FlowNode stage = (FlowNode) stepContextFlowNode.iterateEnclosingBlocks().find { blockStartNode ->
-            CommonUtils.isStageWithOptionalName(stageName).test(blockStartNode)
-        }
-
-        if (stage != null) {
-            nodes.add(stage)
-
-            // Additional check needed to get the possible enclosing parallel branch for a nested stage.
-            Filterator<FlowNode> filtered = FlowScanningUtils.fetchEnclosingBlocks(stage)
-                    .filter(isParallelBranchFlowNode(stageName))
-
-            filtered.each { f ->
-                if (f != null) {
-                    nodes.add(f)
-                }
+        int count = 0
+        for (FlowNode node : stepContextFlowNode.iterateEnclosingBlocks()) {
+            if (CommonUtils.isStageWithOptionalName(stageName).test(node) || isParallelBranchFlowNode(stageName).apply(node)) {
+                addTagToFlowNode(node, tagName, tagValue)
+                count++
+            }
+            if (count == 2) {
+                break
             }
         }
-
-        nodes.each { currentNode ->
-            addTagToFlowNode(currentNode, tagName, tagValue)
-        }
-
     }
 
     private static void addTagToFlowNode(FlowNode currentNode, String tagName, String tagValue) {
