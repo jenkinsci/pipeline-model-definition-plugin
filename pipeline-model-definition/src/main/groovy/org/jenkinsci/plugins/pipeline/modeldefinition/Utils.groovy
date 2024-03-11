@@ -223,7 +223,7 @@ class Utils {
         }
     }
 
-    static List<FlowNode> findStageFlowNodes(String stageName, FlowNode head, FlowExecution execution = null) {
+    static List<FlowNode> findStageFlowNodes(String stageName, FlowExecution execution = null, FlowNode parentStageFlowNode = null) {
         if (execution == null) {
             CpsThread thread = CpsThread.current()
             execution = thread.execution
@@ -231,7 +231,7 @@ class Utils {
 
         List<FlowNode> nodes = []
 
-        FlowNode stage = scanForStageFlowNode(head, execution, stageName)
+        FlowNode stage = scanForStageFlowNode(parentStageFlowNode, execution, stageName)
 
         if (stage != null) {
             nodes.add(stage)
@@ -251,9 +251,9 @@ class Utils {
     }
 
     private static FlowNode scanForStageFlowNode(FlowNode parentFlowNode, FlowExecution execution, String stageName) {
-        ForkScanner scanner = new ForkScanner()
+        DepthFirstScanner scanner = new DepthFirstScanner()
 
-        FlowNode stage = null
+        FlowNode stage
         if (parentFlowNode != null) {
             // find potential heads stopping when parent reached
             def result = scanner.filteredNodes(execution.currentHeads, [parentFlowNode], CommonUtils.isStageWithOptionalName(stageName))
@@ -267,10 +267,6 @@ class Utils {
             stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
         }
         stage
-    }
-
-    static List<FlowNode> findStageFlowNodes(String stageName, FlowExecution execution = null) {
-        return findStageFlowNodes(stageName, null, execution)
     }
 
     /**
@@ -331,13 +327,13 @@ class Utils {
                 markStageWithTag(stageName, currentNode, tagName, tagValue)
             }
         } else {
-            markStageWithTag(stageName, tagName, tagValue)
+            markStageWithTag(stageName, (FlowNode) null, tagName, tagValue)
         }
 
     }
 
-    static void markStageWithTag(String stageName, FlowNode head, String tagName, String tagValue) {
-        List<FlowNode> matched = findStageFlowNodes(stageName, head)
+    static void markStageWithTag(String stageName, FlowNode parentStageFlowNode, String tagName, String tagValue) {
+        List<FlowNode> matched = findStageFlowNodes(stageName, null, parentStageFlowNode)
 
         matched.each { currentNode ->
             if (currentNode != null) {
@@ -354,6 +350,7 @@ class Utils {
         }
     }
 
+    @Deprecated
     static void markStageWithTag(String stageName, String tagName, String tagValue) {
         markStageWithTag(stageName, (FlowNode) null, tagName, tagValue)
     }
@@ -415,23 +412,23 @@ class Utils {
 
     @Restricted(NoExternalUse.class)
     static void markStageFailedAndContinued(String stageName) {
-        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().failedAndContinued)
+        markStageWithTag(stageName, (FlowNode) null, getStageStatusMetadata().tagName, getStageStatusMetadata().failedAndContinued)
     }
 
     @Restricted(NoExternalUse.class)
     static void markStageSkippedForFailure(String stageName) {
-        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
+        markStageWithTag(stageName, (FlowNode) null, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
     @Restricted(NoExternalUse.class)
     static void markStageSkippedForUnstable(String stageName) {
-        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
+        markStageWithTag(stageName, (FlowNode) null, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForFailure)
     }
 
     @Whitelisted
     @Restricted(NoExternalUse.class)
     static void markStageSkippedForConditional(String stageName) {
-        markStageWithTag(stageName, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
+        markStageWithTag(stageName, (FlowNode) null, getStageStatusMetadata().tagName, getStageStatusMetadata().skippedForConditional)
     }
 
     /**
