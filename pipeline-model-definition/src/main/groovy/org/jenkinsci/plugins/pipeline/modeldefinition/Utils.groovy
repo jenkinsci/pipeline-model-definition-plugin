@@ -258,14 +258,10 @@ class Utils {
             // find potential heads stopping when parent reached
             def result = scanner.filteredNodes(execution.currentHeads, [parentFlowNode], CommonUtils.isStageWithOptionalName(stageName))
 
-            result.find {
+            stage = result.find {
                 // work back to parent and make sure head is parented to the stage
                 def match = scanner.findFirstMatch(it, { flowNode -> flowNode.getId() == parentFlowNode.getId() })
-                if (match != null) {
-                    stage = it
-                    return true
-                }
-                return false
+                return match != null
             }
         } else {
             stage = scanner.findFirstMatch(execution.currentHeads, null, CommonUtils.isStageWithOptionalName(stageName))
