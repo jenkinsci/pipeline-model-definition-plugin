@@ -256,9 +256,11 @@ class Utils {
             // find potential heads stopping when parent reached
             def result = new DepthFirstScanner().filteredNodes(execution.currentHeads, [parentFlowNode], CommonUtils.isStageWithOptionalName(stageName))
 
-            stage = result.find {
+            stage = result.find { potentialHead ->
                 // work back to parent and make sure head is parented to the stage
-                def match = new DepthFirstScanner().findFirstMatch(it, { flowNode -> flowNode.getId() == parentFlowNode.getId() })
+                def match = potentialHead.iterateEnclosingBlocks().find { blockStartNode ->
+                    blockStartNode.getId() == parentFlowNode.getId()
+                }
                 return match != null
             }
         } else {
