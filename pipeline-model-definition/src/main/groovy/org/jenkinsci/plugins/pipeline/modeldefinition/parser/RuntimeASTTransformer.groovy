@@ -61,7 +61,6 @@ import java.util.stream.Collectors
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils.*
-import static org.objectweb.asm.Opcodes.ACC_PUBLIC
 
 /**
  * Transforms a given {@link ModelASTPipelineDef} into the {@link Root} used for actual runtime. Also attaches a
@@ -1120,6 +1119,8 @@ public class RuntimeASTTransformer {
      *      This is less effective, but still an improvement.
      */
     static final class Wrapper {
+        private static final int ACC_PUBLIC = 1
+
         private final SourceUnit sourceUnit
         private final ModuleNode moduleNode
         private final Set<String> nameSet = new HashSet<>()
