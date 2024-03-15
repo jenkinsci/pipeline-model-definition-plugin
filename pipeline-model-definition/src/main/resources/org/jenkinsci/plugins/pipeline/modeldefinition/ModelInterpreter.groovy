@@ -214,7 +214,7 @@ class ModelInterpreter implements Serializable {
                     evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null))
             }
         }
-        if (!parallelStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast") != null) ) {
+        if (!parallelStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast")?.isParallelsAlwaysFailFast()) ) {
             parallelStages.put("failFast", true)
         }
 
