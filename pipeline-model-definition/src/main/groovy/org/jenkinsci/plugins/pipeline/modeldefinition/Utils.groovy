@@ -308,21 +308,43 @@ class Utils {
         }
     }
 
+    static void markStageWithTag(String stageName, String stepContextFlowNodeId, String tagName, String tagValue) {
+        CpsThread thread = CpsThread.current()
+        FlowExecution execution = thread.execution
+
+        def stepContextFlowNode = execution.getNode(stepContextFlowNodeId)
+
+        int count = 0
+        for (FlowNode node : stepContextFlowNode.iterateEnclosingBlocks()) {
+            if (CommonUtils.isStageWithOptionalName(stageName).test(node) || isParallelBranchFlowNode(stageName).apply(node)) {
+                addTagToFlowNode(node, tagName, tagValue)
+                count++
+            }
+            if (count == 2) {
+                break
+            }
+        }
+    }
+
+    private static void addTagToFlowNode(FlowNode currentNode, String tagName, String tagValue) {
+        if (currentNode != null) {
+            TagsAction tagsAction = currentNode.getAction(TagsAction.class)
+            if (tagsAction == null) {
+                tagsAction = new TagsAction()
+                tagsAction.addTag(tagName, tagValue)
+                currentNode.addAction(tagsAction)
+            } else if (tagsAction.getTagValue(tagName) == null) {
+                tagsAction.addTag(tagName, tagValue)
+                currentNode.save()
+            }
+        }
+    }
+
     static void markStageWithTag(String stageName, String tagName, String tagValue) {
         List<FlowNode> matched = findStageFlowNodes(stageName)
 
         matched.each { currentNode ->
-            if (currentNode != null) {
-                TagsAction tagsAction = currentNode.getAction(TagsAction.class)
-                if (tagsAction == null) {
-                    tagsAction = new TagsAction()
-                    tagsAction.addTag(tagName, tagValue)
-                    currentNode.addAction(tagsAction)
-                } else if (tagsAction.getTagValue(tagName) == null) {
-                    tagsAction.addTag(tagName, tagValue)
-                    currentNode.save()
-                }
-            }
+            addTagToFlowNode(currentNode, tagName, tagValue)
         }
     }
 

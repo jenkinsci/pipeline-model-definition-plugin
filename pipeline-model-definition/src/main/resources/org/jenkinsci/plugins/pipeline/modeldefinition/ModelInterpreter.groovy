@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
@@ -222,6 +223,11 @@ class ModelInterpreter implements Serializable {
 
     }
 
+    @NonCPS
+    private String getFlowNodeId() {
+        return script.getContext(FlowNode.class).getId()
+    }
+
     /**
      * Evaluate a stage, setting up agent, tools, env, etc, determining any nested stages to execute, skipping
      * if appropriate, etc, actually executing the stage via executeSingleStage, parallel, or evaluateSequentialStages.
@@ -238,15 +244,16 @@ class ModelInterpreter implements Serializable {
                       SkippedStageReason skippedReason) {
         return {
             script.stage(thisStage.name) {
+                def flowNodeId = getFlowNodeId()
                 try {
                     if (skippedReason != null) {
-                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
                     } else if (firstError != null) {
                         skippedReason = new SkippedStageReason.Failure(thisStage.name)
-                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
                     } else if (skipUnstable(root.options)) {
                         skippedReason = new SkippedStageReason.Unstable(thisStage.name)
-                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
                     } else {
                         // if this a is a matrix generated stage, evaluate the matrix axis values first
                         // These are literals that guaranteed not to depend on other variables
@@ -300,7 +307,7 @@ class ModelInterpreter implements Serializable {
                             }
                             if (!whenEvaluator.passed) {
                                 skippedReason = new SkippedStageReason.When(thisStage.name)
-                                skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                                skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
                             }
                         }
                     }
@@ -359,10 +366,10 @@ class ModelInterpreter implements Serializable {
     }
 
     def skipStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason reason,
-                  Stage parentStage) {
+                  Stage parentStage, String stepContextFlowNodeId) {
         return {
             Utils.logToTaskListener(reason.message)
-            Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
+            Utils.markStageWithTag(thisStage.name, stepContextFlowNodeId, StageStatus.TAG_NAME, reason.stageStatus)
             if (thisStage?.parallel != null) {
                 Map<String, Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
                 script.parallel(parallelToSkip)
