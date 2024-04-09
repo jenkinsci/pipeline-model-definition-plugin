@@ -244,16 +244,15 @@ class ModelInterpreter implements Serializable {
                       SkippedStageReason skippedReason) {
         return {
             script.stage(thisStage.name) {
-                def flowNodeId = getFlowNodeId()
                 try {
                     if (skippedReason != null) {
-                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else if (firstError != null) {
                         skippedReason = new SkippedStageReason.Failure(thisStage.name)
-                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else if (skipUnstable(root.options)) {
                         skippedReason = new SkippedStageReason.Unstable(thisStage.name)
-                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                     } else {
                         // if this a is a matrix generated stage, evaluate the matrix axis values first
                         // These are literals that guaranteed not to depend on other variables
@@ -307,7 +306,7 @@ class ModelInterpreter implements Serializable {
                             }
                             if (!whenEvaluator.passed) {
                                 skippedReason = new SkippedStageReason.When(thisStage.name)
-                                skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent, flowNodeId).call()
+                                skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
                             }
                         }
                     }
@@ -366,9 +365,10 @@ class ModelInterpreter implements Serializable {
     }
 
     def skipStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason reason,
-                  Stage parentStage, String stepContextFlowNodeId) {
+                  Stage parentStage) {
         return {
             Utils.logToTaskListener(reason.message)
+            def stepContextFlowNodeId = getFlowNodeId();
             Utils.markStageWithTag(thisStage.name, stepContextFlowNodeId, StageStatus.TAG_NAME, reason.stageStatus)
             if (thisStage?.parallel != null) {
                 Map<String, Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
