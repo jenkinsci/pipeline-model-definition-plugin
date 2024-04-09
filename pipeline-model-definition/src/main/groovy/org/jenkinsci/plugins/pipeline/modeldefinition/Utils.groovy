@@ -312,17 +312,24 @@ class Utils {
         CpsThread thread = CpsThread.current()
         FlowExecution execution = thread.execution
 
-        def stepContextFlowNode = execution.getNode(stepContextFlowNodeId)
+        try {
+            def stepContextFlowNode = execution.getNode(stepContextFlowNodeId)
+            if (stepContextFlowNode == null) {
+                return;
+            }
 
-        int count = 0
-        for (FlowNode node : stepContextFlowNode.iterateEnclosingBlocks()) {
-            if (CommonUtils.isStageWithOptionalName(stageName).test(node) || isParallelBranchFlowNode(stageName).apply(node)) {
-                addTagToFlowNode(node, tagName, tagValue)
-                count++
+            int count = 0
+            for (FlowNode node : stepContextFlowNode.iterateEnclosingBlocks()) {
+                if (CommonUtils.isStageWithOptionalName(stageName).test(node) || isParallelBranchFlowNode(stageName).apply(node)) {
+                    addTagToFlowNode(node, tagName, tagValue)
+                    count++
+                }
+                if (count == 2) {
+                    break
+                }
             }
-            if (count == 2) {
-                break
-            }
+        } catch (IOException e) {
+            // Ignore.
         }
     }
 
