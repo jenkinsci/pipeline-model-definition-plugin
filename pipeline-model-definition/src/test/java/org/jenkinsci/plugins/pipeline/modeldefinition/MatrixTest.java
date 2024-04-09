@@ -237,7 +237,13 @@ public class MatrixTest extends AbstractModelDefTest {
                 .go();
 
         DepthFirstScanner scanner = new DepthFirstScanner();
-        List<FlowNode> currentHeads = scanner.filteredNodes(run.getExecution(), (node) -> node.getAction(TagsAction.class) != null);
+        List<FlowNode> currentHeads = scanner.filteredNodes(run.getExecution(), (node) -> {
+            TagsAction action = node.getAction(TagsAction.class);
+            if (action != null) {
+                return "SKIPPED_FOR_CONDITIONAL".equals(action.getTagValue(StageStatus.TAG_NAME));
+            }
+            return false;
+        });
 
         assertThat(currentHeads, hasSize(2));
     }
