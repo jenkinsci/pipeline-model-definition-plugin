@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional
 import org.jenkinsci.plugins.workflow.cps.CpsScript
+import org.jenkinsci.plugins.workflow.graph.FlowNode
 import org.jenkinsci.plugins.workflow.job.WorkflowRun
 import org.jenkinsci.plugins.workflow.steps.MissingContextVariableException
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
@@ -222,6 +223,11 @@ class ModelInterpreter implements Serializable {
 
     }
 
+    @NonCPS
+    private String getFlowNodeId() {
+        return script.getContext(FlowNode.class).getId()
+    }
+
     /**
      * Evaluate a stage, setting up agent, tools, env, etc, determining any nested stages to execute, skipping
      * if appropriate, etc, actually executing the stage via executeSingleStage, parallel, or evaluateSequentialStages.
@@ -362,7 +368,8 @@ class ModelInterpreter implements Serializable {
                   Stage parentStage) {
         return {
             Utils.logToTaskListener(reason.message)
-            Utils.markStageWithTag(thisStage.name, StageStatus.TAG_NAME, reason.stageStatus)
+            def stepContextFlowNodeId = getFlowNodeId();
+            Utils.markStageWithTag(thisStage.name, stepContextFlowNodeId, StageStatus.TAG_NAME, reason.stageStatus)
             if (thisStage?.parallel != null) {
                 Map<String, Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
                 script.parallel(parallelToSkip)

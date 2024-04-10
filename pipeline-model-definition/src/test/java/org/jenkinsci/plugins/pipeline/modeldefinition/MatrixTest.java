@@ -53,6 +53,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 
 /**
@@ -227,6 +229,23 @@ public class MatrixTest extends AbstractModelDefTest {
                         "{ (Branch: Matrix - OS_VALUE = 'windows', BROWSER_VALUE = 'safari')",
                         "{ (Branch: Matrix - OS_VALUE = 'mac', BROWSER_VALUE = 'safari')")
                 .go();
+    }
+
+    @Test
+    public void matrixPipelineMultipleWhenSkipped() throws Exception {
+        WorkflowRun run = expect("matrix/matrixStagesHaveStatusWhenMultipleSkipped")
+                .go();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        List<FlowNode> currentHeads = scanner.filteredNodes(run.getExecution(), (node) -> {
+            TagsAction action = node.getAction(TagsAction.class);
+            if (action != null) {
+                return "SKIPPED_FOR_CONDITIONAL".equals(action.getTagValue(StageStatus.TAG_NAME));
+            }
+            return false;
+        });
+
+        assertThat(currentHeads, hasSize(2));
     }
 
     @Ignore("Scenario covered by matrixPipelineTwoAxisExcludeNot ")
