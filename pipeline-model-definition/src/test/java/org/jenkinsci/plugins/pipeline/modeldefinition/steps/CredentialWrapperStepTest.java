@@ -37,6 +37,8 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainCredentials;
 import com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+
+import hudson.model.FileParameterValue;
 import hudson.model.Result;
 import hudson.util.Secret;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
@@ -49,6 +51,8 @@ import org.jvnet.hudson.test.Issue;
 
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.StringContains.containsString;
+
+import java.io.File;
 
 /**
  * Tests the "fake" {@code credentials} step in {@code environment}.
@@ -115,7 +119,9 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         UsernamePasswordCredentialsImpl c = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred2Id, "sample", mixedEnvInFoldercred2U, mixedEnvInFolderCred2P);
         folderStore.addCredentials(Domain.global(), c);
 
-        CertificateCredentialsImpl certCred = new CertificateCredentialsImpl(CredentialsScope.GLOBAL, "certCred1", "sample", "test", new CertificateCredentialsImpl.FileOnMasterKeyStoreSource("/tmp/abc123"));
+        File crt = new File(CredentialWrapperStepTest.class.getResource("dummy.p12").toURI());
+        CertificateCredentialsImpl certCred = new CertificateCredentialsImpl(CredentialsScope.GLOBAL, "certCred1", "sample", "test", 
+                new CertificateCredentialsImpl.UploadedKeyStoreSource(new FileParameterValue.FileItemImpl(crt), null));
         store.addCredentials(Domain.global(), certCred);
     }
 
