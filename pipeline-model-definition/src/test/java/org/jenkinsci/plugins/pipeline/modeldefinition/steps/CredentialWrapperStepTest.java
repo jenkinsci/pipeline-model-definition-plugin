@@ -120,7 +120,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
         folderStore.addCredentials(Domain.global(), c);
 
         File crt = new File(CredentialWrapperStepTest.class.getResource("dummy.p12").toURI());
-        CertificateCredentialsImpl certCred = new CertificateCredentialsImpl(CredentialsScope.GLOBAL, "certCred1", "sample", "test", 
+        CertificateCredentialsImpl certCred = new CertificateCredentialsImpl(CredentialsScope.GLOBAL, "certCred1", "sample", "password", 
                 new CertificateCredentialsImpl.UploadedKeyStoreSource(new FileParameterValue.FileItemImpl(crt), null));
         store.addCredentials(Domain.global(), certCred);
     }
