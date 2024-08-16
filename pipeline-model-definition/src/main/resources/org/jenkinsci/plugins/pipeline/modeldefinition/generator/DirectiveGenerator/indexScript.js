@@ -10,9 +10,7 @@ Behaviour.specify(".directive-generator-button-reference-holder", 'prototype', 0
 });
 function handlePrototype(url,id) {
     buildFormTree(document.forms.config);
-    // TODO JSON.stringify fails in some circumstances: https://gist.github.com/jglick/70ec4b15c1f628fdf2e9 due to Array.prototype.toJSON
-    // TODO simplify when Prototype.js is removed
-    var json = Object.toJSON ? Object.toJSON(JSON.parse(document.forms.config.elements.json.value).prototype) : JSON.stringify(JSON.parse(document.forms.config.elements.json.value).prototype);
+    var json = JSON.stringify(JSON.parse(document.forms.config.elements.json.value).prototype);
     if (!json) {
     return; // just a separator
     }
