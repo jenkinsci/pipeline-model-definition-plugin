@@ -35,21 +35,18 @@ import static org.hamcrest.Matchers.not;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.RealJenkinsRule;
 
 public final class InternalCallsTest {
 
-    @Rule public final RealJenkinsRule rr = new RealJenkinsRule();
-//    @ClassRule public static final BuildWatcher bw = new BuildWatcher();
+    @Rule public final JenkinsRule r = new JenkinsRule();
+    @ClassRule public static final BuildWatcher bw = new BuildWatcher();
 
     @Test public void declarative() throws Throwable {
-        rr.then(InternalCallsTest::_declarative);
-    }
-
-    private static void _declarative(JenkinsRule r) throws Throwable {
         var p = r.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition("pipeline {options {quietPeriod 0}; agent any; stages {stage('x') {steps {echo(/constructing ${new hudson.EnvVars()}/)}}}}", true));
         r.assertLogContains("constructing [:]", r.buildAndAssertSuccess(p));
