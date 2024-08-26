@@ -201,7 +201,11 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>support-core</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>ant</artifactId>
@@ -241,5 +245,6 @@
 
   <properties>
     <no-test-jar>false</no-test-jar>
+    <useBeta>true</useBeta>
   </properties>
 </project>
