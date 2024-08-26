@@ -79,10 +79,11 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+      <!-- TODO until in BOM: -->
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>999999-SNAPSHOT</version>
+        <version>3950.v9dfcb_0544a_5d</version> <!-- TODO https://github.com/jenkinsci/workflow-cps-plugin/pull/929 -->
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
