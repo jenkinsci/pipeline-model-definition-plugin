@@ -444,4 +444,13 @@ public class ParallelTest extends AbstractModelDefTest {
         j.assertLogContains("Two Continues", b);
     }
 
+    @Issue("JENKINS-73726")
+    @Test
+    public void parallelErrorPost() throws Exception {
+        expect(Result.FAILURE, "parallel/parallelErrorPost")
+            .logContains("the final failure block")
+            .hasFailureCase()
+            .go();
+    }
+
 }
