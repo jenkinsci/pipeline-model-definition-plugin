@@ -83,7 +83,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
         <artifactId>workflow-cps</artifactId>
-        <version>3961.ve48ee2c44a_b_3</version>
+        <version>3975.v567e2a_1ffa_22</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
