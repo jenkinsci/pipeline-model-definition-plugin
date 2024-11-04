@@ -29,6 +29,8 @@ import hudson.model.Action;
 import hudson.model.InvisibleAction;
 import hudson.model.Queue;
 import hudson.model.Run;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
+import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowFactoryAction2;
 import org.jenkinsci.plugins.workflow.flow.FlowCopier;
@@ -82,11 +84,13 @@ public class RestartFlowFactoryAction extends InvisibleAction implements CpsFlow
             }
         }
 
-        if (origScript != null) {
-            return new CpsFlowExecution(origScript, origSandbox, owner);
-        } else {
+        if (origScript == null) {
             return null;
         }
+        if (!origSandbox) {
+            ScriptApproval.get().using(origScript, GroovyLanguage.get());
+        }
+        return new CpsFlowExecution(origScript, origSandbox, owner);
     }
 
 }

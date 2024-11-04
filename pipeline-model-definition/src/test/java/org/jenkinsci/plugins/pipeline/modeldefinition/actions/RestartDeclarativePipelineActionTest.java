@@ -50,6 +50,8 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
+import org.jenkinsci.plugins.scriptsecurity.scripts.ScriptApproval;
+import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
 import org.jenkinsci.plugins.workflow.actions.NotExecutedNodeAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -137,6 +139,44 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
             j.jenkins.setSecurityRealm(originalRealm);
             j.jenkins.setAuthorizationStrategy(originalStrategy);
         }
+    }
+
+    @Issue("SECURITY-3361")
+    @Test
+    public void restartNeedScriptApproval() throws Exception {
+            WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "SECURITY-3361");
+            String script = "pipeline {\n" +
+                    "  agent any\n" +
+                    "  stages {\n" +
+                    "    stage('List Jobs') {\n" +
+                    "      steps {\n" +
+                    "        script {\n" +
+                    "           println \"Jobs: ${jenkins.model.Jenkins.instance.getItemByFullName(env.JOB_NAME)?.parent?.items*.fullName.join(', ')}!\"" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "}\n";
+            p.setDefinition(new CpsFlowDefinition(script, false));
+
+            ScriptApproval.get().preapprove(script, GroovyLanguage.get());
+
+            WorkflowRun b1 = p.scheduleBuild2(0).waitForStart();
+            j.assertBuildStatusSuccess(j.waitForCompletion(b1));
+
+            ScriptApproval.get().clearApprovedScripts();
+
+            HtmlPage redirect = restartFromStageInUI(b1, "List Jobs");
+            assertNotNull(redirect);
+            assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
+            j.waitUntilNoActivity();
+            WorkflowRun b2 = p.getBuildByNumber(2);
+
+            assertNotNull(b2);
+            j.assertBuildStatus(Result.FAILURE ,b2);
+            j.assertLogContains("Restarted from build #1, stage List Jobs", b2);
+            j.assertLogContains("org.jenkinsci.plugins.scriptsecurity.scripts.UnapprovedUsageException: script not yet approved for use", b2);
+            j.assertLogNotContains("Jobs: SECURITY-3361", b2);
     }
 
     private static boolean canRestart(WorkflowRun b, String user) {
