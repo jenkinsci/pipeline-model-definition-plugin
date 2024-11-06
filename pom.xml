@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.86</version>
+    <version>4.88</version>
     <relativePath />
   </parent>
 
@@ -74,16 +74,10 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.426.x</artifactId>
-        <version>3023.v02a_987a_b_3ff9</version>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
+        <version>3358.vea_fa_1f41504d</version>
         <scope>import</scope>
         <type>pom</type>
-      </dependency>
-      <!-- TODO until in BOM: -->
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>3961.ve48ee2c44a_b_3</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
@@ -139,7 +133,8 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
-    <jenkins.version>2.426.3</jenkins.version>
+    <jenkins.baseline>2.440</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
   <profiles>
