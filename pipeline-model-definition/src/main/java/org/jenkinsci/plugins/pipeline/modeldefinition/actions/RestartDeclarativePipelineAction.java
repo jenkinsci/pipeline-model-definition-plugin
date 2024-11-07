@@ -38,6 +38,7 @@ import org.acegisecurity.AccessDeniedException;
 import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStage;
+import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.causes.RestartDeclarativePipelineCause;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.impl.DisableRestartFromStage;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
@@ -171,6 +172,30 @@ public class RestartDeclarativePipelineAction implements Action {
             }
         }
         return stages;
+    }
+
+    /**
+     * Returns whether a stage is restartable.
+     * @param stageName the stage name
+     * @return true is restartable, false otherwise
+     */
+    public boolean isRestartable(String stageName) {
+        FlowExecution execution = getExecution();
+        if (execution != null) {
+            ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
+            if (execAction != null) {
+                ModelASTStages stages = execAction.getStages();
+                if (stages != null) {
+                    for (ModelASTStage s : stages.getStages()) {
+                        if(s.getName().equals(stageName)) {
+                            return !Utils.stageHasStatusOf(s.getName(), execution,
+                                StageStatus.getSkippedForFailure(), StageStatus.getSkippedForUnstable());
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public String getCheckUrl() {
