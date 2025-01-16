@@ -50,15 +50,15 @@ import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
 
@@ -137,7 +137,7 @@ public class RestartDeclarativePipelineAction implements Action {
 
     @Restricted(DoNotUse.class)
     @RequirePOST
-    public void doRestart(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
+    public void doRestart(StaplerRequest2 req, StaplerResponse2 rsp) throws ServletException, IOException {
         if (!isRestartEnabled()) {
             throw new AccessDeniedException("not allowed to restart"); // AccessDeniedException2 requires us to look up the specific Permission
         }

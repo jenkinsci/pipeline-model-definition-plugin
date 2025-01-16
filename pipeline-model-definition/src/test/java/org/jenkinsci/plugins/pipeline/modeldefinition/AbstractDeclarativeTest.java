@@ -23,9 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import hudson.Launcher;
 import hudson.model.ParameterDefinition;
-import hudson.util.StreamTaskListener;
 import jenkins.plugins.git.GitSampleRepoRule;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -40,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeTrue;
 
@@ -164,19 +161,6 @@ public abstract class AbstractDeclarativeTest {
 
         sampleRepo.git("commit", "--message=files");
     }
-
-    protected void assumeSh() throws Exception {
-        Launcher.LocalLauncher localLauncher = new Launcher.LocalLauncher(StreamTaskListener.NULL);
-
-        if (!localLauncher.isUnix()) {
-            try {
-                Assume.assumeThat("Running sh command succeeds", localLauncher.launch().cmds("sh", "--version").join(), is(0));
-            } catch (IOException x) {
-                Assume.assumeNoException("Have have a shell variant (sh, bash, etc)", x);
-            }
-        }
-    }
-
 
     protected <T extends ParameterDefinition> T getParameterOfType(List<ParameterDefinition> params, Class<T> c) {
         for (ParameterDefinition p : params) {

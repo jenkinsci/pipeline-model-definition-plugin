@@ -39,6 +39,7 @@ import hudson.tasks.LogRotator;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
+import jakarta.servlet.ServletRequest;
 import jenkins.model.BuildDiscarderProperty;
 import jenkins.model.OptionalJobProperty;
 import net.sf.json.JSONArray;
@@ -650,7 +651,7 @@ public class DirectiveGeneratorTest {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new NameValuePair("json", staplerJsonForDescr(desc).toString()));
         // WebClient.addCrumb *replaces* rather than *adds*:
-        params.add(new NameValuePair(r.jenkins.getCrumbIssuer().getDescriptor().getCrumbRequestField(), r.jenkins.getCrumbIssuer().getCrumb(null)));
+        params.add(new NameValuePair(r.jenkins.getCrumbIssuer().getDescriptor().getCrumbRequestField(), r.jenkins.getCrumbIssuer().getCrumb((ServletRequest) null)));
         wrs.setRequestParameters(params);
         WebResponse response = wc.getPage(wrs).getWebResponse();
         assertEquals("text/plain", response.getContentType());

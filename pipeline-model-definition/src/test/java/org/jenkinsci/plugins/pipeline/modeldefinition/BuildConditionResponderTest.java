@@ -24,6 +24,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import org.htmlunit.html.HtmlPage;
+import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
 import jenkins.model.Jenkins;
@@ -41,6 +42,7 @@ import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * @author Andrew Bayer
@@ -273,7 +275,7 @@ public class BuildConditionResponderTest extends AbstractModelDefTest {
     @Issue("JENKINS-50652")
     @Test
     public void abortedShouldNotTriggerFailure() throws Exception {
-        assumeSh();
+        assumeFalse("requires sh/sleep", Functions.isWindows());
         WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
         job.setDefinition(new CpsFlowDefinition("" +
                 "pipeline {\n" +

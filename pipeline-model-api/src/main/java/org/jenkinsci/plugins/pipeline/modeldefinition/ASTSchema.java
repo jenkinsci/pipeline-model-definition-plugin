@@ -29,10 +29,10 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import hudson.Extension;
 import hudson.model.RootAction;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 
 /**
@@ -60,7 +60,7 @@ public class ASTSchema implements RootAction {
     }
 
     @SuppressWarnings("unused")
-    public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+    public void doJson(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
         rsp.serveFile(req, getClass().getResource("/ast-schema.json"));
     }
 

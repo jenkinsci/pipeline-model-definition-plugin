@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.Slave;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
@@ -33,6 +34,8 @@ import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Tests for {@link org.jenkinsci.plugins.pipeline.modeldefinition.model.Stage#post}
@@ -239,7 +242,7 @@ public class PostStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-52114")
     @Test
     public void abortedShouldNotTriggerFailure() throws Exception {
-        assumeSh();
+        assumeFalse("requires sh/sleep", Functions.isWindows());
         WorkflowJob job = j.jenkins.createProject(WorkflowJob.class, "abort");
         job.setDefinition(new CpsFlowDefinition("" +
                 "pipeline {\n" +

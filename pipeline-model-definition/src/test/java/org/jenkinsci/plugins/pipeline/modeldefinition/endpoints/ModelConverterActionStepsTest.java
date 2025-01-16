@@ -31,7 +31,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.io.IOException;
 import java.net.URL;
@@ -50,8 +50,8 @@ import static org.junit.Assert.assertThat;
  * Tests steps conversion in {@link ModelConverterAction}
  *
  * @author Robert Sandell &lt;rsandell@cloudbees.com&gt;.
- * @see ModelConverterAction#doStepsToJenkinsfile(StaplerRequest)
- * @see ModelConverterAction#doStepsToJson(StaplerRequest)
+ * @see ModelConverterAction#doStepsToJenkinsfile(StaplerRequest2)
+ * @see ModelConverterAction#doStepsToJson(StaplerRequest2)
  */
 public class ModelConverterActionStepsTest extends AbstractModelDefTest {
 
