@@ -48,7 +48,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.*;
@@ -75,7 +75,7 @@ public class DirectiveGenerator extends Snippetizer {
     }
 
     @Restricted(DoNotUse.class) // accessed via REST API
-    public HttpResponse doGenerateDirective(StaplerRequest req, @QueryParameter String json) throws Exception {
+    public HttpResponse doGenerateDirective(StaplerRequest2 req, @QueryParameter String json) throws Exception {
         // TODO is there not an easier way to do this? Maybe Descriptor.newInstancesFromHeteroList on a one-element JSONArray?
         JSONObject jsonO = JSONObject.fromObject(json);
         Jenkins j = Jenkins.get();

@@ -41,6 +41,7 @@ import hudson.security.AuthorizationStrategy;
 import hudson.security.SecurityRealm;
 import hudson.security.csrf.CrumbIssuer;
 import hudson.util.RunList;
+import jakarta.servlet.ServletRequest;
 import jenkins.branch.BranchSource;
 import jenkins.model.Jenkins;
 import jenkins.plugins.git.GitSCMSource;
@@ -788,7 +789,7 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
 
         CrumbIssuer crumbIssuer = j.jenkins.getCrumbIssuer();
         if(crumbIssuer != null) {
-            params.add(new NameValuePair(crumbIssuer.getDescriptor().getCrumbRequestField(), crumbIssuer.getCrumb(null)));
+            params.add(new NameValuePair(crumbIssuer.getDescriptor().getCrumbRequestField(), crumbIssuer.getCrumb((ServletRequest) null)));
         }
 
         request.setRequestParameters(params);
