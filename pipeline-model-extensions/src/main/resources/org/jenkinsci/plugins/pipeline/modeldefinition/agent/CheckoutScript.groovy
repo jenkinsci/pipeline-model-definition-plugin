@@ -30,6 +30,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 class CheckoutScript implements Serializable {
     
+    // TODO define optimized version that runs body directly rather than returning Closure
     static Closure doCheckout(CpsScript script, DeclarativeAgent agent, String customWorkspace = null, Closure body) {
         return {
             if (customWorkspace) {

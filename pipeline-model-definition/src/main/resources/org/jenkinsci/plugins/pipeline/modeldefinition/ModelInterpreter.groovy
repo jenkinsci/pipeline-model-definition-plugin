@@ -148,7 +148,7 @@ class ModelInterpreter implements Serializable {
      * @param restartedStageName the name of the stage we're restarting at. Null if this is not a restarted build or this is
      *     called from a nested stage.
      * @param skippedReason Possibly null reason the container for the stages was skipped.
-     * @return A closure to execute
+     * @return A closure to execute (TODO just run directly)
      */
     def evaluateSequentialStages(Root root, Stages stages, Throwable firstError, Stage parent, String restartedStageName,
                                  SkippedStageReason skippedReason) {
@@ -238,7 +238,7 @@ class ModelInterpreter implements Serializable {
      * @param firstError An error that's already occurred earlier in the build. Can be null.
      * @param parent The possible parent stage, defaults to null.
      * @param skippedReason Possibly null reason this stage's parent, and therefore itself, is skipped.
-     * @return
+     * @return TODO just run directly
      */
     def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parent,
                       SkippedStageReason skippedReason) {
@@ -334,36 +334,31 @@ class ModelInterpreter implements Serializable {
 
     def stageInput(StageInput input, Closure body) {
         if (input != null) {
-            return {
-                def submitted = script.input(message: input.message, id: input.id, ok: input.ok, submitter: input.submitter,
-                    submitterParameter: input.submitterParameter, parameters: input.parameters)
-                if (input.parameters.isEmpty() && input.submitterParameter == null) {
-                    // No parameters, so just proceed
-                    body.call()
-                } else {
-                    def inputEnv = []
-                    if (submitted instanceof Map) {
-                        // Multiple parameters!
-                        inputEnv = submitted.collect { k, v -> "${k}=${v}" }
-                    } else if (input.submitterParameter != null) {
-                        // Single parameter, it's the submitter.
-                        inputEnv = ["${input.submitterParameter}=${submitted}"]
-                    } else if (input.parameters.size() == 1) {
-                        // One defined parameter, so we know its name.
-                        inputEnv = ["${input.parameters.first().name}=${submitted}"]
-                    }
-                    script.withEnv(inputEnv) {
-                        body.call()
-                    }
-                }
-            }.call()
-        } else {
-            return {
+            def submitted = script.input(message: input.message, id: input.id, ok: input.ok, submitter: input.submitter,
+                submitterParameter: input.submitterParameter, parameters: input.parameters)
+            if (input.parameters.isEmpty() && input.submitterParameter == null) {
+                // No parameters, so just proceed
                 body.call()
-            }.call()
+            } else {
+                def inputEnv = []
+                if (submitted instanceof Map) {
+                    // Multiple parameters!
+                    inputEnv = submitted.collect { k, v -> "${k}=${v}" }
+                } else if (input.submitterParameter != null) {
+                    // Single parameter, it's the submitter.
+                    inputEnv = ["${input.submitterParameter}=${submitted}"]
+                } else if (input.parameters.size() == 1) {
+                    // One defined parameter, so we know its name.
+                    inputEnv = ["${input.parameters.first().name}=${submitted}"]
+                }
+                script.withEnv(inputEnv, body)
+            }
+        } else {
+            body.call()
         }
     }
 
+    // TODO just run directly rather than returning closure
     def skipStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason reason,
                   Stage parentStage) {
         return {
@@ -397,21 +392,19 @@ class ModelInterpreter implements Serializable {
      * @throws Exception
      */
     def catchRequiredContextForNode(Agent agent, Closure body) throws Exception {
-        return {
-            try {
-                body.call()
-            } catch (MissingContextVariableException e) {
-                if (FilePath.class == e.type || Launcher.class == e.type) {
-                    if (!agent.hasAgent()) {
-                        script.error(Messages.ModelInterpreter_NoNodeContext())
-                    } else {
-                        throw e
-                    }
+        try {
+            body.call()
+        } catch (MissingContextVariableException e) {
+            if (FilePath.class == e.type || Launcher.class == e.type) {
+                if (!agent.hasAgent()) {
+                    script.error(Messages.ModelInterpreter_NoNodeContext())
                 } else {
                     throw e
                 }
+            } else {
+                throw e
             }
-        }.call()
+        }
     }
 
     @Deprecated
@@ -440,15 +433,9 @@ class ModelInterpreter implements Serializable {
                     throw new IllegalArgumentException( Messages.ModelInterpreter_EnvironmentVariableFailed(k) )
                 }
             }.findAll { it != null}
-            return {
-                script.withEnv(evaledEnv) {
-                    body.call()
-                }
-            }.call()
+            script.withEnv(evaledEnv, body)
         } else {
-            return {
-                body.call()
-            }.call()
+            body.call()
         }
     }
 
@@ -478,15 +465,9 @@ class ModelInterpreter implements Serializable {
 
         if (!creds.isEmpty()) {
             List<Map<String, Object>> parameters = createWithCredentialsParameters(creds)
-            return {
-                script.withCredentials(parameters) {
-                    body.call()
-                }
-            }.call()
+            script.withCredentials(parameters, body)
         } else {
-            return {
-                body.call()
-            }.call()
+            body.call()
         }
     }
 
@@ -541,15 +522,9 @@ class ModelInterpreter implements Serializable {
                 toolEnv = actualToolsInstall(toolsList)
             }
 
-            return {
-                script.withEnv(toolEnv) {
-                    body.call()
-                }
-            }.call()
+            script.withEnv(toolEnv, body)
         } else {
-            return {
-                body.call()
-            }.call()
+            body.call()
         }
     }
 
@@ -589,18 +564,14 @@ class ModelInterpreter implements Serializable {
             }
         }
         if (agent == null) {
-            return {
-                body.call()
-            }.call()
+            body.call()
         } else {
             def declarativeAgent = agent.getDeclarativeAgent(root, context)
             if (declarativeAgent == null) {
                 script.error 'Unrecognized agent type'
                 return null
             }
-            return declarativeAgent.getScript(script).run {
-                body.call()
-            }.call()
+            return declarativeAgent.getScript(script).run(body).call()
         }
     }
 
@@ -617,13 +588,9 @@ class ModelInterpreter implements Serializable {
      */
     def inWrappers(Map<String,Object> wrappers, Closure body) {
         if (wrappers != null) {
-            return {
-                recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
-            }.call()
+            recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
         } else {
-            return {
-                body.call()
-            }.call()
+            body.call()
         }
     }
 
@@ -636,25 +603,19 @@ class ModelInterpreter implements Serializable {
      */
     def recursiveWrappers(List<String> wrapperNames, Map<String,Object> wrappers, Closure body) {
         if (wrapperNames.isEmpty()) {
-            return {
-                body.call()
-            }.call()
+            body.call()
         } else {
             def thisWrapper = wrapperNames.remove(0)
 
             def wrapperArgs = wrappers.get(thisWrapper)
             if (wrapperArgs != null) {
-                return {
-                    script."${thisWrapper}"(wrapperArgs) {
-                        recursiveWrappers(wrapperNames, wrappers, body)
-                    }
-                }.call()
+                script."${thisWrapper}"(wrapperArgs) {
+                    recursiveWrappers(wrapperNames, wrappers, body)
+                }
             } else {
-                return {
-                    script."${thisWrapper}"() {
-                        recursiveWrappers(wrapperNames, wrappers, body)
-                    }
-                }.call()
+                script."${thisWrapper}"() {
+                    recursiveWrappers(wrapperNames, wrappers, body)
+                }
             }
         }
     }

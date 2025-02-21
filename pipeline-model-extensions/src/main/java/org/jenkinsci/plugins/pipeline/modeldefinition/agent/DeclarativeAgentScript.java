@@ -34,5 +34,6 @@ public abstract class DeclarativeAgentScript<A extends DeclarativeAgent<A>> exte
         super(s, a);
     }
 
+    // TODO define optimized version that runs body directly rather than returning Closure
     public abstract Closure run(Closure body);
 }
