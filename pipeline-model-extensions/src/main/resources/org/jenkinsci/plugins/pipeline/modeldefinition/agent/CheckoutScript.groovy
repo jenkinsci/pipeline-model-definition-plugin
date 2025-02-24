@@ -35,35 +35,31 @@ class CheckoutScript implements Serializable {
         return {
             if (customWorkspace) {
                 script.ws(customWorkspace) {
-                    checkoutAndRun(script, agent, body).call()
+                    checkoutAndRun(script, agent, body)
                 }
             } else {
-                checkoutAndRun(script, agent, body).call()
+                checkoutAndRun(script, agent, body)
             }
         }
     }
     
-    private static Closure checkoutAndRun(CpsScript script, DeclarativeAgent agent, Closure body) {
-        return {
-            def checkoutMap = [:]
+    private static void checkoutAndRun(CpsScript script, DeclarativeAgent agent, Closure body) {
+        def checkoutMap = [:]
 
-            if (agent.isDoCheckout() && agent.hasScmContext(script)) {
-                String subDir = agent.subdirectory
-                if (subDir != null && subDir != "") {
-                    script.dir(subDir) {
-                        checkoutMap.putAll(performCheckout(script, agent))
-                    }
-                } else {
+        if (agent.isDoCheckout() && agent.hasScmContext(script)) {
+            String subDir = agent.subdirectory
+            if (subDir != null && subDir != "") {
+                script.dir(subDir) {
                     checkoutMap.putAll(performCheckout(script, agent))
                 }
-            }
-            if (checkoutMap) {
-                script.withEnv(checkoutMap.collect { k, v -> "${k}=${v}" }) {
-                    body.call()
-                }
             } else {
-                body.call()
+                checkoutMap.putAll(performCheckout(script, agent))
             }
+        }
+        if (checkoutMap) {
+            script.withEnv(checkoutMap.collect { k, v -> "${k}=${v}" }, body)
+        } else {
+            body.call()
         }
     }
 
