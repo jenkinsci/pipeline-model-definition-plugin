@@ -40,7 +40,7 @@ class LabelScript extends DeclarativeAgentScript<Label> {
     Closure run(Closure body) {
         Closure run = {
             script.node(describable?.label) {
-                CheckoutScript.doCheckout(script, describable, describable.customWorkspace, body).call()
+                CheckoutScript.doCheckout2(script, describable, describable.customWorkspace, body)
             }
         }
         if (describable.retries > 1) {

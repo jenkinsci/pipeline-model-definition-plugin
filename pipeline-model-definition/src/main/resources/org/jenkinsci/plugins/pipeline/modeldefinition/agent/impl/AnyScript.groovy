@@ -39,7 +39,7 @@ class AnyScript extends DeclarativeAgentScript<Any> {
     Closure run(Closure body) {
         return {
             script.node {
-                CheckoutScript.doCheckout(script, describable, null, body).call()
+                CheckoutScript.doCheckout2(script, describable, null, body)
             }
         }
     }
