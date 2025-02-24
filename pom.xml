@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.6</version>
+    <version>5.7</version>
     <relativePath />
   </parent>
 
@@ -75,7 +75,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3850.vb_c5319efa_e29</version>
+        <version>4228.v0a_71308d905b_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -134,7 +134,9 @@
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <!-- TODO until in parent -->
+    <jenkins-test-harness.version>2403.v256947ecb_c8a_</jenkins-test-harness.version>
   </properties>
 
   <profiles>
