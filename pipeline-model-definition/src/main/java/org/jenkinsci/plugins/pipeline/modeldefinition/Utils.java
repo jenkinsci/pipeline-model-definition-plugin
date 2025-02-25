@@ -336,11 +336,9 @@ public class Utils {
         }
     }
 
-    public static void markStartAndEndNodesInStageAsNotExecuted(String stageName, FlowExecution execution) throws IOException {
-        if (execution == null) {
-            CpsThread thread = CpsThread.current();
-            execution = thread.getExecution();
-        }
+    public static void markStartAndEndNodesInStageAsNotExecuted(String stageName) throws IOException {
+        CpsThread thread = CpsThread.current();
+        FlowExecution execution = thread.getExecution();
 
         List<BlockStartNode> nodes = new ArrayList<>();
 
