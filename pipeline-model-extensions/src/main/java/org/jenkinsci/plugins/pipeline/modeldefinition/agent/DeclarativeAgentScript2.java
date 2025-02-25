@@ -22,23 +22,17 @@
  * THE SOFTWARE.
  */
 
+package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
+import groovy.lang.Closure;
+import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
+import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+public abstract class DeclarativeAgentScript2<A extends DeclarativeAgent<A>> extends WithScriptScript<A> {
 
-class AnyScript extends DeclarativeAgentScript2<Any> {
-
-    AnyScript(CpsScript s, Any a) {
-        super(s, a)
+    public DeclarativeAgentScript2(CpsScript s, A a) {
+        super(s, a);
     }
 
-    @Override
-    void run(Closure body) {
-        script.node {
-            CheckoutScript.doCheckout2(script, describable, null, body)
-        }
-    }
+    public abstract void run(Closure body);
 }

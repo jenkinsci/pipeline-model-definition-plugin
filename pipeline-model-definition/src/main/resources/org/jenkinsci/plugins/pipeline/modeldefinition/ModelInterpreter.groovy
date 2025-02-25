@@ -31,6 +31,7 @@ import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -564,7 +565,12 @@ class ModelInterpreter implements Serializable {
                 script.error 'Unrecognized agent type'
                 return null
             }
-            return declarativeAgent.getScript(script).run(body).call()
+            def script = declarativeAgent.getScript(script)
+            if (script instanceof DeclarativeAgentScript2) {
+                script.run(body)
+            } else {
+                script.run(body).call()
+            }
         }
     }
 

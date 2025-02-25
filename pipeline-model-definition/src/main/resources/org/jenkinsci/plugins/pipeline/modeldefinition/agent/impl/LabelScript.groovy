@@ -27,30 +27,27 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-class LabelScript extends DeclarativeAgentScript<Label> {
+class LabelScript extends DeclarativeAgentScript2<Label> {
 
     LabelScript(CpsScript s, Label a) {
         super(s, a)
     }
 
     @Override
-    Closure run(Closure body) {
-        Closure run = {
-            script.node(describable?.label) {
-                CheckoutScript.doCheckout2(script, describable, describable.customWorkspace, body)
-            }
-        }
+    void run(Closure body) {
         if (describable.retries > 1) {
-            return {
-                script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
-                    run.call()
+            script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
+                script.node(describable?.label) {
+                    CheckoutScript.doCheckout2(script, describable, describable.customWorkspace, body)
                 }
             }
         } else {
-            run
+            script.node(describable?.label) {
+                CheckoutScript.doCheckout2(script, describable, describable.customWorkspace, body)
+            }
         }
     }
 }
