@@ -25,7 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
 class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript2<LabelAndOtherFieldAgent> {
