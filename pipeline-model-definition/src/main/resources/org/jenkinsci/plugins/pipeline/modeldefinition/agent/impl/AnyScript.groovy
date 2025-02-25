@@ -26,21 +26,19 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-class AnyScript extends DeclarativeAgentScript<Any> {
+class AnyScript extends DeclarativeAgentScript2<Any> {
 
     AnyScript(CpsScript s, Any a) {
         super(s, a)
     }
 
     @Override
-    Closure run(Closure body) {
-        return {
-            script.node {
-                CheckoutScript.doCheckout(script, describable, null, body).call()
-            }
+    void run(Closure body) {
+        script.node {
+            CheckoutScript.doCheckout2(script, describable, null, body)
         }
     }
 }
