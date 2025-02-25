@@ -909,7 +909,7 @@ public class Utils {
     private static List<JobProperty> getPropertiesToUpdate(@CheckForNull List<JobProperty> currentProperties,
                                                            @NonNull List<JobProperty> existingProperties) {
         Map<String, JobProperty> descriptorsToExistingProperties =
-                existingProperties.stream().collect(Collectors.toMap(p -> p.getDescriptor().getId(), p -> p));
+                existingProperties.stream().collect(Collectors.toMap(p -> p.getDescriptor().getId(), p -> p, (a, b) -> b));
         // Create map <DescriptorId, Count> for extract duplicated parameters
         Map<String, Integer> countMap = new HashMap<>();
         for (JobProperty property : existingProperties) {
