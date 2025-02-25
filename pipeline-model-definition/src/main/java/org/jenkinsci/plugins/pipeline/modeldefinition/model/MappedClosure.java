@@ -23,8 +23,6 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,10 +36,9 @@ import java.util.Objects;
  * @see Environment
  * @see Tools
  */
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
 public abstract class MappedClosure<O, M extends MappedClosure<O, M>> implements Serializable {
 
-    private final Map<String, O> resultMap = new HashMap<>();
+    protected Map<String, O> resultMap = new HashMap<>();
 
     public MappedClosure() {
     }
