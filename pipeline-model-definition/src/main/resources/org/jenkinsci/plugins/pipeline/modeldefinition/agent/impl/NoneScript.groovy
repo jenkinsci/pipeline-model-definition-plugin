@@ -28,14 +28,14 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-class NoneScript extends DeclarativeAgentScript<None> {
+class NoneScript extends DeclarativeAgentScript2<None> {
 
     NoneScript(CpsScript s, None a) {
         super(s, a)
     }
 
     @Override
-    Closure run(Closure body) {
-        return body
+    void run(Closure body) {
+        body.call()
     }
 }

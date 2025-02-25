@@ -28,21 +28,18 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * A type of {@code agent} option that supports automatic retries.
- * Usage from your {@link DeclarativeAgentScript#run} would look something like:
+ * Usage from your {@link DeclarativeAgentScript2#run} would look something like:
  * <pre>{@code
- * Closure run = {
- *     script.node {
- *         CheckoutScript.doCheckout(script, describable, null, body).call()
- *     }
- * }
  * if (describable.retries > 1) {
- *     return {
- *         script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
- *             run.call()
+ *     script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
+ *         script.node {
+ *             CheckoutScript.doCheckout2(script, describable, null, body)
  *         }
  *     }
  * } else {
- *     run
+ *     script.node {
+ *         CheckoutScript.doCheckout2(script, describable, null, body)
+ *     }
  * }}</pre>
  */
 public abstract class RetryableDeclarativeAgent<A extends RetryableDeclarativeAgent<A>> extends DeclarativeAgent<A> {
