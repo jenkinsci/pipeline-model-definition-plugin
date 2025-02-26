@@ -225,7 +225,7 @@ public class Utils {
 
             // Additional check needed to get the possible enclosing parallel branch for a nested stage.
             Filterator<FlowNode> filtered = FlowScanningUtils.fetchEnclosingBlocks(stage)
-                    .filter(isParallelBranchFlowNode(stageName));
+                .filter(isParallelBranchFlowNode(stageName));
 
             filtered.forEachRemaining(f -> {
                 if (f != null) {
@@ -421,13 +421,13 @@ public class Utils {
     public static LoadingCache<Object, Map<String, String>> generateTypeCache(Class<? extends Descriptor> type, boolean includeClassNames,
                                                                               List<String> excludedSymbols, Predicate<Descriptor> filter) {
         return CacheBuilder.newBuilder()
-                .expireAfterWrite(10, TimeUnit.MINUTES)
-                .build(new CacheLoader<Object, Map<String, String>>() {
-                    @Override
-                    public Map<String, String> load(Object key) throws Exception {
-                        return populateTypeCache(type, includeClassNames, excludedSymbols, filter);
-                    }
-                });
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build(new CacheLoader<Object, Map<String, String>>() {
+            @Override
+            public Map<String, String> load(Object key) throws Exception {
+                return populateTypeCache(type, includeClassNames, excludedSymbols, filter);
+            }
+        });
     }
 
     @Restricted(NoExternalUse.class)
@@ -933,9 +933,9 @@ public class Utils {
     @NonNull
     private static List<JobProperty> getPropertiesToRemove(@CheckForNull List<JobProperty> currentProperties,
                                                            @NonNull List<JobProperty> existingProperties) {
-        Set<String> currentPropertiesDescriptors = currentProperties.stream()
+        Set<String> currentPropertiesDescriptors = currentProperties != null ? currentProperties.stream()
                 .map(p -> p.getDescriptor().getId())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toSet()) : Set.of();
         return existingProperties.stream()
                 .filter(p -> !currentPropertiesDescriptors.contains(p.getDescriptor().getId()))
                 .collect(Collectors.toList());
