@@ -169,7 +169,7 @@ class ModelInterpreter implements Serializable {
                     }
                 }
                 try {
-                    evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason)
+                    evaluateStage2(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason)
                 } catch (Throwable e) {
                     Utils.markStageFailedAndContinued(thisStage.name)
                     if (firstError == null) {
@@ -207,11 +207,11 @@ class ModelInterpreter implements Serializable {
         thisStage?.parallel?.stages?.each { content ->
             if (skippedReason != null) {
                 parallelStages.put(content.name, {
-                    evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name))
+                    evaluateStage2(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name))
                 })
             } else {
                 parallelStages.put(content.name, {
-                    evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null)
+                    evaluateStage2(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null)
                 })
             }
         }
@@ -228,6 +228,11 @@ class ModelInterpreter implements Serializable {
         return script.getContext(FlowNode.class).getId()
     }
 
+    @Deprecated
+    def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parent, SkippedStageReason skippedReason) {
+        return {evaluateStage2(root, parentAgent, thisStage, firstError, parent, skippedReason)}
+    }
+
     /**
      * Evaluate a stage, setting up agent, tools, env, etc, determining any nested stages to execute, skipping
      * if appropriate, etc, actually executing the stage via executeSingleStage, parallel, or evaluateSequentialStages.
@@ -239,7 +244,7 @@ class ModelInterpreter implements Serializable {
      * @param parent The possible parent stage, defaults to null.
      * @param skippedReason Possibly null reason this stage's parent, and therefore itself, is skipped.
      */
-    def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parent,
+    def evaluateStage2(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parent,
                       SkippedStageReason skippedReason) {
         script.stage(thisStage.name) {
             try {
