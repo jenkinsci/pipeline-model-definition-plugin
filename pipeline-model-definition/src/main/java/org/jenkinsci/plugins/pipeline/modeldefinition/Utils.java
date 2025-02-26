@@ -268,7 +268,7 @@ public class Utils {
         if (causeClass instanceof Cause.UserIdCause && Cause.UserIdCause.class.getSimpleName().equals(cause)) {
             return detail == null || ((Cause.UserIdCause) causeClass).getUserId().equals(detail);
         } else {
-            return causeClass.getClass().getSimpleName().matches("(?i).*" + cause + ".*");
+            return causeClass.getClass().getSimpleName().matches("(?i)^" + cause + ".*");
         }
     }
 
