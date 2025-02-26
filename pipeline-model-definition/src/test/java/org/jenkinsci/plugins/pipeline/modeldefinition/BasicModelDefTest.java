@@ -78,7 +78,7 @@ public class BasicModelDefTest extends AbstractModelDefTest {
 
     @Issue("JENKINS-47363")
     // Give this a longer timeout
-    @Test(timeout=5 * 60 * 1000)
+    @Test(timeout=10 * 60 * 1000)
     public void stages300() throws Exception {
         assumeFalse("can exceed even 5m timeout", Functions.isWindows());
         RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION = true;

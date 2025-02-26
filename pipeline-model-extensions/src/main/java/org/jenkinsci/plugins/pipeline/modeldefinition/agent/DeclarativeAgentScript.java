@@ -27,7 +27,7 @@ import groovy.lang.Closure;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
-
+@Deprecated
 public abstract class DeclarativeAgentScript<A extends DeclarativeAgent<A>> extends WithScriptScript<A> {
 
     public DeclarativeAgentScript(CpsScript s, A a) {

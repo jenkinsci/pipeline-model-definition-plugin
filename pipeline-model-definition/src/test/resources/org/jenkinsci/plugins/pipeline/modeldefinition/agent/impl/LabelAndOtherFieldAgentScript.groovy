@@ -25,25 +25,23 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2
 import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript<LabelAndOtherFieldAgent> {
+class LabelAndOtherFieldAgentScript extends DeclarativeAgentScript2<LabelAndOtherFieldAgent> {
 
     LabelAndOtherFieldAgentScript(CpsScript s, LabelAndOtherFieldAgent a) {
         super(s, a)
     }
 
     @Override
-    Closure run(Closure body) {
+    void run(Closure body) {
         script.echo "Running in labelAndOtherField with otherField = ${describable.getOtherField()}"
         script.echo "And nested: ${describable.getNested()}"
         Label l = (Label) Label.DescriptorImpl.instanceForName("label", [label: describable.label])
         l.inStage = describable.inStage
         l.doCheckout = describable.doCheckout
         LabelScript labelScript = (LabelScript) l.getScript(script)
-        return labelScript.run {
-            body.call()
-        }
+        labelScript.run(body)
     }
 }
