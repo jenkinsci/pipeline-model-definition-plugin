@@ -1,0 +1,6 @@
+<FindBugsFilter>
+  <Match>
+    <!-- TODO https://github.com/jenkinsci/pipeline-model-definition-plugin/pull/765#discussion_r1970688710 -->
+    <Class name="org.jenkinsci.plugins.pipeline.modeldefinition.Utils"/>
+  </Match>
+</FindBugsFilter>

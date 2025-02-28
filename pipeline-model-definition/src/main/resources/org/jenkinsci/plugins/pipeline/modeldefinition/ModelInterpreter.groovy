@@ -444,16 +444,11 @@ class ModelInterpreter implements Serializable {
         Map<String,CredentialWrapper> creds = new HashMap<>()
 
         if (environment != null) {
-            try {
-                RunWrapper currentBuild = (RunWrapper)script.getProperty("currentBuild")
-                Utils.getCredsFromResolver(environment, script).each { k, v ->
-                    String id = (String) v.call()
-                    CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild)
-                    creds.put(k, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
-                }
-            } catch (MissingMethodException e) {
-                // This will only happen in a running upgrade situation, so check the legacy approach as well.
-                creds.putAll(Utils.getLegacyEnvCredentials(environment))
+            RunWrapper currentBuild = (RunWrapper)script.getProperty("currentBuild")
+            Utils.getCredsFromResolver(environment, script).each { k, v ->
+                String id = (String) v.call()
+                CredentialsBindingHandler handler = CredentialsBindingHandler.forId(id, currentBuild.rawBuild)
+                creds.put(k, new CredentialWrapper(id, handler.getWithCredentialsParameters(id)))
             }
         }
 
