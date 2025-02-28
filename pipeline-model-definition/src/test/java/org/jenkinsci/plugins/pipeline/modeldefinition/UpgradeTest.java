@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.logging.Level;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
@@ -48,7 +49,7 @@ import org.jvnet.hudson.test.TailLog;
 
 public final class UpgradeTest {
 
-    @Rule public RealJenkinsRule rr = new RealJenkinsRule();
+    @Rule public RealJenkinsRule rr = new RealJenkinsRule().withLogger(Upgrade.class, Level.FINE);
     @Rule public InboundAgentRule iar = new InboundAgentRule();
 
     @Test public void deserLabelScript() throws Throwable {
