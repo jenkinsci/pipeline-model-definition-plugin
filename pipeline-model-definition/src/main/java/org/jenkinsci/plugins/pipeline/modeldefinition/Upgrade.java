@@ -108,7 +108,6 @@ import org.xml.sax.helpers.DefaultHandler;
     }
 
     private static boolean isOld(FlowExecutionOwner owner) throws Exception {
-        var rootDir = owner.getRootDir();
         var factory = SAXParserFactory.newDefaultInstance();
         // TODO XMLUtils does not support SAX parsing:
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -116,14 +115,15 @@ import org.xml.sax.helpers.DefaultHandler;
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
         var parser = factory.newSAXParser();
         var old = new AtomicBoolean();
-        parser.parse(new File(rootDir, "build.xml"), new DefaultHandler() {
+        var buildXml = new File(owner.getRootDir(), "build.xml");
+        parser.parse(buildXml, new DefaultHandler() {
             @Override public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
                 var plugin = attributes.getValue("plugin");
                 if (plugin != null) {
                     int at = plugin.indexOf('@');
                     if (at != -1 && plugin.substring(0, at).equals("pipeline-model-definition")) {
                         var version = new VersionNumber(plugin.substring(at + 1));
-                        LOGGER.fine(() -> "got " + version + " off " + qName);
+                        LOGGER.fine(() -> "got " + version + " off " + qName + " in " + buildXml);
                         if (version.isOlderThan(new VersionNumber("2.2234"))) {
                             old.set(true);
                         }
