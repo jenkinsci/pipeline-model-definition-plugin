@@ -74,6 +74,7 @@ import org.xml.sax.helpers.DefaultHandler;
                 url = Upgrade.class.getResource("/compat/CheckoutScript.groovy");
             } else if (filename.equals("org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.LabelScript")) {
                 url = Upgrade.class.getResource("/compat/LabelScript.groovy");
+                // TODO also AnyScript, NoneScript
             } else if (filename.equals("org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter")) {
                 url = Upgrade.class.getResource("/compat/ModelInterpreter.groovy");
             } else {
@@ -92,9 +93,8 @@ import org.xml.sax.helpers.DefaultHandler;
 
     private static boolean isOld(FlowExecutionOwner owner) throws Exception {
         var rootDir = owner.getRootDir();
-        var buildXml = rootDir.toPath().resolve("build.xml");
         var parser = SAXParserFactory.newDefaultInstance().newSAXParser();
-        // TODO disable entity includes etc.
+        // TODO disable entity includes etc. like in XMLUtils
         var old = new AtomicBoolean();
         parser.parse(new File(rootDir, "build.xml"), new DefaultHandler() {
             @Override public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
