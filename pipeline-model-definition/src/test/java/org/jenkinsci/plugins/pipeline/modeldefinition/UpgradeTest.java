@@ -49,7 +49,7 @@ import org.jvnet.hudson.test.TailLog;
 
 public final class UpgradeTest {
 
-    @Rule public RealJenkinsRule rr = new RealJenkinsRule().withLogger(Upgrade.class, Level.FINE);
+    @Rule public RealJenkinsRule rr = new RealJenkinsRule().withLogger(Upgrade.class, Level.FINER);
     @Rule public InboundAgentRule iar = new InboundAgentRule();
 
     @Test public void deserLabelScript() throws Throwable {

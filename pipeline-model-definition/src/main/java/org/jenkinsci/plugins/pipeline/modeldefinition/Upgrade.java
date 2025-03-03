@@ -26,15 +26,18 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import groovy.lang.GroovyShell;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.util.VersionNumber;
 import java.io.File;
 import java.net.URL;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.SAXParserFactory;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.CompatibilityLoader;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.GroovyShellDecorator;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
@@ -69,20 +72,16 @@ import org.xml.sax.helpers.DefaultHandler;
         var cl = shell.getClassLoader();
         var base = cl.getResourceLoader();
         cl.setResourceLoader(filename -> {
-            URL url;
-            // TODO convert into an extension point for benefit of other plugins extending DeclarativeAgentScript
-            if (filename.equals("org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript")) {
-                url = Upgrade.class.getResource("/compat/CheckoutScript.groovy");
-            } else if (filename.equals("org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.LabelScript")) {
-                url = Upgrade.class.getResource("/compat/LabelScript.groovy");
-                // TODO also AnyScript, NoneScript
-            } else if (filename.equals("org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter")) {
-                url = Upgrade.class.getResource("/compat/ModelInterpreter.groovy");
-            } else {
-                url = base.loadGroovySource(filename);
+            for (var loader : ExtensionList.lookup(CompatibilityLoader.class)) {
+                var url = loader.loadGroovySource(filename);
+                if (url != null) {
+                    LOGGER.fine(() -> "for " + context + " loading " + filename + " via " + loader + " ⇒ " + url);
+                    return url;
+                }
             }
+            var url = base.loadGroovySource(filename);
             if (url != null) {
-                LOGGER.fine(() -> "for " + context + " loading " + filename + " ⇒ " + url);
+                LOGGER.finer(() -> "for " + context + " loading " + filename + " ⇒ " + url);
             }
             return url;
         });
@@ -90,6 +89,22 @@ import org.xml.sax.helpers.DefaultHandler;
 
     @Override public GroovyShellDecorator forTrusted() {
         return this;
+    }
+
+    @Extension public static final class Loader implements CompatibilityLoader {
+        private static final Set<String> CLASSES = Set.of(
+            "org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter",
+            "org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript",
+            "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.AnyScript",
+            "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.LabelScript",
+            "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.NoneScript");
+        @Override public URL loadGroovySource(String clazz) {
+            if (CLASSES.contains(clazz)) {
+                return Upgrade.class.getResource("/compat/" + clazz.replaceFirst(".+[.]", "") + ".groovy");
+            } else {
+                return null;
+            }
+        }
     }
 
     private static boolean isOld(FlowExecutionOwner owner) throws Exception {
