@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import hudson.Functions;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
@@ -40,6 +41,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import static org.junit.Assume.assumeFalse;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.InboundAgentRule;
@@ -53,6 +55,7 @@ public final class UpgradeTest {
     @Rule public InboundAgentRule iar = new InboundAgentRule();
 
     @Test public void deserLabelScript() throws Throwable {
+        assumeFalse("TODO sh would need to be ported to bat", Functions.isWindows());
         var plugins = rr.getHome().toPath().resolve("plugins");
         Files.move(plugins.resolve("pipeline-stage-tags-metadata.jpi"), plugins.resolve("pipeline-stage-tags-metadata.jpi.orig"));
         Files.move(plugins.resolve("pipeline-model-api.jpi"), plugins.resolve("pipeline-model-api.jpi.orig"));
