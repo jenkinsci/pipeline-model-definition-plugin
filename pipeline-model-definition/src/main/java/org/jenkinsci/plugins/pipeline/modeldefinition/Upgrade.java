@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.SAXParserFactory;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
@@ -93,8 +94,12 @@ import org.xml.sax.helpers.DefaultHandler;
 
     private static boolean isOld(FlowExecutionOwner owner) throws Exception {
         var rootDir = owner.getRootDir();
-        var parser = SAXParserFactory.newDefaultInstance().newSAXParser();
-        // TODO disable entity includes etc. like in XMLUtils
+        var factory = SAXParserFactory.newDefaultInstance();
+        // TODO XMLUtils does not support SAX parsing:
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        var parser = factory.newSAXParser();
         var old = new AtomicBoolean();
         parser.parse(new File(rootDir, "build.xml"), new DefaultHandler() {
             @Override public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
