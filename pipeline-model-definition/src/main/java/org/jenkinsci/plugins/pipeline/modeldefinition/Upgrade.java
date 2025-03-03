@@ -100,7 +100,7 @@ import org.xml.sax.helpers.DefaultHandler;
             "org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl.NoneScript");
         @Override public URL loadGroovySource(String clazz) {
             if (CLASSES.contains(clazz)) {
-                return Upgrade.class.getResource("/compat/" + clazz.replaceFirst(".+[.]", "") + ".groovy");
+                return Upgrade.class.getResource("compat/" + clazz.replaceFirst(".+[.]", "") + ".groovy");
             } else {
                 return null;
             }
