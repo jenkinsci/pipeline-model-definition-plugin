@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.jenkinsci.plugins.pipeline.modeldefinition.model
+package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import groovy.transform.EqualsAndHashCode
-import groovy.transform.ToString
-
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * Helper class for translating from a closure to a map.
@@ -36,33 +36,50 @@ import groovy.transform.ToString
  * @see Environment
  * @see Tools
  */
-@ToString
-@EqualsAndHashCode
-@SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-abstract class MappedClosure<O,M extends MappedClosure<O,M>> implements Serializable {
+public abstract class MappedClosure<O, M extends MappedClosure<O, M>> implements Serializable {
 
-    Map<String,O> resultMap = [:]
+    protected Map<String, O> resultMap = new HashMap<>();
 
-    MappedClosure() {
+    public MappedClosure() {
     }
 
-    MappedClosure(Map<String,O> inMap) {
-        this.resultMap.putAll(inMap)
+    public MappedClosure(Map<String, O> inMap) {
+        this.resultMap.putAll(inMap);
     }
 
-    O remove(String p) {
-        return resultMap.remove(p)
+    public O remove(String p) {
+        return resultMap.remove(p);
     }
 
-    void put(String k, O v) {
-        resultMap.put(k, v)
+    public void put(String k, O v) {
+        resultMap.put(k, v);
     }
 
-    Map<String, Object> getMap() {
-        def mapCopy = [:]
-        mapCopy.putAll(resultMap)
-        return mapCopy
+    public Map<String, Object> getMap() {
+        Map<String, Object> mapCopy = new HashMap<>();
+        mapCopy.putAll(resultMap);
+        return mapCopy;
     }
 
-    static final int serialVersionUID = 1L
+    @Override
+    public String toString() {
+        return "MappedClosure{" +
+                "resultMap=" + resultMap +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MappedClosure<?, ?> that = (MappedClosure<?, ?>) o;
+        return Objects.equals(resultMap, that.resultMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(resultMap);
+    }
+
+    private static final long serialVersionUID = 1L;
 }
