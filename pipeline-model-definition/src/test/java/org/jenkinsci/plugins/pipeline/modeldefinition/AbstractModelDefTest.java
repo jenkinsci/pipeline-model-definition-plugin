@@ -330,10 +330,10 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
 
     private WorkflowJob createWorkflowJob(Folder folder, String projectName) throws IOException {
         if (folder == null) {
-            return j.createProject(WorkflowJob.class);
+            return j.createProject(WorkflowJob.class, "p" + (Jenkins.get().getItems().size() + 1));
         } else {
             if (projectName == null) {
-                projectName = "test" + (folder.getItems().size() + 1);
+                projectName = "p" + (folder.getItems().size() + 1);
             }
             return folder.createProject(WorkflowJob.class, projectName);
         }

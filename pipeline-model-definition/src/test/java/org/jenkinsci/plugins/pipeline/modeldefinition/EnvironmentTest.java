@@ -187,7 +187,7 @@ public class EnvironmentTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (foo)",
                         "FOO is FOO",
                         "BAZ is FOOBAZ")
-                .logMatches("BAR is .*?workspace" + Pattern.quote(File.separator) + "test\\d+BAR")
+                .logMatches("BAR is .*?workspace" + Pattern.quote(File.separator) + "p\\d+BAR")
                 .go();
     }
 

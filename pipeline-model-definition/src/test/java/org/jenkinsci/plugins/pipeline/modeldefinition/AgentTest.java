@@ -31,6 +31,7 @@ import hudson.model.queue.CauseOfBlockage;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import java.io.File;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -189,7 +190,7 @@ public class AgentTest extends AbstractModelDefTest {
     @Test
     public void retryAny() throws Exception {
         Slave dumbo = inboundAgents.createAgent(j, "dumbo");
-        WorkflowJob p = j.createProject(WorkflowJob.class);
+        WorkflowJob p = j.createProject(WorkflowJob.class, "p" + (Jenkins.get().getItems().size() + 1));
         // TODO convert to expect…go idiom (but need to figure out how to insert logic into middle of build)
         // Due to the way DeclarativeAgentDescriptor.zeroArgModels defines syntax, we cannot offer retries on actual agent any.
         // However it is legal to simply specify no label!
@@ -229,7 +230,7 @@ public class AgentTest extends AbstractModelDefTest {
     public void retryLabel() throws Exception {
         Slave dumbo = inboundAgents.createAgent(j, "dumbo1");
         dumbo.setLabelString("dumb");
-        WorkflowJob p = j.createProject(WorkflowJob.class);
+        WorkflowJob p = j.createProject(WorkflowJob.class, "p" + (Jenkins.get().getItems().size() + 1));
         // TODO convert to expect…go idiom as above
         p.setDefinition(new CpsFlowDefinition("pipeline {agent {node {label 'dumb'; retries 2}}; stages {stage('main') {steps {script {if (isUnix()) {sh 'sleep 10'} else {bat 'echo + sleep && ping -n 10 localhost'}}}}}}", true));
         WorkflowRun b = p.scheduleBuild2(0).waitForStart();
