@@ -1,0 +1,13 @@
+<!-- TODO pending #765 etc., NoteSuppressedWarnings apparently gets confused by Groovy sources -->
+<FindBugsFilter>
+    <Match>
+        <Or>
+            <Class name="org.jenkinsci.plugins.pipeline.modeldefinition.Utils"/>
+            <Class name="org.jenkinsci.plugins.pipeline.modeldefinition.model.MappedClosure"/>
+            <Class name="org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter"/>
+            <Class name="org.jenkinsci.plugins.pipeline.modeldefinition.parser.ModelParser"/>
+            <Class name="org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer"/>
+            <Class name="org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidatorImpl"/>
+        </Or>
+    </Match>
+</FindBugsFilter>

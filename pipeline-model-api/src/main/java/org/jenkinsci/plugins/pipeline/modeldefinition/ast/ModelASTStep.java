@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import net.sf.json.JSONObject;
@@ -21,7 +20,6 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class ModelASTStep extends ModelASTElement {
     /**
      * @deprecated since 1.2-beta-4
