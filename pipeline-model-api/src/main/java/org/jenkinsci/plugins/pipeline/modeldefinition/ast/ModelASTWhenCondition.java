@@ -24,7 +24,6 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -35,7 +34,6 @@ import java.util.List;
 /**
  * @author Andrew Bayer
  */
-@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class ModelASTWhenCondition extends ModelASTElement implements ModelASTWhenContent {
     private String name;
     private ModelASTArgumentList args;
