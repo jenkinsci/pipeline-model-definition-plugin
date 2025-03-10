@@ -61,6 +61,49 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>old-releases</id>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <phase>generate-test-resources</phase>
+            <configuration>
+              <outputDirectory>${project.build.testOutputDirectory}/old-releases</outputDirectory>
+              <stripVersion>true</stripVersion>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.jenkinsci.plugins</groupId>
+                  <artifactId>pipeline-stage-tags-metadata</artifactId>
+                  <version>${old-release.version}</version>
+                  <type>hpi</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.jenkinsci.plugins</groupId>
+                  <artifactId>pipeline-model-api</artifactId>
+                  <version>${old-release.version}</version>
+                  <type>hpi</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.jenkinsci.plugins</groupId>
+                  <artifactId>pipeline-model-extensions</artifactId>
+                  <version>${old-release.version}</version>
+                  <type>hpi</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.jenkinsci.plugins</groupId>
+                  <artifactId>pipeline-model-definition</artifactId>
+                  <version>${old-release.version}</version>
+                  <type>hpi</type>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -176,6 +219,12 @@
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>jenkins-test-harness-tools</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>gradle</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -246,5 +295,6 @@
   <properties>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
+    <old-release.version>2.2221.vc657003fb_d93</old-release.version>
   </properties>
 </project>

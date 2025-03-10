@@ -28,6 +28,7 @@ import hudson.ExtensionPoint;
 import java.util.Map;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.logging.Logger;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
@@ -41,6 +42,9 @@ import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
  * @author Andrew Bayer
  */
 public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
+
+    private static final Logger LOGGER = Logger.getLogger(DeclarativeAgent.class.getName());
+
     protected boolean inStage;
     protected boolean doCheckout;
     protected String subdirectory;
@@ -53,7 +57,11 @@ public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends Wi
 
         cpsScript.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript");
 
-        return super.getScript(cpsScript);
+        var script = super.getScript(cpsScript);
+        if (script instanceof DeclarativeAgentScript) {
+            LOGGER.warning(() -> script.getClass().getName() + " should implement " + DeclarativeAgentScript2.class.getName());
+        }
+        return script;
     }
 
     public void setInStage(boolean inStage) {

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2022 CloudBees, Inc.
+ * Copyright 2025 CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,37 +22,27 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
+package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
-import org.kohsuke.stapler.DataBoundSetter;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import groovy.lang.GroovyResourceLoader;
+import hudson.ExtensionPoint;
+import java.net.URL;
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
 
 /**
- * A type of {@code agent} option that supports automatic retries.
- * Usage from your {@link DeclarativeAgentScript2#run} would look something like:
- * <pre>{@code
- * if (describable.retries > 1) {
- *     script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
- *         script.node {
- *             CheckoutScript.doCheckout2(script, describable, null, body)
- *         }
- *     }
- * } else {
- *     script.node {
- *         CheckoutScript.doCheckout2(script, describable, null, body)
- *     }
- * }}</pre>
+ * Allows plugins formerly defining {@link DeclarativeAgentScript} to tolerate old builds.
  */
-public abstract class RetryableDeclarativeAgent<A extends RetryableDeclarativeAgent<A>> extends DeclarativeAgent<A> {
+@Restricted(Beta.class) // TODO deprecate for deletion cca. 2026-03 (a year after 2.2234.v4a_b_13b_8cd590)
+public interface CompatibilityLoader extends ExtensionPoint {
 
-    private int retries = 1;
-
-    public int getRetries() {
-        return retries;
-    }
-
-    @DataBoundSetter
-    public void setRetries(int retries) {
-        this.retries = retries;
-    }
+    /**
+     * @param clazz a “filename”, actually a Groovy class FQN
+     * @return a URL to a {@code *.groovy} source file, or null to use default classpath
+     * @see GroovyResourceLoader#loadGroovySource
+     */
+    @CheckForNull URL loadGroovySource(String clazz);
 
 }

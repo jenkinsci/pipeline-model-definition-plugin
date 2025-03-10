@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2022 CloudBees, Inc.
+ * Copyright (c) 2016, CloudBees, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,37 +22,20 @@
  * THE SOFTWARE.
  */
 
-package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
-import org.kohsuke.stapler.DataBoundSetter;
+package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl
 
-/**
- * A type of {@code agent} option that supports automatic retries.
- * Usage from your {@link DeclarativeAgentScript2#run} would look something like:
- * <pre>{@code
- * if (describable.retries > 1) {
- *     script.retry(count: describable.retries, conditions: [script.agent(), script.nonresumable()]) {
- *         script.node {
- *             CheckoutScript.doCheckout2(script, describable, null, body)
- *         }
- *     }
- * } else {
- *     script.node {
- *         CheckoutScript.doCheckout2(script, describable, null, body)
- *     }
- * }}</pre>
- */
-public abstract class RetryableDeclarativeAgent<A extends RetryableDeclarativeAgent<A>> extends DeclarativeAgent<A> {
+import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript
+import org.jenkinsci.plugins.workflow.cps.CpsScript
 
-    private int retries = 1;
+class NoneScript extends DeclarativeAgentScript<None> {
 
-    public int getRetries() {
-        return retries;
+    NoneScript(CpsScript s, None a) {
+        super(s, a)
     }
 
-    @DataBoundSetter
-    public void setRetries(int retries) {
-        this.retries = retries;
+    @Override
+    Closure run(Closure body) {
+        return body
     }
-
 }

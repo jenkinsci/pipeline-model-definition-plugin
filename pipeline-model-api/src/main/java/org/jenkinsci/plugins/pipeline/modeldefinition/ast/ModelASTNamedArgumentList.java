@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import net.sf.json.JSONArray;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
@@ -14,7 +13,6 @@ import java.util.Map;
  * @author Kohsuke Kawaguchi
  * @author Andrew Bayer
  */
-@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public final class ModelASTNamedArgumentList extends ModelASTArgumentList {
     private Map<ModelASTKey, ModelASTValue> arguments = new LinkedHashMap<>();
 

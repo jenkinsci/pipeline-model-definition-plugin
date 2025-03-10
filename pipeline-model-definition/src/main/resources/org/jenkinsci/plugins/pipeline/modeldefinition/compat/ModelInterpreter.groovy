@@ -31,7 +31,6 @@ import hudson.Launcher
 import hudson.model.Result
 import org.jenkinsci.plugins.pipeline.StageStatus
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript2
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.*
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption
 import org.jenkinsci.plugins.pipeline.modeldefinition.steps.CredentialWrapper
@@ -83,7 +82,7 @@ class ModelInterpreter implements Serializable {
                                 // the whole pipeline and don't want firstError to be set.
                                 firstError = null
                                 toolsBlock(root.tools, root.agent, null) {
-                                    firstError = evaluateSequentialStages(root, root.stages, firstError, null, restartedStage, null)
+                                    firstError = evaluateSequentialStages(root, root.stages, firstError, null, restartedStage, null).call()
 
                                     // Execute post-build actions now that we've finished all parallel.
                                     try {
@@ -149,47 +148,50 @@ class ModelInterpreter implements Serializable {
      * @param restartedStageName the name of the stage we're restarting at. Null if this is not a restarted build or this is
      *     called from a nested stage.
      * @param skippedReason Possibly null reason the container for the stages was skipped.
+     * @return A closure to execute
      */
     def evaluateSequentialStages(Root root, Stages stages, Throwable firstError, Stage parent, String restartedStageName,
                                  SkippedStageReason skippedReason) {
-        try {
-            boolean skippedForRestart = restartedStageName != null
-            stages.stages.each { thisStage ->
-                if (skippedForRestart) {
-                    // Check if we're skipping for restart but are now on the stage we're supposed to restart on.
-                    if (thisStage.name == restartedStageName) {
-                        // If so, set skippedForRestart to false, and if the skippedReason is for restart, wipe that out too.
-                        skippedForRestart = false
-                        if (skippedReason instanceof SkippedStageReason.Restart) {
-                            skippedReason = null
+        return {
+            try {
+                boolean skippedForRestart = restartedStageName != null
+                stages.stages.each { thisStage ->
+                    if (skippedForRestart) {
+                        // Check if we're skipping for restart but are now on the stage we're supposed to restart on.
+                        if (thisStage.name == restartedStageName) {
+                            // If so, set skippedForRestart to false, and if the skippedReason is for restart, wipe that out too.
+                            skippedForRestart = false
+                            if (skippedReason instanceof SkippedStageReason.Restart) {
+                                skippedReason = null
+                            }
+                        } else {
+                            // If we skipped for restart and this isn't the restarted name, create a new reason.
+                            skippedReason = new SkippedStageReason.Restart(thisStage.name, restartedStageName)
                         }
-                    } else {
-                        // If we skipped for restart and this isn't the restarted name, create a new reason.
-                        skippedReason = new SkippedStageReason.Restart(thisStage.name, restartedStageName)
+                    }
+                    try {
+                        evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason).call()
+                    } catch (Throwable e) {
+                        Utils.markStageFailedAndContinued(thisStage.name)
+                        if (firstError == null) {
+                            firstError = e
+                        }
+                    }
+                    if (skippedForRestart) {
+                        Utils.markStartAndEndNodesInStageAsNotExecuted(thisStage.name)
                     }
                 }
-                try {
-                    evaluateStage(root, thisStage.agent ?: root.agent, thisStage, firstError, parent, skippedReason)
-                } catch (Throwable e) {
-                    Utils.markStageFailedAndContinued(thisStage.name)
-                    if (firstError == null) {
-                        firstError = e
-                    }
-                }
-                if (skippedForRestart) {
-                    Utils.markStartAndEndNodesInStageAsNotExecuted(thisStage.name)
+            } finally {
+                // And finally, run the post stage steps if this was a parallel parent.
+                if (skippedReason == null && parent != null &&
+                    root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
+                    Utils.logToTaskListener("Post stage")
+                    firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name)
                 }
             }
-        } finally {
-            // And finally, run the post stage steps if this was a parallel parent.
-            if (skippedReason == null && parent != null &&
-                root.hasSatisfiedConditions(parent.post, script.getProperty("currentBuild"), parent, firstError)) {
-                Utils.logToTaskListener("Post stage")
-                firstError = runPostConditions(parent.post, parent.agent ?: root.agent, firstError, parent.name)
-            }
-        }
 
-        return firstError
+            return firstError
+        }
     }
 
     /**
@@ -206,13 +208,11 @@ class ModelInterpreter implements Serializable {
         def parallelStages = [:]
         thisStage?.parallel?.stages?.each { content ->
             if (skippedReason != null) {
-                parallelStages.put(content.name, {
-                    evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name))
-                })
+                parallelStages.put(content.name,
+                    evaluateStage(root, parentAgent, content, firstError, thisStage, skippedReason.cloneWithNewStage(content.name)))
             } else {
-                parallelStages.put(content.name, {
-                    evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null)
-                })
+                parallelStages.put(content.name,
+                    evaluateStage(root, thisStage.agent ?: parentAgent, content, firstError, thisStage, null))
             }
         }
         if (!parallelStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast") != null) ) {
@@ -238,58 +238,61 @@ class ModelInterpreter implements Serializable {
      * @param firstError An error that's already occurred earlier in the build. Can be null.
      * @param parent The possible parent stage, defaults to null.
      * @param skippedReason Possibly null reason this stage's parent, and therefore itself, is skipped.
+     * @return
      */
     def evaluateStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, Stage parent,
                       SkippedStageReason skippedReason) {
-        script.stage(thisStage.name) {
-            try {
-                if (skippedReason != null) {
-                    skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent)
-                } else if (firstError != null) {
-                    skippedReason = new SkippedStageReason.Failure(thisStage.name)
-                    skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent)
-                } else if (skipUnstable(root.options)) {
-                    skippedReason = new SkippedStageReason.Unstable(thisStage.name)
-                    skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent)
-                } else {
-                    // if this a is a matrix generated stage, evaluate the matrix axis values first
-                    // These are literals that guaranteed not to depend on other variables
-                    // Users will expect them to be available at all times in a particular cell in a matrix.
-                    withEnvBlock(thisStage.getMatrixCellEnvVars(script)) {
+        return {
+            script.stage(thisStage.name) {
+                try {
+                    if (skippedReason != null) {
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                    } else if (firstError != null) {
+                        skippedReason = new SkippedStageReason.Failure(thisStage.name)
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                    } else if (skipUnstable(root.options)) {
+                        skippedReason = new SkippedStageReason.Unstable(thisStage.name)
+                        skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                    } else {
+                        // if this a is a matrix generated stage, evaluate the matrix axis values first
+                        // These are literals that guaranteed not to depend on other variables
+                        // Users will expect them to be available at all times in a particular cell in a matrix.
+                        withEnvBlock(thisStage.getMatrixCellEnvVars(script)) {
 
-                        def whenEvaluator = new WhenEvaluator(thisStage.when)
+                            def whenEvaluator = new WhenEvaluator(thisStage.when)
 
-                        if (whenEvaluator.passedOrNotEvaluatedBeforeOptions()) {
-                            inWrappers(thisStage.options?.wrappers) {
-                                if (whenEvaluator.passedOrNotEvaluatedBeforeInput()) {
-                                    stageInput(thisStage.input) {
-                                        if (thisStage?.parallel != null) {
-                                            if (whenEvaluator.passedOrNotEvaluated()) {
-                                                withCredentialsBlock(thisStage.environment) {
-                                                    withEnvBlock(thisStage.getEnvVars(script)) {
-                                                        script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
+                            if (whenEvaluator.passedOrNotEvaluatedBeforeOptions()) {
+                                inWrappers(thisStage.options?.wrappers) {
+                                    if (whenEvaluator.passedOrNotEvaluatedBeforeInput()) {
+                                        stageInput(thisStage.input) {
+                                            if (thisStage?.parallel != null) {
+                                                if (whenEvaluator.passedOrNotEvaluated()) {
+                                                    withCredentialsBlock(thisStage.environment) {
+                                                        withEnvBlock(thisStage.getEnvVars(script)) {
+                                                            script.parallel(getParallelStages(root, parentAgent, thisStage, firstError, null))
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        } else {
-                                            if (whenEvaluator.passedOrNotEvaluatedBeforeAgent()) {
-                                                inDeclarativeAgent(thisStage, root, thisStage.agent) {
-                                                    if (whenEvaluator.passedOrNotEvaluated()) {
-                                                        withCredentialsBlock(thisStage.environment) {
-                                                            withEnvBlock(thisStage.getEnvVars(script)) {
-                                                                toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
-                                                                    if (thisStage?.stages) {
-                                                                        def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError,
-                                                                                                                    thisStage, null, null)
+                                            } else {
+                                                if (whenEvaluator.passedOrNotEvaluatedBeforeAgent()) {
+                                                    inDeclarativeAgent(thisStage, root, thisStage.agent) {
+                                                        if (whenEvaluator.passedOrNotEvaluated()) {
+                                                            withCredentialsBlock(thisStage.environment) {
+                                                                withEnvBlock(thisStage.getEnvVars(script)) {
+                                                                    toolsBlock(thisStage.tools, thisStage.agent ?: root.agent, parent?.tools ?: root.tools) {
+                                                                        if (thisStage?.stages) {
+                                                                            def nestedError = evaluateSequentialStages(root, thisStage.stages, firstError,
+                                                                                                                       thisStage, null, null).call()
 
-                                                                        // Propagate any possible error from the sequential stages
-                                                                        // as if it were an error thrown directly.
-                                                                        if (nestedError != null) {
-                                                                            throw nestedError
+                                                                            // Propagate any possible error from the sequential stages
+                                                                            // as if it were an error thrown directly.
+                                                                            if (nestedError != null) {
+                                                                                throw nestedError
+                                                                            }
+                                                                        } else {
+                                                                            // Execute the actual stage and potential post-stage actions
+                                                                            executeSingleStage(root, thisStage, parentAgent)
                                                                         }
-                                                                    } else {
-                                                                        // Execute the actual stage and potential post-stage actions
-                                                                        executeSingleStage(root, thisStage, parentAgent)
                                                                     }
                                                                 }
                                                             }
@@ -301,77 +304,85 @@ class ModelInterpreter implements Serializable {
                                     }
                                 }
                             }
-                        }
-                        if (!whenEvaluator.passed) {
-                            skippedReason = new SkippedStageReason.When(thisStage.name)
-                            skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent)
+                            if (!whenEvaluator.passed) {
+                                skippedReason = new SkippedStageReason.When(thisStage.name)
+                                skipStage(root, parentAgent, thisStage, firstError, skippedReason, parent).call()
+                            }
                         }
                     }
+                } catch (Throwable e) {
+                    Utils.markStageFailedAndContinued(thisStage.name)
+                    if (firstError == null) {
+                        firstError = e
+                    }
+                } finally {
+                    // And finally, run the post stage steps if this was a parallel parent.
+                    if (skippedReason == null &&
+                        root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
+                            thisStage?.parallel != null) {
+                        Utils.logToTaskListener("Post stage")
+                        firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
+                    }
                 }
-            } catch (Throwable e) {
-                Utils.markStageFailedAndContinued(thisStage.name)
-                if (firstError == null) {
-                    firstError = e
-                }
-            } finally {
-                // And finally, run the post stage steps if this was a parallel parent.
-                if (skippedReason == null &&
-                    root.hasSatisfiedConditions(thisStage.post, script.getProperty("currentBuild"), thisStage, firstError) &&
-                        thisStage?.parallel != null) {
-                    Utils.logToTaskListener("Post stage")
-                    firstError = runPostConditions(thisStage.post, thisStage.agent ?: parentAgent, firstError, thisStage.name)
-                }
-            }
 
-            if (firstError != null) {
-                throw firstError
+                if (firstError != null) {
+                    throw firstError
+                }
             }
         }
     }
 
     def stageInput(StageInput input, Closure body) {
         if (input != null) {
-            def submitted = script.input(message: input.message, id: input.id, ok: input.ok, submitter: input.submitter,
-                submitterParameter: input.submitterParameter, parameters: input.parameters)
-            if (input.parameters.isEmpty() && input.submitterParameter == null) {
-                // No parameters, so just proceed
-                body.call()
-            } else {
-                def inputEnv = []
-                if (submitted instanceof Map) {
-                    // Multiple parameters!
-                    inputEnv = submitted.collect { k, v -> "${k}=${v}" }
-                } else if (input.submitterParameter != null) {
-                    // Single parameter, it's the submitter.
-                    inputEnv = ["${input.submitterParameter}=${submitted}"]
-                } else if (input.parameters.size() == 1) {
-                    // One defined parameter, so we know its name.
-                    inputEnv = ["${input.parameters.first().name}=${submitted}"]
+            return {
+                def submitted = script.input(message: input.message, id: input.id, ok: input.ok, submitter: input.submitter,
+                    submitterParameter: input.submitterParameter, parameters: input.parameters)
+                if (input.parameters.isEmpty() && input.submitterParameter == null) {
+                    // No parameters, so just proceed
+                    body.call()
+                } else {
+                    def inputEnv = []
+                    if (submitted instanceof Map) {
+                        // Multiple parameters!
+                        inputEnv = submitted.collect { k, v -> "${k}=${v}" }
+                    } else if (input.submitterParameter != null) {
+                        // Single parameter, it's the submitter.
+                        inputEnv = ["${input.submitterParameter}=${submitted}"]
+                    } else if (input.parameters.size() == 1) {
+                        // One defined parameter, so we know its name.
+                        inputEnv = ["${input.parameters.first().name}=${submitted}"]
+                    }
+                    script.withEnv(inputEnv) {
+                        body.call()
+                    }
                 }
-                script.withEnv(inputEnv, body)
-            }
+            }.call()
         } else {
-            body.call()
+            return {
+                body.call()
+            }.call()
         }
     }
 
     def skipStage(Root root, Agent parentAgent, Stage thisStage, Throwable firstError, SkippedStageReason reason,
                   Stage parentStage) {
-        Utils.logToTaskListener(reason.message)
-        def stepContextFlowNodeId = getFlowNodeId();
-        Utils.markStageWithTag(thisStage.name, stepContextFlowNodeId, StageStatus.TAG_NAME, reason.stageStatus)
-        if (thisStage?.parallel != null) {
-            Map<String, Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
-            script.parallel(parallelToSkip)
-            if (reason instanceof SkippedStageReason.Restart) {
-                parallelToSkip.keySet().each { k -> Utils.markStartAndEndNodesInStageAsNotExecuted(k) }
+        return {
+            Utils.logToTaskListener(reason.message)
+            def stepContextFlowNodeId = getFlowNodeId();
+            Utils.markStageWithTag(thisStage.name, stepContextFlowNodeId, StageStatus.TAG_NAME, reason.stageStatus)
+            if (thisStage?.parallel != null) {
+                Map<String, Closure> parallelToSkip = getParallelStages(root, parentAgent, thisStage, firstError, reason)
+                script.parallel(parallelToSkip)
+                if (reason instanceof SkippedStageReason.Restart) {
+                    parallelToSkip.keySet().each { k -> Utils.markStartAndEndNodesInStageAsNotExecuted(k) }
+                }
+            } else if (thisStage?.stages != null) {
+                String restartedStage = null
+                if (reason instanceof SkippedStageReason.Restart) {
+                    restartedStage = reason.restartedStage
+                }
+                evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, restartedStage, reason).call()
             }
-        } else if (thisStage?.stages != null) {
-            String restartedStage = null
-            if (reason instanceof SkippedStageReason.Restart) {
-                restartedStage = reason.restartedStage
-            }
-            evaluateSequentialStages(root, thisStage.stages, firstError, thisStage, restartedStage, reason)
         }
     }
 
@@ -386,19 +397,21 @@ class ModelInterpreter implements Serializable {
      * @throws Exception
      */
     def catchRequiredContextForNode(Agent agent, Closure body) throws Exception {
-        try {
-            body.call()
-        } catch (MissingContextVariableException e) {
-            if (FilePath.class == e.type || Launcher.class == e.type) {
-                if (!agent.hasAgent()) {
-                    script.error(Messages.ModelInterpreter_NoNodeContext())
+        return {
+            try {
+                body.call()
+            } catch (MissingContextVariableException e) {
+                if (FilePath.class == e.type || Launcher.class == e.type) {
+                    if (!agent.hasAgent()) {
+                        script.error(Messages.ModelInterpreter_NoNodeContext())
+                    } else {
+                        throw e
+                    }
                 } else {
                     throw e
                 }
-            } else {
-                throw e
             }
-        }
+        }.call()
     }
 
     @Deprecated
@@ -427,9 +440,15 @@ class ModelInterpreter implements Serializable {
                     throw new IllegalArgumentException( Messages.ModelInterpreter_EnvironmentVariableFailed(k) )
                 }
             }.findAll { it != null}
-            script.withEnv(evaledEnv, body)
+            return {
+                script.withEnv(evaledEnv) {
+                    body.call()
+                }
+            }.call()
         } else {
-            body.call()
+            return {
+                body.call()
+            }.call()
         }
     }
 
@@ -459,9 +478,15 @@ class ModelInterpreter implements Serializable {
 
         if (!creds.isEmpty()) {
             List<Map<String, Object>> parameters = createWithCredentialsParameters(creds)
-            script.withCredentials(parameters, body)
+            return {
+                script.withCredentials(parameters) {
+                    body.call()
+                }
+            }.call()
         } else {
-            body.call()
+            return {
+                body.call()
+            }.call()
         }
     }
 
@@ -516,9 +541,15 @@ class ModelInterpreter implements Serializable {
                 toolEnv = actualToolsInstall(toolsList)
             }
 
-            script.withEnv(toolEnv, body)
+            return {
+                script.withEnv(toolEnv) {
+                    body.call()
+                }
+            }.call()
         } else {
-            body.call()
+            return {
+                body.call()
+            }.call()
         }
     }
 
@@ -558,19 +589,18 @@ class ModelInterpreter implements Serializable {
             }
         }
         if (agent == null) {
-            body.call()
+            return {
+                body.call()
+            }.call()
         } else {
             def declarativeAgent = agent.getDeclarativeAgent(root, context)
             if (declarativeAgent == null) {
                 script.error 'Unrecognized agent type'
                 return null
             }
-            def script = declarativeAgent.getScript(script)
-            if (script instanceof DeclarativeAgentScript2) {
-                script.run(body)
-            } else {
-                script.run(body).call()
-            }
+            return declarativeAgent.getScript(script).run {
+                body.call()
+            }.call()
         }
     }
 
@@ -587,9 +617,13 @@ class ModelInterpreter implements Serializable {
      */
     def inWrappers(Map<String,Object> wrappers, Closure body) {
         if (wrappers != null) {
-            recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
+            return {
+                recursiveWrappers(wrappers.keySet().toList(), wrappers, body)
+            }.call()
         } else {
-            body.call()
+            return {
+                body.call()
+            }.call()
         }
     }
 
@@ -602,19 +636,25 @@ class ModelInterpreter implements Serializable {
      */
     def recursiveWrappers(List<String> wrapperNames, Map<String,Object> wrappers, Closure body) {
         if (wrapperNames.isEmpty()) {
-            body.call()
+            return {
+                body.call()
+            }.call()
         } else {
             def thisWrapper = wrapperNames.remove(0)
 
             def wrapperArgs = wrappers.get(thisWrapper)
             if (wrapperArgs != null) {
-                script."${thisWrapper}"(wrapperArgs) {
-                    recursiveWrappers(wrapperNames, wrappers, body)
-                }
+                return {
+                    script."${thisWrapper}"(wrapperArgs) {
+                        recursiveWrappers(wrapperNames, wrappers, body)
+                    }
+                }.call()
             } else {
-                script."${thisWrapper}"() {
-                    recursiveWrappers(wrapperNames, wrappers, body)
-                }
+                return {
+                    script."${thisWrapper}"() {
+                        recursiveWrappers(wrapperNames, wrappers, body)
+                    }
+                }.call()
             }
         }
     }
