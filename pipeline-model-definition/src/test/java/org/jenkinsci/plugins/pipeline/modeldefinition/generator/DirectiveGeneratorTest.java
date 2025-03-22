@@ -419,6 +419,17 @@ public class DirectiveGeneratorTest {
                 "}");
     }
 
+    @Issue("JENKINS-75468")
+    @Test
+    public void optionsHandlesNullProperties() throws Exception {
+        List<Describable> o = new ArrayList<>();
+        // This can happen in at least one known instance; the descriptor for OverrideIndexTriggersJobProperty
+        // (from branch-api) will return a null instance if the incoming form data says it hasn't been selected.
+        o.add(null);
+        OptionsDirective options = new OptionsDirective(o);
+        dg.assertGenerateDirective(options, "options {\n}");
+    }
+
     @Test
     public void tools() throws Exception {
         ToolsDirective tools = new ToolsDirective(Collections.singletonList(new ToolsDirective.SymbolAndName("maven::::apache-maven-3.0.1")));

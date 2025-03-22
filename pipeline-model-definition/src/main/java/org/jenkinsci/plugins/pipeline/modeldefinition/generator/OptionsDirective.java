@@ -46,6 +46,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -58,7 +59,7 @@ public class OptionsDirective extends AbstractDirective<OptionsDirective> {
     @DataBoundConstructor
     public OptionsDirective(List<Describable> options) {
         if (options != null) {
-            this.options.addAll(options);
+            this.options.addAll(options.stream().filter(Objects::nonNull).toList());
         }
     }
 
