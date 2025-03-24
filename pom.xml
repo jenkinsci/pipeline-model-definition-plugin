@@ -135,8 +135,6 @@
     <gitHubRepo>jenkinsci/pipeline-model-definition-plugin</gitHubRepo>
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <!-- TODO until in parent -->
-    <jenkins-test-harness.version>2403.v256947ecb_c8a_</jenkins-test-harness.version>
   </properties>
 
   <profiles>
