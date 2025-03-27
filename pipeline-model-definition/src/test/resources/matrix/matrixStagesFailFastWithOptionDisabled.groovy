@@ -25,36 +25,49 @@
 pipeline {
     agent none
     options {
-        parallelsAlwaysFailFast()
+        parallelsAlwaysFailFast false
     }
     stages {
         stage("foo") {
             //failFast true
-            parallel {
-                stage("first") {
-                    steps {
-                        error "First branch"
-                    }
-                    post {
-                        aborted {
-                            echo "FIRST STAGE ABORTED"
-                        }
-                        failure {
-                            echo "FIRST STAGE FAILURE"
-                        }
+            matrix {
+                axes {
+                    axis {
+                        name 'OS_VALUE'
+                        values "linux", "windows", "mac"
                     }
                 }
-                stage("second") {
-                    steps {
-                        sleep 10
-                        echo "Second branch"
-                    }
-                    post {
-                        aborted {
-                            echo "SECOND STAGE ABORTED"
+                stages {
+                    stage("first") {
+                        steps {
+                            script {
+                                if (env.OS_VALUE == "windows") {
+                                    sleep 1
+                                    error "First branch"
+                                }
+                            }
                         }
-                        failure {
-                            echo "SECOND STAGE FAILURE"
+                        post {
+                            aborted {
+                                echo "FIRST STAGE ABORTED"
+                            }
+                            failure {
+                                echo "FIRST ${OS_VALUE} STAGE FAILURE"
+                            }
+                        }
+                    }
+                    stage("second") {
+                        steps {
+                            sleep 10
+                            error "Second branch"
+                        }
+                        post {
+                            aborted {
+                                echo "SECOND ${OS_VALUE} STAGE ABORTED"
+                            }
+                            failure {
+                                echo "SECOND STAGE FAILURE"
+                            }
                         }
                     }
                 }
