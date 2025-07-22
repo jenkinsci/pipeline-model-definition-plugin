@@ -32,7 +32,6 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
