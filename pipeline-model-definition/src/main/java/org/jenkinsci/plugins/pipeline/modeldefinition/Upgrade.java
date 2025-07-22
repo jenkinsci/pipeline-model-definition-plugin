@@ -30,8 +30,10 @@ import hudson.ExtensionList;
 import hudson.util.VersionNumber;
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.XMLConstants;
@@ -108,13 +110,17 @@ import org.xml.sax.helpers.DefaultHandler;
     }
 
     private static boolean isOld(FlowExecutionOwner owner) throws Exception {
+        var markerFile = owner.getRootDir().toPath().resolve(".old-declarative-version");
+        if (Files.exists(markerFile)) {
+            return true;
+        }
         var factory = SAXParserFactory.newDefaultInstance();
         // TODO XMLUtils does not support SAX parsing:
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
         factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
         var parser = factory.newSAXParser();
-        var old = new AtomicBoolean();
+        var old = new AtomicReference<String>();
         var buildXml = new File(owner.getRootDir(), "build.xml");
         parser.parse(buildXml, new DefaultHandler() {
             @Override public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -125,13 +131,18 @@ import org.xml.sax.helpers.DefaultHandler;
                         var version = new VersionNumber(plugin.substring(at + 1));
                         LOGGER.fine(() -> "got " + version + " off " + qName + " in " + buildXml);
                         if (version.isOlderThan(new VersionNumber("2.2234"))) {
-                            old.set(true);
+                            old.set(version.toString());
                         }
                     }
                 }
             }
         });
-        return old.get();
+        var oldVersion = old.get();
+        if (oldVersion != null) {
+            Files.writeString(markerFile, oldVersion);
+            return true;
+        }
+        return false;
     }
 
 }

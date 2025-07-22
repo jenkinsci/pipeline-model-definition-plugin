@@ -118,6 +118,10 @@ public final class UpgradeTest {
                 var b = p.getBuildByNumber(1);
                 r.waitForMessage("Resuming build at ", b);
                 r.waitForMessage("Ready to run at ", b);
+            });
+            rr.then(r -> {
+                var p = r.jenkins.getItemByFullName("p", WorkflowJob.class);
+                var b = p.getBuildByNumber(1);
                 var proceed = Path.of(((StringParameterValue) b.getAction(ParametersAction.class).getParameter("PROCEED")).getValue());
                 System.err.println("Touching " + proceed);
                 Files.writeString(proceed, "go");
