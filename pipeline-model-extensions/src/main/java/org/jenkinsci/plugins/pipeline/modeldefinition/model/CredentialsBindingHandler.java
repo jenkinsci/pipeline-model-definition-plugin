@@ -30,7 +30,7 @@ import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Run;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;

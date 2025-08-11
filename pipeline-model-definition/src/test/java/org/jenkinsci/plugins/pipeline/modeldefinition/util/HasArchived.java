@@ -28,7 +28,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.util;
 import hudson.model.Run;
 import jenkins.model.ArtifactManager;
 import jenkins.util.VirtualFile;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;

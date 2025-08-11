@@ -26,7 +26,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
 import hudson.Extension;
 import hudson.model.Descriptor;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;

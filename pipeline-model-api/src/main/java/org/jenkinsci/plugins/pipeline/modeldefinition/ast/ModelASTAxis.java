@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 import edu.umd.cs.findbugs.annotations.NonNull;

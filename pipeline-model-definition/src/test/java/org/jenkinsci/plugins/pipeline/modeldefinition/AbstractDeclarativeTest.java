@@ -28,7 +28,7 @@ import jenkins.plugins.git.GitSampleRepoRule;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Assume;
 import org.junit.Rule;
 

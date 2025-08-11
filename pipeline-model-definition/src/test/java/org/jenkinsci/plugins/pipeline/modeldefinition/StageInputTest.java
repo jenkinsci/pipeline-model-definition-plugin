@@ -27,7 +27,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 import org.htmlunit.html.*;
 import hudson.Util;
 import hudson.model.queue.QueueTaskFuture;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;

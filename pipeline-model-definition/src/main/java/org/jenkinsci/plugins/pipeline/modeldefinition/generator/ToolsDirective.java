@@ -29,7 +29,7 @@ import hudson.ExtensionList;
 import hudson.model.Descriptor;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.accmod.Restricted;
