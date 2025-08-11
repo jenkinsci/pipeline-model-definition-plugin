@@ -29,8 +29,8 @@
         for more information on the <code>post</code> directive.
         <f:entry title="${%Conditions}" help="${descriptor.getHelpPage()}">
             <j:forEach var="c" items="${descriptor.getPossibleConditions()}">
-                <div>
-                    <input type="checkbox" name="conditions" json="${c.getKey()}" value="${c.getKey()}">${c.getValue()}</input>
+                <div class="jenkins-form-item tr">
+                    <f:checkbox title="${c.getValue()}" field="conditions" json="${c.getKey()}" />
                 </div>
             </j:forEach>
         </f:entry>
