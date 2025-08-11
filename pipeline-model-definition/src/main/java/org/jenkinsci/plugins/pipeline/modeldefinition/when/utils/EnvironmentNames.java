@@ -26,7 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.utils;
 
 import hudson.EnvVars;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Easier way to refer to and extract known environment variables instead of copying strings back and forth.

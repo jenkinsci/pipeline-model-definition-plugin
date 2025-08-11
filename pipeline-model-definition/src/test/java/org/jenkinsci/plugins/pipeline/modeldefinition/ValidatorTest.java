@@ -25,7 +25,7 @@ package org.jenkinsci.plugins.pipeline.modeldefinition;
 
 import hudson.slaves.DumbSlave;
 import jenkins.model.OptionalJobProperty;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.hamcrest.Matchers;
 import org.jenkinsci.Symbol;

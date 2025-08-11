@@ -25,7 +25,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 
 import hudson.model.AbstractDescribableImpl;
-import org.apache.commons.lang.reflect.ConstructorUtils;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 

@@ -26,7 +26,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.utils;
 
 import hudson.util.ListBoxModel;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jvnet.localizer.Localizable;
@@ -34,7 +34,7 @@ import org.jvnet.localizer.Localizable;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 /**
  * Utility for selecting a way to compare two strings.

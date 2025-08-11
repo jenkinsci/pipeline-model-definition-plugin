@@ -47,7 +47,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.EnvironmentNames.*;
 
 public class ChangeRequestConditional extends DeclarativeStageConditional<ChangeRequestConditional> {
