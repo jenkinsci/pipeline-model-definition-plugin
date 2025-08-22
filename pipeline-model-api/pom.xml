@@ -38,6 +38,10 @@
   <description>Model API for Declarative Pipeline</description>
   <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
 
+  <properties>
+    <hpi.bundledArtifacts>btf,jackson-coreutils,jackson-coreutils-equivalence,jopt-simple,json-schema-core,json-schema-validator,libphonenumber,mailapi,msg-simple,rhino,uri-template</hpi.bundledArtifacts>
+  </properties>
+
   <dependencies>
     <!-- JSON schema stuff -->
     <dependency>
