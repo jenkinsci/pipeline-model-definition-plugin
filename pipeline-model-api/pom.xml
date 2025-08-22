@@ -38,6 +38,10 @@
   <description>Model API for Declarative Pipeline</description>
   <url>https://github.com/jenkinsci/pipeline-model-definition-plugin</url>
 
+  <properties>
+    <hpi.bundledArtifacts>btf,jackson-coreutils,jackson-coreutils-equivalence,jopt-simple,json-schema-core,json-schema-validator,libphonenumber,mailapi,msg-simple,rhino,uri-template</hpi.bundledArtifacts>
+  </properties>
+
   <dependencies>
     <!-- JSON schema stuff -->
     <dependency>
@@ -48,6 +52,11 @@
       <groupId>com.github.java-json-tools</groupId>
       <artifactId>json-schema-validator</artifactId>
       <exclusions>
+        <exclusion>
+          <!-- Avoid JSR-305 in the Jenkins ecosystem -->
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
         <exclusion>
           <!-- Conflicts with the version from Jenkins core in downstream plugins. -->
           <groupId>com.google.guava</groupId>
