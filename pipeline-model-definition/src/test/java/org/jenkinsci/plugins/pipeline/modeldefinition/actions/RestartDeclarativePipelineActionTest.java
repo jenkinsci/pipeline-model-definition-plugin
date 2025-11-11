@@ -75,6 +75,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -768,6 +769,53 @@ public class RestartDeclarativePipelineActionTest extends AbstractModelDefTest {
         assertTrue(stageStatusPredicate("second-parallel", StageStatus.getSkippedForRestart()).apply(secondRunSecondParallelStart));
         assertFalse(stageStatusPredicate("second-parallel", StageStatus.getSkippedForFailure()).apply(secondRunSecondParallelStart));
         assertFalse(stageStatusPredicate("second-parallel", StageStatus.getFailedAndContinued()).apply(secondRunSecondParallelStart));
+    }
+
+    @Issue("JENKINS-70808")
+    @Test
+    public void isRestartable() throws Exception {
+        WorkflowRun original = expect(Result.FAILURE, "restart", "isRestartable")
+            .logContains("This shouldn't show up on second run", "Odd numbered build, failing")
+            .logNotContains("This should only run on restart")
+            .go();
+
+        WorkflowJob p = original.getParent();
+
+        FlowExecution firstExecution = original.getExecution();
+        assertNotNull(firstExecution);
+        assertNotNull(firstExecution.getCauseOfFailure());
+
+        RestartDeclarativePipelineAction action = original.getAction(RestartDeclarativePipelineAction.class);
+        assertNotNull(action);
+        assertTrue(action.isRestartEnabled());
+        List<String> restartableStages = action.getRestartableStages();
+        assertThat(restartableStages, is(Arrays.asList("skip-on-restart", "restart")));
+        assertTrue(action.isRestartable("skip-on-restart"));
+        assertTrue(action.isRestartable("restart"));
+        assertFalse(action.isRestartable("post-restart"));
+
+        HtmlPage redirect = restartFromStageInUI(original, "restart");
+
+        assertNotNull(redirect);
+        assertEquals(p.getAbsoluteUrl(), redirect.getUrl().toString());
+
+        j.waitUntilNoActivity();
+        WorkflowRun b2 = p.getBuildByNumber(2);
+        assertNotNull(b2);
+        j.assertBuildStatusSuccess(b2);
+        j.assertLogContains("Even numbered build, success", b2);
+        j.assertLogContains("Now we're post-restart", b2);
+        j.assertLogNotContains("This shouldn't show up on second run", b2);
+
+        action = b2.getAction(RestartDeclarativePipelineAction.class);
+        assertNotNull(action);
+        assertTrue(action.isRestartEnabled());
+        restartableStages = action.getRestartableStages();
+        assertThat(restartableStages, is(Arrays.asList("skip-on-restart", "restart", "post-restart")));
+        assertTrue(action.isRestartable("skip-on-restart"));
+        assertTrue(action.isRestartable("restart"));
+        assertTrue(action.isRestartable("post-restart"));
+
     }
 
     @Test
