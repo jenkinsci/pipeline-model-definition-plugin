@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.28</version>
+    <version>5.30</version>
     <relativePath />
   </parent>
 
@@ -136,8 +136,6 @@
     <jenkins.baseline>2.504</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-    <!-- TODO until in parent -->
-    <jenkins-test-harness.version>2516.vc8fe6b_362b_19</jenkins-test-harness.version>
   </properties>
 
   <profiles>
