@@ -137,7 +137,7 @@
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <!-- TODO until in parent -->
-    <jenkins-test-harness.version>2549.va_d3707a_ff237</jenkins-test-harness.version>
+    <jenkins-test-harness.version>2551.vb_14930141097</jenkins-test-harness.version>
   </properties>
 
   <profiles>
