@@ -168,6 +168,17 @@ public class MatrixTest extends AbstractModelDefTest {
     }
 
     @Test
+    public void matrixWithVariable() throws Exception {
+        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+        expect("matrix/matrixWithVariable")
+                .logContains("[Pipeline] { (foo)",
+                        "{ (Branch: Matrix - OS_VALUE = 'linux')",
+                        "{ (Branch: Matrix - OS_VALUE = 'windows')",
+                        "{ (Branch: Matrix - OS_VALUE = 'mac')")
+                .go();
+    }
+
+    @Test
     public void matrixPipelineLiterals() throws Exception {
         expect("matrix/matrixPipelineLiterals")
             .logContains("[Pipeline] { (foo)",
