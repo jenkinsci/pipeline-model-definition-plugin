@@ -168,6 +168,29 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
                 }
             }
         }
+        if (error != null) {
+            if (error instanceof FlowInterruptedException) {
+                errorResult = ((FlowInterruptedException)error).getResult();
+            } else {
+                errorResult = Result.FAILURE;
+            }
+        }
+        // When evaluating a stage-level post condition (context is the stage name)
+        // and we have explicit stage-scoped result information (from WarningAction
+        // set by catchError/warnError, or from a stage error), use only the
+        // stage-scoped result. Do not combine with the global execution/build result,
+        // because during parallel execution the global result may reflect failures
+        // from sibling stages that have nothing to do with this stage's own outcome.
+        // This avoids a race condition where a sibling's failure taints the global
+        // result before this stage's post-condition evaluation, causing the wrong
+        // post block to run.
+        //
+        // When no stage-scoped result information is available (errorResult is
+        // SUCCESS), fall back to the global result for backwards compatibility with
+        // stages that set currentBuild.result directly.
+        if (context instanceof String && errorResult != Result.SUCCESS) {
+            return errorResult;
+        }
         Result execResult = getFlowExecutionResult(run);
         Result prevResult = run.getResult();
         if (prevResult == null) {
@@ -175,13 +198,6 @@ public abstract class BuildCondition implements Serializable, ExtensionPoint {
         }
         if (execResult == null) {
             execResult = Result.SUCCESS;
-        }
-        if (error != null) {
-            if (error instanceof FlowInterruptedException) {
-                errorResult = ((FlowInterruptedException)error).getResult();
-            } else {
-                errorResult = Result.FAILURE;
-            }
         }
         return execResult.combine(prevResult).combine(errorResult);
     }

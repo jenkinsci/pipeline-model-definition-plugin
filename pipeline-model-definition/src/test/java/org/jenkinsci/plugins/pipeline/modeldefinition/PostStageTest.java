@@ -239,6 +239,24 @@ public class PostStageTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Test
+    public void parallelCatchErrorSiblingPostCondition() throws Exception {
+        // When a parallel stage fails (caught by catchError with buildResult: SUCCESS),
+        // sibling stages that succeed should run their 'success' post block, not
+        // 'failure'. The sibling's post-condition evaluation must not be affected by
+        // the failing stage's result polluting the global build/execution result.
+        expect("parallelCatchErrorSiblingPostCondition")
+                .logContains(
+                        "Stage 1 post: SUCCESS",
+                        "Stage 1 post: ALWAYS",
+                        "Stage 2 post: FAILURE",
+                        "Stage 2 post: ALWAYS")
+                .logNotContains(
+                        "Stage 1 post: FAILURE",
+                        "Stage 2 post: SUCCESS")
+                .go();
+    }
+
     @Issue("JENKINS-52114")
     @Test
     public void abortedShouldNotTriggerFailure() throws Exception {
@@ -332,10 +350,13 @@ public class PostStageTest extends AbstractModelDefTest {
     @Issue("JENKINS-57826")
     @Test
     public void catchErrorStageUnstableBuildFailure() throws Exception {
+        // When catchError sets stageResult: "UNSTABLE" and buildResult: "FAILURE",
+        // the stage post block should see the stage result (UNSTABLE), not the
+        // build result (FAILURE). The build-level post block should see FAILURE.
         expect(Result.FAILURE, "catchErrorStageUnstableBuildFailure")
-                .logContains("This should happen",
+                .logContains("Stage unstable should happen",
                         "The build should be a failure")
-                .logNotContains("This shouldn't happen",
+                .logNotContains("Stage failure should not happen",
                         "The build shouldn't be unstable")
                 .go();
     }

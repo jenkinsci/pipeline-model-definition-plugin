@@ -763,7 +763,15 @@ class ModelInterpreter implements Serializable {
                 Closure c = responder.closureForSatisfiedCondition(conditionName, runWrapper,
                     stageName, stageError)
                 if (c != null) {
-                    runWrapper.rawBuild.@result = logicalResult
+                    // For stage-level post conditions, avoid temporarily mutating the
+                    // global build result. During parallel execution, this mutation is
+                    // visible to sibling stages and causes a race condition where a
+                    // sibling's post evaluation reads a dirty global result. For
+                    // pipeline-level post (stageName == null), the mutation is safe
+                    // because there is no concurrent execution at that point.
+                    if (stageName == null) {
+                        runWrapper.rawBuild.@result = logicalResult
+                    }
                     catchRequiredContextForNode(agentContext) {
                         delegateAndExecute(c)
                     }
@@ -778,16 +786,18 @@ class ModelInterpreter implements Serializable {
                     stageError = e
                 }
             } finally {
-                Result currentResult = Result.fromString(runWrapper.currentResult);
-                // We can't leave the result set because it will interfere with the
-                // final build result, so we reset it to the original value unless
-                // the actual value changed inside of the post condition.However,
-                // if the build result is set to the logical build result manually,
-                // then after the post condition it will be set back to the original
-                // value. This seems ok since the logical result is the same and so
-                // will be reset for any later post conditions.
-                if (currentResult == logicalResult && logicalResult != originalResult) {
-                    runWrapper.rawBuild.@result = originalResult // Intentionally using .@ to bypass the setter which does not allow nulls.
+                if (stageName == null) {
+                    Result currentResult = Result.fromString(runWrapper.currentResult);
+                    // We can't leave the result set because it will interfere with the
+                    // final build result, so we reset it to the original value unless
+                    // the actual value changed inside of the post condition. However,
+                    // if the build result is set to the logical build result manually,
+                    // then after the post condition it will be set back to the original
+                    // value. This seems ok since the logical result is the same and so
+                    // will be reset for any later post conditions.
+                    if (currentResult == logicalResult && logicalResult != originalResult) {
+                        runWrapper.rawBuild.@result = originalResult // Intentionally using .@ to bypass the setter which does not allow nulls.
+                    }
                 }
             }
         }
