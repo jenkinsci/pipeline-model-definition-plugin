@@ -36,10 +36,10 @@ pipeline {
             }
             post {
                 failure {
-                    echo "This should happen"
+                    echo "Stage failure should not happen"
                 }
                 unstable {
-                    echo "This shouldn't happen"
+                    echo "Stage unstable should happen"
                 }
             }
         }
