@@ -820,13 +820,6 @@ class ModelValidatorImpl implements ModelValidator {
             valid = false
         }
 
-        axis.values.each { value ->
-            if (!value.literal) {
-                errorCollector.error(value, Messages.ModelParser_ExpectedStringLiteralButGot(value.value))
-                valid = false
-            }
-        }
-
         return validateFromContributors(axis, valid)
     }
 
