@@ -30,13 +30,24 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 public class ParallelsAlwaysFailFast extends DeclarativeOption {
+    private Boolean parallelsAlwaysFailFast;
+
+    public ParallelsAlwaysFailFast() {
+        this.parallelsAlwaysFailFast = true;
+    }
 
     @DataBoundConstructor
-    public ParallelsAlwaysFailFast() {
+    public ParallelsAlwaysFailFast(@Nullable Boolean parallelsAlwaysFailFast) {
+        this.parallelsAlwaysFailFast = parallelsAlwaysFailFast;
+    }
 
+    public boolean isParallelsAlwaysFailFast() {
+        return parallelsAlwaysFailFast == null || parallelsAlwaysFailFast;
     }
 
 

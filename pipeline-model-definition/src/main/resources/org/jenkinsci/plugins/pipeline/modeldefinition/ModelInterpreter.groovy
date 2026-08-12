@@ -215,7 +215,7 @@ class ModelInterpreter implements Serializable {
                 })
             }
         }
-        if (!parallelStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast") != null) ) {
+        if (!parallelStages.isEmpty() && ( thisStage.failFast || root.options?.options?.get("parallelsAlwaysFailFast")?.isParallelsAlwaysFailFast()) ) {
             parallelStages.put("failFast", true)
         }
 
