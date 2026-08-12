@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
-import com.google.inject.Inject;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -33,13 +32,17 @@ import hudson.model.TaskListener;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
-import org.jenkinsci.plugins.workflow.steps.*;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * An internal step used to take a tool descriptor ID and tool version and get the environment variables that
@@ -50,7 +53,7 @@ import java.util.Map;
  *
  * @author Andrew Bayer
  */
-public final class EnvVarsForToolStep extends AbstractStepImpl implements Serializable {
+public final class EnvVarsForToolStep extends Step implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -71,12 +74,13 @@ public final class EnvVarsForToolStep extends AbstractStepImpl implements Serial
         return toolId;
     }
 
-    @Extension
-    public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
+    @Override
+    public StepExecution start(StepContext context) throws Exception {
+        return new EnvVarsForToolStepExecution(this, context);
+    }
 
-        public DescriptorImpl() {
-            super(EnvVarsForToolStepExecution.class);
-        }
+    @Extension
+    public static final class DescriptorImpl extends StepDescriptor {
 
         @Override
         public boolean isAdvanced() {
@@ -94,15 +98,20 @@ public final class EnvVarsForToolStep extends AbstractStepImpl implements Serial
         @Override public boolean takesImplicitBlockArgument() {
             return false;
         }
+
+        @Override
+        public Set<? extends Class<?>> getRequiredContext() {
+            return Set.of(Node.class, TaskListener.class, EnvVars.class);
+        }
     }
 
-    public static final class EnvVarsForToolStepExecution extends AbstractSynchronousNonBlockingStepExecution<List<String>> {
-        @Inject
-        private transient EnvVarsForToolStep step;
+    public static final class EnvVarsForToolStepExecution extends SynchronousNonBlockingStepExecution<List<String>> {
+        private final transient EnvVarsForToolStep step;
 
-        @StepContextParameter transient TaskListener listener;
-        @StepContextParameter transient EnvVars env;
-        @StepContextParameter transient Node node;
+        EnvVarsForToolStepExecution(EnvVarsForToolStep step, StepContext context) {
+            super(context);
+            this.step = step;
+        }
 
         @Override protected List<String> run() throws Exception {
             String toolVersion = step.getToolVersion();
@@ -115,20 +124,19 @@ public final class EnvVarsForToolStep extends AbstractStepImpl implements Serial
                 for (ToolInstallation tool : desc.getInstallations()) {
                     if (tool.getName().equals(toolVersion)) {
                         if (tool instanceof NodeSpecific) {
+                            Node node = getContext().get(Node.class);
+                            TaskListener listener = getContext().get(TaskListener.class);
                             tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(node, listener);
                         }
                         if (tool instanceof EnvironmentSpecific) {
+                            EnvVars env = getContext().get(EnvVars.class);
                             tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(env);
                         }
 
                         List<String> toolEnvList = new ArrayList<>();
-
                         EnvVars toolEnv = new EnvVars();
                         tool.buildEnvVars(toolEnv);
-
-                        for (Map.Entry<String,String> entry: toolEnv.entrySet()) {
-                            toolEnvList.add(entry.getKey() + "=" + entry.getValue());
-                        }
+                        toolEnv.forEach((key, value) -> toolEnvList.add(key + "=" + value));
                         return toolEnvList;
                     }
                 }
