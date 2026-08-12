@@ -28,14 +28,11 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import groovy.lang.GroovyResourceLoader;
 import hudson.ExtensionPoint;
 import java.net.URL;
-import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentScript;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
 
 /**
- * Allows plugins formerly defining {@link DeclarativeAgentScript} to tolerate old builds.
+ * @deprecated No longer used. TODO delete cca. 2027-02
  */
-@Restricted(Beta.class) // TODO deprecate for deletion cca. 2026-03 (a year after 2.2234.v4a_b_13b_8cd590)
+@Deprecated(forRemoval = true)
 public interface CompatibilityLoader extends ExtensionPoint {
 
     /**
