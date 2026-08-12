@@ -29,15 +29,16 @@ import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.cps.GroovySourceFileAllowlist;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.ExtensionList;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Descriptor for {@link WithScriptDescribable}.
@@ -45,10 +46,7 @@ import java.util.Set;
  * @author Andrew Bayer
  */
 public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> extends Descriptor<T> {
-
-    protected WithScriptDescriptor() {
-        ExtensionList.lookupSingleton(WithScriptAllowlist.class).registerScript(getScriptResource());
-    }
+    private static final Logger LOGGER = Logger.getLogger(WithScriptDescriptor.class.getName());
 
     /**
      * The name for this type. Defaults to the first string in the {@code Symbol} on the class.
@@ -75,10 +73,9 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
     }
 
     @SuppressFBWarnings(value = "UI_INHERITANCE_UNSAFE_GETRESOURCE", justification = "We intentionally want to use the class loader for the subclass in this case")
-    private @NonNull URL getScriptResource() {
+    private @CheckForNull URL getScriptResource() {
         String scriptFile = '/' + getScriptClass().replace('.', '/') + ".groovy";
-        return Objects.requireNonNull(getClass().getResource(scriptFile),
-                () -> "Unable to find resource file: " + scriptFile);
+        return getClass().getResource(scriptFile);
     }
 
     /**
@@ -104,15 +101,17 @@ public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> e
 
     @Extension
     public static class WithScriptAllowlist extends GroovySourceFileAllowlist {
-        private final Set<String> scriptUrls = new HashSet<>();
-
-        private void registerScript(URL scriptUrl) {
-            scriptUrls.add(scriptUrl.toString());
-        }
-
         @Override
         public boolean isAllowed(String groovyResourceUrl) {
-            return scriptUrls.contains(groovyResourceUrl);
+            for (WithScriptDescriptor descriptor : ExtensionList.lookup(WithScriptDescriptor.class)) {
+                URL scriptResource = descriptor.getScriptResource();
+                if (scriptResource != null && scriptResource.toString().equals(groovyResourceUrl)) {
+                    return true;
+                } else {
+                    LOGGER.log(Level.WARNING, () -> "Unable to find Groovy source file for: " + descriptor.getScriptClass());
+                }
+            }
+            return false;
         }
     }
 }
