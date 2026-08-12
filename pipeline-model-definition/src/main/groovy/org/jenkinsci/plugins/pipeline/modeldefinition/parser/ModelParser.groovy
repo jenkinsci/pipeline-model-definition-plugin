@@ -478,7 +478,11 @@ class ModelParser implements Parser {
                             }
                             break
                         case 'values':
-                            a.values.addAll(method.args);
+                            List<Expression> valArgs = ((TupleExpression) mc.arguments).expressions
+                            valArgs.each { argExpr ->
+                                def resolvedValues = resolveListVariableOrParse(argExpr)
+                                a.values.addAll(resolvedValues)
+                            }
                             break
                         default:
                             // We need to check for unknowns here.
@@ -1516,6 +1520,164 @@ class ModelParser implements Parser {
         }
 
         return val
+    }
+
+    /**
+     * Resolves a variable reference to a list constant if possible, otherwise parses as a single argument.
+     * This enables using variables defined outside the pipeline block as axis values, e.g.:
+     * <pre>
+     * def osList = ["linux", "windows", "mac"]
+     * pipeline {
+     *   stages {
+     *     stage("foo") {
+     *       matrix {
+     *         axes {
+     *           axis {
+     *             name 'OS_VALUE'
+     *             values osList
+     *           }
+     *         }
+     *       }
+     *     }
+     *   }
+     * }
+     * </pre>
+     */
+    protected List<ModelASTValue> resolveListVariableOrParse(Expression expr) {
+        if (expr instanceof VariableExpression) {
+            def varName = ((VariableExpression) expr).name
+            // Search for variable declaration in the module's statements
+            def listExpr = findListVariableDeclaration(varName)
+            if (listExpr != null) {
+                // Build a map of constant variable values for GString evaluation
+                def varMap = buildConstantVariableMap()
+                // Expand the list elements as individual constant values
+                return listExpr.expressions.collect { element ->
+                    parseListElementWithVarResolution(element, varMap)
+                }
+            }
+        }
+        // Fall back to parsing as a single argument
+        return [parseArgument(expr)]
+    }
+
+    /**
+     * Parses a list element, resolving GString expressions using the provided variable map.
+     */
+    private ModelASTValue parseListElementWithVarResolution(Expression element, Map<String, Object> varMap) {
+        if (element instanceof GStringExpression) {
+            // Try to evaluate the GString using known constant variables
+            def evaluated = evaluateGString((GStringExpression) element, varMap)
+            if (evaluated != null) {
+                // Create a new ConstantExpression with the evaluated value as the source location
+                // This ensures RuntimeASTTransformer uses the constant, not the original GString
+                def constantExpr = new ConstantExpression(evaluated)
+                constantExpr.setSourcePosition(element)
+                return ModelASTValue.fromConstant(evaluated, constantExpr)
+            }
+        }
+        return parseArgument(element)
+    }
+
+    /**
+     * Evaluates a GStringExpression using constant variable values.
+     * @return The evaluated string, or null if evaluation is not possible
+     */
+    @CheckForNull
+    private String evaluateGString(GStringExpression gstring, Map<String, Object> varMap) {
+        try {
+            StringBuilder result = new StringBuilder()
+            def strings = gstring.strings
+            def values = gstring.values
+
+            for (int i = 0; i < strings.size(); i++) {
+                if (strings[i] instanceof ConstantExpression) {
+                    result.append(((ConstantExpression) strings[i]).value?.toString() ?: "")
+                }
+                if (i < values.size()) {
+                    def valueExpr = values[i]
+                    if (valueExpr instanceof VariableExpression) {
+                        def varName = ((VariableExpression) valueExpr).name
+                        if (varMap.containsKey(varName)) {
+                            result.append(varMap.get(varName)?.toString() ?: "")
+                        } else {
+                            // Variable not found in our constant map, can't evaluate
+                            return null
+                        }
+                    } else {
+                        // Complex expression, can't evaluate at parse time
+                        return null
+                    }
+                }
+            }
+            return result.toString()
+        } catch (Exception e) {
+            return null
+        }
+    }
+
+    /**
+     * Builds a map of constant variable declarations from the module.
+     */
+    private Map<String, Object> buildConstantVariableMap() {
+        def varMap = new HashMap<String, Object>()
+        def ast = sourceUnit?.AST
+        def statementBlock = ast?.statementBlock
+        if (statementBlock?.statements == null) {
+            return varMap
+        }
+        for (stmt in statementBlock.statements) {
+            if (stmt instanceof ExpressionStatement) {
+                def expr = ((ExpressionStatement) stmt).expression
+                if (expr instanceof DeclarationExpression) {
+                    def declExpr = (DeclarationExpression) expr
+                    def leftExpr = declExpr.leftExpression
+                    if (leftExpr instanceof VariableExpression) {
+                        def varName = ((VariableExpression) leftExpr).name
+                        def rightExpr = declExpr.rightExpression
+                        if (rightExpr instanceof ConstantExpression) {
+                            varMap.put(varName, ((ConstantExpression) rightExpr).value)
+                        }
+                    }
+                }
+            }
+        }
+        return varMap
+    }
+
+    /**
+     * Finds a variable declaration in the module that initializes to a list literal.
+     * @return The ListExpression if found, null otherwise
+     */
+    @CheckForNull
+    private ListExpression findListVariableDeclaration(String varName) {
+        def ast = sourceUnit?.AST
+        def statementBlock = ast?.statementBlock
+        if (statementBlock?.statements == null) {
+            return null
+        }
+        for (stmt in statementBlock.statements) {
+            if (!(stmt instanceof Statement)) {
+                continue
+            }
+            if (stmt instanceof ExpressionStatement) {
+                def expr = ((ExpressionStatement) stmt).expression
+                if (expr instanceof DeclarationExpression) {
+                    def declExpr = (DeclarationExpression) expr
+                    def leftExpr = declExpr.leftExpression
+                    if (leftExpr instanceof VariableExpression) {
+                        def declVarName = ((VariableExpression) leftExpr).name
+                        if (declVarName == varName) {
+                            def rightExpr = declExpr.rightExpression
+                            if (rightExpr instanceof ListExpression) {
+                                return (ListExpression) rightExpr
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null
     }
 
     protected String parseStringLiteralOrEmpty(Expression exp) {
