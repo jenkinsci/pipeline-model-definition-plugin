@@ -672,16 +672,16 @@ public class WhenStageTest extends AbstractModelDefTest {
         List<FlowNode> heads = b.getExecution().getCurrentHeads();
         FlowNode startTest = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("Test"));
         assertNotNull(startTest);
-        assertFalse(StageStatus.isSkippedStage(startTest));
+        assertNull(stageStatus(startTest));
 
         List<FlowNode> buildStages = scanner.filteredNodes(heads, CommonUtils.isStageWithOptionalName("Build"));
         assertEquals(2, buildStages.size());
         for (FlowNode buildStage : buildStages) {
             if (startTest.getAllEnclosingIds().contains(buildStage.getId())) {
                 // The outer "Build" stage ran "Test", so it must not be marked as skipped
-                assertFalse(StageStatus.isSkippedStage(buildStage));
+                assertNull("Build stage " + buildStage.getId(), stageStatus(buildStage));
             } else {
-                assertTrue(StageStatus.isSkippedStageForReason(buildStage, StageStatus.getSkippedForConditional()));
+                assertEquals("Build stage " + buildStage.getId(), StageStatus.getSkippedForConditional(), stageStatus(buildStage));
             }
         }
     }

@@ -304,18 +304,18 @@ public class ParallelTest extends AbstractModelDefTest {
         FlowNode startB = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("B"));
         assertNotNull(startA);
         assertNotNull(startB);
-        assertTrue(StageStatus.isSkippedStageForReason(startA, StageStatus.getSkippedForConditional()));
-        assertFalse(StageStatus.isSkippedStage(startB));
+        assertEquals(StageStatus.getSkippedForConditional(), stageStatus(startA));
+        assertNull(stageStatus(startB));
 
         List<FlowNode> buildStages = scanner.filteredNodes(heads, CommonUtils.isStageWithOptionalName("Build"));
         assertEquals(3, buildStages.size());
         for (FlowNode buildStage : buildStages) {
             List<String> enclosingIds = buildStage.getAllEnclosingIds();
             if (enclosingIds.contains(startA.getId())) {
-                assertTrue(StageStatus.isSkippedStageForReason(buildStage, StageStatus.getSkippedForConditional()));
+                assertEquals("Build stage " + buildStage.getId(), StageStatus.getSkippedForConditional(), stageStatus(buildStage));
             } else {
                 // Neither the outer "Build" stage nor the one in "B" may be marked as skipped
-                assertFalse(StageStatus.isSkippedStage(buildStage));
+                assertNull("Build stage " + buildStage.getId(), stageStatus(buildStage));
             }
         }
     }
