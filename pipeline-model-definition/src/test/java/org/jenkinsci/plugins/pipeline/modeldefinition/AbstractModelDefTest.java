@@ -38,12 +38,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matcher;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.util.HasArchived;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.BlockedStepsAndMethodCalls;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
@@ -628,5 +631,13 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             nodeProperties.replace(newProperty);
         }
 
+    }
+
+    /**
+     * Returns the value of the stage status tag on the given node, or {@code null} if it has none.
+     */
+    protected static String stageStatus(FlowNode node) {
+        TagsAction tags = node.getAction(TagsAction.class);
+        return tags == null ? null : tags.getTagValue(StageStatus.TAG_NAME);
     }
 }

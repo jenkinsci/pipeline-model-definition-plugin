@@ -43,12 +43,15 @@ import jenkins.scm.impl.mock.MockSCMController;
 import jenkins.scm.impl.mock.MockSCMDiscoverChangeRequests;
 import jenkins.scm.impl.mock.MockSCMSource;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.StageStatus;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
@@ -67,6 +70,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.collection.IsEmptyCollection.empty;
@@ -654,6 +658,32 @@ public class WhenStageTest extends AbstractModelDefTest {
                 .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "I'm running anyway", "And I run last of all")
                 .logNotContains("World")
                 .go();
+    }
+
+    @Issue("https://github.com/jenkinsci/pipeline-graph-view-plugin/issues/558")
+    @Test
+    public void whenSkippedStageNamedLikeSequentialParent() throws Exception {
+        WorkflowRun b = expect("when/whenSkippedStageNamedLikeSequentialParent")
+                .logContains("Test ran")
+                .logNotContains("WE SHOULD NEVER GET HERE")
+                .go();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        List<FlowNode> heads = b.getExecution().getCurrentHeads();
+        FlowNode startTest = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("Test"));
+        assertNotNull(startTest);
+        assertNull(stageStatus(startTest));
+
+        List<FlowNode> buildStages = scanner.filteredNodes(heads, CommonUtils.isStageWithOptionalName("Build"));
+        assertEquals(2, buildStages.size());
+        for (FlowNode buildStage : buildStages) {
+            if (startTest.getAllEnclosingIds().contains(buildStage.getId())) {
+                // The outer "Build" stage ran "Test", so it must not be marked as skipped
+                assertNull("Build stage " + buildStage.getId(), stageStatus(buildStage));
+            } else {
+                assertEquals("Build stage " + buildStage.getId(), StageStatus.getSkippedForConditional(), stageStatus(buildStage));
+            }
+        }
     }
 
     @Issue("JENKINS-42226")

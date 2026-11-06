@@ -290,6 +290,36 @@ public class ParallelTest extends AbstractModelDefTest {
                 .go();
     }
 
+    @Issue("https://github.com/jenkinsci/pipeline-graph-view-plugin/issues/558")
+    @Test
+    public void parallelSkippedStageWithNestedStageNamedLikeParent() throws Exception {
+        WorkflowRun b = expect("parallel/parallelSkippedStageWithNestedStageNamedLikeParent")
+                .logContains("Build B")
+                .logNotContains("WE SHOULD NEVER GET HERE")
+                .go();
+
+        DepthFirstScanner scanner = new DepthFirstScanner();
+        List<FlowNode> heads = b.getExecution().getCurrentHeads();
+        FlowNode startA = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("A"));
+        FlowNode startB = scanner.findFirstMatch(heads, null, CommonUtils.isStageWithOptionalName("B"));
+        assertNotNull(startA);
+        assertNotNull(startB);
+        assertEquals(StageStatus.getSkippedForConditional(), stageStatus(startA));
+        assertNull(stageStatus(startB));
+
+        List<FlowNode> buildStages = scanner.filteredNodes(heads, CommonUtils.isStageWithOptionalName("Build"));
+        assertEquals(3, buildStages.size());
+        for (FlowNode buildStage : buildStages) {
+            List<String> enclosingIds = buildStage.getAllEnclosingIds();
+            if (enclosingIds.contains(startA.getId())) {
+                assertEquals("Build stage " + buildStage.getId(), StageStatus.getSkippedForConditional(), stageStatus(buildStage));
+            } else {
+                // Neither the outer "Build" stage nor the one in "B" may be marked as skipped
+                assertNull("Build stage " + buildStage.getId(), stageStatus(buildStage));
+            }
+        }
+    }
+
     private List<String> tailOfList(List<String> l) {
         return Collections.unmodifiableList(l.subList(1, l.size()));
     }
